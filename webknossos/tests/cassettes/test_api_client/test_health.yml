@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v11/health
+      path: /api/v12/health
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -22,7 +22,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:08:42 GMT
+        date: Thu, 09 Oct 2025 13:43:32 GMT
         connection: close
         content-type: text/plain; charset=UTF-8
         content-length: '2'

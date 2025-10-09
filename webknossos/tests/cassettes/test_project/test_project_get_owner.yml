@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v11/teams
+      path: /api/v12/teams
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -22,7 +22,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:07:35 GMT
+        date: Thu, 09 Oct 2025 13:42:16 GMT
         connection: close
         content-type: application/json
         content-length: '440'
@@ -33,7 +33,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /api/v11/user
+      path: /api/v12/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -54,18 +54,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:07:35 GMT
+        date: Thu, 09 Oct 2025 13:42:16 GMT
         connection: close
         content-type: application/json
         content-length: '717'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1760017181014,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
         compression: none
   - request:
       method: POST
-      path: /api/v11/projects
+      path: /api/v12/projects
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -91,18 +91,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:07:35 GMT
+        date: Thu, 09 Oct 2025 13:42:16 GMT
         connection: close
         content-type: application/json
         content-length: '628'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_get_owner_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68e79777de0000316389a9ff","created":1760008055831}
+          {"name":"test_get_owner_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68e7bbb9e00000016ebe2c87","created":1760017337280}
         compression: none
   - request:
       method: GET
-      path: /api/v11/users/570b9f4d2a7c0e4d008da6ef
+      path: /api/v12/users/570b9f4d2a7c0e4d008da6ef
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -123,18 +123,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:07:35 GMT
+        date: Thu, 09 Oct 2025 13:42:16 GMT
         connection: close
         content-type: application/json
         content-length: '717'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1760008055825,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1760017337272,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
         compression: none
   - request:
       method: GET
-      path: /api/v11/user
+      path: /api/v12/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -155,12 +155,12 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:07:35 GMT
+        date: Thu, 09 Oct 2025 13:42:16 GMT
         connection: close
         content-type: application/json
         content-length: '717'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1760017181014,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
         compression: none

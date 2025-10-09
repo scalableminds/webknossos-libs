@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v11/user
+      path: /api/v12/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -22,19 +22,19 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:08:38 GMT
+        date: Thu, 09 Oct 2025 13:43:27 GMT
         connection: close
         content-type: application/json
         content-length: '717'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1760017368158,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v11/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
+        /api/v12/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -57,19 +57,19 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:08:38 GMT
+        date: Thu, 09 Oct 2025 13:43:27 GMT
         connection: close
         content-type: application/json
         content-length: '2991'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760008118472,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760017407315,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v11/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        /api/v12/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -90,18 +90,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:08:38 GMT
+        date: Thu, 09 Oct 2025 13:43:27 GMT
         connection: close
         content-type: application/json
         content-length: '2989'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760008118902,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760017407771,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: HEAD
-      path: /data/v11/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
+      path: /data/v12/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
       headers:
         host: localhost:9000
         x-auth-token: >-
@@ -123,7 +123,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:08:38 GMT
+        date: Thu, 09 Oct 2025 13:43:27 GMT
         connection: close
         content-type: application/json
         content-length: '1529'
@@ -133,7 +133,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/v11/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
+      path: /data/v12/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
       headers:
         host: localhost:9000
         x-auth-token: >-
@@ -156,7 +156,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:08:38 GMT
+        date: Thu, 09 Oct 2025 13:43:27 GMT
         connection: close
         content-type: application/json
         content-length: '1529'
@@ -167,7 +167,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /api/v11/datasets/59e9cfbdba632ac2ab8b23b5
+      path: /api/v12/datasets/59e9cfbdba632ac2ab8b23b5
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -188,18 +188,18 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:08:38 GMT
+        date: Thu, 09 Oct 2025 13:43:27 GMT
         connection: close
         content-type: application/json
         content-length: '2989'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760008118928,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760017407799,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: POST
-      path: /api/v11/annotations/upload
+      path: /api/v12/annotations/upload
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -209,11 +209,11 @@ http_interactions:
         x-auth-token: >-
           1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
         content-length: '1005'
-        content-type: multipart/form-data; boundary=78ddfbe4f890b7fcef52829ccd860551
+        content-type: multipart/form-data; boundary=e776febf95685d1b828483feae24c3e3
       body:
         encoding: base64
         data: >-
-          LS03OGRkZmJlNGY4OTBiN2ZjZWY1MjgyOWNjZDg2MDU1MQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS03OGRkZmJlNGY4OTBiN2ZjZWY1MjgyOWNjZDg2MDU1MQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgAE2lJW73tP4MAAgAAMAQAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjVNLb5wwEL7nV1i+Zxeb50qQSLlVqtRTq7SXlQEHrICNbNPS/PqOjb0lVSuVCzOe1/fNo37c5gl959oIJRtMTglGXHaqF3Jo8Gpf7iv8+HBX2xEezMMdQvXCNJu5hRCnwgPfFq7FzKVFEiwNnrKrYfMycYyUHpgUb8z69J8O2vUZo3PIYDo2cbRKYRssmVQ+PUYbACInml7gK0tCSEWKDKOff39+azCtHP6Y1QImNBvwLoskSSqIh9/Bzszrk1ql4/qkNtSpSekTA38c5LbByYlGDRoC0buXdpYco54vdmwwSCMXwwj4QRTmizCinaAVVq/Qhb0tFupd21ZtGFm1fOQv9hlqQcqgfX2nfdu1H6IPBSKt1XD9H7BvJBxsB/UAHCgF4K6fEbmTRe9J/oPBZ+mY9CiWB+EPMhRy/KaTE6gUVMeHVhgFQq6YZ1Sf3y/UvmqHYbiR7tj9OC5lmuXFheQ0KyjJymj0NGmeXPI0ScGcZrRIb1Y/L9igkpZFnlKSVpQU0KJBq3X5AKRBdtwB7z4shqzmHIcFlarnYd1h4Z3mvVO/o4lDCEvp/7CF/h+ndT6E1rwfuLntJ2w565llsQ/+xvyJtZrJblyUkDa4152a3YXFmwsqNEZaeIazcZiAhPs3GICF5h7jas82pvCKp+HC/OGyvR+34Ohfn+P9/wJQSwECFAMUAAAACAATaUlbve0/gwACAAAwBAAAHwAAAAAAAAAAAAAAgAEAAAAAdGVzdF9ib3VuZGluZ19ib3hfcm91bmR0cmlwLm5tbFBLBQYAAAAAAQABAE0AAAA9AgAAAAANCi0tNzhkZGZiZTRmODkwYjdmY2VmNTI4MjljY2Q4NjA1NTEtLQ0K
+          LS1lNzc2ZmViZjk1Njg1ZDFiODI4NDgzZmVhZTI0YzNlMw0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcmVhdGVHcm91cEZvckVhY2hGaWxlIg0KDQpmYWxzZQ0KLS1lNzc2ZmViZjk1Njg1ZDFiODI4NDgzZmVhZTI0YzNlMw0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAuemlwIjsgZmlsZW5hbWU9InRlc3RfYm91bmRpbmdfYm94X3JvdW5kdHJpcC56aXAiDQpDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL3ppcA0KDQpQSwMEFAAAAAgAbX1JW0U09lEAAgAALgQAAB8AAAB0ZXN0X2JvdW5kaW5nX2JveF9yb3VuZHRyaXAubm1sjVNLb5wwEL7nV1i+d9dmAYMEiZRbpUo9tUp7WRlwwCrYyJiW5td3bOwtW7VSuTAznsf3zaN62qYRfRdmkVrVmJ4IRkK1upOqr/FqX98V+OnxobIDGJbHB4SqmRs+CQshTgWD2GZh5CSURQpeajym14VP8ygw0qbnSr5x69N/PGjXF4zOIcPS8lGgVUlbY8WV9ukx2gAQPSWXEj7GKKUFzVOMfv7d/FbjpHD4Y1YLmNC0gDfLCaEsJYyQ4ztfvj3rVTmuz3pDrR61OXHwx0FuakxOSdSgIRC9exn3kmHUidkONQZpELIfAD+IcvksF9mM0AprVujC3hYL9a5NozeMrJ4/iFf7ArUgZdC+3Glfd+2H7EKBSGtdhPkP2DcSDraDegAOlAJw18+I3Mmy8yT/weCTckw6FMuD8AeZBHL8ppNRqBRUxycpMAqEXDHPqDrfL9S+aodhuJHu2P042CWjec5IWdCSFK7e/uhp0jKjRcmyS5YWOWP3rFlWEFJmZZ5lOU1zgNYbvc7vgTI0yzEH0z4qjqwRAof1VLoTYdlh3Z3mvS9+Q4nDByvp/7CD/h9ndT6EVqLrxXLbTthx3nHLYxf8hfkDawxX7TBrqWxwr1o9ufuKFxdUYK4smOFoHCYg4f41BmChtce4yrONKbziabgwf7Z878ctOPpX53j9vwBQSwECFAMUAAAACABtfUlbRTT2UQACAAAuBAAAHwAAAAAAAAAAAAAAgAEAAAAAdGVzdF9ib3VuZGluZ19ib3hfcm91bmR0cmlwLm5tbFBLBQYAAAAAAQABAE0AAAA9AgAAAAANCi0tZTc3NmZlYmY5NTY4NWQxYjgyODQ4M2ZlYWUyNGMzZTMtLQ0K
     response:
       status:
         code: 200
@@ -222,20 +222,20 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:08:38 GMT
+        date: Thu, 09 Oct 2025 13:43:27 GMT
         connection: close
         content-type: application/json
         content-length: '124'
       body:
         encoding: utf8
         data: >-
-          {"annotation":{"typ":"Explorational","id":"68e797b6de0000a56289aa36"},"messages":[{"success":"Successfully
+          {"annotation":{"typ":"Explorational","id":"68e7bbffe00000056ebe2ce1"},"messages":[{"success":"Successfully
           uploaded file"}]}
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v11/annotations/68e797b6de0000a56289aa36/download?skipVolumeData=false&volumeDataZipFormat=zarr3
+        /api/v12/annotations/68e7bbffe00000056ebe2ce1/download?skipVolumeData=false&volumeDataZipFormat=zarr3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -257,7 +257,7 @@ http_interactions:
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         content-disposition: attachment;filename="test_bounding_box_roundtrip.nml"
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 09 Oct 2025 11:08:38 GMT
+        date: Thu, 09 Oct 2025 13:43:27 GMT
         connection: close
         content-type: application/xml
         content-length: '1757'
@@ -266,22 +266,22 @@ http_interactions:
         data: |-
           <things>
             <meta name="writer" content="NmlWriter.scala"/>
-            <meta name="writerGitCommit" content="bc63f8dfe87616fddbc7da2bd0139e04a329ca15"/>
-            <meta name="timestamp" content="1760008118992"/>
-            <meta name="annotationId" content="68e797b6de0000a56289aa36"/>
+            <meta name="writerGitCommit" content="6f640c145055799e9cfbf3d0dc4a1800d164d70f"/>
+            <meta name="timestamp" content="1760017407898"/>
+            <meta name="annotationId" content="68e7bbffe00000056ebe2ce1"/>
             <meta name="username" content="user_A last_A"/>
             <parameters>
               <experiment name="l4_sample" organization="Organization_X" datasetId="59e9cfbdba632ac2ab8b23b5" description="" wkUrl="http://localhost:9000"/>
               <scale x="11.239999771118164" y="11.239999771118164" z="28.0" unit="nanometer"/>
               <offset x="0" y="0" z="0"/>
-              <time ms="1760008118952"/>
+              <time ms="1760017407846"/>
               <editPosition x="0" y="0" z="0"/>
               <editRotation xRot="0.0" yRot="0.0" zRot="0.0"/>
               <zoomLevel zoom="2.0"/>
               <userBoundingBox id="0" name="Unnamed Bounding Box" isVisible="true" color.r="0.20000000298023224" color.g="0.5" color.b="0.10000000149011612" color.a="1.0" topLeftX="1024" topLeftY="512" topLeftZ="128" width="64" height="64" depth="64"/>
-              <userBoundingBox id="1" name="task bounding box" color.r="0.6830903133215386" color.g="0.48527209266796756" color.b="0.6156487700901746" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
+              <userBoundingBox id="1" name="task bounding box" color.r="0.16636133104730488" color.g="0.5058046125822756" color.b="0.5780371703859085" color.a="1.0" topLeftX="10" topLeftY="10" topLeftZ="10" width="5" height="5" depth="5"/>
             </parameters>
-            <thing id="2" color.r="0.11172765493392944" color.g="0.2509530484676361" color.b="0.9734569191932678" color.a="1.0" name="a tree" isVisible="true" groupId="1">
+            <thing id="2" color.r="0.7580096125602722" color.g="0.19518975913524628" color.b="0.7351667284965515" color.a="1.0" name="a tree" isVisible="true" groupId="1">
               <nodes>
                 <node id="3" radius="1.0" x="0" y="0" z="0" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0"/>
               </nodes>
