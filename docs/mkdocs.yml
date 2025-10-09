@@ -248,6 +248,7 @@ nav:
         - webknossos-py/examples/announce_dataset_upload.md
         - webknossos-py/examples/accessing_metadata.md
         - webknossos-py/examples/explore_and_add_remote.md
+        - webknossos-py/examples/upload_to_webknossos.md
       - Annotation Examples:
         - webknossos-py/examples/apply_merger_mode.md
         - webknossos-py/examples/learned_segmenter.md
