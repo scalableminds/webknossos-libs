@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -eEuo pipefail
 
 echo "🔍 Checking for uncommitted changes..."
 

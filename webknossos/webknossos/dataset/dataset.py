@@ -2419,21 +2419,20 @@ class Dataset:
             )
         foreign_layer_path = foreign_layer.path
 
-        self_path = self.path
-        assert is_fs_path(self_path), (
-            f"Cannot create symlinks in remote dataset {self_path}"
+        assert is_fs_path(self.path), (
+            f"Cannot create symlinks in remote dataset {self.path}"
         )
         assert is_fs_path(foreign_layer_path), (
             f"Cannot create symlink to remote layer {foreign_layer_path}"
         )
 
         foreign_layer_symlink_path = (
-            UPath(relpath(foreign_layer_path, self_path))
+            UPath(relpath(foreign_layer_path, self.path))
             if make_relative
             else foreign_layer_path.resolve()
         )
 
-        new_layer_path = self_path / new_layer_name
+        new_layer_path = self.path / new_layer_name
         new_layer_path.symlink_to(foreign_layer_symlink_path)
         new_layer_properties = copy.deepcopy(foreign_layer._properties)
         new_layer_properties.name = new_layer_name
@@ -2445,7 +2444,7 @@ class Dataset:
             )
             if is_fs_path(foreign_mag.path):
                 mag_prop.path = (
-                    UPath(relpath(foreign_mag.path.resolve(), self_path))
+                    UPath(relpath(foreign_mag.path.resolve(), self.path))
                     if make_relative
                     else foreign_mag.path.resolve()
                 ).as_posix()
@@ -2465,7 +2464,7 @@ class Dataset:
                         ).resolve()
                     assert is_fs_path(old_path)
                     attachment.path = (
-                        UPath(relpath(old_path, self_path))
+                        UPath(relpath(old_path, self.path))
                         if make_relative
                         else old_path.resolve()
                     ).as_posix()

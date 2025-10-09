@@ -7,7 +7,7 @@ from collections import namedtuple
 from collections.abc import Generator, Iterator
 from functools import partial
 from multiprocessing import cpu_count
-from os import sep
+from os import PathLike, sep
 from types import TracebackType
 from typing import Annotated, Any, cast
 
@@ -47,7 +47,7 @@ KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 
 
 class KnossosDataset:
-    def __init__(self, root: str | UPath, dtype: np.dtype):
+    def __init__(self, root: str | PathLike | UPath, dtype: np.dtype):
         self.root = UPath(root)
         self.dtype = dtype
 
@@ -129,7 +129,7 @@ class KnossosDataset:
         pass
 
     @staticmethod
-    def open(root: str | UPath, dtype: np.dtype) -> "KnossosDataset":
+    def open(root: str | PathLike | UPath, dtype: np.dtype) -> "KnossosDataset":
         return KnossosDataset(root, dtype)
 
     def __enter__(self) -> "KnossosDataset":

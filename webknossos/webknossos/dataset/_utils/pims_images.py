@@ -2,7 +2,7 @@ import warnings
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
-from os import PathLike, environ
+from os import environ
 from typing import TypeVar, Union, cast
 from urllib.error import HTTPError
 
@@ -75,9 +75,7 @@ class PimsImages:
 
     def __init__(
         self,
-        images: Union[
-            str, PathLike, UPath, "pims.FramesSequence", list[str | PathLike | UPath]
-        ],
+        images: Union[str, UPath, "pims.FramesSequence", list[str | UPath]],
         channel: int | None,
         timepoint: int | None,
         czi_channel: int | None,

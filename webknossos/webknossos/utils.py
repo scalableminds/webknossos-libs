@@ -274,11 +274,11 @@ def count_defined_values(values: Iterable[Any | None]) -> int:
 def is_fs_path(
     path: UPath,
 ) -> TypeGuard[PosixUPath | WindowsUPath]:
-    return not isinstance(path, UPath) or isinstance(path, PosixUPath | WindowsUPath)
+    return isinstance(path, PosixUPath | WindowsUPath)
 
 
 def is_remote_path(path: UPath) -> bool:
-    return not is_fs_path(path)
+    return isinstance(path, UPath) and not is_fs_path(path)
 
 
 def cheap_resolve(path: UPath) -> UPath:

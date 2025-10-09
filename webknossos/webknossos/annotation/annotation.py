@@ -48,7 +48,7 @@ from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import IO, BinaryIO, Literal, Union, overload
+from typing import IO, Literal, Union, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -540,7 +540,7 @@ class Annotation:
     def _load_from_nml(
         cls,
         name: str,
-        nml_content: BinaryIO,
+        nml_content: IO[bytes],
         possible_volume_paths: list[ZipPath] | None = None,
     ) -> "Annotation":
         nml = wknml.Nml.parse(nml_content)
@@ -642,7 +642,7 @@ class Annotation:
         return volume_layers
 
     @classmethod
-    def _load_from_zip(cls, content: str | UPath | BinaryIO) -> "Annotation":
+    def _load_from_zip(cls, content: str | UPath | IO[bytes]) -> "Annotation":
         f: IO[bytes]
         if isinstance(content, str):
             f = open(content, mode="rb")
@@ -736,8 +736,8 @@ class Annotation:
 
     def merge_fallback_layer(
         self,
-        target: UPath,
-        dataset_directory: UPath,
+        target: str | PathLike | UPath,
+        dataset_directory: str | PathLike | UPath,
         volume_layer_name: str | None = None,
         executor: Executor | None = None,
     ) -> None:
@@ -793,7 +793,7 @@ class Annotation:
             self.export_volume_layer_to_dataset(output_dataset)
 
         else:
-            fallback_dataset_path = dataset_directory / self.dataset_name
+            fallback_dataset_path = UPath(dataset_directory) / self.dataset_name
             fallback_layer = Dataset.open(fallback_dataset_path).get_layer(
                 fallback_layer_name
             )

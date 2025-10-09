@@ -436,7 +436,6 @@ def test_edited_volume_annotation_format() -> None:
     unpack_dir = TESTOUTPUT_DIR / "unpacked_annotation"
     with save_path.open("rb") as f:
         with zipfile.ZipFile(f) as zip_ref:
-            assert is_fs_path(unpack_dir)
             zip_ref.extractall(str(unpack_dir))
 
     # test for the format assumptions as mentioned in https://github.com/scalableminds/webknossos/issues/8604

@@ -1,6 +1,5 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
-from os import PathLike
 
 import numpy as np
 from pims import FramesSequenceND
@@ -38,7 +37,7 @@ class PimsCziReader(FramesSequenceND):
     # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
     class_priority = 20
 
-    def __init__(self, path: PathLike | UPath, czi_channel: int = 0) -> None:
+    def __init__(self, path: UPath, czi_channel: int = 0) -> None:
         self.path = UPath(path)
         self.czi_channel = czi_channel
         self.axis_offsets: dict[str, int] = {}

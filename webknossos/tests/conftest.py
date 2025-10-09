@@ -145,7 +145,7 @@ def use_replay_proxay(request: Any) -> Generator:
 
 
 @pytest.fixture(scope="session")
-def WT1_path() -> UPath:
+def WT1_upath() -> UPath:
     ds_path = TESTDATA_DIR / "WT1_wkw"
     if ds_path.exists():
         rmtree(ds_path)

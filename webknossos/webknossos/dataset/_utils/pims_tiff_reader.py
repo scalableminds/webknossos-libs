@@ -1,6 +1,5 @@
 import json
 from collections.abc import Iterator
-from os import PathLike
 from typing import NamedTuple
 
 import numpy as np
@@ -121,7 +120,7 @@ class PimsTiffReader(FramesSequenceND):
     # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
     class_priority = 19
 
-    def __init__(self, path: PathLike | UPath) -> None:
+    def __init__(self, path: UPath) -> None:
         super().__init__()
 
         self.path = UPath(path)

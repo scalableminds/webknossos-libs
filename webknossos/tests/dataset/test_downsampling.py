@@ -70,9 +70,9 @@ def test_non_linear_filter_reshape() -> None:
 
 
 def downsample_test_helper(
-    WT1_path: UPath, tmp_upath: UPath, use_compress: bool, chunk_shape: Vec3Int
+    WT1_upath: UPath, tmp_upath: UPath, use_compress: bool, chunk_shape: Vec3Int
 ) -> None:
-    source_path = WT1_path
+    source_path = WT1_upath
     target_path = tmp_upath / "WT1_wkw"
 
     source_ds = Dataset.open(source_path)
@@ -124,14 +124,14 @@ def downsample_test_helper(
     )
 
 
-def test_downsample_cube_job(WT1_path: UPath, tmp_upath: UPath) -> None:
-    downsample_test_helper(WT1_path, tmp_upath, False, Vec3Int.full(16))
+def test_downsample_cube_job(WT1_upath: UPath, tmp_upath: UPath) -> None:
+    downsample_test_helper(WT1_upath, tmp_upath, False, Vec3Int.full(16))
 
 
-def test_compressed_downsample_cube_job(WT1_path: UPath, tmp_upath: UPath) -> None:
+def test_compressed_downsample_cube_job(WT1_upath: UPath, tmp_upath: UPath) -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("error")  # This escalates the warning to an error
-        downsample_test_helper(WT1_path, tmp_upath, True, Vec3Int.full(32))
+        downsample_test_helper(WT1_upath, tmp_upath, True, Vec3Int.full(32))
 
 
 def test_downsample_multi_channel(tmp_upath: UPath) -> None:

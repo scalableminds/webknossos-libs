@@ -2,7 +2,6 @@ import uuid
 from collections.abc import Callable, Sequence
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from functools import partial
-from os import PathLike
 from typing import Any
 
 import httpx
@@ -83,11 +82,9 @@ class Resumable:
         self.file_completed = CallbackDispatcher()
         self.chunk_completed = CallbackDispatcher()
 
-    def add_file(
-        self, path: PathLike | UPath | str, relative_path: UPath | None
-    ) -> ResumableFile:
+    def add_file(self, path: UPath, relative_path: UPath | None) -> ResumableFile:
         file = ResumableFile(
-            UPath(path),
+            path,
             relative_path,
             self.config.chunk_size,
             self.config.generate_unique_identifier,
