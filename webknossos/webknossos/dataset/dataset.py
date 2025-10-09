@@ -17,7 +17,6 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from .. import RemoteSegmentationLayer
 from ..client.api_client.models import (
     ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
@@ -49,6 +48,7 @@ from .layer import (
     ArrayInfo,
     BaseArray,
     LayerToLink,
+    RemoteSegmentationLayer,
     Zarr3Config,
 )
 from .layer.abstract_layer import (

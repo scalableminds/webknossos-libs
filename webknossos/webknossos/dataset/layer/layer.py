@@ -1407,10 +1407,11 @@ class Layer(AbstractLayer):
 
     @classmethod
     def _ensure_layer(
-        cls, layer: str | PathLike | "Layer" | "RemoteLayer"
+        cls, layer: Union[str, PathLike, "Layer", "RemoteLayer"]
     ) -> Union["Layer", "RemoteLayer"]:
         # local import to prevent circular dependency
         from webknossos.dataset import Dataset, RemoteDataset
+        from webknossos.dataset.layer.remote_layer import RemoteLayer
 
         if isinstance(layer, Layer | RemoteLayer):
             return layer
