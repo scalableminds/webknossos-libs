@@ -37,6 +37,7 @@ dependencies = [
     "boltons >=21.0.0",
     "cattrs >=22.0.0",
     "certifi >=2023",
+    "click <8.2.0", # pinned because of incompatibility with typer
     "cluster-tools",
     "httpx ~=0.27.0",
     "loxun ~=2.0.0",
