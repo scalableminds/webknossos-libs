@@ -21,7 +21,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `RemoteDatset.download_mesh()`, use `remote_segmentation_layer.download_mes()h` instead.
   - `Dataset.get_remote_datasets()`, use `RemoteDataset.list()` instead.
   - `Dataset.download()`, use `RemoteDataset.download()` instead.
-  - `mag_view.is_foreign', use `layer.is_mag_view_foreign(mag_view)` instead.
+  - `mag_view.is_foreign`, use `layer.is_mag_view_foreign(mag_view)` instead.
 
 ### Added
 - Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
