@@ -5,11 +5,13 @@
 # requires-python = ">=3.10"
 # ///
 
-from contextlib import contextmanager
+# ruff: noqa: T201
+
 import os
 import subprocess
 import sys
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from shutil import copyfileobj, rmtree, unpack_archive
 from time import sleep
