@@ -1,8 +1,13 @@
 from collections.abc import Sequence
-from typing import TypeVar
+from typing import TypeVar, TYPE_CHECKING
 
 from ..client.context import webknossos_context
 from ..utils import LazyReadOnlyDict
+
+if TYPE_CHECKING:
+    from .dataset import RemoteDataset  # noqa: F401 imported but unused
+
+
 
 K = TypeVar("K")  # key
 V = TypeVar("V")  # value
@@ -19,9 +24,10 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         tags: str | Sequence[str] | None,
         folder_id: str | None,
     ) -> None:
+        from webknossos.dataset.remote_dataset import RemoteDataset
+
         from ..administration.user import User
         from ..client.context import _get_context
-        from webknossos.dataset.remote_dataset import RemoteDataset
 
         context = _get_context()
         client = context.api_client_with_auth

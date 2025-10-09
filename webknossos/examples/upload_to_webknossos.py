@@ -19,11 +19,9 @@ def main() -> None:
         new_dataset_name="my_new_dataset_name",
         folder_id=folder_id,
         layers_to_link=[
-            LayerToLink(
-                existing_dataset.dataset_id,
-                layer_name="image_230130b",
-                new_layer_name="image",
-            )
+            LayerToLink.from_remote_layer(
+                existing_dataset.get_layer("image_230130b"), new_layer_name="image"
+            ),
         ],
     )
 

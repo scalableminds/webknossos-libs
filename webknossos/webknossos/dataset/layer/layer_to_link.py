@@ -27,9 +27,11 @@ class LayerToLink(NamedTuple):
         )
 
     @classmethod
-    def from_remote_layer(cls, remote_layer: "RemoteLayer") -> "LayerToLink":
+    def from_remote_layer(
+        cls, remote_layer: "RemoteLayer", new_layer_name: str | None = None
+    ) -> "LayerToLink":
         return cls(
             remote_layer.dataset.dataset_id,
             remote_layer.name,
-            new_layer_name=None,
+            new_layer_name=new_layer_name,
         )
