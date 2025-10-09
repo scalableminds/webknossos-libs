@@ -3523,11 +3523,11 @@ class RemoteDataset(Dataset):
         dataset = ApiDatasetExploreAndAddRemote(
             UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
         )
-        context.api_client_with_auth.dataset_explore_and_add_remote(dataset=dataset)
-
-        return cls.open_remote(
-            dataset_name_or_url=dataset_name, organization_id=context.organization_id
+        dataset_id = context.api_client_with_auth.dataset_explore_and_add_remote(
+            dataset=dataset
         )
+
+        return cls.open_remote(dataset_id=dataset_id)
 
     @property
     def folder(self) -> RemoteFolder:
