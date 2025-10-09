@@ -50,7 +50,7 @@ dependencies = [
     "python-dotenv ~=1.0.1",
     "rich ~=13.8.0",
     "scipy >=1.13",
-    "tensorstore==0.1.77",
+    "tensorstore==0.1.76",
     "typer ~=0.12.5",
     "typing-extensions ~=4.0",
     "universal-pathlib ~=0.2",
