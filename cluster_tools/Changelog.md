@@ -10,6 +10,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...HEAD)
 
 ### Breaking Changes
+- Deprecate the `dask` and `kubernetes` executors. They will be removed in a future version. [#1375](https://github.com/scalableminds/webknossos-libs/pull/1375)
 
 ### Added
 
