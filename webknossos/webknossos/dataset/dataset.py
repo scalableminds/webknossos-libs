@@ -2,13 +2,13 @@ import copy
 import json
 import logging
 import warnings
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import Enum, unique
 from itertools import product
 from os import PathLike
 from os.path import relpath
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Union, cast, Mapping
+from typing import TYPE_CHECKING, Any, Union, cast
 
 import attr
 import numpy as np
@@ -735,11 +735,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     @staticmethod
     def get_remote_datasets(
-            *,
-            organization_id: str | None = None,
-            tags: str | Sequence[str] | None = None,
-            name: str | None = None,
-            folder_id: RemoteFolder | str | None = None,
+        *,
+        organization_id: str | None = None,
+        tags: str | Sequence[str] | None = None,
+        name: str | None = None,
+        folder_id: RemoteFolder | str | None = None,
     ) -> Mapping[str, "RemoteDataset"]:
         warn_deprecated("Dataset.get_remote_datasets", "RemoteDataset.list")
         from webknossos import RemoteDataset
@@ -757,7 +757,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         token: str | None = None,
         datastore_url: str | None = None,
     ) -> None:
-        warn_deprecated("Dataset.trigger_reload_in_datastore", "RemoteDataset.trigger_reload_in_datastore")
+        warn_deprecated(
+            "Dataset.trigger_reload_in_datastore",
+            "RemoteDataset.trigger_reload_in_datastore",
+        )
         RemoteDataset.trigger_reload_in_datastore(
             dataset_name_or_url=dataset_name_or_url,
             organization_id=organization_id,
@@ -773,7 +776,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         cls, directory_name: str, organization: str, token: str | None = None
     ) -> None:
         """Deprecated. Use `Dataset.trigger_reload_in_datastore` instead."""
-        warn_deprecated("trigger_dataset_import", "RemoteDataset.trigger_reload_in_datastore")
+        warn_deprecated(
+            "trigger_dataset_import", "RemoteDataset.trigger_reload_in_datastore"
+        )
 
         cls.trigger_reload_in_datastore(
             dataset_name_or_url=directory_name,
@@ -1298,7 +1303,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         layer = self._initialize_layer_from_properties(
             layer_properties, read_only=False
         )
-        self.layers[layer.name] = layer
+        self._layers[layer.name] = layer
 
         self._save_dataset_properties()
         return self.layers[layer.name]

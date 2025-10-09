@@ -243,8 +243,8 @@ class Layer(AbstractLayer):
             self.path.rename(self.dataset.path / layer_name)
         self._path = self.dataset.path / layer_name
         self._resolved_path = cheap_resolve(self.dataset.resolved_path / layer_name)
-        del self.dataset.layers[self.name]
-        self.dataset.layers[layer_name] = self
+        del self.dataset._layers[self.name]
+        self.dataset._layers[layer_name] = self
         self._properties.name = layer_name
         self._name: str = layer_name
 
@@ -1410,15 +1410,11 @@ class Layer(AbstractLayer):
         cls, layer: Union[str, PathLike, "Layer", "RemoteLayer"]
     ) -> Union["Layer", "RemoteLayer"]:
         # local import to prevent circular dependency
-        from webknossos.dataset import Dataset, RemoteDataset
+        from webknossos.dataset import Dataset
         from webknossos.dataset.layer.remote_layer import RemoteLayer
 
         if isinstance(layer, Layer | RemoteLayer):
             return layer
 
         layer_path = UPath(layer)
-        if is_fs_path(layer_path):
-            return Dataset.open(layer_path.parent).get_layer(layer_path.name)
-        else:
-            # Zarr streaming paths behave like regular paths
-            return RemoteDataset.open(str(layer_path.parent)).get_layer(layer_path.name)
+        return Dataset.open(layer_path.parent).get_layer(layer_path.name)

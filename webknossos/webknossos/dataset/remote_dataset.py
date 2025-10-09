@@ -17,7 +17,11 @@ from webknossos.client.api_client.models import (
     ApiUnusableDataSource,
 )
 from webknossos.dataset._metadata import DatasetMetadata
-from webknossos.dataset.abstract_dataset import AbstractDataset, _DATASET_URL_REGEX, _DATASET_DEPRECATED_URL_REGEX
+from webknossos.dataset.abstract_dataset import (
+    _DATASET_DEPRECATED_URL_REGEX,
+    _DATASET_URL_REGEX,
+    AbstractDataset,
+)
 from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer
 from webknossos.dataset_properties import (
     DatasetProperties,
@@ -25,8 +29,8 @@ from webknossos.dataset_properties import (
 from webknossos.geometry import BoundingBox, Vec3Int
 from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
-from ..client.api_client.errors import UnexpectedStatusError
 
+from ..client.api_client.errors import UnexpectedStatusError
 from ..ssl_context import SSL_CONTEXT
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
@@ -289,8 +293,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         return datetime.fromtimestamp(self._get_dataset_info().created / 1000).strftime(
             "%B %d, %Y %I:%M:%S"
         )
-
-
 
     def _get_dataset_info(self) -> ApiDataset:
         from ..client.context import _get_api_client
@@ -729,9 +731,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     @classmethod
     def _disambiguate_remote(
-            cls,
-            dataset_name: str,
-            organization_id: str,
+        cls,
+        dataset_name: str,
+        organization_id: str,
     ) -> str:
         from webknossos import RemoteDataset
 
@@ -763,12 +765,12 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     @classmethod
     def _parse_remote(
-            cls,
-            dataset_name_or_url: str | None = None,
-            organization_id: str | None = None,
-            sharing_token: str | None = None,
-            webknossos_url: str | None = None,
-            dataset_id: str | None = None,
+        cls,
+        dataset_name_or_url: str | None = None,
+        organization_id: str | None = None,
+        sharing_token: str | None = None,
+        webknossos_url: str | None = None,
+        dataset_id: str | None = None,
     ) -> tuple["webknossos_context", str, str | None]:
         """Parses the given arguments to
         * context_manager that should be entered,
@@ -790,13 +792,13 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             deprecated_match = _DATASET_DEPRECATED_URL_REGEX.match(dataset_name_or_url)
             if match is not None:
                 assert (
-                        organization_id is None
-                        and sharing_token is None
-                        and webknossos_url is None
+                    organization_id is None
+                    and sharing_token is None
+                    and webknossos_url is None
                 ), (
-                        f"When Dataset.{caller}() is called with an url, "
-                        + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
-                        + "organization_id, sharing_token and webknossos_url must not be set."
+                    f"When Dataset.{caller}() is called with an url, "
+                    + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+                    + "organization_id, sharing_token and webknossos_url must not be set."
                 )
                 dataset_id = match.group("dataset_id")
                 sharing_token = match.group("sharing_token")
@@ -804,13 +806,13 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 assert dataset_id is not None
             elif deprecated_match is not None:
                 assert (
-                        organization_id is None
-                        and sharing_token is None
-                        and webknossos_url is None
+                    organization_id is None
+                    and sharing_token is None
+                    and webknossos_url is None
                 ), (
-                        f"When Dataset.{caller}() is called with an url, "
-                        + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
-                        + "organization_id, sharing_token and webknossos_url must not be set."
+                    f"When Dataset.{caller}() is called with an url, "
+                    + f"e.g. Dataset.{caller}('https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view'), "
+                    + "organization_id, sharing_token and webknossos_url must not be set."
                 )
                 dataset_name = deprecated_match.group("dataset_name")
                 organization_id = deprecated_match.group("organization_id")
@@ -845,14 +847,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     @classmethod
     def trigger_reload_in_datastore(
-            cls,
-            dataset_name_or_url: str | None = None,
-            organization_id: str | None = None,
-            webknossos_url: str | None = None,
-            dataset_id: str | None = None,
-            organization: str | None = None,
-            token: str | None = None,
-            datastore_url: str | None = None,
+        cls,
+        dataset_name_or_url: str | None = None,
+        organization_id: str | None = None,
+        webknossos_url: str | None = None,
+        dataset_id: str | None = None,
+        organization: str | None = None,
+        token: str | None = None,
+        datastore_url: str | None = None,
     ) -> None:
         """Trigger a manual reload of the dataset's properties.
 
@@ -914,7 +916,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     @classmethod
     def explore_and_add_remote(
-            cls, dataset_uri: str | PathLike, dataset_name: str, folder_path: str
+        cls, dataset_uri: str | PathLike, dataset_name: str, folder_path: str
     ) -> "RemoteDataset":
         """Explore and add an external dataset as a remote dataset.
 

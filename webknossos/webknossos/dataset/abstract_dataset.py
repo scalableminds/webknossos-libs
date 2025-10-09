@@ -1,16 +1,14 @@
 import copy
-import inspect
 import json
 import logging
 import re
 import warnings
 from abc import abstractmethod
-from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, cast
+from collections.abc import Mapping
+from typing import Any, Generic, Literal, TypeVar, cast
 
 from upath import UPath
 
-from webknossos.client.api_client.errors import UnexpectedStatusError
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -23,17 +21,11 @@ from webknossos.dataset_properties import (
 )
 from webknossos.geometry import BoundingBox, NDBoundingBox
 
-from ..utils import warn_deprecated
 from .defaults import PROPERTIES_FILE_NAME
 from .layer.abstract_layer import AbstractLayer
 from .layer.segmentation_layer.abstract_segmentation_layer import (
     AbstractSegmentationLayer,
 )
-from .remote_folder import RemoteFolder
-
-if TYPE_CHECKING:
-    from ..client.context import webknossos_context
-    from .dataset import RemoteDataset
 
 logger = logging.getLogger(__name__)
 SUPPORTED_VERSIONS: list[Literal[1]] = [1]
@@ -380,7 +372,6 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
             bbox = layer.bounding_box
             dataset_bbox = dataset_bbox.extended_by(bbox)
         return dataset_bbox
-
 
     @staticmethod
     def _load_dataset_properties_from_path(dataset_path: UPath) -> DatasetProperties:

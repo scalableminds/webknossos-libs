@@ -99,12 +99,12 @@ def test_ref_layer_from_remote_layer(sample_remote_dataset: Dataset) -> None:
     )
     sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
-        layer_name = f"test_remote_layer_{layer.category}_path"
+        layer_name = f"test_remote_layer_{layer.category}_object"
         sample_remote_dataset.add_layer_as_ref(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
         assert is_remote_path(new_layer.get_mag(1).path) and (
-            str(new_layer.get_mag(1).path) == str(layer.get_mag(1).path)
-        ), "Mag path of added layer should be equal to mag path is source layer."
+            str(layer.get_mag(1).path) == str(new_layer.get_mag(1).path)
+        ), "Mag path of added layer should be equal to mag path in source layer."
 
 
 def test_ref_layer_non_public(tmp_path: Path) -> None:
