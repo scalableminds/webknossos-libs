@@ -125,7 +125,7 @@ def local_test_wk() -> Iterator[None]:
 
 @contextmanager
 def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
-    cmd = ["proxay"]
+    cmd = ["npx", "proxay"]
     if mode == "record":
         cmd += [
             "--mode",
