@@ -14,7 +14,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Breaking Changes
 - Removed Docker image `scalableminds/webknossos-cli` build. It will not be released further. [#1376](https://github.com/scalableminds/webknossos-libs/pull/1376)
-- Dataset.add_layer_as_ref(remote_layer.path) does not work anymore. Please use Dataset.add_layer_as_ref(remote_layer) instead. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
+- `Dataset.add_layer_as_ref(remote_layer.path)` does not work anymore. Please use `Dataset.add_layer_as_ref(remote_layer)` instead. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Due to the refactoring, the imports of various classes have changed. Please update your code accordingly. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Deprecated a number of methods [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371]):
   - `Dataset.open_remote()`, use `RemoteDataset.open` instead.
