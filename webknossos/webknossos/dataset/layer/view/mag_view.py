@@ -269,6 +269,19 @@ class MagView(View, Generic[LayerTypeT]):
         """
         return self._mag.to_layer_name()
 
+    @property
+    def is_foreign(self) -> bool:
+        """
+        Check if this magnification's data is stored not as part of to the dataset.
+        """
+        warn_deprecated("MagView.isforeign", "Layer.is_mag_view_foreign()")
+        from webknossos import Layer
+
+        if not isinstance(self._layer, Layer):
+            raise TypeError("This method is only available for mags of Layer objects.")
+
+        return self._layer.is_mag_view_foreign(self)
+
     def get_zarr_array(self) -> "tensorstore.TensorStore":
         """Get direct access to the underlying Zarr array.
 
