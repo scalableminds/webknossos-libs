@@ -449,7 +449,6 @@ jobs:
       - cluster_tools_slurm
       - webknossos_linux
       - webknossos_windows
-      - webknossos_cli_docker
       - docs
       - pypi_and_gh_release
     if: always()
