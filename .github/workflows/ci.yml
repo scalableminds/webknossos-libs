@@ -305,7 +305,7 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           MULTIPROCESSING_DEFAULT_START_METHOD: spawn
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration -s
+        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
   coverage_report:
     needs: [webknossos_linux]
