@@ -93,6 +93,27 @@ def test_url_open_remote(url: str, tmp_path: Path) -> None:
     }, "Dataset instances should be picklable."
 
 
+def test_upload_dataset_with_symlinks(tmp_path: Path) -> None:
+    sample_dataset = get_sample_dataset(tmp_path)
+    remote_ds = sample_dataset.upload(
+        new_dataset_name="test_remote_symlink", upload_directly_to_common_storage=True, symlink_data_instead_of_copy=True
+    )
+    assert np.array_equal(
+        remote_ds.get_color_layers()[0].get_finest_mag().read(),
+        sample_dataset.get_color_layers()[0].get_finest_mag().read(),
+    )
+
+def test_upload_dataset_copy_to_paths(tmp_path: Path) -> None:
+    sample_dataset = get_sample_dataset(tmp_path)
+    remote_ds = sample_dataset.upload(
+        new_dataset_name="test_remote_copy", upload_directly_to_common_storage=True
+    )
+    assert np.array_equal(
+        remote_ds.get_color_layers()[0].get_finest_mag().read(),
+        sample_dataset.get_color_layers()[0].get_finest_mag().read(),
+    )
+
+
 def test_remote_dataset(tmp_path: Path) -> None:
     sample_dataset = get_sample_dataset(tmp_path)
     remote_ds = sample_dataset.upload(new_dataset_name="test_remote_metadata")

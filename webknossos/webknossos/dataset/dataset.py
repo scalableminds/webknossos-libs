@@ -621,6 +621,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ```
         """
 
+        if symlink_data_instead_of_copy:
+            assert upload_directly_to_common_storage, "Cannot use symlinking with upload_directly_to_common_storage=False"
+
         from ..client.context import _get_context
 
         new_dataset_name = new_dataset_name or self.name
@@ -695,7 +698,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     assert is_fs_path(src_mag.path) and is_fs_path(dst_mag_path), (
                         f"Either src_mag.path or mag.path are not pointing to a local file system {src_mag.path}, {mag.path}"
                     )
-                    dst_mag_path.unlink()
+                    dst_mag_path.parent.mkdir(parents=True, exist_ok=True)
+                    dst_mag_path.unlink(missing_ok=True)
                     dst_mag_path.symlink_to(src_mag.path)
                 else:
                     copytree(
