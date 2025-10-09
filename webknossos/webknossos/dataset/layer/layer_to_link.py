@@ -2,9 +2,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from webknossos.client.api_client.models import (
     ApiLinkedLayerIdentifier,
-    ApiLinkedLayerIdentifierLegacy,
 )
-from webknossos.client.context import _get_context
 
 if TYPE_CHECKING:
     from webknossos.dataset.layer import RemoteLayer

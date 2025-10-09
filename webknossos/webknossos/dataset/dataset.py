@@ -622,7 +622,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
 
         if symlink_data_instead_of_copy:
-            assert upload_directly_to_common_storage, "Cannot use symlinking with upload_directly_to_common_storage=False"
+            assert upload_directly_to_common_storage, (
+                "Cannot use symlinking with upload_directly_to_common_storage=False"
+            )
 
         from ..client.context import _get_context
 

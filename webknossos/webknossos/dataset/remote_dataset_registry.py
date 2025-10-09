@@ -1,12 +1,11 @@
 from collections.abc import Sequence
-from typing import TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 from ..client.context import webknossos_context
 from ..utils import LazyReadOnlyDict
 
 if TYPE_CHECKING:
     from .dataset import RemoteDataset  # noqa: F401 imported but unused
-
 
 
 K = TypeVar("K")  # key
