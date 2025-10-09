@@ -13,9 +13,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...HEAD)
 
 ### Breaking Changes
-- MagView.is_foreign() is now defined with the Layer.is_mag_view_foreign() method.
-- Dataset.add_layer_as_ref() does not accept a path to a remote layer anymore.
+- Dataset.add_layer_as_ref(remote_layer.path) does not work anymore. Please use Dataset.add_layer_as_ref(remote_layer) instead.
 - Due to the refactoring, the imports of various classes have changed. Please update your code accordingly.
+- Deprecated a number of methods [https://github.com/scalableminds/webknossos-libs/pull/1371]():
+  - `Dataset.open_remote()`, use `RemoteDataset.open` instead.
+  - `RemoteDatset.download_mesh()`, use `remote_segmentation_layer.download_mes()h` instead.
+  - `Dataset.get_remote_datasets()`, use `RemoteDataset.list()` instead.
+  - `Dataset.download()`, use `RemoteDataset.download()` instead.
+  - `mag_view.is_foreign', use `layer.is_mag_view_foreign(mag_view)` instead.
 
 ### Added
 - Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects.
