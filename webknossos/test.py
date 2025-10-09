@@ -21,10 +21,13 @@ import requests
 
 WK_TOKEN = "1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e"
 WK_URL = "http://localhost:9000"
+IS_WINDOWS = sys.platform == "win32"
 
 
 @contextmanager
 def local_test_wk() -> Iterator[None]:
+    assert not IS_WINDOWS, "Windows is not supported for local testing"
+
     # Fetch current version of webknossos.org this can be replaced with a fixed version for testing
     wk_version = requests.get("https://webknossos.org/api/buildinfo").json()[
         "webknossos"
@@ -145,10 +148,16 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
         print(f"Starting proxay with command: {cmd} {quiet=}")
         if quiet:
             proxay_process = subprocess.Popen(
-                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                shell=IS_WINDOWS,
             )
         else:
-            proxay_process = subprocess.Popen(cmd)
+            proxay_process = subprocess.Popen(
+                cmd,
+                shell=IS_WINDOWS,
+            )
         sleep(1)
         yield
     finally:
