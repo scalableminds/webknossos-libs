@@ -137,6 +137,7 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
             ["npx", "-y", f"proxay@{PROXAY_VERSION}"],
             text=True,
             stderr=subprocess.STDOUT,
+            shell=IS_WINDOWS,
         )
     except subprocess.CalledProcessError as e:
         if "Please specify a valid mode (record or replay)" not in e.output:
