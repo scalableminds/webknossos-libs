@@ -1,7 +1,7 @@
 from functools import reduce
 
 from ...geometry import BoundingBox
-from ..mag_view import MagView
+from ..layer.view import MagView
 
 
 def infer_bounding_box_existing_files(mag_view: MagView) -> BoundingBox:

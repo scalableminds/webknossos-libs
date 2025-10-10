@@ -6,7 +6,7 @@ import pytest
 from upath import UPath
 
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
-from webknossos.dataset._downsampling_utils import (
+from webknossos.dataset.layer._downsampling_utils import (
     InterpolationModes,
     _mode,
     calculate_default_coarsest_mag,

@@ -7,9 +7,8 @@ from cluster_tools import get_executor
 from upath import UPath
 
 import webknossos as wk
-from webknossos import Annotation, SegmentationLayer
+from webknossos import Annotation, DataFormat, SegmentationLayer
 from webknossos.annotation.volume_layer import VolumeLayerEditMode
-from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
@@ -164,7 +163,7 @@ def test_dataset_access_via_annotation() -> None:
     # while it was referenced in an annotation.
 
     # load a remote dataset
-    remote_ds = wk.Dataset.open_remote(
+    remote_ds = wk.RemoteDataset.open(
         "http://localhost:9000/datasets/Organization_X/l4_sample"
     )
 
@@ -278,7 +277,7 @@ def test_reading_bounding_boxes() -> None:
 
 @pytest.mark.use_proxay
 def test_bounding_box_roundtrip() -> None:
-    ds = wk.Dataset.open_remote("l4_sample")
+    ds = wk.RemoteDataset.open("l4_sample")
 
     annotation_before = wk.Annotation(
         name="test_bounding_box_roundtrip",

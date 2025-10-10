@@ -22,7 +22,7 @@ REMOTE_TESTOUTPUT_DIR = UPath(
     "s3://testoutput",
     key=MINIO_ROOT_USER,
     secret=MINIO_ROOT_PASSWORD,
-    client_kwargs={"endpoint_url": f"http://localhost:{MINIO_PORT}"},
+    endpoint_url=f"http://localhost:{MINIO_PORT}",
 )
 
 

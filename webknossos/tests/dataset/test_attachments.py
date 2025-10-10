@@ -3,7 +3,7 @@ import json
 import pytest
 from upath import UPath
 
-from webknossos.dataset import (
+from webknossos import (
     SEGMENTATION_CATEGORY,
     AttachmentDataFormat,
     Dataset,
@@ -27,7 +27,6 @@ def make_dataset(dataset_path: UPath) -> tuple[Dataset, SegmentationLayer]:
 
 def test_attachments(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
-
     # meshes
     seg_layer.attachments.add_mesh(
         dataset.path / "seg" / "meshfile",
@@ -46,7 +45,7 @@ def test_attachments(tmp_upath: UPath) -> None:
     seg_layer.attachments.add_agglomerate(
         UPath(
             "s3://bucket/agglomerate.zarr",
-            client_kwargs={"endpoint_url": "https://s3.eu-central-1.amazonaws.com"},
+            endpoint_url="https://s3.eu-central-1.amazonaws.com",
         ),
         name="identity",
         data_format=AttachmentDataFormat.Zarr3,
@@ -242,7 +241,7 @@ def test_remote_layer(tmp_upath: UPath) -> None:
 
     mesh_path = UPath(
         "s3://bucket/meshfile.zarr",
-        client_kwargs={"endpoint_url": "https://s3.eu-central-1.amazonaws.com"},
+        endpoint_url="https://s3.eu-central-1.amazonaws.com",
     )
 
     seg_layer.attachments.add_mesh(
@@ -264,6 +263,7 @@ def test_remote_layer(tmp_upath: UPath) -> None:
 
 def test_upload_fail(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
+
     seg_layer.attachments.add_mesh(
         dataset.path / "seg" / "meshfile",
         name="meshfile",
@@ -418,7 +418,6 @@ def test_add_symlink_attachments(tmp_upath: UPath) -> None:
 
 def test_detect_legacy_attachments(tmp_upath: UPath) -> None:
     _, seg_layer = make_dataset(tmp_upath)
-
     # legacy meshes
     mesh_path = seg_layer.path / "meshes" / "meshfile_4-4-1.hdf5"
     mesh_path.parent.mkdir(parents=True, exist_ok=True)

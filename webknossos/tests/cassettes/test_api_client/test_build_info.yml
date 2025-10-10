@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v10/buildinfo
+      path: /api/v12/buildinfo
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -18,17 +18,19 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:35:34 GMT
+        date: Fri, 10 Oct 2025 08:29:41 GMT
+        connection: close
         content-type: application/json
-        content-length: '400'
+        content-length: '380'
       body:
         encoding: utf8
         data: >-
-          {"webknossos":{"name":"webknossos","ciTag":"","commitHash":"d0ace838806845b888e1829ab406f819f0070eba","ciBuild":"17913035221","scalaVersion":"2.13.16","version":"17913035221","sbtVersion":"1.11.4","commitDate":"Mon
-          Sep 22 12:54:11 2025
-          +0200"},"schemaVersion":141,"httpApiVersioning":{"currentApiVersion":11,"oldestSupportedApiVersion":5},"localDataStoreEnabled":true,"localTracingStoreEnabled":true}
+          {"webknossos":{"name":"webknossos","ciTag":"","commitHash":"6f640c145055799e9cfbf3d0dc4a1800d164d70f","ciBuild":"","scalaVersion":"2.13.16","version":"dev","sbtVersion":"1.11.4","commitDate":"Thu
+          Oct 9 10:26:57 2025
+          +0200"},"schemaVersion":144,"httpApiVersioning":{"currentApiVersion":12,"oldestSupportedApiVersion":5},"localDataStoreEnabled":true,"localTracingStoreEnabled":true}
         compression: none

@@ -3,7 +3,7 @@ import tensorstore
 from upath import UPath
 
 import webknossos as wk
-from webknossos.dataset.data_format import DataFormat
+from webknossos import DataFormat
 
 
 def test_add_mag_from_zarrarray(tmp_upath: UPath) -> None:

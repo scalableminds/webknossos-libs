@@ -18,9 +18,9 @@ import wkw
 from typing_extensions import NotRequired, Self
 from upath import UPath
 
-from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
-from ..utils import call_with_retries, is_fs_path
-from .data_format import DataFormat
+from webknossos.dataset_properties import DataFormat
+from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
+from webknossos.utils import call_with_retries, is_fs_path
 
 logger = getLogger(__name__)
 
@@ -541,9 +541,7 @@ class TensorStoreArray(BaseArray):
                 "bucket": parsed_url.netloc,
                 "use_conditional_write": False,
             }
-            if endpoint_url := path.storage_options.get("client_kwargs", {}).get(
-                "endpoint_url", None
-            ):
+            if endpoint_url := path.storage_options.get("endpoint_url", None):
                 kvstore_spec["endpoint"] = endpoint_url
             if "key" in path.storage_options and "secret" in path.storage_options:
                 kvstore_spec["aws_credentials"] = _aws_credential_manager.add(

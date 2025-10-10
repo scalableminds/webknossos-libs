@@ -17,13 +17,15 @@ pytestmark = [
 
 def get_sample_dataset(tmpdir: UPath) -> wk.Dataset:
     url = "http://localhost:9000/datasets/Organization_X/l4_sample"
-    return wk.Dataset.download(url, path=UPath(tmpdir) / "sample_ds", bbox=SAMPLE_BBOX)
+    return wk.RemoteDataset.open(url).download(
+        path=UPath(tmpdir) / "sample_ds", bbox=SAMPLE_BBOX
+    )
 
 
 def test_get_remote_datasets() -> None:
-    datasets = wk.Dataset.get_remote_datasets()
+    datasets = wk.RemoteDataset.list()
     assert any(ds.name == "l4_sample" for ds in datasets.values())
-    l4_sample = wk.Dataset.open_remote("l4_sample")
+    l4_sample = wk.RemoteDataset.open("l4_sample")
     l4_sample_id = l4_sample._dataset_id
     assert l4_sample_id in datasets
     l4_from_datasets = datasets[l4_sample_id]
@@ -32,12 +34,10 @@ def test_get_remote_datasets() -> None:
     assert l4_from_datasets.tags == l4_sample.tags
     assert l4_from_datasets.folder == l4_sample.folder
 
-    datasets_by_name = wk.Dataset.get_remote_datasets(name="l4_sample")
+    datasets_by_name = wk.RemoteDataset.list(name="l4_sample")
     assert len(datasets_by_name) == 1
 
-    datasets_by_organization = wk.Dataset.get_remote_datasets(
-        organization_id="Organization_X"
-    )
+    datasets_by_organization = wk.RemoteDataset.list(organization_id="Organization_X")
     assert len(datasets_by_organization) > 0
 
 
@@ -52,8 +52,8 @@ def test_get_remote_datasets() -> None:
 )
 def test_url_download(url: str, tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
-    ds = wk.Dataset.download(
-        url, path=tmp_upath / "ds", mags=[wk.Mag(1)], bbox=SAMPLE_BBOX
+    ds = wk.RemoteDataset.open(url).download(
+        path=tmp_upath / "ds", mags=[wk.Mag(1)], bbox=SAMPLE_BBOX
     )
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = ds.get_color_layers()[0].get_finest_mag().read()
@@ -75,7 +75,7 @@ def test_url_download(url: str, tmp_upath: UPath) -> None:
 )
 def test_url_open_remote(url: str, tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
-    ds = wk.Dataset.open_remote(url)
+    ds = wk.RemoteDataset.open(url)
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = (
         ds.get_color_layers()[0]
@@ -91,6 +91,36 @@ def test_url_open_remote(url: str, tmp_upath: UPath) -> None:
         "color",
         "segmentation",
     }, "Dataset instances should be picklable."
+
+
+@pytest.mark.skip(
+    reason="This won't work in CI as the paths stored in cassettes are always absolute and dependent on the system recording the cassette."
+)
+def test_upload_dataset_with_symlinks(tmp_upath: UPath) -> None:
+    sample_dataset = get_sample_dataset(tmp_upath)
+    remote_ds = sample_dataset.upload(
+        new_dataset_name="test_remote_symlink",
+        upload_directly_to_common_storage=True,
+        symlink_data_instead_of_copy=True,
+    )
+    assert np.array_equal(
+        remote_ds.get_color_layers()[0].get_finest_mag().read(),
+        sample_dataset.get_color_layers()[0].get_finest_mag().read(),
+    )
+
+
+@pytest.mark.skip(
+    reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
+)
+def test_upload_dataset_copy_to_paths(tmp_upath: UPath) -> None:
+    sample_dataset = get_sample_dataset(tmp_upath)
+    remote_ds = sample_dataset.upload(
+        new_dataset_name="test_remote_copy", upload_directly_to_common_storage=True
+    )
+    assert np.array_equal(
+        remote_ds.get_color_layers()[0].get_finest_mag().read(),
+        sample_dataset.get_color_layers()[0].get_finest_mag().read(),
+    )
 
 
 def test_remote_dataset(tmp_upath: UPath) -> None:
@@ -163,11 +193,11 @@ def test_upload_download_roundtrip(tmp_upath: UPath) -> None:
     uploaded_dataset = ds_original.upload(
         new_dataset_name="test_upload_download_roundtrip"
     )
-    wk.Dataset.trigger_reload_in_datastore(
+    wk.RemoteDataset.trigger_reload_in_datastore(
         "test_upload_download_roundtrip", "Organization_X"
     )
-    ds_roundtrip = wk.Dataset.download(
-        uploaded_dataset.url, path=tmp_upath / "ds", layers=["color", "segmentation"]
+    ds_roundtrip = wk.RemoteDataset.open(uploaded_dataset.url).download(
+        path=tmp_upath / "ds", layers=["color", "segmentation"]
     )
     assert set(ds_original.get_segmentation_layers()[0].mags.keys()) == set(
         ds_roundtrip.get_segmentation_layers()[0].mags.keys()

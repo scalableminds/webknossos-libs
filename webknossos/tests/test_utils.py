@@ -110,14 +110,14 @@ def test_dump_path(tmp_upath: UPath) -> None:
     dataset_path = tmp_upath / "test_dataset"
     path = UPath(
         "s3://bucket/test.txt",
-        client_kwargs={"endpoint_url": "https://s3.amazonaws.com"},
+        endpoint_url="https://s3.amazonaws.com",
     )
     assert dump_path(path, dataset_path) == "s3://s3.amazonaws.com/bucket/test.txt"
 
     # s3 relative
     dataset_path = UPath(
         "s3://bucket/test_dataset",
-        client_kwargs={"endpoint_url": "https://s3.amazonaws.com"},
+        endpoint_url="https://s3.amazonaws.com",
     )
     path = dataset_path / "test.txt"
     assert dump_path(path, dataset_path) == "./test.txt"
@@ -125,12 +125,12 @@ def test_dump_path(tmp_upath: UPath) -> None:
     # s3 dataset path is a prefix
     dataset_path = UPath(
         "s3://bucket/test_dataset",
-        client_kwargs={"endpoint_url": "https://s3.amazonaws.com"},
+        endpoint_url="https://s3.amazonaws.com",
     )
     path = (
         UPath(
             "s3://bucket/test_dataset_longer",
-            client_kwargs={"endpoint_url": "https://s3.amazonaws.com"},
+            endpoint_url="https://s3.amazonaws.com",
         )
         / "test.txt"
     )
@@ -142,7 +142,7 @@ def test_dump_path(tmp_upath: UPath) -> None:
     # s3 with ..
     dataset_path = UPath(
         "s3://bucket/test_dataset",
-        client_kwargs={"endpoint_url": "https://s3.amazonaws.com"},
+        endpoint_url="https://s3.amazonaws.com",
     )
     path = dataset_path / ".." / "test_dataset2" / "test.txt"
     assert (
@@ -163,7 +163,7 @@ def test_dump_path(tmp_upath: UPath) -> None:
     dataset_path = (
         UPath(
             "s3://bucket/test_dataset",
-            client_kwargs={"endpoint_url": "https://s3.amazonaws.com"},
+            endpoint_url="https://s3.amazonaws.com",
         )
         / ".."
         / "test_dataset2"
@@ -173,7 +173,7 @@ def test_dump_path(tmp_upath: UPath) -> None:
 
     path = UPath(
         "s3://bucket/test_dataset/test.txt",
-        client_kwargs={"endpoint_url": "https://s3.amazonaws.com"},
+        endpoint_url="https://s3.amazonaws.com",
     )
     assert (
         dump_path(path, dataset_path)
@@ -183,7 +183,7 @@ def test_dump_path(tmp_upath: UPath) -> None:
     path = (
         UPath(
             "s3://bucket/",
-            client_kwargs={"endpoint_url": "https://s3.amazonaws.com"},
+            endpoint_url="https://s3.amazonaws.com",
         )
         / "test_dataset2"
         / "test.txt"

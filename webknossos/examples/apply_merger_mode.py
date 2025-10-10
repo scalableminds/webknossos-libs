@@ -1,10 +1,6 @@
-from pathlib import Path
-
 import fastremap
 
 import webknossos as wk
-
-TESTDATA_DIR = Path(__file__).parent.parent / "testdata"
 
 
 def main() -> None:
@@ -18,15 +14,14 @@ def main() -> None:
     ).skeleton
 
     ###############################################
-    # Download and open the corresponding dataset #
+    # Open the corresponding dataset #
     ###############################################
 
-    dataset = wk.Dataset.download(
+    input_dataset = wk.RemoteDataset.open(
         "l4_sample",
-        bbox=wk.BoundingBox((3457, 3323, 1204), (40, 10, 10)),
-        path="testoutput/l4_sample",
+        organization_id="scalable_minds",
     )
-    in_layer = dataset.get_segmentation_layer("segmentation")
+    in_layer = input_dataset.get_segmentation_layer("segmentation")
     in_mag1 = in_layer.get_mag("1")
 
     ##############################
@@ -52,8 +47,10 @@ def main() -> None:
     ############################
     # Creating an output layer #
     ############################
-
-    out_layer = dataset.add_layer(
+    output_dataset = wk.Dataset(
+        "testoutput/l4_sample", voxel_size=input_dataset.voxel_size
+    )
+    out_layer = output_dataset.add_layer(
         "segmentation_remapped",
         wk.SEGMENTATION_CATEGORY,
         dtype_per_channel=in_layer.dtype_per_channel,
@@ -84,16 +81,9 @@ def main() -> None:
     ########################################
 
     out_layer.downsample()
-    dataset.delete_layer("segmentation")
-    dataset.upload(
+    output_dataset.upload(
         "l4_sample_remapped",
-        layers_to_link=[
-            wk.LayerToLink(
-                dataset_name="l4_sample",
-                layer_name="color",
-                organization_id="scalable_minds",
-            )
-        ],
+        layers_to_link=[input_dataset.get_layer("color")],
     )
 
 

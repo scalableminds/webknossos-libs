@@ -6,8 +6,7 @@ import pytest
 from upath import UPath
 
 from tests.constants import TESTOUTPUT_DIR
-from webknossos.dataset import COLOR_CATEGORY, Dataset
-from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos import COLOR_CATEGORY, BoundingBox, Dataset, Mag, Vec3Int
 from webknossos.utils import rmtree
 
 # This module effectively tests BufferedSliceWriter and

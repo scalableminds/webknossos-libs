@@ -3,9 +3,7 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
-from webknossos.dataset.length_unit import length_unit_from_str
-from webknossos.dataset.properties import VoxelSize
-
+from ..dataset_properties import VoxelSize, length_unit_from_str
 from ..geometry import BoundingBox, NDBoundingBox
 from ..geometry.bounding_box import _DEFAULT_BBOX_NAME
 from .utils import Vector3, enforce_not_null, filter_none_values
