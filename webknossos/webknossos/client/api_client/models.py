@@ -346,6 +346,13 @@ class ApiProjectCreate:
 
 
 @attr.s(auto_attribs=True)
+class ApiAnnotationLayer:
+    tracing_id: str
+    typ: str
+    name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiAnnotation:
     id: str
     typ: str
@@ -354,6 +361,7 @@ class ApiAnnotation:
     description: str
     state: str
     modified: int
+    annotation_layers: list[ApiAnnotationLayer] | None
     data_store: ApiDataStore | None = None
     tracing_time: int | None = None  # millis
 
