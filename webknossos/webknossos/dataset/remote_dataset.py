@@ -625,14 +625,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             bbox=bbox,
             layers=layers,
             mags=mags,
-            path=path,
+            path=UPath(path) if path is not None else None,
             exist_ok=exist_ok,
         )
 
     def download_mesh(
         self,
         segment_id: int,
-        output_dir: PathLike | str,
+        output_dir: PathLike | UPath | str,
         layer_name: str | None = None,
         mesh_file_name: str | None = None,
         datastore_url: str | None = None,
@@ -916,7 +916,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     @classmethod
     def explore_and_add_remote(
-        cls, dataset_uri: str | PathLike, dataset_name: str, folder_path: str
+        cls, dataset_uri: str | PathLike | UPath, dataset_name: str, folder_path: str
     ) -> "RemoteDataset":
         """Explore and add an external dataset as a remote dataset.
 

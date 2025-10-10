@@ -1902,7 +1902,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_copy_layer(
         self,
-        foreign_layer: str | PathLike | UPath | Layer,
+        foreign_layer: str | PathLike | UPath | Layer | RemoteLayer,
         new_layer_name: str | None = None,
         *,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -2166,7 +2166,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_remote_layer(
         self,
-        foreign_layer: str | PathLike | UPath | Layer,
+        foreign_layer: str | PathLike | UPath | Layer | RemoteLayer,
         new_layer_name: str | None = None,
     ) -> Layer:
         """Deprecated. Use `Dataset.add_layer_as_ref` instead."""

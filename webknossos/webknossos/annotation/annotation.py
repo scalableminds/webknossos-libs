@@ -1484,7 +1484,7 @@ class RemoteAnnotation(Annotation):
     def download_mesh(
         self,
         segment_id: int,
-        output_dir: PathLike | str,
+        output_dir: PathLike | UPath | str,
         tracing_id: str,
         mesh_file_name: str | None = None,
         lod: int = 0,

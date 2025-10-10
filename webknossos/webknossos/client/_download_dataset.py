@@ -1,5 +1,4 @@
 import logging
-from os import PathLike
 from typing import TypeVar, cast
 
 import numpy as np
@@ -31,7 +30,7 @@ def download_dataset(
     bbox: BoundingBox | None = None,
     layers: list[str] | None = None,
     mags: list[Mag] | None = None,
-    path: PathLike | UPath | str | None = None,
+    path: UPath | str | None = None,
     exist_ok: bool = False,
 ) -> Dataset:
     context = _get_context()
