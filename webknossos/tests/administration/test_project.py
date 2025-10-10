@@ -102,7 +102,7 @@ def test_project_get_owner() -> None:
 def test_project_get_tasks() -> None:
     """Test getting the task of a project."""
     teams = wk.Team.get_list()
-    ds_id = wk.Dataset.open_remote("l4_sample")._dataset_id
+    ds_id = wk.RemoteDataset.open("l4_sample")._dataset_id
 
     project = wk.Project.create(
         name="test_get_task_project",

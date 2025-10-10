@@ -6,11 +6,14 @@ from typing import TypeVar, cast
 import numpy as np
 from rich.progress import track
 
-from ..dataset import Dataset, LayerCategoryType
-from ..dataset.layer import _element_class_to_dtype_per_channel
-from ..dataset.length_unit import length_unit_from_str
-from ..dataset.properties import LayerViewConfiguration, VoxelSize, dataset_converter
+from .. import LayerCategoryType
+from ..dataset import Dataset
+from ..dataset.layer.abstract_layer import _element_class_to_dtype_per_channel
+from ..dataset_properties import (
+    LayerProperties,
+)
 from ..geometry import BoundingBox, Mag, Vec3Int
+from .api_client.models import ApiUnusableDataSource
 from .context import _get_context
 
 logger = logging.getLogger(__name__)
@@ -45,17 +48,17 @@ def download_dataset(
     if download_path.exists():
         logger.warning(f"{download_path} already exists, skipping download.")
         return Dataset.open(download_path)
-
+    if isinstance(api_dataset.data_source, ApiUnusableDataSource):
+        raise RuntimeError(
+            f"The dataset {api_dataset.id} is unusable {api_dataset.data_source.status}"
+        )
     api_data_layers = api_dataset.data_source.data_layers
     scale = api_dataset.data_source.scale
-    if api_data_layers is None or len(api_data_layers) == 0 or scale is None:
-        raise RuntimeError(
-            f"Could not download dataset {api_client.base_wk_url}/datasets/{api_dataset.id}: {api_dataset.data_source.status or 'Unknown error.'}"
-        )
+
     dataset = Dataset(
         download_path,
         name=api_dataset.name,
-        voxel_size_with_unit=VoxelSize(scale.factor, length_unit_from_str(scale.unit)),
+        voxel_size_with_unit=scale,
         exist_ok=exist_ok,
     )
     for layer_name in layers or [i.name for i in api_data_layers]:
@@ -66,7 +69,7 @@ def download_dataset(
         assert len(matching_api_data_layers) == 1, (
             f"The provided layer name {layer_name} was found multiple times in the requested dataset."
         )
-        api_data_layer = matching_api_data_layers[0]
+        api_data_layer: LayerProperties = matching_api_data_layers[0]
         category = cast(LayerCategoryType, api_data_layer.category)
         element_class = api_data_layer.element_class
         num_channels = 3 if element_class == "uint24" else 1
@@ -78,28 +81,20 @@ def download_dataset(
             category=category,
             dtype_per_channel=dtype_per_channel,
             num_channels=num_channels,
-            largest_segment_id=api_data_layer.largest_segment_id,
+            largest_segment_id=getattr(api_data_layer, "largest_segment_id", None),
         )
 
-        if api_data_layer.default_view_configuration is not None:
-            default_view_configuration = dataset_converter.structure(
-                api_data_layer.default_view_configuration, LayerViewConfiguration
-            )
-            layer.default_view_configuration = default_view_configuration
+        layer.default_view_configuration = api_data_layer.default_view_configuration
 
         if bbox is None:
-            response_bbox = api_data_layer.bounding_box
-            layer.bounding_box = BoundingBox(
-                Vec3Int(response_bbox.top_left),
-                Vec3Int(response_bbox.width, response_bbox.height, response_bbox.depth),
-            )
+            layer.bounding_box = api_data_layer.bounding_box
         else:
             assert isinstance(bbox, BoundingBox), (
                 f"Expected a BoundingBox object for the bbox parameter but got {type(bbox)}"
             )
             layer.bounding_box = bbox
         if mags is None:
-            mags = [Mag(mag) for mag in api_data_layer.resolutions]
+            mags = [mag_view.mag for mag_view in api_data_layer.mags]
         for mag in mags:
             mag_view = layer.get_or_add_mag(
                 mag,

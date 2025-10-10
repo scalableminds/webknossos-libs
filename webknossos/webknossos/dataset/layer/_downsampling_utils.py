@@ -10,12 +10,12 @@ import numpy as np
 from scipy.ndimage import zoom
 
 if TYPE_CHECKING:
-    from .dataset import Dataset
+    from webknossos.dataset.dataset import Dataset
 
-from ..geometry import Mag, Vec3Int, Vec3IntLike
-from ._array import ArrayInfo
-from .layer_categories import LayerCategoryType
-from .view import View
+from webknossos.dataset_properties import LayerCategoryType
+from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
+
+from .view import ArrayInfo, View
 
 logger = logging.getLogger(__name__)
 

@@ -81,9 +81,9 @@ class RemoteFolder:
     def get_datasets(self) -> Mapping[str, "RemoteDataset"]:
         """Returns all datasets in this folder."""
 
-        from .dataset import Dataset
+        from .dataset import RemoteDataset
 
-        return Dataset.get_remote_datasets(folder_id=self.id)
+        return RemoteDataset.list(folder_id=self.id)
 
     def get_subfolders(self) -> tuple["RemoteFolder", ...]:
         """Returns all subfolders in this folder."""

@@ -5,7 +5,7 @@ import webknossos as wk
 
 def main() -> None:
     # Remote datasets are read-only, but can be used similar to normal datasets:
-    l4_sample_dataset = wk.Dataset.open_remote("l4_sample")
+    l4_sample_dataset = wk.RemoteDataset.open("l4_sample")
 
     # Print information of the public l4dense_motta_et_al_demo dataset:
     print(l4_sample_dataset.url)
@@ -14,7 +14,7 @@ def main() -> None:
     print("Tags:", ", ".join(l4_sample_dataset.tags))
 
     # List all accessible remote datasets via get_remote_datasets():
-    own_remote_datasets = wk.Dataset.get_remote_datasets()
+    own_remote_datasets = wk.RemoteDataset.list()
 
     # Print the first 10 dataset names from your organization:
     print()
@@ -26,7 +26,7 @@ def main() -> None:
     l4_sample_dataset.tags = ("demo",)
 
     # List all accessible demo datasets:
-    remote_demo_datasets = wk.Dataset.get_remote_datasets(tags="demo")
+    remote_demo_datasets = wk.RemoteDataset.list(tags="demo")
     print("Remote demo datasets:", list(remote_demo_datasets))
     assert l4_sample_dataset in remote_demo_datasets.values()
 
