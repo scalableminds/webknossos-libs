@@ -2,8 +2,7 @@ import warnings
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
-from os import PathLike, environ
-from pathlib import Path
+from os import environ
 from typing import TypeVar, Union, cast
 from urllib.error import HTTPError
 
@@ -11,11 +10,12 @@ import numpy as np
 import pims
 from natsort import natsorted
 from numpy.typing import DTypeLike
+from upath import UPath
 
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
-from ..mag_view import MagView
+from ..layer.view import MagView
 
 # Fix ImageIOReader not handling channels correctly. This might get fixed via
 # https://github.com/soft-matter/pims/pull/430
@@ -75,7 +75,7 @@ class PimsImages:
 
     def __init__(
         self,
-        images: Union[str, Path, "pims.FramesSequence", list[str | PathLike]],
+        images: Union[str, UPath, "pims.FramesSequence", list[str | UPath]],
         channel: int | None,
         timepoint: int | None,
         czi_channel: int | None,
@@ -309,8 +309,8 @@ class PimsImages:
 
     def _normalize_original_images(self) -> str | list[str]:
         original_images = self._original_images
-        if isinstance(original_images, str | Path):
-            original_images_path = Path(original_images)
+        if isinstance(original_images, str | UPath):
+            original_images_path = UPath(original_images)
             if original_images_path.is_dir():
                 valid_suffixes = get_valid_pims_suffixes()
                 if self._use_bioformats is not False:
@@ -750,7 +750,7 @@ def get_valid_bioformats_suffixes() -> set[str]:
 
 
 def has_image_z_dimension(
-    filepath: Path,
+    filepath: UPath,
     use_bioformats: bool | None,
     is_segmentation: bool,
 ) -> bool:

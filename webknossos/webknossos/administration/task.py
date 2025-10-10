@@ -3,6 +3,7 @@ from typing import Any, Literal
 
 import attr
 
+from webknossos.dataset import RemoteDataset
 from webknossos.geometry.vec3_int import Vec3IntLike
 
 from ..annotation import Annotation, AnnotationInfo
@@ -17,11 +18,10 @@ from ..client.api_client.models import (
     ApiTaskTypeCreate,
 )
 from ..client.context import _get_api_client, _get_context
-from ..dataset.dataset import RemoteDataset
 from ..geometry import BoundingBox, Vec3Int
 from ..utils import warn_deprecated
 from .project import Project
-from .user import Team
+from .team import Team
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ class TaskType:
                 ```
         """
         client = _get_api_client(enforce_auth=True)
-        return cls._from_api_task_type(client.get_task_type(task_type_id))
+        return cls._from_api_task_type(client.get_task_type(task_type_id=task_type_id))
 
     @classmethod
     def get_by_name(cls, name: str) -> "TaskType":
@@ -234,7 +234,7 @@ class TaskType:
         team_name = team.name
         team_id = team.id
         api_task_type = client.task_type_create(
-            ApiTaskTypeCreate(
+            task_type=ApiTaskTypeCreate(
                 summary=name,
                 description=description,
                 team_id=team_id,
@@ -248,7 +248,7 @@ class TaskType:
     def delete(self) -> None:
         """Deletes the task type."""
         client = _get_api_client(enforce_auth=True)
-        client.task_type_delete(self.task_type_id)
+        client.task_type_delete(task_type_id=self.task_type_id)
 
 
 @attr.frozen
@@ -291,7 +291,7 @@ class Task:
                 ```
         """
         client = _get_api_client(enforce_auth=True)
-        api_task = client.task_info(task_id)
+        api_task = client.task_info(task_id=task_id)
         return cls._from_api_task(api_task)
 
     @classmethod
@@ -401,7 +401,9 @@ class Task:
         annotation_files = [
             (f"{a.name}.zip", a._binary_zip()) for a in base_annotations
         ]
-        result = client.tasks_create_from_files(nml_task_parameters, annotation_files)
+        result = client.tasks_create_from_files(
+            nml_task_parameters=nml_task_parameters, annotation_files=annotation_files
+        )
 
         return cls._handle_task_creation_result(result)
 
@@ -498,7 +500,7 @@ class Task:
             else:
                 context = _get_context()
                 dataset_id = client.dataset_id_from_name(
-                    dataset_name, context.organization_id
+                    directory_name=dataset_name, organization_id=context.organization_id
                 )
 
         task_parameters = ApiTaskParameters(
@@ -523,7 +525,7 @@ class Task:
             else None,
         )
 
-        response = client.tasks_create([task_parameters])
+        response = client.tasks_create(task_parameters=[task_parameters])
 
         return cls._handle_task_creation_result(response)
 
@@ -598,18 +600,18 @@ class Task:
             self.edit_position.to_tuple(),
             self.edit_rotation,
         )
-        updated = client.task_update(self.task_id, api_task)
+        updated = client.task_update(task_id=self.task_id, task_parameters=api_task)
         return self._from_api_task(updated)
 
     def delete(self) -> None:
         """Deletes this task. WARNING: This is irreversible!"""
         client = _get_api_client(enforce_auth=True)
-        client.task_delete(self.task_id)
+        client.task_delete(task_id=self.task_id)
 
     def get_annotation_infos(self) -> list[AnnotationInfo]:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
         client = _get_api_client(enforce_auth=True)
-        api_annotations = client.annotation_infos_by_task(self.task_id)
+        api_annotations = client.annotation_infos_by_task(task_id=self.task_id)
         return [AnnotationInfo._from_api_annotation(a) for a in api_annotations]
 
     def get_project(self) -> Project:

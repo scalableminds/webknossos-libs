@@ -9,20 +9,20 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
-from ..geometry.vec_int import VecIntLike
-from ..utils import (
+from ....dataset_properties import DataFormat
+from ....geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ....geometry.vec_int import VecIntLike
+from ....utils import (
     count_defined_values,
     get_executor_for_args,
     get_rich_progress,
     wait_and_ensure_success,
 )
 from ._array import ArrayInfo, BaseArray
-from .data_format import DataFormat
 
 if TYPE_CHECKING:
-    from ._utils.buffered_slice_reader import BufferedSliceReader
-    from ._utils.buffered_slice_writer import BufferedSliceWriter
+    from ..._utils.buffered_slice_reader import BufferedSliceReader
+    from ..._utils.buffered_slice_writer import BufferedSliceWriter
 
 
 def _assert_check_equality(args: tuple["View", "View", int]) -> None:
@@ -70,6 +70,7 @@ class View:
         mag: Mag,
         data_format: DataFormat,
         read_only: bool = False,
+        cached_array: BaseArray | None = None,
     ):
         """Initialize a View instance for accessing and manipulating dataset regions.
 
@@ -96,7 +97,7 @@ class View:
         self._data_format = data_format
         self._bounding_box = bounding_box
         self._read_only = read_only
-        self._cached_array = None
+        self._cached_array = cached_array
         self._mag = mag
 
     @property
@@ -797,6 +798,7 @@ class View:
             mag=self._mag,
             data_format=self._data_format,
             read_only=read_only,
+            cached_array=self._cached_array,
         )
 
     def get_buffered_slice_writer(
@@ -863,7 +865,7 @@ class View:
             - Remember to use the writer in a context manager
             - Only one positioning parameter should be specified
         """
-        from ._utils.buffered_slice_writer import BufferedSliceWriter
+        from ..._utils.buffered_slice_writer import BufferedSliceWriter
 
         assert not self._read_only, (
             "Cannot get a buffered slice writer on a read-only view."
@@ -938,7 +940,7 @@ class View:
             - Only one positioning parameter should be specified
             - The reader can be used as an iterator
         """
-        from ._utils.buffered_slice_reader import BufferedSliceReader
+        from ..._utils.buffered_slice_reader import BufferedSliceReader
 
         if buffer_size is None:
             buffer_size = self.info.shard_shape[dimension]
@@ -1279,6 +1281,7 @@ class View:
         self,
         other: "View",
         executor: Executor | None = None,
+        progress_desc: str | None = None,
     ) -> bool:
         """Compare the content of this view with another view.
 
@@ -1317,7 +1320,7 @@ class View:
                     _assert_check_equality,
                     other,
                     executor=executor,
-                    progress_desc="Comparing contents",
+                    progress_desc=progress_desc or "Comparing contents",
                 )
             except AssertionError:
                 return False
@@ -1379,9 +1382,3 @@ class View:
     def __setstate__(self, d: dict[str, Any]) -> None:
         d["_cached_array"] = None
         self.__dict__ = d
-
-
-def _copy_job(args: tuple[View, View, int]) -> None:
-    (source_view, target_view, _) = args
-    # Copy the data form one view to the other in a buffered fashion
-    target_view.write(source_view.read())

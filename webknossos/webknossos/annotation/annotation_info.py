@@ -51,6 +51,6 @@ class AnnotationInfo:
 
         return [
             cls._from_api_annotation(api_annotation)
-            for api_annotation in client.annotation_list(is_finished)
+            for api_annotation in client.annotation_list(is_finished=is_finished)
             if api_annotation.owner.id == owner
         ]

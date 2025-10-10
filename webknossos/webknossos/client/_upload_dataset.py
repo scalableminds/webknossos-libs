@@ -2,58 +2,26 @@ import os
 import warnings
 from collections.abc import Iterator
 from functools import cache
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import gmtime, strftime
-from typing import NamedTuple
 from uuid import uuid4
 
 import httpx
+from upath import UPath
 
-from ..dataset import Dataset, Layer, RemoteDataset
+from .. import LayerToLink
+from ..dataset import Dataset
 from ..datastore import Datastore
 from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .api_client.models import (
     ApiDatasetUploadInformation,
-    ApiLinkedLayerIdentifier,
     ApiReserveDatasetUploadInformation,
 )
 from .context import _get_context, _WebknossosContext, webknossos_context
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 4
-
-
-class LayerToLink(NamedTuple):
-    dataset_name: str
-    layer_name: str
-    new_layer_name: str | None = None
-    organization_id: str | None = (
-        None  # defaults to the user's organization before uploading
-    )
-
-    @classmethod
-    def from_remote_layer(
-        cls,
-        layer: Layer,
-        new_layer_name: str | None = None,
-        organization_id: str | None = None,
-    ) -> "LayerToLink":
-        ds = layer.dataset
-        assert isinstance(ds, RemoteDataset), (
-            f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
-        )
-        return cls(ds._dataset_id, layer.name, new_layer_name, organization_id)
-
-    def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
-        context = _get_context()
-        return ApiLinkedLayerIdentifier(
-            self.organization_id or context.organization_id,
-            self.dataset_name,
-            self.layer_name,
-            self.new_layer_name,
-        )
 
 
 @cache
@@ -63,9 +31,9 @@ def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
 
 
 def _walk(
-    path: Path,
-    base_path: Path | None = None,
-) -> Iterator[tuple[Path, Path, int]]:
+    path: UPath,
+    base_path: UPath | None = None,
+) -> Iterator[tuple[UPath, UPath, int]]:
     if base_path is None:
         base_path = path
     if path.is_dir():
@@ -109,14 +77,15 @@ def upload_dataset(
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
     time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
-    datastore_token = context.datastore_required_token
     datastore_url = datastore_url or _cached_get_upload_datastore(context)
-    datastore_api_client = context.get_datastore_api_client(datastore_url)
+    datastore_api_client = context.get_datastore_api_client(
+        datastore_url, require_auth=True
+    )
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
     is_valid_new_name_response = context.api_client_with_auth.dataset_is_valid_new_name(
-        new_dataset_name
+        dataset_name=new_dataset_name
     )
     if not is_valid_new_name_response.is_valid:
         problems_str = ""
@@ -127,19 +96,18 @@ def upload_dataset(
         )
 
     datastore_api_client.dataset_reserve_upload(
-        ApiReserveDatasetUploadInformation(
+        reserve_upload_information=ApiReserveDatasetUploadInformation(
             upload_id,
             new_dataset_name,
             context.organization_id,
             total_file_count=len(file_infos),
             total_file_size_in_bytes=total_file_size,
             layers_to_link=[
-                layer.as_api_linked_layer_identifier() for layer in layers_to_link
+                layer._as_api_linked_layer_identifier() for layer in layers_to_link
             ],
             folder_id=None,
             initial_teams=[],
         ),
-        token=None,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
     with get_rich_progress() as progress:
@@ -151,7 +119,7 @@ def upload_dataset(
                 "name": new_dataset_name,
                 "totalFileCount": len(file_infos),
             },
-            headers={"x-auth-token": datastore_token},
+            headers={"X-Auth-Token": context.required_token},
             chunk_size=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda _,
             relative_path: f"{upload_id}/{relative_path.as_posix()}",
@@ -167,8 +135,7 @@ def upload_dataset(
                 )
 
     dataset_id = datastore_api_client.dataset_finish_upload(
-        ApiDatasetUploadInformation(upload_id),
-        token=None,
+        upload_information=ApiDatasetUploadInformation(upload_id),
         retry_count=MAXIMUM_RETRY_COUNT,
     )
 

@@ -6,7 +6,8 @@ import attr
 from ..client.api_client.errors import UnexpectedStatusError
 from ..client.api_client.models import ApiProject, ApiProjectCreate
 from ..client.context import _get_api_client
-from .user import Team, User
+from .team import Team
+from .user import User
 
 if TYPE_CHECKING:
     from .task import Task
@@ -50,7 +51,9 @@ class Project:
                 print(project.name)
                 ```
         """
-        api_project = _get_api_client(enforce_auth=True).project_info_by_id(project_id)
+        api_project = _get_api_client(enforce_auth=True).project_info_by_id(
+            project_id=project_id
+        )
         return cls._from_api_project(api_project)
 
     @classmethod
@@ -79,7 +82,7 @@ class Project:
         """
         api_client = _get_api_client(enforce_auth=True)
         try:
-            api_project = api_client.project_info_by_name(name)
+            api_project = api_client.project_info_by_name(project_name=name)
         except UnexpectedStatusError as e:
             if "Project could not be found" in str(e):
                 raise ValueError(f"Project with name '{name}' does not exist.")
@@ -126,12 +129,12 @@ class Project:
             is_blacklisted_from_report=is_blacklisted_from_report,
         )
 
-        return cls._from_api_project(api_client.project_create(api_project))
+        return cls._from_api_project(api_client.project_create(project=api_project))
 
     def delete(self) -> None:
         """Deletes this project from server. WARNING: This is irreversible!"""
         client = _get_api_client(enforce_auth=True)
-        client.project_delete(self.project_id)
+        client.project_delete(project_id=self.project_id)
 
     def update(
         self,
@@ -178,7 +181,7 @@ class Project:
             owner=self.owner_id,
         )
         updated = _get_api_client(enforce_auth=True).project_update(
-            self.project_id, api_project
+            project_id=self.project_id, project=api_project
         )
         return Project._from_api_project(updated)
 
@@ -219,7 +222,9 @@ class Project:
 
         client = _get_api_client(enforce_auth=True)
         api_tasks_batch, total_count = client.task_infos_by_project_id_paginated(
-            self.project_id, limit=PAGINATION_LIMIT, page_number=pagination_page
+            project_id=self.project_id,
+            limit=PAGINATION_LIMIT,
+            page_number=pagination_page,
         )
         all_tasks = [Task._from_api_task(t) for t in api_tasks_batch]
         if total_count > PAGINATION_LIMIT:
@@ -227,7 +232,7 @@ class Project:
                 while total_count > len(all_tasks):
                     pagination_page += 1
                     api_tasks_batch, _ = client.task_infos_by_project_id_paginated(
-                        self.project_id,
+                        project_id=self.project_id,
                         limit=PAGINATION_LIMIT,
                         page_number=pagination_page,
                     )

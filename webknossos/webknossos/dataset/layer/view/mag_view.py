@@ -2,16 +2,14 @@ import logging
 import warnings
 from collections.abc import Iterator
 from os import PathLike
-from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Generic, TypeVar, Union
 from uuid import uuid4
 
 import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from ..geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
-from ..utils import (
+from webknossos.utils import (
     get_executor_for_args,
     is_fs_path,
     rmtree,
@@ -19,6 +17,9 @@ from ..utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
+
+from ....dataset_properties import DataFormat, MagViewProperties
+from ....geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ._array import (
     ArrayInfo,
     BaseArray,
@@ -28,15 +29,11 @@ from ._array import (
     Zarr3ArrayInfo,
     Zarr3Config,
 )
-from .data_format import DataFormat
-from .properties import MagViewProperties
 
 if TYPE_CHECKING:
     import tensorstore
 
-    from .layer import (
-        Layer,
-    )
+    from ..abstract_layer import AbstractLayer
 
 from .view import View
 
@@ -50,7 +47,10 @@ def _copy_view_data(args: tuple[View, View, int]) -> None:
     )
 
 
-class MagView(View):
+LayerTypeT = TypeVar("LayerTypeT", bound="AbstractLayer")
+
+
+class MagView(View, Generic[LayerTypeT]):
     """A view of a specific magnification level within a WEBKNOSSOS layer.
 
     MagView provides access to volumetric data at a specific resolution/magnification level.
@@ -113,12 +113,12 @@ class MagView(View):
         - Dataset: Root container for all layers
     """
 
-    _layer: "Layer"
+    _layer: LayerTypeT
 
     @classmethod
     def create(
         cls,
-        layer: "Layer",
+        layer: LayerTypeT,
         mag: Mag,
         *,
         path: UPath,
@@ -193,7 +193,7 @@ class MagView(View):
 
     def __init__(
         self,
-        layer: "Layer",
+        layer: LayerTypeT,
         mag: Mag,
         path: UPath,
         read_only: bool = False,
@@ -234,7 +234,7 @@ class MagView(View):
     # Own methods:
 
     @property
-    def layer(self) -> "Layer":
+    def layer(self) -> LayerTypeT:
         """Get the parent Layer object.
 
         Returns:
@@ -259,19 +259,6 @@ class MagView(View):
         return self._path
 
     @property
-    def is_foreign(self) -> bool:
-        """Check if this magnification's data is stored not as part of to the dataset.
-        Returns:
-            bool: True if data is stored in a different location than the parent dataset.
-        """
-        return self.path.parent.parent != self.layer.dataset.resolved_path
-
-    @property
-    def is_remote_to_dataset(self) -> bool:
-        warn_deprecated("is_remote_to_dataset", "is_foreign")
-        return self.is_foreign
-
-    @property
     def name(self) -> str:
         """Get the name of this magnification level.
 
@@ -280,6 +267,19 @@ class MagView(View):
 
         """
         return self._mag.to_layer_name()
+
+    @property
+    def is_foreign(self) -> bool:
+        """
+        Check if this magnification's data is stored not as part of to the dataset.
+        """
+        warn_deprecated("MagView.isforeign", "Layer.is_mag_view_foreign()")
+        from webknossos import Layer
+
+        if not isinstance(self._layer, Layer):
+            raise TypeError("This method is only available for mags of Layer objects.")
+
+        return self._layer.is_mag_view_foreign(self)
 
     def get_zarr_array(self) -> "tensorstore.TensorStore":
         """Get direct access to the underlying Zarr array.
@@ -486,7 +486,7 @@ class MagView(View):
     def compress(
         self,
         *,
-        target_path: str | Path | None = None,
+        target_path: str | PathLike | UPath | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Compresses the files on disk.
@@ -529,7 +529,7 @@ class MagView(View):
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         compress: bool | Zarr3Config | None = None,
-        target_path: str | Path | None = None,
+        target_path: str | PathLike | UPath | None = None,
         executor: Executor | None = None,
         _progress_desc: str | None = None,
     ) -> None:
@@ -565,21 +565,19 @@ class MagView(View):
             - Progress is displayed during rechunking
             - Compressed data may have slower read/write speeds
         """
-        from .dataset import Dataset
+        from webknossos.dataset import Dataset
 
         self._ensure_writable()
         path = self._path
+
         if target_path is None:
             assert is_fs_path(path), (
                 "Cannot rechunk a remote mag without `target_path`."
             )
         else:
             target_path = UPath(target_path)
-
         rechunked_dataset_path = (
-            self.layer.dataset.path / f".rechunk-{uuid4()}"
-            if target_path is None
-            else target_path
+            path.parent / f".rechunk-{uuid4()}" if target_path is None else target_path
         )
         rechunked_dataset = Dataset(
             rechunked_dataset_path,
@@ -763,7 +761,7 @@ class MagView(View):
 
     @classmethod
     def _ensure_mag_view(
-        cls, mag_view_or_path: Union[str, PathLike, "MagView"]
+        cls, mag_view_or_path: Union[str, PathLike, UPath, "MagView"]
     ) -> "MagView":
         """Ensure input is a MagView object, converting path-like objects if needed.
 
@@ -783,7 +781,7 @@ class MagView(View):
             return mag_view_or_path
         else:
             # local import to prevent circular dependency
-            from .dataset import Dataset
+            from webknossos.dataset import Dataset
 
             mag_view_path = strip_trailing_slash(UPath(mag_view_or_path))
             return (

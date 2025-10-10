@@ -2,6 +2,8 @@ from typing import Any, Literal
 
 import attr
 
+from webknossos.dataset_properties import DatasetProperties
+
 # Request and response bodies for wk/datastore routes
 # Should contain only the fields that are actually used by the python libs
 # Note that keys are converted to/from camelCase to match this
@@ -86,10 +88,9 @@ class ApiVoxelSize:
 
 
 @attr.s(auto_attribs=True)
-class ApiDataSource:
-    data_layers: list[ApiDataLayer] | None = None
-    status: str | None = None
-    scale: ApiVoxelSize | None = None
+class ApiUnusableDataSource:
+    id: dict[str, str]
+    status: str
 
 
 @attr.s(auto_attribs=True)
@@ -110,7 +111,7 @@ class ApiDataset:
     directory_name: str
     owning_organization: str
     data_store: ApiDataStore
-    data_source: ApiDataSource
+    data_source: ApiUnusableDataSource | DatasetProperties
     created: float
     metadata: list[ApiMetadata] | None = None
     description: str | None = None
@@ -130,15 +131,6 @@ class ApiDatasetExploreAndAddRemote:
     dataset_name: str
     folder_path: str | None = None
     data_store_name: str | None = None
-
-
-@attr.s(auto_attribs=True)
-class ApiDatasetAnnounceUpload:
-    dataset_name: str
-    organization: str
-    initial_team_ids: list[str]
-    folder_id: str | None
-    require_unique_name: bool
 
 
 @attr.s(auto_attribs=True)
@@ -163,13 +155,14 @@ class ApiDatasetUploadSuccess:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetManualUploadSuccess:
-    new_dataset_id: str
-    directory_name: str
+class ApiLinkedLayerIdentifier:
+    dataset_id: str
+    layer_name: str
+    new_layer_name: str | None = None
 
 
 @attr.s(auto_attribs=True)
-class ApiLinkedLayerIdentifier:
+class ApiLinkedLayerIdentifierLegacy:
     organization_id: str
     data_set_name: str
     layer_name: str
@@ -324,11 +317,6 @@ class ApiLoggedTimeForMonth:
 
 
 @attr.s(auto_attribs=True)
-class ApiDataStoreToken:
-    token: str
-
-
-@attr.s(auto_attribs=True)
 class ApiLoggedTimeGroupedByMonth:
     logged_time: list[ApiLoggedTimeForMonth]
 
@@ -391,6 +379,12 @@ class ApiAnnotationUploadResult:
 
 
 @attr.s(auto_attribs=True)
+class ApiFolderAdd:
+    parent_id: str
+    name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiFolderWithParent:
     id: str
     name: str
@@ -404,6 +398,13 @@ class ApiFolder:
     allowed_teams: list[ApiTeam]
     allowed_teams_cumulative: list[ApiTeam]
     is_editable: bool
+    metadata: list[ApiMetadata] | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiFolderUpdate:
+    name: str
+    allowed_teams: list[str]
     metadata: list[ApiMetadata] | None = None
 
 
@@ -423,3 +424,39 @@ class ApiAdHocMeshInfo:
     mapping_type: Literal["json", "agglomerate"] | None
     mag: tuple[int, int, int]
     seed_position: tuple[int, int, int]
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveDatasetUplaodToPathsParameters:
+    dataset_name: str
+    initial_team_ids: list[str]
+    folder_id: str | None
+    require_unique_name: bool
+    layers_to_link: list[ApiLinkedLayerIdentifier]
+    data_source: DatasetProperties
+    path_prefix: str | None
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveDatasetUploadToPathsResponse:
+    new_dataset_id: str
+    data_source: DatasetProperties
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveAttachmentUploadToPathParameters:
+    layer_name: str
+    attachment_name: str
+    attachment_type: str
+    attachment_dataformat: str
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveDatasetUploadToPathsForPreliminaryParameters:
+    data_source: DatasetProperties
+    path_prefix: str | None
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveDatasetUploadToPathsForPreliminaryResponse:
+    data_source: DatasetProperties

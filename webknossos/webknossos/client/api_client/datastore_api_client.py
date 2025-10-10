@@ -2,8 +2,6 @@ from collections.abc import Iterator
 
 from webknossos.client.api_client.models import (
     ApiAdHocMeshInfo,
-    ApiDatasetAnnounceUpload,
-    ApiDatasetManualUploadSuccess,
     ApiDatasetUploadInformation,
     ApiDatasetUploadSuccess,
     ApiPrecomputedMeshInfo,
@@ -21,6 +19,7 @@ class DatastoreApiClient(AbstractApiClient):
 
     def __init__(
         self,
+        *,
         datastore_base_url: str,
         timeout_seconds: float,
         headers: dict[str, str] | None = None,
@@ -34,15 +33,14 @@ class DatastoreApiClient(AbstractApiClient):
 
     def dataset_finish_upload(
         self,
+        *,
         upload_information: ApiDatasetUploadInformation,
-        token: str | None,
         retry_count: int,
     ) -> str:
         route = "/datasets/finishUpload"
         json = self._post_json_with_json_response(
             route,
             upload_information,
-            query={"token": token},
             retry_count=retry_count,
             timeout_seconds=LONG_TIMEOUT_SECONDS,
             response_type=ApiDatasetUploadSuccess,
@@ -51,43 +49,32 @@ class DatastoreApiClient(AbstractApiClient):
 
     def dataset_reserve_upload(
         self,
+        *,
         reserve_upload_information: ApiReserveDatasetUploadInformation,
-        token: str | None,
         retry_count: int,
     ) -> None:
         route = "/datasets/reserveUpload"
         self._post_json(
             route,
             reserve_upload_information,
-            query={"token": token},
             retry_count=retry_count,
         )
 
     def dataset_trigger_reload(
         self,
+        *,
         organization_id: str,
-        dataset_name: str,
+        dataset_id: str,
         token: str | None = None,
     ) -> None:
-        route = f"/triggers/reload/{organization_id}/{dataset_name}"
+        route = f"/triggers/reload/{organization_id}/{dataset_id}"
         query: Query = {"token": token}
         self._post(route, query=query)
 
-    def dataset_reserve_manual_upload(
-        self,
-        dataset_announce: ApiDatasetAnnounceUpload,
-        token: str | None,
-    ) -> ApiDatasetManualUploadSuccess:
-        route = "/datasets/reserveManualUpload"
-        query: Query = {"token": token}
-        return self._post_json_with_json_response(
-            route, dataset_announce, ApiDatasetManualUploadSuccess, query
-        )
-
     def dataset_get_raw_data(
         self,
-        organization_id: str,
-        directory_name: str,
+        *,
+        dataset_id: str,
         data_layer_name: str,
         mag: str,
         token: str | None,
@@ -98,7 +85,7 @@ class DatastoreApiClient(AbstractApiClient):
         height: int,
         depth: int,
     ) -> tuple[bytes, str]:
-        route = f"/datasets/{organization_id}/{directory_name}/layers/{data_layer_name}/data"
+        route = f"/datasets/{dataset_id}/layers/{data_layer_name}/data"
         query: Query = {
             "mag": mag,
             "x": x,
@@ -114,13 +101,13 @@ class DatastoreApiClient(AbstractApiClient):
 
     def download_mesh(
         self,
+        *,
         mesh_info: ApiPrecomputedMeshInfo | ApiAdHocMeshInfo,
-        organization_id: str,
-        directory_name: str,
+        dataset_id: str,
         layer_name: str,
         token: str | None,
     ) -> Iterator[bytes]:
-        route = f"/datasets/{organization_id}/{directory_name}/layers/{layer_name}/meshes/fullMesh.stl"
+        route = f"/datasets/{dataset_id}/layers/{layer_name}/meshes/fullMesh.stl"
         query: Query = {"token": token}
         yield from self._post_json_with_bytes_iterator_response(
             route=route,

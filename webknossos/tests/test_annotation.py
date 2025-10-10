@@ -1,12 +1,14 @@
 import sys
 import tempfile
-from pathlib import Path
 
 import numpy as np
 import pytest
+from cluster_tools import get_executor
+from upath import UPath
 
 import webknossos as wk
-from webknossos.dataset import DataFormat
+from webknossos import Annotation, DataFormat, SegmentationLayer
+from webknossos.annotation.volume_layer import VolumeLayerEditMode
 from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
@@ -40,7 +42,10 @@ def test_annotation_from_wkw_zip_file() -> None:
     assert len(list(copied_annotation.get_volume_layer_names())) == 1
     assert len(list(copied_annotation.skeleton.flattened_trees())) == 1
 
-    copied_annotation.add_volume_layer(name="new_volume_layer")
+    copied_annotation.add_volume_layer(
+        name="new_volume_layer",
+        dtype=np.uint32,
+    )
     assert len(list(copied_annotation.get_volume_layer_names())) == 2
     copied_annotation.delete_volume_layer(volume_layer_name="new_volume_layer")
     assert len(list(copied_annotation.get_volume_layer_names())) == 1
@@ -158,7 +163,7 @@ def test_dataset_access_via_annotation() -> None:
     # while it was referenced in an annotation.
 
     # load a remote dataset
-    remote_ds = wk.Dataset.open_remote(
+    remote_ds = wk.RemoteDataset.open(
         "http://localhost:9000/datasets/Organization_X/l4_sample"
     )
 
@@ -263,7 +268,7 @@ def test_reading_bounding_boxes() -> None:
 
     # Check exporting and re-reading checked-in file (roundtrip)
     with tempfile.TemporaryDirectory() as tmp_dir:
-        output_path = Path(tmp_dir) / "serialized.zip"
+        output_path = UPath(tmp_dir) / "serialized.zip"
         annotation.save(output_path)
 
         annotation_deserialized = wk.Annotation.load(output_path)
@@ -272,7 +277,7 @@ def test_reading_bounding_boxes() -> None:
 
 @pytest.mark.use_proxay
 def test_bounding_box_roundtrip() -> None:
-    ds = wk.Dataset.open_remote("l4_sample")
+    ds = wk.RemoteDataset.open("l4_sample")
 
     annotation_before = wk.Annotation(
         name="test_bounding_box_roundtrip",
@@ -324,7 +329,7 @@ def test_empty_volume_annotation() -> None:
         TESTDATA_DIR / "annotations" / "nml_with_volumes.zip",
     ],
 )
-def test_nml_with_volumes(nml_path: Path) -> None:
+def test_nml_with_volumes(nml_path: UPath) -> None:
     if nml_path.suffix == ".zip":
         with pytest.warns(UserWarning, match="location is not referenced in the NML"):
             a = wk.Annotation.load(nml_path)
@@ -340,15 +345,15 @@ def test_nml_with_volumes(nml_path: Path) -> None:
     )
 
 
-def test_segment_metadata(tmp_path: Path) -> None:
+def test_segment_metadata(tmp_upath: UPath) -> None:
     annotation = wk.Annotation.load(
         TESTDATA_DIR / "annotations" / "nml_with_volumes.zip"
     )
     annotation.get_volume_layer_segments("segmentation")[2504698].metadata[
         "test_segment"
     ] = "test"
-    annotation.save(tmp_path / "test.zip")
-    tmp_annotation = wk.Annotation.load(tmp_path / "test.zip")
+    annotation.save(tmp_upath / "test.zip")
+    tmp_annotation = wk.Annotation.load(tmp_upath / "test.zip")
     assert (
         tmp_annotation.get_volume_layer_segments("segmentation")[2504698].metadata[
             "test_segment"
@@ -357,14 +362,170 @@ def test_segment_metadata(tmp_path: Path) -> None:
     )
 
 
-def test_tree_metadata(tmp_path: Path) -> None:
+def test_tree_metadata(tmp_upath: UPath) -> None:
     annotation = wk.Annotation.load(
         TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     )
     list(annotation.skeleton.flattened_trees())[0].metadata["test_tree"] = "test"
-    annotation.save(tmp_path / "test.zip")
-    tmp_annotation = wk.Annotation.load(tmp_path / "test.zip")
+    annotation.save(tmp_upath / "test.zip")
+    tmp_annotation = wk.Annotation.load(tmp_upath / "test.zip")
     assert (
         list(tmp_annotation.skeleton.flattened_trees())[0].metadata["test_tree"]
         == "test"
     )
+
+
+@pytest.mark.parametrize(
+    "edit_mode", [VolumeLayerEditMode.MEMORY, VolumeLayerEditMode.TEMPORARY_DIRECTORY]
+)
+@pytest.mark.parametrize("executor", ["sequential", "multiprocessing"])
+def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode, executor: str) -> None:
+    dtype = np.uint32
+    data = np.ones((1, 10, 10, 10), dtype=dtype)
+    ann = wk.Annotation(
+        name="my_annotation",
+        dataset_name="sample_dataset",
+        voxel_size=(11.2, 11.2, 25.0),
+    )
+
+    volume_layer = ann.add_volume_layer(
+        name="segmentation",
+        dtype=dtype,
+    )
+    if edit_mode == VolumeLayerEditMode.MEMORY and executor == "multiprocessing":
+        with pytest.raises(ValueError, match="SequentialExecutor"):
+            with volume_layer.edit(
+                edit_mode=edit_mode, executor=get_executor(executor)
+            ) as seg_layer:
+                pass
+    else:
+        with volume_layer.edit(
+            edit_mode=edit_mode, executor=get_executor(executor)
+        ) as seg_layer:
+            assert isinstance(seg_layer, SegmentationLayer)
+            mag = seg_layer.add_mag(1)
+            mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
+        with volume_layer.edit(edit_mode=edit_mode) as seg_layer:
+            assert len(seg_layer.mags) == 1
+            mag = seg_layer.get_mag(1)
+            read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+            assert np.array_equal(data, read_data)
+
+
+def test_edited_volume_annotation_format() -> None:
+    import zipfile
+
+    import tensorstore
+
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    ann = Annotation.load(path)
+    data = np.ones(shape=(10, 10, 10))
+
+    volume_layer = ann.add_volume_layer(
+        name="segmentation",
+        dtype=np.uint32,
+    )
+    with volume_layer.edit() as seg_layer:
+        mag_view = seg_layer.add_mag(1)
+        mag_view.write(data, allow_resize=True)
+
+    save_path = TESTOUTPUT_DIR / "saved_annotation.zip"
+    ann.save(save_path)
+    unpack_dir = TESTOUTPUT_DIR / "unpacked_annotation"
+    with save_path.open("rb") as f:
+        with zipfile.ZipFile(f) as zip_ref:
+            zip_ref.extractall(str(unpack_dir))
+
+    # test for the format assumptions as mentioned in https://github.com/scalableminds/webknossos/issues/8604
+    ts = tensorstore.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {
+                "driver": "zip",
+                "path": "volumeAnnotationData/1/",
+                "base": {
+                    "driver": "file",
+                    "path": str(unpack_dir / "data_1_segmentation.zip"),
+                },
+            },
+        },
+        create=False,
+        open=True,
+    ).result()
+    metadata = ts.spec().to_json()["metadata"]
+
+    assert metadata["chunk_key_encoding"] == {
+        "configuration": {"separator": "."},
+        "name": "default",
+    }
+    assert ["transpose", "bytes", "blosc"] == [
+        codec["name"] for codec in metadata["codecs"]
+    ]
+    data_read = ts.read().result()[0, :10, :10, :10]
+    assert np.array_equal(data, data_read)
+
+
+@pytest.mark.parametrize(
+    "edit_mode", [VolumeLayerEditMode.MEMORY, VolumeLayerEditMode.TEMPORARY_DIRECTORY]
+)
+def test_edited_volume_annotation_save_load(edit_mode: VolumeLayerEditMode) -> None:
+    data = np.ones((1, 10, 10, 10))
+
+    ann = wk.Annotation(
+        name="my_annotation",
+        dataset_name="sample_dataset",
+        voxel_size=(11.2, 11.2, 25.0),
+    )
+
+    volume_layer = ann.add_volume_layer(name="segmentation", dtype=np.uint32)
+    with volume_layer.edit(edit_mode=edit_mode) as seg_layer:
+        mag_view = seg_layer.add_mag(1)
+        mag_view.write(data, allow_resize=True)
+
+    save_path = TESTOUTPUT_DIR / "annotation_saved.zip"
+    ann.save(save_path)
+    ann_loaded = Annotation.load(save_path)
+
+    volume_layer_downloaded = ann_loaded.get_volume_layer("segmentation")
+
+    with volume_layer_downloaded.edit(edit_mode=edit_mode) as seg_layer:
+        assert len(seg_layer.mags) == 1
+        mag = seg_layer.get_mag(1)
+        read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+        assert np.array_equal(data, read_data)
+
+
+@pytest.mark.use_proxay
+def test_edited_volume_annotation_upload_download() -> None:
+    data = np.ones((1, 10, 10, 10))
+
+    ann = Annotation.load(
+        TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    )
+    ann.organization_id = "Organization_X"
+
+    volume_layer = ann.add_volume_layer(
+        name="segmentation",
+        dtype=np.uint32,
+    )
+    with volume_layer.edit() as seg_layer:
+        mag_view = seg_layer.add_mag(1)
+        mag_view.write(data, allow_resize=True)
+
+    url = ann.upload()
+    ann_downloaded = Annotation.download(
+        url,
+    )
+
+    assert {layer.name for layer in ann_downloaded._volume_layers} == {
+        "Volume",
+        "segmentation",
+    }
+
+    volume_layer_downloaded = ann_downloaded.get_volume_layer("segmentation")
+
+    with volume_layer_downloaded.edit() as seg_layer:
+        assert len(seg_layer.mags) == 1
+        mag = seg_layer.get_mag(1)
+        read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+        assert np.array_equal(data, read_data)

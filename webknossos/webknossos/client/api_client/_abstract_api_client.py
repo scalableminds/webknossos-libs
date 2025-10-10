@@ -5,8 +5,8 @@ from typing import Any, TypeVar
 
 import httpx
 
-from ...dataset.defaults import SSL_CONTEXT
-from ._serialization import custom_converter
+from ...ssl_context import SSL_CONTEXT
+from ._serialization import api_client_converter
 from .errors import CannotHandleResponseError, UnexpectedStatusError
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class AbstractApiClient(ABC):
         self,
         timeout_seconds: float,
         headers: dict[str, str] | None = None,
-        webknossos_api_version: int = 9,
+        webknossos_api_version: int = 12,
     ):
         self.headers = headers
         self.timeout_seconds = timeout_seconds
@@ -134,8 +134,20 @@ class AbstractApiClient(ABC):
         response = self._get(route, query, retry_count=retry_count)
         return response.content, self._parse_filename_from_header(response)
 
-    def _post_with_json_response(self, route: str, response_type: type[T]) -> T:
-        response = self._post(route)
+    def _post_with_json_response(
+        self,
+        route: str,
+        response_type: type[T],
+        query: Query | None = None,
+        retry_count: int = 0,
+        timeout_seconds: float | None = None,
+    ) -> T:
+        response = self._post(
+            route,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+        )
         return self._parse_json(response, response_type)
 
     def _post_json_with_json_response(
@@ -290,7 +302,7 @@ class AbstractApiClient(ABC):
 
     def _parse_json(self, response: httpx.Response, response_type: type[T]) -> T:
         try:
-            return custom_converter.structure(response.json(), response_type)
+            return api_client_converter.structure(response.json(), response_type)
         except Exception as e:
             raise CannotHandleResponseError(response) from e
 
@@ -310,7 +322,7 @@ class AbstractApiClient(ABC):
         return dict(m.get_params() or []).get("filename", "")
 
     def _prepare_for_json(self, body_structured: Any) -> Any:
-        return custom_converter.unstructure(body_structured)
+        return api_client_converter.unstructure(body_structured)
 
     def _assert_good_response(self, response: httpx.Response) -> None:
         try:

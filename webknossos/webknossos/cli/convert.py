@@ -6,15 +6,18 @@ from typing import Annotated, Any
 
 import typer
 
-from ..dataset import DataFormat, Dataset, LengthUnit
+from ..dataset import Dataset, SamplingModes
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
-from ..dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
-from ..geometry import Vec3Int
-from ..utils import get_executor_for_args
+from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
+from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
+from ..geometry import Mag, Vec3Int
+from ..utils import get_executor_for_args, rmtree
 from ._utils import (
     DistributionStrategy,
     LayerCategory,
+    SamplingMode,
     VoxelSizeTuple,
+    parse_mag,
     parse_path,
     parse_vec3int,
     parse_voxel_size,
@@ -44,7 +47,7 @@ def main(
         VoxelSizeTuple,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
-            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
+            "Should be a comma-separated string (e.g. 11.0,11.0,20.0).",
             parser=parse_voxel_size,
             metavar="VoxelSize",
             show_default=False,
@@ -113,7 +116,26 @@ def main(
     ] = True,
     downsample: Annotated[
         bool, typer.Option(help="Downsample the target dataset.")
-    ] = False,
+    ] = True,
+    max_mag: Annotated[
+        Mag | None,
+        typer.Option(
+            help="Create downsampled magnifications up to the magnification specified by this argument. "
+            "If omitted, the coarsest magnification will be determined by using the bounding box of the layer. "
+            "Should be number or hyphen-separated string (e.g. `2` or `2-2-2`).",
+            parser=parse_mag,
+        ),
+    ] = None,
+    interpolation_mode: Annotated[
+        str,
+        typer.Option(
+            help="The interpolation mode that should be used "
+            "(median, mode, nearest, bilinear or bicubic)."
+        ),
+    ] = "default",
+    sampling_mode: Annotated[
+        SamplingMode, typer.Option(help="The sampling mode to use.")
+    ] = SamplingMode.ANISOTROPIC,
     batch_size: Annotated[
         int | None,
         typer.Option(
@@ -123,6 +145,13 @@ def main(
             "shard shape (chunk-shape x chunks-per-shard).",
         ),
     ] = None,
+    overwrite_existing: Annotated[
+        bool,
+        typer.Option(
+            help="Clear target folder if it already exists. Not enabled by default. Use with caution.",
+            show_default=False,
+        ),
+    ] = False,
     jobs: Annotated[
         int,
         typer.Option(
@@ -160,6 +189,10 @@ def main(
         job_resources=job_resources,
     )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
+    mode = SamplingModes.parse(sampling_mode.value)
+
+    if overwrite_existing and target.exists():
+        rmtree(target)
 
     with get_executor_for_args(args=executor_args) as executor:
         dataset = Dataset.from_images(
@@ -178,4 +211,10 @@ def main(
         )
     if downsample:
         with get_executor_for_args(args=executor_args) as executor:
-            dataset.downsample(executor=executor)
+            dataset.downsample(
+                coarsest_mag=max_mag,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                sampling_mode=mode,
+                executor=executor,
+            )

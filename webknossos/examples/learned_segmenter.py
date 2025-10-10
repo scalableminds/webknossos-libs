@@ -1,6 +1,4 @@
-import os
 from functools import partial
-from tempfile import TemporaryDirectory
 
 import numpy as np
 from skimage import feature
@@ -19,7 +17,6 @@ def main() -> None:
     # Step 1: Read the training data from the annotation and the dataset's color
     # layer (the data will be streamed from WEBKNOSSOS to our local computer)
     training_data_bbox = annotation.user_bounding_boxes[0]  # type: ignore[index]
-    new_dataset_name = f"{annotation.dataset_name.replace(' ', '_')}_segmented"
     with wk.webknossos_context("https://webknossos.org"):
         dataset = annotation.get_remote_annotation_dataset()
 
@@ -58,28 +55,15 @@ def main() -> None:
     assert segmentation.max() < 256
     segmentation = segmentation.astype("uint8")
 
-    # Step 5: Bundle everything as a WEBKNOSSOS layer and upload to wK for viewing and further work
-    with TemporaryDirectory() as tempdir:
-        new_dataset = wk.Dataset(
-            tempdir, voxel_size=dataset.voxel_size, name=new_dataset_name
-        )
-        segmentation_layer = new_dataset.add_layer(
-            "segmentation",
-            wk.SEGMENTATION_CATEGORY,
-            dtype_per_channel=segmentation.dtype,
-            largest_segment_id=int(segmentation.max()),
-        )
+    # Step 5: Upload the segmentation to WEBKNOSSOS
+    print("Uploading segmentation…")
+    volume_layer = annotation.add_volume_layer("segmentation", dtype=segmentation.dtype)
+    with volume_layer.edit() as segmentation_layer:
         segmentation_layer.bounding_box = dataset.layers["color"].bounding_box
         segmentation_layer.add_mag(mag, compress=True).write(segmentation)
         segmentation_layer.downsample(sampling_mode="constant_z")
 
-        remote_ds = new_dataset.upload(
-            layers_to_link=[annotation.get_remote_base_dataset().layers["color"]]
-            if "PYTEST_CURRENT_TEST" not in os.environ
-            else None
-        )
-
-    url = remote_ds.url
+    url = annotation.upload()
     print(f"Successfully uploaded {url}")
 
 

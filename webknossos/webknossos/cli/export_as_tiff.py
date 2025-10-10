@@ -6,7 +6,6 @@ from argparse import Namespace
 from functools import partial
 from math import ceil
 from multiprocessing import cpu_count
-from pathlib import Path
 from typing import Annotated, Any
 from urllib.parse import urlparse
 
@@ -16,11 +15,12 @@ from PIL import Image
 from scipy.ndimage import zoom
 from upath import UPath
 
+from .. import RemoteDataset
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
 from ..dataset import Dataset, MagView, View
-from ..dataset.dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
+from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, is_fs_path, wait_and_ensure_success
@@ -68,7 +68,7 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
 
 
 def export_tiff_slice(
-    dest_path: Path,
+    dest_path: UPath,
     name: str,
     tiling_size: None | tuple[int, int],
     downsample: int,
@@ -104,7 +104,8 @@ def export_tiff_slice(
             tiff_file_path = dest_path / tiff_file_name
 
             image = _slice_to_image(tiff_data[:, :, :, slice_index], downsample)
-            image.save(tiff_file_path)
+            with tiff_file_path.open("wb") as f:
+                image.save(f)
             logger.debug("Saved slice %s", slice_name_number)
 
         else:
@@ -127,7 +128,8 @@ def export_tiff_slice(
                         downsample,
                     )
 
-                    tile_image.save(tile_tiff_path / tile_tiff_filename)
+                    with (tile_tiff_path / tile_tiff_filename).open("wb") as f:
+                        tile_image.save(f)
 
             logger.debug("Saved tiles for slice %s", slice_name_number)
 
@@ -137,7 +139,7 @@ def export_tiff_slice(
 def export_tiff_stack(
     mag_view: MagView,
     bbox: BoundingBox,
-    destination_path: Path,
+    destination_path: UPath,
     name: str,
     tiling_slice_size: None | tuple[int, int],
     batch_size: int,
@@ -275,7 +277,7 @@ def main(
 ) -> None:
     """Export your WEBKNOSSOS dataset to TIFF image data."""
 
-    mag_view = None
+    mag_view: MagView | None = None
     source_path = UPath(source)
     if not is_fs_path(source_path):
         url = resolve_short_link(source)
@@ -286,7 +288,7 @@ def main(
             if re.match(_DATASET_URL_REGEX, url) or re.match(
                 _DATASET_DEPRECATED_URL_REGEX, url
             ):
-                mag_view = Dataset.open_remote(url).get_layer(layer_name).get_mag(mag)
+                mag_view = RemoteDataset.open(url).get_layer(layer_name).get_mag(mag)
             elif re.match(_ANNOTATION_URL_REGEX, url):
                 mag_view = (
                     Annotation.open_as_remote_dataset(annotation_id_or_url=url)

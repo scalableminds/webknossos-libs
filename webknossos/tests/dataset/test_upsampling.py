@@ -1,9 +1,9 @@
 import warnings
 from collections.abc import Iterator
-from pathlib import Path
 
 import numpy as np
 import pytest
+from upath import UPath
 
 from webknossos import (
     COLOR_CATEGORY,
@@ -13,7 +13,7 @@ from webknossos import (
     Mag,
     Vec3Int,
 )
-from webknossos.dataset._upsampling_utils import upsample_cube, upsample_cube_job
+from webknossos.dataset.layer._upsampling_utils import upsample_cube, upsample_cube_job
 from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.utils import get_executor_for_args
 
@@ -28,8 +28,8 @@ def ignore_warnings() -> Iterator:
         yield
 
 
-def test_upsampling(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path, voxel_size=(1, 1, 1))
+def test_upsampling(tmp_upath: UPath) -> None:
+    ds = Dataset(tmp_upath, voxel_size=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag([4, 4, 2])
     mag.write(
@@ -61,8 +61,8 @@ def test_upsample_cube() -> None:
     assert np.all(output[:, :, :] == np.repeat(np.arange(0, BUFFER_SHAPE.x), 2))
 
 
-def upsample_test_helper(tmp_path: Path, use_compress: bool) -> None:
-    ds = Dataset(tmp_path, voxel_size=(10.5, 10.5, 5))
+def upsample_test_helper(tmp_upath: UPath, use_compress: bool) -> None:
+    ds = Dataset(tmp_upath, voxel_size=(10.5, 10.5, 5))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag2 = layer.add_mag([2, 2, 2])
 
@@ -102,22 +102,22 @@ def upsample_test_helper(tmp_path: Path, use_compress: bool) -> None:
     assert np.all(target_buffer == upsample_cube(source_buffer, [2, 2, 1]))
 
 
-def test_upsample_cube_job(tmp_path: Path) -> None:
-    upsample_test_helper(tmp_path, False)
+def test_upsample_cube_job(tmp_upath: UPath) -> None:
+    upsample_test_helper(tmp_upath, False)
 
 
-def test_compressed_upsample_cube_job(tmp_path: Path) -> None:
-    upsample_test_helper(tmp_path, True)
+def test_compressed_upsample_cube_job(tmp_upath: UPath) -> None:
+    upsample_test_helper(tmp_upath, True)
 
 
-def test_upsample_multi_channel(tmp_path: Path) -> None:
+def test_upsample_multi_channel(tmp_upath: UPath) -> None:
     num_channels = 3
     size = (32, 32, 10)
     source_data = (
         128 * np.random.randn(num_channels, size[0], size[1], size[2])
     ).astype("uint8")
 
-    ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
+    ds = Dataset(tmp_upath / "multi-channel-test", (1, 1, 1))
     layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
@@ -151,8 +151,8 @@ def test_upsample_multi_channel(tmp_path: Path) -> None:
     assert np.all(target_buffer == joined_buffer)
 
 
-def test_upsampling_non_aligned(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "test", (50, 50, 50))
+def test_upsampling_non_aligned(tmp_upath: UPath) -> None:
+    ds = Dataset(tmp_upath / "test", (50, 50, 50))
     layer = ds.add_layer(
         "color", SEGMENTATION_CATEGORY, dtype_per_channel="uint8", largest_segment_id=0
     )
@@ -171,11 +171,11 @@ def test_upsampling_non_aligned(tmp_path: Path) -> None:
     )
 
 
-def test_upsample_nd_dataset(tmp_path: Path) -> None:
+def test_upsample_nd_dataset(tmp_upath: UPath) -> None:
     source_path = (
-        Path(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
+        UPath(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
     )
-    target_path = tmp_path / "upsample_test"
+    target_path = tmp_upath / "upsample_test"
 
     source_ds = Dataset.open(source_path)
     target_ds = Dataset(target_path, voxel_size=(10, 10, 10))

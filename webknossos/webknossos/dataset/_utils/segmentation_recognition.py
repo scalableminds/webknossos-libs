@@ -1,11 +1,11 @@
 import random
-from pathlib import Path
 
 import numpy as np
+from upath import UPath
 
+from ...dataset_properties import LayerCategoryType
 from ...geometry.vec3_int import Vec3Int
-from ..layer_categories import LayerCategoryType
-from ..mag_view import MagView
+from ..layer.view import MagView
 
 NUM_SAMPLES = 20
 THRESHOLD = (
@@ -16,7 +16,7 @@ MAX_FAILS = 200
 MIN_INSPECTED_VOXELS = 1000
 
 
-def guess_if_segmentation_path(filepath: Path) -> bool:
+def guess_if_segmentation_path(filepath: UPath) -> bool:
     lowercase_filepath = str(filepath).lower()
     return any(i in lowercase_filepath for i in ["segmentation", "labels"])
 

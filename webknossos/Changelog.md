@@ -10,15 +10,73 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.10...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...HEAD)
 
 ### Breaking Changes
+- The `endpoint_url` in `UPath` objects is now stored directly in the `storage_options` dict, instead of being stored in the `storage_options["client_kwargs"]` dict. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
+- Removed Docker image `scalableminds/webknossos-cli` build. It will not be released further. [#1376](https://github.com/scalableminds/webknossos-libs/pull/1376)
+- `Dataset.add_layer_as_ref(remote_layer.path)` does not work anymore. Please use `Dataset.add_layer_as_ref(remote_layer)` instead. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
+- Due to the refactoring, the imports of various classes have changed. Please update your code accordingly. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
+- Deprecated a number of methods [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371]):
+  - `Dataset.open_remote()`, use `RemoteDataset.open` instead.
+  - `RemoteDatset.download_mesh()`, use `remote_segmentation_layer.download_mesh()` instead.
+  - `Dataset.get_remote_datasets()`, use `RemoteDataset.list()` instead.
+  - `Dataset.download()`, use `RemoteDataset.download()` instead.
+  - `mag_view.is_foreign`, use `layer.is_mag_view_foreign(mag_view)` instead.
+  - `Dataset.trigger_reload_in_datastore()`, use `RemoteDataset.trigger_reload_in_datastore()` instead.
 
 ### Added
+- Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 
 ### Changed
+- Replaced `pathlib.Path` for `upath.UPath` internally. `pathlib.Path` is still supported for user-facing APIs. Adds support for `universal_pathlib` version 0.3.x. [#1374](https://github.com/scalableminds/webknossos-libs/pull/1374)
+- Only use fs-based copy for mags on local file systems and S3. Other protocols, e.g. memory and HTTP, have caveats that break fs-based copying. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
+- The `add_*` methods in `Attachments` now return the created attachment objects, similar to `add_layer` and `add_mag`. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
+- The returned dataset ID from dataset exploration is now used. [#1378](https://github.com/scalableminds/webknossos-libs/pull/1378) 
+- Refactored the architecture, by introducing RemoteLayers, RemoteSegmentationLayers and their abstract base classes. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
+- Updated the api version of the webknossos-api to 12. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 
 ### Fixed
+
+
+## [2.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.5.0) - 2025-10-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...v2.5.0)
+
+### Added
+- Added context manager `VolumeLayer.edit` for creating and modifying volume annotations. [#1340](https://github.com/scalableminds/webknossos-libs/pull/1340)
+- Added `overwrite_existing` flag to `convert`, `convert-raw` and `convert-zarr` CLI commands. Use with caution. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added `downsample`, `max-mag`, `interpolation-mode`, `sampling-mode` args to `convert`, `convert-raw` and `convert-zarr` CLI commands, where it was missing, for consistency. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added value rescaling to `convert-raw` CLI command through `source-dtype` and `rescale-min-max` args. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added `interpolation_mode` and `compress` kwargs to `Dataset.downsample` method. [#1372](https://github.com/scalableminds/webknossos-libs/pull/1372)
+- Added `Team.get_by_id`, `Team.add_user` and `Team.delete` methods. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+- Added `RemoteFolder.get_root`, `RemoteFolder.get_subfolders`, `RemoteFolder.get_datasets`, `RemoteFolder.add_subfolder`, `RemoteFolder.move_to`, `RemoteFolder.delete` methods and `RemoteFolder.allowed_teams`, `RemoteFolder.name` properties. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+
+### Changed
+- `Team.add` now returns the created team object. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+- Moved `Team` to `webknossos.administration.team` module. [#1373](https://github.com/scalableminds/webknossos-libs/pull/1373)
+
+
+## [2.4.12](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.12) - 2025-09-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.11...v2.4.12)
+
+### Changed
+- Disabled conditional writes for S3 buckets in tensorstore. [#1368](https://github.com/scalableminds/webknossos-libs/pull/1368)
+
+### Fixed
+- Fixed that some operations that need an authentication token didn’t ask for it but just failed. [#1366](https://github.com/scalableminds/webknossos-libs/pull/1366)
+
+
+
+## [2.4.11](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.11) - 2025-09-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.10...v2.4.11)
+
+### Breaking Changes
+- All internal API client methods (`webknossos.client`) use keyword-only arguments. [#1363](https://github.com/scalableminds/webknossos-libs/pull/1363)
+- The signature of `Dataset.trigger_reload_on_datastore` changed. `dataset_name` has been renamed to `dataset_name_or_url`. Alternatively, a `dataset_id` can be supplied. [#1363](https://github.com/scalableminds/webknossos-libs/pull/1363)
+
+### Changed
+- `Layer.add_mag_as_copy` now automatically uses file-based copy, if possible. Therefore, `Dataset.fs_copy_dataset`, `Dataset.add_fs_copy_layer` and `Layer.add_fs_copy_mag` are deprecated. [#1362](https://github.com/scalableminds/webknossos-libs/pull/1362)
+- The API methods now use `v10` API version of Webknossos. Datasets are now referenced by ID instead of dataset name or directory name. [#1363](https://github.com/scalableminds/webknossos-libs/pull/1363)
 
 
 ## [2.4.10](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.4.10) - 2025-08-25

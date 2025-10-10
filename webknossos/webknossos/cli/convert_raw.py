@@ -4,24 +4,25 @@ import logging
 from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
-from pathlib import Path
 from typing import Annotated, Any, Literal
 
 import numpy as np
 import typer
+from upath import UPath
 
-from webknossos.dataset.length_unit import LengthUnit
-from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
-
-from ..dataset import DataFormat, Dataset, MagView, SamplingModes
+from ..dataset import Dataset, MagView, SamplingModes
 from ..dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_DATA_FORMAT,
     DEFAULT_SHARD_SHAPE,
 )
+from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
+from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import (
     get_executor_for_args,
+    is_fs_path,
+    rmtree,
     time_start,
     time_stop,
     wait_and_ensure_success,
@@ -29,10 +30,12 @@ from ..utils import (
 from ._utils import (
     DistributionStrategy,
     Order,
+    RescaleValues,
     SamplingMode,
     VoxelSizeTuple,
     parse_mag,
     parse_path,
+    parse_rescale_values,
     parse_vec3int,
     parse_voxel_size,
     prepare_shard_shape,
@@ -43,17 +46,22 @@ logger = logging.getLogger(__name__)
 
 def _raw_chunk_converter(
     bounding_box: BoundingBox,
-    source_raw_path: Path,
+    source_raw_path: UPath,
     target_mag_view: MagView,
-    input_dtype: str,
+    source_dtype: np.dtype,
+    target_dtype: np.dtype,
     shape: tuple[int, int, int],
     order: Literal["C", "F"],
     flip_axes: int | tuple[int, ...] | None,
+    rescale_min_max: RescaleValues | None,
 ) -> None:
     logger.info("Conversion of %s", bounding_box.topleft)
+    assert is_fs_path(source_raw_path)
     source_data: np.ndarray = np.memmap(
-        source_raw_path,
-        dtype=np.dtype(input_dtype),
+        str(
+            source_raw_path
+        ),  # this is fine, because we checked that source_raw_path is a fs_path
+        dtype=source_dtype,
         mode="r",
         shape=(1,) + shape,
         order=order,
@@ -65,14 +73,32 @@ def _raw_chunk_converter(
     contiguous_chunk = source_data[(slice(None),) + bounding_box.to_slices()].copy(
         order="F"
     )
+    if rescale_min_max is not None:
+        if np.isclose(rescale_min_max.min, rescale_min_max.max):
+            contiguous_chunk = np.zeros_like(contiguous_chunk, dtype=target_dtype)
+        else:
+            target_max = (
+                np.iinfo(target_dtype).max
+                if np.issubdtype(target_dtype, np.integer)
+                else 1
+            )
+            norm = (contiguous_chunk.astype(np.float64) - rescale_min_max.min) / (
+                rescale_min_max.max - rescale_min_max.min
+            )
+            contiguous_chunk = norm * target_max
+
+    if contiguous_chunk.dtype != target_dtype:
+        contiguous_chunk = contiguous_chunk.astype(target_dtype)
     target_mag_view.write(data=contiguous_chunk, absolute_offset=bounding_box.topleft)
 
 
 def convert_raw(
-    source_raw_path: Path,
-    target_path: Path,
+    *,
+    source_raw_path: UPath,
+    target_path: UPath,
     layer_name: str,
-    input_dtype: str,
+    source_dtype: np.dtype,
+    target_dtype: np.dtype,
     shape: Vec3Int,
     data_format: DataFormat,
     chunk_shape: Vec3Int,
@@ -81,6 +107,7 @@ def convert_raw(
     voxel_size_with_unit: VoxelSize = VoxelSize((1.0, 1.0, 1.0)),
     flip_axes: int | tuple[int, ...] | None = None,
     compress: bool = True,
+    rescale_min_max: RescaleValues | None = None,
     executor_args: Namespace | None = None,
 ) -> MagView:
     """Performs the conversion step from RAW file to WEBKNOSSOS"""
@@ -92,7 +119,7 @@ def convert_raw(
     wk_layer = wk_ds.get_or_add_layer(
         layer_name,
         "color",
-        dtype_per_channel=np.dtype(input_dtype),
+        dtype_per_channel=np.dtype(target_dtype),
         num_channels=1,
         data_format=data_format,
     )
@@ -112,10 +139,12 @@ def convert_raw(
                     _raw_chunk_converter,
                     source_raw_path=source_raw_path,
                     target_mag_view=wk_mag,
-                    input_dtype=input_dtype,
+                    source_dtype=source_dtype,
+                    target_dtype=target_dtype,
                     shape=shape,
                     order=order,
                     flip_axes=flip_axes,
+                    rescale_min_max=rescale_min_max,
                 ),
                 wk_layer.bounding_box.chunk(chunk_shape=shard_shape),
             ),
@@ -148,29 +177,16 @@ def main(
         Vec3Int,
         typer.Option(
             help="Shape of the source dataset. Should be a comma separated "
-            "string (e.g. 1024,1024,512).",
+            "string (e.g. `1024,1024,512`).",
             parser=parse_vec3int,
             metavar="Vec3Int",
         ),
     ],
-    order: Annotated[
-        Order,
-        typer.Option(
-            help="The input data storage layout: "
-            "either 'F' for Fortran-style/column-major order (the default), "
-            "or 'C' for C-style/row-major order. "
-            "Note: Axes are expected in  (x, y, z) order."
-        ),
-    ] = Order.F,
-    layer_name: Annotated[
-        str,
-        typer.Option(help="Name of the cubed layer (color or segmentation)"),
-    ] = "color",
     voxel_size: Annotated[
         VoxelSizeTuple,
         typer.Option(
             help="The size of one voxel in source data in nanometers. "
-            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
+            "Should be a comma-separated string (e.g. `11.0,11.0,20.0`).",
             parser=parse_voxel_size,
             metavar="VoxelSize",
             show_default=False,
@@ -183,8 +199,39 @@ def main(
         ),
     ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     dtype: Annotated[
-        str, typer.Option(help="Target datatype (e.g. uint8, uint16, uint32)")
+        str, typer.Option(help="Target datatype (e.g. `uint8`, `uint16`, `uint32`)")
     ] = "uint8",
+    source_dtype: Annotated[
+        str | None,
+        typer.Option(
+            help="Source datatype (e.g. `uint8`, `uint16`, `uint32`). "
+            "If omitted, it is assumed to be the same as the target datatype."
+        ),
+    ] = None,
+    order: Annotated[
+        Order,
+        typer.Option(
+            help="The input data storage layout: "
+            "either 'F' for Fortran-style/column-major order (the default), "
+            "or 'C' for C-style/row-major order. "
+            "Note: Axes are expected in (x, y, z) order."
+        ),
+    ] = Order.F,
+    layer_name: Annotated[
+        str,
+        typer.Option(help="Name of the output layer (color or segmentation)"),
+    ] = "color",
+    rescale_min_max: Annotated[
+        RescaleValues | None,
+        typer.Option(
+            help="Rescale the values of the target dataset by specifying the min and max values. "
+            "Will be scaled to the range from 0 to the maximum value of the target data type or 1.0 for floats. "
+            "Should be a comma-separated string (e.g. `0.2,0.8`).",
+            parser=parse_rescale_values,
+            metavar="RescaleValues",
+            show_default=False,
+        ),
+    ] = None,
     data_format: Annotated[
         DataFormat,
         typer.Option(
@@ -218,11 +265,28 @@ def main(
             metavar="Vec3Int",
         ),
     ] = None,
+    flip_axes: Annotated[
+        Vec3Int | None,
+        typer.Option(
+            help="The axes that should be flipped. "
+            "Input format is a comma-separated list of axis indices. "
+            "For example, 1,2,3 will flip the x, y and z axes.",
+            parser=parse_vec3int,
+            metavar="Vec3Int",
+        ),
+    ] = None,
+    compress: Annotated[
+        bool, typer.Option(help="Enable compression of the target dataset.")
+    ] = True,
+    downsample: Annotated[
+        bool, typer.Option(help="Downsample the target dataset.")
+    ] = True,
     max_mag: Annotated[
         Mag | None,
         typer.Option(
-            help="Max resolution to be downsampled. "
-            "Should be number or minus separated string (e.g. 2 or 2-2-2).",
+            help="Create downsampled magnifications up to the magnification specified by this argument. "
+            "If omitted, the coarsest magnification will be determined by using the bounding box of the layer. "
+            "Should be number or hyphen-separated string (e.g. `2` or `2-2-2`).",
             parser=parse_mag,
         ),
     ] = None,
@@ -233,22 +297,16 @@ def main(
             "(median, mode, nearest, bilinear or bicubic)."
         ),
     ] = "default",
-    flip_axes: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="The axes at which should be flipped. "
-            "Input format is a comma separated list of axis indices. "
-            "For example, 1,2,3 will flip the x, y and z axes.",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
-    compress: Annotated[
-        bool, typer.Option(help="Enable compression of the target dataset.")
-    ] = True,
     sampling_mode: Annotated[
         SamplingMode, typer.Option(help="The sampling mode to use.")
     ] = SamplingMode.ANISOTROPIC,
+    overwrite_existing: Annotated[
+        bool,
+        typer.Option(
+            help="Clear target folder if it already exists. Not enabled by default. Use with caution.",
+            show_default=False,
+        ),
+    ] = False,
     jobs: Annotated[
         int,
         typer.Option(
@@ -274,6 +332,9 @@ def main(
 ) -> None:
     """Converts a RAW file into a WEBKNOSSOS dataset."""
 
+    if source_dtype is None:
+        source_dtype = dtype
+
     shard_shape = prepare_shard_shape(
         chunk_shape=chunk_shape,
         shard_shape=shard_shape,
@@ -298,28 +359,34 @@ def main(
     )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
+    if overwrite_existing and target.exists():
+        rmtree(target)
+
     mag_view = convert_raw(
-        source,
-        target,
-        layer_name,
-        dtype,
-        shape,
-        data_format,
-        chunk_shape,
-        shard_shape or DEFAULT_SHARD_SHAPE,
-        order.value,
-        voxel_size_with_unit,
-        flip_axes,
-        compress,
-        executor_args,
+        source_raw_path=source,
+        target_path=target,
+        layer_name=layer_name,
+        source_dtype=np.dtype(source_dtype),
+        target_dtype=np.dtype(dtype),
+        shape=shape,
+        data_format=data_format,
+        chunk_shape=chunk_shape,
+        shard_shape=shard_shape or DEFAULT_SHARD_SHAPE,
+        order=order.value,
+        voxel_size_with_unit=voxel_size_with_unit,
+        flip_axes=flip_axes,
+        compress=compress,
+        rescale_min_max=rescale_min_max,
+        executor_args=executor_args,
     )
 
-    with get_executor_for_args(executor_args) as executor:
-        mag_view.layer.downsample(
-            from_mag=mag_view.mag,
-            coarsest_mag=max_mag,
-            interpolation_mode=interpolation_mode,
-            compress=compress,
-            sampling_mode=mode,
-            executor=executor,
-        )
+    if downsample:
+        with get_executor_for_args(executor_args) as executor:
+            mag_view.layer.downsample(
+                from_mag=mag_view.mag,
+                coarsest_mag=max_mag,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                sampling_mode=mode,
+                executor=executor,
+            )
