@@ -13,7 +13,7 @@ from webknossos import (
     Mag,
     Vec3Int,
 )
-from webknossos.dataset._upsampling_utils import upsample_cube, upsample_cube_job
+from webknossos.dataset.layer._upsampling_utils import upsample_cube, upsample_cube_job
 from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.utils import get_executor_for_args
 

@@ -5,55 +5,23 @@ from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import gmtime, strftime
-from typing import NamedTuple
 from uuid import uuid4
 
 import httpx
 
-from ..dataset import Dataset, Layer, RemoteDataset
+from .. import LayerToLink
+from ..dataset import Dataset
 from ..datastore import Datastore
 from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .api_client.models import (
     ApiDatasetUploadInformation,
-    ApiLinkedLayerIdentifier,
     ApiReserveDatasetUploadInformation,
 )
 from .context import _get_context, _WebknossosContext, webknossos_context
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 4
-
-
-class LayerToLink(NamedTuple):
-    dataset_name: str
-    layer_name: str
-    new_layer_name: str | None = None
-    organization_id: str | None = (
-        None  # defaults to the user's organization before uploading
-    )
-
-    @classmethod
-    def from_remote_layer(
-        cls,
-        layer: Layer,
-        new_layer_name: str | None = None,
-        organization_id: str | None = None,
-    ) -> "LayerToLink":
-        ds = layer.dataset
-        assert isinstance(ds, RemoteDataset), (
-            f"The passed layer must belong to a RemoteDataset, but belongs to {ds}"
-        )
-        return cls(ds._dataset_id, layer.name, new_layer_name, organization_id)
-
-    def as_api_linked_layer_identifier(self) -> ApiLinkedLayerIdentifier:
-        context = _get_context()
-        return ApiLinkedLayerIdentifier(
-            self.organization_id or context.organization_id,
-            self.dataset_name,
-            self.layer_name,
-            self.new_layer_name,
-        )
 
 
 @cache
@@ -135,7 +103,7 @@ def upload_dataset(
             total_file_count=len(file_infos),
             total_file_size_in_bytes=total_file_size,
             layers_to_link=[
-                layer.as_api_linked_layer_identifier() for layer in layers_to_link
+                layer._as_api_linked_layer_identifier() for layer in layers_to_link
             ],
             folder_id=None,
             initial_teams=[],

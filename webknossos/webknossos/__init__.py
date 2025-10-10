@@ -28,6 +28,7 @@ from .administration import *
 from .annotation import *
 from .client import *
 from .dataset import *
+from .dataset_properties import *
 from .datastore import *
 from .geometry import *
 from .skeleton import *
@@ -45,3 +46,7 @@ if not current_version == "0.0.0":
         os.environ["WEBKNOSSOS_SKIP_VERSION_CHECK"] = "True"
         # Schedule the version check to run non-blocking in a background thread
         check_version_in_background(current_version)
+import os
+
+# This needs to be set to make sure the encoding is not chunked when uploading
+os.environ["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED"

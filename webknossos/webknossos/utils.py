@@ -3,6 +3,7 @@ import calendar
 import functools
 import json
 import logging
+import os
 import sys
 import time
 import warnings
@@ -32,8 +33,6 @@ from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
 
-from .dataset.defaults import DEFAULT_BACKOFF_FACTOR, DEFAULT_NUM_RETRIES
-
 logger = logging.getLogger(__name__)
 
 times = {}
@@ -51,6 +50,18 @@ def _is_exception_retryable(exception: Exception) -> bool:
     ):
         return True
     return False
+
+
+DEFAULT_NUM_RETRIES = (
+    int(os.environ["DEFAULT_NUM_RETRIES"])
+    if "DEFAULT_NUM_RETRIES" in os.environ
+    else 20
+)
+DEFAULT_BACKOFF_FACTOR = (
+    float(os.environ["DEFAULT_BACKOFF_FACTOR"])
+    if "DEFAULT_BACKOFF_FACTOR" in os.environ
+    else 1.75
+)
 
 
 def call_with_retries(
@@ -530,11 +541,13 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
     return False
 
 
-def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
+def enrich_path(
+    path: str | PathLike | UPath, dataset_path: UPath | None = None
+) -> UPath:
     upath = UPath(path)
     if upath.protocol in ("http", "https"):
         from .client.context import _get_context
-        from .dataset.defaults import SSL_CONTEXT
+        from .ssl_context import SSL_CONTEXT
 
         # To setup the mag for non-public remote paths, we need to get the token from the context
         wk_context = _get_context()
@@ -560,6 +573,9 @@ def enrich_path(path: str | PathLike | UPath, dataset_path: UPath) -> UPath:
         )
 
     if not upath.is_absolute():
+        assert dataset_path is not None, (
+            f"dataset_path must be set if {path} is not absolute"
+        )
         return cheap_resolve(dataset_path / upath)
     return cheap_resolve(upath)
 

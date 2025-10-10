@@ -20,17 +20,21 @@ from numpy._typing import DTypeLike
 from upath import UPath
 from zipp import Path as ZipPath
 
-from ..cli._utils import DistributionStrategy
-from ..dataset import (
+from webknossos.dataset_properties import (
     SEGMENTATION_CATEGORY,
     DataFormat,
+    DatasetProperties,
+    get_dataset_converter,
+)
+
+from ..cli._utils import DistributionStrategy
+from ..dataset import (
     Dataset,
     Layer,
     SegmentationLayer,
 )
-from ..dataset._array import Zarr3Config
 from ..dataset.defaults import PROPERTIES_FILE_NAME
-from ..dataset.properties import DatasetProperties, dataset_converter
+from ..dataset.layer import Zarr3Config
 from ..geometry import Vec3Int
 from ..utils import get_executor_for_args, is_fs_path
 
@@ -271,7 +275,7 @@ class VolumeLayer:
                     ),
                 )
             elif self.data_format == DataFormat.Zarr3:
-                datasource_properties = dataset_converter.structure(
+                datasource_properties = get_dataset_converter().structure(
                     json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
                 )
                 assert len(datasource_properties.data_layers) == 1, (

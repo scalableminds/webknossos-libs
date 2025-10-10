@@ -7,7 +7,8 @@ from typing import Annotated, Any
 
 import typer
 
-from ..dataset import DataFormat, Dataset
+from ..dataset import Dataset
+from ..dataset_properties import DataFormat
 from ..geometry import Vec3Int
 from ..utils import get_executor_for_args
 from ._utils import DistributionStrategy, parse_path, parse_vec3int
