@@ -26,7 +26,9 @@ class AgglomerateGraph:
         self.affinities = affinities
 
     @classmethod
-    def from_proto(cls, protobuf_binary: bytes) -> "AgglomerateGraph":
+    def from_proto(
+        cls, agglomerate_graph_proto: agglomerate_graph_pb2.AgglomerateGraph
+    ) -> "AgglomerateGraph":
         """Create an AgglomerateGraph from a protobuf binary.
 
         Args:
@@ -35,8 +37,7 @@ class AgglomerateGraph:
         Returns:
             AgglomerateGraph
         """
-        agglomerate_graph_proto = agglomerate_graph_pb2.AgglomerateGraph()
-        agglomerate_graph_proto.ParseFromString(protobuf_binary)
+
         return cls(
             segments=np.array(agglomerate_graph_proto.segments, dtype=np.uint64),
             edges=np.array(

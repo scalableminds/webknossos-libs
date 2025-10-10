@@ -5,6 +5,7 @@ from typing import Any, TypeVar
 
 import httpx
 
+from ...proofreading import agglomerate_graph_pb2
 from ...ssl_context import SSL_CONTEXT
 from ._serialization import api_client_converter
 from .errors import CannotHandleResponseError, UnexpectedStatusError
@@ -65,6 +66,13 @@ class AbstractApiClient(ABC):
         return self._parse_json(
             response, response_type
         ), self._extract_total_count_header(response)
+
+    def _get_graph(self, route: str) -> agglomerate_graph_pb2.AgglomerateGraph:
+        protobuf_binary_response = self._get(route)
+        protobuf_binary = protobuf_binary_response.content
+        agglomerate_graph_proto = agglomerate_graph_pb2.AgglomerateGraph()
+        agglomerate_graph_proto.ParseFromString(protobuf_binary)
+        return agglomerate_graph_proto
 
     def _put_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)

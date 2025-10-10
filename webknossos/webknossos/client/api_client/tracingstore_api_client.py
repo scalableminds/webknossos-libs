@@ -47,7 +47,6 @@ class TracingStoreApiClient(AbstractApiClient):
         self, tracing_id: str, agglomerate_id: int
     ) -> AgglomerateGraph:
         route = f"/mapping/{tracing_id}/agglomerateGraph/{agglomerate_id}"
-        protobuf_binary_response = self._get(route)
-        protobuf_binary = protobuf_binary_response.content
-        agglomerate_graph = AgglomerateGraph.from_proto(protobuf_binary)
+        agglomerate_graph_proto = self._get_graph(route)
+        agglomerate_graph = AgglomerateGraph.from_proto(agglomerate_graph_proto)
         return agglomerate_graph
