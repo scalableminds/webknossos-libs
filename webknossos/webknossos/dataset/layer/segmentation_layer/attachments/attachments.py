@@ -147,13 +147,12 @@ class AbstractAttachments:
                 properties_container.append(attachment._properties)
         self._save_properties()
 
-    def add_copy_attachments(self, *other: Attachment) -> None:
+    def add_copy_attachments(self, *other: Attachment) -> list[Attachment]:
         warn_deprecated("add_copy_attachments", "add_attachment_as_copy")
-        for attachment in other:
-            self.add_attachment_as_copy(*other)
+        return [self.add_attachment_as_copy(*other) for attachment in other]
 
     @abstractmethod
-    def add_attachment_as_copy(self, attachment: Attachment) -> None:
+    def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         pass
 
 
@@ -168,7 +167,7 @@ class RemoteAttachments(AbstractAttachments):
     def _get_optional_dataset_path(self) -> UPath | None:
         return None
 
-    def add_attachment_as_copy(self, attachment: Attachment) -> None:
+    def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         self._ensure_writable()
         # In case of a remote dataset, we can ask wk for a path to put the attachment to.
         target_dataset_id = self._layer.dataset.dataset_id
@@ -200,6 +199,7 @@ class RemoteAttachments(AbstractAttachments):
             data_format=attachment.data_format,
         )
         self._add_attachment(new_attachment)
+        return new_attachment
 
 
 class Attachments(AbstractAttachments):
@@ -240,63 +240,63 @@ class Attachments(AbstractAttachments):
 
     def add_mesh(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            MeshAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._get_optional_dataset_path(),
-            )
+    ) -> MeshAttachment:
+        attachment = MeshAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._get_optional_dataset_path(),
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def add_agglomerate(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            AgglomerateAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._get_optional_dataset_path(),
-            )
+    ) -> AgglomerateAttachment:
+        attachment = AgglomerateAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._get_optional_dataset_path(),
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def add_connectome(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            ConnectomeAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._get_optional_dataset_path(),
-            )
+    ) -> ConnectomeAttachment:
+        attachment = ConnectomeAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._get_optional_dataset_path(),
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def set_segment_index(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            SegmentIndexAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._get_optional_dataset_path(),
-            )
+    ) -> SegmentIndexAttachment:
+        attachment = SegmentIndexAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._get_optional_dataset_path(),
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def set_cumsum(
         self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
-    ) -> None:
-        self._add_attachment(
-            CumsumAttachment.from_path_and_name(
-                UPath(path),
-                name,
-                data_format=data_format,
-                dataset_path=self._get_optional_dataset_path(),
-            )
+    ) -> CumsumAttachment:
+        attachment = CumsumAttachment.from_path_and_name(
+            UPath(path),
+            name,
+            data_format=data_format,
+            dataset_path=self._get_optional_dataset_path(),
         )
+        self._add_attachment(attachment)
+        return attachment
 
     def delete_attachment(self, attachment: Attachment) -> None:
         if isinstance(attachment, MeshAttachment):
@@ -312,12 +312,11 @@ class Attachments(AbstractAttachments):
         else:
             raise TypeError(f"Cannot delete attachment of type {attachment.__class__}")
 
-    def add_attachments(self, *other: Attachment) -> None:
+    def add_attachments(self, *other: Attachment) -> list[Attachment]:
         warn_deprecated("add_attachments", "add_attachment_as_ref")
-        for attachment in other:
-            self.add_attachment_as_ref(attachment)
+        return [self.add_attachment_as_ref(attachment) for attachment in other]
 
-    def add_attachment_as_ref(self, attachment: Attachment) -> None:
+    def add_attachment_as_ref(self, attachment: Attachment) -> Attachment:
         new_attachment = type(attachment).from_path_and_name(
             cheap_resolve(attachment.path),
             attachment.name,
@@ -325,8 +324,9 @@ class Attachments(AbstractAttachments):
             dataset_path=self._get_optional_dataset_path(),
         )
         self._add_attachment(new_attachment)
+        return new_attachment
 
-    def add_attachment_as_copy(self, attachment: Attachment) -> None:
+    def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         self._ensure_writable()
         # We set the attachment path following the convention.
         new_path = cheap_resolve(
@@ -345,16 +345,18 @@ class Attachments(AbstractAttachments):
         )
 
         self._add_attachment(new_attachment)
+        return new_attachment
 
     def add_symlink_attachments(
         self, *other: Attachment, make_relative: bool = False
-    ) -> None:
+    ) -> list[Attachment]:
         warnings.warn(
             "Using symlinks is deprecated and will be removed in a future version. "
             + "Use `add_attachment_as_ref` instead, which adds an attachment as a reference to the layer.",
             DeprecationWarning,
             stacklevel=2,
         )
+        output = []
         for attachment in other:
             new_path = cheap_resolve(attachment.path)
             if is_fs_path(attachment.path):
@@ -375,6 +377,8 @@ class Attachments(AbstractAttachments):
                 dataset_path=self._layer.dataset.resolved_path,
             )
             self._add_attachment(new_attachment)
+            output.append(new_attachment)
+        return output
 
     def detect_legacy_attachments(self) -> None:
         """Detects and adds legacy attachments.

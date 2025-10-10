@@ -64,6 +64,8 @@ from webknossos.utils import (
 
 logger = logging.getLogger(__name__)
 
+COPY_COMPATIBLE_PROTOCOLS = ("", "file", "s3")
+
 
 def _copy_job(args: tuple[View, View, int]) -> None:
     (source_view, target_view, _) = args
@@ -610,6 +612,9 @@ class Layer(AbstractLayer):
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
+        if progress_desc is None:
+            progress_desc = f"Copying mag {foreign_mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {self}"
+
         has_same_shapes = (
             (
                 chunk_shape is None
@@ -637,16 +642,17 @@ class Layer(AbstractLayer):
         else:
             has_same_compression = compress == foreign_mag_view.info.compression_mode
 
-        uses_memory_store = (
-            foreign_mag_view.path.protocol == "memory"
-            or (self.path / foreign_mag_view.mag.to_layer_name()).protocol == "memory"
+        uses_compatible_protocols = (
+            foreign_mag_view.path.protocol in COPY_COMPATIBLE_PROTOCOLS
+            and (self.path / foreign_mag_view.mag.to_layer_name()).protocol
+            in COPY_COMPATIBLE_PROTOCOLS
         )
 
         if (
             has_same_shapes
             and has_same_format
             and has_same_compression
-            and not uses_memory_store
+            and uses_compatible_protocols
         ):
             logger.debug(
                 f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{foreign_mag_view.mag} directly without re-encoding."
@@ -655,6 +661,7 @@ class Layer(AbstractLayer):
                 foreign_mag_view,
                 extend_layer_bounding_box=extend_layer_bounding_box,
                 exists_ok=exists_ok,
+                progress_desc=progress_desc,
             )
 
         chunk_shape = Vec3Int.from_vec_or_int(
@@ -693,14 +700,15 @@ class Layer(AbstractLayer):
                 foreign_mag_view.layer.bounding_box
             )
 
-        if progress_desc is None:
-            progress_desc = f"Copying mag {mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {mag_view.layer}"
-
+        # use the target shard shape for the copy operation
+        copy_shape = mag_view.info.shard_shape * mag_view.mag.to_vec3_int()
         foreign_mag_view.for_zipped_chunks(
             func_per_chunk=_copy_job,
             target_view=mag_view,
             executor=executor,
             progress_desc=progress_desc,
+            source_chunk_shape=copy_shape,
+            target_chunk_shape=copy_shape,
         )
 
         return mag_view
@@ -779,6 +787,7 @@ class Layer(AbstractLayer):
         self,
         foreign_mag_view_or_path: PathLike | str | MagView,
         *,
+        mag: MagLike | None = None,
         extend_layer_bounding_box: bool = True,
     ) -> MagView["Layer"]:
         """
@@ -789,7 +798,8 @@ class Layer(AbstractLayer):
         """
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
-        self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
+        mag = Mag(mag) if mag is not None else foreign_mag_view.mag
+        self._assert_mag_does_not_exist_yet(mag)
 
         assert self.data_format == foreign_mag_view.info.data_format, (
             f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
@@ -800,12 +810,12 @@ class Layer(AbstractLayer):
             + f"must match the layer's dtype {self.dtype_per_channel}"
         )
 
-        self._setup_mag(foreign_mag_view.mag, foreign_mag_view.path, read_only=True)
+        self._setup_mag(mag, foreign_mag_view.path, read_only=True)
 
         # since the remote mag view might belong to another dataset, it's property's path might be None, therefore, we get the path from the mag_view itself instead of it's properties
         self._properties.mags.append(
             MagViewProperties(
-                mag=foreign_mag_view.mag,
+                mag=mag,
                 path=dump_path(foreign_mag_view.path, self.dataset.resolved_path),
                 cube_length=foreign_mag_view._properties.cube_length,
                 axis_order=foreign_mag_view._properties.axis_order,
@@ -818,7 +828,7 @@ class Layer(AbstractLayer):
                 foreign_mag_view.layer.bounding_box
             )
 
-        return self.get_mag(foreign_mag_view.mag)
+        return self.get_mag(mag)
 
     def _add_fs_copy_mag(
         self,
@@ -826,6 +836,7 @@ class Layer(AbstractLayer):
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
+        progress_desc: str | None = None,
     ) -> MagView["Layer"]:
         self._ensure_writable()
 
@@ -841,10 +852,7 @@ class Layer(AbstractLayer):
             raise FileExistsError(
                 f"Cannot copy {foreign_mag_view.path} to {mag_path} because it already exists."
             )
-        copytree(
-            foreign_mag_view.path,
-            mag_path,
-        )
+        copytree(foreign_mag_view.path, mag_path, progress_desc=progress_desc)
 
         mag = self._add_mag_for_existing_files(
             foreign_mag_view.mag, mag_path=mag_path, read_only=False

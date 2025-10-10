@@ -112,6 +112,25 @@ from ._utils.segmentation_recognition import (
 
 logger = logging.getLogger(__name__)
 
+_ALLOWED_COLOR_LAYER_DTYPES = (
+    "uint8",
+    "uint16",
+    "uint32",
+    "int8",
+    "int16",
+    "int32",
+    "float32",
+)
+_ALLOWED_SEGMENTATION_LAYER_DTYPES = (
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+)
 
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
@@ -1082,36 +1101,17 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         # assert that the dtype_per_channel is supported by webknossos
         if category == COLOR_CATEGORY:
-            color_dtypes = (
-                "uint8",
-                "uint16",
-                "uint32",
-                "int8",
-                "int16",
-                "int32",
-                "float32",
-            )
-            if dtype_per_channel.name not in color_dtypes:
+            if dtype_per_channel.name not in _ALLOWED_COLOR_LAYER_DTYPES:
                 raise ValueError(
                     f"Cannot add color layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(color_dtypes)}."
+                    f"Supported dtypes are: {', '.join(_ALLOWED_COLOR_LAYER_DTYPES)}."
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
         else:
-            segmentation_dtypes = (
-                "uint8",
-                "uint16",
-                "uint32",
-                "uint64",
-                "int8",
-                "int16",
-                "int32",
-                "int64",
-            )
-            if dtype_per_channel.name not in segmentation_dtypes:
+            if dtype_per_channel.name not in _ALLOWED_SEGMENTATION_LAYER_DTYPES:
                 raise ValueError(
                     f"Cannot add segmentation layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(segmentation_dtypes)}."
+                    f"Supported dtypes are: {', '.join(_ALLOWED_SEGMENTATION_LAYER_DTYPES)}."
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
 

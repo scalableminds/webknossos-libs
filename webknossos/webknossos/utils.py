@@ -18,11 +18,7 @@ from os import PathLike
 from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from threading import Thread
-from typing import (
-    Any,
-    Protocol,
-    TypeVar,
-)
+from typing import Any, Protocol, TypeVar
 from urllib.parse import urlparse
 
 import httpx
@@ -386,6 +382,7 @@ def copytree(
 
     def _copy(args: tuple[UPath, UPath, tuple[str, ...]]) -> None:
         in_path, out_path, sub_path = args
+
         with (
             _append(in_path, sub_path).open("rb") as in_file,
             _append(out_path, sub_path).open("wb") as out_file,
@@ -559,18 +556,13 @@ def enrich_path(
         )
 
     elif upath.protocol == "s3":
-        if (
-            upath.storage_options.get("client_kwargs", {}).get("endpoint_url")
-            is not None
-        ):
+        if upath.storage_options.get("endpoint_url") is not None:
             return upath
         parsed_url = urlparse(str(upath))
         endpoint_url = f"https://{parsed_url.netloc}"
         bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
 
-        return UPath(
-            f"s3://{bucket}/{key}", client_kwargs={"endpoint_url": endpoint_url}
-        )
+        return UPath(f"s3://{bucket}/{key}", endpoint_url=endpoint_url)
 
     if not upath.is_absolute():
         assert dataset_path is not None, (
@@ -604,5 +596,6 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
         if safe_is_relative_to(path, dataset_path):
             return "./" + path.relative_to(dataset_path).as_posix()
     if path.protocol == "s3":
-        return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
+        endpoint_url = path.storage_options["endpoint_url"]
+        return f"s3://{urlparse(endpoint_url).netloc}/{path.path}"
     return path.as_posix()
