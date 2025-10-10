@@ -15,7 +15,7 @@ from numpy.typing import DTypeLike
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
-from ..mag_view import MagView
+from ..layer.view import MagView
 
 # Fix ImageIOReader not handling channels correctly. This might get fixed via
 # https://github.com/soft-matter/pims/pull/430

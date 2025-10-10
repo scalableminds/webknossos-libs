@@ -674,7 +674,6 @@ def test_merge_fallback_no_fallback_layer(
         mag1.write(absolute_offset=topleft, data=annotation_data, allow_resize=True)
 
         volume_layer_zip = tmp_ds_dir / "data_Volume.zip"
-
         with ZipFile(
             volume_layer_zip,
             mode="x",

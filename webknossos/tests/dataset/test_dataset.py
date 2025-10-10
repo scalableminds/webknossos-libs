@@ -9,7 +9,6 @@ from unittest import mock
 
 import numpy as np
 import pytest
-from cattrs import ClassValidationError
 from cluster_tools import get_executor
 from jsonschema import validate
 from upath import UPath
@@ -20,7 +19,7 @@ from tests.constants import (
     TESTOUTPUT_DIR,
     use_minio,
 )
-from webknossos.dataset import (
+from webknossos import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     Dataset,
@@ -28,17 +27,18 @@ from webknossos.dataset import (
     RemoteDataset,
     View,
 )
-from webknossos.dataset._array import Zarr3ArrayInfo, Zarr3Config
-from webknossos.dataset.data_format import AttachmentDataFormat, DataFormat
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
-from webknossos.dataset.properties import (
+from webknossos.dataset.layer.view._array import Zarr3ArrayInfo, Zarr3Config
+from webknossos.dataset_properties import (
+    AttachmentDataFormat,
+    DataFormat,
     DatasetProperties,
     DatasetViewConfiguration,
     LayerViewConfiguration,
     SegmentationLayerProperties,
-    dataset_converter,
 )
+from webknossos.dataset_properties.structuring import get_dataset_converter
 from webknossos.geometry import BoundingBox, Mag, Vec3Int, VecIntLike
 from webknossos.utils import (
     copytree,
@@ -1138,7 +1138,7 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
 
     ds = Dataset.open(ds_path)
     assert ds.get_layer("color").num_channels == 1
-    ds._export_as_json()
+    ds._save_dataset_properties()
 
     with open(
         ds_path / "datasource-properties.json",
@@ -1183,7 +1183,7 @@ def test_properties_with_segmentation() -> None:
 
     with open(ds_path / "datasource-properties.json", encoding="utf-8") as f:
         data = json.load(f)
-        ds_properties = dataset_converter.structure(data, DatasetProperties)
+        ds_properties = get_dataset_converter().structure(data, DatasetProperties)
 
         # the attributes 'largest_segment_id' and 'mappings' only exist if it is a SegmentationLayer
         segmentation_layer = cast(
@@ -1207,7 +1207,7 @@ def test_properties_with_segmentation() -> None:
     with open(ds_path / "datasource-properties.json", "w", encoding="utf-8") as f:
         # Update the properties on disk (without changing the data)
         json.dump(
-            dataset_converter.unstructure(ds_properties),
+            get_dataset_converter().unstructure(ds_properties),
             f,
             indent=4,
         )
@@ -1243,7 +1243,7 @@ def test_relative_mag_paths(data_format: DataFormat, output_path: UPath) -> None
             else:
                 mag._properties.path = f"{layer.name}/{mag.path.name}"
 
-    ds._export_as_json()
+    ds._save_dataset_properties()
 
     ds = Dataset.open(ds_path)
     for layer in ds.layers.values():
@@ -2213,7 +2213,7 @@ def test_search_dataset_also_for_long_layer_name(
 
     # Remove path from mag to let the path be auto-detected
     ds._properties.data_layers[0].mags[0].path = None
-    ds._export_as_json()
+    ds._save_dataset_properties()
 
     # make sure that reading data still works
     mag.read(absolute_offset=(20, 20, 20), size=(20, 20, 20))
@@ -2255,7 +2255,6 @@ def test_dataset_shallow_copy(data_format: DataFormat, output_path: UPath) -> No
         data_format=data_format,
     ).as_segmentation_layer()
     original_layer_2.add_mag(4)
-
     agglomerates_path = original_layer_2.path / "agglomerates" / "agglomerate_view.hdf5"
     agglomerates_path.parent.mkdir(parents=True)
     agglomerates_path.touch()
@@ -3396,7 +3395,6 @@ def test_warn_outdated_properties(data_format: DataFormat, output_path: UPath) -
 def test_dataset_properties_version() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-
     properties_path = ds.path / PROPERTIES_FILE_NAME
     properties = json.loads((properties_path).read_bytes())
     assert properties["version"] == 1
@@ -3405,7 +3403,7 @@ def test_dataset_properties_version() -> None:
     properties["version"] = 9000
     properties_path.write_text(json.dumps(properties))
 
-    with pytest.raises(ClassValidationError):
+    with pytest.raises(AssertionError):
         Dataset.open(ds_path)
 
 
@@ -3641,7 +3639,7 @@ def test_copy_dataset_exists_ok() -> None:
 
 @pytest.mark.use_proxay
 def test_remote_dataset_access_metadata() -> None:
-    ds = Dataset.open_remote("l4_sample", "Organization_X")
+    ds = RemoteDataset.open("l4_sample", "Organization_X")
     assert len(ds.metadata) == 0
 
     ds.metadata["key"] = "value"
@@ -3662,41 +3660,41 @@ def test_remote_dataset_access_metadata() -> None:
 
 @pytest.mark.use_proxay
 def test_remote_dataset_urls() -> None:
-    ds = Dataset.open_remote("l4_sample", "Organization_X")
+    ds = RemoteDataset.open("l4_sample", "Organization_X")
     dataset_id = ds._dataset_id
     assert dataset_id in ds.url
 
-    ds_open_with_id = Dataset.open_remote(dataset_id=dataset_id)
+    ds_open_with_id = RemoteDataset.open(dataset_id=dataset_id)
     assert ds_open_with_id.url == ds.url
 
     # Test different variants of the URL
     # 1. deprecated url: "http://localhost:9000/datasets/Organization_X/l4_sample"
 
-    ds1 = Dataset.open_remote("http://localhost:9000/datasets/Organization_X/l4_sample")
+    ds1 = RemoteDataset.open("http://localhost:9000/datasets/Organization_X/l4_sample")
     assert ds1.url == ds.url
 
     # 2. deprecated url with params: "http://localhost:9000/datasets/Organization_X/l4_sample/view#2786,4326,1816,0,3"
-    ds2 = Dataset.open_remote(
+    ds2 = RemoteDataset.open(
         "http://localhost:9000/datasets/Organization_X/l4_sample/view#2786,4326,1816,0,3"
     )
     assert ds2.url == ds.url
 
     # 3. new url: "http://localhost:9000/datasets/{dataset_id}"
-    ds3 = Dataset.open_remote(f"http://localhost:9000/datasets/{dataset_id}")
+    ds3 = RemoteDataset.open(f"http://localhost:9000/datasets/{dataset_id}")
     assert ds3.url == ds.url
 
     # 4. new url with params: "http://localhost:9000/datasets/{dataset_id}/view#2786,4326,1816,0,3"
-    ds4 = Dataset.open_remote(
+    ds4 = RemoteDataset.open(
         f"http://localhost:9000/datasets/{dataset_id}/view#2786,4326,1816,0,3"
     )
     assert ds4.url == ds.url
 
     # 5. new url with ds name: "http://localhost:9000/datasets/l4_sample-{dataset_id}"
-    ds5 = Dataset.open_remote(f"http://localhost:9000/datasets/l4_sample-{dataset_id}")
+    ds5 = RemoteDataset.open(f"http://localhost:9000/datasets/l4_sample-{dataset_id}")
     assert ds5.url == ds.url
 
     # 6. new url with ds name and params: "http://localhost:9000/datasets/l4_sample-{dataset_id}/view#2786,4326,1816,0,3"
-    ds6 = Dataset.open_remote(
+    ds6 = RemoteDataset.open(
         f"http://localhost:9000/datasets/l4_sample-{dataset_id}/view#2786,4326,1816,0,3"
     )
     assert ds6.url == ds.url

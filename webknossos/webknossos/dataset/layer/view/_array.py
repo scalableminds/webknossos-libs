@@ -20,9 +20,9 @@ import wkw
 from typing_extensions import NotRequired, Self
 from upath import UPath
 
-from ..geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
-from ..utils import call_with_retries, is_fs_path
-from .data_format import DataFormat
+from webknossos.dataset_properties import DataFormat
+from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
+from webknossos.utils import call_with_retries, is_fs_path
 
 logger = getLogger(__name__)
 

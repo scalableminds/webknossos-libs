@@ -15,13 +15,14 @@ def main() -> None:
     bbox = wk.BoundingBox([50, 50, 50], [50, 50, 50])
 
     # Download the dataset
-    ds = wk.Dataset.download(
+    ds = wk.RemoteDataset.open(
         dataset_name_or_url=name,
         organization_id=organization_id,
+        webknossos_url="https://webknossos.org",
+    ).download(
         bbox=bbox,
         layers=layers,
         mags=mags,
-        webknossos_url="https://webknossos.org",
     )
 
     # Check that the layer was downloaded
