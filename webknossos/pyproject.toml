@@ -50,7 +50,7 @@ dependencies = [
     "python-dotenv ~=1.0.1",
     "rich ~=13.8.0",
     "scipy >=1.13",
-    "tensorstore ==0.1.76; sys_platform == 'win32'",
+    "tensorstore ==0.1.76; sys_platform == 'win32'", # tensorstore crashes on windows with >0.1.76
     "tensorstore ~=0.1.78; sys_platform != 'win32'",
     "typer ~=0.12.5",
     "typing-extensions ~=4.0",
