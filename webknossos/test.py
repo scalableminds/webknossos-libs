@@ -130,7 +130,15 @@ Please ensure that the test-db is prepared by running this in the webknossos rep
 
 @contextmanager
 def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
-    cmd = ["npx", "proxay"]
+    try:
+        subprocess.check_output(
+            ["npx", "-y", "proxay@1.9.0"], text=True, stderr=subprocess.STDOUT
+        )
+    except subprocess.CalledProcessError as e:
+        if "Please specify a valid mode (record or replay)" not in e.output:
+            raise
+
+    cmd = ["npx", "proxay@1.9.0"]
     if mode == "record":
         cmd += [
             "--mode",

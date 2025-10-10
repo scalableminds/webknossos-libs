@@ -148,6 +148,9 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
+      - name: Install proxay
+        run: npm install -g proxay@1.9.0
+
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
@@ -222,6 +225,9 @@ jobs:
 
       - name: Install minio
         run: Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile "minio.exe"
+
+      - name: Install proxay
+        run: npm install -g proxay@1.9.0
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
