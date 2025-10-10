@@ -22,6 +22,7 @@ import requests
 WK_TOKEN = "1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e"
 WK_URL = "http://localhost:9000"
 IS_WINDOWS = sys.platform == "win32"
+PROXAY_VERSION = "1.9.0"
 
 
 @contextmanager
@@ -130,15 +131,18 @@ Please ensure that the test-db is prepared by running this in the webknossos rep
 
 @contextmanager
 def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
+    # Ensure that proxay is installed, otherwise it will lead to hard-to-debug errors
     try:
         subprocess.check_output(
-            ["npx", "-y", "proxay@1.9.0"], text=True, stderr=subprocess.STDOUT
+            ["npx", "-y", f"proxay@{PROXAY_VERSION}"],
+            text=True,
+            stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
         if "Please specify a valid mode (record or replay)" not in e.output:
             raise
 
-    cmd = ["npx", "proxay@1.9.0"]
+    cmd = ["npx", f"proxay@{PROXAY_VERSION}"]
     if mode == "record":
         cmd += [
             "--mode",
