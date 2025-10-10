@@ -1,4 +1,5 @@
-// refresh with `protoc --python_out .  webknossos/proofreading/agglomerate_graph.proto --pyi_out .`
+// This file was copied from webknossos: https://github.com/scalableminds/webknossos/blob/6f640c145055799e9cfbf3d0dc4a1800d164d70f/webknossos-datastore/proto/AgglomerateGraph.proto
+// update .py and .pyi files with: ( while being in webknossos-libs/webknossos): `protoc --proto_path webknossos/proofreading --python_out webknossos/proofreading/generated agglomerate_graph.proto --pyi_out webknossos/proofreading/generated`
 syntax = "proto2";
 
 package com.scalableminds.webknossos.datastore;

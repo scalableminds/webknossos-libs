@@ -1,6 +1,6 @@
 import numpy as np
 
-from webknossos.proofreading import agglomerate_graph_pb2
+from webknossos.proofreading.generated import agglomerate_graph_pb2
 
 
 class AgglomerateGraph:

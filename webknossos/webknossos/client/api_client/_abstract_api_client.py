@@ -5,7 +5,7 @@ from typing import Any, TypeVar
 
 import httpx
 
-from ...proofreading import agglomerate_graph_pb2
+from ...proofreading.generated import agglomerate_graph_pb2
 from ...ssl_context import SSL_CONTEXT
 from ._serialization import api_client_converter
 from .errors import CannotHandleResponseError, UnexpectedStatusError
