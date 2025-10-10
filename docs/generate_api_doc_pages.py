@@ -49,7 +49,7 @@ def print_submodule_classes(submodules_classes):
                 if not c.__name__.startswith("_")
             ]
         )
-        file_content = f"""::: {submodule}
+        file_content = f"""::: {".".join(submodule.split(".")[0:2])}
         options:
             members:\n{classes_string}\n"""
 

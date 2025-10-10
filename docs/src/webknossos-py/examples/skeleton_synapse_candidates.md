@@ -1,6 +1,6 @@
 # Skeleton Synapse Candidates
 
-This example loads an NML-file as a [`Skeleton`](../../api/webknossos/skeleton/skeleton.md#webknossos.skeleton.skeleton.Skeleton) and manipulates it:
+This example loads an NML-file as a [`Skeleton`](../../api/webknossos/skeleton/skeleton.md#webknossos.skeleton.Skeleton) and manipulates it:
 
 ```python
 --8<--
