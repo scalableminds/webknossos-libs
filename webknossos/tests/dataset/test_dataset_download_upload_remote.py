@@ -93,6 +93,9 @@ def test_url_open_remote(url: str, tmp_path: Path) -> None:
     }, "Dataset instances should be picklable."
 
 
+@pytest.mark.skip(
+    reason="This won't work in CI as the paths stored in cassettes are always absolute and dependent on the system recording the cassette."
+)
 def test_upload_dataset_with_symlinks(tmp_path: Path) -> None:
     sample_dataset = get_sample_dataset(tmp_path)
     remote_ds = sample_dataset.upload(
@@ -106,6 +109,9 @@ def test_upload_dataset_with_symlinks(tmp_path: Path) -> None:
     )
 
 
+@pytest.mark.skip(
+    reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
+)
 def test_upload_dataset_copy_to_paths(tmp_path: Path) -> None:
     sample_dataset = get_sample_dataset(tmp_path)
     remote_ds = sample_dataset.upload(

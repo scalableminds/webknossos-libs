@@ -22,14 +22,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/json
         content-length: '717'
       body:
         encoding: utf8
         data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1760083115510,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
+          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1760084899444,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
         compression: none
   - request:
       method: GET
@@ -57,14 +57,14 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/json
         content-length: '2991'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760083531661,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760084922944,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
@@ -90,14 +90,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/json
         content-length: '2989'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760083532003,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760084923281,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: HEAD
@@ -123,7 +123,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/json
         content-length: '1529'
@@ -156,7 +156,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/json
         content-length: '1529'
@@ -188,14 +188,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/json
         content-length: '2989'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760083532034,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760084923305,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: GET
@@ -225,7 +225,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '1000'
@@ -261,7 +261,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '360'
@@ -297,7 +297,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '120'
@@ -333,7 +333,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '20'
@@ -368,7 +368,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '6'
@@ -403,7 +403,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '4000'
@@ -439,7 +439,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '1440'
@@ -475,7 +475,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:31 GMT
+        date: Fri, 10 Oct 2025 08:28:43 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '480'
@@ -511,7 +511,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '80'
@@ -547,7 +547,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '24'
@@ -580,14 +580,14 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '2991'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760083532034,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760084923305,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
@@ -613,14 +613,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '2989'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760083533266,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760084924510,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: HEAD
@@ -646,7 +646,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '1529'
@@ -679,7 +679,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '1529'
@@ -716,7 +716,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -753,7 +753,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -790,7 +790,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -827,7 +827,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -864,7 +864,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -901,7 +901,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -938,7 +938,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -975,7 +975,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '166'
@@ -1012,7 +1012,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '163'
@@ -1049,7 +1049,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Fri, 10 Oct 2025 08:05:32 GMT
+        date: Fri, 10 Oct 2025 08:28:44 GMT
         connection: close
         content-type: application/json
         content-length: '163'
