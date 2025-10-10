@@ -294,6 +294,15 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             "%B %d, %Y %I:%M:%S"
         )
 
+    @property
+    def used_storage_bytes(self) -> int:
+        """The amount of storage used by the dataset.
+
+        Returns:
+            int: The amount of storage used by the dataset in bytes.
+        """
+        return self._get_dataset_info().used_storage_bytes or 0
+
     def _get_dataset_info(self) -> ApiDataset:
         from ..client.context import _get_api_client
 
