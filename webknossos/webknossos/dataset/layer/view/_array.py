@@ -4,8 +4,6 @@ from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from logging import getLogger
-from os.path import relpath
-from pathlib import Path
 from tempfile import mkdtemp
 from typing import (
     Any,
@@ -174,8 +172,8 @@ class BaseArray(ABC):
 
     _path: UPath
 
-    def __init__(self, path: Path):
-        self._path = UPath(path)
+    def __init__(self, path: UPath):
+        self._path = path
 
     @property
     @abstractmethod
@@ -184,7 +182,7 @@ class BaseArray(ABC):
 
     @classmethod
     @abstractmethod
-    def open(_cls, path: Path) -> "BaseArray":
+    def open(_cls, path: UPath) -> "BaseArray":
         classes = (WKWArray, Zarr3Array, Zarr2Array)
         for cls in classes:
             try:
@@ -196,7 +194,7 @@ class BaseArray(ABC):
 
     @classmethod
     @abstractmethod
-    def create(cls, path: Path, array_info: ArrayInfo) -> "BaseArray":
+    def create(cls, path: UPath, array_info: ArrayInfo) -> "BaseArray":
         pass
 
     @abstractmethod
@@ -235,12 +233,12 @@ class WKWArray(BaseArray):
 
     _cached_wkw_dataset: wkw.Dataset | None
 
-    def __init__(self, path: Path):
+    def __init__(self, path: UPath):
         super().__init__(path)
         self._cached_wkw_dataset = None
 
     @classmethod
-    def open(cls, path: Path) -> "WKWArray":
+    def open(cls, path: UPath) -> "WKWArray":
         header_path = path / "header.wkw"
 
         if header_path.exists() and header_path.is_file():
@@ -265,7 +263,7 @@ class WKWArray(BaseArray):
         )
 
     @classmethod
-    def create(cls, path: Path, array_info: ArrayInfo) -> "WKWArray":
+    def create(cls, path: UPath, array_info: ArrayInfo) -> "WKWArray":
         assert array_info.data_format == cls.data_format
 
         assert array_info.chunk_shape.is_uniform(), (
@@ -319,24 +317,18 @@ class WKWArray(BaseArray):
     def resize(self, new_bbox: NDBoundingBox) -> None:
         pass
 
-    def _list_files(self) -> Iterator[Path]:
-        return (
-            Path(relpath(filename, self._path))
-            for filename in self._wkw_dataset.list_files()
-        )
-
     def list_bounding_boxes(self) -> Iterator[BoundingBox]:
         def _extract_num(s: str) -> int:
             match = re.search("[0-9]+", s)
             assert match is not None
             return int(match[0])
 
-        def _extract_file_index(file_path: Path) -> Vec3Int:
-            z, y, x = [_extract_num(el) for el in file_path.parts]
+        def _extract_file_index(file_path: UPath) -> Vec3Int:
+            z, y, x = [_extract_num(el) for el in file_path.parts[-3:]]
             return Vec3Int(x, y, z)
 
         shard_shape = self.info.shard_shape
-        for file_path in self._list_files():
+        for file_path in self._path.glob("*/**/*.wkw"):
             cube_index = _extract_file_index(file_path)
             cube_offset = cube_index * shard_shape
 
@@ -379,9 +371,9 @@ class WKWArray(BaseArray):
 
 class AWSCredentialManager:
     entries: dict[int, tuple[str, str]]
-    folder_path: Path
+    folder_path: UPath
 
-    def __init__(self, folder_path: Path) -> None:
+    def __init__(self, folder_path: UPath) -> None:
         self.entries = {}
         self.folder_path = folder_path
 
@@ -389,11 +381,11 @@ class AWSCredentialManager:
         self.config_file_path.write_text("[default]\n")
 
     @property
-    def credentials_file_path(self) -> Path:
+    def credentials_file_path(self) -> UPath:
         return self.folder_path / "credentials"
 
     @property
-    def config_file_path(self) -> Path:
+    def config_file_path(self) -> UPath:
         return self.folder_path / "config"
 
     def _dump_credentials(self) -> None:
@@ -423,8 +415,8 @@ class AWSCredentialManager:
 
 
 @lru_cache
-def _aws_credential_folder() -> Path:
-    return Path(mkdtemp())
+def _aws_credential_folder() -> UPath:
+    return UPath(mkdtemp())
 
 
 _aws_credential_manager = AWSCredentialManager(_aws_credential_folder())
@@ -434,7 +426,7 @@ class TensorStoreArray(BaseArray):
     _cached_array: tensorstore.TensorStore | None
 
     def __init__(
-        self, path: Path, _cached_array: tensorstore.TensorStore | None = None
+        self, path: UPath, _cached_array: tensorstore.TensorStore | None = None
     ):
         super().__init__(path)
         self._cached_array = _cached_array
@@ -549,9 +541,7 @@ class TensorStoreArray(BaseArray):
                 "bucket": parsed_url.netloc,
                 "use_conditional_write": False,
             }
-            if endpoint_url := path.storage_options.get("client_kwargs", {}).get(
-                "endpoint_url", None
-            ):
+            if endpoint_url := path.storage_options.get("endpoint_url", None):
                 kvstore_spec["endpoint"] = endpoint_url
             if "key" in path.storage_options and "secret" in path.storage_options:
                 kvstore_spec["aws_credentials"] = _aws_credential_manager.add(
@@ -575,7 +565,7 @@ class TensorStoreArray(BaseArray):
             }
 
     @classmethod
-    def open(cls, path: Path) -> "TensorStoreArray":
+    def open(cls, path: UPath) -> "TensorStoreArray":
         classes = (Zarr3Array, Zarr2Array)
         for _cls in classes:
             try:
@@ -809,8 +799,8 @@ class Zarr3Array(TensorStoreArray):
     data_format = DataFormat.Zarr3
 
     @classmethod
-    def open(cls, path: Path) -> "Zarr3Array":
-        return cls._open(UPath(path))
+    def open(cls, path: UPath) -> "Zarr3Array":
+        return cls._open(path)
 
     @property
     def info(self) -> Zarr3ArrayInfo:
@@ -851,10 +841,9 @@ class Zarr3Array(TensorStoreArray):
         return any(c["name"] in ("blosc", "gzip", "zstd") for c in codecs)
 
     @classmethod
-    def create(cls, path: Path, array_info: ArrayInfo) -> "Zarr3Array":
+    def create(cls, path: UPath, array_info: ArrayInfo) -> "Zarr3Array":
         assert array_info.data_format == cls.data_format
         array_info = Zarr3ArrayInfo.from_array_info(array_info)
-        upath = UPath(path)
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.dimension_names[1:]
@@ -889,7 +878,7 @@ class Zarr3Array(TensorStoreArray):
         _array = tensorstore.open(
             {
                 "driver": str(cls.data_format),
-                "kvstore": cls._make_kvstore(upath),
+                "kvstore": cls._make_kvstore(path),
                 "metadata": {
                     "data_type": str(array_info.voxel_type),
                     "shape": shape,
@@ -906,7 +895,7 @@ class Zarr3Array(TensorStoreArray):
             },
             context=TS_CONTEXT,
         ).result()
-        return cls(upath, _array)
+        return cls(path, _array)
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         metadata = self._array.spec().to_json()["metadata"]
@@ -924,8 +913,8 @@ class Zarr2Array(TensorStoreArray):
     data_format = DataFormat.Zarr
 
     @classmethod
-    def open(cls, path: Path) -> "Zarr2Array":
-        return cls._open(UPath(path))
+    def open(cls, path: UPath) -> "Zarr2Array":
+        return cls._open(path)
 
     @property
     def info(self) -> ArrayInfo:
@@ -945,12 +934,11 @@ class Zarr2Array(TensorStoreArray):
         )
 
     @classmethod
-    def create(cls, path: Path, array_info: ArrayInfo) -> "Zarr2Array":
+    def create(cls, path: UPath, array_info: ArrayInfo) -> "Zarr2Array":
         assert array_info.data_format == DataFormat.Zarr
         assert array_info.chunks_per_shard == Vec3Int.full(1), (
             "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
         )
-        upath = UPath(path)
         chunk_shape = (array_info.num_channels,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.dimension_names[1:]
@@ -962,7 +950,7 @@ class Zarr2Array(TensorStoreArray):
         _array = tensorstore.open(
             {
                 "driver": "zarr",
-                "kvstore": cls._make_kvstore(upath),
+                "kvstore": cls._make_kvstore(path),
                 "metadata": {
                     "shape": shape,
                     "chunks": chunk_shape,
@@ -984,7 +972,7 @@ class Zarr2Array(TensorStoreArray):
             },
             context=TS_CONTEXT,
         ).result()
-        return cls(upath, _array)
+        return cls(path, _array)
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         metadata = self._array.spec().to_json()["metadata"]

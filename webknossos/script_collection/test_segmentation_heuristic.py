@@ -1,5 +1,6 @@
 import sys
-from pathlib import Path
+
+from upath import UPath
 
 import webknossos as wk
 from webknossos.dataset._utils.segmentation_recognition import (
@@ -9,11 +10,11 @@ from webknossos.dataset._utils.segmentation_recognition import (
 )
 
 
-def looks_like_remote_dataset(path: Path) -> bool:
+def looks_like_remote_dataset(path: UPath) -> bool:
     return len([item for item in path.iterdir() if item.is_dir()]) == 0
 
 
-def main(path_to_datasets: Path) -> None:
+def main(path_to_datasets: UPath) -> None:
     wrongly_predicted: list[str] = []
     correctly_predicted: list[str] = []
     failures: list[str] = []
@@ -79,4 +80,4 @@ def main(path_to_datasets: Path) -> None:
 
 
 if __name__ == "__main__":
-    main(Path("../webknossos/binaryData/sample_organization/"))
+    main(UPath("../webknossos/binaryData/sample_organization/"))

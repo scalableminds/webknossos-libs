@@ -5,12 +5,12 @@ import time
 from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
-from pathlib import Path
 from typing import Annotated, Any, cast
 
 import numpy as np
 import tensorstore
 import typer
+from upath import UPath
 
 from ..dataset import Dataset, MagView, SegmentationLayer
 from ..dataset.defaults import (
@@ -36,7 +36,7 @@ from ._utils import (
 logger = logging.getLogger(__name__)
 
 
-def _try_open_zarr(path: Path) -> tensorstore.TensorStore:
+def _try_open_zarr(path: UPath) -> tensorstore.TensorStore:
     try:
         return tensorstore.open(
             {"driver": "zarr3", "kvstore": {"driver": "file", "path": path}}
@@ -49,7 +49,7 @@ def _try_open_zarr(path: Path) -> tensorstore.TensorStore:
 
 def _zarr_chunk_converter(
     bounding_box: BoundingBox,
-    source_zarr_path: Path,
+    source_zarr_path: UPath,
     target_mag_view: MagView,
     flip_axes: int | tuple[int, ...] | None,
 ) -> int:
@@ -70,8 +70,8 @@ def _zarr_chunk_converter(
 
 def convert_zarr(
     *,
-    source_zarr_path: Path,
-    target_path: Path,
+    source_zarr_path: UPath,
+    target_path: UPath,
     layer_name: str,
     data_format: DataFormat,
     chunk_shape: Vec3Int,

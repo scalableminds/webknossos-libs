@@ -2,7 +2,6 @@ import logging
 import warnings
 from collections.abc import Iterator
 from os import PathLike
-from pathlib import Path
 from typing import TYPE_CHECKING, Generic, TypeVar, Union
 from uuid import uuid4
 
@@ -487,7 +486,7 @@ class MagView(View, Generic[LayerTypeT]):
     def compress(
         self,
         *,
-        target_path: str | Path | None = None,
+        target_path: str | PathLike | UPath | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Compresses the files on disk.
@@ -530,7 +529,7 @@ class MagView(View, Generic[LayerTypeT]):
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         compress: bool | Zarr3Config | None = None,
-        target_path: str | Path | None = None,
+        target_path: str | PathLike | UPath | None = None,
         executor: Executor | None = None,
         _progress_desc: str | None = None,
     ) -> None:
@@ -762,7 +761,7 @@ class MagView(View, Generic[LayerTypeT]):
 
     @classmethod
     def _ensure_mag_view(
-        cls, mag_view_or_path: Union[str, PathLike, "MagView"]
+        cls, mag_view_or_path: Union[str, PathLike, UPath, "MagView"]
     ) -> "MagView":
         """Ensure input is a MagView object, converting path-like objects if needed.
 

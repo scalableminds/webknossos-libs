@@ -47,9 +47,8 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
-from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import BinaryIO, Literal, Union, overload
+from typing import IO, Literal, Union, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -80,7 +79,7 @@ from ..dataset_properties import (
 )
 from ..geometry import NDBoundingBox, Vec3Int
 from ..skeleton import Skeleton
-from ..utils import get_executor_for_args, time_since_epoch_in_ms
+from ..utils import get_executor_for_args, is_fs_path, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 from .volume_layer import SegmentInformation, VolumeLayer
 
@@ -299,7 +298,7 @@ class Annotation:
         self.skeleton.description = description
 
     @classmethod
-    def load(cls, annotation_path: str | PathLike) -> "Annotation":
+    def load(cls, annotation_path: str | PathLike | UPath) -> "Annotation":
         """Loads an annotation from a file.
 
         Supports loading from:
@@ -325,7 +324,7 @@ class Annotation:
             ann = Annotation.load("annotation.zip")
             ```
         """
-        annotation_path = Path(annotation_path)
+        annotation_path = UPath(annotation_path)
         assert annotation_path.exists(), (
             f"Annotation path {annotation_path} does not exist."
         )
@@ -444,7 +443,7 @@ class Annotation:
         volume_zip_root = NamedTemporaryFile(suffix=".zip").name
         with ZipFile(volume_zip_root, "w"):
             pass
-        annotation._write_volume_layers(Path(volume_zip_root))
+        annotation._write_volume_layers(UPath(volume_zip_root))
 
         if _return_context:
             return annotation, context
@@ -542,7 +541,7 @@ class Annotation:
     def _load_from_nml(
         cls,
         name: str,
-        nml_content: BinaryIO,
+        nml_content: IO[bytes],
         possible_volume_paths: list[ZipPath] | None = None,
     ) -> "Annotation":
         nml = wknml.Nml.parse(nml_content)
@@ -644,30 +643,43 @@ class Annotation:
         return volume_layers
 
     @classmethod
-    def _load_from_zip(cls, content: str | PathLike | BinaryIO) -> "Annotation":
-        zipfile = ZipFile(content)
+    def _load_from_zip(cls, content: str | UPath | IO[bytes]) -> "Annotation":
+        f: IO[bytes]
+        if isinstance(content, str):
+            f = open(content, mode="rb")
+        elif isinstance(content, UPath):
+            f = content.open(mode="rb")
+        else:
+            f = content
+        zipfile = ZipFile(f)
         paths = [ZipPath(zipfile, i.filename) for i in zipfile.filelist]
         nml_paths = [i for i in paths if i.suffix == ".nml"]
         assert len(nml_paths) > 0, "Couldn't find an nml file in the supplied zip-file."
         assert len(nml_paths) == 1, (
             f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
         )
-        with nml_paths[0].open(mode="rb") as f:
-            return cls._load_from_nml(nml_paths[0].stem, f, possible_volume_paths=paths)
+        with nml_paths[0].open(mode="rb") as nml_f:
+            return cls._load_from_nml(
+                nml_paths[0].stem, nml_f, possible_volume_paths=paths
+            )
 
-    def _write_volume_layers(self, path: Path) -> None:
+    def _write_volume_layers(self, path: UPath) -> None:
         """
         Writes all volume layers with zip data to a single zip file at the specified location.
         """
 
+        assert is_fs_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        with ZipFile(
-            path,
-            mode="w",
-            compression=ZIP_DEFLATED,
-            compresslevel=Z_BEST_SPEED,
-        ) as zf:
+        with (
+            path.open(mode="wb") as f,
+            ZipFile(
+                f,
+                mode="w",
+                compression=ZIP_DEFLATED,
+                compresslevel=Z_BEST_SPEED,
+            ) as zf,
+        ):
             for layer in self._volume_layers:
                 if layer.zip is not None:
                     with layer.zip.open(mode="rb") as f:
@@ -677,7 +689,7 @@ class Annotation:
             if layer.zip is not None:
                 layer.zip = ZipPath(path, layer.zip.at)
 
-    def save(self, path: str | PathLike) -> None:
+    def save(self, path: str | PathLike | UPath) -> None:
         """Saves the annotation to a file.
 
         For skeleton-only annotations, saves as .nml file.
@@ -700,16 +712,19 @@ class Annotation:
             annotation.save("full_annotation.zip")
             ```
         """
-        path = Path(path)
+        path = UPath(path)
         assert path.suffix in [
             ".zip",
             ".nml",
         ], "The target path must have a .zip or .nml suffix."
 
         if path.suffix == ".zip":
-            with ZipFile(
-                path, mode="x", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
-            ) as zipfile:
+            with (
+                path.open(mode="wb") as f,
+                ZipFile(
+                    f, mode="w", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
+                ) as zipfile,
+            ):
                 self._write_to_zip(zipfile)
         else:
             assert len(self._volume_layers) == 0, (
@@ -717,13 +732,13 @@ class Annotation:
                 + "Please use a .zip path instead."
             )
             nml = annotation_to_nml(self)
-            with open(path, "wb") as f:
+            with path.open("wb") as f:
                 nml.write(f)
 
     def merge_fallback_layer(
         self,
-        target: Path,
-        dataset_directory: Path,
+        target: str | PathLike | UPath,
+        dataset_directory: str | PathLike | UPath,
         volume_layer_name: str | None = None,
         executor: Executor | None = None,
     ) -> None:
@@ -779,7 +794,7 @@ class Annotation:
             self.export_volume_layer_to_dataset(output_dataset)
 
         else:
-            fallback_dataset_path = dataset_directory / self.dataset_name
+            fallback_dataset_path = UPath(dataset_directory) / self.dataset_name
             fallback_layer = Dataset.open(fallback_dataset_path).get_layer(
                 fallback_layer_name
             )
@@ -1461,7 +1476,7 @@ class RemoteAnnotation(Annotation):
             ),
         )
 
-    def save(self, path: str | PathLike) -> None:
+    def save(self, path: str | PathLike | UPath) -> None:
         raise NotImplementedError(
             "Remote annotations cannot be saved. Changes are applied ."
         )
@@ -1469,7 +1484,7 @@ class RemoteAnnotation(Annotation):
     def download_mesh(
         self,
         segment_id: int,
-        output_dir: PathLike | str,
+        output_dir: PathLike | UPath | str,
         tracing_id: str,
         mesh_file_name: str | None = None,
         lod: int = 0,

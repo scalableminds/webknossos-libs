@@ -176,7 +176,6 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-          COVERAGE_FILE: "~/.local/share/coverage/${{ matrix.group }}.coverage"
         run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
@@ -191,13 +190,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-${{ matrix.group }}
-          path: "~/.local/share/coverage/${{ matrix.group }}.coverage"
+          path: "webknossos/.coverage"
+          include-hidden-files: true
+          if-no-files-found: error
           retention-days: 1 # Automatically deletes after 1 day
 
       - name: Check if git is dirty
-        run: |
-          git diff --no-ext-diff --exit-code
-          [[ -z $(git status -s) ]]
+        run: ../_tooling/check_clean.sh
 
   webknossos_windows:
     needs: changes
@@ -262,7 +261,7 @@ jobs:
         env:
           COVERAGE_FILE: "~/coverage-files/result.coverage"
         run: |
-          coverage combine ~/coverage-files/**/*.coverage
+          coverage combine ~/coverage-files/**/.coverage
           coverage xml -i -o ~/coverage-files/result.xml
 
       - name: Report coverage
@@ -301,8 +300,8 @@ jobs:
           cd docs
           ./generate.sh --persist
 
-      - name: Push docs (for branch)
-        if: github.ref_type == 'branch'
+      - name: Push docs (for master)
+        if: github.ref == 'refs/heads/master'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -193,7 +193,7 @@ def parse_path(value: str) -> UPath:
     if value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
         return UPath(
             value,
-            client_kwargs={"endpoint_url": environ["S3_ENDPOINT_URL"]},
+            endpoint_url=environ["S3_ENDPOINT_URL"],
         )
 
     return UPath(value)

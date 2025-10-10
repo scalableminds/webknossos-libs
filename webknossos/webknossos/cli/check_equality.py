@@ -103,7 +103,7 @@ def main(
             f"The datasets {source} and {target} are equal \
     (with regard to the layers: {layer_names})"
         )
-    except AssertionError as err:
+    except RuntimeError as err:
         print(f"The datasets are not equal: {err}")
         exit(1)
 
@@ -118,18 +118,20 @@ def compare_layers(
     layer_name = source_layer.name
     logger.info("Checking layer_name: %s", layer_name)
 
-    assert source_layer.bounding_box == target_layer.bounding_box, (
-        f"The bounding boxes of '{layer_name}' layer of source and target \
+    if source_layer.bounding_box != target_layer.bounding_box:
+        raise RuntimeError(
+            f"The bounding boxes of '{layer_name}' layer of source and target \
 are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
-    )
+        )
 
     source_mags = set(source_layer.mags.keys())
     target_mags = set(target_layer.mags.keys())
 
-    assert source_mags == target_mags, (
-        f"The mags of '{layer_name}' layer of source and target are not equal: \
+    if source_mags != target_mags:
+        raise RuntimeError(
+            f"The mags of '{layer_name}' layer of source and target are not equal: \
 {source_mags} != {target_mags}"
-    )
+        )
 
     for mag in source_mags:
         source_mag = source_layer.mags[mag]
@@ -137,6 +139,11 @@ are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
 
         logger.info("Start verification of %s in mag %s", layer_name, mag)
         with get_executor_for_args(args=executor_args) as executor:
-            assert source_mag.content_is_equal(target_mag, executor=executor), (
-                f"The contents of {source_mag} and {target_mag} differ."
-            )
+            if not source_mag.content_is_equal(
+                target_mag,
+                executor=executor,
+                progress_desc=f"Comparing {layer_name}/{mag}",
+            ):
+                raise RuntimeError(
+                    f"The contents of {source_mag} and {target_mag} differ."
+                )

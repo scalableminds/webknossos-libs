@@ -37,7 +37,7 @@ class RemoteSegmentationLayer(
     def download_mesh(
         self,
         segment_id: int,
-        output_dir: PathLike | str,
+        output_dir: PathLike | UPath | str,
         mesh_file_name: str | None = None,
         datastore_url: str | None = None,
         lod: int = 0,

@@ -4,11 +4,11 @@ import logging
 from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
-from pathlib import Path
 from typing import Annotated, Any, Literal
 
 import numpy as np
 import typer
+from upath import UPath
 
 from ..dataset import Dataset, MagView, SamplingModes
 from ..dataset.defaults import (
@@ -21,6 +21,7 @@ from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import (
     get_executor_for_args,
+    is_fs_path,
     rmtree,
     time_start,
     time_stop,
@@ -45,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 def _raw_chunk_converter(
     bounding_box: BoundingBox,
-    source_raw_path: Path,
+    source_raw_path: UPath,
     target_mag_view: MagView,
     source_dtype: np.dtype,
     target_dtype: np.dtype,
@@ -55,8 +56,11 @@ def _raw_chunk_converter(
     rescale_min_max: RescaleValues | None,
 ) -> None:
     logger.info("Conversion of %s", bounding_box.topleft)
+    assert is_fs_path(source_raw_path)
     source_data: np.ndarray = np.memmap(
-        source_raw_path,
+        str(
+            source_raw_path
+        ),  # this is fine, because we checked that source_raw_path is a fs_path
         dtype=source_dtype,
         mode="r",
         shape=(1,) + shape,
@@ -90,8 +94,8 @@ def _raw_chunk_converter(
 
 def convert_raw(
     *,
-    source_raw_path: Path,
-    target_path: Path,
+    source_raw_path: UPath,
+    target_path: UPath,
     layer_name: str,
     source_dtype: np.dtype,
     target_dtype: np.dtype,
