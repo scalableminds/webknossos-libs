@@ -2557,7 +2557,7 @@ requires-dist = [
     { name = "tifffile", marker = "extra == 'tifffile'", specifier = ">=2024.8.24,<2025.5.21" },
     { name = "typer", specifier = "~=0.12.5" },
     { name = "typing-extensions", specifier = "~=4.0" },
-    { name = "universal-pathlib", specifier = "~=0.3" },
+    { name = "universal-pathlib", specifier = "~=0.2" },
     { name = "webknossos", extras = ["bioformats"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["examples"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["imagecodecs"], marker = "extra == 'all'" },
