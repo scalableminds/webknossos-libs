@@ -1,9 +1,9 @@
 import mimetypes
 import time
-from pathlib import Path
 from typing import Any
 
 import httpx
+from upath import UPath
 
 from .file import FileChunk, ResumableFile
 from .util import Config
@@ -111,7 +111,7 @@ def _build_query(
     }
 
 
-def _file_type(path: Path) -> str:
+def _file_type(path: UPath) -> str:
     """Mimic the type parameter of a JS File object.
 
     Resumable.js uses the File object's type attribute to guess mime type,

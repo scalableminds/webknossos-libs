@@ -1,13 +1,13 @@
 import json
 import warnings
 from collections.abc import Iterator
-from pathlib import Path
 from shutil import copytree
 
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor
 from tifffile import TiffFile
+from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset
@@ -20,34 +20,41 @@ def ignore_warnings() -> Iterator:
         yield
 
 
-def test_compare_tifffile(tmp_path: Path) -> None:
-    ds = Dataset.from_images(
-        TESTDATA_DIR / "tiff",
-        tmp_path,
-        (1, 1, 1),
-        compress=True,
-        layer_name="tiff_stack",
-        layer_category="segmentation",
-        shard_shape=(256, 256, 256),
-        map_filepath_to_layer_name=Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER,
-    )
+def test_compare_tifffile(tmp_upath: UPath) -> None:
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            TESTDATA_DIR / "tiff",
+            tmp_upath,
+            (1, 1, 1),
+            compress=True,
+            layer_name="tiff_stack",
+            layer_category="segmentation",
+            shard_shape=(256, 256, 256),
+            map_filepath_to_layer_name=Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER,
+            executor=executor,
+        )
     assert len(ds.layers) == 1
     assert "tiff_stack" in ds.layers
     data = ds.layers["tiff_stack"].get_finest_mag().read()[0, :, :]
     for z_index in range(0, data.shape[-1]):
-        with TiffFile(TESTDATA_DIR / "tiff" / "test.0000.tiff") as tif_file:
+        with (
+            (TESTDATA_DIR / "tiff" / "test.0000.tiff").open("rb") as f,
+            TiffFile(f) as tif_file,
+        ):
             comparison_slice = tif_file.asarray().T
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
-def test_multiple_multitiffs(tmp_path: Path) -> None:
-    ds = Dataset.from_images(
-        TESTDATA_DIR / "various_tiff_formats",
-        tmp_path,
-        (1, 1, 1),
-        data_format="zarr3",
-        layer_name="tiffs",
-    )
+def test_multiple_multitiffs(tmp_upath: UPath) -> None:
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            TESTDATA_DIR / "various_tiff_formats",
+            tmp_upath,
+            (1, 1, 1),
+            data_format="zarr3",
+            layer_name="tiffs",
+            executor=executor,
+        )
     assert len(ds.layers) == 12
 
     expected_dtype_channels_size_per_layer = {
@@ -81,10 +88,10 @@ def test_multiple_multitiffs(tmp_path: Path) -> None:
         assert array_shape == [channels] + shard_aligned_bottomright.to_list()
 
 
-def test_from_dicom_images(tmp_path: Path) -> None:
+def test_from_dicom_images(tmp_upath: UPath) -> None:
     ds = Dataset.from_images(
         TESTDATA_DIR / "dicoms",
-        tmp_path,
+        tmp_upath,
         (1, 1, 1),
     )
     assert len(ds.layers) == 1
@@ -96,19 +103,19 @@ def test_from_dicom_images(tmp_path: Path) -> None:
     )
 
 
-def test_no_slashes_in_layername(tmp_path: Path) -> None:
-    (input_path := tmp_path / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
+def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
+    (input_path := tmp_upath / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
     copytree(
-        TESTDATA_DIR / "tiff_with_different_shapes",
-        input_path,
+        str(TESTDATA_DIR / "tiff_with_different_shapes"),
+        str(input_path),
         dirs_exist_ok=True,
     )
 
     for strategy in Dataset.ConversionLayerMapping:
         with SequentialExecutor() as executor:
             dataset = Dataset.from_images(
-                tmp_path / "tiff",
-                tmp_path / str(strategy),
+                tmp_upath / "tiff",
+                tmp_upath / str(strategy),
                 voxel_size=(10, 10, 10),
                 map_filepath_to_layer_name=strategy,
                 executor=executor,

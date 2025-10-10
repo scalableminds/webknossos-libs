@@ -1,10 +1,9 @@
 import logging
-from os import PathLike
-from pathlib import Path
 from typing import TypeVar, cast
 
 import numpy as np
 from rich.progress import track
+from upath import UPath
 
 from .. import LayerCategoryType
 from ..dataset import Dataset
@@ -31,7 +30,7 @@ def download_dataset(
     bbox: BoundingBox | None = None,
     layers: list[str] | None = None,
     mags: list[Mag] | None = None,
-    path: PathLike | str | None = None,
+    path: UPath | str | None = None,
     exist_ok: bool = False,
 ) -> Dataset:
     context = _get_context()
@@ -43,7 +42,7 @@ def download_dataset(
     datastore_client = context.get_datastore_api_client(api_dataset.data_store.url)
 
     download_path = (
-        Path(f"{api_dataset.name}-{api_dataset.id}") if path is None else Path(path)
+        UPath(f"{api_dataset.name}-{api_dataset.id}") if path is None else UPath(path)
     )
     if download_path.exists():
         logger.warning(f"{download_path} already exists, skipping download.")

@@ -29,6 +29,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 
 ### Changed
+- Replaced `pathlib.Path` for `upath.UPath` internally. `pathlib.Path` is still supported for user-facing APIs. Adds support for `universal_pathlib` version 0.3.x. [#1374](https://github.com/scalableminds/webknossos-libs/pull/1374)
 - Only use fs-based copy for mags on local file systems and S3. Other protocols, e.g. memory and HTTP, have caveats that break fs-based copying. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 - The `add_*` methods in `Attachments` now return the created attachment objects, similar to `add_layer` and `add_mag`. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 - The returned dataset ID from dataset exploration is now used. [#1378](https://github.com/scalableminds/webknossos-libs/pull/1378) 

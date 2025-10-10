@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -72,42 +71,43 @@ def test_call_with_retries_direct_failure(mock_sleep: Mock) -> None:
     assert mock_sleep.call_count == 0  # Sleep not called since it failed immediately
 
 
-def test_dump_path(tmp_path: Path) -> None:
-    tmp_path = UPath(tmp_path.resolve())
+def test_dump_path(tmp_upath: UPath) -> None:
+    tmp_upath = UPath(tmp_upath.resolve())
 
     # relative enclosed
-    dataset_path = tmp_path / "test_dataset"
+    dataset_path = tmp_upath / "test_dataset"
     path = dataset_path / "test.txt"
     assert dump_path(path, dataset_path) == "./test.txt"
 
     # relative not enclosed
-    dataset_path = tmp_path / "test_dataset"
+    dataset_path = tmp_upath / "test_dataset"
     path = dataset_path / ".." / "test_dataset2" / "test.txt"
     assert (
-        dump_path(path, dataset_path) == f"{tmp_path.as_posix()}/test_dataset2/test.txt"
+        dump_path(path, dataset_path)
+        == f"{tmp_upath.as_posix()}/test_dataset2/test.txt"
     )
 
     # dataset path with ..
-    dataset_path = tmp_path / "test_dataset" / ".." / "test_dataset2"
-    path = tmp_path / "test_dataset" / "test.txt"
+    dataset_path = tmp_upath / "test_dataset" / ".." / "test_dataset2"
+    path = tmp_upath / "test_dataset" / "test.txt"
     assert (
-        dump_path(path, dataset_path) == f"{tmp_path.as_posix()}/test_dataset/test.txt"
+        dump_path(path, dataset_path) == f"{tmp_upath.as_posix()}/test_dataset/test.txt"
     )
 
-    dataset_path = tmp_path / "test_dataset" / ".." / "test_dataset2"
-    path = tmp_path / "test_dataset2" / "test.txt"
+    dataset_path = tmp_upath / "test_dataset" / ".." / "test_dataset2"
+    path = tmp_upath / "test_dataset2" / "test.txt"
     assert dump_path(path, dataset_path) == "./test.txt"
 
     # dataset path is a prefix
-    dataset_path = tmp_path / "test_dataset"
-    path = tmp_path / "test_dataset_longer" / "test.txt"
+    dataset_path = tmp_upath / "test_dataset"
+    path = tmp_upath / "test_dataset_longer" / "test.txt"
     assert (
         dump_path(path, dataset_path)
-        == f"{tmp_path.as_posix()}/test_dataset_longer/test.txt"
+        == f"{tmp_upath.as_posix()}/test_dataset_longer/test.txt"
     )
 
     # s3 non relative
-    dataset_path = tmp_path / "test_dataset"
+    dataset_path = tmp_upath / "test_dataset"
     path = UPath(
         "s3://bucket/test.txt",
         endpoint_url="https://s3.amazonaws.com",

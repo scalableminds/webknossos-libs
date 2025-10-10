@@ -3,7 +3,6 @@ import warnings
 from inspect import getframeinfo, stack
 from os import PathLike
 from os.path import relpath
-from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
@@ -242,6 +241,9 @@ class Layer(AbstractLayer):
             )
 
         if self.path.exists():
+            assert is_fs_path(self.dataset.path), (
+                "Renaming layers is only supported for local paths."
+            )
             self.path.rename(self.dataset.path / layer_name)
         self._path = self.dataset.path / layer_name
         self._resolved_path = cheap_resolve(self.dataset.resolved_path / layer_name)
@@ -566,7 +568,7 @@ class Layer(AbstractLayer):
 
     def add_copy_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -593,7 +595,7 @@ class Layer(AbstractLayer):
 
     def add_mag_as_copy(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -715,7 +717,7 @@ class Layer(AbstractLayer):
 
     def add_symlink_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         make_relative: bool = False,
         extend_layer_bounding_box: bool = True,
@@ -739,27 +741,35 @@ class Layer(AbstractLayer):
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
+        self_path = self.path
+        self_resolved_path = self.resolved_path
+        dataset_resolved_path = self.dataset.resolved_path
+        assert (
+            is_fs_path(self_path)
+            and is_fs_path(self_resolved_path)
+            and is_fs_path(dataset_resolved_path)
+        ), f"Cannot create symlinks in non-local layer {self_path}"
         assert is_fs_path(foreign_mag_view.path), (
-            f"Cannot create symlink to remote mag {foreign_mag_view.path}"
+            f"Cannot create symlink to non-local mag {foreign_mag_view.path}"
         )
 
         foreign_normalized_mag_path = (
-            Path(relpath(foreign_mag_view.path, self.resolved_path))
+            UPath(relpath(foreign_mag_view.path, self_resolved_path))
             if make_relative
             else foreign_mag_view.path
         )
 
-        (self.path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
+        (self_path / str(foreign_mag_view.mag)).symlink_to(foreign_normalized_mag_path)
 
         new_mag_path = (
-            relpath(foreign_mag_view.path, self.dataset.resolved_path)
+            relpath(foreign_mag_view.path, dataset_resolved_path)
             if make_relative
             else str(foreign_mag_view.path.resolve())
         )
 
         mag = self._add_mag_for_existing_files(
             foreign_mag_view.mag,
-            mag_path=foreign_mag_view.path,
+            mag_path=UPath(foreign_mag_view.path),
             override_stored_path=new_mag_path,
             read_only=True,
         )
@@ -772,7 +782,7 @@ class Layer(AbstractLayer):
 
     def add_remote_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
     ) -> MagView["Layer"]:
@@ -785,7 +795,7 @@ class Layer(AbstractLayer):
 
     def add_mag_as_ref(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         mag: MagLike | None = None,
         extend_layer_bounding_box: bool = True,
@@ -832,7 +842,7 @@ class Layer(AbstractLayer):
 
     def _add_fs_copy_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
@@ -867,7 +877,7 @@ class Layer(AbstractLayer):
 
     def add_fs_copy_mag(
         self,
-        foreign_mag_view_or_path: PathLike | str | MagView,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
@@ -892,7 +902,7 @@ class Layer(AbstractLayer):
     def add_mag_from_zarrarray(
         self,
         mag: MagLike,
-        path: PathLike,
+        path: PathLike | UPath,
         *,
         move: bool = False,
         extend_layer_bounding_box: bool = True,
@@ -1415,7 +1425,7 @@ class Layer(AbstractLayer):
 
     @classmethod
     def _ensure_layer(
-        cls, layer: Union[str, PathLike, "Layer", "RemoteLayer"]
+        cls, layer: Union[str, PathLike, UPath, "Layer", "RemoteLayer"]
     ) -> Union["Layer", "RemoteLayer"]:
         # local import to prevent circular dependency
         from webknossos.dataset import Dataset

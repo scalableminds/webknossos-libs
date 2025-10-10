@@ -3,7 +3,6 @@ from abc import abstractmethod
 from collections.abc import Iterator
 from os import PathLike
 from os.path import relpath
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from upath import UPath
@@ -239,7 +238,11 @@ class Attachments(AbstractAttachments):
         self._save_properties()
 
     def add_mesh(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> MeshAttachment:
         attachment = MeshAttachment.from_path_and_name(
             UPath(path),
@@ -251,7 +254,11 @@ class Attachments(AbstractAttachments):
         return attachment
 
     def add_agglomerate(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> AgglomerateAttachment:
         attachment = AgglomerateAttachment.from_path_and_name(
             UPath(path),
@@ -263,7 +270,11 @@ class Attachments(AbstractAttachments):
         return attachment
 
     def add_connectome(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> ConnectomeAttachment:
         attachment = ConnectomeAttachment.from_path_and_name(
             UPath(path),
@@ -275,7 +286,11 @@ class Attachments(AbstractAttachments):
         return attachment
 
     def set_segment_index(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> SegmentIndexAttachment:
         attachment = SegmentIndexAttachment.from_path_and_name(
             UPath(path),
@@ -287,7 +302,11 @@ class Attachments(AbstractAttachments):
         return attachment
 
     def set_cumsum(
-        self, path: str | PathLike, *, name: str, data_format: AttachmentDataFormat
+        self,
+        path: str | PathLike | UPath,
+        *,
+        name: str,
+        data_format: AttachmentDataFormat,
     ) -> CumsumAttachment:
         attachment = CumsumAttachment.from_path_and_name(
             UPath(path),
@@ -367,7 +386,12 @@ class Attachments(AbstractAttachments):
                 )
                 new_path.parent.mkdir(parents=True, exist_ok=True)
                 if make_relative:
-                    new_path.symlink_to(Path(relpath(attachment.path, new_path.parent)))
+                    assert is_fs_path(new_path.parent), (
+                        "Relative symlinks are only supported for local paths."
+                    )
+                    new_path.symlink_to(
+                        UPath(relpath(attachment.path, new_path.parent))
+                    )
                 else:
                     new_path.symlink_to(attachment.path)
             new_attachment = type(attachment).from_path_and_name(
