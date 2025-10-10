@@ -26,6 +26,7 @@ from .layer import (
     LayerToLink,
     MagView,
     MeshAttachment,
+    RemoteLayer,
     RemoteSegmentationLayer,
     SegmentationLayer,
     SegmentIndexAttachment,

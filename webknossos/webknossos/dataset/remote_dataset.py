@@ -87,6 +87,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         zarr_streaming_path: UPath | None,
         dataset_properties: DatasetProperties | None,
         dataset_id: str,
+        annotation_id: str | None,
         context: webknossos_context,
         read_only: bool,
     ) -> None:
@@ -118,6 +119,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         super().__init__(dataset_properties, read_only)
 
         self._dataset_id = dataset_id
+        self._annotation_id = annotation_id
         self._context = context
 
     @classmethod
@@ -198,7 +200,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                         headers={} if token is None else {"X-Auth-Token": token},
                         ssl=SSL_CONTEXT,
                     )
-                return cls(zarr_path, None, dataset_id, context_manager, read_only=True)
+                return cls(zarr_path, None, dataset_id, annotation_id, context_manager, read_only=True)
             else:
                 if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
                     raise RuntimeError(
@@ -209,6 +211,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     None,
                     api_dataset_info.data_source,
                     dataset_id,
+                    annotation_id,
                     context_manager,
                     read_only,
                 )
@@ -260,6 +263,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     @property
     def dataset_id(self) -> str:
         return self._dataset_id
+
+    @property
+    def annotation_id(self) -> str | None:
+        return self._annotation_id
 
     @property
     def url(self) -> str:
