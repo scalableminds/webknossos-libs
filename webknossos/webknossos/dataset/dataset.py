@@ -598,7 +598,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         initial_team_ids: list[str] | None = None,
         folder_id: str | RemoteFolder | None = None,
         require_unique_name: bool = False,
-        layers_to_link: list[LayerToLink | RemoteLayer] | None = None,
+        layers_to_link: Sequence[LayerToLink | RemoteLayer] | None = None,
         upload_directly_to_common_storage: bool = False,
         jobs: int | None = None,
         common_storage_path_prefix: str | None = None,

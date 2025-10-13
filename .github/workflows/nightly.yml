@@ -2,7 +2,7 @@ name: nightly
 
 on:
   schedule:
-    - cron:  '00 06 * * *'
+    - cron: "00 06 * * *"
   workflow_dispatch: ~
 
 jobs:
@@ -19,46 +19,46 @@ jobs:
         working-directory: webknossos
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
 
-    - name: Install proxay
-      run: npm install -g proxay
+      - name: Install proxay
+        run: npm install -g proxay
 
-    - name: Set up Python ${{ matrix.python-version }}
-      run: uv python install ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
 
-    - name: Check if git is dirty
-      run: |
-        git diff --no-ext-diff --quiet --exit-code
-        [[ -z $(git status -s) ]]
+      - name: Check if git is dirty
+        run: |
+          git diff --no-ext-diff --quiet --exit-code
+          [[ -z $(git status -s) ]]
 
-    - name: Python tests, refreshing the network snapshots
-      env:
-        WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: ./test.sh --refresh-snapshots --splits 3 --group ${{ matrix.group }}
+      - name: Python tests, refreshing the network snapshots
+        env:
+          WK_TOKEN: ${{ secrets.WK_TOKEN }}
+        run: uv run test.py --refresh-snapshots --splits 3 --group ${{ matrix.group }}
 
-    - name: Python tests, using the new snapshots
-      env:
-        WK_TOKEN: ${{ secrets.WK_TOKEN }}
-      run: ./test.sh --refresh-snapshots --splits 3 --group ${{ matrix.group }}
+      - name: Python tests, using the new snapshots
+        env:
+          WK_TOKEN: ${{ secrets.WK_TOKEN }}
+        run: uv run test.py --refresh-snapshots --splits 3 --group ${{ matrix.group }}
 
-    - uses: slackapi/slack-github-action@v2.1.1
-      if: failure() || cancelled()
-      with:
-        webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-        webhook-type: incoming-webhook
-        payload: |
-          attachments:
-            - color: "#f00"
-              blocks:
-                - type: "section"
-                  text:
-                    type: "mrkdwn"
-                    text: ':fire: Job <${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}|${{github.job}}> of workflow "${{github.workflow}}" failed'
-                - type: "context"
-                  elements:
-                    - type: mrkdwn
-                      text: '<${{github.repositoryUrl}}|${{github.repository}}>'
+      - uses: slackapi/slack-github-action@v2.1.1
+        if: failure() || cancelled()
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            attachments:
+              - color: "#f00"
+                blocks:
+                  - type: "section"
+                    text:
+                      type: "mrkdwn"
+                      text: ':fire: Job <${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}|${{github.job}}> of workflow "${{github.workflow}}" failed'
+                  - type: "context"
+                    elements:
+                      - type: mrkdwn
+                        text: '<${{github.repositoryUrl}}|${{github.repository}}>'

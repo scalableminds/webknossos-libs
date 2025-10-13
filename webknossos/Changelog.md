@@ -15,6 +15,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 - The `endpoint_url` in `UPath` objects is now stored directly in the `storage_options` dict, instead of being stored in the `storage_options["client_kwargs"]` dict. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 - Removed Docker image `scalableminds/webknossos-cli` build. It will not be released further. [#1376](https://github.com/scalableminds/webknossos-libs/pull/1376)
+
+### Added
+- Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
+- RemoteDataset.annotation_id is now exposed, when available. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
+- RemoteDataset.open() now accepts an annotation url as well. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
+### Changed
+- Ported `test.sh` to `test.py`, run with `uv run test.py`. [#1379](https://github.com/scalableminds/webknossos-libs/pull/1379)
 - `Dataset.add_layer_as_ref(remote_layer.path)` does not work anymore. Please use `Dataset.add_layer_as_ref(remote_layer)` instead. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Due to the refactoring, the imports of various classes have changed. Please update your code accordingly. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Deprecated a number of methods [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371]):
@@ -24,11 +31,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `Dataset.download()`, use `RemoteDataset.download()` instead.
   - `mag_view.is_foreign`, use `layer.is_mag_view_foreign(mag_view)` instead.
   - `Dataset.trigger_reload_in_datastore()`, use `RemoteDataset.trigger_reload_in_datastore()` instead.
-
-### Added
-- Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
-
-### Changed
 - Replaced `pathlib.Path` for `upath.UPath` internally. `pathlib.Path` is still supported for user-facing APIs. Adds support for `universal_pathlib` version 0.3.x. [#1374](https://github.com/scalableminds/webknossos-libs/pull/1374)
 - Only use fs-based copy for mags on local file systems and S3. Other protocols, e.g. memory and HTTP, have caveats that break fs-based copying. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 - The `add_*` methods in `Attachments` now return the created attachment objects, similar to `add_layer` and `add_mag`. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)

@@ -114,7 +114,7 @@ See below for specifics of the different packages. Let's have a look at the comm
     * `./format.sh`: ruff
     * `./lint.sh`: ruff
     * `./typecheck.sh`: mypy
-    * `./test.sh`: pytest and custom scripts
+    * `./test.py`: pytest and custom scripts
 
   Those are also accessible via make commands from the top-level directory, running the respective scripts for each sub-project
   , e.g. `make format`, `make lint`, …
@@ -133,14 +133,14 @@ Internal workflows for scalable minds:
 
 The `webknossos` folder contains examples, which are not part of the package, but are tested via `tests/test_examples.py` and added to the documentation (see `docs/src/webknossos-py/examples`).
 
-To run the `./test.sh` script it is necessary to install `proxay`. This is either done with [NPM](https://www.npmjs.com) or [yarn](https://yarnpkg.com/getting-started/install):
+To run the `uv run test.py` script it is necessary to install `proxay`. This is either done with [NPM](https://www.npmjs.com) or [yarn](https://yarnpkg.com/getting-started/install):
 ```bash
 npm install --global proxay
 
 # or if you're using yarn
 yarn global add proxay
 ```
-When running the `./test.sh` script on MacOS, it is also necessary to install `minio` using the following command:
+When running the `uv run test.py` script on MacOS, it is also necessary to install `minio` using the following command:
 
 ```bash
 brew install minio
@@ -148,11 +148,11 @@ brew install minio
 
 The tests also contain functionality for the WEBKNOSSOS client. There a two modes to run the tests:
 
-1. `./test.sh --refresh-snapshots`, sending network requests to a WEBKNOSSOS instance:
-  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a `docker compose` setup is started automatically for the tests, see `./test.sh` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [proxay](https://github.com/airtasker/proxay), see next point:
-2. `./test.sh` replays responses from previous network snapshots using [proxay](https://github.com/airtasker/proxay).
+1. `uv run test.py --refresh-snapshots`, sending network requests to a WEBKNOSSOS instance:
+  This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS. If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database). Alternatively, a `docker compose` setup is started automatically for the tests, see `uv run test.py` and `tests/docker-compose.yml` for details. The network requests & response are recorded as "cassettes" by [proxay](https://github.com/airtasker/proxay), see next point:
+2. `uv run test.py` replays responses from previous network snapshots using [proxay](https://github.com/airtasker/proxay).
 
-`./test.sh --store-durations` updates the durations for
+`uv run test.py --store-durations` updates the durations for
 [`pytest-split`](https://jerry-git.github.io/pytest-split),
 which is used in the CI to split the tests for different runners.
 
