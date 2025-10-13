@@ -21,13 +21,87 @@ import requests
 
 WK_TOKEN = "1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e"
 WK_URL = "http://localhost:9000"
+WK_API_VERSION = 12
 IS_WINDOWS = sys.platform == "win32"
 PROXAY_VERSION = "1.9.0"
+
+
+def check_and_clean_datasets_folder() -> None:
+    # Within the tests folder is a binaryData folder of the local running webknossos instance. This folder is cleaned up before running the tests.
+    # This find command gets all directories in binaryData/Organization_X except for the l4_sample and e2006_knossos directories and deletes them.
+    for dataset_path in Path("tests/binaryData/Organization_X").iterdir():
+        if dataset_path.is_dir() and not (
+            dataset_path.name == "l4_sample" or dataset_path.name == "e2006_knossos"
+        ):
+            rmtree(dataset_path)
+
+
+def download_and_unpack(
+    url: str | None,
+    org_binary_data_dir: Path,
+) -> None:
+    with requests.get(url, stream=True) as req:
+        req.raise_for_status()
+        with open(org_binary_data_dir / "tmp.zip", "wb") as f:
+            copyfileobj(req.raw, f)
+    unpack_archive(org_binary_data_dir / "tmp.zip", org_binary_data_dir)
+    (org_binary_data_dir / "tmp.zip").unlink()
+
+
+def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
+    print(
+        f"Starting webknossos via docker compose with tag {wk_docker_tag}",
+        flush=True,
+    )
+
+    subprocess.check_call(
+        ["docker", "compose", "pull", "webknossos"], cwd=wk_docker_dir
+    )
+
+    # Create the binaryData directory and download the l4_sample dataset
+    binary_data_dir = wk_docker_dir / "binaryData"
+    org_binary_data_dir = binary_data_dir / "Organization_X"
+    if not (org_binary_data_dir / "l4_sample").exists():
+        org_binary_data_dir.mkdir(parents=True, exist_ok=True)
+        download_and_unpack(
+            "https://static.webknossos.org/data/l4_sample.zip", org_binary_data_dir
+        )
+
+    # Start the webknossos server
+    subprocess.check_call(
+        ["docker", "compose", "up", "-d", "--no-build", "webknossos"],
+        cwd=wk_docker_dir,
+        env={
+            **os.environ,
+            "USER_UID": str(os.getuid()),
+            "USER_GID": str(os.getgid()),
+        },
+    )
+
+    # Wait for booting
+    while not requests.get(f"{WK_URL}/api/health").ok:
+        sleep(1)
+
+    # Prepare the test database
+    subprocess.check_call(
+        [
+            "docker",
+            "compose",
+            "exec",
+            "-T",
+            "webknossos",
+            "tools/postgres/dbtool.js",
+            "prepare-test-db",
+        ],
+        cwd=wk_docker_dir,
+    )
 
 
 @contextmanager
 def local_test_wk() -> Iterator[None]:
     assert not IS_WINDOWS, "Windows is not supported for local testing"
+
+    check_and_clean_datasets_folder()
 
     # Fetch current version of webknossos.org this can be replaced with a fixed version for testing
     wk_version = requests.get("https://webknossos.org/api/buildinfo").json()[
@@ -35,79 +109,20 @@ def local_test_wk() -> Iterator[None]:
     ]["version"]
     wk_docker_tag = f"master__${wk_version}"
     os.environ["DOCKER_TAG"] = wk_docker_tag
+    wk_docker_dir = Path("tests")
 
     try:
-        wk_docker_dir = Path("tests")
-
         if not requests.get(f"{WK_URL}/api/health").ok:
-            print(
-                f"Starting webknossos via docker compose with tag {wk_docker_tag}",
-                flush=True,
-            )
-
-            subprocess.check_call(
-                ["docker", "compose", "pull", "webknossos"], cwd=wk_docker_dir
-            )
-
-            # Create the binaryData directory and download the l4_sample dataset
-            binary_data_dir = wk_docker_dir / "binaryData"
-            org_binary_data_dir = binary_data_dir / "Organization_X"
-            if not (org_binary_data_dir / "l4_sample").exists():
-                org_binary_data_dir.mkdir(parents=True, exist_ok=True)
-                with requests.get(
-                    "https://static.webknossos.org/data/l4_sample.zip", stream=True
-                ) as req:
-                    req.raise_for_status()
-                    with open(org_binary_data_dir / "l4_sample.zip", "wb") as f:
-                        copyfileobj(req.raw, f)
-                unpack_archive(
-                    org_binary_data_dir / "l4_sample.zip", org_binary_data_dir
-                )
-                (org_binary_data_dir / "l4_sample.zip").unlink()
-
-            # Start the webknossos server
-            subprocess.check_call(
-                ["docker", "compose", "up", "-d", "--no-build", "webknossos"],
-                cwd=wk_docker_dir,
-                env={
-                    **os.environ,
-                    "USER_UID": str(os.getuid()),
-                    "USER_GID": str(os.getgid()),
-                },
-            )
-
-            # Wait for booting
-            while not requests.get(f"{WK_URL}/api/health").ok:
-                sleep(5)
-
-            # Fix datasets in the test database
-            path = Path("test/db/dataSets.csv")
-            text = path.read_text()
-            text = text.replace("f,t,'l4_sample'", "t,t,'l4_sample'")
-            path.write_text(text)
-
-            # Prepare the test database
-            subprocess.check_call(
-                [
-                    "docker",
-                    "compose",
-                    "exec",
-                    "-T",
-                    "webknossos",
-                    "tools/postgres/dbtool.js",
-                    "prepare-test-db",
-                ],
-                cwd=wk_docker_dir,
-            )
-
+            start_wk_via_docker()
         else:
             print(
                 f"Using the already running webknossos at {WK_URL}. Make sure l4_sample exists and is set to public first!",
                 flush=True,
             )
 
+        # Check that the login user is set up correctly
         user_req = requests.get(
-            f"{WK_URL}/api/user", headers={"X-Auth-Token": WK_TOKEN}
+            f"{WK_URL}/api/v{WK_API_VERSION}/user", headers={"X-Auth-Token": WK_TOKEN}
         )
         if not user_req.ok or "user_a@scalableminds.com" not in user_req.text:
             print(
@@ -119,14 +134,14 @@ Please ensure that the test-db is prepared by running this in the webknossos rep
             )
             raise RuntimeError("Login user could not be found or changed.")
 
+        # Trigger dataset import via directory scan
         requests.post(
             f"{WK_URL}/data/triggers/checkInboxBlocking",
             headers={"X-Auth-Token": WK_TOKEN},
         )
         yield
     finally:
-        if wk_docker_dir is not None:
-            subprocess.check_call(["docker", "compose", "down"], cwd=wk_docker_dir)
+        subprocess.check_call(["docker", "compose", "down"], cwd=wk_docker_dir)
 
 
 @contextmanager
@@ -140,6 +155,7 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
             shell=IS_WINDOWS,
         )
     except subprocess.CalledProcessError as e:
+        # Checking that proxay is installed properly
         if "Please specify a valid mode (record or replay)" not in e.output:
             raise
 
@@ -183,7 +199,7 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
             proxay_process.kill()
 
 
-def main(snapshot: Literal["refresh", "add"] | None, args: list[str]) -> None:
+def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) -> None:
     python_version = os.environ.get("PYTHON_VERSION", "3.13")
 
     # Using forkserver instead of spawn is faster. Fork should never be used due to potential deadlock problems.
@@ -211,20 +227,12 @@ def main(snapshot: Literal["refresh", "add"] | None, args: list[str]) -> None:
         "-vv",
     ]
 
-    # Within the tests folder is a binaryData folder of the local running webknossos instance. This folder is cleaned up before running the tests.
-    # This find command gets all directories in binaryData/Organization_X except for the l4_sample and e2006_knossos directories and deletes them.
-    for dataset_path in Path("tests/binaryData/Organization_X").iterdir():
-        if dataset_path.is_dir() and not (
-            dataset_path.name == "l4_sample" or dataset_path.name == "e2006_knossos"
-        ):
-            rmtree(dataset_path)
-
-    if snapshot == "refresh":
+    if snapshot_command == "refresh":
         rmtree("tests/cassettes", ignore_errors=True)
 
         with proxay("record", quiet=False), local_test_wk():
             subprocess.check_call(pytest_cmd + ["-m", "use_proxay"] + args)
-    elif snapshot == "add":
+    elif snapshot_command == "add":
         with proxay("record", quiet=False), local_test_wk():
             subprocess.check_call(pytest_cmd + ["-m", "use_proxay"] + args)
     else:
@@ -233,10 +241,10 @@ def main(snapshot: Literal["refresh", "add"] | None, args: list[str]) -> None:
 
 
 if __name__ == "__main__":
-    snapshot = None
+    snapshot_command = None
     args = sys.argv[1:]
     if len(args) > 0 and args[0] in ["--refresh-snapshots", "--add-snapshots"]:
-        snapshot = args[0][3:-10]
+        snapshot_command = args[0][3:-10]
         args = args[1:]
 
-    main(snapshot, args)
+    main(snapshot_command, args)
