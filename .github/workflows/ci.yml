@@ -149,7 +149,7 @@ jobs:
           cache-dependency-glob: "webknossos/uv.lock"
 
       - name: Install proxay
-        run: npm install -g proxay
+        run: npm install -g proxay@1.9.0
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -176,14 +176,14 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
         if: ${{ matrix.python-version != '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
       - name: Persist coverage reports
         if: ${{ matrix.python-version == '3.11' }}
@@ -222,22 +222,21 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
-      - name: Install proxay
-        run: npm install -g proxay
-
       - name: Install minio
         run: Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile "minio.exe"
+
+      - name: Install proxay
+        run: npm install -g proxay@1.9.0
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
       - name: Python tests
         timeout-minutes: 30
-        shell: bash
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           MULTIPROCESSING_DEFAULT_START_METHOD: spawn
-        run: ./test.sh --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
 
   coverage_report:
     needs: [webknossos_linux]
