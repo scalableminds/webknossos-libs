@@ -201,7 +201,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                         headers={} if token is None else {"X-Auth-Token": token},
                         ssl=SSL_CONTEXT,
                     )
-                return cls(zarr_path, None, dataset_id, annotation_id, context_manager, read_only=True)
+                return cls(
+                    zarr_path,
+                    None,
+                    dataset_id,
+                    annotation_id,
+                    context_manager,
+                    read_only=True,
+                )
             else:
                 if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
                     raise RuntimeError(
@@ -785,9 +792,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         * context_manager that should be entered,
         * dataset_id,
         """
+        from .. import Annotation
         from ..client._resolve_short_link import resolve_short_link
         from ..client.context import _get_context, webknossos_context
-        from .. import Annotation
 
         caller = inspect.stack()[1].function
         current_context = _get_context()
