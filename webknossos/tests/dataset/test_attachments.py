@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 import pytest
 from upath import UPath
@@ -46,7 +45,7 @@ def test_attachments(tmp_upath: UPath) -> None:
     seg_layer.attachments.add_agglomerate(
         UPath(
             "s3://bucket/agglomerate.zarr",
-            client_kwargs={"endpoint_url": "https://s3.eu-central-1.amazonaws.com"},
+            endpoint_url="https://s3.eu-central-1.amazonaws.com",
         ),
         name="identity",
         data_format=AttachmentDataFormat.Zarr3,
@@ -81,14 +80,14 @@ def test_attachments(tmp_upath: UPath) -> None:
 
     # segment index
     seg_layer.attachments.set_segment_index(
-        Path.home() / "segment_index.hdf5",
+        UPath.home() / "segment_index.hdf5",
         name="main",
         data_format=AttachmentDataFormat.HDF5,
     )
     assert seg_layer._properties.attachments.segment_index is not None
     assert (
         seg_layer._properties.attachments.segment_index.path
-        == (Path.home() / "segment_index.hdf5").as_posix()
+        == (UPath.home() / "segment_index.hdf5").as_posix()
     )
     assert (
         seg_layer._properties.attachments.segment_index.data_format
@@ -158,7 +157,7 @@ def test_copy_layer(tmp_upath: UPath) -> None:
         data_format=AttachmentDataFormat.HDF5,
     )
     seg_layer.attachments.add_agglomerate(
-        Path("../agglomerate_view_15"),
+        UPath("../agglomerate_view_15"),
         name="agglomerate_view_15",
         data_format=AttachmentDataFormat.Zarr3,
     )
@@ -207,7 +206,7 @@ def test_symlink_layer(tmp_upath: UPath) -> None:
     )
 
     seg_layer.attachments.add_agglomerate(
-        Path("../agglomerate_view_15"),
+        UPath("../agglomerate_view_15"),
         name="agglomerate_view_15",
         data_format=AttachmentDataFormat.Zarr3,
     )
@@ -242,7 +241,7 @@ def test_remote_layer(tmp_upath: UPath) -> None:
 
     mesh_path = UPath(
         "s3://bucket/meshfile.zarr",
-        client_kwargs={"endpoint_url": "https://s3.eu-central-1.amazonaws.com"},
+        endpoint_url="https://s3.eu-central-1.amazonaws.com",
     )
 
     seg_layer.attachments.add_mesh(

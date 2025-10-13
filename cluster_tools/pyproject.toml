@@ -21,8 +21,8 @@ dask = ["distributed ~=2023.9.1"]
 kubernetes = ["kubernetes ~=27.2.0"]
 all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "icecream ~=2.1.1",
     "mypy ~=1.15.0",
     "pytest ~=8.3.3",

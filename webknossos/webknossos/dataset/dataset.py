@@ -7,7 +7,6 @@ from enum import Enum, unique
 from itertools import product
 from os import PathLike
 from os.path import relpath
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Union, cast
 
 import attr
@@ -112,11 +111,30 @@ from ._utils.segmentation_recognition import (
 
 logger = logging.getLogger(__name__)
 
+_ALLOWED_COLOR_LAYER_DTYPES = (
+    "uint8",
+    "uint16",
+    "uint32",
+    "int8",
+    "int16",
+    "int32",
+    "float32",
+)
+_ALLOWED_SEGMENTATION_LAYER_DTYPES = (
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+)
 
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
-def _find_array_info(layer_path: Path) -> ArrayInfo | None:
+def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
     for f in layer_path.iterdir():
         if f.is_dir():
             try:
@@ -218,10 +236,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         def _to_callable(
             self,
-            input_path: Path,
-            input_files: Sequence[Path],
+            input_path: UPath,
+            input_files: Sequence[UPath],
             use_bioformats: bool | None,
-        ) -> Callable[[Path], str]:
+        ) -> Callable[[UPath], str]:
             ConversionLayerMapping = Dataset.ConversionLayerMapping
 
             if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
@@ -231,11 +249,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_FOLDER:
                 return lambda p: (
                     input_path.name
-                    if p.parent == Path()
+                    if p.parent == UPath()
                     else p.parent.as_posix().replace("/", "_")
                 )
             elif self == ConversionLayerMapping.ENFORCE_LAYER_PER_TOPLEVEL_FOLDER:
-                return lambda p: input_path.name if p.parent == Path() else p.parts[0]
+                return lambda p: input_path.name if p.parent == UPath() else p.parts[0]
             elif self == ConversionLayerMapping.INSPECT_EVERY_FILE:
                 # If a file has z dimensions, it becomes its own layer,
                 # if it's 2D, the folder becomes a layer.
@@ -248,7 +266,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     )
                     else (
                         input_path.name
-                        if p.parent == Path()
+                        if p.parent == UPath()
                         else p.parent.as_posix().replace("/", "_")
                     )
                 )
@@ -262,14 +280,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     return str
                 else:
                     return lambda p: (
-                        input_path.name if p.parent == Path() else p.parts[-2]
+                        input_path.name if p.parent == UPath() else p.parts[-2]
                     )
             else:
                 raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
 
     def __init__(
         self,
-        dataset_path: str | PathLike,
+        dataset_path: str | PathLike | UPath,
         voxel_size: tuple[float, float, float] | None = None,  # in nanometers
         name: str | None = None,
         exist_ok: bool = False,
@@ -411,7 +429,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         return super()._initialize_layer_from_properties(properties, read_only)
 
     @classmethod
-    def open(cls, dataset_path: str | PathLike, read_only: bool = False) -> "Dataset":
+    def open(
+        cls, dataset_path: str | PathLike | UPath, read_only: bool = False
+    ) -> "Dataset":
         """
         To open an existing dataset on disk, simply call `Dataset.open("your_path")`.
         This requires `datasource-properties.json` to exist in this folder. Based on the `datasource-properties.json`,
@@ -511,7 +531,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         bbox: BoundingBox | None = None,
         layers: list[str] | str | None = None,
         mags: list[Mag] | None = None,
-        path: PathLike | str | None = None,
+        path: PathLike | UPath | str | None = None,
         exist_ok: bool = False,
     ) -> "Dataset":
         """Downloads a dataset and returns the Dataset instance.
@@ -789,14 +809,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     @classmethod
     def from_images(
         cls,
-        input_path: str | PathLike,
-        output_path: str | PathLike,
+        input_path: str | PathLike | UPath,
+        output_path: str | PathLike | UPath,
         voxel_size: tuple[float, float, float] | None = None,
         name: str | None = None,
         *,
         map_filepath_to_layer_name: ConversionLayerMapping
-        | Callable[[Path], str] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
-        z_slices_sort_key: Callable[[Path], Any] = natsort_keygen(),
+        | Callable[[UPath], str] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
+        z_slices_sort_key: Callable[[UPath], Any] = natsort_keygen(),
         voxel_size_with_unit: VoxelSize | None = None,
         layer_name: str | None = None,
         layer_category: LayerCategoryType | None = None,
@@ -925,7 +945,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         ds = cls(output_path, voxel_size_with_unit=voxel_size_with_unit, name=name)
 
-        filepaths_per_layer: dict[str, list[Path]] = {}
+        filepaths_per_layer: dict[str, list[UPath]] = {}
         for input_file in input_files:
             layer_name_from_mapping = map_filepath_to_layer_name_func(input_file)
             # Remove characters from layer name that are not allowed
@@ -1082,36 +1102,17 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         # assert that the dtype_per_channel is supported by webknossos
         if category == COLOR_CATEGORY:
-            color_dtypes = (
-                "uint8",
-                "uint16",
-                "uint32",
-                "int8",
-                "int16",
-                "int32",
-                "float32",
-            )
-            if dtype_per_channel.name not in color_dtypes:
+            if dtype_per_channel.name not in _ALLOWED_COLOR_LAYER_DTYPES:
                 raise ValueError(
                     f"Cannot add color layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(color_dtypes)}."
+                    f"Supported dtypes are: {', '.join(_ALLOWED_COLOR_LAYER_DTYPES)}."
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
         else:
-            segmentation_dtypes = (
-                "uint8",
-                "uint16",
-                "uint32",
-                "uint64",
-                "int8",
-                "int16",
-                "int32",
-                "int64",
-            )
-            if dtype_per_channel.name not in segmentation_dtypes:
+            if dtype_per_channel.name not in _ALLOWED_SEGMENTATION_LAYER_DTYPES:
                 raise ValueError(
                     f"Cannot add segmentation layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(segmentation_dtypes)}."
+                    f"Supported dtypes are: {', '.join(_ALLOWED_SEGMENTATION_LAYER_DTYPES)}."
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
 
@@ -1402,7 +1403,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_layer_from_images(
         self,
-        images: Union[str, "pims.FramesSequence", list[str | PathLike]],
+        images: Union[str, "pims.FramesSequence", list[str | PathLike | UPath]],
         ## add_layer arguments
         layer_name: str,
         category: LayerCategoryType | None = "color",
@@ -1467,11 +1468,15 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
         if category is None:
-            image_path_for_category_guess: Path
-            if isinstance(images, str) or isinstance(images, PathLike):
-                image_path_for_category_guess = Path(images)
+            image_path_for_category_guess: UPath
+            if (
+                isinstance(images, str)
+                or isinstance(images, PathLike)
+                or isinstance(images, UPath)
+            ):
+                image_path_for_category_guess = UPath(images)
             else:
-                image_path_for_category_guess = Path(images[0])
+                image_path_for_category_guess = UPath(images[0])
             category = (
                 "segmentation"
                 if guess_if_segmentation_path(image_path_for_category_guess)
@@ -1897,7 +1902,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_copy_layer(
         self,
-        foreign_layer: str | Path | Layer,
+        foreign_layer: str | PathLike | UPath | Layer | RemoteLayer,
         new_layer_name: str | None = None,
         *,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -1926,7 +1931,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_layer_as_copy(
         self,
-        foreign_layer: str | Path | Layer | RemoteLayer,
+        foreign_layer: str | PathLike | UPath | Layer | RemoteLayer,
         new_layer_name: str | None = None,
         *,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -2037,7 +2042,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_symlink_layer(
         self,
-        foreign_layer: str | Path | Layer,
+        foreign_layer: str | PathLike | UPath | Layer,
         new_layer_name: str | None = None,
         *,
         make_relative: bool = False,
@@ -2109,7 +2114,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
 
         foreign_layer_symlink_path = (
-            Path(relpath(foreign_layer_path, self.path))
+            UPath(relpath(foreign_layer_path, self.path))
             if make_relative
             else foreign_layer_path.resolve()
         )
@@ -2126,7 +2131,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             )
             if is_fs_path(foreign_mag.path):
                 mag_prop.path = (
-                    Path(relpath(foreign_mag.path.resolve(), self.path))
+                    UPath(relpath(foreign_mag.path.resolve(), self.path))
                     if make_relative
                     else foreign_mag.path.resolve()
                 ).as_posix()
@@ -2144,8 +2149,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                         old_path = (
                             foreign_layer.dataset.resolved_path / old_path
                         ).resolve()
+                    assert is_fs_path(old_path)
                     attachment.path = (
-                        Path(relpath(old_path, self.path))
+                        UPath(relpath(old_path, self.path))
                         if make_relative
                         else old_path.resolve()
                     ).as_posix()
@@ -2160,7 +2166,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_remote_layer(
         self,
-        foreign_layer: str | PathLike | Layer,
+        foreign_layer: str | PathLike | UPath | Layer | RemoteLayer,
         new_layer_name: str | None = None,
     ) -> Layer:
         """Deprecated. Use `Dataset.add_layer_as_ref` instead."""
@@ -2169,7 +2175,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_layer_as_ref(
         self,
-        foreign_layer: str | PathLike | Layer | RemoteLayer,
+        foreign_layer: str | PathLike | UPath | Layer | RemoteLayer,
         new_layer_name: str | None = None,
     ) -> Layer:
         """Add a layer from another dataset by reference.
@@ -2231,7 +2237,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_fs_copy_layer(
         self,
-        foreign_layer: str | Path | Layer,
+        foreign_layer: str | PathLike | UPath | Layer,
         new_layer_name: str | None = None,
     ) -> Layer:
         """Deprecated. File-based copy is automatically used in `Dataset.add_layer_as_copy`.
@@ -2268,9 +2274,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             for attachment in new_layer_properties.attachments:
                 old_path = UPath(attachment.path)
                 if is_fs_path(old_path):
+                    assert isinstance(old_path, UPath)  # for mypy
                     if not old_path.is_absolute():
                         old_path = (
-                            foreign_layer.dataset.resolved_path / old_path
+                            foreign_layer.dataset.resolved_path / old_path.as_posix()
                         ).resolve()
                     else:
                         old_path = old_path.resolve()
@@ -2289,7 +2296,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def copy_dataset(
         self,
-        new_dataset_path: str | Path,
+        new_dataset_path: str | PathLike | UPath,
         *,
         voxel_size: tuple[float, float, float] | None = None,
         chunk_shape: Vec3IntLike | int | None = None,
@@ -2389,7 +2396,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def fs_copy_dataset(
         self,
-        new_dataset_path: str | Path,
+        new_dataset_path: str | PathLike | UPath,
         *,
         exists_ok: bool = False,
         layers_to_ignore: Iterable[str] | None = None,
@@ -2459,7 +2466,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def shallow_copy_dataset(
         self,
-        new_dataset_path: str | PathLike,
+        new_dataset_path: str | PathLike | UPath,
         *,
         name: str | None = None,
         layers_to_ignore: Iterable[str] | None = None,
@@ -2620,7 +2627,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
 def _extract_num_channels(
     num_channels_in_properties: int | None,
-    path: Path,
+    path: UPath,
     layer: str,
     mag: int | Mag | None,
 ) -> int:

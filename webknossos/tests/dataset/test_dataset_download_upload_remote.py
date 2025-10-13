@@ -1,9 +1,9 @@
 import pickle
 import sys
-from pathlib import Path
 
 import numpy as np
 import pytest
+from upath import UPath
 
 import webknossos as wk
 
@@ -15,10 +15,10 @@ pytestmark = [
 ]
 
 
-def get_sample_dataset(tmpdir: Path) -> wk.Dataset:
+def get_sample_dataset(tmpdir: UPath) -> wk.Dataset:
     url = "http://localhost:9000/datasets/Organization_X/l4_sample"
     return wk.RemoteDataset.open(url).download(
-        path=Path(tmpdir) / "sample_ds", bbox=SAMPLE_BBOX
+        path=UPath(tmpdir) / "sample_ds", bbox=SAMPLE_BBOX
     )
 
 
@@ -50,10 +50,10 @@ def test_get_remote_datasets() -> None:
         # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
-def test_url_download(url: str, tmp_path: Path) -> None:
-    sample_dataset = get_sample_dataset(tmp_path)
+def test_url_download(url: str, tmp_upath: UPath) -> None:
+    sample_dataset = get_sample_dataset(tmp_upath)
     ds = wk.RemoteDataset.open(url).download(
-        path=tmp_path / "ds", mags=[wk.Mag(1)], bbox=SAMPLE_BBOX
+        path=tmp_upath / "ds", mags=[wk.Mag(1)], bbox=SAMPLE_BBOX
     )
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = ds.get_color_layers()[0].get_finest_mag().read()
@@ -73,8 +73,8 @@ def test_url_download(url: str, tmp_path: Path) -> None:
         # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
-def test_url_open_remote(url: str, tmp_path: Path) -> None:
-    sample_dataset = get_sample_dataset(tmp_path)
+def test_url_open_remote(url: str, tmp_upath: UPath) -> None:
+    sample_dataset = get_sample_dataset(tmp_upath)
     ds = wk.RemoteDataset.open(url)
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = (
@@ -96,8 +96,8 @@ def test_url_open_remote(url: str, tmp_path: Path) -> None:
 @pytest.mark.skip(
     reason="This won't work in CI as the paths stored in cassettes are always absolute and dependent on the system recording the cassette."
 )
-def test_upload_dataset_with_symlinks(tmp_path: Path) -> None:
-    sample_dataset = get_sample_dataset(tmp_path)
+def test_upload_dataset_with_symlinks(tmp_upath: UPath) -> None:
+    sample_dataset = get_sample_dataset(tmp_upath)
     remote_ds = sample_dataset.upload(
         new_dataset_name="test_remote_symlink",
         upload_directly_to_common_storage=True,
@@ -112,8 +112,8 @@ def test_upload_dataset_with_symlinks(tmp_path: Path) -> None:
 @pytest.mark.skip(
     reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
 )
-def test_upload_dataset_copy_to_paths(tmp_path: Path) -> None:
-    sample_dataset = get_sample_dataset(tmp_path)
+def test_upload_dataset_copy_to_paths(tmp_upath: UPath) -> None:
+    sample_dataset = get_sample_dataset(tmp_upath)
     remote_ds = sample_dataset.upload(
         new_dataset_name="test_remote_copy", upload_directly_to_common_storage=True
     )
@@ -123,8 +123,8 @@ def test_upload_dataset_copy_to_paths(tmp_path: Path) -> None:
     )
 
 
-def test_remote_dataset(tmp_path: Path) -> None:
-    sample_dataset = get_sample_dataset(tmp_path)
+def test_remote_dataset(tmp_upath: UPath) -> None:
+    sample_dataset = get_sample_dataset(tmp_upath)
     remote_ds = sample_dataset.upload(new_dataset_name="test_remote_metadata")
     assert np.array_equal(
         remote_ds.get_color_layers()[0].get_finest_mag().read(),
@@ -188,8 +188,8 @@ def test_folders_and_teams() -> None:
     remote_team.delete()
 
 
-def test_upload_download_roundtrip(tmp_path: Path) -> None:
-    ds_original = get_sample_dataset(tmp_path)
+def test_upload_download_roundtrip(tmp_upath: UPath) -> None:
+    ds_original = get_sample_dataset(tmp_upath)
     uploaded_dataset = ds_original.upload(
         new_dataset_name="test_upload_download_roundtrip"
     )
@@ -197,7 +197,7 @@ def test_upload_download_roundtrip(tmp_path: Path) -> None:
         "test_upload_download_roundtrip", "Organization_X"
     )
     ds_roundtrip = wk.RemoteDataset.open(uploaded_dataset.url).download(
-        path=tmp_path / "ds", layers=["color", "segmentation"]
+        path=tmp_upath / "ds", layers=["color", "segmentation"]
     )
     assert set(ds_original.get_segmentation_layers()[0].mags.keys()) == set(
         ds_roundtrip.get_segmentation_layers()[0].mags.keys()
@@ -219,8 +219,8 @@ def test_upload_download_roundtrip(tmp_path: Path) -> None:
     assert np.array_equal(data_original, data_roundtrip)
 
 
-def test_upload_twice(tmp_path: Path) -> None:
-    ds_original = get_sample_dataset(tmp_path)
+def test_upload_twice(tmp_upath: UPath) -> None:
+    ds_original = get_sample_dataset(tmp_upath)
     remote1 = ds_original.upload(new_dataset_name="test_upload_twice")
     remote2 = ds_original.upload(new_dataset_name="test_upload_twice")
     assert remote1.url != remote2.url

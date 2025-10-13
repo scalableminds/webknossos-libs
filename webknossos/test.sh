@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -eEuo pipefail
+set -x
 
 source local_wk_setup.sh
 

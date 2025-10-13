@@ -2,7 +2,6 @@ import os
 import sys
 import warnings
 from collections.abc import Iterator
-from pathlib import Path
 from shutil import copy
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from time import gmtime, strftime
@@ -14,6 +13,7 @@ import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor
 from tifffile import TiffFile
+from upath import UPath
 
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
@@ -26,8 +26,8 @@ def ignore_warnings() -> Iterator:
         yield
 
 
-def test_compare_tifffile(tmp_path: Path) -> None:
-    ds = wk.Dataset(tmp_path, (1, 1, 1))
+def test_compare_tifffile(tmp_upath: UPath) -> None:
+    ds = wk.Dataset(tmp_upath, (1, 1, 1))
     layer = ds.add_layer_from_images(
         "testdata/tiff/test.02*.tiff",
         layer_name="compare_tifffile",
@@ -45,8 +45,8 @@ def test_compare_tifffile(tmp_path: Path) -> None:
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
-def test_compare_nd_tifffile(tmp_path: Path) -> None:
-    ds = wk.Dataset(tmp_path, (1, 1, 1))
+def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
+    ds = wk.Dataset(tmp_upath, (1, 1, 1))
     with SequentialExecutor() as executor:
         layer = ds.add_layer_from_images(
             "testdata/4D/4D_series/4D-series.ome.tif",
@@ -74,7 +74,7 @@ def test_compare_nd_tifffile(tmp_path: Path) -> None:
 
 
 REPO_IMAGES_ARGS: list[
-    tuple[str | list[Path], dict[str, Any], str, int, int, tuple[int, ...]]
+    tuple[str | list[UPath], dict[str, Any], str, int, int, tuple[int, ...]]
 ] = [
     (
         "testdata/tiff/test.*.tiff",
@@ -193,8 +193,8 @@ REPO_IMAGES_ARGS: list[
 
 
 def _test_repo_images(
-    tmp_path: Path,
-    path: str | list[Path],
+    tmp_upath: UPath,
+    path: str | list[UPath],
     kwargs: dict,
     dtype: str,
     num_channels: int,
@@ -202,7 +202,7 @@ def _test_repo_images(
     size: tuple[int, ...],
 ) -> wk.Dataset:
     with SequentialExecutor() as executor:
-        ds = wk.Dataset(tmp_path, (1, 1, 1))
+        ds = wk.Dataset(tmp_upath, (1, 1, 1))
         layer = ds.add_layer_from_images(
             path,
             layer_name="color",
@@ -225,7 +225,7 @@ def _test_repo_images(
     "path, kwargs, dtype, num_channels, num_layers, size", REPO_IMAGES_ARGS
 )
 def test_repo_images(
-    tmp_path: Path,
+    tmp_upath: UPath,
     path: str,
     kwargs: dict,
     dtype: str,
@@ -233,11 +233,11 @@ def test_repo_images(
     num_layers: int,
     size: tuple[int, ...],
 ) -> None:
-    _test_repo_images(tmp_path, path, kwargs, dtype, num_channels, num_layers, size)
+    _test_repo_images(tmp_upath, path, kwargs, dtype, num_channels, num_layers, size)
 
 
 def download_and_unpack(
-    url: str | list[str], out_path: Path, filename: str | list[str]
+    url: str | list[str], out_path: UPath, filename: str | list[str]
 ) -> None:
     if isinstance(url, str):
         assert isinstance(filename, str)
@@ -259,10 +259,10 @@ def download_and_unpack(
                         )
             try:
                 with ZipFile(download_file, "r") as zip_file:
-                    zip_file.extractall(out_path)
+                    zip_file.extractall(str(out_path))
             except BadZipFile:
                 out_path.mkdir(parents=True, exist_ok=True)
-                copy(download_file.name, out_path / filename_i)
+                copy(download_file.name, str(out_path / filename_i))
 
 
 BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]] = [
@@ -315,7 +315,7 @@ BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]
 
 
 def _test_bioformats(
-    tmp_path: Path,
+    tmp_upath: UPath,
     url: str,
     filename: str,
     kwargs: dict,
@@ -324,9 +324,9 @@ def _test_bioformats(
     size: tuple[int, int, int],
     num_layers: int,
 ) -> wk.Dataset:
-    unzip_path = tmp_path / "unzip"
+    unzip_path = tmp_upath / "unzip"
     download_and_unpack(url, unzip_path, filename)
-    ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with wk.utils.get_executor_for_args(None) as executor:
         layer = ds.add_layer_from_images(
             str(unzip_path / filename),
@@ -351,7 +351,7 @@ def _test_bioformats(
     "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
 )
 def test_bioformats(
-    tmp_path: Path,
+    tmp_upath: UPath,
     url: str,
     filename: str,
     kwargs: dict,
@@ -361,7 +361,7 @@ def test_bioformats(
     num_layers: int,
 ) -> None:
     _test_bioformats(
-        tmp_path, url, filename, kwargs, dtype, num_channels, size, num_layers
+        tmp_upath, url, filename, kwargs, dtype, num_channels, size, num_layers
     )
 
 
@@ -458,7 +458,7 @@ TEST_IMAGES_ARGS: list[
 
 
 def _test_test_images(
-    tmp_path: Path,
+    tmp_upath: UPath,
     url: str | list[str],
     filename: str | list[str],
     kwargs: dict,
@@ -466,16 +466,16 @@ def _test_test_images(
     num_channels: int,
     size: tuple[int, int, int],
 ) -> wk.Dataset:
-    unzip_path = tmp_path / "unzip"
+    unzip_path = tmp_upath / "unzip"
     download_and_unpack(url, unzip_path, filename)
-    path: Path | list[Path]
+    path: UPath | list[UPath]
     if isinstance(filename, list):
         layer_name = filename[0] + "..."
         path = [unzip_path / i for i in filename]
     else:
         layer_name = filename
         path = unzip_path / filename
-    ds = wk.Dataset(tmp_path / "ds", (1, 1, 1))
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with wk.utils.get_executor_for_args(None) as executor:
         l_bio: wk.Layer | None
         try:
@@ -520,7 +520,7 @@ def _test_test_images(
     reason="only run on linux CI",
 )
 def test_test_images(
-    tmp_path: Path,
+    tmp_upath: UPath,
     url: str | list[str],
     filename: str | list[str],
     kwargs: dict,
@@ -528,7 +528,7 @@ def test_test_images(
     num_channels: int,
     size: tuple[int, int, int],
 ) -> None:
-    _test_test_images(tmp_path, url, filename, kwargs, dtype, num_channels, size)
+    _test_test_images(tmp_upath, url, filename, kwargs, dtype, num_channels, size)
 
 
 if __name__ == "__main__":
@@ -542,7 +542,7 @@ if __name__ == "__main__":
             name = "".join(filter(str.isalnum, image_path))
             print(repo_image)
             print(
-                _test_repo_images(Path(tempdir), *repo_image)
+                _test_repo_images(UPath(tempdir), *repo_image)
                 .upload(f"test_repo_images_{name}_{time()}")
                 .url
             )
@@ -552,7 +552,7 @@ if __name__ == "__main__":
             name = "".join(filter(str.isalnum, bioformat_image[1]))
             print(bioformat_image)
             print(
-                _test_bioformats(Path(tempdir), *bioformat_image)
+                _test_bioformats(UPath(tempdir), *bioformat_image)
                 .upload(f"test_bioformats_{name}_{time()}")
                 .url
             )
@@ -562,7 +562,7 @@ if __name__ == "__main__":
             name = "".join(filter(str.isalnum, test_images_args[1]))
             print(*test_images_args)
             print(
-                _test_test_images(Path(tempdir), *test_images_args)
+                _test_test_images(UPath(tempdir), *test_images_args)
                 .upload(f"test_test_images_{name}_{time()}")
                 .url
             )

@@ -1,8 +1,8 @@
 from collections.abc import Callable, Sequence
-from pathlib import Path
 from typing import Any
 
 import attr
+from upath import UPath
 
 
 class CallbackDispatcher:
@@ -35,4 +35,4 @@ class Config:
     max_chunk_retries: int
     permanent_errors: Sequence[int]
     additional_query_params: dict[str, Any]
-    generate_unique_identifier: Callable[[Path, Path], str]
+    generate_unique_identifier: Callable[[UPath, UPath], str]

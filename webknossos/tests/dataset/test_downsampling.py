@@ -1,9 +1,9 @@
 import sys
 import warnings
-from pathlib import Path
 
 import numpy as np
 import pytest
+from upath import UPath
 
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
 from webknossos.dataset.layer._downsampling_utils import (
@@ -70,10 +70,10 @@ def test_non_linear_filter_reshape() -> None:
 
 
 def downsample_test_helper(
-    WT1_path: Path, tmp_path: Path, use_compress: bool, chunk_shape: Vec3Int
+    WT1_upath: UPath, tmp_upath: UPath, use_compress: bool, chunk_shape: Vec3Int
 ) -> None:
-    source_path = WT1_path
-    target_path = tmp_path / "WT1_wkw"
+    source_path = WT1_upath
+    target_path = tmp_upath / "WT1_wkw"
 
     source_ds = Dataset.open(source_path)
     target_ds = source_ds.copy_dataset(
@@ -124,24 +124,24 @@ def downsample_test_helper(
     )
 
 
-def test_downsample_cube_job(WT1_path: Path, tmp_path: Path) -> None:
-    downsample_test_helper(WT1_path, tmp_path, False, Vec3Int.full(16))
+def test_downsample_cube_job(WT1_upath: UPath, tmp_upath: UPath) -> None:
+    downsample_test_helper(WT1_upath, tmp_upath, False, Vec3Int.full(16))
 
 
-def test_compressed_downsample_cube_job(WT1_path: Path, tmp_path: Path) -> None:
+def test_compressed_downsample_cube_job(WT1_upath: UPath, tmp_upath: UPath) -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("error")  # This escalates the warning to an error
-        downsample_test_helper(WT1_path, tmp_path, True, Vec3Int.full(32))
+        downsample_test_helper(WT1_upath, tmp_upath, True, Vec3Int.full(32))
 
 
-def test_downsample_multi_channel(tmp_path: Path) -> None:
+def test_downsample_multi_channel(tmp_upath: UPath) -> None:
     num_channels = 3
     size = (32, 32, 10)
     source_data = (
         128 * np.random.randn(num_channels, size[0], size[1], size[2])
     ).astype("uint8")
 
-    ds = Dataset(tmp_path / "multi-channel-test", (1, 1, 1))
+    ds = Dataset(tmp_upath / "multi-channel-test", (1, 1, 1))
     print("writing source_data shape", source_data.shape)
     assert np.any(source_data != 0)
     layer = ds.write_layer("color", COLOR_CATEGORY, data=source_data, downsample=False)
@@ -333,8 +333,8 @@ def test_default_max_mag() -> None:
     )
 
 
-def test_default_parameter(tmp_path: Path) -> None:
-    target_path = tmp_path / "downsaple_default"
+def test_default_parameter(tmp_upath: UPath) -> None:
+    target_path = tmp_upath / "downsaple_default"
 
     ds = Dataset(target_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer(
@@ -350,8 +350,8 @@ def test_default_parameter(tmp_path: Path) -> None:
     assert sorted(layer.mags.keys()) == [Mag("2"), Mag("4")]
 
 
-def test_default_anisotropic_voxel_size(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "default_anisotropic_voxel_size", voxel_size=(85, 85, 346))
+def test_default_anisotropic_voxel_size(tmp_upath: UPath) -> None:
+    ds = Dataset(tmp_upath / "default_anisotropic_voxel_size", voxel_size=(85, 85, 346))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
@@ -362,8 +362,8 @@ def test_default_anisotropic_voxel_size(tmp_path: Path) -> None:
     assert sorted(layer.mags.keys()) == [Mag("1"), Mag("2-2-1"), Mag("4-4-1")]
 
 
-def test_downsample_mag_list(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_mag_list", voxel_size=(1, 1, 2))
+def test_downsample_mag_list(tmp_upath: UPath) -> None:
+    ds = Dataset(tmp_upath / "downsample_mag_list", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
@@ -378,8 +378,8 @@ def test_downsample_mag_list(tmp_path: Path) -> None:
         assert m in layer.mags
 
 
-def test_downsample_mag_list_with_only_setup_mags(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_mag_list", voxel_size=(1, 1, 2))
+def test_downsample_mag_list_with_only_setup_mags(tmp_upath: UPath) -> None:
+    ds = Dataset(tmp_upath / "downsample_mag_list", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
@@ -403,8 +403,8 @@ def test_downsample_mag_list_with_only_setup_mags(tmp_path: Path) -> None:
         assert m in layer.mags
 
 
-def test_downsample_with_invalid_mag_list(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_mag_list", voxel_size=(1, 1, 2))
+def test_downsample_with_invalid_mag_list(tmp_upath: UPath) -> None:
+    ds = Dataset(tmp_upath / "downsample_mag_list", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
@@ -418,8 +418,8 @@ def test_downsample_with_invalid_mag_list(tmp_path: Path) -> None:
         )
 
 
-def test_downsample_compressed(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_compressed", voxel_size=(1, 1, 2))
+def test_downsample_compressed(tmp_upath: UPath) -> None:
+    ds = Dataset(tmp_upath / "downsample_compressed", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, chunk_shape=8, shard_shape=64, compress=False)
     mag.write(
@@ -445,8 +445,8 @@ def test_downsample_compressed(tmp_path: Path) -> None:
     assert Mag("4-4-2") in layer.mags.keys()
 
 
-def test_downsample_2d(tmp_path: Path) -> None:
-    ds = Dataset(tmp_path / "downsample_compressed", voxel_size=(1, 1, 2))
+def test_downsample_2d(tmp_upath: UPath) -> None:
+    ds = Dataset(tmp_upath / "downsample_compressed", voxel_size=(1, 1, 2))
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, chunk_shape=8, shard_shape=64)
     # write 2D data with all values set to "123"
@@ -462,11 +462,11 @@ def test_downsample_2d(tmp_path: Path) -> None:
     assert np.all(layer.get_mag(Mag("2-2-1")).read() == 123)  # The data is not darkened
 
 
-def test_downsample_nd_dataset(tmp_path: Path) -> None:
+def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
     source_path = (
-        Path(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
+        UPath(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
     )
-    target_path = tmp_path / "downsample_test"
+    target_path = tmp_upath / "downsample_test"
 
     source_ds = Dataset.open(source_path)
     target_ds = Dataset(target_path, voxel_size=(10, 10, 10))

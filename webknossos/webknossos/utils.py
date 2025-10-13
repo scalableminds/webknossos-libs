@@ -4,7 +4,6 @@ import functools
 import json
 import logging
 import os
-import sys
 import time
 import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -15,12 +14,12 @@ from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from os import PathLike
-from pathlib import Path, PosixPath, WindowsPath
 from shutil import copyfileobj, move
 from threading import Thread
 from typing import (
     Any,
     Protocol,
+    TypeGuard,
     TypeVar,
 )
 from urllib.parse import urlparse
@@ -32,6 +31,7 @@ from cluster_tools import Executor, get_executor
 from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
+from upath.implementations.local import PosixUPath, WindowsUPath
 
 logger = logging.getLogger(__name__)
 
@@ -250,31 +250,6 @@ def setup_warnings() -> None:
     warnings.filterwarnings("default", category=DeprecationWarning, module="webknossos")
 
 
-def setup_logging(args: argparse.Namespace) -> None:
-    log_path = Path(f"./logs/cuber_{time.strftime('%Y-%m-%d_%H%M%S')}.txt")
-
-    console_log_level = logging.DEBUG if args.verbose else logging.INFO
-    file_log_level = logging.DEBUG
-
-    logging_formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-
-    # Always set the global log level to the more verbose of console_log_level and
-    # file_log_level to allow to log with different log levels to console and files.
-    root_logger = logging.getLogger()
-    root_logger.setLevel(min(console_log_level, file_log_level))
-
-    console = logging.StreamHandler(sys.stdout)
-    console.setLevel(console_log_level)
-    console.setFormatter(logging_formatter)
-    root_logger.addHandler(console)
-
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    file_handler = logging.FileHandler(log_path, mode="w", encoding="UTF-8")
-    file_handler.setLevel(file_log_level)
-    file_handler.setFormatter(logging_formatter)
-    root_logger.addHandler(file_handler)
-
-
 def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--verbose", help="Verbose output", dest="verbose", action="store_true"
@@ -307,16 +282,14 @@ def count_defined_values(values: Iterable[Any | None]) -> int:
     return sum(i is not None for i in values)
 
 
-def is_fs_path(path: UPath) -> bool:
-    from upath.implementations.local import PosixUPath, WindowsUPath
-
-    return not isinstance(path, UPath) or isinstance(
-        path, PosixPath | WindowsPath | PosixUPath | WindowsUPath
-    )
+def is_fs_path(
+    path: UPath,
+) -> TypeGuard[PosixUPath | WindowsUPath]:
+    return isinstance(path, PosixUPath | WindowsUPath)
 
 
 def is_remote_path(path: UPath) -> bool:
-    return not is_fs_path(path)
+    return isinstance(path, UPath) and not is_fs_path(path)
 
 
 def cheap_resolve(path: UPath) -> UPath:
@@ -369,11 +342,11 @@ def copytree(
     threads: int | None = 10,
     progress_desc: str | None = None,
 ) -> None:
-    def _walk(path: UPath, base_path: UPath) -> Iterator[tuple[Path, tuple[str, ...]]]:
+    def _walk(path: UPath, base_path: UPath) -> Iterator[tuple[UPath, tuple[str, ...]]]:
         # base_path.parts is a prefix of path.parts; strip it
         assert len(path.parts) >= len(base_path.parts)
         assert path.parts[: len(base_path.parts)] == base_path.parts
-        yield (path, path.parts[len(base_path.parts) :])
+        yield (path, tuple(path.parts[len(base_path.parts) :]))
 
         if path.is_dir():
             for p in path.iterdir():
@@ -386,6 +359,7 @@ def copytree(
 
     def _copy(args: tuple[UPath, UPath, tuple[str, ...]]) -> None:
         in_path, out_path, sub_path = args
+
         with (
             _append(in_path, sub_path).open("rb") as in_file,
             _append(out_path, sub_path).open("wb") as out_file,
@@ -412,6 +386,10 @@ def copytree(
 
 
 def movetree(in_path: UPath, out_path: UPath) -> None:
+    assert is_fs_path(in_path), f"Move is only supported for local paths, got {in_path}"
+    assert is_fs_path(out_path), (
+        f"Move is only supported for local paths, got {out_path}"
+    )
     move(in_path, out_path)
 
 
@@ -559,24 +537,19 @@ def enrich_path(
         )
 
     elif upath.protocol == "s3":
-        if (
-            upath.storage_options.get("client_kwargs", {}).get("endpoint_url")
-            is not None
-        ):
+        if upath.storage_options.get("endpoint_url") is not None:
             return upath
         parsed_url = urlparse(str(upath))
         endpoint_url = f"https://{parsed_url.netloc}"
         bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
 
-        return UPath(
-            f"s3://{bucket}/{key}", client_kwargs={"endpoint_url": endpoint_url}
-        )
+        return UPath(f"s3://{bucket}/{key}", endpoint_url=endpoint_url)
 
     if not upath.is_absolute():
         assert dataset_path is not None, (
             f"dataset_path must be set if {path} is not absolute"
         )
-        return cheap_resolve(dataset_path / upath)
+        return cheap_resolve(dataset_path / upath.as_posix())
     return cheap_resolve(upath)
 
 
@@ -604,5 +577,6 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
         if safe_is_relative_to(path, dataset_path):
             return "./" + path.relative_to(dataset_path).as_posix()
     if path.protocol == "s3":
-        return f"s3://{urlparse(path.storage_options['client_kwargs']['endpoint_url']).netloc}/{path.path}"
+        endpoint_url = path.storage_options["endpoint_url"]
+        return f"s3://{urlparse(endpoint_url).netloc}/{path.path}"
     return path.as_posix()
