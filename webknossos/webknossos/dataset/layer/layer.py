@@ -3,7 +3,7 @@ import warnings
 from inspect import getframeinfo, stack
 from os import PathLike
 from os.path import relpath
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 from cluster_tools import Executor
@@ -39,7 +39,7 @@ from .view import (
 )
 
 if TYPE_CHECKING:
-    from webknossos.dataset import Dataset
+    from webknossos.dataset import Dataset, RemoteDataset
     from webknossos.dataset.layer import RemoteLayer
 
     from .segmentation_layer import SegmentationLayer
@@ -955,8 +955,8 @@ class Layer(AbstractLayer):
         return full_path
 
     def _get_dataset_from_align_with_other_layers(
-        self, align_with_other_layers: Union[bool, "Dataset"]
-    ) -> Optional["Dataset"]:
+        self, align_with_other_layers: Union[bool, "Dataset", "RemoteDataset"]
+    ) -> Union["Dataset", "RemoteDataset"] | None:
         if isinstance(align_with_other_layers, bool):
             return self.dataset if align_with_other_layers else None
         else:
@@ -970,7 +970,7 @@ class Layer(AbstractLayer):
         interpolation_mode: str = "default",
         compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
-        align_with_other_layers: Union[bool, "Dataset"] = True,
+        align_with_other_layers: Union[bool, "Dataset", "RemoteDataset"] = True,
         buffer_shape: Vec3Int | None = None,
         force_sampling_scheme: bool = False,
         allow_overwrite: bool = False,
@@ -990,7 +990,7 @@ class Layer(AbstractLayer):
             compress (bool | Zarr3Config): Whether to compress the generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             sampling_mode (str | SamplingModes): How dimensions should be downsampled.
                 Defaults to ANISOTROPIC.
-            align_with_other_layers (bool | Dataset): Whether to align with other layers. True by default.
+            align_with_other_layers (bool | Dataset | RemoteDataset): Whether to align with other layers. True by default.
             buffer_shape (Vec3Int | None): Shape of processing buffer. Defaults to None.
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
             allow_overwrite (bool): Whether existing mags can be overwritten. False by default.
