@@ -964,7 +964,7 @@ class Annotation:
             dataset_name_or_url=self.dataset_name,
             organization_id=organization_id,
             dataset_id=self.dataset_id,
-            annotation_id=self.annotation_id,
+            annotation_id_or_url=self.annotation_id,
             use_zarr_streaming=True,
             read_only=True,
         )

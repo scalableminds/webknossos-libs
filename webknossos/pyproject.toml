@@ -146,6 +146,7 @@ exclude = [
     "site-packages",
     "venv",
     "webknossos/dataset/_utils/vendor",
+    "webknossos/proofreading/generated",
 ]
 
 # Same as Black.
