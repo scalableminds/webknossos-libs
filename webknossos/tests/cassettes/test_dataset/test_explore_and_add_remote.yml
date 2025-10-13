@@ -15,12 +15,14 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:55 GMT
+        date: Mon, 13 Oct 2025 09:59:02 GMT
+        connection: close
         content-type: text/html; charset=UTF-8
         content-length: '1487'
       body:
@@ -29,7 +31,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v10/datasets/exploreAndAddRemote
+      path: /api/v12/datasets/exploreAndAddRemote
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -52,50 +54,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:56 GMT
+        date: Mon, 13 Oct 2025 09:59:02 GMT
+        connection: close
         content-type: application/json
         content-length: '26'
       body:
         encoding: utf8
-        data: '"68d24d64010000b600de7bb1"'
-        compression: none
-  - request:
-      method: GET
-      path: /api/v10/user
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        connection: keep-alive
-        user-agent: python-httpx/0.27.2
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:56 GMT
-        content-type: application/json
-        content-length: '717'
-      body:
-        encoding: utf8
-        data: >-
-          {"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isOrganizationOwner":true,"isDatasetManager":true,"isActive":true,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}],"experiences":{"abc":5},"lastActivity":1460379469053,"isAnonymous":false,"isEditable":true,"organization":"Organization_X","novelUserExperienceInfos":{},"selectedTheme":"auto","created":1460379469000,"lastTaskTypeId":null,"isSuperUser":true,"isEmailVerified":true,"isUnlisted":false,"isGuest":false}
+        data: '"68eccd66e00000e435be2f1f"'
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v10/datasets?isActive=true&organizationId=Organization_X&searchQuery=added_remote_ds
+        /api/v12/datasets/68eccd66e00000e435be2f1f?sharingToken=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -112,53 +86,22 @@ http_interactions:
       status:
         code: 200
       headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        access-control-max-age: '600'
-        access-control-allow-origin: '*'
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:56 GMT
-        content-type: application/json
-        content-length: '2219'
-      body:
-        encoding: utf8
-        data: >-
-          [{"id":"68d24d64010000b600de7bb1","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-68d24d64010000b600de7bb1","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-68d24d64010000b600de7bb1","created":1758612836672,"isEditable":true,"lastUsedByUser":0,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1758612836672,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":true}]
-        compression: none
-  - request:
-      method: GET
-      path: >-
-        /api/v10/datasets/68d24d64010000b600de7bb1?sharingToken=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        connection: keep-alive
-        user-agent: python-httpx/0.27.2
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:56 GMT
+        date: Mon, 13 Oct 2025 09:59:02 GMT
+        connection: close
         content-type: application/json
-        content-length: '2229'
+        content-length: '2809'
       body:
         encoding: utf8
         data: >-
-          {"id":"68d24d64010000b600de7bb1","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-68d24d64010000b600de7bb1","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-68d24d64010000b600de7bb1","created":1758612836672,"isEditable":true,"lastUsedByUser":1758612836759,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1758612836672,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":true}
+          {"id":"68eccd66e00000e435be2f1f","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-68eccd66e00000e435be2f1f","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-68eccd66e00000e435be2f1f","created":1760349542480,"isEditable":true,"lastUsedByUser":1760349542511,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1760349542480,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":true}
         compression: none
   - request:
       method: HEAD
-      path: /data/v10/zarr/68d24d64010000b600de7bb1/datasource-properties.json
+      path: /data/v12/zarr/68eccd66e00000e435be2f1f/datasource-properties.json
       headers:
         host: localhost:9000
         x-auth-token: >-
@@ -174,12 +117,14 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:56 GMT
+        date: Mon, 13 Oct 2025 09:59:02 GMT
+        connection: close
         content-type: application/json
         content-length: '1560'
       body:
@@ -188,7 +133,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/v10/zarr/68d24d64010000b600de7bb1/datasource-properties.json
+      path: /data/v12/zarr/68eccd66e00000e435be2f1f/datasource-properties.json
       headers:
         host: localhost:9000
         x-auth-token: >-
@@ -205,22 +150,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:56 GMT
+        date: Mon, 13 Oct 2025 09:59:02 GMT
+        connection: close
         content-type: application/json
         content-length: '1560'
       body:
         encoding: utf8
         data: >-
-          {"id":{"name":"added_remote_ds-68d24d64010000b600de7bb1","team":"Organization_X"},"dataLayers":[{"category":"color","name":"color","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1},{"category":"segmentation","name":"segmentation","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
+          {"id":{"name":"added_remote_ds-68eccd66e00000e435be2f1f","team":"Organization_X"},"dataLayers":[{"category":"color","name":"color","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1},{"category":"segmentation","name":"segmentation","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
         compression: none
   - request:
       method: GET
-      path: /api/v10/datasets/68d24d64010000b600de7bb1
+      path: /api/v12/datasets/68eccd66e00000e435be2f1f
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -237,14 +184,16 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:56 GMT
+        date: Mon, 13 Oct 2025 09:59:02 GMT
+        connection: close
         content-type: application/json
-        content-length: '2229'
+        content-length: '2809'
       body:
         encoding: utf8
         data: >-
-          {"id":"68d24d64010000b600de7bb1","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-68d24d64010000b600de7bb1","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-68d24d64010000b600de7bb1","created":1758612836672,"isEditable":true,"lastUsedByUser":1758612836827,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1758612836672,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":true}
+          {"id":"68eccd66e00000e435be2f1f","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-68eccd66e00000e435be2f1f","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-68eccd66e00000e435be2f1f","created":1760349542480,"isEditable":true,"lastUsedByUser":1760349542552,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1760349542480,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":true}
         compression: none

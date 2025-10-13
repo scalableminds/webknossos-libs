@@ -7,7 +7,6 @@ from argparse import Namespace
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from enum import Enum
-from pathlib import Path
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
 from typing import Any, cast
@@ -20,17 +19,21 @@ from numpy._typing import DTypeLike
 from upath import UPath
 from zipp import Path as ZipPath
 
-from ..cli._utils import DistributionStrategy
-from ..dataset import (
+from webknossos.dataset_properties import (
     SEGMENTATION_CATEGORY,
     DataFormat,
+    DatasetProperties,
+    get_dataset_converter,
+)
+
+from ..cli._utils import DistributionStrategy
+from ..dataset import (
     Dataset,
     Layer,
     SegmentationLayer,
 )
-from ..dataset._array import Zarr3Config
 from ..dataset.defaults import PROPERTIES_FILE_NAME
-from ..dataset.properties import DatasetProperties, dataset_converter
+from ..dataset.layer import Zarr3Config
 from ..geometry import Vec3Int
 from ..utils import get_executor_for_args, is_fs_path
 
@@ -249,6 +252,9 @@ class VolumeLayer:
         assert self.zip is not None, (
             "The selected volume layer data is not available and cannot be exported."
         )
+        assert is_fs_path(dataset.path), (
+            "The dataset path must be a local path to export the volume layer."
+        )
 
         with self.zip.open(mode="rb") as f:
             data_zip = ZipFile(f)
@@ -271,7 +277,7 @@ class VolumeLayer:
                     ),
                 )
             elif self.data_format == DataFormat.Zarr3:
-                datasource_properties = dataset_converter.structure(
+                datasource_properties = get_dataset_converter().structure(
                     json.loads(data_zip.read(PROPERTIES_FILE_NAME)), DatasetProperties
                 )
                 assert len(datasource_properties.data_layers) == 1, (
@@ -308,7 +314,7 @@ class VolumeLayer:
         return layer
 
 
-def _extract_zip_folder(zip_file: ZipFile, out_path: Path, prefix: str) -> None:
+def _extract_zip_folder(zip_file: ZipFile, out_path: UPath, prefix: str) -> None:
     for zip_entry in zip_file.filelist:
         if zip_entry.filename.startswith(prefix) and not zip_entry.is_dir():
             out_file_path = out_path / (zip_entry.filename[len(prefix) :])

@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
+from ..dataset_properties import DataFormat
 from ..utils import is_writable_path
-from .data_format import DataFormat
 from .defaults import ZARR_JSON_FILE_NAME, ZATTRS_FILE_NAME, ZGROUP_FILE_NAME
 
 if TYPE_CHECKING:

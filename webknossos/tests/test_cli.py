@@ -7,14 +7,13 @@ import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
 from math import ceil
-from pathlib import Path
-from shutil import copytree
 from tempfile import TemporaryDirectory
 
 import numpy as np
 import pytest
 from PIL import Image
 from typer.testing import CliRunner
+from upath import UPath
 
 from tests.constants import (
     MINIO_PORT,
@@ -29,6 +28,7 @@ from webknossos.cli.export_as_tiff import _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
+from webknossos.utils import copytree
 
 runner = CliRunner()
 
@@ -52,7 +52,7 @@ def minio_docker() -> Iterator[None]:
         yield
 
 
-def check_call(*args: str | int | Path) -> None:
+def check_call(*args: str | int | UPath) -> None:
     try:
         subprocess.check_call([str(a) for a in args])
     except subprocess.CalledProcessError as err:
@@ -60,7 +60,7 @@ def check_call(*args: str | int | Path) -> None:
         raise err
 
 
-def _tiff_cubing(out_path: Path, data_format: DataFormat) -> None:
+def _tiff_cubing(out_path: UPath, data_format: DataFormat) -> None:
     in_path = TESTDATA_DIR / "tiff"
 
     check_call(
@@ -132,7 +132,7 @@ def test_check_equality() -> None:
     )
 
 
-def test_copy_dataset(tmp_path: Path) -> None:
+def test_copy_dataset(tmp_upath: UPath) -> None:
     """Tests the functionality of copy_dataset subcommand."""
 
     result_without_args = runner.invoke(app, ["copy-dataset"])
@@ -143,14 +143,14 @@ def test_copy_dataset(tmp_path: Path) -> None:
         [
             "copy-dataset",
             str(TESTDATA_DIR / "simple_wkw_dataset"),
-            str(tmp_path / "simple_wkw_dataset"),
+            str(tmp_upath / "simple_wkw_dataset"),
             "--data-format",
             "zarr3",
         ],
     )
     assert result.exit_code == 0
     # verify that data is
-    target_ds = Dataset.open(tmp_path / "simple_wkw_dataset")
+    target_ds = Dataset.open(tmp_upath / "simple_wkw_dataset")
     target_layer = target_ds.get_layer("color")
     assert target_layer.data_format == DataFormat.Zarr3
     assert Mag(1) in target_layer.mags
@@ -160,7 +160,7 @@ def test_copy_dataset(tmp_path: Path) -> None:
         [
             "copy-dataset",
             str(TESTDATA_DIR / "simple_wkw_dataset"),
-            str(tmp_path / "simple_wkw_dataset"),
+            str(tmp_upath / "simple_wkw_dataset"),
             "--data-format",
             "zarr3",
             "--exists-ok",
@@ -173,10 +173,10 @@ def test_check_not_equal() -> None:
     """Tests that the check_equality subcommand detects differing datasets."""
 
     with tmp_cwd():
-        tmp_path = Path("testdata") / "simple_wkw_dataset"
+        tmp_upath = UPath("testdata") / "simple_wkw_dataset"
 
-        copytree(TESTDATA_DIR / "simple_wkw_dataset", tmp_path)
-        dataset = Dataset.open(tmp_path)
+        copytree(TESTDATA_DIR / "simple_wkw_dataset", tmp_upath)
+        dataset = Dataset.open(tmp_upath)
         finest_mag = dataset.get_layer("color").get_finest_mag().read()
         finest_mag[1, 5, 7, 4] += 1
         dataset.get_layer("color").get_finest_mag().write(finest_mag)
@@ -186,7 +186,7 @@ def test_check_not_equal() -> None:
             [
                 "check-equality",
                 str(TESTDATA_DIR / "simple_wkw_dataset"),
-                str(tmp_path),
+                str(tmp_upath),
             ],
         )
         assert result.exit_code == 1, result.stdout
@@ -206,7 +206,7 @@ def test_compress() -> None:
 
     with tmp_cwd():
         wkw_path = TESTDATA_DIR / "simple_wkw_dataset"
-        copytree(wkw_path, Path("testdata") / "simple_wkw_dataset")
+        copytree(wkw_path, UPath("testdata") / "simple_wkw_dataset")
 
         result = runner.invoke(app, ["compress", "testdata/simple_wkw_dataset"])
 
@@ -218,7 +218,7 @@ def test_compress_with_args() -> None:
 
     with tmp_cwd():
         wkw_path = TESTDATA_DIR / "simple_wkw_dataset"
-        copytree(wkw_path, Path("testdata") / "simple_wkw_dataset")
+        copytree(wkw_path, UPath("testdata") / "simple_wkw_dataset")
 
         result = runner.invoke(
             app,
@@ -258,7 +258,7 @@ def test_convert() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff"
-        wkw_path = Path("wkw_from_tiff_simple")
+        wkw_path = UPath("wkw_from_tiff_simple")
 
         result = runner.invoke(
             app,
@@ -281,7 +281,7 @@ def test_convert_single_file() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff" / "test.0000.tiff"
-        wkw_path = Path("wkw_from_tiff_single_file")
+        wkw_path = UPath("wkw_from_tiff_single_file")
 
         result = runner.invoke(
             app,
@@ -303,7 +303,7 @@ def test_convert_with_all_params() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff_with_different_shapes"
-        wkw_path = Path(f"wkw_from_{origin_path.name}")
+        wkw_path = UPath(f"wkw_from_{origin_path.name}")
         with pytest.warns(UserWarning, match="Some images are larger than expected,"):
             result = runner.invoke(
                 app,
@@ -329,11 +329,11 @@ def test_convert_raw() -> None:
     """Tests the functionality of convert-raw subcommand."""
 
     with tmp_cwd():
-        origin_path = Path("test.raw")
+        origin_path = UPath("test.raw")
         origin_path.write_bytes(
             np.array([[0.2, 0.4], [0.6, 0.8]], dtype="float32").tobytes(order="F")
         )
-        out_path = Path(f"wkw_from_{origin_path.name}")
+        out_path = UPath(f"wkw_from_{origin_path.name}")
         result = runner.invoke(
             app,
             [
@@ -392,7 +392,7 @@ def test_download_dataset(url: str) -> None:
             ],
         )
         assert result.exit_code == 0, result.stdout
-        assert (Path("testoutput") / PROPERTIES_FILE_NAME).exists()
+        assert (UPath("testoutput") / PROPERTIES_FILE_NAME).exists()
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
@@ -403,7 +403,7 @@ def test_downsample_and_upsample() -> None:
     assert result_without_args.exit_code == 2
 
     with tmp_cwd():
-        wkw_path = Path("simple_wkw_dataset")
+        wkw_path = UPath("simple_wkw_dataset")
         copytree(TESTDATA_DIR / wkw_path, wkw_path)
 
         result_downsample = runner.invoke(app, ["downsample", str(wkw_path)])
@@ -432,11 +432,11 @@ def test_upload() -> None:
     assert result_without_args.exit_code == 2
 
 
-def test_export_tiff_stack(tmp_path: Path) -> None:
+def test_export_tiff_stack(tmp_upath: UPath) -> None:
     """Tests export of a tiff stack."""
 
     source_path = TESTDATA_DIR / "simple_wkw_dataset"
-    destination_path = tmp_path / "simple_wkw_dataset_tiff"
+    destination_path = tmp_upath / "simple_wkw_dataset_tiff"
     bbox = BoundingBox((4, 4, 10), (20, 20, 14))
 
     result = runner.invoke(
@@ -471,7 +471,8 @@ def test_export_tiff_stack(tmp_path: Path) -> None:
 
         assert tiff_path.is_file(), f"Expected a tiff to be written at: {tiff_path}."
 
-        test_image = np.array(Image.open(tiff_path)).T
+        with tiff_path.open("rb") as f:
+            test_image = np.array(Image.open(f)).T
 
         correct_image = test_mag_view.read(
             absolute_offset=slice_bbox.topleft, size=slice_bbox.size
@@ -484,11 +485,11 @@ def test_export_tiff_stack(tmp_path: Path) -> None:
         )
 
 
-def test_export_tiff_stack_tile_size(tmp_path: Path) -> None:
+def test_export_tiff_stack_tile_size(tmp_upath: UPath) -> None:
     """Tests the tile size support of exporting a tiff stack."""
 
     source_path = TESTDATA_DIR / "simple_wkw_dataset"
-    destination_path = tmp_path / "simple_wkw_dataset_tile_size"
+    destination_path = tmp_upath / "simple_wkw_dataset_tile_size"
     bbox = BoundingBox((0, 0, 0), (24, 24, 5))
 
     result = runner.invoke(
@@ -529,7 +530,8 @@ def test_export_tiff_stack_tile_size(tmp_path: Path) -> None:
                     f"Expected a tiff to be written at: {tiff_path}."
                 )
 
-                test_image = np.array(Image.open(tiff_path)).T
+                with tiff_path.open("rb") as f:
+                    test_image = np.array(Image.open(f)).T
 
                 correct_image = test_mag_view.read(
                     absolute_offset=(
@@ -548,11 +550,11 @@ def test_export_tiff_stack_tile_size(tmp_path: Path) -> None:
                 )
 
 
-def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
+def test_export_tiff_stack_tiles_per_dimension(tmp_upath: UPath) -> None:
     """Tests the tiles per dimension support when exporting a tiff stack."""
 
     source_path = TESTDATA_DIR / "simple_wkw_dataset"
-    destination_path = tmp_path / "simple_wkw_dataset_tiles_per_dimension"
+    destination_path = tmp_upath / "simple_wkw_dataset_tiles_per_dimension"
     bbox = BoundingBox((0, 0, 0), (24, 24, 5))
 
     result = runner.invoke(
@@ -593,7 +595,8 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
                     f"Expected a tiff to be written at: {tiff_path}."
                 )
 
-                test_image = np.array(Image.open(tiff_path)).T
+                with tiff_path.open("rb") as f:
+                    test_image = np.array(Image.open(f)).T
 
                 correct_image = test_mag_view.read(
                     absolute_offset=(
@@ -614,7 +617,7 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("use_compression", [True, False])
 def test_merge_fallback_no_fallback_layer(
-    tmp_path: Path, use_compression: bool
+    tmp_upath: UPath, use_compression: bool
 ) -> None:
     from zipfile import ZIP_DEFLATED, ZipFile
     from zlib import Z_BEST_SPEED
@@ -625,7 +628,7 @@ def test_merge_fallback_no_fallback_layer(
     fallback_layer_data = np.ones((64, 64, 64), dtype=np.uint8)
 
     fallback_mag = (
-        Dataset(tmp_path / "fallback_dataset", (11.24, 11.24, 25))
+        Dataset(tmp_upath / "fallback_dataset", (11.24, 11.24, 25))
         .add_layer(
             "fallback_layer",
             SEGMENTATION_CATEGORY,
@@ -644,76 +647,73 @@ def test_merge_fallback_no_fallback_layer(
         absolute_offset=(0,) * 3, data=fallback_layer_data, allow_resize=True
     )
 
-    annotation_zip_path = tmp_path / "annotation.zip"
+    annotation_zip_path = tmp_upath / "annotation.zip"
     annotation_data = np.ones((32, 32, 32), dtype=fallback_layer_data.dtype) * 2
     voxel_size = (11.24, 11.24, 25)
 
     topleft = (32,) * 3
 
-    with TemporaryDirectory(dir=tmp_path) as tmp_dir:
-        tmp_ds_dir = Path(tmp_dir)
-        tmp_dataset = Dataset(tmp_ds_dir / "tmp_dataset", voxel_size)
+    tmp_dataset = Dataset(tmp_upath / "tmp_dataset", voxel_size)
+    largest_segment_id = int(annotation_data.max())
 
-        largest_segment_id = int(annotation_data.max())
+    tmp_layer = tmp_dataset.add_layer(
+        "Volume",
+        SEGMENTATION_CATEGORY,
+        data_format=DataFormat.WKW,
+        dtype_per_channel=annotation_data.dtype,
+        largest_segment_id=largest_segment_id,
+    )
 
-        tmp_layer = tmp_dataset.add_layer(
-            "Volume",
-            SEGMENTATION_CATEGORY,
+    mag1 = tmp_layer.add_mag(
+        1,
+        chunk_shape=DEFAULT_CHUNK_SHAPE,
+        shard_shape=DEFAULT_CHUNK_SHAPE,
+        compress=True,
+    )
+
+    mag1.write(absolute_offset=topleft, data=annotation_data, allow_resize=True)
+
+    volume_layer_zip = tmp_upath / "data_Volume.zip"
+
+    with ZipFile(
+        str(volume_layer_zip),
+        mode="x",
+        compression=ZIP_DEFLATED,
+        compresslevel=Z_BEST_SPEED,
+    ) as zf:
+        for dirname, _, files in os.walk(str(tmp_layer.path)):
+            arcname = str(UPath(dirname).relative_to(tmp_layer.path))
+            for filename in files:
+                if filename.endswith(".wkw"):
+                    zf.write(
+                        os.path.join(dirname, filename),
+                        os.path.join(arcname, filename),
+                    )
+
+    annotation = Annotation(
+        name="test_annotation",
+        skeleton=Skeleton(
+            voxel_size=tmp_dataset.voxel_size,
+            dataset_name=fallback_mag.layer.dataset.name,
+        ),
+    )
+
+    annotation._volume_layers = [
+        webknossos.annotation.VolumeLayer(  # type: ignore
+            id=0,
+            name=tmp_layer.name,
+            fallback_layer_name=fallback_mag.layer.name,
+            zip=volume_layer_zip,
+            segments={},
             data_format=DataFormat.WKW,
-            dtype_per_channel=annotation_data.dtype,
             largest_segment_id=largest_segment_id,
-        )
+            voxel_size=tmp_dataset.voxel_size,
+        ),
+    ]
 
-        mag1 = tmp_layer.add_mag(
-            1,
-            chunk_shape=DEFAULT_CHUNK_SHAPE,
-            shard_shape=DEFAULT_CHUNK_SHAPE,
-            compress=True,
-        )
+    annotation.save(annotation_zip_path)
 
-        mag1.write(absolute_offset=topleft, data=annotation_data, allow_resize=True)
-
-        volume_layer_zip = tmp_ds_dir / "data_Volume.zip"
-
-        with ZipFile(
-            volume_layer_zip,
-            mode="x",
-            compression=ZIP_DEFLATED,
-            compresslevel=Z_BEST_SPEED,
-        ) as zf:
-            for dirname, _, files in os.walk(str(tmp_layer.path)):
-                arcname = str(Path(dirname).relative_to(tmp_layer.path))
-                for filename in files:
-                    if filename.endswith(".wkw"):
-                        zf.write(
-                            os.path.join(dirname, filename),
-                            os.path.join(arcname, filename),
-                        )
-
-        annotation = Annotation(
-            name="test_annotation",
-            skeleton=Skeleton(
-                voxel_size=tmp_dataset.voxel_size,
-                dataset_name=fallback_mag.layer.dataset.name,
-            ),
-        )
-
-        annotation._volume_layers = [
-            webknossos.annotation.VolumeLayer(  # type: ignore
-                id=0,
-                name=tmp_layer.name,
-                fallback_layer_name=fallback_mag.layer.name,
-                zip=volume_layer_zip,
-                segments={},
-                data_format=DataFormat.WKW,
-                largest_segment_id=largest_segment_id,
-                voxel_size=tmp_dataset.voxel_size,
-            ),
-        ]
-
-        annotation.save(annotation_zip_path)
-
-    target_dataset_path = tmp_path / "merged_dataset"
+    target_dataset_path = tmp_upath / "merged_dataset"
 
     result = runner.invoke(
         app,
@@ -721,7 +721,7 @@ def test_merge_fallback_no_fallback_layer(
             "merge-fallback",
             str(target_dataset_path),
             str(annotation_zip_path),
-            str(tmp_path),
+            str(tmp_upath),
         ],
     )
 

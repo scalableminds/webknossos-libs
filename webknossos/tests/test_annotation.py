@@ -1,15 +1,14 @@
 import sys
 import tempfile
-from pathlib import Path
 
 import numpy as np
 import pytest
 from cluster_tools import get_executor
+from upath import UPath
 
 import webknossos as wk
-from webknossos import Annotation, SegmentationLayer
+from webknossos import Annotation, DataFormat, SegmentationLayer
 from webknossos.annotation.volume_layer import VolumeLayerEditMode
-from webknossos.dataset import DataFormat
 from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
@@ -164,7 +163,7 @@ def test_dataset_access_via_annotation() -> None:
     # while it was referenced in an annotation.
 
     # load a remote dataset
-    remote_ds = wk.Dataset.open_remote(
+    remote_ds = wk.RemoteDataset.open(
         "http://localhost:9000/datasets/Organization_X/l4_sample"
     )
 
@@ -269,7 +268,7 @@ def test_reading_bounding_boxes() -> None:
 
     # Check exporting and re-reading checked-in file (roundtrip)
     with tempfile.TemporaryDirectory() as tmp_dir:
-        output_path = Path(tmp_dir) / "serialized.zip"
+        output_path = UPath(tmp_dir) / "serialized.zip"
         annotation.save(output_path)
 
         annotation_deserialized = wk.Annotation.load(output_path)
@@ -278,7 +277,7 @@ def test_reading_bounding_boxes() -> None:
 
 @pytest.mark.use_proxay
 def test_bounding_box_roundtrip() -> None:
-    ds = wk.Dataset.open_remote("l4_sample")
+    ds = wk.RemoteDataset.open("l4_sample")
 
     annotation_before = wk.Annotation(
         name="test_bounding_box_roundtrip",
@@ -298,6 +297,7 @@ def test_bounding_box_roundtrip() -> None:
     )
 
     annotation_url = annotation_before.upload()
+    _ = wk.RemoteDataset.open(annotation_id_or_url=annotation_url)
     annotation_after = wk.Annotation.download(annotation_url)
 
     # task bounding box is appended to user bounding boxes when uploading a normal annotation:
@@ -330,7 +330,7 @@ def test_empty_volume_annotation() -> None:
         TESTDATA_DIR / "annotations" / "nml_with_volumes.zip",
     ],
 )
-def test_nml_with_volumes(nml_path: Path) -> None:
+def test_nml_with_volumes(nml_path: UPath) -> None:
     if nml_path.suffix == ".zip":
         with pytest.warns(UserWarning, match="location is not referenced in the NML"):
             a = wk.Annotation.load(nml_path)
@@ -346,15 +346,15 @@ def test_nml_with_volumes(nml_path: Path) -> None:
     )
 
 
-def test_segment_metadata(tmp_path: Path) -> None:
+def test_segment_metadata(tmp_upath: UPath) -> None:
     annotation = wk.Annotation.load(
         TESTDATA_DIR / "annotations" / "nml_with_volumes.zip"
     )
     annotation.get_volume_layer_segments("segmentation")[2504698].metadata[
         "test_segment"
     ] = "test"
-    annotation.save(tmp_path / "test.zip")
-    tmp_annotation = wk.Annotation.load(tmp_path / "test.zip")
+    annotation.save(tmp_upath / "test.zip")
+    tmp_annotation = wk.Annotation.load(tmp_upath / "test.zip")
     assert (
         tmp_annotation.get_volume_layer_segments("segmentation")[2504698].metadata[
             "test_segment"
@@ -363,13 +363,13 @@ def test_segment_metadata(tmp_path: Path) -> None:
     )
 
 
-def test_tree_metadata(tmp_path: Path) -> None:
+def test_tree_metadata(tmp_upath: UPath) -> None:
     annotation = wk.Annotation.load(
         TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     )
     list(annotation.skeleton.flattened_trees())[0].metadata["test_tree"] = "test"
-    annotation.save(tmp_path / "test.zip")
-    tmp_annotation = wk.Annotation.load(tmp_path / "test.zip")
+    annotation.save(tmp_upath / "test.zip")
+    tmp_annotation = wk.Annotation.load(tmp_upath / "test.zip")
     assert (
         list(tmp_annotation.skeleton.flattened_trees())[0].metadata["test_tree"]
         == "test"
@@ -433,8 +433,9 @@ def test_edited_volume_annotation_format() -> None:
     save_path = TESTOUTPUT_DIR / "saved_annotation.zip"
     ann.save(save_path)
     unpack_dir = TESTOUTPUT_DIR / "unpacked_annotation"
-    with zipfile.ZipFile(save_path, "r") as zip_ref:
-        zip_ref.extractall(unpack_dir)
+    with save_path.open("rb") as f:
+        with zipfile.ZipFile(f) as zip_ref:
+            zip_ref.extractall(str(unpack_dir))
 
     # test for the format assumptions as mentioned in https://github.com/scalableminds/webknossos/issues/8604
     ts = tensorstore.open(

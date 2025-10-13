@@ -2,7 +2,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v10/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
+        /api/v12/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -19,53 +19,25 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:25 GMT
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
         content-type: application/json
-        content-length: '2601'
+        content-length: '2991'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758612866426,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
-        compression: none
-  - request:
-      method: GET
-      path: /api/v10/datasets/59e9cfbdba632ac2ab8b23b5
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        connection: keep-alive
-        user-agent: python-httpx/0.27.2
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:25 GMT
-        content-type: application/json
-        content-length: '2599'
-      body:
-        encoding: utf8
-        data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758612866695,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760349567501,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+        /api/v12/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -82,6 +54,138 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
+        content-type: application/json
+        content-length: '2989'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760349568147,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+        compression: none
+  - request:
+      method: HEAD
+      path: /data/v12/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept-encoding: identity
+        accept: '*/*'
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1529'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: /data/v12/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        range: bytes=0-1528
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1529'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"category":"color","name":"color","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1},{"category":"segmentation","name":"segmentation","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
+        compression: none
+  - request:
+      method: GET
+      path: /api/v12/datasets/59e9cfbdba632ac2ab8b23b5
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
+        content-type: application/json
+        content-length: '2989'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760349568189,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+        compression: none
+  - request:
+      method: GET
+      path: >-
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -89,7 +193,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:25 GMT
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '700'
       body:
@@ -99,7 +204,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -116,6 +221,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -123,7 +229,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:26 GMT
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '300'
       body:
@@ -133,7 +240,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=2-2-1&x=3164&y=3212&z=1017&width=5&height=5&depth=7
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=2-2-1&x=3164&y=3212&z=1017&width=5&height=5&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -150,6 +257,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -157,7 +265,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:27 GMT
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '175'
       body:
@@ -167,7 +276,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=2-2-1&x=3164&y=3212&z=1024&width=5&height=5&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=2-2-1&x=3164&y=3212&z=1024&width=5&height=5&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -184,6 +293,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -191,7 +301,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:27 GMT
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '75'
       body:
@@ -201,7 +312,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=4-4-1&x=3164&y=3212&z=1017&width=3&height=3&depth=7
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=4-4-1&x=3164&y=3212&z=1017&width=3&height=3&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -218,6 +329,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -225,7 +337,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:27 GMT
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '63'
       body:
@@ -235,7 +348,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=4-4-1&x=3164&y=3212&z=1024&width=3&height=3&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=4-4-1&x=3164&y=3212&z=1024&width=3&height=3&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -252,6 +365,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -259,7 +373,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:27 GMT
+        date: Mon, 13 Oct 2025 09:59:28 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '27'
       body:
@@ -268,7 +383,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=8-8-2&x=3160&y=3208&z=1016&width=2&height=2&depth=4
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=8-8-2&x=3160&y=3208&z=1016&width=2&height=2&depth=4
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -285,6 +400,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -292,7 +408,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:28 GMT
+        date: Mon, 13 Oct 2025 09:59:29 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '16'
       body:
@@ -301,7 +418,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=8-8-2&x=3160&y=3208&z=1024&width=2&height=2&depth=2
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=8-8-2&x=3160&y=3208&z=1024&width=2&height=2&depth=2
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -318,6 +435,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -325,7 +443,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:28 GMT
+        date: Mon, 13 Oct 2025 09:59:29 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '8'
       body:
@@ -335,7 +454,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=16-16-4&x=3152&y=3200&z=1016&width=2&height=2&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=16-16-4&x=3152&y=3200&z=1016&width=2&height=2&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -352,6 +471,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -359,7 +479,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:28 GMT
+        date: Mon, 13 Oct 2025 09:59:29 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '12'
       body:
@@ -368,7 +489,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -385,6 +506,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -392,7 +514,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:28 GMT
+        date: Mon, 13 Oct 2025 09:59:29 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '2800'
       body:
@@ -402,7 +525,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -419,6 +542,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -426,7 +550,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:29 GMT
+        date: Mon, 13 Oct 2025 09:59:29 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '1200'
       body:
@@ -436,7 +561,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=2-2-1&x=3164&y=3212&z=1017&width=5&height=5&depth=7
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=2-2-1&x=3164&y=3212&z=1017&width=5&height=5&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -453,6 +578,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -460,7 +586,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:29 GMT
+        date: Mon, 13 Oct 2025 09:59:30 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '700'
       body:
@@ -470,7 +597,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=2-2-1&x=3164&y=3212&z=1024&width=5&height=5&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=2-2-1&x=3164&y=3212&z=1024&width=5&height=5&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -487,6 +614,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -494,7 +622,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:29 GMT
+        date: Mon, 13 Oct 2025 09:59:30 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '300'
       body:
@@ -504,7 +633,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=4-4-1&x=3164&y=3212&z=1017&width=3&height=3&depth=7
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=4-4-1&x=3164&y=3212&z=1017&width=3&height=3&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -521,6 +650,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -528,7 +658,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:30 GMT
+        date: Mon, 13 Oct 2025 09:59:30 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '252'
       body:
@@ -538,7 +669,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=4-4-1&x=3164&y=3212&z=1024&width=3&height=3&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=4-4-1&x=3164&y=3212&z=1024&width=3&height=3&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -555,6 +686,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -562,7 +694,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:30 GMT
+        date: Mon, 13 Oct 2025 09:59:30 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '108'
       body:
@@ -572,7 +705,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=8-8-2&x=3160&y=3208&z=1016&width=2&height=2&depth=4
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=8-8-2&x=3160&y=3208&z=1016&width=2&height=2&depth=4
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -589,6 +722,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -596,7 +730,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:30 GMT
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '64'
       body:
@@ -606,7 +741,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=8-8-2&x=3160&y=3208&z=1024&width=2&height=2&depth=2
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=8-8-2&x=3160&y=3208&z=1024&width=2&height=2&depth=2
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -623,6 +758,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -630,7 +766,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:30 GMT
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '32'
       body:
@@ -639,7 +776,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=16-16-4&x=3152&y=3200&z=1016&width=2&height=2&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=16-16-4&x=3152&y=3200&z=1016&width=2&height=2&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -656,6 +793,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -663,7 +801,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:31 GMT
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '48'
       body:
@@ -672,7 +811,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v10/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
+        /api/v12/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -689,53 +828,25 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:31 GMT
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
         content-type: application/json
-        content-length: '2601'
+        content-length: '2991'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758612866695,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
-        compression: none
-  - request:
-      method: GET
-      path: /api/v10/datasets/59e9cfbdba632ac2ab8b23b5
-      headers:
-        host: localhost:9000
-        accept: '*/*'
-        accept-encoding: gzip, deflate
-        connection: keep-alive
-        user-agent: python-httpx/0.27.2
-        x-auth-token: >-
-          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
-      body:
-        encoding: utf8
-        data: ''
-        compression: none
-    response:
-      status:
-        code: 200
-      headers:
-        cache-control: no-cache
-        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
-        x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:31 GMT
-        content-type: application/json
-        content-length: '2599'
-      body:
-        encoding: utf8
-        data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758612872677,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760349568189,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+        /api/v12/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -752,6 +863,138 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
+        content-type: application/json
+        content-length: '2989'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760349571935,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+        compression: none
+  - request:
+      method: HEAD
+      path: /data/v12/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        accept-encoding: identity
+        accept: '*/*'
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1529'
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+  - request:
+      method: GET
+      path: /data/v12/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
+      headers:
+        host: localhost:9000
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        range: bytes=0-1528
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        user-agent: Python/3.13 aiohttp/3.10.11
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        access-control-max-age: '600'
+        access-control-allow-origin: '*'
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
+        content-type: application/json
+        content-length: '1529'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"category":"color","name":"color","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1},{"category":"segmentation","name":"segmentation","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
+        compression: none
+  - request:
+      method: GET
+      path: /api/v12/datasets/59e9cfbdba632ac2ab8b23b5
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        cache-control: no-cache
+        referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+        x-permitted-cross-domain-policies: master-only
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
+        content-type: application/json
+        content-length: '2989'
+      body:
+        encoding: utf8
+        data: >-
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760349571976,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"key","type":"string","value":"value"},{"key":"number","type":"number","value":42},{"key":"list","type":"string[]","value":["a","b","c"]}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+        compression: none
+  - request:
+      method: GET
+      path: >-
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+      headers:
+        host: localhost:9000
+        accept: '*/*'
+        accept-encoding: gzip, deflate
+        connection: keep-alive
+        user-agent: python-httpx/0.27.2
+        x-auth-token: >-
+          1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+      body:
+        encoding: utf8
+        data: ''
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -759,7 +1002,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:31 GMT
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '700'
       body:
@@ -769,7 +1013,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/color/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -786,6 +1030,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -793,7 +1038,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:31 GMT
+        date: Mon, 13 Oct 2025 09:59:31 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '300'
       body:
@@ -803,7 +1049,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1017&width=10&height=10&depth=7
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -820,6 +1066,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -827,7 +1074,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:33 GMT
+        date: Mon, 13 Oct 2025 09:59:32 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '2800'
       body:
@@ -837,7 +1085,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /data/v10/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
+        /data/v12/datasets/59e9cfbdba632ac2ab8b23b5/layers/segmentation/data?mag=1-1-1&x=3164&y=3212&z=1024&width=10&height=10&depth=3
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -854,6 +1102,7 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         missing-buckets: '[]'
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
@@ -861,7 +1110,8 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:34:33 GMT
+        date: Mon, 13 Oct 2025 09:59:32 GMT
+        connection: close
         content-type: application/octet-stream
         content-length: '1200'
       body:

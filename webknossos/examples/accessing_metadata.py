@@ -2,7 +2,7 @@ import webknossos as wk
 
 
 def main() -> None:
-    l4_sample_dataset = wk.Dataset.open_remote("l4_sample")
+    l4_sample_dataset = wk.RemoteDataset.open("l4_sample")
     # Access the metadata of the dataset
     print(l4_sample_dataset.metadata)
 

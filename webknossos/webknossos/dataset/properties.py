@@ -1,6 +1,5 @@
 import copy
 from collections.abc import Callable, Iterable, Iterator
-from pathlib import Path
 from typing import (
     Any,
     Literal,
@@ -10,6 +9,7 @@ import attr
 import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
+from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
@@ -28,7 +28,7 @@ DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
 
 def _extract_num_channels(
     num_channels_in_properties: int | None,
-    path: Path,
+    path: UPath,
     layer: str,
     mag: int | Mag | None,
 ) -> int:

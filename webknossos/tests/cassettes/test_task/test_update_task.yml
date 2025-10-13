@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v10/teams
+      path: /api/v12/teams
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -18,10 +18,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '440'
       body:
@@ -31,7 +33,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /api/v10/taskTypes
+      path: /api/v12/taskTypes
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -48,10 +50,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '822'
       body:
@@ -65,7 +69,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v10/taskTypes
+      path: /api/v12/taskTypes
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -102,22 +106,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '388'
       body:
         encoding: utf8
         data: >-
-          {"id":"68d24d62010000ba00de7ba1","summary":"test_task_type","description":"This
+          {"id":"68eccd61e00000e435be2f0f","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
         compression: none
   - request:
       method: GET
-      path: /api/v10/projects/byName/test_project
+      path: /api/v12/projects/byName/test_project
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -134,10 +140,12 @@ http_interactions:
       status:
         code: 404
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '53'
       body:
@@ -146,7 +154,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /api/v10/user
+      path: /api/v12/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -163,10 +171,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '717'
       body:
@@ -176,7 +186,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v10/projects
+      path: /api/v12/projects
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -198,20 +208,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '618'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68d24d62010000b700de7ba2","created":1758612834154}
+          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68eccd61e00000e435be2f10","created":1760349537813}
         compression: none
   - request:
       method: GET
-      path: /api/v10/taskTypes
+      path: /api/v12/taskTypes
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -228,10 +240,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '1211'
       body:
@@ -241,13 +255,13 @@ http_interactions:
           those cells
           out!","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"570b9f4c2a7c0e4c008da6ff","summary":"ek_0674_BipolarCells","description":"Check
           those cells
-          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"68d24d62010000ba00de7ba1","summary":"test_task_type","description":"This
+          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"68eccd61e00000e435be2f0f","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}]
         compression: none
   - request:
       method: GET
-      path: /api/v10/user
+      path: /api/v12/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -264,10 +278,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '717'
       body:
@@ -278,7 +294,7 @@ http_interactions:
   - request:
       method: GET
       path: >-
-        /api/v10/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
+        /api/v12/datasets?isActive=true&organizationId=Organization_X&searchQuery=l4_sample
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -295,23 +311,25 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
-        content-length: '2457'
+        content-length: '2847'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758612833632,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760349537491,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
       path: >-
-        /api/v10/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
+        /api/v12/datasets/59e9cfbdba632ac2ab8b23b5?sharingToken=1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -328,20 +346,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:57 GMT
+        connection: close
         content-type: application/json
-        content-length: '2455'
+        content-length: '2845'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1758612834246,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/color/16-16-4"}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"wkw","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/1"},{"mag":[2,2,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/2-2-1"},{"mag":[4,4,1],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/4-4-1"},{"mag":[8,8,2],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/8-8-2"},{"mag":[16,16,4],"path":"/Users/valentin/Documents/scalableminds/webknossos/binaryData/Organization_X/l4_sample/segmentation/16-16-4"}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1760349537869,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: HEAD
-      path: /data/v10/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
+      path: /data/v12/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
       headers:
         host: localhost:9000
         x-auth-token: >-
@@ -357,12 +377,14 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:57 GMT
+        connection: close
         content-type: application/json
         content-length: '1529'
       body:
@@ -371,7 +393,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/v10/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
+      path: /data/v12/zarr/59e9cfbdba632ac2ab8b23b5/datasource-properties.json
       headers:
         host: localhost:9000
         x-auth-token: >-
@@ -388,12 +410,14 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:57 GMT
+        connection: close
         content-type: application/json
         content-length: '1529'
       body:
@@ -403,7 +427,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v10/tasks
+      path: /api/v12/tasks
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -417,7 +441,7 @@ http_interactions:
       body:
         encoding: utf8
         data: >-
-          [{"taskTypeId": "68d24d62010000ba00de7ba1", "neededExperience":
+          [{"taskTypeId": "68eccd61e00000e435be2f0f", "neededExperience":
           {"domain": "testing", "value": 0}, "pendingInstances": 1,
           "projectName": "test_project", "scriptId": null, "boundingBox": null,
           "datasetId": "59e9cfbdba632ac2ab8b23b5", "editPosition": [0, 0, 0],
@@ -427,22 +451,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:57 GMT
+        connection: close
         content-type: application/json
         content-length: '869'
       body:
         encoding: utf8
         data: >-
-          {"tasks":[{"status":200,"success":{"id":"68d24d62010000b700de7ba4","projectId":"68d24d62010000b700de7ba2","projectName":"test_project","team":"team_X1","type":{"id":"68d24d62010000ba00de7ba1","summary":"test_task_type","description":"This
+          {"tasks":[{"status":200,"success":{"id":"68eccd61e00000ec6dbe2f12","projectId":"68eccd61e00000e435be2f10","projectName":"test_project","team":"team_X1","type":{"id":"68eccd61e00000e435be2f0f","summary":"test_task_type","description":"This
           is a test task
-          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"testing","value":0},"created":1758612834317,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
+          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"testing","value":0},"created":1760349537936,"status":{"pending":1,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0]}}],"warnings":[]}
         compression: none
   - request:
       method: GET
-      path: /api/v10/projects/68d24d62010000b700de7ba2
+      path: /api/v12/projects/68eccd61e00000e435be2f10
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -459,20 +485,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:57 GMT
+        connection: close
         content-type: application/json
         content-length: '618'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68d24d62010000b700de7ba2","created":1758612834154}
+          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68eccd61e00000e435be2f10","created":1760349537813}
         compression: none
   - request:
       method: PUT
-      path: /api/v10/tasks/68d24d62010000b700de7ba4
+      path: /api/v12/tasks/68eccd61e00000ec6dbe2f12
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -486,7 +514,7 @@ http_interactions:
       body:
         encoding: utf8
         data: >-
-          {"taskTypeId": "68d24d62010000ba00de7ba1", "neededExperience":
+          {"taskTypeId": "68eccd61e00000e435be2f0f", "neededExperience":
           {"domain": "testing", "value": 0}, "pendingInstances": 4,
           "projectName": "test_project", "scriptId": null, "boundingBox": null,
           "datasetId": "59e9cfbdba632ac2ab8b23b5", "editPosition": [0, 0, 0],
@@ -496,23 +524,25 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:57 GMT
+        connection: close
         content-type: application/json
         content-length: '870'
       body:
         encoding: utf8
         data: >-
-          {"id":"68d24d62010000b700de7ba4","projectId":"68d24d62010000b700de7ba2","projectName":"test_project","team":"team_X1","type":{"id":"68d24d62010000ba00de7ba1","summary":"test_task_type","description":"This
+          {"id":"68eccd61e00000ec6dbe2f12","projectId":"68eccd61e00000e435be2f10","projectName":"test_project","team":"team_X1","type":{"id":"68eccd61e00000e435be2f0f","summary":"test_task_type","description":"This
           is a test task
-          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"testing","value":0},"created":1758612834317,"status":{"pending":4,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0],"messages":[{"success":"Task
+          type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"},"datasetName":"l4_sample","datasetId":"59e9cfbdba632ac2ab8b23b5","neededExperience":{"domain":"testing","value":0},"created":1760349537936,"status":{"pending":4,"active":0,"finished":0},"script":null,"tracingTime":null,"creationInfo":null,"boundingBox":null,"editPosition":[0,0,0],"editRotation":[0,0,0],"messages":[{"success":"Task
           successfully edited"}]}
         compression: none
   - request:
       method: DELETE
-      path: /api/v10/taskTypes/68d24d62010000ba00de7ba1
+      path: /api/v12/taskTypes/68eccd61e00000e435be2f0f
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -529,10 +559,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:57 GMT
+        connection: close
         content-type: application/json
         content-length: '80'
       body:
@@ -543,7 +575,7 @@ http_interactions:
         compression: none
   - request:
       method: DELETE
-      path: /api/v10/projects/68d24d62010000b700de7ba2
+      path: /api/v12/projects/68eccd61e00000e435be2f10
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -560,10 +592,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:57 GMT
+        connection: close
         content-type: application/json
         content-length: '61'
       body:

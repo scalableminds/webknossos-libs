@@ -1,7 +1,7 @@
 http_interactions:
   - request:
       method: GET
-      path: /api/v10/teams
+      path: /api/v12/teams
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -18,10 +18,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '440'
       body:
@@ -31,7 +33,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /api/v10/taskTypes
+      path: /api/v12/taskTypes
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -48,10 +50,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '822'
       body:
@@ -65,7 +69,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v10/taskTypes
+      path: /api/v12/taskTypes
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -102,22 +106,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '388'
       body:
         encoding: utf8
         data: >-
-          {"id":"68d24d61010000ba00de7b9f","summary":"test_task_type","description":"This
+          {"id":"68eccd61e00000ec6dbe2f0d","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
         compression: none
   - request:
       method: GET
-      path: /api/v10/projects/byName/test_project
+      path: /api/v12/projects/byName/test_project
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -134,10 +140,12 @@ http_interactions:
       status:
         code: 404
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '53'
       body:
@@ -146,7 +154,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /api/v10/user
+      path: /api/v12/user
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -163,10 +171,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '717'
       body:
@@ -176,7 +186,7 @@ http_interactions:
         compression: none
   - request:
       method: POST
-      path: /api/v10/projects
+      path: /api/v12/projects
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -198,20 +208,22 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '618'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68d24d61010000b700de7ba0","created":1758612833921}
+          {"name":"test_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68eccd61e00000e435be2f0e","created":1760349537681}
         compression: none
   - request:
       method: GET
-      path: /api/v10/taskTypes
+      path: /api/v12/taskTypes
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -228,10 +240,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '1211'
       body:
@@ -241,13 +255,13 @@ http_interactions:
           those cells
           out!","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"570b9f4c2a7c0e4c008da6ff","summary":"ek_0674_BipolarCells","description":"Check
           those cells
-          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"68d24d61010000ba00de7b9f","summary":"test_task_type","description":"This
+          out!","teamId":"69882b370d889b84020efd4f","teamName":"team_X2","settings":{"allowedModes":["orthogonal","oblique","flight"],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":true,"magRestrictions":{}},"recommendedConfiguration":null,"tracingType":"skeleton"},{"id":"68eccd61e00000ec6dbe2f0d","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}]
         compression: none
   - request:
       method: GET
-      path: /api/v10/taskTypes/68d24d61010000ba00de7b9f
+      path: /api/v12/taskTypes/68eccd61e00000ec6dbe2f0d
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -264,22 +278,24 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '388'
       body:
         encoding: utf8
         data: >-
-          {"id":"68d24d61010000ba00de7b9f","summary":"test_task_type","description":"This
+          {"id":"68eccd61e00000ec6dbe2f0d","summary":"test_task_type","description":"This
           is a test task
           type","teamId":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","settings":{"allowedModes":[],"branchPointsAllowed":true,"somaClickingAllowed":true,"volumeInterpolationAllowed":false,"mergerMode":false,"magRestrictions":{"min":1,"max":1}},"recommendedConfiguration":null,"tracingType":"volume"}
         compression: none
   - request:
       method: DELETE
-      path: /api/v10/taskTypes/68d24d61010000ba00de7b9f
+      path: /api/v12/taskTypes/68eccd61e00000ec6dbe2f0d
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -296,10 +312,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '80'
       body:
@@ -310,7 +328,7 @@ http_interactions:
         compression: none
   - request:
       method: DELETE
-      path: /api/v10/projects/68d24d61010000b700de7ba0
+      path: /api/v12/projects/68eccd61e00000e435be2f0e
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -327,10 +345,12 @@ http_interactions:
       status:
         code: 200
       headers:
+        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 23 Sep 2025 07:33:53 GMT
+        date: Mon, 13 Oct 2025 09:58:56 GMT
+        connection: close
         content-type: application/json
         content-length: '61'
       body:

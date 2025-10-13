@@ -7,23 +7,22 @@ from collections import namedtuple
 from collections.abc import Generator, Iterator
 from functools import partial
 from multiprocessing import cpu_count
-from os import sep
-from pathlib import Path
+from os import PathLike, sep
 from types import TracebackType
 from typing import Annotated, Any, cast
 
 import numpy as np
 import typer
+from upath import UPath
 
-from webknossos.dataset.length_unit import LengthUnit
-from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
-
-from ..dataset import COLOR_CATEGORY, DataFormat, Dataset, View
+from ..dataset import Dataset, View
 from ..dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_DATA_FORMAT,
     DEFAULT_SHARD_SHAPE,
 )
+from ..dataset_properties import COLOR_CATEGORY, DataFormat, LengthUnit, VoxelSize
+from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, time_start, time_stop
 from ._utils import (
@@ -47,8 +46,8 @@ KnossosDatasetInfo = namedtuple("KnossosDatasetInfo", ("dataset_path", "dtype"))
 
 
 class KnossosDataset:
-    def __init__(self, root: str | Path, dtype: np.dtype):
-        self.root = Path(root)
+    def __init__(self, root: str | PathLike | UPath, dtype: np.dtype):
+        self.root = UPath(root)
         self.dtype = dtype
 
     def read(
@@ -71,7 +70,7 @@ class KnossosDataset:
         filename = self.__get_only_raw_file_path(cube_xyz)
         if filename is None:
             return np.zeros(KNOSSOS_CUBE_SHAPE, dtype=self.dtype)
-        with open(filename, "rb") as cube_file:
+        with filename.open("rb") as cube_file:
             cube_data = np.fromfile(cube_file, dtype=self.dtype)
             if cube_data.size != KNOSSOS_CUBE_SIZE:
                 padded_data = np.zeros(KNOSSOS_CUBE_SIZE, dtype=self.dtype)
@@ -90,18 +89,18 @@ class KnossosDataset:
             )
 
         filename.parent.mkdir(parents=True, exist_ok=True)
-        with open(filename, "wb") as cube_file:
+        with filename.open("wb") as cube_file:
             cube_data.ravel(order="F").tofile(cube_file)
 
-    def __get_cube_folder(self, cube_xyz: tuple[int, ...]) -> Path:
+    def __get_cube_folder(self, cube_xyz: tuple[int, ...]) -> UPath:
         x, y, z = cube_xyz
         return self.root / f"x{x:04d}" / f"y{y:04d}" / f"z{z:04d}"
 
-    def __get_cube_file_name(self, cube_xyz: tuple[int, ...]) -> Path:
+    def __get_cube_file_name(self, cube_xyz: tuple[int, ...]) -> UPath:
         x, y, z = cube_xyz
-        return Path(f"cube_x{x:04d}_y{y:04d}_z{z:04d}.raw")
+        return UPath(f"cube_x{x:04d}_y{y:04d}_z{z:04d}.raw")
 
-    def __get_only_raw_file_path(self, cube_xyz: tuple[int, ...]) -> Path | None:
+    def __get_only_raw_file_path(self, cube_xyz: tuple[int, ...]) -> UPath | None:
         cube_folder = self.__get_cube_folder(cube_xyz)
         raw_files = list(cube_folder.glob("*.raw"))
         assert len(raw_files) <= 1, (
@@ -109,10 +108,10 @@ class KnossosDataset:
         )
         return raw_files[0] if len(raw_files) > 0 else None
 
-    def list_files(self) -> Iterator[Path]:
+    def list_files(self) -> Iterator[UPath]:
         return self.root.glob("*/*/*/*.raw")
 
-    def __parse_cube_file_name(self, filename: Path) -> tuple[int, int, int] | None:
+    def __parse_cube_file_name(self, filename: UPath) -> tuple[int, int, int] | None:
         m = KNOSSOS_CUBE_REGEX.search(str(filename))
         if m is None:
             return None
@@ -129,7 +128,7 @@ class KnossosDataset:
         pass
 
     @staticmethod
-    def open(root: str | Path, dtype: np.dtype) -> "KnossosDataset":
+    def open(root: str | PathLike | UPath, dtype: np.dtype) -> "KnossosDataset":
         return KnossosDataset(root, dtype)
 
     def __enter__(self) -> "KnossosDataset":
@@ -177,8 +176,8 @@ def convert_cube_job(
 
 
 def convert_knossos(
-    source_path: Path,
-    target_path: Path,
+    source_path: UPath,
+    target_path: UPath,
     layer_name: str,
     dtype: str,
     voxel_size_with_unit: VoxelSize,

@@ -6,10 +6,12 @@ from urllib.parse import urlparse
 
 import typer
 
+from webknossos import RemoteDataset
+
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
-from ..dataset.dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX, Dataset
+from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
 from ..geometry import BoundingBox, Mag
 from ._utils import parse_bbox, parse_mag, parse_path
 
@@ -82,8 +84,7 @@ def main(
         if re.match(_DATASET_URL_REGEX, url) or re.match(
             _DATASET_DEPRECATED_URL_REGEX, url
         ):
-            Dataset.download(
-                dataset_name_or_url=url,
+            RemoteDataset.open(url).download(
                 path=target,
                 bbox=bbox,
                 layers=layers,
