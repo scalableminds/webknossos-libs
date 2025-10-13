@@ -80,7 +80,7 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     )
 
     # Wait for booting
-    while not requests.get(f"{WK_URL}/api/health").ok:
+    while not requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
         sleep(1)
 
     # Prepare the test database
@@ -105,15 +105,15 @@ def local_test_wk() -> Iterator[None]:
     check_and_clean_datasets_folder()
 
     # Fetch current version of webknossos.org this can be replaced with a fixed version for testing
-    wk_version = requests.get("https://webknossos.org/api/buildinfo").json()[
-        "webknossos"
-    ]["version"]
+    wk_version = requests.get(
+        "https://webknossos.org/api/v{WK_API_VERSION}/buildinfo"
+    ).json()["webknossos"]["version"]
     wk_docker_tag = f"master__${wk_version}"
     os.environ["DOCKER_TAG"] = wk_docker_tag
     wk_docker_dir = Path("tests")
 
     try:
-        if not requests.get(f"{WK_URL}/api/health").ok:
+        if not requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
             start_wk_via_docker()
         else:
             print(
@@ -137,7 +137,7 @@ Please ensure that the test-db is prepared by running this in the webknossos rep
 
         # Trigger dataset import via directory scan
         requests.post(
-            f"{WK_URL}/data/triggers/checkInboxBlocking",
+            f"{WK_URL}/data/v{WK_API_VERSION}/triggers/checkInboxBlocking",
             headers={"X-Auth-Token": WK_TOKEN},
         )
         yield
