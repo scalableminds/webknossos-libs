@@ -272,9 +272,13 @@ nav:
         - VecInt: api/webknossos/geometry/vec_int.md
       - Dataset:
         - Dataset: api/webknossos/dataset/dataset.md
-        - Layer: api/webknossos/dataset/layer.md
-        - MagView: api/webknossos/dataset/mag_view.md
-        - View: api/webknossos/dataset/view.md
+        - Layer: api/webknossos/dataset/layer/layer.md
+        - SegmentationLayer: api/webknossos/dataset/layer/segmentation_layer/segmentation_layer.md
+        - MagView: api/webknossos/dataset/layer/view/mag_view.md
+        - View: api/webknossos/dataset/layer/view/view.md
+        - RemoteDataset: api/webknossos/dataset/remote_dataset.md
+        - RemoteLayer: api/webknossos/dataset/layer/remote_layer.md
+        - RemoteSegmentationLayer: api/webknossos/dataset/layer/segmentation_layer/remote_segmentation_layer.md
         - RemoteFolder: api/webknossos/dataset/remote_folder.md
       - Annotation: api/webknossos/annotation/annotation.md
       - Skeleton:
