@@ -297,6 +297,7 @@ def test_bounding_box_roundtrip() -> None:
     )
 
     annotation_url = annotation_before.upload()
+    _ = wk.RemoteDataset.open(annotation_id_or_url=annotation_url)
     annotation_after = wk.Annotation.download(annotation_url)
 
     # task bounding box is appended to user bounding boxes when uploading a normal annotation:

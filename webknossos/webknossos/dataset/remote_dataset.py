@@ -87,6 +87,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         zarr_streaming_path: UPath | None,
         dataset_properties: DatasetProperties | None,
         dataset_id: str,
+        annotation_id: str | None,
         context: webknossos_context,
         read_only: bool,
     ) -> None:
@@ -118,6 +119,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         super().__init__(dataset_properties, read_only)
 
         self._dataset_id = dataset_id
+        self._annotation_id = annotation_id
         self._context = context
 
     @classmethod
@@ -128,7 +130,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-        annotation_id: str | None = None,
+        annotation_id_or_url: str | None = None,
         use_zarr_streaming: bool = True,
         read_only: bool = False,
     ) -> "RemoteDataset":
@@ -143,7 +145,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             sharing_token: Optional sharing token for dataset access
             webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
             dataset_id: Optional unique ID of the dataset
-            annotation_id: Optional unique ID of the annotation to stream the data from the annotation.
+            annotation_id_or_url: Optional unique ID or URL of the annotation to stream the data from the annotation.
             use_zarr_streaming: Whether to use zarr streaming
 
         Returns:
@@ -159,19 +161,20 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             must not be set.
         """
 
-        if annotation_id is not None:
+        if annotation_id_or_url is not None:
             assert use_zarr_streaming, (
                 "Annotations are only supported with zarr streaming"
             )
 
         from ..client.context import _get_context
 
-        (context_manager, dataset_id, sharing_token) = cls._parse_remote(
+        (context_manager, dataset_id, annotation_id, sharing_token) = cls._parse_remote(
             dataset_name_or_url,
             organization_id,
             sharing_token,
             webknossos_url,
             dataset_id,
+            annotation_id_or_url,
         )
 
         with context_manager:
@@ -198,7 +201,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                         headers={} if token is None else {"X-Auth-Token": token},
                         ssl=SSL_CONTEXT,
                     )
-                return cls(zarr_path, None, dataset_id, context_manager, read_only=True)
+                return cls(
+                    zarr_path,
+                    None,
+                    dataset_id,
+                    annotation_id,
+                    context_manager,
+                    read_only=True,
+                )
             else:
                 if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
                     raise RuntimeError(
@@ -209,6 +219,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     None,
                     api_dataset_info.data_source,
                     dataset_id,
+                    annotation_id,
                     context_manager,
                     read_only,
                 )
@@ -260,6 +271,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     @property
     def dataset_id(self) -> str:
         return self._dataset_id
+
+    @property
+    def annotation_id(self) -> str | None:
+        return self._annotation_id
 
     @property
     def url(self) -> str:
@@ -771,16 +786,33 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-    ) -> tuple["webknossos_context", str, str | None]:
+        annotation_id_or_url: str | None = None,
+    ) -> tuple["webknossos_context", str, str | None, str | None]:
         """Parses the given arguments to
         * context_manager that should be entered,
         * dataset_id,
         """
+        from .. import Annotation
         from ..client._resolve_short_link import resolve_short_link
         from ..client.context import _get_context, webknossos_context
 
         caller = inspect.stack()[1].function
         current_context = _get_context()
+
+        if annotation_id_or_url is not None:
+            annotation = Annotation.download(
+                annotation_id_or_url,
+                webknossos_url=webknossos_url,
+                skip_volume_data=True,
+            )
+            if dataset_id is not None:
+                assert dataset_id == annotation.dataset_id, (
+                    f"The annotation id {annotation.annotation_id} is not from the dataset with id {dataset_id}."
+                )
+            dataset_id = annotation.dataset_id
+            annotation_id = annotation.annotation_id
+        else:
+            annotation_id = None
 
         if dataset_id is None:
             assert dataset_name_or_url is not None, (
@@ -843,7 +875,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
                 context_manager = webknossos_context(webknossos_url, None)
-        return (context_manager, dataset_id, sharing_token)
+        return (context_manager, dataset_id, annotation_id, sharing_token)
 
     @classmethod
     def trigger_reload_in_datastore(
@@ -894,7 +926,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     "Both organization and organization_id were provided. Only one is allowed."
                 )
 
-        (context_manager, dataset_id, _) = cls._parse_remote(
+        (context_manager, dataset_id, _, _) = cls._parse_remote(
             dataset_name_or_url,
             organization_id,
             None,
