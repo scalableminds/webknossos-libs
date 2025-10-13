@@ -18,7 +18,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
-
+- RemoteDataset.annotation_id is now exposed, when available. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
+- RemoteDataset.open() now accepts an annotation url as well. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
 ### Changed
 - Ported `test.sh` to `test.py`, run with `uv run test.py`. [#1379](https://github.com/scalableminds/webknossos-libs/pull/1379)
 - `Dataset.add_layer_as_ref(remote_layer.path)` does not work anymore. Please use `Dataset.add_layer_as_ref(remote_layer)` instead. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
