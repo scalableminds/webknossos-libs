@@ -8,6 +8,7 @@
 # ruff: noqa: T201
 
 import os
+import signal
 import subprocess
 import sys
 from collections.abc import Iterator
@@ -199,6 +200,20 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
             proxay_process.kill()
 
 
+def run_pytest(args: list[str]) -> None:
+    process = subprocess.Popen(args)
+    try:
+        process.wait()
+    except KeyboardInterrupt:
+        print("Terminating pytest", flush=True)
+        if IS_WINDOWS:
+            process.terminate()
+        else:
+            process.send_signal(signal.SIGINT)
+        process.wait()
+        raise
+
+
 def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) -> None:
     python_version = os.environ.get("PYTHON_VERSION", "3.13")
 
@@ -231,13 +246,13 @@ def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) ->
         rmtree("tests/cassettes", ignore_errors=True)
 
         with proxay("record", quiet=False), local_test_wk():
-            subprocess.check_call(pytest_cmd + ["-m", "use_proxay"] + args)
+            run_pytest(pytest_cmd + ["-m", "use_proxay"] + args)
     elif snapshot_command == "add":
         with proxay("record", quiet=False), local_test_wk():
-            subprocess.check_call(pytest_cmd + ["-m", "use_proxay"] + args)
+            run_pytest(pytest_cmd + ["-m", "use_proxay"] + args)
     else:
         with proxay("replay", quiet=False):
-            subprocess.check_call(pytest_cmd + ["--timeout=360"] + args)
+            run_pytest(pytest_cmd + ["--timeout=360"] + args)
 
 
 if __name__ == "__main__":
