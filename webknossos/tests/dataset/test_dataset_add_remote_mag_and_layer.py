@@ -1,13 +1,12 @@
 import itertools
 import sys
 from collections.abc import Iterable, Iterator
-from pathlib import Path
 
 import numpy as np
 import pytest
 from upath import UPath
 
-from webknossos.dataset import COLOR_CATEGORY, Dataset
+from webknossos import COLOR_CATEGORY, Dataset, RemoteDataset
 from webknossos.geometry import BoundingBox
 from webknossos.utils import is_remote_path
 
@@ -18,10 +17,9 @@ pytestmark = [
 
 
 @pytest.fixture
-def sample_remote_dataset(tmp_path: Path) -> Iterator[Dataset]:
-    yield Dataset.download(
-        "l4_sample",
-        path=tmp_path / "l4_sample",
+def sample_remote_dataset(tmp_upath: UPath) -> Iterator[Dataset]:
+    yield RemoteDataset.open("l4_sample").download(
+        path=tmp_upath / "l4_sample",
         bbox=BoundingBox((3457, 3323, 1204), (10, 10, 10)),
     )
 
@@ -37,7 +35,7 @@ def test_add_remote_mags_from_mag_view(
     sample_remote_dataset: Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
     sample_remote_mags = [
         remote_dataset.get_layer(layer).get_mag(mag)
         for layer, mag in sample_layer_and_mag_name
@@ -65,7 +63,7 @@ def test_add_remote_mags_from_path(
     sample_remote_dataset: Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
     sample_remote_mags = [
         remote_dataset.get_layer(layer).get_mag(mag)
         for layer, mag in sample_layer_and_mag_name
@@ -91,11 +89,16 @@ def test_add_remote_mags_from_path(
         ), "Added remote mag's path does not match remote path of mag added."
 
 
-def test_ref_layer_from_object(sample_remote_dataset: Dataset) -> None:
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+def test_ref_layer_from_remote_layer(sample_remote_dataset: Dataset) -> None:
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
+    assert remote_dataset.zarr_streaming_path is not None, (
+        "Zarr streaming sets a remote path."
+    )
+    assert is_remote_path(remote_dataset.zarr_streaming_path), (
+        "zarr streaming path should be remote."
+    )
     sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
-        assert is_remote_path(layer.path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{layer.category}_object"
         sample_remote_dataset.add_layer_as_ref(layer, layer_name)
         new_layer = sample_remote_dataset.layers[layer_name]
@@ -104,24 +107,11 @@ def test_ref_layer_from_object(sample_remote_dataset: Dataset) -> None:
         ), "Mag path of added layer should be equal to mag path in source layer."
 
 
-def test_ref_layer_from_path(sample_remote_dataset: Dataset) -> None:
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
-    sample_remote_layer = list(remote_dataset.layers.values())
-    for layer in sample_remote_layer:
-        assert is_remote_path(layer.path), "Remote mag does not have remote path."
-        layer_name = f"test_remote_layer_{layer.category}_path"
-        sample_remote_dataset.add_layer_as_ref(UPath(layer.path), layer_name)
-        new_layer = sample_remote_dataset.layers[layer_name]
-        assert is_remote_path(new_layer.get_mag(1).path) and (
-            str(new_layer.get_mag(1).path) == str(layer.get_mag(1).path)
-        ), "Mag path of added layer should be equal to mag path is source layer."
-
-
-def test_ref_layer_non_public(tmp_path: Path) -> None:
+def test_ref_layer_non_public(tmp_upath: UPath) -> None:
     dataset = Dataset.open("testdata/simple_zarr3_dataset").copy_dataset(
-        tmp_path / "simple_zarr3_dataset"
+        tmp_upath / "simple_zarr3_dataset"
     )
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
     remote_dataset.is_public = False
     dataset.add_layer_as_ref(remote_dataset.get_layer("segmentation"), "segmentation")
 
@@ -134,17 +124,17 @@ def test_ref_layer_non_public(tmp_path: Path) -> None:
     remote_dataset.is_public = True
 
 
-def test_shallow_copy_remote_layers(tmp_path: Path) -> None:
-    dataset = Dataset(tmp_path / "origin", voxel_size=(10, 10, 10))
-    remote_dataset = Dataset.open_remote("l4_sample", "Organization_X")
+def test_shallow_copy_remote_layers(tmp_upath: UPath) -> None:
+    dataset = Dataset(tmp_upath / "origin", voxel_size=(10, 10, 10))
+    remote_dataset = RemoteDataset.open("l4_sample", "Organization_X")
     dataset.add_layer_as_ref(remote_dataset.get_layer("color"), "color")
-    dataset_copy = dataset.shallow_copy_dataset(tmp_path / "copy")
+    dataset_copy = dataset.shallow_copy_dataset(tmp_upath / "copy")
     data = dataset_copy.get_layer("color").get_mag("16-16-4").read()
     assert data.shape == (1, 64, 64, 256)
 
 
-def test_add_mag_ref_from_local_path(tmp_path: Path) -> None:
-    dataset1 = Dataset(tmp_path / "origin", voxel_size=(10, 10, 10))
+def test_add_mag_ref_from_local_path(tmp_upath: UPath) -> None:
+    dataset1 = Dataset(tmp_upath / "origin", voxel_size=(10, 10, 10))
     dataset1.write_layer(
         "color",
         COLOR_CATEGORY,
@@ -152,19 +142,19 @@ def test_add_mag_ref_from_local_path(tmp_path: Path) -> None:
         downsample=False,
     )
 
-    dataset2 = Dataset(tmp_path / "copy", voxel_size=(10, 10, 10))
-    layer1 = dataset2.add_layer_as_ref(tmp_path / "origin" / "color")
+    dataset2 = Dataset(tmp_upath / "copy", voxel_size=(10, 10, 10))
+    layer1 = dataset2.add_layer_as_ref(tmp_upath / "origin" / "color")
     layer1_mag1 = layer1.get_mag(1)
 
-    assert layer1_mag1.path == tmp_path / "origin" / "color" / "1"
+    assert layer1_mag1.path == tmp_upath / "origin" / "color" / "1"
     assert layer1_mag1._properties.path == str(
-        (tmp_path / "origin" / "color" / "1").resolve()
+        (tmp_upath / "origin" / "color" / "1").resolve()
     )
 
     layer2_mag1 = dataset2.add_layer("color2", COLOR_CATEGORY).add_mag_as_ref(
-        tmp_path / "origin" / "color" / "1"
+        tmp_upath / "origin" / "color" / "1"
     )
-    assert layer2_mag1.path == tmp_path / "origin" / "color" / "1"
+    assert layer2_mag1.path == tmp_upath / "origin" / "color" / "1"
     assert layer2_mag1._properties.path == str(
-        (tmp_path / "origin" / "color" / "1").resolve()
+        (tmp_upath / "origin" / "color" / "1").resolve()
     )

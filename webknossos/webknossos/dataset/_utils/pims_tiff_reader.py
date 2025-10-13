@@ -1,11 +1,10 @@
 import json
 from collections.abc import Iterator
-from os import PathLike
-from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
 from pims import FramesSequenceND
+from upath import UPath
 
 try:
     import tifffile
@@ -121,92 +120,96 @@ class PimsTiffReader(FramesSequenceND):
     # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
     class_priority = 19
 
-    def __init__(self, path: PathLike) -> None:
+    def __init__(self, path: UPath) -> None:
         super().__init__()
 
-        self.path = Path(path)
+        self.path = UPath(path)
 
-        _tiff = tifffile.TiffFile(self.path).series[0]
-        self._tiff_axes = tuple(_tiff.axes.lower())  # All the axes in the tiff file
-        for axis, shape in zip(self._tiff_axes, _tiff.shape):
-            self._init_axis(axis, shape)
+        with self.path.open("rb") as f:
+            _tiff = tifffile.TiffFile(f).series[0]
+            self._tiff_axes = tuple(_tiff.axes.lower())  # All the axes in the tiff file
+            for axis, shape in zip(self._tiff_axes, _tiff.shape):
+                self._init_axis(axis, shape)
 
-        self._tiff_shape = _tiff.shape
+            self._tiff_shape = _tiff.shape
 
-        # Selecting the first page to get the dtype and shape
-        if hasattr(_tiff, "pages"):
-            _tmp = _tiff.pages[0]
-        else:
-            _tmp = _tiff["pages"][0]  # type: ignore
-        assert _tmp is not None, "No pages found in tiff file."
-        self._dtype = _tmp.dtype or np.dtype("uint8")
-        self._shape = _tmp.shape
-        self._other_axes = tuple(
-            axis for axis in self._tiff_axes if axis not in _tmp.axes.lower()
-        )  # Axes that are not present in a single tiff page
+            # Selecting the first page to get the dtype and shape
+            if hasattr(_tiff, "pages"):
+                _tmp = _tiff.pages[0]
+            else:
+                _tmp = _tiff["pages"][0]  # type: ignore
+            assert _tmp is not None, "No pages found in tiff file."
+            self._dtype = _tmp.dtype or np.dtype("uint8")
+            self._shape = _tmp.shape
+            self._other_axes = tuple(
+                axis for axis in self._tiff_axes if axis not in _tmp.axes.lower()
+            )  # Axes that are not present in a single tiff page
 
-        if "c" in self._tiff_axes:
-            self._register_get_frame(self.get_frame_2D, "cyx")
-        else:
-            self._register_get_frame(self.get_frame_2D, "yx")
+            if "c" in self._tiff_axes:
+                self._register_get_frame(self.get_frame_2D, "cyx")
+            else:
+                self._register_get_frame(self.get_frame_2D, "yx")
 
-        expected_page_count = int(
-            np.prod([self.sizes[axis] for axis in self._other_axes])
-        )
-        self._page_mode = len(_tiff.pages) == expected_page_count
+            expected_page_count = int(
+                np.prod([self.sizes[axis] for axis in self._other_axes])
+            )
+            self._page_mode = len(_tiff.pages) == expected_page_count
 
     def get_frame_2D(self, **ind: int) -> np.ndarray:
-        _tiff = tifffile.TiffFile(self.path).series[0]
+        with self.path.open("rb") as f:
+            _tiff = tifffile.TiffFile(f).series[0]
 
-        # We are using aszarr because it provides a chunked interface
-        # to the tiff file's content. However, we don't want to add
-        # zarr-python as a dependency. So we just implement the indexing
-        # ourselves and rely on the fact that tifffile isn't using more
-        # complex zarr features such as compressors, filters, F-order, fillvalue etc.
-        zarr_store = _tiff.aszarr(
-            level=0
-        )  # for multi-scale tiffs, we use the highest resolution
-        zarray = json.loads(zarr_store[".zarray"])
+            # We are using aszarr because it provides a chunked interface
+            # to the tiff file's content. However, we don't want to add
+            # zarr-python as a dependency. So we just implement the indexing
+            # ourselves and rely on the fact that tifffile isn't using more
+            # complex zarr features such as compressors, filters, F-order, fillvalue etc.
+            zarr_store = _tiff.aszarr(
+                level=0
+            )  # for multi-scale tiffs, we use the highest resolution
+            zarray = json.loads(zarr_store[".zarray"])
 
-        assert zarray["zarr_format"] == 2
-        assert zarray["order"] == "C"
-        assert np.dtype(zarray["dtype"]) == self._dtype
-        assert zarray.get("compressor") is None
-        assert zarray.get("filters") in (None, [])
-        assert zarray["fill_value"] == 0
-        array_shape = tuple(zarray["shape"])
-        chunk_shape = tuple(zarray["chunks"])
+            assert zarray["zarr_format"] == 2
+            assert zarray["order"] == "C"
+            assert np.dtype(zarray["dtype"]) == self._dtype
+            assert zarray.get("compressor") is None
+            assert zarray.get("filters") in (None, [])
+            assert zarray["fill_value"] == 0
+            array_shape = tuple(zarray["shape"])
+            chunk_shape = tuple(zarray["chunks"])
 
-        # Prepare output array for this frame
-        out_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)
-        out = np.zeros(out_shape, dtype=self._dtype)
+            # Prepare output array for this frame
+            out_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)
+            out = np.zeros(out_shape, dtype=self._dtype)
 
-        # Axes that need to be broadcasted from page to output
-        broadcast_axes = tuple(
-            axis
-            for axis in self._tiff_axes
-            if axis in self.bundle_axes and axis not in self._other_axes
-        )
-
-        # Prepare selection of the data to read for this frame
-        selection: tuple[slice | int, ...] = tuple(
-            slice(None) if axis in broadcast_axes else ind[axis]
-            for axis in self._tiff_axes
-        )
-
-        for chunk_projection in _chunk_indexing(selection, array_shape, chunk_shape):
-            # read data from zarr store
-            chunk_data = (
-                zarr_store[".".join(map(str, chunk_projection.chunk_coords))]
-                .ravel()
-                .reshape(chunk_shape)
+            # Axes that need to be broadcasted from page to output
+            broadcast_axes = tuple(
+                axis
+                for axis in self._tiff_axes
+                if axis in self.bundle_axes and axis not in self._other_axes
             )
-            # write in output array
-            out[chunk_projection.out_selection] = chunk_data[
-                chunk_projection.chunk_selection
-            ]
 
-        return out
+            # Prepare selection of the data to read for this frame
+            selection: tuple[slice | int, ...] = tuple(
+                slice(None) if axis in broadcast_axes else ind[axis]
+                for axis in self._tiff_axes
+            )
+
+            for chunk_projection in _chunk_indexing(
+                selection, array_shape, chunk_shape
+            ):
+                # read data from zarr store
+                chunk_data = (
+                    zarr_store[".".join(map(str, chunk_projection.chunk_coords))]
+                    .ravel()
+                    .reshape(chunk_shape)
+                )
+                # write in output array
+                out[chunk_projection.out_selection] = chunk_data[
+                    chunk_projection.chunk_selection
+                ]
+
+            return out
 
     @property
     def pixel_type(self) -> np.dtype:

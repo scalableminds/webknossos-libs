@@ -48,7 +48,7 @@ def test_get_task() -> None:
         needed_experience_domain="testing",
         needed_experience_value=0,
         starting_position=wk.Vec3Int(0, 0, 0),
-        dataset_id=wk.Dataset.open_remote("l4_sample")._dataset_id,
+        dataset_id=wk.RemoteDataset.open("l4_sample")._dataset_id,
     )
     task_by_id = wk.Task.get_by_id(tasks[0].task_id)
     assert task_by_id == tasks[0]
@@ -61,7 +61,7 @@ def test_task_get_project() -> None:
         needed_experience_domain="testing",
         needed_experience_value=0,
         starting_position=wk.Vec3Int(0, 0, 0),
-        dataset_id=wk.Dataset.open_remote("l4_sample")._dataset_id,
+        dataset_id=wk.RemoteDataset.open("l4_sample")._dataset_id,
     )
     project = tasks[0].get_project()
     assert project.name == TEST_PROJECT_NAME
@@ -82,7 +82,7 @@ def test_update_task() -> None:
         needed_experience_domain="testing",
         needed_experience_value=0,
         starting_position=wk.Vec3Int(0, 0, 0),
-        dataset_id=wk.Dataset.open_remote("l4_sample")._dataset_id,
+        dataset_id=wk.RemoteDataset.open("l4_sample")._dataset_id,
     )
     task = tasks[0]
     updated = task.update(
@@ -98,7 +98,7 @@ def test_delete_task() -> None:
         needed_experience_domain="testing",
         needed_experience_value=0,
         starting_position=wk.Vec3Int(0, 0, 0),
-        dataset_id=wk.Dataset.open_remote("l4_sample")._dataset_id,
+        dataset_id=wk.RemoteDataset.open("l4_sample")._dataset_id,
     )
     task = tasks[0]
     task.delete()
@@ -115,7 +115,7 @@ def test_task_list() -> None:
         needed_experience_domain="testing",
         needed_experience_value=0,
         starting_position=wk.Vec3Int(0, 0, 0),
-        dataset_id=wk.Dataset.open_remote("l4_sample")._dataset_id,
+        dataset_id=wk.RemoteDataset.open("l4_sample")._dataset_id,
     )
     task_list = wk.Task.get_list()
     assert len(task_list) > 0

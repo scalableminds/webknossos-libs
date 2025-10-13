@@ -9,7 +9,6 @@ def main() -> None:
     #####################
     # Opening a dataset #
     #####################
-
     dataset = wk.Dataset.open("testdata/simple_wkw_dataset")
     # Assuming that the dataset has a layer "color"
     # and the layer has the magnification 1
@@ -67,7 +66,7 @@ def main() -> None:
 
     copy_of_dataset = dataset.copy_dataset(
         "testoutput/copy_of_dataset",
-        chunk_shape=(8, 8, 8),
+        chunk_shape=(32, 32, 32),
         shard_shape=(64, 64, 64),
         compress=True,
     )

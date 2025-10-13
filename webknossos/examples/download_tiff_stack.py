@@ -8,7 +8,7 @@ MAG = wk.Mag("16-16-4")
 
 
 def main() -> None:
-    dataset = wk.Dataset.open_remote(
+    dataset = wk.RemoteDataset.open(
         DATASET_NAME,
         organization_id="scalable_minds",
         webknossos_url="https://webknossos.org",

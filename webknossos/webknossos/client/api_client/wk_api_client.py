@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import httpx
 
@@ -17,6 +18,11 @@ from webknossos.client.api_client.models import (
     ApiNmlTaskParameters,
     ApiProject,
     ApiProjectCreate,
+    ApiReserveAttachmentUploadToPathParameters,
+    ApiReserveDatasetUplaodToPathsParameters,
+    ApiReserveDatasetUploadToPathsForPreliminaryParameters,
+    ApiReserveDatasetUploadToPathsForPreliminaryResponse,
+    ApiReserveDatasetUploadToPathsResponse,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
@@ -74,7 +80,11 @@ class WkApiClient(AbstractApiClient):
         sharing_token: str | None = None,
     ) -> ApiDataset:
         route = f"/datasets/{dataset_id}"
-        return self._get_json(route, ApiDataset, query={"sharingToken": sharing_token})
+        return self._get_json(
+            route,
+            ApiDataset,
+            query={"sharingToken": sharing_token},
+        )
 
     def dataset_id_from_name(self, *, directory_name: str, organization_id: str) -> str:
         route = f"/datasets/disambiguate/{organization_id}/{directory_name}/toId"
@@ -104,9 +114,14 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/{dataset_id}/teams"
         self._patch_json(route, team_ids)
 
-    def dataset_update(self, *, dataset_id: str, updated_dataset: ApiDataset) -> None:
-        route = f"/datasets/{dataset_id}"
-        self._patch_json(route, updated_dataset)
+    def dataset_update(
+        self, *, dataset_id: str, dataset_updates: dict[str, Any]
+    ) -> None:
+        # Dataset_updates is not an attrs class because we need to distinguish between absent keys and null values
+        # The server will use all present keys to set the value to their value, including to null/None.
+        # So we need to craft the updates dict manually, depending on what fields should be updated.
+        route = f"/datasets/{dataset_id}/updatePartial"
+        self._patch_json(route, dataset_updates)
 
     def dataset_sharing_token(self, *, dataset_id: str) -> ApiSharingToken:
         route = f"/datasets/{dataset_id}/sharingToken"
@@ -120,12 +135,9 @@ class WkApiClient(AbstractApiClient):
 
     def dataset_explore_and_add_remote(
         self, *, dataset: ApiDatasetExploreAndAddRemote
-    ) -> None:
+    ) -> str:
         route = "/datasets/exploreAndAddRemote"
-        self._post_json(
-            route,
-            dataset,
-        )
+        return self._post_json_with_json_response(route, dataset, str)
 
     def annotation_list(self, *, is_finished: bool | None) -> list[ApiAnnotation]:
         route = "/annotations/readable"
@@ -340,3 +352,62 @@ class WkApiClient(AbstractApiClient):
         return self.post_multipart_with_json_response(
             route, ApiTaskCreationResult, multipart_data=data, files=files
         )
+
+    def reserve_dataset_upload_to_paths(
+        self,
+        reserve_dataset_upload_to_path_parameters: ApiReserveDatasetUplaodToPathsParameters,
+    ) -> ApiReserveDatasetUploadToPathsResponse:
+        route = "/datasets/reserveUploadToPaths"
+        return self._post_json_with_json_response(
+            route,
+            reserve_dataset_upload_to_path_parameters,
+            ApiReserveDatasetUploadToPathsResponse,
+        )
+
+    def reserve_dataset_upload_to_paths_for_preliminary(
+        self,
+        dataset_id: str,
+        reserve_dataset_upload_to_path_for_preliminary_parameters: ApiReserveDatasetUploadToPathsForPreliminaryParameters,
+    ) -> ApiReserveDatasetUploadToPathsForPreliminaryResponse:
+        route = f"/datasets/{dataset_id}/reserveUploadToPathsForPreliminary"
+        return self._post_json_with_json_response(
+            route,
+            reserve_dataset_upload_to_path_for_preliminary_parameters,
+            ApiReserveDatasetUploadToPathsForPreliminaryResponse,
+        )
+
+    def reserve_attachment_upload_to_path(
+        self,
+        dataset_id: str,
+        layer_name: str,
+        attachment_name: str,
+        attachment_type: str,
+        attachment_dataformat: str,
+    ) -> str:
+        route = f"/datasets/{dataset_id}/reserveAttachmentUploadToPath"
+        return self._post_json_with_json_response(
+            route,
+            ApiReserveAttachmentUploadToPathParameters(
+                layer_name, attachment_name, attachment_type, attachment_dataformat
+            ),
+            str,
+        )
+
+    def finish_attachment_upload_to_path(
+        self,
+        dataset_id: str,
+        layer_name: str,
+        attachment_name: str,
+        attachment_type: str,
+        attachment_dataformat: str,
+    ) -> None:
+        route = f"/datasets/{dataset_id}/finishAttachmentUploadToPath"
+        self._post_json(
+            route,
+            ApiReserveAttachmentUploadToPathParameters(
+                layer_name, attachment_name, attachment_type, attachment_dataformat
+            ),
+        )
+
+    def finish_dataset_upload_to_paths(self, dataset_id: str) -> None:
+        self._post(f"/datasets/{dataset_id}/finishUploadToPaths")

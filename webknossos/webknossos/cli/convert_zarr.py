@@ -5,22 +5,21 @@ import time
 from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
-from pathlib import Path
 from typing import Annotated, Any, cast
 
 import numpy as np
 import tensorstore
 import typer
+from upath import UPath
 
-from webknossos.dataset.length_unit import LengthUnit
-from webknossos.dataset.properties import DEFAULT_LENGTH_UNIT_STR, VoxelSize
-
-from ..dataset import DataFormat, Dataset, MagView, SegmentationLayer
+from ..dataset import Dataset, MagView, SegmentationLayer
 from ..dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_DATA_FORMAT,
     DEFAULT_SHARD_SHAPE,
 )
+from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
+from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, rmtree, wait_and_ensure_success
 from ._utils import (
@@ -37,7 +36,7 @@ from ._utils import (
 logger = logging.getLogger(__name__)
 
 
-def _try_open_zarr(path: Path) -> tensorstore.TensorStore:
+def _try_open_zarr(path: UPath) -> tensorstore.TensorStore:
     try:
         return tensorstore.open(
             {"driver": "zarr3", "kvstore": {"driver": "file", "path": path}}
@@ -50,7 +49,7 @@ def _try_open_zarr(path: Path) -> tensorstore.TensorStore:
 
 def _zarr_chunk_converter(
     bounding_box: BoundingBox,
-    source_zarr_path: Path,
+    source_zarr_path: UPath,
     target_mag_view: MagView,
     flip_axes: int | tuple[int, ...] | None,
 ) -> int:
@@ -71,8 +70,8 @@ def _zarr_chunk_converter(
 
 def convert_zarr(
     *,
-    source_zarr_path: Path,
-    target_path: Path,
+    source_zarr_path: UPath,
+    target_path: UPath,
     layer_name: str,
     data_format: DataFormat,
     chunk_shape: Vec3Int,
