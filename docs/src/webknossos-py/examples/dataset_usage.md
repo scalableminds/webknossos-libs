@@ -6,8 +6,8 @@ such as the `datasource-properties.json`.
 The [`Dataset` class](../../api/webknossos/dataset/dataset.md) is the entry-point for this API.
 The dataset stores the data on disk in `.wkw`-files.
 
-Each dataset consists of one or more [layers](../../api/webknossos/dataset/layer/layer.md),
-which themselves can comprise multiple [magnifications represented via `MagView`s](../../api/webknossos/dataset/layer/view/mag_view.md).
+Each dataset consists of one or more [layers](../../api/webknossos/dataset/layer.md),
+which themselves can comprise multiple [magnifications represented via `MagView`s](../../api/webknossos/dataset/mag_view.md).
 
 ```python
 --8<--
