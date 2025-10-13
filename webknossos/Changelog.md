@@ -27,6 +27,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
+- RemoteDataset.annotation_id is now exposed, when available. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
+- RemoteDataset.open() now accepts an annotation url as well. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
 
 ### Changed
 - Replaced `pathlib.Path` for `upath.UPath` internally. `pathlib.Path` is still supported for user-facing APIs. Adds support for `universal_pathlib` version 0.3.x. [#1374](https://github.com/scalableminds/webknossos-libs/pull/1374)
