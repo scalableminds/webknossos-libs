@@ -1,6 +1,6 @@
 # Image Stack to Dataset
 
-This example shows how to [create a new WEBKNOSSOS dataset from a stack of images](../../api/webknossos/dataset/dataset.md#webknossos.dataset.dataset.Dataset.from_images), e.g. Tiff, JPEG, etc files.
+This example shows how to [create a new WEBKNOSSOS dataset from a stack of images](../../api/webknossos/dataset/dataset.md#webknossos.dataset.Dataset.from_images), e.g. Tiff, JPEG, etc files.
 
 There are a few assumptions we made about the images used for this example:
 
