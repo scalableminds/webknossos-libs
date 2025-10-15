@@ -5,6 +5,8 @@ class DataFormat(Enum):
     WKW = "wkw"
     Zarr = "zarr"
     Zarr3 = "zarr3"
+    NeuroglancerPrecomputed = "neuroglancerPrecomputed"
+    N5 = "n5"
 
     def __str__(self) -> str:
         return self.value
