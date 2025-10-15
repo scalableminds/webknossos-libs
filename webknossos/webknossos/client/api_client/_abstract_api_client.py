@@ -4,6 +4,7 @@ from collections.abc import Iterator
 from typing import Any, TypeVar
 
 import httpx
+from google.protobuf.message import Message as ProtobufMessage
 
 from ...ssl_context import SSL_CONTEXT
 from ._serialization import api_client_converter
@@ -12,6 +13,7 @@ from .errors import CannotHandleResponseError, UnexpectedStatusError
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+ProtobufMessageType = TypeVar("ProtobufMessageType", bound=ProtobufMessage)
 
 Query = dict[str, str | int | float | bool | None]
 
@@ -65,6 +67,15 @@ class AbstractApiClient(ABC):
         return self._parse_json(
             response, response_type
         ), self._extract_total_count_header(response)
+
+    def _get_parsed_protobuf(
+        self, route: str, MessageType: type[ProtobufMessageType]
+    ) -> ProtobufMessageType:
+        protobuf_binary_response = self._get(route)
+        protobuf_binary = protobuf_binary_response.content
+        proto_object = MessageType()
+        proto_object.ParseFromString(protobuf_binary)
+        return proto_object
 
     def _put_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
