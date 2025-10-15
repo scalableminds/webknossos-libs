@@ -1538,7 +1538,7 @@ class RemoteAnnotation(Annotation):
     def get_agglomerate_graph(self, agglomerate_id: int) -> AgglomerateGraph:
         """
         Get the agglomerate graph for the specified agglomerate id.
-        This works for proofreading annotations, that have a single volume layer only.
+        This works only for proofreading annotations that have only a single volume layer.
 
         Args:
             agglomerate_id (int): The id of the agglomerate to get the graph for.
