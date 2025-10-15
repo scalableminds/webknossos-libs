@@ -1548,7 +1548,7 @@ class RemoteAnnotation(Annotation):
 
         Raises:
             ValueError: If the agglomerate id is not valid
-            UnexpectedStatusError: If the annotation does not have an editable mapping (is a proofreading annotation)
+            UnexpectedStatusError: If the annotation does not have an editable mapping (is not a proofreading annotation)
             AssertionError: If the annotation does not have exactly one volume layer
 
         """
