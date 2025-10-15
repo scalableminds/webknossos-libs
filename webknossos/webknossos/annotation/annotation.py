@@ -1538,7 +1538,7 @@ class RemoteAnnotation(Annotation):
     def get_agglomerate_graph(self, agglomerate_id: int) -> AgglomerateGraph:
         """
         Get the agglomerate graph for the specified agglomerate id.
-        This works for proofreading annotations, that have a single volume layer only.
+        This works only for proofreading annotations that have only a single volume layer.
 
         Args:
             agglomerate_id (int): The id of the agglomerate to get the graph for.
@@ -1548,7 +1548,7 @@ class RemoteAnnotation(Annotation):
 
         Raises:
             ValueError: If the agglomerate id is not valid
-            UnexpectedStatusError: If the annotation does not have an editable mapping (is a proofreading annotation)
+            UnexpectedStatusError: If the annotation does not have an editable mapping (is not a proofreading annotation)
             AssertionError: If the annotation does not have exactly one volume layer
 
         """
