@@ -225,6 +225,10 @@ class BaseArray(ABC):
             return Zarr3Array
         if data_format == DataFormat.Zarr:
             return Zarr2Array
+        if data_format == DataFormat.NeuroglancerPrecomputed:
+            return NeuroglancerPrecomputedArray
+        if data_format == DataFormat.N5:
+            return N5Array
         raise ValueError(f"Array format `{data_format}` is invalid.")
 
 
@@ -424,6 +428,7 @@ _aws_credential_manager = AWSCredentialManager(_aws_credential_folder())
 
 class TensorStoreArray(BaseArray):
     _cached_array: tensorstore.TensorStore | None
+    _ts_data_format: str
 
     def __init__(
         self, path: UPath, _cached_array: tensorstore.TensorStore | None = None
@@ -582,7 +587,7 @@ class TensorStoreArray(BaseArray):
             _array = call_with_retries(
                 lambda: tensorstore.open(
                     {
-                        "driver": str(cls.data_format),
+                        "driver": cls._ts_data_format,
                         "kvstore": uri,
                     },
                     open=True,
@@ -651,7 +656,7 @@ class TensorStoreArray(BaseArray):
             current_array = call_with_retries(
                 lambda: tensorstore.open(
                     {
-                        "driver": str(self.data_format),
+                        "driver": self._ts_data_format,
                         "kvstore": self._make_kvstore(self._path),
                     },
                     context=TS_CONTEXT,
@@ -765,7 +770,7 @@ class TensorStoreArray(BaseArray):
                 self._cached_array = call_with_retries(
                     lambda: tensorstore.open(
                         {
-                            "driver": str(self.data_format),
+                            "driver": self._ts_data_format,
                             "kvstore": self._make_kvstore(self._path),
                         },
                         context=TS_CONTEXT,
@@ -797,6 +802,7 @@ class TensorStoreArray(BaseArray):
 
 class Zarr3Array(TensorStoreArray):
     data_format = DataFormat.Zarr3
+    _ts_data_format = "zarr3"
 
     @classmethod
     def open(cls, path: UPath) -> "Zarr3Array":
@@ -911,6 +917,7 @@ class Zarr3Array(TensorStoreArray):
 
 class Zarr2Array(TensorStoreArray):
     data_format = DataFormat.Zarr
+    _ts_data_format = "zarr"
 
     @classmethod
     def open(cls, path: UPath) -> "Zarr2Array":
@@ -979,3 +986,78 @@ class Zarr2Array(TensorStoreArray):
         separator = metadata.get("dimension_separator", ".")
         assert separator in ["/", "."]
         return "v2", separator
+
+
+class NeuroglancerPrecomputedArray(TensorStoreArray):
+    data_format = DataFormat.NeuroglancerPrecomputed
+    _ts_data_format = "neuroglancer_precomputed"
+
+    @classmethod
+    def open(cls, path: UPath) -> "NeuroglancerPrecomputedArray":
+        return cls._open(path)
+
+    @property
+    def info(self) -> ArrayInfo:
+        array = self._array
+        dimension_names, chunk_shape, shard_shape, num_channels, shape = (
+            self._get_array_dimensions(array)
+        )
+
+        return ArrayInfo(
+            data_format=DataFormat.NeuroglancerPrecomputed,
+            num_channels=num_channels,
+            voxel_type=array.dtype.numpy_dtype,
+            compression_mode=array.codec.to_json()["encoding"] is not None,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
+            shape=shape,
+        )
+
+    @classmethod
+    def create(cls, _path: UPath, _array_info: ArrayInfo) -> "Zarr2Array":
+        raise RuntimeError("Neuroglancer precomputed arrays cannot be created.")
+
+    def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
+        raise NotImplementedError()
+
+    def write(self, _bbox: NDBoundingBox, _data: np.ndarray) -> None:
+        raise RuntimeError("Neuroglancer precomputed arrays cannot be written to.")
+
+    def read(self, bbox: NDBoundingBox):
+        return super().read(bbox).T
+
+
+class N5Array(TensorStoreArray):
+    data_format = DataFormat.N5
+    _ts_data_format = "n5"
+
+    @classmethod
+    def open(cls, path: UPath) -> "N5Array":
+        return cls._open(path)
+
+    @property
+    def info(self) -> ArrayInfo:
+        array = self._array
+        dimension_names, chunk_shape, shard_shape, num_channels, shape = (
+            self._get_array_dimensions(array)
+        )
+
+        return ArrayInfo(
+            data_format=DataFormat.N5,
+            num_channels=num_channels,
+            voxel_type=array.dtype.numpy_dtype,
+            compression_mode=array.codec.to_json()["compression"] is not None,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
+            shape=shape,
+        )
+
+    @classmethod
+    def create(cls, _path: UPath, _array_info: ArrayInfo) -> "Zarr2Array":
+        raise RuntimeError("N5 arrays cannot be created.")
+
+    def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
+        raise NotImplementedError()
+
+    def write(self, _bbox: NDBoundingBox, _data: np.ndarray) -> None:
+        raise RuntimeError("N5 arrays cannot be written to.")

@@ -9,11 +9,9 @@ import attr
 import cattr
 import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
-from upath import UPath
 
 from ..geometry import Mag, NDBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
-from ._array import ArrayException, BaseArray
 from .data_format import AttachmentDataFormat, DataFormat
 from .layer_categories import LayerCategoryType
 from .length_unit import (
@@ -24,40 +22,6 @@ from .length_unit import (
 
 DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER
 DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
-
-
-def _extract_num_channels(
-    num_channels_in_properties: int | None,
-    path: UPath,
-    layer: str,
-    mag: int | Mag | None,
-) -> int:
-    # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'numChannels' in the
-    # datasource-properties.json. In this case we need to extract the number of channels from the 'header.wkw'.
-    if num_channels_in_properties is not None:
-        return num_channels_in_properties
-
-    if mag is None:
-        # Unable to extract the 'num_channels' from the 'header.wkw' if the dataset has no magnifications.
-        # This should never be the case because wkw-datasets that are created without this API always have a magnification.
-        raise RuntimeError(
-            "Cannot extract the number of channels of a dataset without a properties file and without any magnifications"
-        )
-
-    mag = Mag(mag)
-    array_file_path = path / layer / mag.to_layer_name()
-    try:
-        array = BaseArray.open(array_file_path)
-    except ArrayException as e:
-        raise Exception(
-            f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
-            f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
-            f"the file {array_file_path} to extract the num_channels from there. "
-            f"Since this file does not exist, the attempt to open the dataset failed. "
-            f"Please add the attribute manually to solve the problem. "
-            f"If the layer does not contain any data, you can also delete the layer and add it again.",
-        ) from e
-    return array.info.num_channels
 
 
 def float_tpl(voxel_size: list | tuple) -> Iterable:

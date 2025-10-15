@@ -418,14 +418,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def _initialize_layer_from_properties(
         self, properties: LayerProperties, read_only: bool
     ) -> Layer:
-        # To be backwards compatible, we extract the number of channels from the first mag
+        # If the numChannels key is not present in the dataset properties, assume it is 1.
         if properties.num_channels is None:
-            properties.num_channels = _extract_num_channels(
-                properties.num_channels,
-                self.path,
-                properties.name,
-                (properties.mags[0].mag if len(properties.mags) > 0 else None),
-            )
+            properties.num_channels = 1
         return super()._initialize_layer_from_properties(properties, read_only)
 
     @classmethod
@@ -2623,40 +2618,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             raise IndexError(
                 f"Failed to get segmentation layer: There are multiple {category} layer."
             )
-
-
-def _extract_num_channels(
-    num_channels_in_properties: int | None,
-    path: UPath,
-    layer: str,
-    mag: int | Mag | None,
-) -> int:
-    # if a wk dataset is not created with this API, then it most likely doesn't have the attribute 'numChannels' in the
-    # datasource-properties.json. In this case we need to extract the number of channels from the 'header.wkw'.
-    if num_channels_in_properties is not None:
-        return num_channels_in_properties
-
-    if mag is None:
-        # Unable to extract the 'num_channels' from the 'header.wkw' if the dataset has no magnifications.
-        # This should never be the case because wkw-datasets that are created without this API always have a magnification.
-        raise RuntimeError(
-            "Cannot extract the number of channels of a dataset without a properties file and without any magnifications"
-        )
-
-    mag = Mag(mag)
-    array_file_path = path / layer / mag.to_layer_name()
-    try:
-        array = BaseArray.open(array_file_path)
-    except ArrayException as e:
-        raise Exception(
-            f"The dataset you are trying to open does not have the attribute 'numChannels' for layer {layer}. "
-            f"However, this attribute is necessary. To mitigate this problem, it was tried to locate "
-            f"the file {array_file_path} to extract the num_channels from there. "
-            f"Since this file does not exist, the attempt to open the dataset failed. "
-            f"Please add the attribute manually to solve the problem. "
-            f"If the layer does not contain any data, you can also delete the layer and add it again.",
-        ) from e
-    return array.info.num_channels
 
 
 def _dtype_per_channel_to_element_class(
