@@ -1545,6 +1545,8 @@ class RemoteAnnotation(Annotation):
 
         Returns:
             AgglomerateGraph: The agglomerate graph for the specified agglomerate id.
+            The agglomerate graph has a vertex for all segments that belong to the agglomerate.
+            Adjacent segments are connected by an edge.
 
         Raises:
             ValueError: If the agglomerate id is not valid
