@@ -49,6 +49,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     This class is returned from `RemoteDataset.open()` and provides read-only access to
     image data streamed from the webknossos server. It uses the same interface as `Dataset`
     but additionally allows metadata manipulation through properties.
+    In case of zarr streaming, an even smaller subset of metadata manipulation is possible.
 
     Properties:
         metadata: Dataset metadata as key-value pairs
@@ -112,7 +113,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self.zarr_streaming_path = zarr_streaming_path
         self._use_zarr_streaming = zarr_streaming_path is not None
         if self._use_zarr_streaming:
-            assert read_only, "zarr streaming is only supported in read-only mode"
             dataset_properties = self._load_dataset_properties()
 
         assert dataset_properties is not None
@@ -187,8 +187,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
             if use_zarr_streaming:
-                if not read_only:
-                    logger.warning("zarr streaming is supported in read-only mode only")
                 if annotation_id is not None:
                     zarr_path = UPath(
                         f"{url_prefix}/annotations/zarr/{annotation_id}/",
@@ -207,7 +205,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     dataset_id,
                     annotation_id,
                     context_manager,
-                    read_only=True,
+                    read_only=read_only,
                 )
             else:
                 if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
@@ -246,8 +244,15 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         Exports the current dataset properties to the server.
         Note that some edits will not be accepted by the server.
         The client-side RemoteDataset is reinitialized to the new server state.
+        Does not work with zarr streaming, as the remote datasource-properties.json is not writable.
         """
         from ..client.context import _get_api_client
+
+        if self._use_zarr_streaming:
+            # reset the dataset properties to the server state
+            data_source = self._load_dataset_properties()
+            self._init_from_properties(data_source, read_only=self.read_only)
+            raise RuntimeError("zarr streaming does not support updating this property")
 
         with self._context:
             client = _get_api_client()
@@ -325,6 +330,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         tags: list[str] = _UNSET,
         metadata: list[ApiMetadata] | None = _UNSET,
     ) -> None:
+        self._ensure_writable()
         from ..client.context import _get_api_client
 
         # Atm, the wk backend needs to get previous parameters passed
@@ -578,6 +584,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     @allowed_teams.setter
     def allowed_teams(self, allowed_teams: Sequence[Union[str, "Team"]]) -> None:
         """Assign the teams that are allowed to access the dataset. Specify the teams like this `[Team.get_by_name("Lab_A"), ...]`."""
+        self._ensure_writable()
         from ..administration.team import Team
         from ..client.context import _get_api_client
 

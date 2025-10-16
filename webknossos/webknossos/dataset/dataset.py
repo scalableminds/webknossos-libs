@@ -701,7 +701,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 self, new_dataset_name, converted_layers_to_link, jobs
             )
 
-        return RemoteDataset.open(dataset_id=new_dataset_id, read_only=True)
+        return RemoteDataset.open(dataset_id=new_dataset_id)
 
     def _copy_or_symlink_dataset_to_paths(
         self, data_source: DatasetProperties, symlink_data_instead_of_copy: bool
