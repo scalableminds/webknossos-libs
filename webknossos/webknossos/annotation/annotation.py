@@ -982,7 +982,6 @@ class Annotation:
             dataset_id=self.dataset_id,
             annotation_id_or_url=self.annotation_id,
             use_zarr_streaming=True,
-            read_only=True,
         )
 
     def get_remote_base_dataset(
