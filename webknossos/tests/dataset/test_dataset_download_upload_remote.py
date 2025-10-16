@@ -131,8 +131,8 @@ def test_remote_dataset(tmp_upath: UPath) -> None:
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
     )
 
-    assert remote_ds.read_only
-    assert remote_ds.get_color_layers()[0].read_only
+    assert not remote_ds.read_only
+    assert not remote_ds.get_color_layers()[0].read_only
     assert remote_ds.get_color_layers()[0].get_finest_mag().read_only
 
     assert remote_ds.name == "test_remote_metadata"

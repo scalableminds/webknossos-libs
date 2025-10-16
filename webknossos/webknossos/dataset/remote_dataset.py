@@ -113,7 +113,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self.zarr_streaming_path = zarr_streaming_path
         self._use_zarr_streaming = zarr_streaming_path is not None
         if self._use_zarr_streaming:
-            assert read_only, "zarr streaming is only supported in read-only mode"
             dataset_properties = self._load_dataset_properties()
 
         assert dataset_properties is not None

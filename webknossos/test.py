@@ -106,15 +106,17 @@ def local_test_wk() -> Iterator[None]:
 
     # Fetch current version of webknossos.org this can be replaced with a fixed version for testing
     wk_version = requests.get(
-        "https://webknossos.org/api/v{WK_API_VERSION}/buildinfo"
+        f"https://webknossos.org/api/v{WK_API_VERSION}/buildinfo"
     ).json()["webknossos"]["version"]
     wk_docker_tag = f"master__${wk_version}"
     os.environ["DOCKER_TAG"] = wk_docker_tag
     wk_docker_dir = Path("tests")
+    tear_down_wk = False
 
     try:
         if not requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
             start_wk_via_docker()
+            tear_down_wk = True
         else:
             print(
                 f"Using the already running webknossos at {WK_URL}. Make sure l4_sample exists and is set to public first!",
@@ -142,7 +144,8 @@ Please ensure that the test-db is prepared by running this in the webknossos rep
         )
         yield
     finally:
-        subprocess.check_call(["docker", "compose", "down"], cwd=wk_docker_dir)
+        if tear_down_wk:
+            subprocess.check_call(["docker", "compose", "down"], cwd=wk_docker_dir)
 
 
 @contextmanager
@@ -259,7 +262,7 @@ if __name__ == "__main__":
     snapshot_command = None
     args = sys.argv[1:]
     if len(args) > 0 and args[0] in ["--refresh-snapshots", "--add-snapshots"]:
-        snapshot_command = args[0][3:-10]
+        snapshot_command = args[0][2:-10]
         args = args[1:]
 
     main(snapshot_command, args)

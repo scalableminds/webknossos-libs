@@ -6,7 +6,12 @@ import numpy as np
 import pytest
 from upath import UPath
 
-from webknossos import COLOR_CATEGORY, Dataset, RemoteDataset
+from webknossos import (
+    COLOR_CATEGORY,
+    Dataset,
+    LayerViewConfiguration,
+    RemoteDataset,
+)
 from webknossos.geometry import BoundingBox
 from webknossos.utils import is_remote_path
 
@@ -158,3 +163,38 @@ def test_add_mag_ref_from_local_path(tmp_upath: UPath) -> None:
     assert layer2_mag1._properties.path == str(
         (tmp_upath / "origin" / "color" / "1").resolve()
     )
+
+
+def test_changing_properties_on_remote_dataset() -> None:
+    remote_dataset = RemoteDataset.open(dataset_id="59e9cfbdba632ac2ab8b23b5")
+    remote_dataset.description = "This is a test description"
+    assert remote_dataset.description == "This is a test description"
+    largest_segment_id_before_change_attempt = remote_dataset.get_segmentation_layer(
+        "segmentation"
+    ).largest_segment_id
+    with pytest.raises(RuntimeError):
+        remote_dataset.get_segmentation_layer("segmentation").largest_segment_id = 10
+    assert (
+        remote_dataset.get_segmentation_layer("segmentation").largest_segment_id
+        == largest_segment_id_before_change_attempt
+    )
+    default_view_configuration_before_change_attempt = (
+        remote_dataset.get_layer("color").default_view_configuration
+    )
+    with pytest.raises(RuntimeError):
+        remote_dataset.get_layer(
+            "color"
+        ).default_view_configuration = LayerViewConfiguration(alpha=0.3)
+    assert (
+        remote_dataset.get_layer("color").default_view_configuration == default_view_configuration_before_change_attempt
+    )
+
+
+def test_changing_properties_on_read_only_remote_dataset() -> None:
+    remote_dataset = RemoteDataset.open(
+        dataset_id="59e9cfbdba632ac2ab8b23b5", read_only=True
+    )
+    description_before_change_attempt = remote_dataset.description
+    with pytest.raises(RuntimeError):
+        remote_dataset.description = "This is a test description"
+    assert remote_dataset.description == description_before_change_attempt
