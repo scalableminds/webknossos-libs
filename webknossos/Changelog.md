@@ -40,9 +40,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Refactored the architecture, by introducing RemoteLayers, RemoteSegmentationLayers and their abstract base classes. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Updated the api version of the webknossos-api to 12. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Allowing RemoteDataset to align mags, when down- or upsampling [#1382](https://github.com/scalableminds/webknossos-libs/pull/1382)
+- RemoteDatasets that use zarr streaming are no longer read-only. [#1383](https://github.com/scalableminds/webknossos-libs/pull/1383)
 
 ### Fixed
-
+- Fixed test.py to parse the command line arguments correctly. [#1383](https://github.com/scalableminds/webknossos-libs/pull/1383)
 
 ## [2.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.5.0) - 2025-10-06
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...v2.5.0)
