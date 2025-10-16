@@ -178,15 +178,16 @@ def test_changing_properties_on_remote_dataset() -> None:
         remote_dataset.get_segmentation_layer("segmentation").largest_segment_id
         == largest_segment_id_before_change_attempt
     )
-    default_view_configuration_before_change_attempt = (
-        remote_dataset.get_layer("color").default_view_configuration
-    )
+    default_view_configuration_before_change_attempt = remote_dataset.get_layer(
+        "color"
+    ).default_view_configuration
     with pytest.raises(RuntimeError):
         remote_dataset.get_layer(
             "color"
         ).default_view_configuration = LayerViewConfiguration(alpha=0.3)
     assert (
-        remote_dataset.get_layer("color").default_view_configuration == default_view_configuration_before_change_attempt
+        remote_dataset.get_layer("color").default_view_configuration
+        == default_view_configuration_before_change_attempt
     )
 
 
