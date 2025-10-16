@@ -134,6 +134,16 @@ _ALLOWED_SEGMENTATION_LAYER_DTYPES = (
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
+class TransferMode(Enum):
+    """
+    The transfer mode determines how data is transferred to the remote or local storage.
+    """
+
+    HTTP = "http"
+    MOVE_AND_SYMLINK = "move+symlink"
+    COPY = "copy"
+
+
 def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
     for f in layer_path.iterdir():
         if f.is_dir():
@@ -565,7 +575,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         self,
         dataset_id: str,
         path_prefix: str | None = None,
-        symlink_data_instead_of_copy: bool = False,
+        transfer_mode: TransferMode = TransferMode.COPY,
     ) -> None:
         """
         Copies or symlinks the data to paths returned by WEBKNOSSOS
@@ -579,6 +589,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
         from ..client.context import _get_context
 
+        if transfer_mode == TransferMode.HTTP:
+            raise ValueError("HTTP transfer mode is not supported for this method")
+
         context = _get_context()
         response = context.api_client_with_auth.reserve_dataset_upload_to_paths_for_preliminary(
             dataset_id,
@@ -586,9 +599,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 self._properties, path_prefix
             ),
         )
-        self._copy_or_symlink_dataset_to_paths(
-            response.data_source, symlink_data_instead_of_copy
-        )
+        self._copy_or_symlink_dataset_to_paths(response.data_source, transfer_mode)
 
         context.api_client_with_auth.finish_dataset_upload_to_paths(dataset_id)
 
@@ -599,10 +610,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         folder_id: str | RemoteFolder | None = None,
         require_unique_name: bool = False,
         layers_to_link: Sequence[LayerToLink | RemoteLayer] | None = None,
-        upload_directly_to_common_storage: bool = False,
+        transfer_mode: TransferMode = TransferMode.HTTP,
         jobs: int | None = None,
         common_storage_path_prefix: str | None = None,
-        symlink_data_instead_of_copy: bool = False,
     ) -> "RemoteDataset":
         """Upload this dataset to webknossos.
 
@@ -615,10 +625,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             folder_id: Optional ID of folder where dataset should be placed
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
             layers_to_link: Optional list of LayerToLink to link already published layers to the dataset.
-            upload_directly_to_common_storage: Set this to true when the client has access to the same storage system as the WEBKNOSSOS datastore (file system or cloud storage).
             jobs: Optional number of jobs to use for uploading the data.
             common_storage_path_prefix: Optional path prefix used when upload_directly_to_common_storage is true to select one of the available mount points for the dataset folder.
-            symlink_data_instead_of_copy: Considered, when upload_directly_to_common_storage is True. Set this to true when the client has access to the same file system as the WEBKNOSSOS datastore.
             When set to true, the data symlinked to the new location.
         Returns:
             RemoteDataset: Reference to the newly created remote dataset
@@ -641,11 +649,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ```
         """
 
-        if symlink_data_instead_of_copy:
-            assert upload_directly_to_common_storage, (
-                "Cannot use symlinking with upload_directly_to_common_storage=False"
-            )
-
         from ..client.context import _get_context
 
         new_dataset_name = new_dataset_name or self.name
@@ -662,7 +665,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ]
         )
 
-        if upload_directly_to_common_storage:
+        if transfer_mode in (TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK):
             context = _get_context()
             response = context.api_client_with_auth.reserve_dataset_upload_to_paths(
                 ApiReserveDatasetUplaodToPathsParameters(
@@ -683,12 +686,15 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             new_dataset_id = response.new_dataset_id
             data_source = response.data_source
 
-            self._copy_or_symlink_dataset_to_paths(
-                data_source, symlink_data_instead_of_copy
-            )
+            self._copy_or_symlink_dataset_to_paths(data_source, transfer_mode)
             # announce finished upload
             context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
         else:
+            if common_storage_path_prefix is not None:
+                logger.warning(
+                    "common_storage_path_prefix is not None, but uploading via HTTP."
+                    " Ignoring common_storage_path_prefix."
+                )
             for layer in self.get_segmentation_layers():
                 if not layer.attachments.is_empty:
                     raise NotImplementedError(
@@ -704,26 +710,30 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         return RemoteDataset.open(dataset_id=new_dataset_id)
 
     def _copy_or_symlink_dataset_to_paths(
-        self, data_source: DatasetProperties, symlink_data_instead_of_copy: bool
+        self, data_source: DatasetProperties, transfer_mode: TransferMode
     ) -> None:
         """
-        Iterates over the mags and attachments and copies or symlinks them to the target location.
+        Iterates over the mags and attachments and copies or moves then symlinks them to the target location.
         """
-        # copy data
+        assert transfer_mode in (TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK), (
+            f"transfer mode not supported. found {transfer_mode}"
+        )
+        # transfer data
         for layer in data_source.data_layers:
             src_layer = self.layers[layer.name]
             for mag in layer.mags:
                 src_mag = src_layer.mags[mag.mag]
                 assert mag.path is not None, "mag.path must be set to copy/move data"
                 dst_mag_path = enrich_path(mag.path)
-                if symlink_data_instead_of_copy:
+                if transfer_mode == TransferMode.MOVE_AND_SYMLINK:
                     assert is_fs_path(src_mag.path) and is_fs_path(dst_mag_path), (
                         f"Either src_mag.path or mag.path are not pointing to a local file system {src_mag.path}, {mag.path}"
                     )
                     dst_mag_path.parent.mkdir(parents=True, exist_ok=True)
                     dst_mag_path.unlink(missing_ok=True)
-                    dst_mag_path.symlink_to(src_mag.path)
-                else:
+                    src_mag.path.move(dst_mag_path)
+                    src_mag.path.symlink_to(dst_mag_path)
+                elif transfer_mode == TransferMode.COPY:
                     copytree(
                         src_mag.path,
                         dst_mag_path,
@@ -738,15 +748,17 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     src_layer.attachments, layer.attachments
                 ):
                     dst_attachment_path = enrich_path(dst_attachment.path)
-                    if symlink_data_instead_of_copy:
+                    if transfer_mode == TransferMode.MOVE_AND_SYMLINK:
                         assert is_fs_path(src_attachment.path) and is_fs_path(
                             dst_attachment_path
                         ), (
                             f"Either src_attachment.path or dst_attachment.path are not pointing to a local file system {src_attachment.path}, {dst_attachment.path}"
                         )
-                        dst_attachment_path.unlink()
-                        dst_attachment_path.symlink_to(src_attachment.path)
-                    else:
+                        dst_attachment_path.parent.mkdir(parents=True, exist_ok=True)
+                        dst_attachment_path.unlink(missing_ok=True)
+                        src_attachment.path.move(dst_attachment_path)
+                        src_attachment.path.symlink_to(dst_attachment_path)
+                    elif transfer_mode == TransferMode.COPY:
                         copytree(
                             src_attachment.path,
                             enrich_path(dst_attachment.path),
