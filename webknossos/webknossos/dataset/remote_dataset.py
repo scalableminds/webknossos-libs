@@ -250,7 +250,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         from ..client.context import _get_api_client
 
         if self._use_zarr_streaming:
-            raise RuntimeError("zarr streaming does not support updating properties")
+            # reset the dataset properties to the server state
+            data_source = self._load_dataset_properties()
+            self._init_from_properties(data_source, read_only=self.read_only)
+            raise RuntimeError("zarr streaming does not support updating this property")
 
         with self._context:
             client = _get_api_client()
