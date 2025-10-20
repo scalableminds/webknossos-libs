@@ -617,8 +617,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
             layers_to_link: Optional list of LayerToLink to link already published layers to the dataset.
             jobs: Optional number of jobs to use for uploading the data.
-            common_storage_path_prefix: Optional path prefix used when upload_directly_to_common_storage is true to select one of the available mount points for the dataset folder.
-            When set to true, the data symlinked to the new location.
+            common_storage_path_prefix: Optional path prefix used when transfer_mode is either "copy" or "move_and_symlink"
+                                        to select one of the available WEBKNOSSOS storages.
         Returns:
             RemoteDataset: Reference to the newly created remote dataset
         Note:
