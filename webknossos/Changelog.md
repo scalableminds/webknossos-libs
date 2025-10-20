@@ -41,6 +41,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Updated the api version of the webknossos-api to 12. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Allowing RemoteDataset to align mags, when down- or upsampling [#1382](https://github.com/scalableminds/webknossos-libs/pull/1382)
 - RemoteDatasets that use zarr streaming are no longer read-only. [#1383](https://github.com/scalableminds/webknossos-libs/pull/1383)
+- Introduced transfer modes COPY, MOVE_AND_SYMLINK and HTTP for Dataset.upload() [#1384](https://github.com/scalableminds/webknossos-libs/pull/1384)
 
 ### Fixed
 - Fixed test.py to parse the command line arguments correctly. [#1383](https://github.com/scalableminds/webknossos-libs/pull/1383)
