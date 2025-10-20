@@ -6,6 +6,7 @@ import pytest
 from upath import UPath
 
 import webknossos as wk
+from webknossos import TransferMode
 
 SAMPLE_BBOX = wk.BoundingBox((3164, 3212, 1017), (10, 10, 10))
 
@@ -100,8 +101,7 @@ def test_upload_dataset_with_symlinks(tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
     remote_ds = sample_dataset.upload(
         new_dataset_name="test_remote_symlink",
-        upload_directly_to_common_storage=True,
-        symlink_data_instead_of_copy=True,
+        transfer_mode=TransferMode.MOVE_AND_SYMLINK,
     )
     assert np.array_equal(
         remote_ds.get_color_layers()[0].get_finest_mag().read(),
@@ -115,7 +115,7 @@ def test_upload_dataset_with_symlinks(tmp_upath: UPath) -> None:
 def test_upload_dataset_copy_to_paths(tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
     remote_ds = sample_dataset.upload(
-        new_dataset_name="test_remote_copy", upload_directly_to_common_storage=True
+        new_dataset_name="test_remote_copy", transfer_mode=TransferMode.COPY
     )
     assert np.array_equal(
         remote_ds.get_color_layers()[0].get_finest_mag().read(),
