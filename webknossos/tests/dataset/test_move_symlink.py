@@ -1,13 +1,12 @@
 import tempfile
 
-from upath import UPath
 import pytest
+from upath import UPath
 
-from webknossos.dataset.dataset import TransferMode
+from webknossos import TransferMode
 
 
 def test_transfer_mode_move_and_symlink() -> None:
-
     transfer_mode = TransferMode.MOVE_AND_SYMLINK
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -37,8 +36,3 @@ def test_transfer_mode_move_and_symlink() -> None:
         assert dst2.is_symlink()
         assert (src / "a.txt").exists()
         assert src.is_symlink()
-
-
-
-
-

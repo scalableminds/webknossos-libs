@@ -1,6 +1,6 @@
 # ruff: noqa: F401 imported but unused
 
-from .dataset import Dataset, TransferMode
+from .dataset import Dataset
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
@@ -25,3 +25,4 @@ from .layer import (
 from .remote_dataset import RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
+from .transfer_mode import TransferMode
