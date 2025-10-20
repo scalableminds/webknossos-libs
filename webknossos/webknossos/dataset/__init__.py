@@ -1,6 +1,6 @@
 # ruff: noqa: F401 imported but unused
 
-from .dataset import Dataset
+from .dataset import Dataset, TransferMode
 from .defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,

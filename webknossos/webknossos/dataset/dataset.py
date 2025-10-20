@@ -7,6 +7,7 @@ from enum import Enum, unique
 from itertools import product
 from os import PathLike
 from os.path import relpath
+from shutil import move
 from typing import TYPE_CHECKING, Any, Union, cast
 
 import attr
@@ -142,6 +143,33 @@ class TransferMode(Enum):
     HTTP = "http"
     MOVE_AND_SYMLINK = "move+symlink"
     COPY = "copy"
+
+    @staticmethod
+    def move_and_symlink(src_path: UPath, dst_path: UPath) -> None:
+        assert is_fs_path(src_path) and is_fs_path(dst_path), (
+            f"Either src_mag.path or mag.path are not pointing to a local file system {src_path}, {dst_path}"
+        )
+        assert not dst_path.exists(), f"Destination path {dst_path} already exists."
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
+        move(str(src_path), str(dst_path))
+        src_path.symlink_to(dst_path.resolve())
+
+    @staticmethod
+    def copy(src_path: UPath, dst_path: UPath) -> None:
+        copytree(
+            src_path,
+            dst_path,
+            progress_desc=f"copying attachment {src_path.path} to {dst_path.path}",
+        )
+
+    def transfer(self, src_path: UPath, dst_path: UPath) -> None:
+        if self.name == TransferMode.COPY.name:
+            self.copy(src_path, dst_path)
+        elif self.name == TransferMode.MOVE_AND_SYMLINK.name:
+            self.move_and_symlink(src_path, dst_path)
+        else:
+            raise ValueError(f"Not supported transfer mode {self.name}")
+
 
 
 def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
@@ -578,7 +606,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         transfer_mode: TransferMode = TransferMode.COPY,
     ) -> None:
         """
-        Copies or symlinks the data to paths returned by WEBKNOSSOS
+        Copies or moves+symlinks the data to paths returned by WEBKNOSSOS
         The dataset needs to be in status "uploading".
         The dataset already exists in WEBKNOSSOS but has no dataset_properties.
         With the dataset_properties WEBKNOSSOS can reserve the paths.
@@ -690,6 +718,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             # announce finished upload
             context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
         else:
+            assert transfer_mode == TransferMode.HTTP, "Expected HTTP transfer mode"
             if common_storage_path_prefix is not None:
                 logger.warning(
                     "common_storage_path_prefix is not None, but uploading via HTTP."
@@ -718,6 +747,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         assert transfer_mode in (TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK), (
             f"transfer mode not supported. found {transfer_mode}"
         )
+
         # transfer data
         for layer in data_source.data_layers:
             src_layer = self.layers[layer.name]
@@ -725,20 +755,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 src_mag = src_layer.mags[mag.mag]
                 assert mag.path is not None, "mag.path must be set to copy/move data"
                 dst_mag_path = enrich_path(mag.path)
-                if transfer_mode == TransferMode.MOVE_AND_SYMLINK:
-                    assert is_fs_path(src_mag.path) and is_fs_path(dst_mag_path), (
-                        f"Either src_mag.path or mag.path are not pointing to a local file system {src_mag.path}, {mag.path}"
-                    )
-                    dst_mag_path.parent.mkdir(parents=True, exist_ok=True)
-                    dst_mag_path.unlink(missing_ok=True)
-                    src_mag.path.move(dst_mag_path)
-                    src_mag.path.symlink_to(dst_mag_path)
-                elif transfer_mode == TransferMode.COPY:
-                    copytree(
-                        src_mag.path,
-                        dst_mag_path,
-                        progress_desc=f"copying mag {src_mag.path} to {mag.path}",
-                    )
+                transfer_mode.transfer(src_mag.path, dst_mag_path)
             if isinstance(src_layer, SegmentationLayer):
                 assert isinstance(layer, SegmentationLayerProperties), (
                     "If src_layer is a SegmentationLayer, then layer must be a SegmentationLayerProperties"
@@ -748,22 +765,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     src_layer.attachments, layer.attachments
                 ):
                     dst_attachment_path = enrich_path(dst_attachment.path)
-                    if transfer_mode == TransferMode.MOVE_AND_SYMLINK:
-                        assert is_fs_path(src_attachment.path) and is_fs_path(
-                            dst_attachment_path
-                        ), (
-                            f"Either src_attachment.path or dst_attachment.path are not pointing to a local file system {src_attachment.path}, {dst_attachment.path}"
-                        )
-                        dst_attachment_path.parent.mkdir(parents=True, exist_ok=True)
-                        dst_attachment_path.unlink(missing_ok=True)
-                        src_attachment.path.move(dst_attachment_path)
-                        src_attachment.path.symlink_to(dst_attachment_path)
-                    elif transfer_mode == TransferMode.COPY:
-                        copytree(
-                            src_attachment.path,
-                            enrich_path(dst_attachment.path),
-                            progress_desc=f"copying attachment {src_attachment.path} to {dst_attachment.path}",
-                        )
+                    transfer_mode.transfer(src_attachment.path, dst_attachment_path)
 
     @staticmethod
     def get_remote_datasets(
