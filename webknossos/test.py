@@ -80,7 +80,14 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     )
 
     # Wait for booting
-    while not requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
+    wk_healthy = False
+    while not wk_healthy:
+        try:
+            if requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
+                wk_healthy = True
+        except Exception:
+            # wk_healthy stays False
+            pass
         sleep(1)
 
     # Prepare the test database
@@ -108,14 +115,21 @@ def local_test_wk() -> Iterator[None]:
     wk_version = requests.get(
         f"https://webknossos.org/api/v{WK_API_VERSION}/buildinfo"
     ).json()["webknossos"]["version"]
-    wk_docker_tag = f"master__${wk_version}"
+    wk_docker_tag = f"master__{wk_version}"
     os.environ["DOCKER_TAG"] = wk_docker_tag
     wk_docker_dir = Path("tests")
     tear_down_wk = False
 
     try:
-        if not requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
-            start_wk_via_docker()
+        wk_healthy = False
+        try:
+            if requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
+                wk_healthy = True
+        except Exception:
+            # wk_healthy stays False
+            pass
+        if not wk_healthy:
+            start_wk_via_docker(wk_docker_dir, wk_docker_tag)
             tear_down_wk = True
         else:
             print(
@@ -127,6 +141,7 @@ def local_test_wk() -> Iterator[None]:
         user_req = requests.get(
             f"{WK_URL}/api/v{WK_API_VERSION}/user", headers={"X-Auth-Token": WK_TOKEN}
         )
+        print(user_req)
         if not user_req.ok or "user_a@scalableminds.com" not in user_req.text:
             print(
                 """The login user user_a@scalableminds.com could not be found or changed.
