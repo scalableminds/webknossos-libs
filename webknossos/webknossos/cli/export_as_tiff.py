@@ -97,7 +97,7 @@ def export_tiff_slice(
         tiff_data = padded_tiff_data
     for slice_index in range(tiff_bbox.size.z):
         slice_name_number = (
-            tiff_bbox_mag1.topleft.z + slice_index + 1 - start_slice_index
+            tiff_bbox_mag1.topleft.z + slice_index * view.mag.z - start_slice_index
         )
         if tiling_size is None:
             tiff_file_name = _make_tiff_name(name, slice_name_number)
