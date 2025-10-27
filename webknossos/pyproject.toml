@@ -45,6 +45,8 @@ dependencies = [
     "networkx ~=3.2.1",
     "numpy >=2.0.0,<3.0.0",
     "pims ~=0.7.0",
+    "protobuf<7,>=3.12.0",
+    "google-api-python-client >= 2.0.0",
     "psutil ~=6.0.0",
     "python-dateutil ~=2.8.0",
     "python-dotenv ~=1.0.1",
@@ -149,6 +151,8 @@ exclude = [
     "site-packages",
     "venv",
     "webknossos/dataset/_utils/vendor",
+    "webknossos/proofreading/generated/agglomerate_graph_pb2.py",
+    "webknossos/proofreading/generated/agglomerate_graph_pb2.pyi",
 ]
 
 # Same as Black.

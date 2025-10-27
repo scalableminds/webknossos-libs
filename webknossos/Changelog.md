@@ -20,6 +20,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - RemoteDataset.annotation_id is now exposed, when available. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
 - RemoteDataset.open() now accepts an annotation url as well. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
+- RemoteAnnotation, now has a get_agglomerate_graph method, to make working with proofreading annotations easier. [#1361](https://github.com/scalableminds/webknossos-libs/pull/1361)
+
 ### Changed
 - Ported `test.sh` to `test.py`, run with `uv run test.py`. [#1379](https://github.com/scalableminds/webknossos-libs/pull/1379)
 - `Dataset.add_layer_as_ref(remote_layer.path)` does not work anymore. Please use `Dataset.add_layer_as_ref(remote_layer)` instead. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
@@ -37,9 +39,12 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The returned dataset ID from dataset exploration is now used. [#1378](https://github.com/scalableminds/webknossos-libs/pull/1378) 
 - Refactored the architecture, by introducing RemoteLayers, RemoteSegmentationLayers and their abstract base classes. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Updated the api version of the webknossos-api to 12. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
+- Allowing RemoteDataset to align mags, when down- or upsampling [#1382](https://github.com/scalableminds/webknossos-libs/pull/1382)
+- RemoteDatasets that use zarr streaming are no longer read-only. [#1383](https://github.com/scalableminds/webknossos-libs/pull/1383)
+- Introduced transfer modes COPY, MOVE_AND_SYMLINK and HTTP for Dataset.upload() [#1384](https://github.com/scalableminds/webknossos-libs/pull/1384)
 
 ### Fixed
-
+- Fixed test.py to parse the command line arguments correctly. [#1383](https://github.com/scalableminds/webknossos-libs/pull/1383)
 
 ## [2.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.5.0) - 2025-10-06
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...v2.5.0)

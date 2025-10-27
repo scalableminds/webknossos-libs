@@ -4,13 +4,13 @@ import warnings
 from collections.abc import Callable
 from enum import Enum
 from itertools import product
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 from scipy.ndimage import zoom
 
 if TYPE_CHECKING:
-    from webknossos.dataset.dataset import Dataset
+    from webknossos.dataset.dataset import Dataset, RemoteDataset
 
 from webknossos.dataset_properties import LayerCategoryType
 from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
@@ -46,7 +46,7 @@ def determine_upsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
 def calculate_mags_to_downsample(
     from_mag: Mag,
     coarsest_mag: Mag,
-    dataset_to_align_with: Optional["Dataset"],
+    dataset_to_align_with: Union["Dataset", "RemoteDataset"] | None,
     voxel_size: tuple[float, float, float] | None,
 ) -> list[Mag]:
     assert np.all(from_mag.to_np() <= coarsest_mag.to_np())
@@ -119,7 +119,7 @@ def calculate_mags_to_downsample(
 def calculate_mags_to_upsample(
     from_mag: Mag,
     finest_mag: Mag,
-    dataset_to_align_with: Optional["Dataset"],
+    dataset_to_align_with: Union["Dataset", "RemoteDataset"] | None,
     voxel_size: tuple[float, float, float] | None,
 ) -> list[Mag]:
     return list(

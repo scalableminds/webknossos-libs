@@ -25,3 +25,4 @@ from .layer import (
 from .remote_dataset import RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
+from .transfer_mode import TransferMode
