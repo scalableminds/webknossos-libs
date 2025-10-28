@@ -316,7 +316,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     @property
     def used_storage_bytes(self) -> int:
-        """The amount of storage used by the dataset.
+        """The amount of storage used by the dataset on the WEBKNOSSOS server. Note that 0 may indicate that the data is either not stored on the WEBKNOSSOS server directly, or that the storage usage was not yet scanned.
 
         Returns:
             int: The amount of storage used by the dataset in bytes.
