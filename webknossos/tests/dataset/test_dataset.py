@@ -3679,3 +3679,32 @@ def test_remote_dataset_urls() -> None:
 def test_dataset_open_wrong_path() -> None:
     with pytest.raises(FileNotFoundError):
         Dataset.open("wrong_path")
+
+
+@pytest.mark.parametrize(
+    "data_format", [DataFormat.N5, DataFormat.NeuroglancerPrecomputed]
+)
+def test_n5_and_ng_datasets(data_format: DataFormat) -> None:
+    reference_data = (
+        Dataset.open(TESTDATA_DIR / "simple_zarr3_dataset")
+        .get_layer("color")
+        .get_mag(1)
+        .read()
+    )
+
+    short_data_format = "n5" if data_format == DataFormat.N5 else "ng"
+
+    test_mag = (
+        Dataset.open(TESTDATA_DIR / f"simple_{short_data_format}_dataset")
+        .get_layer("color")
+        .get_mag(1)
+    )
+    assert test_mag.layer.data_format == data_format
+
+    test_data = test_mag.read()
+    np.testing.assert_equal(test_data, reference_data)
+
+    with pytest.raises(RuntimeError):
+        test_mag.write(
+            absolute_offset=(0, 0, 0), data=np.ones((3, 24, 24, 24), dtype="uint8")
+        )

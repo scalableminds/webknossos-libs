@@ -27,12 +27,15 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 - The `endpoint_url` in `UPath` objects is now stored directly in the `storage_options` dict, instead of being stored in the `storage_options["client_kwargs"]` dict. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 - Removed Docker image `scalableminds/webknossos-cli` build. It will not be released further. [#1376](https://github.com/scalableminds/webknossos-libs/pull/1376)
+- Removed inference of channels in case `numChannels` is not set in the `datasource-properties.json`. `numChannels == 1` is assumed and fails upon reading, if otherwise. [#1386](https://github.com/scalableminds/webknossos-libs/pull/1386)
 
 ### Added
 - Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - RemoteDataset.annotation_id is now exposed, when available. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
 - RemoteDataset.open() now accepts an annotation url as well. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
 - RemoteAnnotation, now has a get_agglomerate_graph method, to make working with proofreading annotations easier. [#1361](https://github.com/scalableminds/webknossos-libs/pull/1361)
+- Added `RemoteDataset.used_storage_bytes` property. [#1386](https://github.com/scalableminds/webknossos-libs/pull/1386)
+- Added read support for N5 and neuroglancer precomputed data formats. [#1386](https://github.com/scalableminds/webknossos-libs/pull/1386)
 
 ### Changed
 - Ported `test.sh` to `test.py`, run with `uv run test.py`. [#1379](https://github.com/scalableminds/webknossos-libs/pull/1379)
