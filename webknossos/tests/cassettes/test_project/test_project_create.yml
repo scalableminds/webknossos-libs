@@ -18,12 +18,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 13 Oct 2025 09:58:55 GMT
-        connection: close
+        date: Tue, 28 Oct 2025 09:03:33 GMT
         content-type: application/json
         content-length: '440'
       body:
@@ -50,12 +48,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 13 Oct 2025 09:58:55 GMT
-        connection: close
+        date: Tue, 28 Oct 2025 09:03:33 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -87,18 +83,16 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 13 Oct 2025 09:58:55 GMT
-        connection: close
+        date: Tue, 28 Oct 2025 09:03:33 GMT
         content-type: application/json
         content-length: '625'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_create_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"68eccd60e00000016ebe2ef3","created":1760349536003}
+          {"name":"test_create_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"690086e5010000bb00017b9e","created":1761642213859}
         compression: none
   - request:
       method: GET
@@ -119,12 +113,10 @@ http_interactions:
       status:
         code: 200
       headers:
-        x-powered-by: Express
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 13 Oct 2025 09:58:55 GMT
-        connection: close
+        date: Tue, 28 Oct 2025 09:03:33 GMT
         content-type: application/json
         content-length: '717'
       body:
