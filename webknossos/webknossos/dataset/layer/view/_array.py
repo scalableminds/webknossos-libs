@@ -428,7 +428,7 @@ _aws_credential_manager = AWSCredentialManager(_aws_credential_folder())
 
 class TensorStoreArray(BaseArray):
     _cached_array: tensorstore.TensorStore | None
-    _ts_data_format: str
+    _tensorstore_data_format: str
 
     def __init__(
         self, path: UPath, _cached_array: tensorstore.TensorStore | None = None
@@ -584,7 +584,7 @@ class TensorStoreArray(BaseArray):
     @classmethod
     def _open_spec(cls, path: UPath) -> dict[str, Any]:
         return {
-            "driver": cls._ts_data_format,
+            "driver": cls._tensorstore_data_format,
             "kvstore": cls._make_kvstore(path),
         }
 
@@ -667,7 +667,7 @@ class TensorStoreArray(BaseArray):
             current_array = call_with_retries(
                 lambda: tensorstore.open(
                     {
-                        "driver": self._ts_data_format,
+                        "driver": self._tensorstore_data_format,
                         "kvstore": self._make_kvstore(self._path),
                     },
                     context=TS_CONTEXT,
@@ -782,7 +782,7 @@ class TensorStoreArray(BaseArray):
                 self._cached_array = call_with_retries(
                     lambda: tensorstore.open(
                         {
-                            "driver": self._ts_data_format,
+                            "driver": self._tensorstore_data_format,
                             "kvstore": self._make_kvstore(self._path),
                         },
                         context=TS_CONTEXT,
@@ -815,7 +815,7 @@ class TensorStoreArray(BaseArray):
 
 class Zarr3Array(TensorStoreArray):
     data_format = DataFormat.Zarr3
-    _ts_data_format = "zarr3"
+    _tensorstore_data_format = "zarr3"
 
     @classmethod
     def open(cls, path: UPath) -> "Zarr3Array":
@@ -931,7 +931,7 @@ class Zarr3Array(TensorStoreArray):
 
 class Zarr2Array(TensorStoreArray):
     data_format = DataFormat.Zarr
-    _ts_data_format = "zarr"
+    _tensorstore_data_format = "zarr"
 
     @classmethod
     def open(cls, path: UPath) -> "Zarr2Array":
@@ -1005,7 +1005,7 @@ class Zarr2Array(TensorStoreArray):
 
 class NeuroglancerPrecomputedArray(TensorStoreArray):
     data_format = DataFormat.NeuroglancerPrecomputed
-    _ts_data_format = "neuroglancer_precomputed"
+    _tensorstore_data_format = "neuroglancer_precomputed"
 
     @classmethod
     def open(cls, path: UPath) -> "NeuroglancerPrecomputedArray":
@@ -1016,7 +1016,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
         # need to open the parent dir, because that is the multiscale path
         uri = cls._make_kvstore(path.parent)
         return {
-            "driver": cls._ts_data_format,
+            "driver": cls._tensorstore_data_format,
             "kvstore": uri,
             "scale_metadata": {"key": path.name},
         }
@@ -1065,7 +1065,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
 
 class N5Array(TensorStoreArray):
     data_format = DataFormat.N5
-    _ts_data_format = "n5"
+    _tensorstore_data_format = "n5"
 
     @classmethod
     def open(cls, path: UPath) -> "N5Array":
