@@ -1,5 +1,6 @@
 import pickle
 import sys
+from time import sleep
 
 import numpy as np
 import pytest
@@ -136,6 +137,18 @@ def test_remote_dataset(tmp_upath: UPath) -> None:
     assert remote_ds.get_color_layers()[0].get_finest_mag().read_only
 
     assert remote_ds.name == "test_remote_metadata"
+
+    # allow 10s for wk to scan the used storage bytes
+    used_storage_bytes = 0
+    for _ in range(10):
+        if remote_ds.used_storage_bytes == 0:
+            sleep(1)
+            continue
+        else:
+            used_storage_bytes = remote_ds.used_storage_bytes
+            break
+
+    assert used_storage_bytes == 1188727
 
     assert remote_ds.description is None
     remote_ds.description = "My awesome test description"

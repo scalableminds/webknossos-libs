@@ -3633,8 +3633,6 @@ def test_remote_dataset_access_metadata() -> None:
     assert ds.folder.metadata["folder_key"] == "folder_value"
     assert len(ds.folder.metadata) == 2
 
-    assert ds.used_storage_bytes == 123
-
 
 @pytest.mark.use_proxay
 def test_remote_dataset_urls() -> None:
