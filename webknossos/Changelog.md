@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.0) - 2025-10-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...v3.0.0)
 
 ### Breaking Changes
 - The `endpoint_url` in `UPath` objects is now stored directly in the `storage_options` dict, instead of being stored in the `storage_options["client_kwargs"]` dict. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
@@ -36,7 +48,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Replaced `pathlib.Path` for `upath.UPath` internally. `pathlib.Path` is still supported for user-facing APIs. Adds support for `universal_pathlib` version 0.3.x. [#1374](https://github.com/scalableminds/webknossos-libs/pull/1374)
 - Only use fs-based copy for mags on local file systems and S3. Other protocols, e.g. memory and HTTP, have caveats that break fs-based copying. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 - The `add_*` methods in `Attachments` now return the created attachment objects, similar to `add_layer` and `add_mag`. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
-- The returned dataset ID from dataset exploration is now used. [#1378](https://github.com/scalableminds/webknossos-libs/pull/1378) 
+- The returned dataset ID from dataset exploration is now used. [#1378](https://github.com/scalableminds/webknossos-libs/pull/1378)
 - Refactored the architecture, by introducing RemoteLayers, RemoteSegmentationLayers and their abstract base classes. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Updated the api version of the webknossos-api to 12. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Allowing RemoteDataset to align mags, when down- or upsampling [#1382](https://github.com/scalableminds/webknossos-libs/pull/1382)
@@ -45,6 +57,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed test.py to parse the command line arguments correctly. [#1383](https://github.com/scalableminds/webknossos-libs/pull/1383)
+
 
 ## [2.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.5.0) - 2025-10-06
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...v2.5.0)
