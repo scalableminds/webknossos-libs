@@ -80,14 +80,7 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     )
 
     # Wait for booting
-    wk_healthy = False
-    while not wk_healthy:
-        try:
-            if requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
-                wk_healthy = True
-        except Exception:
-            # wk_healthy stays False
-            pass
+    while not is_wk_healthy():
         sleep(1)
 
     # Prepare the test database
@@ -103,6 +96,15 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
         ],
         cwd=wk_docker_dir,
     )
+
+
+def is_wk_healthy():
+    try:
+        if requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
+            return True
+    except requests.RequestException:
+        pass
+    return False
 
 
 @contextmanager
@@ -121,14 +123,7 @@ def local_test_wk() -> Iterator[None]:
     tear_down_wk = False
 
     try:
-        wk_healthy = False
-        try:
-            if requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
-                wk_healthy = True
-        except Exception:
-            # wk_healthy stays False
-            pass
-        if not wk_healthy:
+        if not is_wk_healthy():
             start_wk_via_docker(wk_docker_dir, wk_docker_tag)
             tear_down_wk = True
         else:
