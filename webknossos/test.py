@@ -141,7 +141,6 @@ def local_test_wk() -> Iterator[None]:
         user_req = requests.get(
             f"{WK_URL}/api/v{WK_API_VERSION}/user", headers={"X-Auth-Token": WK_TOKEN}
         )
-        print(user_req)
         if not user_req.ok or "user_a@scalableminds.com" not in user_req.text:
             print(
                 """The login user user_a@scalableminds.com could not be found or changed.
