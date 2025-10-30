@@ -45,6 +45,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed test.py to parse the command line arguments correctly. [#1383](https://github.com/scalableminds/webknossos-libs/pull/1383)
+- Fixed a bug in the CLI tool export_as_tiff, where filenames would not match the data z position exactly. [#1387](https://github.com/scalableminds/webknossos-libs/pull/1387)
 
 ## [2.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.5.0) - 2025-10-06
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...v2.5.0)
