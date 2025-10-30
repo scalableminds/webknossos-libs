@@ -211,6 +211,7 @@ class PimsTiffReader(FramesSequenceND):
                     ]
                 except KeyError:
                     # chunk not present in zarr_store, leave black.
+                    # ruff: noqa: PERF203 try-catch is still faster than in for the ZarrStore
                     pass
 
             return out
