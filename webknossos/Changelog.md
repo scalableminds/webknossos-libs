@@ -10,17 +10,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.0) - 2025-10-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...v3.0.0)
 
 ### Breaking Changes
 - The `endpoint_url` in `UPath` objects is now stored directly in the `storage_options` dict, instead of being stored in the `storage_options["client_kwargs"]` dict. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 - Removed Docker image `scalableminds/webknossos-cli` build. It will not be released further. [#1376](https://github.com/scalableminds/webknossos-libs/pull/1376)
+- Removed inference of channels in case `numChannels` is not set in the `datasource-properties.json`. `numChannels == 1` is assumed and fails upon reading, if otherwise. [#1386](https://github.com/scalableminds/webknossos-libs/pull/1386)
 
 ### Added
 - Dataset.add_layer_as_ref() now accepts RemoteLayer objects as well as Layer objects. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - RemoteDataset.annotation_id is now exposed, when available. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
 - RemoteDataset.open() now accepts an annotation url as well. [#1380](https://github.com/scalableminds/webknossos-libs/pull/1380)
 - RemoteAnnotation, now has a get_agglomerate_graph method, to make working with proofreading annotations easier. [#1361](https://github.com/scalableminds/webknossos-libs/pull/1361)
+- Added `RemoteDataset.used_storage_bytes` property. [#1386](https://github.com/scalableminds/webknossos-libs/pull/1386)
+- Added read support for N5 and neuroglancer precomputed data formats. [#1386](https://github.com/scalableminds/webknossos-libs/pull/1386)
 
 ### Changed
 - Ported `test.sh` to `test.py`, run with `uv run test.py`. [#1379](https://github.com/scalableminds/webknossos-libs/pull/1379)
@@ -36,7 +51,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Replaced `pathlib.Path` for `upath.UPath` internally. `pathlib.Path` is still supported for user-facing APIs. Adds support for `universal_pathlib` version 0.3.x. [#1374](https://github.com/scalableminds/webknossos-libs/pull/1374)
 - Only use fs-based copy for mags on local file systems and S3. Other protocols, e.g. memory and HTTP, have caveats that break fs-based copying. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
 - The `add_*` methods in `Attachments` now return the created attachment objects, similar to `add_layer` and `add_mag`. [#1365](https://github.com/scalableminds/webknossos-libs/pull/1365)
-- The returned dataset ID from dataset exploration is now used. [#1378](https://github.com/scalableminds/webknossos-libs/pull/1378) 
+- The returned dataset ID from dataset exploration is now used. [#1378](https://github.com/scalableminds/webknossos-libs/pull/1378)
 - Refactored the architecture, by introducing RemoteLayers, RemoteSegmentationLayers and their abstract base classes. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Updated the api version of the webknossos-api to 12. [#1371](https://github.com/scalableminds/webknossos-libs/pull/1371])
 - Allowing RemoteDataset to align mags, when down- or upsampling [#1382](https://github.com/scalableminds/webknossos-libs/pull/1382)
@@ -46,6 +61,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - Fixed test.py to parse the command line arguments correctly. [#1383](https://github.com/scalableminds/webknossos-libs/pull/1383)
 - Fixed a bug in the CLI tool export_as_tiff, where filenames would not match the data z position exactly. [#1387](https://github.com/scalableminds/webknossos-libs/pull/1387)
+
 
 ## [2.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.5.0) - 2025-10-06
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.4.12...v2.5.0)

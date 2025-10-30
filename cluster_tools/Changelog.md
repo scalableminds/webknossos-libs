@@ -7,16 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.0...HEAD)
 
 ### Breaking Changes
-- Deprecate the `dask` and `kubernetes` executors. They will be removed in a future version. [#1375](https://github.com/scalableminds/webknossos-libs/pull/1375)
 
 ### Added
 
 ### Changed
 
 ### Fixed
+
+
+## [3.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.0) - 2025-10-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v2.5.0...v3.0.0)
+
+### Breaking Changes
+- Deprecate the `dask` and `kubernetes` executors. They will be removed in a future version. [#1375](https://github.com/scalableminds/webknossos-libs/pull/1375)
 
 
 ## [2.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v2.5.0) - 2025-10-06

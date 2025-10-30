@@ -80,7 +80,7 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     )
 
     # Wait for booting
-    while not requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
+    while not is_wk_healthy():
         sleep(1)
 
     # Prepare the test database
@@ -98,6 +98,15 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     )
 
 
+def is_wk_healthy():
+    try:
+        if requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
+            return True
+    except requests.RequestException:
+        pass
+    return False
+
+
 @contextmanager
 def local_test_wk() -> Iterator[None]:
     assert not IS_WINDOWS, "Windows is not supported for local testing"
@@ -108,14 +117,14 @@ def local_test_wk() -> Iterator[None]:
     wk_version = requests.get(
         f"https://webknossos.org/api/v{WK_API_VERSION}/buildinfo"
     ).json()["webknossos"]["version"]
-    wk_docker_tag = f"master__${wk_version}"
+    wk_docker_tag = f"master__{wk_version}"
     os.environ["DOCKER_TAG"] = wk_docker_tag
     wk_docker_dir = Path("tests")
     tear_down_wk = False
 
     try:
-        if not requests.get(f"{WK_URL}/api/v{WK_API_VERSION}/health").ok:
-            start_wk_via_docker()
+        if not is_wk_healthy():
+            start_wk_via_docker(wk_docker_dir, wk_docker_tag)
             tear_down_wk = True
         else:
             print(

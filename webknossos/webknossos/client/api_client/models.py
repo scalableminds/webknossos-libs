@@ -115,6 +115,7 @@ class ApiDataset:
     created: float
     metadata: list[ApiMetadata] | None = None
     description: str | None = None
+    used_storage_bytes: int | None = None
 
 
 @attr.s(auto_attribs=True)
