@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a bug where some tiff images could not be correctly converted to wkw/zarr, yielding KeyErrors. [#1388](https://github.com/scalableminds/webknossos-libs/pull/1388)
 
 
 ## [3.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.0) - 2025-10-28
