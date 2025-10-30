@@ -198,20 +198,14 @@ class PimsTiffReader(FramesSequenceND):
             for chunk_projection in _chunk_indexing(
                 selection, array_shape, chunk_shape
             ):
-                try:
-                    # read data from zarr store
-                    chunk_data = (
-                        zarr_store[".".join(map(str, chunk_projection.chunk_coords))]
-                        .ravel()
-                        .reshape(chunk_shape)
-                    )
+                # read data from zarr store
+                chunk_key = ".".join(map(str, chunk_projection.chunk_coords))
+                if chunk_key in zarr_store:
+                    chunk_data = zarr_store[chunk_key].ravel().reshape(chunk_shape)
                     # write in output array
                     out[chunk_projection.out_selection] = chunk_data[
                         chunk_projection.chunk_selection
                     ]
-                except KeyError:
-                    # chunk not present in zarr_store, leave black.
-                    pass
 
             return out
 
