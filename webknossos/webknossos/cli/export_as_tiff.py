@@ -67,12 +67,12 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
     return Image.fromarray(data_slice)
 
 
-def export_tiff_slice(
+def export_tiff_slice_batch(
     dest_path: UPath,
     name: str,
     tiling_size: None | tuple[int, int],
     downsample: int,
-    start_slice_index: int,
+    start_slice_z_mag1: int,
     view: View,
 ) -> None:
     tiff_bbox_mag1 = view.bounding_box
@@ -97,7 +97,7 @@ def export_tiff_slice(
         tiff_data = padded_tiff_data
     for slice_index in range(tiff_bbox.size.z):
         slice_name_number = (
-            tiff_bbox_mag1.topleft.z + slice_index + 1 - start_slice_index
+            tiff_bbox_mag1.topleft.z + slice_index * view.mag.z - start_slice_z_mag1
         )
         if tiling_size is None:
             tiff_file_name = _make_tiff_name(name, slice_name_number)
@@ -165,7 +165,7 @@ def export_tiff_stack(
         wait_and_ensure_success(
             executor.map_to_futures(
                 partial(
-                    export_tiff_slice,
+                    export_tiff_slice_batch,
                     destination_path,
                     name,
                     tiling_slice_size,
