@@ -241,9 +241,9 @@ class Layer(AbstractLayer):
             )
 
         if self.path.exists():
-            assert is_fs_path(self.dataset.path), (
-                "Renaming layers is only supported for local paths."
-            )
+            assert is_fs_path(
+                self.dataset.path
+            ), "Renaming layers is only supported for local paths."
             self.path.rename(self.dataset.path / layer_name)
         self._path = self.dataset.path / layer_name
         self._resolved_path = cheap_resolve(self.dataset.resolved_path / layer_name)
@@ -414,9 +414,9 @@ class Layer(AbstractLayer):
         """
         self._ensure_writable()
         mag = Mag(mag)
-        assert mag not in self.mags, (
-            f"Cannot add mag {mag} as it already exists for layer {self}"
-        )
+        assert (
+            mag not in self.mags
+        ), f"Cannot add mag {mag} as it already exists for layer {self}"
         self._setup_mag(mag, mag_path=mag_path, read_only=read_only)
         mag_view = self._mags[mag]
         mag_array_info = mag_view.info
@@ -749,9 +749,9 @@ class Layer(AbstractLayer):
             and is_fs_path(self_resolved_path)
             and is_fs_path(dataset_resolved_path)
         ), f"Cannot create symlinks in non-local layer {self_path}"
-        assert is_fs_path(foreign_mag_view.path), (
-            f"Cannot create symlink to non-local mag {foreign_mag_view.path}"
-        )
+        assert is_fs_path(
+            foreign_mag_view.path
+        ), f"Cannot create symlink to non-local mag {foreign_mag_view.path}"
 
         foreign_normalized_mag_path = (
             UPath(relpath(foreign_mag_view.path, self_resolved_path))
@@ -853,9 +853,9 @@ class Layer(AbstractLayer):
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert foreign_mag_view.info.data_format == self.data_format, (
-            f"Cannot use file-based copy, because the foreign data format {foreign_mag_view.info.data_format} does not match the layer's data format {self.data_format}."
-        )
+        assert (
+            foreign_mag_view.info.data_format == self.data_format
+        ), f"Cannot use file-based copy, because the foreign data format {foreign_mag_view.info.data_format} does not match the layer's data format {self.data_format}."
 
         mag_path = self.path / str(foreign_mag_view.mag)
         if not exists_ok and mag_path.exists():
@@ -1020,14 +1020,14 @@ class Layer(AbstractLayer):
         """
 
         if from_mag is None:
-            assert len(self.mags.keys()) > 0, (
-                "Failed to downsample data because no existing mag was found."
-            )
+            assert (
+                len(self.mags.keys()) > 0
+            ), "Failed to downsample data because no existing mag was found."
             from_mag = max(self.mags.keys())
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        assert (
+            from_mag in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         if coarsest_mag is None:
             coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size_xyz)
@@ -1118,18 +1118,18 @@ class Layer(AbstractLayer):
             AssertionError: If from_mag doesn't exist or target exists without overwrite"""
         self._dataset._ensure_writable()
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        assert (
+            from_mag in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.category
         )
 
         assert from_mag <= target_mag
-        assert allow_overwrite or target_mag not in self.mags, (
-            "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
-        )
+        assert (
+            allow_overwrite or target_mag not in self.mags
+        ), "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
 
         prev_mag_view = self.mags[from_mag]
 
@@ -1245,9 +1245,9 @@ class Layer(AbstractLayer):
 
         See downsample_mag() for more details on parameters.
         """
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
-        )
+        assert (
+            from_mag in self.mags.keys()
+        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
 
         # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
         target_mags = sorted(target_mags, key=lambda m: m.to_list())
@@ -1309,9 +1309,9 @@ class Layer(AbstractLayer):
 
         self._dataset._ensure_writable()
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        assert (
+            from_mag in self.mags.keys()
+        ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -1382,6 +1382,8 @@ class Layer(AbstractLayer):
                     # this view is restricted to the bounding box specified in the properties
                     func,
                     target_view=target_view,
+                    source_chunk_shape=buffer_shape * prev_mag,
+                    target_chunk_shape=buffer_shape * target_mag,
                     executor=actual_executor,
                     progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )
