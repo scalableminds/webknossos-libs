@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from upath import UPath
 
+from webknossos.dataset.transfer_mode import TransferMode
 from webknossos.dataset_properties import AttachmentDataFormat, AttachmentsProperties
 from webknossos.utils import (
     cheap_resolve,
@@ -167,7 +168,18 @@ class RemoteAttachments(AbstractAttachments):
         return None
 
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
+        return self.upload_attachment(attachment, transfer_mode=TransferMode.COPY)
+
+    def upload_attachment(
+        self,
+        attachment: Attachment,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_prefix: str | None = None,
+    ) -> Attachment:
         self._ensure_writable()
+        if transfer_mode not in (TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK):
+            raise ValueError(f"Transfer mode {transfer_mode} is not supported.")
+
         # In case of a remote dataset, we can ask wk for a path to put the attachment to.
         target_dataset_id = self._layer.dataset.dataset_id
         from webknossos.client.context import _get_context
@@ -180,10 +192,11 @@ class RemoteAttachments(AbstractAttachments):
                 attachment.name,
                 attachment.type_name,
                 str(attachment.data_format),
+                common_storage_prefix,
             )
         )
-        # copy to target dataset
-        copytree(attachment.path, new_path)
+        # transfer to target dataset
+        transfer_mode.transfer(attachment.path, new_path)
 
         context.api_client_with_auth.finish_attachment_upload_to_path(
             target_dataset_id,
@@ -191,6 +204,7 @@ class RemoteAttachments(AbstractAttachments):
             attachment.name,
             attachment.type_name,
             str(attachment.data_format),
+            common_storage_prefix,
         )
         new_attachment = type(attachment).from_path_and_name(
             new_path,

@@ -450,6 +450,7 @@ class ApiReserveAttachmentUploadToPathParameters:
     attachment_name: str
     attachment_type: str
     attachment_dataformat: str
+    common_storage_prefix: str | None
 
 
 @attr.s(auto_attribs=True)

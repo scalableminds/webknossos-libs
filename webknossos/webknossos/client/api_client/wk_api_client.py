@@ -383,12 +383,17 @@ class WkApiClient(AbstractApiClient):
         attachment_name: str,
         attachment_type: str,
         attachment_dataformat: str,
+        common_storage_prefix: str | None = None,
     ) -> str:
         route = f"/datasets/{dataset_id}/reserveAttachmentUploadToPath"
         return self._post_json_with_json_response(
             route,
             ApiReserveAttachmentUploadToPathParameters(
-                layer_name, attachment_name, attachment_type, attachment_dataformat
+                layer_name,
+                attachment_name,
+                attachment_type,
+                attachment_dataformat,
+                common_storage_prefix,
             ),
             str,
         )
@@ -400,12 +405,17 @@ class WkApiClient(AbstractApiClient):
         attachment_name: str,
         attachment_type: str,
         attachment_dataformat: str,
+        common_storage_prefix: str | None = None,
     ) -> None:
         route = f"/datasets/{dataset_id}/finishAttachmentUploadToPath"
         self._post_json(
             route,
             ApiReserveAttachmentUploadToPathParameters(
-                layer_name, attachment_name, attachment_type, attachment_dataformat
+                layer_name,
+                attachment_name,
+                attachment_type,
+                attachment_dataformat,
+                common_storage_prefix,
             ),
         )
 
