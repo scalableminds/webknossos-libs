@@ -41,6 +41,7 @@ _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 if TYPE_CHECKING:
     from webknossos.administration.user import Team
     from webknossos.dataset import Dataset
+    from webknossos.dataset_properties import LayerProperties
 
 
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
@@ -222,6 +223,13 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     read_only,
                 )
 
+    def _initialize_layer_from_properties(
+        self, properties: "LayerProperties", read_only: bool
+    ) -> RemoteLayer:
+        # When using zarr streaming, layers are read only.
+        read_only = self._use_zarr_streaming
+        return super()._initialize_layer_from_properties(properties, read_only)
+
     @property
     def _LayerType(self) -> type[RemoteLayer]:
         return RemoteLayer
@@ -253,8 +261,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         if self._use_zarr_streaming:
             # reset the dataset properties to the server state
-            data_source = self._load_dataset_properties()
-            self._init_from_properties(data_source, read_only=self.read_only)
+            self._apply_server_dataset_properties()
             raise RuntimeError("zarr streaming does not support updating this property")
 
         with self._context:
