@@ -161,14 +161,12 @@ class AbstractAttachments:
         if isinstance(attachment, CumsumAttachment) or isinstance(
             attachment, SegmentIndexAttachment
         ):
-            setattr(self, container_name, attachment)
             setattr(self._properties, container_name, attachment._properties)
         else:
             if any(a.name == attachment.name for a in getattr(self, container_name)):
                 raise ValueError(
                     f"Attachment with name {attachment.name} already exists in {container_name}."
                 )
-            setattr(self, container_name, getattr(self, container_name) + (attachment,))
             properties_container = getattr(self._properties, container_name)
             if properties_container is None:
                 setattr(self._properties, container_name, [attachment._properties])
