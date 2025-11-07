@@ -152,8 +152,6 @@ class AbstractAttachments:
             yield self.cumsum
         yield from (self.connectomes or [])
 
-    # def _get_attachment(self, container_name: str, attachment_name: str) -> Attachment:
-
     def _add_attachment(
         self,
         attachment: Attachment,
