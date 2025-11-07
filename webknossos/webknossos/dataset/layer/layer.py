@@ -1369,8 +1369,10 @@ class Layer(AbstractLayer):
             with get_executor_for_args(None, executor) as actual_executor:
                 if buffer_shape is None:
                     buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
+                    chunk_shape = None
                 else:
                     buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
+                    chunk_shape = buffer_shape * prev_mag,
                 func = named_partial(
                     upsample_cube_job,
                     mag_factors=mag_factors,
@@ -1382,8 +1384,8 @@ class Layer(AbstractLayer):
                     # this view is restricted to the bounding box specified in the properties
                     func,
                     target_view=target_view,
-                    source_chunk_shape=buffer_shape * prev_mag,
-                    target_chunk_shape=buffer_shape * target_mag,
+                    source_chunk_shape=chunk_shape,
+                    target_chunk_shape=chunk_shape,
                     executor=actual_executor,
                     progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )
