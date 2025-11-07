@@ -651,7 +651,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ]
         )
 
-        if transfer_mode in (TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK):
+        if transfer_mode in (
+            TransferMode.COPY,
+            TransferMode.MOVE_AND_SYMLINK,
+            TransferMode.SYMLINK,
+        ):
             context = _get_context()
             response = context.api_client_with_auth.reserve_dataset_upload_to_paths(
                 ApiReserveDatasetUplaodToPathsParameters(
@@ -702,9 +706,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
         Iterates over the mags and attachments and copies or moves then symlinks them to the target location.
         """
-        assert transfer_mode in (TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK), (
-            f"transfer mode not supported. found {transfer_mode}"
-        )
+        assert transfer_mode in (
+            TransferMode.COPY,
+            TransferMode.MOVE_AND_SYMLINK,
+            TransferMode.SYMLINK,
+        ), f"transfer mode not supported. found {transfer_mode}"
 
         # transfer data
         for layer in data_source.data_layers:

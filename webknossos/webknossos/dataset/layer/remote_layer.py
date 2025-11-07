@@ -54,3 +54,6 @@ class RemoteLayer(AbstractLayer):
 
     def get_finest_mag(self) -> MagView["RemoteLayer"]:
         return super().get_finest_mag()
+
+    def _apply_server_layer_properties(self) -> None:
+        self.dataset._apply_server_dataset_properties()

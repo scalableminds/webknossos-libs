@@ -239,6 +239,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         assert isinstance(api_dataset_info.data_source, DatasetProperties)
         return api_dataset_info.data_source
 
+    def _apply_server_dataset_properties(self) -> None:
+        self._properties = self._load_dataset_properties()
+
     def _save_dataset_properties_impl(self) -> None:
         """
         Exports the current dataset properties to the server.
@@ -260,9 +263,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 dataset_id=self._dataset_id,
                 dataset_updates={"dataSource": self._properties},
             )
-            data_source = self._load_dataset_properties()
-
-            self._init_from_properties(data_source, read_only=self.read_only)
+            self._apply_server_dataset_properties()
 
     def __repr__(self) -> str:
         return f"RemoteDataset({repr(self.url)})"
