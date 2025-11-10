@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.2...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.0.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.2) - 2025-11-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.1...v3.0.2)
 
 ### Added
 - Added symlink transfer mode. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
@@ -23,6 +33,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - RemoteSegmentationLayers and RemoteAttachments now sync correctly to the server state. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
+
 
 
 ## [3.0.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.1) - 2025-10-30
