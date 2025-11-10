@@ -41,7 +41,6 @@ class AbstractSegmentationLayer(AbstractLayer, Generic[AttachmentsTypeT]):
         instantiating directly.
     """
 
-    _properties: SegmentationLayerProperties
     _attachments: AttachmentsTypeT
 
     def __init__(
@@ -51,12 +50,31 @@ class AbstractSegmentationLayer(AbstractLayer, Generic[AttachmentsTypeT]):
         read_only: bool,
     ):
         super().__init__(dataset, properties, read_only)
-        self._attachments = self._AttachmentsType(self, properties.attachments)
+        self._attachments = self._AttachmentsType(self)
 
     @property
     @abstractmethod
     def _AttachmentsType(self) -> type[AttachmentsTypeT]:
         pass
+
+    @property
+    def _properties(self) -> SegmentationLayerProperties:
+        """Gets the SegmentationLayerProperties object containing layer attributes.
+
+        Returns:
+            SegmentationLayerProperties: Properties object for this layer
+
+        Note:
+            Internal property used to access underlying properties' storage.
+        """
+
+        properties = next(
+            layer_property
+            for layer_property in self.dataset._properties.data_layers
+            if layer_property.name == self.name
+        )
+        assert isinstance(properties, SegmentationLayerProperties)
+        return properties
 
     @property
     def largest_segment_id(self) -> int | None:

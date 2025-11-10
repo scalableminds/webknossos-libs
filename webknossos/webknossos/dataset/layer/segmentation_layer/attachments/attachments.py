@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from upath import UPath
 
+from webknossos.dataset.transfer_mode import TransferMode
 from webknossos.dataset_properties import AttachmentDataFormat, AttachmentsProperties
 from webknossos.utils import (
     cheap_resolve,
@@ -44,58 +45,82 @@ def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -
 
 class AbstractAttachments:
     _layer: "AbstractSegmentationLayer"
-    _properties: AttachmentsProperties
-    meshes: tuple[MeshAttachment, ...] = ()
-    agglomerates: tuple[AgglomerateAttachment, ...] = ()
-    segment_index: SegmentIndexAttachment | None = None
-    cumsum: CumsumAttachment | None = None
-    connectomes: tuple[ConnectomeAttachment, ...] = ()
 
-    def __init__(
-        self, layer: "AbstractSegmentationLayer", properties: "AttachmentsProperties"
-    ):
-        self._properties = properties
+    def __init__(self, layer: "AbstractSegmentationLayer"):
         self._layer = layer
-        optional_dataset_path = self._get_optional_dataset_path()
 
-        if properties.meshes is not None:
-            self.meshes = tuple(
-                MeshAttachment(
-                    attachment,
-                    enrich_path(attachment.path, optional_dataset_path),
-                )
-                for attachment in properties.meshes
+    @property
+    def meshes(self) -> tuple[MeshAttachment, ...]:
+        if self._properties.meshes is None:
+            return tuple()
+        return tuple(
+            MeshAttachment(
+                attachment,
+                enrich_path(attachment.path, self._get_optional_dataset_path()),
             )
-        if properties.agglomerates is not None:
-            self.agglomerates = tuple(
-                AgglomerateAttachment(
-                    attachment,
-                    enrich_path(attachment.path, optional_dataset_path),
-                )
-                for attachment in properties.agglomerates
+            for attachment in self._properties.meshes
+        )
+
+    @property
+    def agglomerates(self) -> tuple[AgglomerateAttachment, ...]:
+        if self._properties.agglomerates is None:
+            return tuple()
+        return tuple(
+            AgglomerateAttachment(
+                attachment,
+                enrich_path(attachment.path, self._get_optional_dataset_path()),
             )
-        if properties.segment_index is not None:
-            self.segment_index = SegmentIndexAttachment(
-                properties.segment_index,
-                enrich_path(properties.segment_index.path, optional_dataset_path),
+            for attachment in self._properties.agglomerates
+        )
+
+    @property
+    def segment_index(self) -> SegmentIndexAttachment | None:
+        if self._properties.segment_index is None:
+            return None
+        return SegmentIndexAttachment(
+            self._properties.segment_index,
+            enrich_path(
+                self._properties.segment_index.path,
+                self._get_optional_dataset_path(),
+            ),
+        )
+
+    @property
+    def cumsum(self) -> CumsumAttachment | None:
+        if self._properties.cumsum is None:
+            return None
+        return CumsumAttachment(
+            self._properties.cumsum,
+            enrich_path(
+                self._properties.cumsum.path, self._get_optional_dataset_path()
+            ),
+        )
+
+    @property
+    def connectomes(self) -> tuple[ConnectomeAttachment, ...]:
+        if self._properties.connectomes is None:
+            return tuple()
+        return tuple(
+            ConnectomeAttachment(
+                attachment,
+                enrich_path(attachment.path, self._get_optional_dataset_path()),
             )
-        if properties.cumsum is not None:
-            self.cumsum = CumsumAttachment(
-                properties.cumsum,
-                enrich_path(properties.cumsum.path, optional_dataset_path),
-            )
-        if properties.connectomes is not None:
-            self.connectomes = tuple(
-                ConnectomeAttachment(
-                    attachment,
-                    enrich_path(attachment.path, optional_dataset_path),
-                )
-                for attachment in properties.connectomes
-            )
+            for attachment in self._properties.connectomes
+        )
 
     @abstractmethod
     def _get_optional_dataset_path(self) -> UPath | None:
+        """
+        Attachment paths can be relative to the dataset path.
+        But attachments store absolute paths only.
+        In case we have a dataset path we can make a relative attachment path absolute.
+        But if we don't, we fail when encountering a relative attachment path.
+        """
         pass
+
+    @property
+    def _properties(self) -> "AttachmentsProperties":
+        return self._layer._properties.attachments
 
     def _ensure_writable(self) -> None:
         self._layer._ensure_writable()
@@ -131,14 +156,12 @@ class AbstractAttachments:
         if isinstance(attachment, CumsumAttachment) or isinstance(
             attachment, SegmentIndexAttachment
         ):
-            setattr(self, container_name, attachment)
             setattr(self._properties, container_name, attachment._properties)
         else:
             if any(a.name == attachment.name for a in getattr(self, container_name)):
                 raise ValueError(
                     f"Attachment with name {attachment.name} already exists in {container_name}."
                 )
-            setattr(self, container_name, getattr(self, container_name) + (attachment,))
             properties_container = getattr(self._properties, container_name)
             if properties_container is None:
                 setattr(self._properties, container_name, [attachment._properties])
@@ -158,17 +181,32 @@ class AbstractAttachments:
 class RemoteAttachments(AbstractAttachments):
     _layer: "RemoteSegmentationLayer"
 
-    def __init__(
-        self, layer: "RemoteSegmentationLayer", properties: "AttachmentsProperties"
-    ):
-        super().__init__(layer, properties)
+    def __init__(self, layer: "RemoteSegmentationLayer"):
+        super().__init__(layer)
+
+    def _apply_server_properties(self) -> None:
+        self._layer._apply_server_layer_properties()
 
     def _get_optional_dataset_path(self) -> UPath | None:
         return None
 
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
+        return self.upload_attachment(attachment, transfer_mode=TransferMode.COPY)
+
+    def upload_attachment(
+        self,
+        attachment: Attachment,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_prefix: str | None = None,
+    ) -> Attachment:
         self._ensure_writable()
-        # In case of a remote dataset, we can ask wk for a path to put the attachment to.
+        if transfer_mode not in (
+            TransferMode.COPY,
+            TransferMode.MOVE_AND_SYMLINK,
+            TransferMode.SYMLINK,
+        ):
+            raise ValueError(f"Transfer mode {transfer_mode} is not supported.")
+
         target_dataset_id = self._layer.dataset.dataset_id
         from webknossos.client.context import _get_context
 
@@ -180,10 +218,11 @@ class RemoteAttachments(AbstractAttachments):
                 attachment.name,
                 attachment.type_name,
                 str(attachment.data_format),
+                common_storage_prefix,
             )
         )
-        # copy to target dataset
-        copytree(attachment.path, new_path)
+        # transfer to target dataset
+        transfer_mode.transfer(attachment.path, new_path)
 
         context.api_client_with_auth.finish_attachment_upload_to_path(
             target_dataset_id,
@@ -191,21 +230,26 @@ class RemoteAttachments(AbstractAttachments):
             attachment.name,
             attachment.type_name,
             str(attachment.data_format),
+            common_storage_prefix,
         )
+
+        # sync to server state
+        self._apply_server_properties()
+
         new_attachment = type(attachment).from_path_and_name(
             new_path,
             attachment.name,
             data_format=attachment.data_format,
         )
-        self._add_attachment(new_attachment)
+
         return new_attachment
 
 
 class Attachments(AbstractAttachments):
     _layer: "SegmentationLayer"
 
-    def __init__(self, layer: "SegmentationLayer", properties: "AttachmentsProperties"):
-        super().__init__(layer, properties)
+    def __init__(self, layer: "SegmentationLayer"):
+        super().__init__(layer)
 
     def _get_optional_dataset_path(self) -> UPath:
         return self._layer.dataset.resolved_path
