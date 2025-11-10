@@ -888,7 +888,7 @@ class Annotation:
                 )
             self.organization_id = context.organization_id
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         response_annotation_info = client.annotation_upload(
             file_body=self._binary_zip(),
             filename=f"{self.name}.zip",
@@ -960,8 +960,6 @@ class Annotation:
         context = _get_context()
         token: str | None
         if self.organization_id is None:
-            # ask for token, if necessary
-            _ = context.required_token
             organization_id = context.organization_id
         else:
             token = context.token
@@ -1444,7 +1442,7 @@ class RemoteAnnotation(Annotation):
     def _get_annotation_info(self) -> ApiAnnotation:
         from webknossos.client.context import _get_api_client
 
-        client = _get_api_client(True)
+        client = _get_api_client()
         assert self.annotation_id is not None, "Annotation ID must be set."
         return client.annotation_info(annotation_id=self.annotation_id)
 
@@ -1453,7 +1451,7 @@ class RemoteAnnotation(Annotation):
     ) -> None:
         from webknossos.client.context import _get_api_client
 
-        client = _get_api_client(True)
+        client = _get_api_client()
         annotation_info = self._get_annotation_info()
         name = name if name is not None else annotation_info.name
         description = (

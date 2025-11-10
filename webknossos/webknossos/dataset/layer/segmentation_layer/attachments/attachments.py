@@ -170,11 +170,11 @@ class RemoteAttachments(AbstractAttachments):
         self._ensure_writable()
         # In case of a remote dataset, we can ask wk for a path to put the attachment to.
         target_dataset_id = self._layer.dataset.dataset_id
-        from webknossos.client.context import _get_context
+        from webknossos.client.context import _get_api_client
 
-        context = _get_context()
+        client = _get_api_client()
         new_path = enrich_path(
-            context.api_client_with_auth.reserve_attachment_upload_to_path(
+            client.reserve_attachment_upload_to_path(
                 target_dataset_id,
                 self._layer.name,
                 attachment.name,
@@ -185,7 +185,7 @@ class RemoteAttachments(AbstractAttachments):
         # copy to target dataset
         copytree(attachment.path, new_path)
 
-        context.api_client_with_auth.finish_attachment_upload_to_path(
+        client.finish_attachment_upload_to_path(
             target_dataset_id,
             self._layer.name,
             attachment.name,

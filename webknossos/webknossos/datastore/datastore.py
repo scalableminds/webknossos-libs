@@ -29,17 +29,17 @@ class Datastore:
             ```
         """
 
-        from ..client.context import _get_context
+        from ..client.context import _get_api_client
 
-        context = _get_context()
+        client = _get_api_client()
         if allows_upload is None:
             return [
                 cls(datastore.name, datastore.url, datastore.allows_upload)
-                for datastore in context.api_client_with_auth.datastore_list()
+                for datastore in client.datastore_list()
             ]
         return [
             cls(datastore.name, datastore.url, datastore.allows_upload)
-            for datastore in context.api_client_with_auth.datastore_list()
+            for datastore in client.datastore_list()
             if allows_upload == datastore.allows_upload
         ]
 

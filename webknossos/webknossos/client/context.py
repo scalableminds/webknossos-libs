@@ -53,7 +53,6 @@ from typing import Any
 
 import attr
 from dotenv import load_dotenv
-from rich.prompt import Prompt
 
 from ._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
 from .api_client import DatastoreApiClient, TracingStoreApiClient, WkApiClient
@@ -62,22 +61,8 @@ load_dotenv()
 
 
 @cache
-def _cached_ask_for_token(webknossos_url: str) -> str:
-    # TODO # noqa: FIX002 Line contains TODO
-    # -validate token and ask again if necessary
-    # -ask if the token should be saved in some .env file
-    # -reset invalid tokens
-    #  (e.g. use cachetools for explicit cache management:
-    #  https://cachetools.readthedocs.io/en/stable/#memoizing-decorators)
-    return Prompt.ask(
-        f"\nPlease enter your webknossos token as shown on {webknossos_url}/auth/token ",
-        password=True,
-    )
-
-
-@cache
 def _cached_get_org(context: "_WebknossosContext") -> str:
-    current_api_user = context.api_client_with_auth.user_current()
+    current_api_user = context.api_client.user_current()
     return current_api_user.organization
 
 
@@ -96,7 +81,6 @@ def _cached__get_api_client(
 
 
 def _clear_all_context_caches() -> None:
-    _cached_ask_for_token.cache_clear()
     _cached_get_org.cache_clear()
     _cached__get_api_client.cache_clear()
 
@@ -109,19 +93,6 @@ class _WebknossosContext:
 
     # all properties are cached outside to allow re-usability
     # if same context is instantiated twice
-    @property
-    def required_token(self) -> str:
-        if self.token is None:
-            token = _cached_ask_for_token(self.url)
-            # We replace the current context, but leave all previous ones as-is.
-            # Any opened contextmanagers will still close correctly, as the stored
-            # tokens still point to the correct predecessors.
-            _webknossos_context_var.set(
-                _WebknossosContext(self.url, token, self.timeout)
-            )
-            return token
-        else:
-            return self.token
 
     @property
     def organization_id(self) -> str:
@@ -131,28 +102,18 @@ class _WebknossosContext:
     def api_client(self) -> WkApiClient:
         return _cached__get_api_client(self.url, self.token, self.timeout)
 
-    @property
-    def api_client_with_auth(self) -> WkApiClient:
-        return _cached__get_api_client(self.url, self.required_token, self.timeout)
-
-    def get_datastore_api_client(
-        self, datastore_url: str, require_auth: bool = False
-    ) -> DatastoreApiClient:
-        token = self.required_token if require_auth else self.token
+    def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
         return DatastoreApiClient(
             datastore_base_url=datastore_url,
-            headers={} if token is None else {"X-Auth-Token": token},
+            headers={} if self.token is None else {"X-Auth-Token": self.token},
             timeout_seconds=self.timeout,
         )
 
-    def get_tracingstore_api_client(
-        self, require_auth: bool = False
-    ) -> TracingStoreApiClient:
-        token = self.required_token if require_auth else self.token
-        api_tracingstore = self.api_client_with_auth.tracing_store()
+    def get_tracingstore_api_client(self) -> TracingStoreApiClient:
+        api_tracingstore = self.api_client.tracing_store()
         return TracingStoreApiClient(
             base_url=api_tracingstore.url,
-            headers={} if token is None else {"X-Auth-Token": token},
+            headers={} if self.token is None else {"X-Auth-Token": self.token},
             timeout_seconds=self.timeout,
         )
 
@@ -223,8 +184,5 @@ class webknossos_context(ContextDecorator):
         _webknossos_context_var.reset(self._context_var_token_stack.pop())
 
 
-def _get_api_client(enforce_auth: bool = False) -> WkApiClient:
-    if enforce_auth:
-        return _get_context().api_client_with_auth
-    else:
-        return _get_context().api_client
+def _get_api_client() -> WkApiClient:
+    return _get_context().api_client

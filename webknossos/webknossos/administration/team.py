@@ -18,7 +18,7 @@ class Team:
     @classmethod
     def get_by_name(cls, name: str) -> "Team":
         """Returns the Team specified by the passed name if your token authorizes you to see it."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_teams = client.team_list()
         for api_team in api_teams:
             if api_team.name == name:
@@ -28,7 +28,7 @@ class Team:
     @classmethod
     def get_by_id(cls, team_id: str) -> "Team":
         """Returns the Team specified by the passed ID."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_teams = client.team_list()
         for api_team in api_teams:
             if api_team.id == team_id:
@@ -38,7 +38,7 @@ class Team:
     @classmethod
     def get_list(cls) -> list["Team"]:
         """Returns all teams of the current user."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_teams = client.team_list()
         return [
             cls(api_team.id, api_team.name, api_team.organization)
@@ -48,7 +48,7 @@ class Team:
     @classmethod
     def add(cls, team_name: str) -> "Team":
         """Adds a new team with the specified name."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         client.team_add(team=ApiTeamAdd(team_name))
         return cls.get_by_name(team_name)
 
@@ -58,5 +58,5 @@ class Team:
 
     def delete(self) -> None:
         """Deletes the team."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         client.team_delete(team_id=self.id)

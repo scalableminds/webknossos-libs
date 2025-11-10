@@ -573,13 +573,13 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             path_prefix: The prefix of the storage path, can be used to select one of the storage path options.
             symlink_data_instead_of_copy: Set to true if the client has access to the same file system as the WEBKNOSSOS datastore.
         """
-        from ..client.context import _get_context
+        from ..client.context import _get_api_client
 
         if transfer_mode == TransferMode.HTTP:
             raise ValueError("HTTP transfer mode is not supported for this method")
 
-        context = _get_context()
-        response = context.api_client_with_auth.reserve_dataset_upload_to_paths_for_preliminary(
+        client = _get_api_client()
+        response = client.reserve_dataset_upload_to_paths_for_preliminary(
             dataset_id,
             ApiReserveDatasetUploadToPathsForPreliminaryParameters(
                 self._properties, path_prefix
@@ -587,7 +587,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
         self._copy_or_symlink_dataset_to_paths(response.data_source, transfer_mode)
 
-        context.api_client_with_auth.finish_dataset_upload_to_paths(dataset_id)
+        client.finish_dataset_upload_to_paths(dataset_id)
 
     def upload(
         self,
@@ -635,7 +635,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ```
         """
 
-        from ..client.context import _get_context
+        from ..client.context import _get_api_client
 
         new_dataset_name = new_dataset_name or self.name
 
@@ -652,8 +652,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
 
         if transfer_mode in (TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK):
-            context = _get_context()
-            response = context.api_client_with_auth.reserve_dataset_upload_to_paths(
+            client = _get_api_client()
+            response = client.reserve_dataset_upload_to_paths(
                 ApiReserveDatasetUplaodToPathsParameters(
                     dataset_name=new_dataset_name,
                     initial_team_ids=initial_team_ids or [],
@@ -674,7 +674,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
             self._copy_or_symlink_dataset_to_paths(data_source, transfer_mode)
             # announce finished upload
-            context.api_client_with_auth.finish_dataset_upload_to_paths(new_dataset_id)
+            client.finish_dataset_upload_to_paths(new_dataset_id)
         else:
             assert transfer_mode == TransferMode.HTTP, "Expected HTTP transfer mode"
             if common_storage_path_prefix is not None:
