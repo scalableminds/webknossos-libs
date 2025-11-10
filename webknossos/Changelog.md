@@ -15,10 +15,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added symlink transfer mode. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
+- Added method RemoteSegmentationLayer.upload_attachment. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
 
 ### Changed
+- RemoteLayers are read-only in the zarr_streaming case. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
 
 ### Fixed
+- RemoteSegmentationLayers and RemoteAttachments now sync correctly to the server state. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
 
 
 ## [3.0.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.1) - 2025-10-30
