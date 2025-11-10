@@ -58,7 +58,7 @@ class RemoteLayer(AbstractLayer):
     def _ensure_writable(self) -> None:
         if self.read_only:
             raise RuntimeError(
-                f"Remote layer '{self.name}' is read-only, consider disabling zarr_streaming RemoteDataset.open(use_zarr_streaming=False)"
+                f"Remote layer '{self.name}' is read-only, consider disabling zarr_streaming with RemoteDataset.open(use_zarr_streaming=False)"
             )
 
     def _apply_server_layer_properties(self) -> None:
