@@ -1166,7 +1166,11 @@ class Layer(AbstractLayer):
         with get_executor_for_args(None, executor) as executor:
             if buffer_shape is None:
                 buffer_shape = determine_downsample_buffer_shape(prev_mag_view.info)
-            chunk_size = chunk_size * target_mag if chunk_size is not None else None
+            chunk_size = (
+                Vec3Int.from_vec_or_int(chunk_size) * target_mag
+                if chunk_size is not None
+                else None
+            )
 
             func = named_partial(
                 downsample_cube_job,
@@ -1389,7 +1393,11 @@ class Layer(AbstractLayer):
                     buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
                 else:
                     buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
-                chunk_size = chunk_size * target_mag if chunk_size is not None else None
+                chunk_size = (
+                    Vec3Int.from_vec_or_int(chunk_size) * target_mag
+                    if chunk_size is not None
+                    else None
+                )
 
                 func = named_partial(
                     upsample_cube_job,
