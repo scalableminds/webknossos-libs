@@ -51,67 +51,62 @@ class AbstractAttachments:
 
     @property
     def meshes(self) -> tuple[MeshAttachment, ...]:
-        if self._properties.meshes is not None:
-            return tuple(
-                MeshAttachment(
-                    attachment,
-                    enrich_path(attachment.path, self._get_optional_dataset_path()),
-                )
-                for attachment in self._properties.meshes
-            )
-        else:
+        if self._properties.meshes is None:
             return tuple()
+        return tuple(
+            MeshAttachment(
+                attachment,
+                enrich_path(attachment.path, self._get_optional_dataset_path()),
+            )
+            for attachment in self._properties.meshes
+        )
 
     @property
     def agglomerates(self) -> tuple[AgglomerateAttachment, ...]:
-        if self._properties.agglomerates is not None:
-            return tuple(
-                AgglomerateAttachment(
-                    attachment,
-                    enrich_path(attachment.path, self._get_optional_dataset_path()),
-                )
-                for attachment in self._properties.agglomerates
-            )
-        else:
+        if self._properties.agglomerates is None:
             return tuple()
+        return tuple(
+            AgglomerateAttachment(
+                attachment,
+                enrich_path(attachment.path, self._get_optional_dataset_path()),
+            )
+            for attachment in self._properties.agglomerates
+        )
 
     @property
     def segment_index(self) -> SegmentIndexAttachment | None:
-        if self._properties.segment_index is not None:
-            return SegmentIndexAttachment(
-                self._properties.segment_index,
-                enrich_path(
-                    self._properties.segment_index.path,
-                    self._get_optional_dataset_path(),
-                ),
-            )
-        else:
+        if self._properties.segment_index is None:
             return None
+        return SegmentIndexAttachment(
+            self._properties.segment_index,
+            enrich_path(
+                self._properties.segment_index.path,
+                self._get_optional_dataset_path(),
+            ),
+        )
 
     @property
     def cumsum(self) -> CumsumAttachment | None:
-        if self._properties.cumsum is not None:
-            return CumsumAttachment(
-                self._properties.cumsum,
-                enrich_path(
-                    self._properties.cumsum.path, self._get_optional_dataset_path()
-                ),
-            )
-        else:
+        if self._properties.cumsum is None:
             return None
+        return CumsumAttachment(
+            self._properties.cumsum,
+            enrich_path(
+                self._properties.cumsum.path, self._get_optional_dataset_path()
+            ),
+        )
 
     @property
     def connectomes(self) -> tuple[ConnectomeAttachment, ...]:
-        if self._properties.connectomes is not None:
-            return tuple(
-                ConnectomeAttachment(
-                    attachment,
-                    enrich_path(attachment.path, self._get_optional_dataset_path()),
-                )
-                for attachment in self._properties.connectomes
-            )
-        else:
+        if self._properties.connectomes is None:
             return tuple()
+        return tuple(
+            ConnectomeAttachment(
+                attachment,
+                enrich_path(attachment.path, self._get_optional_dataset_path()),
+            )
+            for attachment in self._properties.connectomes
+        )
 
     @abstractmethod
     def _get_optional_dataset_path(self) -> UPath | None:
