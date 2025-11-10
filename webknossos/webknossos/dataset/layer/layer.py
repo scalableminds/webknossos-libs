@@ -241,9 +241,9 @@ class Layer(AbstractLayer):
             )
 
         if self.path.exists():
-            assert is_fs_path(
-                self.dataset.path
-            ), "Renaming layers is only supported for local paths."
+            assert is_fs_path(self.dataset.path), (
+                "Renaming layers is only supported for local paths."
+            )
             self.path.rename(self.dataset.path / layer_name)
         self._path = self.dataset.path / layer_name
         self._resolved_path = cheap_resolve(self.dataset.resolved_path / layer_name)
@@ -414,9 +414,9 @@ class Layer(AbstractLayer):
         """
         self._ensure_writable()
         mag = Mag(mag)
-        assert (
-            mag not in self.mags
-        ), f"Cannot add mag {mag} as it already exists for layer {self}"
+        assert mag not in self.mags, (
+            f"Cannot add mag {mag} as it already exists for layer {self}"
+        )
         self._setup_mag(mag, mag_path=mag_path, read_only=read_only)
         mag_view = self._mags[mag]
         mag_array_info = mag_view.info
@@ -749,9 +749,9 @@ class Layer(AbstractLayer):
             and is_fs_path(self_resolved_path)
             and is_fs_path(dataset_resolved_path)
         ), f"Cannot create symlinks in non-local layer {self_path}"
-        assert is_fs_path(
-            foreign_mag_view.path
-        ), f"Cannot create symlink to non-local mag {foreign_mag_view.path}"
+        assert is_fs_path(foreign_mag_view.path), (
+            f"Cannot create symlink to non-local mag {foreign_mag_view.path}"
+        )
 
         foreign_normalized_mag_path = (
             UPath(relpath(foreign_mag_view.path, self_resolved_path))
@@ -853,9 +853,9 @@ class Layer(AbstractLayer):
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
 
-        assert (
-            foreign_mag_view.info.data_format == self.data_format
-        ), f"Cannot use file-based copy, because the foreign data format {foreign_mag_view.info.data_format} does not match the layer's data format {self.data_format}."
+        assert foreign_mag_view.info.data_format == self.data_format, (
+            f"Cannot use file-based copy, because the foreign data format {foreign_mag_view.info.data_format} does not match the layer's data format {self.data_format}."
+        )
 
         mag_path = self.path / str(foreign_mag_view.mag)
         if not exists_ok and mag_path.exists():
@@ -976,6 +976,7 @@ class Layer(AbstractLayer):
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
         executor: Executor | None = None,
+        chunk_size: Vec3Int | None = None,
     ) -> None:
         """Downsample data from a source magnification to coarser magnifications.
 
@@ -996,7 +997,7 @@ class Layer(AbstractLayer):
             allow_overwrite (bool): Whether existing mags can be overwritten. False by default.
             only_setup_mags (bool): Only create mags without data. False by default.
             executor (Executor | None): Executor for parallel processing. None by default.
-
+            chunk_size (Vec3IntLike | None): Size of processing chunks in target mag.
         Raises:
             AssertionError: If from_mag does not exist
             RuntimeError: If sampling scheme produces invalid magnifications
@@ -1020,14 +1021,14 @@ class Layer(AbstractLayer):
         """
 
         if from_mag is None:
-            assert (
-                len(self.mags.keys()) > 0
-            ), "Failed to downsample data because no existing mag was found."
+            assert len(self.mags.keys()) > 0, (
+                "Failed to downsample data because no existing mag was found."
+            )
             from_mag = max(self.mags.keys())
 
-        assert (
-            from_mag in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        assert from_mag in self.mags.keys(), (
+            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        )
 
         if coarsest_mag is None:
             coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size_xyz)
@@ -1088,6 +1089,7 @@ class Layer(AbstractLayer):
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
                 executor=executor,
+                chunk_size=chunk_size,
             )
 
     def downsample_mag(
@@ -1101,6 +1103,7 @@ class Layer(AbstractLayer):
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
         executor: Executor | None = None,
+        chunk_size: Vec3Int | None = None,
     ) -> None:
         """Performs a single downsampling step between magnification levels.
 
@@ -1113,23 +1116,24 @@ class Layer(AbstractLayer):
             allow_overwrite: Whether to allow overwriting existing mag
             only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
             executor: Executor for parallel processing
+            chunk_size (Vec3IntLike | None): Size of processing chunks in target mag.
 
         Raises:
             AssertionError: If from_mag doesn't exist or target exists without overwrite"""
         self._dataset._ensure_writable()
 
-        assert (
-            from_mag in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        assert from_mag in self.mags.keys(), (
+            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        )
 
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.category
         )
 
         assert from_mag <= target_mag
-        assert (
-            allow_overwrite or target_mag not in self.mags
-        ), "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
+        assert allow_overwrite or target_mag not in self.mags, (
+            "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
+        )
 
         prev_mag_view = self.mags[from_mag]
 
@@ -1162,6 +1166,8 @@ class Layer(AbstractLayer):
         with get_executor_for_args(None, executor) as executor:
             if buffer_shape is None:
                 buffer_shape = determine_downsample_buffer_shape(prev_mag_view.info)
+            chunk_size = chunk_size * target_mag if chunk_size is not None else None
+
             func = named_partial(
                 downsample_cube_job,
                 mag_factors=mag_factors,
@@ -1173,6 +1179,8 @@ class Layer(AbstractLayer):
                 # this view is restricted to the bounding box specified in the properties
                 func,
                 target_view=target_view,
+                source_chunk_shape=chunk_size,
+                target_chunk_shape=chunk_size,
                 executor=executor,
                 progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",
             )
@@ -1245,9 +1253,9 @@ class Layer(AbstractLayer):
 
         See downsample_mag() for more details on parameters.
         """
-        assert (
-            from_mag in self.mags.keys()
-        ), f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+        assert from_mag in self.mags.keys(), (
+            f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+        )
 
         # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
         target_mags = sorted(target_mags, key=lambda m: m.to_list())
@@ -1284,6 +1292,8 @@ class Layer(AbstractLayer):
         align_with_other_layers: Union[bool, "Dataset"] = True,
         buffer_shape: Vec3IntLike | None = None,
         executor: Executor | None = None,
+        chunk_size: Vec3IntLike | None = None,
+        allow_overwrite: bool = False,
     ) -> None:
         """Upsample data to finer magnifications.
 
@@ -1301,6 +1311,9 @@ class Layer(AbstractLayer):
             align_with_other_layers: Whether to align mags with others. Defaults to True.
             buffer_shape (Vec3IntLike | None): Shape of processing buffer.
             executor (Executor | None): Executor for parallel processing.
+            chunk_size (Vec3IntLike | None): Size of processing chunks in target mag.
+            allow_overwrite: Whether to allow overwriting existing mag
+
 
         Raises:
             AssertionError: If from_mag doesn't exist or finest_mag invalid
@@ -1309,9 +1322,9 @@ class Layer(AbstractLayer):
 
         self._dataset._ensure_writable()
 
-        assert (
-            from_mag in self.mags.keys()
-        ), f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        assert from_mag in self.mags.keys(), (
+            f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+        )
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -1341,7 +1354,9 @@ class Layer(AbstractLayer):
             [from_mag] + mags_to_upsample[:-1], mags_to_upsample
         ):
             assert prev_mag > target_mag
-            assert target_mag not in self.mags
+            assert allow_overwrite or target_mag not in self.mags, (
+                "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
+            )
 
             prev_mag_view = self.mags[prev_mag]
 
@@ -1349,12 +1364,15 @@ class Layer(AbstractLayer):
                 t / s for (t, s) in zip(target_mag.to_list(), prev_mag.to_list())
             ]
 
-            # initialize the new mag
-            target_mag_view = self._initialize_mag_from_other_mag(
-                target_mag,
-                prev_mag_view,
-                compress=compress,
-            )
+            if target_mag in self.mags.keys() and allow_overwrite:
+                target_mag_view = self.get_mag(target_mag)
+            else:
+                # initialize the new mag
+                target_mag_view = self._initialize_mag_from_other_mag(
+                    target_mag,
+                    prev_mag_view,
+                    compress=compress,
+                )
 
             # We need to make sure the layer's bounding box is aligned
             # with the previous mag. Otherwise, `for_zipped_chunks` will fail.
@@ -1369,10 +1387,10 @@ class Layer(AbstractLayer):
             with get_executor_for_args(None, executor) as actual_executor:
                 if buffer_shape is None:
                     buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
-                    chunk_shape = None
                 else:
                     buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
-                    chunk_shape = buffer_shape * prev_mag,
+                chunk_size = chunk_size * target_mag if chunk_size is not None else None
+
                 func = named_partial(
                     upsample_cube_job,
                     mag_factors=mag_factors,
@@ -1384,8 +1402,8 @@ class Layer(AbstractLayer):
                     # this view is restricted to the bounding box specified in the properties
                     func,
                     target_view=target_view,
-                    source_chunk_shape=chunk_shape,
-                    target_chunk_shape=chunk_shape,
+                    source_chunk_shape=chunk_size,
+                    target_chunk_shape=chunk_size,
                     executor=actual_executor,
                     progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
                 )
