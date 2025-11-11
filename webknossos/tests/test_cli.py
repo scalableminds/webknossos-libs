@@ -586,7 +586,7 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_upath: UPath) -> None:
             for x_tile_index in range(ceil(tile_bbox.size.x / tile_bbox.size.x)):
                 tiff_path = (
                     destination_path
-                    / f"{data_slice_index + 1}"
+                    / f"{data_slice_index}"
                     / f"{y_tile_index + 1}"
                     / f"{x_tile_index + 1}.tiff"
                 )
