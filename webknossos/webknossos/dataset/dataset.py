@@ -585,7 +585,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 self._properties, path_prefix
             ),
         )
-        self._copy_or_symlink_dataset_to_paths(response.data_source, transfer_mode)
+        self._transfer_dataset_items(response.data_source, transfer_mode)
 
         client.finish_dataset_upload_to_paths(dataset_id)
 
@@ -651,7 +651,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ]
         )
 
-        if transfer_mode in (TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK):
+        if transfer_mode in (
+            TransferMode.COPY,
+            TransferMode.MOVE_AND_SYMLINK,
+            TransferMode.SYMLINK,
+        ):
             client = _get_api_client()
             response = client.reserve_dataset_upload_to_paths(
                 ApiReserveDatasetUplaodToPathsParameters(
@@ -672,7 +676,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             new_dataset_id = response.new_dataset_id
             data_source = response.data_source
 
-            self._copy_or_symlink_dataset_to_paths(data_source, transfer_mode)
+            self._transfer_dataset_items(data_source, transfer_mode)
             # announce finished upload
             client.finish_dataset_upload_to_paths(new_dataset_id)
         else:
@@ -696,15 +700,17 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         return RemoteDataset.open(dataset_id=new_dataset_id)
 
-    def _copy_or_symlink_dataset_to_paths(
+    def _transfer_dataset_items(
         self, data_source: DatasetProperties, transfer_mode: TransferMode
     ) -> None:
         """
-        Iterates over the mags and attachments and copies or moves then symlinks them to the target location.
+        Iterates over the mags and attachments and transfers them to the target location.
         """
-        assert transfer_mode in (TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK), (
-            f"transfer mode not supported. found {transfer_mode}"
-        )
+        assert transfer_mode in (
+            TransferMode.COPY,
+            TransferMode.MOVE_AND_SYMLINK,
+            TransferMode.SYMLINK,
+        ), f"transfer mode not supported. found {transfer_mode}"
 
         # transfer data
         for layer in data_source.data_layers:

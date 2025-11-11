@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.2...HEAD)
 
 ### Breaking Changes
 
@@ -20,6 +20,21 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
 
 ### Fixed
+
+
+## [3.0.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.2) - 2025-11-10
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.1...v3.0.2)
+
+### Added
+- Added symlink transfer mode. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
+- Added method RemoteSegmentationLayer.upload_attachment. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
+
+### Changed
+- RemoteLayers are read-only in the zarr_streaming case. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
+
+### Fixed
+- RemoteSegmentationLayers and RemoteAttachments now sync correctly to the server state. [#1390](https://github.com/scalableminds/webknossos-libs/pull/1390)
+
 
 
 ## [3.0.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.1) - 2025-10-30

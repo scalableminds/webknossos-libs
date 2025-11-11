@@ -321,7 +321,7 @@ class AbstractLayer:
     ) -> None:
         self._ensure_metadata_writable()
         self._properties.default_view_configuration = view_configuration
-        self._save_layer_properties()  # update properties on disk
+        self._save_layer_properties()
 
     @property
     def read_only(self) -> bool:

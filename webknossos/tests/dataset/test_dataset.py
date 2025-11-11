@@ -2258,12 +2258,13 @@ def test_dataset_shallow_copy(data_format: DataFormat, output_path: UPath) -> No
     assert len(Dataset.open(copy_path).get_layer("color").mags) == 3, (
         "Expecting all mags from original dataset and new downsampled mag"
     )
-    assert (
+    assert str(
         shallow_copy_of_ds.get_segmentation_layer("segmentation")
         .attachments.agglomerates[0]
         .path
-        == ds_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"
-    ), "Expecting agglomerates to exist in shallow copy"
+    ) == str(ds_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"), (
+        "Expecting agglomerates to exist in shallow copy"
+    )
 
     assert not (
         copy_path / "segmentation" / "agglomerates" / "agglomerate_view.hdf5"

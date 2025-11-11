@@ -8,8 +8,10 @@ from webknossos import (
     AttachmentDataFormat,
     Dataset,
     MeshAttachment,
+    RemoteDataset,
     SegmentationLayer,
     SegmentIndexAttachment,
+    TransferMode,
 )
 from webknossos.geometry import BoundingBox
 
@@ -272,6 +274,37 @@ def test_upload_fail(tmp_upath: UPath) -> None:
 
     with pytest.raises(NotImplementedError):
         dataset.upload()
+
+
+@pytest.mark.skip(
+    reason="This won't work in CI as the paths stored in cassettes are always absolute and dependent on the system recording the cassette."
+)
+def test_upload_attachment(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
+    mesh_attachment = MeshAttachment.from_path_and_name(
+        dataset.path / "seg" / "meshfile",
+        name="meshfile",
+        data_format=AttachmentDataFormat.Zarr3,
+    )
+    # create empty meshfile
+    mesh_attachment.path.mkdir(parents=True)
+    mesh_attachment.path.touch()
+
+    remote_dataset = dataset.upload(transfer_mode=TransferMode.SYMLINK)
+    remote_dataset = RemoteDataset.open(
+        dataset_id=remote_dataset.dataset_id, use_zarr_streaming=False
+    )
+    remote_segmentation_layer = remote_dataset.get_segmentation_layer(seg_layer.name)
+    mesh_attachment_from_remote = (
+        remote_segmentation_layer.attachments.upload_attachment(
+            mesh_attachment, transfer_mode=TransferMode.MOVE_AND_SYMLINK
+        )
+    )
+    assert len(remote_segmentation_layer.attachments.meshes) == 1
+    assert (
+        mesh_attachment_from_remote.path
+        == remote_segmentation_layer.attachments.meshes[0].path
+    )
 
 
 def test_unique_attachment_names(tmp_upath: UPath) -> None:
