@@ -267,14 +267,8 @@ class Attachments(AbstractAttachments):
                 raise KeyError(
                     f"Attachment {attachment} is not part of {container_name}."
                 )
-            setattr(self, container_name, None)
             setattr(self._properties, container_name, None)
         else:
-            setattr(
-                self,
-                container_name,
-                tuple(p for p in getattr(self, container_name) if p != attachment),
-            )
             properties_container = getattr(self._properties, container_name)
             properties_container.remove(attachment._properties)
             if len(properties_container) == 0:

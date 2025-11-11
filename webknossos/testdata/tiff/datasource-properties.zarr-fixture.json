@@ -11,7 +11,7 @@
   "dataLayers": [
     {
       "name": "tiff",
-      "category": "segmentation",
+      "category": "color",
       "boundingBox": {
         "topLeft": [0, 0, 0],
         "width": 265,
@@ -32,8 +32,7 @@
           "path": "./tiff/1"
         }
       ],
-      "numChannels": 1,
-      "largestSegmentId": 255
+      "numChannels": 1
     }
   ]
 }

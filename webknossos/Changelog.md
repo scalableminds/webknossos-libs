@@ -20,6 +20,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
 
 ### Fixed
+- Fixed test.py to actually fail, if tests fail. [#1392](https://github.com/scalableminds/webknossos-libs/pull/1392)
+- Fixed Attachments.delete_attachment. [#1392](https://github.com/scalableminds/webknossos-libs/pull/1392)
 
 
 ## [3.0.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.2) - 2025-11-10
