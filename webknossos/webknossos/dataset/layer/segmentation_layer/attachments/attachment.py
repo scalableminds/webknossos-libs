@@ -82,6 +82,15 @@ class Attachment:
             path,
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Attachment):
+            return False
+        return (
+            self.name == other.name
+            and self.path == other.path
+            and self.data_format == other.data_format
+        )
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(path={repr(self.path)}, name={self.name}, data_format={self.data_format})"
 
