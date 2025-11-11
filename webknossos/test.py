@@ -215,7 +215,7 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
 def run_pytest(args: list[str]) -> None:
     process = subprocess.Popen(args)
     try:
-        process.wait()
+        exit_code = process.wait()
     except KeyboardInterrupt:
         print("Terminating pytest", flush=True)
         if IS_WINDOWS:
@@ -224,6 +224,8 @@ def run_pytest(args: list[str]) -> None:
             process.send_signal(signal.SIGINT)
         process.wait()
         raise
+    if exit_code != 0:
+        raise ValueError("pytest failed")
 
 
 def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) -> None:
