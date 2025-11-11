@@ -33,7 +33,7 @@ class RemoteFolder:
         """Adds a new folder with the specified name."""
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_folder = client.folder_add(folder_name=name, parent_id=self.id)
         return RemoteFolder(name=api_folder.name, id=api_folder.id)
 
@@ -42,7 +42,7 @@ class RemoteFolder:
         """Returns the folder specified by the passed id."""
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         folder_tree_response: list[ApiFolderWithParent] = client.folder_tree()
 
         for folder_info in folder_tree_response:
@@ -58,7 +58,7 @@ class RemoteFolder:
         from ..client.context import _get_api_client
 
         path = path.rstrip("/")
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         folder_tree_response: list[ApiFolderWithParent] = client.folder_tree()
 
         for folder_info in folder_tree_response:
@@ -74,7 +74,7 @@ class RemoteFolder:
 
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         root_folder = client.folder_root()
         return cls(name=root_folder.name, id=root_folder.id)
 
@@ -89,7 +89,7 @@ class RemoteFolder:
         """Returns all subfolders in this folder."""
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         folder_tree_response: list[ApiFolderWithParent] = client.folder_tree()
 
         return tuple(
@@ -108,7 +108,7 @@ class RemoteFolder:
     ) -> None:
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         folder = client.folder_get(folder_id=self.id)
         if metadata is not None:
             api_metadata = [
@@ -126,7 +126,7 @@ class RemoteFolder:
         """Move the folder to a new parent folder."""
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         client.folder_move(folder_id=self.id, new_parent_id=new_parent.id)
 
     @property
@@ -141,7 +141,7 @@ class RemoteFolder:
         """
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         return tuple(
             Team(id=t.id, name=t.name, organization_id=t.organization)
             for t in client.folder_get(folder_id=self.id).allowed_teams
@@ -154,7 +154,7 @@ class RemoteFolder:
 
         team_ids = [i.id if isinstance(i, Team) else i for i in allowed_teams]
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         folder = client.folder_get(folder_id=self.id)
         new_folder = ApiFolderUpdate(
             name=folder.name,
@@ -177,7 +177,7 @@ class RemoteFolder:
         """
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         folder = client.folder_get(folder_id=self.id)
         new_folder = ApiFolderUpdate(
             name=name,
@@ -191,5 +191,5 @@ class RemoteFolder:
         """Deletes the folder."""
         from ..client.context import _get_api_client
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         client.folder_delete(folder_id=self.id)

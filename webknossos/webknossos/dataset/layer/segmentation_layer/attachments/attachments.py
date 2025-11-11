@@ -208,11 +208,11 @@ class RemoteAttachments(AbstractAttachments):
             raise ValueError(f"Transfer mode {transfer_mode} is not supported.")
 
         target_dataset_id = self._layer.dataset.dataset_id
-        from webknossos.client.context import _get_context
+        from webknossos.client.context import _get_api_client
 
-        context = _get_context()
+        client = _get_api_client()
         new_path = enrich_path(
-            context.api_client_with_auth.reserve_attachment_upload_to_path(
+            client.reserve_attachment_upload_to_path(
                 target_dataset_id,
                 self._layer.name,
                 attachment.name,
@@ -224,7 +224,7 @@ class RemoteAttachments(AbstractAttachments):
         # transfer to target dataset
         transfer_mode.transfer(attachment.path, new_path)
 
-        context.api_client_with_auth.finish_attachment_upload_to_path(
+        client.finish_attachment_upload_to_path(
             target_dataset_id,
             self._layer.name,
             attachment.name,

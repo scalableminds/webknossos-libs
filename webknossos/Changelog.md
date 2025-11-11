@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
 
 ### Fixed
 

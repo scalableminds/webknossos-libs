@@ -78,13 +78,11 @@ def upload_dataset(
     time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
     upload_id = f"{time_str}__{uuid4()}"
     datastore_url = datastore_url or _cached_get_upload_datastore(context)
-    datastore_api_client = context.get_datastore_api_client(
-        datastore_url, require_auth=True
-    )
+    datastore_api_client = context.get_datastore_api_client(datastore_url)
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
     if "PYTEST_CURRENT_TEST" in os.environ:
         simultaneous_uploads = 1
-    is_valid_new_name_response = context.api_client_with_auth.dataset_is_valid_new_name(
+    is_valid_new_name_response = context.api_client.dataset_is_valid_new_name(
         dataset_name=new_dataset_name
     )
     if not is_valid_new_name_response.is_valid:
@@ -119,7 +117,7 @@ def upload_dataset(
                 "name": new_dataset_name,
                 "totalFileCount": len(file_infos),
             },
-            headers={"X-Auth-Token": context.required_token},
+            headers={"X-Auth-Token": context.token},
             chunk_size=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda _,
             relative_path: f"{upload_id}/{relative_path.as_posix()}",

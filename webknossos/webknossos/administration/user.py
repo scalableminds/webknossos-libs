@@ -30,7 +30,7 @@ class User:
     def get_logged_times(self) -> list["LoggedTime"]:
         """Get the logged times of this user.
         Returns a list of `LoggedTime` objects where one represents one month."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_logged_times: ApiLoggedTimeGroupedByMonth = client.user_logged_time(
             user_id=self.user_id
         )
@@ -66,27 +66,27 @@ class User:
     @classmethod
     def get_by_id(cls, id: str) -> "User":  # noqa: A002 Argument `id` is shadowing a Python builtin
         """Returns the user specified by the passed id if your token authorizes you to see them."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_user = client.user_by_id(user_id=id)
         return cls._from_api_user(api_user)
 
     @classmethod
     def get_current_user(cls) -> "User":
         """Returns the current user from the authentication context."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_user = client.user_current()
         return cls._from_api_user(api_user)
 
     @classmethod
     def get_all_managed_users(cls) -> list["User"]:
         """Returns all users of whom the current user is admin or team-manager."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_users = client.user_list()
         return [cls._from_api_user(i) for i in api_users]
 
     def assign_team_roles(self, team: "str | Team", is_team_manager: bool) -> None:
         """Assigns the specified roles to the user for the specified team."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_user = client.user_by_id(user_id=self.user_id)
         team_obj = Team.get_by_name(team) if isinstance(team, str) else team
         if team_obj.id in [t.id for t in api_user.teams]:
