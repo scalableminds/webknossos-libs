@@ -465,9 +465,7 @@ def test_export_tiff_stack(tmp_upath: UPath) -> None:
             (bbox.topleft.x, bbox.topleft.y, bbox.topleft.z + data_slice_index),
             (bbox.size.x, bbox.size.y, 1),
         )
-        tiff_path = destination_path / _make_tiff_name(
-            "test_export", data_slice_index + 1
-        )
+        tiff_path = destination_path / _make_tiff_name("test_export", data_slice_index)
 
         assert tiff_path.is_file(), f"Expected a tiff to be written at: {tiff_path}."
 
