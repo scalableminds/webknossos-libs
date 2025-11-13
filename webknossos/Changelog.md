@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
+- Updated pylibCZIrw package to 5.1.1, which does not require custom-built wheels anymore. [#1394](https://github.com/scalableminds/webknossos-libs/pull/1394)
 
 ### Fixed
 
