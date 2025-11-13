@@ -75,7 +75,7 @@ Changelog = "https://github.com/scalableminds/webknossos-libs/blob/master/webkno
 tifffile = ["tifffile >=2024.8.24, <2025.5.21"]
 imagecodecs = ["imagecodecs >=2021.11.20"]
 bioformats = ["JPype1 ~=1.5.0"]
-czi = ["pylibCZIrw ==5.0.0"]
+czi = ["pylibCZIrw ==5.1.1"]
 examples = [
     "fastremap ~=1.15.0",
     "pandas ~=2.2.0",
@@ -89,6 +89,7 @@ all = [
     "webknossos[tifffile]",
     "webknossos[imagecodecs]",
     "webknossos[bioformats]",
+    "webknossos[czi]",
     "webknossos[examples]",
 ]
 
@@ -111,9 +112,6 @@ dev = [
     "types-python-dateutil ~=2.9",
     "ruff ~=0.11.0",
 ]
-
-[tool.uv]
-extra-index-url = ["https://pypi.scm.io/simple"]
 
 [tool.uv.sources]
 cluster-tools = { path = "../cluster_tools", editable = true }
