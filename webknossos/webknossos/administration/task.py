@@ -90,7 +90,7 @@ class TaskType:
                     print(task_type.name)
                 ```
         """
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_tasks = client.task_type_list()
         return [cls._from_api_task_type(t) for t in api_tasks]
 
@@ -118,7 +118,7 @@ class TaskType:
                 print(task_type.name)
                 ```
         """
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         return cls._from_api_task_type(client.get_task_type(task_type_id=task_type_id))
 
     @classmethod
@@ -228,7 +228,7 @@ class TaskType:
                 print(task_type.id)
                 ```
         """
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         if isinstance(team, str):
             team = Team.get_by_name(team)
         team_name = team.name
@@ -247,7 +247,7 @@ class TaskType:
 
     def delete(self) -> None:
         """Deletes the task type."""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         client.task_type_delete(task_type_id=self.task_type_id)
 
 
@@ -290,7 +290,7 @@ class Task:
                 print(task.name)
                 ```
         """
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_task = client.task_info(task_id=task_id)
         return cls._from_api_task(api_task)
 
@@ -312,7 +312,7 @@ class Task:
                     print(task.name)
                 ```
         """
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_tasks = client.task_list()
         return [cls._from_api_task(t) for t in api_tasks]
 
@@ -379,7 +379,7 @@ class Task:
         if isinstance(project_name, Project):
             project_name = project_name.name
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         nml_task_parameters = ApiNmlTaskParameters(
             task_type_id=task_type_id,
             needed_experience=ApiExperience(
@@ -479,7 +479,7 @@ class Task:
                 ```
         """
 
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         assert dataset_id is not None or dataset_name is not None, (
             "Please provide a dataset_id to create a task."
         )
@@ -581,7 +581,7 @@ class Task:
             print(updated_task.remaining_instances)
             ```
         """
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_task = ApiTaskParameters(
             self.task_type.task_type_id,
             ApiExperience(self.experience.domain, self.experience.value),
@@ -605,12 +605,12 @@ class Task:
 
     def delete(self) -> None:
         """Deletes this task. WARNING: This is irreversible!"""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         client.task_delete(task_id=self.task_id)
 
     def get_annotation_infos(self) -> list[AnnotationInfo]:
         """Returns AnnotationInfo objects describing all task instances that have been started by annotators for this task"""
-        client = _get_api_client(enforce_auth=True)
+        client = _get_api_client()
         api_annotations = client.annotation_infos_by_task(task_id=self.task_id)
         return [AnnotationInfo._from_api_annotation(a) for a in api_annotations]
 

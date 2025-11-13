@@ -45,7 +45,7 @@ class AnnotationInfo:
         If owner is not None, only annotations of the specified owner are returned."""
         from ..client.context import _get_api_client
 
-        client = _get_api_client(True)
+        client = _get_api_client()
         if owner is None:
             owner = client.user_current().id
 

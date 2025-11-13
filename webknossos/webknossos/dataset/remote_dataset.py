@@ -41,6 +41,7 @@ _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 if TYPE_CHECKING:
     from webknossos.administration.user import Team
     from webknossos.dataset import Dataset
+    from webknossos.dataset_properties import LayerProperties
 
 
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
@@ -222,6 +223,13 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     read_only,
                 )
 
+    def _initialize_layer_from_properties(
+        self, properties: "LayerProperties", read_only: bool
+    ) -> RemoteLayer:
+        # When using zarr streaming, layers are read only.
+        read_only = self._use_zarr_streaming
+        return super()._initialize_layer_from_properties(properties, read_only)
+
     @property
     def _LayerType(self) -> type[RemoteLayer]:
         return RemoteLayer
@@ -239,6 +247,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         assert isinstance(api_dataset_info.data_source, DatasetProperties)
         return api_dataset_info.data_source
 
+    def _apply_server_dataset_properties(self) -> None:
+        self._properties = self._load_dataset_properties()
+
     def _save_dataset_properties_impl(self) -> None:
         """
         Exports the current dataset properties to the server.
@@ -250,8 +261,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         if self._use_zarr_streaming:
             # reset the dataset properties to the server state
-            data_source = self._load_dataset_properties()
-            self._init_from_properties(data_source, read_only=self.read_only)
+            self._apply_server_dataset_properties()
             raise RuntimeError("zarr streaming does not support updating this property")
 
         with self._context:
@@ -260,9 +270,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 dataset_id=self._dataset_id,
                 dataset_updates={"dataSource": self._properties},
             )
-            data_source = self._load_dataset_properties()
-
-            self._init_from_properties(data_source, read_only=self.read_only)
+            self._apply_server_dataset_properties()
 
     def __repr__(self) -> str:
         return f"RemoteDataset({repr(self.url)})"
@@ -768,9 +776,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     ) -> str:
         from webknossos import RemoteDataset
 
-        from ..client.context import _get_context
+        from ..client.context import _get_api_client
 
-        current_context = _get_context()
+        client = _get_api_client()
         possible_ids = list(
             RemoteDataset.list(
                 name=dataset_name, organization_id=organization_id
@@ -778,14 +786,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         )
         if len(possible_ids) == 0:
             try:
-                dataset_id = current_context.api_client_with_auth.dataset_id_from_name(
+                dataset_id = client.dataset_id_from_name(
                     directory_name=dataset_name, organization_id=organization_id
                 )
                 possible_ids.append(dataset_id)
-            except UnexpectedStatusError:
+            except UnexpectedStatusError as e:
                 raise ValueError(
                     f"Dataset with name {dataset_name} not found in organization {organization_id}"
-                )
+                ) from e
         elif len(possible_ids) > 1:
             logger.warning(
                 f"There are several datasets with same name '{dataset_name}' available online. Opened dataset with ID {possible_ids[0]}. "
@@ -955,9 +963,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             datastore_url = datastore_url or _cached_get_upload_datastore(context)
             organization_id = organization_id or context.organization_id
 
-            datastore_api = context.get_datastore_api_client(
-                datastore_url, require_auth=True
-            )
+            datastore_api = context.get_datastore_api_client(datastore_url)
             datastore_api.dataset_trigger_reload(
                 organization_id=organization_id, dataset_id=dataset_id, token=token
             )
@@ -992,14 +998,12 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             The dataset files must be accessible from the WEBKNOSSOS server
             for this to work. The data will be streamed through webknossos from the source.
         """
-        from ..client.context import _get_context
+        from ..client.context import _get_api_client
 
-        context = _get_context()
+        client = _get_api_client()
         dataset = ApiDatasetExploreAndAddRemote(
             UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
         )
-        dataset_id = context.api_client_with_auth.dataset_explore_and_add_remote(
-            dataset=dataset
-        )
+        dataset_id = client.dataset_explore_and_add_remote(dataset=dataset)
 
         return cls.open(dataset_id=dataset_id)

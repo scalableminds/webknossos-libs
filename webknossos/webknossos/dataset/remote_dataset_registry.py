@@ -29,7 +29,7 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         from ..client.context import _get_context
 
         context = _get_context()
-        client = context.api_client_with_auth
+        client = context.api_client
 
         if organization_id is None:
             organization_id = User.get_current_user().organization_id

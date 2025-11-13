@@ -54,3 +54,12 @@ class RemoteLayer(AbstractLayer):
 
     def get_finest_mag(self) -> MagView["RemoteLayer"]:
         return super().get_finest_mag()
+
+    def _ensure_writable(self) -> None:
+        if self.read_only:
+            raise RuntimeError(
+                f"Remote layer '{self.name}' is read-only, consider disabling zarr_streaming with RemoteDataset.open(use_zarr_streaming=False)"
+            )
+
+    def _apply_server_layer_properties(self) -> None:
+        self.dataset._apply_server_dataset_properties()

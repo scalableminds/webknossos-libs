@@ -15,26 +15,21 @@ def client() -> WkApiClient:
     return _get_api_client()
 
 
-@pytest.fixture
-def auth_client() -> WkApiClient:
-    return _get_api_client(enforce_auth=True)
-
-
 def test_health(client: WkApiClient) -> None:
     # No exception should be raised
     client.health()
 
 
-def test_annotation_info(auth_client: WkApiClient) -> None:
+def test_annotation_info(client: WkApiClient) -> None:
     annotation_id = "570ba0092a7c0e980056fe9b"
     typ = "Explorational"
-    api_annotation = auth_client.annotation_info(annotation_id=annotation_id)
+    api_annotation = client.annotation_info(annotation_id=annotation_id)
     assert api_annotation.id == annotation_id
     assert api_annotation.typ == typ
 
 
-def test_datastore_list(auth_client: WkApiClient) -> None:
-    datastores = auth_client.datastore_list()
+def test_datastore_list(client: WkApiClient) -> None:
+    datastores = client.datastore_list()
     internal_datastore = ApiDataStore(
         name="localhost",
         url="http://localhost:9000",
@@ -43,26 +38,23 @@ def test_datastore_list(auth_client: WkApiClient) -> None:
     assert internal_datastore in datastores
 
 
-def test_current_user_info_and_user_logged_time(auth_client: WkApiClient) -> None:
-    current_api_user = auth_client.user_current()
+def test_current_user_info_and_user_logged_time(client: WkApiClient) -> None:
+    current_api_user = client.user_current()
 
     assert len(current_api_user.email) > 0
     assert len(current_api_user.teams) > 0
     assert current_api_user.is_active
-    user_logged_time_response = auth_client.user_logged_time(
-        user_id=current_api_user.id
-    )
+    user_logged_time_response = client.user_logged_time(user_id=current_api_user.id)
     assert user_logged_time_response is not None
     assert isinstance(user_logged_time_response.logged_time, list)
 
 
-def test_user_list(auth_client: WkApiClient) -> None:
-    api_users = auth_client.user_list()
+def test_user_list(client: WkApiClient) -> None:
+    api_users = client.user_list()
     assert isinstance(api_users, list)
 
 
-def test_dataset_info() -> None:
-    client = _get_api_client()
+def test_dataset_info(client: WkApiClient) -> None:
     dataset_id = client.dataset_id_from_name(
         directory_name="l4_sample", organization_id="Organization_X"
     )

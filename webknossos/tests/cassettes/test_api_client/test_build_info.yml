@@ -22,13 +22,13 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Tue, 28 Oct 2025 09:05:26 GMT
+        date: Mon, 10 Nov 2025 13:22:07 GMT
         content-type: application/json
         content-length: '400'
       body:
         encoding: utf8
         data: >-
-          {"webknossos":{"name":"webknossos","ciTag":"","commitHash":"6c7c4f72fa3a4b3c7fe2bbd2868740dc09e4f502","ciBuild":"18866596954","scalaVersion":"2.13.16","version":"18866596954","sbtVersion":"1.11.4","commitDate":"Tue
-          Oct 28 07:52:49 2025
+          {"webknossos":{"name":"webknossos","ciTag":"","commitHash":"12861dd0fb559bce276735a35ea2efd09a7d9b30","ciBuild":"19229113534","scalaVersion":"2.13.16","version":"19229113534","sbtVersion":"1.11.7","commitDate":"Mon
+          Nov 10 11:51:14 2025
           +0100"},"schemaVersion":144,"httpApiVersioning":{"currentApiVersion":12,"oldestSupportedApiVersion":5},"localDataStoreEnabled":true,"localTracingStoreEnabled":true}
         compression: none
