@@ -35,7 +35,7 @@ def determine_downsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
     # data that is read is up to 512³ vx in the source magnification. Using larger
     # shapes uses a lot of RAM, especially for segmentation layers which use the mode filter.
     # See https://scm.slack.com/archives/CMBMU5684/p1749771929954699 for more context.
-    return Vec3Int.full(512).pairmin(array_info.shard_shape)
+    return Vec3Int.full(1024).pairmin(array_info.shard_shape)
 
 
 def determine_upsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
@@ -61,9 +61,9 @@ def calculate_mags_to_downsample(
             for mag in layer.mags.keys()
         )
     mags_to_align_with_by_max_dim = {mag.max_dim: mag for mag in mags_to_align_with}
-    assert len(mags_to_align_with) == len(mags_to_align_with_by_max_dim), (
-        "Some layers contain different values for the same mag, this is not allowed."
-    )
+    assert len(mags_to_align_with) == len(
+        mags_to_align_with_by_max_dim
+    ), "Some layers contain different values for the same mag, this is not allowed."
     while current_mag < coarsest_mag:
         if current_mag.max_dim * 2 in mags_to_align_with_by_max_dim:
             current_mag = mags_to_align_with_by_max_dim[current_mag.max_dim * 2]
