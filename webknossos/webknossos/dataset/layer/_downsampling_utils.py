@@ -35,7 +35,7 @@ def determine_downsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
     # data that is read is up to 512³ vx in the source magnification. Using larger
     # shapes uses a lot of RAM, especially for segmentation layers which use the mode filter.
     # See https://scm.slack.com/archives/CMBMU5684/p1749771929954699 for more context.
-    return Vec3Int.full(256).pairmin(array_info.shard_shape)
+    return Vec3Int.full(512).pairmin(array_info.shard_shape)
 
 
 def determine_upsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
