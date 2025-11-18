@@ -32,10 +32,10 @@ class InterpolationModes(Enum):
 
 def determine_downsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
     # This is the shape of the data in the downsampling target magnification, so the
-    # data that is read is up to 512³ vx in the source magnification. Using larger
+    # data that is read is up to 1024³ vx in the source magnification. Using larger
     # shapes uses a lot of RAM, especially for segmentation layers which use the mode filter.
     # See https://scm.slack.com/archives/CMBMU5684/p1749771929954699 for more context.
-    return Vec3Int.full(1024).pairmin(array_info.shard_shape)
+    return Vec3Int.full(512).pairmin(array_info.shard_shape)
 
 
 def determine_upsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
@@ -318,7 +318,7 @@ def downsample_cube_job(
         target_bbox_in_mag = target_view.bounding_box.in_mag(target_view.mag)
         shape = (num_channels,) + target_bbox_in_mag.size.to_tuple()
         shape_xyz = target_bbox_in_mag.size_xyz
-        file_buffer = np.zeros(shape, target_view.get_dtype())
+        file_buffer = np.zeros(shape, target_view.get_dtype(), order="F")
 
         tiles = product(
             *(

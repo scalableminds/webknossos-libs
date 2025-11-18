@@ -37,14 +37,9 @@ logger = logging.getLogger(__name__)
 
 
 def _try_open_zarr(path: UPath) -> tensorstore.TensorStore:
-    try:
-        return tensorstore.open(
-            {"driver": "zarr3", "kvstore": {"driver": "file", "path": path}}
-        ).result()
-    except tensorstore.TensorStoreError:
-        return tensorstore.open(
-            {"driver": "zarr", "kvstore": {"driver": "file", "path": path}}
-        ).result()
+    return tensorstore.open(
+        {"driver": "zarr3", "kvstore": {"driver": "file", "path": str(path)}}
+    ).result()
 
 
 def _zarr_chunk_converter(
