@@ -1176,7 +1176,7 @@ class Layer(AbstractLayer):
                 func,
                 target_view=target_view,
                 executor=executor,
-                source_chunk_shape=target_chunk_shape * from_mag.to_np(),
+                source_chunk_shape=target_chunk_shape * target_mag.to_np(),
                 target_chunk_shape=target_chunk_shape * target_mag.to_np(),
                 progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",
             )
