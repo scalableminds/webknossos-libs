@@ -1168,7 +1168,9 @@ class Layer(AbstractLayer):
                 interpolation_mode=parsed_interpolation_mode,
                 buffer_shape=buffer_shape,
             )
-            target_chunk_shape = Vec3Int([1024, 1024, 512]).pairmax(target_view.info.shard_shape)
+            target_chunk_shape = Vec3Int([1024, 1024, 512]).pairmax(
+                target_view.info.shard_shape
+            )
             source_view.for_zipped_chunks(
                 # this view is restricted to the bounding box specified in the properties
                 func,
