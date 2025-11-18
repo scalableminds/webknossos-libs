@@ -1161,19 +1161,21 @@ class Layer(AbstractLayer):
         # perform downsampling
         with get_executor_for_args(None, executor) as executor:
             if buffer_shape is None:
-                buffer_shape = determine_downsample_buffer_shape(prev_mag_view.info)
+                buffer_shape = determine_downsample_buffer_shape(target_view.info)
             func = named_partial(
                 downsample_cube_job,
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
                 buffer_shape=buffer_shape,
             )
-
+            target_chunk_shape = Vec3Int([1024, 1024, 512]).pairmax(target_view.info.shard_shape)
             source_view.for_zipped_chunks(
                 # this view is restricted to the bounding box specified in the properties
                 func,
                 target_view=target_view,
                 executor=executor,
+                source_chunk_shape=target_chunk_shape * from_mag.to_np(),
+                target_chunk_shape=target_chunk_shape * target_mag.to_np(),
                 progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",
             )
 
