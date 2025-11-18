@@ -283,15 +283,7 @@ def fast_mode(input_array: np.ndarray) -> np.ndarray:
             if not found_value:
                 values[value_offset] = value
                 value_offset += 1
-        max_counter = counter.max()
-        # initialize with max value of values.dtype
-        mode = np.iinfo(values.dtype).max
-        for i in range(counter.shape[0]):
-            if counter[i] == max_counter:
-                value = values[i]
-                if value < mode:
-                    mode = value
-        # mode = values[np.argmax(counter)]
+        mode = values[np.argmax(counter)]
         output_array[row_index] = mode
 
     return output_array
