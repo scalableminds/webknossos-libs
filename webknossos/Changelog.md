@@ -21,6 +21,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Updated pylibCZIrw package to 5.1.1, which does not require custom-built wheels anymore. [#1394](https://github.com/scalableminds/webknossos-libs/pull/1394)
 
 ### Fixed
+- Fix mag and attachment paths in Zarr annotation volume layer export. [#1401](https://github.com/scalableminds/webknossos-libs/pull/1401)
 
 
 ## [3.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.3) - 2025-11-11
