@@ -116,7 +116,7 @@ def download_dataset(
                     dataset_id=dataset_id,
                     data_layer_name=layer_name,
                     mag=mag.to_long_layer_name(),
-                    token=sharing_token,
+                    sharing_token=sharing_token,
                     x=chunk.topleft.x,
                     y=chunk.topleft.y,
                     z=chunk.topleft.z,

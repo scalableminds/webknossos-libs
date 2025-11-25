@@ -45,7 +45,7 @@ class RemoteSegmentationLayer(
         mapping_type: Literal["agglomerate", "json"] | None = None,
         mag: MagLike | None = None,
         seed_position: Vec3Int | None = None,
-        token: str | None = None,
+        sharing_token: str | None = None,
     ) -> UPath:
         from webknossos.client.context import _get_context
         from webknossos.datastore import Datastore
@@ -74,16 +74,16 @@ class RemoteSegmentationLayer(
                 seed_position=seed_position.to_tuple(),
             )
         file_path: UPath
-        datastore = context.get_datastore_api_client(datastore_url=datastore_url)
+        datastore_client = context.get_datastore_api_client(datastore_url=datastore_url)
         api_dataset = context.api_client.dataset_info(
             dataset_id=self.dataset.dataset_id
         )
         directory_name = api_dataset.directory_name
-        mesh_download = datastore.download_mesh(
+        mesh_download = datastore_client.download_mesh(
             mesh_info=mesh_info,
             dataset_id=self.dataset.dataset_id,
             layer_name=self.name,
-            token=token,
+            sharing_token=sharing_token,
         )
         file_path = UPath(output_dir) / f"{directory_name}_{self.name}_{segment_id}.stl"
 

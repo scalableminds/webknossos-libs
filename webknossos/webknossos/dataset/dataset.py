@@ -752,7 +752,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
         organization: str | None = None,
-        token: str | None = None,
         datastore_url: str | None = None,
     ) -> None:
         warn_deprecated(
@@ -765,14 +764,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             webknossos_url=webknossos_url,
             dataset_id=dataset_id,
             organization=organization,
-            token=token,
             datastore_url=datastore_url,
         )
 
     @classmethod
-    def trigger_dataset_import(
-        cls, directory_name: str, organization: str, token: str | None = None
-    ) -> None:
+    def trigger_dataset_import(cls, directory_name: str, organization: str) -> None:
         """Deprecated. Use `Dataset.trigger_reload_in_datastore` instead."""
         warn_deprecated(
             "trigger_dataset_import", "RemoteDataset.trigger_reload_in_datastore"
@@ -781,7 +777,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         cls.trigger_reload_in_datastore(
             dataset_name_or_url=directory_name,
             organization_id=organization,
-            token=token,
         )
 
     @classmethod
