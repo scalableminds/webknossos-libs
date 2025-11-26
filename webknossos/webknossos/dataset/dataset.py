@@ -428,9 +428,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def _initialize_layer_from_properties(
         self, properties: LayerProperties, read_only: bool
     ) -> Layer:
-        # If the numChannels key is not present in the dataset properties, assume it is 1.
+        # If the numChannels key is not present in the dataset properties, assume it is 1 unless we have uint24.
         if properties.num_channels is None:
-            properties.num_channels = 1
+            if properties.element_class == "uint24":
+                properties.num_channels = 3
+            else:
+                properties.num_channels = 1
         return super()._initialize_layer_from_properties(properties, read_only)
 
     @classmethod
