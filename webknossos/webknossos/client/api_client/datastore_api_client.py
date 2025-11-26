@@ -65,11 +65,9 @@ class DatastoreApiClient(AbstractApiClient):
         *,
         organization_id: str,
         dataset_id: str,
-        token: str | None = None,
     ) -> None:
         route = f"/triggers/reload/{organization_id}/{dataset_id}"
-        query: Query = {"token": token}
-        self._post(route, query=query)
+        self._post(route)
 
     def dataset_get_raw_data(
         self,
@@ -77,7 +75,7 @@ class DatastoreApiClient(AbstractApiClient):
         dataset_id: str,
         data_layer_name: str,
         mag: str,
-        token: str | None,
+        sharing_token: str | None,
         x: int,
         y: int,
         z: int,
@@ -94,7 +92,7 @@ class DatastoreApiClient(AbstractApiClient):
             "width": width,
             "height": height,
             "depth": depth,
-            "token": token,
+            "token": sharing_token,
         }
         response = self._get(route, query)
         return response.content, response.headers.get("MISSING-BUCKETS")
@@ -105,10 +103,10 @@ class DatastoreApiClient(AbstractApiClient):
         mesh_info: ApiPrecomputedMeshInfo | ApiAdHocMeshInfo,
         dataset_id: str,
         layer_name: str,
-        token: str | None,
+        sharing_token: str | None,
     ) -> Iterator[bytes]:
         route = f"/datasets/{dataset_id}/layers/{layer_name}/meshes/fullMesh.stl"
-        query: Query = {"token": token}
+        query: Query = {"token": sharing_token}
         yield from self._post_json_with_bytes_iterator_response(
             route=route,
             body_structured=mesh_info,
