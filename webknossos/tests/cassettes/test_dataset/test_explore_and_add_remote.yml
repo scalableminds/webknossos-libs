@@ -20,7 +20,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 26 Nov 2025 10:04:15 GMT
+        date: Wed, 26 Nov 2025 10:30:55 GMT
         content-type: text/html; charset=UTF-8
         content-length: '1487'
       body:
@@ -55,16 +55,16 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 26 Nov 2025 10:04:15 GMT
+        date: Wed, 26 Nov 2025 10:30:55 GMT
         content-type: application/json
         content-length: '26'
       body:
         encoding: utf8
-        data: '"6926d09f0100009d0061201d"'
+        data: '"6926d6df010000ac003d8523"'
         compression: none
   - request:
       method: GET
-      path: /api/v12/datasets/6926d09f0100009d0061201d
+      path: /api/v12/datasets/6926d6df010000ac003d8523
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -84,17 +84,17 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 26 Nov 2025 10:04:15 GMT
+        date: Wed, 26 Nov 2025 10:30:55 GMT
         content-type: application/json
         content-length: '2809'
       body:
         encoding: utf8
         data: >-
-          {"id":"6926d09f0100009d0061201d","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-6926d09f0100009d0061201d","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-6926d09f0100009d0061201d","created":1764151455419,"isEditable":true,"lastUsedByUser":1764151455463,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1764151455419,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":true}
+          {"id":"6926d6df010000ac003d8523","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-6926d6df010000ac003d8523","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-6926d6df010000ac003d8523","created":1764153055951,"isEditable":true,"lastUsedByUser":1764153056010,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1764153055951,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":true}
         compression: none
   - request:
       method: HEAD
-      path: /data/v12/zarr/6926d09f0100009d0061201d/datasource-properties.json
+      path: /data/v12/zarr/6926d6df010000ac003d8523/datasource-properties.json
       headers:
         host: localhost:9000
         x-auth-token: >-
@@ -115,7 +115,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 26 Nov 2025 10:04:15 GMT
+        date: Wed, 26 Nov 2025 10:30:55 GMT
         content-type: application/json
         content-length: '1560'
       body:
@@ -124,7 +124,7 @@ http_interactions:
         compression: none
   - request:
       method: GET
-      path: /data/v12/zarr/6926d09f0100009d0061201d/datasource-properties.json
+      path: /data/v12/zarr/6926d6df010000ac003d8523/datasource-properties.json
       headers:
         host: localhost:9000
         x-auth-token: >-
@@ -146,17 +146,17 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 26 Nov 2025 10:04:15 GMT
+        date: Wed, 26 Nov 2025 10:30:55 GMT
         content-type: application/json
         content-length: '1560'
       body:
         encoding: utf8
         data: >-
-          {"id":{"name":"added_remote_ds-6926d09f0100009d0061201d","team":"Organization_X"},"dataLayers":[{"category":"color","name":"color","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1},{"category":"segmentation","name":"segmentation","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
+          {"id":{"name":"added_remote_ds-6926d6df010000ac003d8523","team":"Organization_X"},"dataLayers":[{"category":"color","name":"color","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint8","mags":[{"mag":[1,1,1],"path":"./color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1},{"category":"segmentation","name":"segmentation","dataFormat":"zarr","boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024},"elementClass":"uint32","mags":[{"mag":[1,1,1],"path":"./segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"./segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"./segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"./segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"./segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"largestSegmentId":2504697,"resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"numChannels":1}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}}
         compression: none
   - request:
       method: GET
-      path: /api/v12/datasets/6926d09f0100009d0061201d
+      path: /api/v12/datasets/6926d6df010000ac003d8523
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -176,11 +176,11 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Wed, 26 Nov 2025 10:04:15 GMT
+        date: Wed, 26 Nov 2025 10:30:55 GMT
         content-type: application/json
         content-length: '2809'
       body:
         encoding: utf8
         data: >-
-          {"id":"6926d09f0100009d0061201d","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-6926d09f0100009d0061201d","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-6926d09f0100009d0061201d","created":1764151455419,"isEditable":true,"lastUsedByUser":1764151455532,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1764151455419,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":true}
+          {"id":"6926d6df010000ac003d8523","name":"added_remote_ds","dataSource":{"id":{"name":"added_remote_ds-6926d6df010000ac003d8523","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"defaultViewConfiguration":{"color":[255,0,0]},"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[],"allowedTeamsCumulative":[],"isActive":true,"isPublic":false,"description":null,"directoryName":"added_remote_ds-6926d6df010000ac003d8523","created":1764153055951,"isEditable":true,"lastUsedByUser":1764153056140,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1764153055951,"metadata":[],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":true}
         compression: none
