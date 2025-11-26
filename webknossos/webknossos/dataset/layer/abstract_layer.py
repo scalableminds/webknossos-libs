@@ -70,7 +70,7 @@ def _dtype_per_layer_to_dtype_per_channel(
         )
     except TypeError as e:
         raise TypeError(
-            "Converting dtype_per_layer to dtype_per_channel failed. Double check if the dtype_per_layer value is correct."
+            f"Converting dtype_per_layer to dtype_per_channel failed. Double check if the dtype_per_layer value is correct. Got {dtype_per_layer} and {num_channels} channels."
         ) from e
 
 
