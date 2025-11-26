@@ -10,11 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.4...HEAD)
 
 ### Breaking Changes
 
 ### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.4) - 2025-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...v3.0.4)
 
 ### Changed
 - The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
@@ -23,6 +31,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed a bug where user tokens would sometimes show up in the logging as a GET parameter. [#1400](https://github.com/scalableminds/webknossos-libs/pull/1400)
+
 
 ## [3.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.3) - 2025-11-11
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.2...v3.0.3)
