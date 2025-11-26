@@ -680,6 +680,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         mapping_type: Literal["agglomerate", "json"] | None = None,
         mag: MagLike | None = None,
         seed_position: Vec3Int | None = None,
+        token: str | None = None,
         sharing_token: str | None = None,
     ) -> UPath:
         warn_deprecated(
@@ -704,6 +705,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             mapping_type,
             mag,
             seed_position,
+            token,
             sharing_token,
         )
 
@@ -908,8 +910,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         organization_id: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-        organization: str | None = None,
+        organization: str | None = None,  # deprecated, use organization_id instead
         datastore_url: str | None = None,
+        token: str | None = None,  # deprecated, use a webknossos context instead
     ) -> None:
         """Trigger a manual reload of the dataset's properties.
 
@@ -939,6 +942,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         from ..client._upload_dataset import _cached_get_upload_datastore
         from ..client.context import _get_context
 
+        if token is not None:
+            warn_deprecated("parameter: token", "a webknossos context")
+
         if organization is not None:
             warn_deprecated("organization", "organization_id")
             if organization_id is None:
@@ -951,7 +957,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         (context_manager, dataset_id, _, _) = cls._parse_remote(
             dataset_name_or_url,
             organization_id,
-            None,
+            token,
             webknossos_url,
             dataset_id,
         )

@@ -753,6 +753,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         dataset_id: str | None = None,
         organization: str | None = None,
         datastore_url: str | None = None,
+        token: str | None = None,
     ) -> None:
         warn_deprecated(
             "Dataset.trigger_reload_in_datastore",
@@ -765,10 +766,13 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             dataset_id=dataset_id,
             organization=organization,
             datastore_url=datastore_url,
+            token=token,
         )
 
     @classmethod
-    def trigger_dataset_import(cls, directory_name: str, organization: str) -> None:
+    def trigger_dataset_import(
+        cls, directory_name: str, organization: str, token: str
+    ) -> None:
         """Deprecated. Use `Dataset.trigger_reload_in_datastore` instead."""
         warn_deprecated(
             "trigger_dataset_import", "RemoteDataset.trigger_reload_in_datastore"
@@ -777,6 +781,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         cls.trigger_reload_in_datastore(
             dataset_name_or_url=directory_name,
             organization_id=organization,
+            token=token,
         )
 
     @classmethod
