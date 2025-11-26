@@ -111,8 +111,8 @@ class AbstractLayer:
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
-        assert _ALLOWED_LAYER_NAME_REGEX.match(properties.name), (
-            f"The layer name '{properties.name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+        assert "/" not in properties.name and not properties.name.startswith("."), (
+            f"The layer name '{properties.name}' is invalid."
         )
         self._dataset = dataset
         self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.

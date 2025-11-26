@@ -146,6 +146,15 @@ def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
     return None
 
 
+def _assert_valid_layer_name(layer_name: str) -> None:
+    from webknossos.dataset.layer.abstract_layer import _ALLOWED_LAYER_NAME_REGEX
+
+    if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
+        raise ValueError(
+            f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+        )
+
+
 class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     """A dataset is the entry point of the Dataset API.
 
@@ -1052,6 +1061,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         self._ensure_writable()
 
+        _assert_valid_layer_name(layer_name)
+
         if num_channels is None:
             num_channels = 1
 
@@ -1243,6 +1254,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     ) -> Layer:
         self._ensure_writable()
 
+        _assert_valid_layer_name(layer_name)
+
         if layer_name in self.layers.keys():
             raise IndexError(
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
@@ -1339,6 +1352,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             Magnifications are discovered automatically.
         """
         self._ensure_writable()
+
+        _assert_valid_layer_name(layer_name)
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
 
         array_info = _find_array_info(self.path / layer_name)
@@ -1445,6 +1460,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
+
+        _assert_valid_layer_name(layer_name)
         if category is None:
             image_path_for_category_guess: UPath
             if (
@@ -1965,6 +1982,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
+        else:
+            _assert_valid_layer_name(new_layer_name)
 
         if exists_ok:
             layer = self.get_or_add_layer(
@@ -2192,6 +2211,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
+        else:
+            _assert_valid_layer_name(new_layer_name)
 
         if new_layer_name in self.layers.keys():
             raise IndexError(
