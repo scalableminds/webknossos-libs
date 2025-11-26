@@ -22,6 +22,15 @@ def _validate_data_format(
         )
 
 
+def _validate_name(name: str) -> None:
+    from webknossos.dataset.layer.abstract_layer import _ALLOWED_LAYER_NAME_REGEX
+
+    if not _ALLOWED_LAYER_NAME_REGEX.match(name):
+        raise ValueError(
+            f"Name {name} is not allowed. It must only contain letters, numbers, underscores, hyphens and dots."
+        )
+
+
 class Attachment:
     _properties: AttachmentProperties
     name: str
@@ -44,10 +53,8 @@ class Attachment:
         properties: AttachmentProperties,
         path: UPath,
     ):
-        from webknossos.dataset.dataset import _assert_valid_layer_name
-
         _validate_data_format(self.__class__, properties.data_format)
-        _assert_valid_layer_name(properties.name)
+        _validate_name(properties.name)
         self._properties = properties
         self.name = properties.name
         self.path = path
@@ -73,15 +80,6 @@ class Attachment:
                 name=name, data_format=data_format, path=dump_path(path, dataset_path)
             ),
             path,
-        )
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Attachment):
-            return False
-        return (
-            self.name == other.name
-            and self.path == other.path
-            and self.data_format == other.data_format
         )
 
     def __repr__(self) -> str:

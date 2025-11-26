@@ -224,7 +224,7 @@ class Layer(AbstractLayer):
         Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
         Only layers on local file systems can be renamed.
         """
-        from webknossos.dataset.dataset import _assert_valid_layer_name
+        from webknossos.dataset.dataset import _validate_layer_name
 
         if layer_name == self.name:
             return
@@ -236,7 +236,7 @@ class Layer(AbstractLayer):
                 f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
             )
 
-        _assert_valid_layer_name(layer_name)
+        _validate_layer_name(layer_name)
 
         if self.path.exists():
             assert is_fs_path(self.dataset.path), (
