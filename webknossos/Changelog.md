@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fix mag and attachment paths in Zarr annotation volume layer export. [#1401](https://github.com/scalableminds/webknossos-libs/pull/1401)
 
 
 ## [3.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.4) - 2025-11-26
