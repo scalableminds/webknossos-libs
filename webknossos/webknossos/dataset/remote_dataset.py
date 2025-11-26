@@ -182,7 +182,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             wk_context = _get_context()
             token = sharing_token or wk_context.token
             api_dataset_info = wk_context.api_client.dataset_info(
-                dataset_id=dataset_id, sharing_token=token
+                dataset_id=dataset_id, sharing_token=sharing_token
             )
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
@@ -681,6 +681,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         mag: MagLike | None = None,
         seed_position: Vec3Int | None = None,
         token: str | None = None,
+        sharing_token: str | None = None,
     ) -> UPath:
         warn_deprecated(
             "RemoteDataset.download_mesh", "RemoteSegmentationLayer.download"
@@ -705,6 +706,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             mag,
             seed_position,
             token,
+            sharing_token,
         )
 
     @classmethod
@@ -908,9 +910,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         organization_id: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
-        organization: str | None = None,
-        token: str | None = None,
+        organization: str | None = None,  # deprecated, use organization_id instead
         datastore_url: str | None = None,
+        token: str | None = None,  # deprecated, use a webknossos context instead
     ) -> None:
         """Trigger a manual reload of the dataset's properties.
 
@@ -926,7 +928,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             organization_id: Organization ID where dataset is located
             datastore_url: Optional URL to the datastore
             webknossos_url: Optional URL to the webknossos server
-            token: Optional authentication token
 
         Examples:
             ```
@@ -941,6 +942,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         from ..client._upload_dataset import _cached_get_upload_datastore
         from ..client.context import _get_context
 
+        if token is not None:
+            warn_deprecated("parameter: token", "a webknossos context")
+
         if organization is not None:
             warn_deprecated("organization", "organization_id")
             if organization_id is None:
@@ -953,7 +957,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         (context_manager, dataset_id, _, _) = cls._parse_remote(
             dataset_name_or_url,
             organization_id,
-            None,
+            token,
             webknossos_url,
             dataset_id,
         )
@@ -963,9 +967,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             datastore_url = datastore_url or _cached_get_upload_datastore(context)
             organization_id = organization_id or context.organization_id
 
-            datastore_api = context.get_datastore_api_client(datastore_url)
-            datastore_api.dataset_trigger_reload(
-                organization_id=organization_id, dataset_id=dataset_id, token=token
+            datastore_client = context.get_datastore_api_client(datastore_url)
+            datastore_client.dataset_trigger_reload(
+                organization_id=organization_id, dataset_id=dataset_id
             )
 
     @classmethod

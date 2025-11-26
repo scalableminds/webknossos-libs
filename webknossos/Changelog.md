@@ -10,18 +10,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.4...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
-- Updated pylibCZIrw package to 5.1.1, which does not require custom-built wheels anymore. [#1394](https://github.com/scalableminds/webknossos-libs/pull/1394)
 
 ### Fixed
 - Fix mag and attachment paths in Zarr annotation volume layer export. [#1401](https://github.com/scalableminds/webknossos-libs/pull/1401)
+
+
+## [3.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.4) - 2025-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...v3.0.4)
+
+### Changed
+- The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
+- Updated pylibCZIrw package to 5.1.1, which does not require custom-built wheels anymore. [#1394](https://github.com/scalableminds/webknossos-libs/pull/1394)
+- In the methods `Dataset.trigger_dataset_import`, `Dataset.trigger_reload_in_datastore` and `RemoteDataset.trigger_reload_in_datastore` the parameter `token` was deprecated (use an authenticated webknossos context instead). In `RemoteDataset.download_mesh` and `RemoteSegmentationLayer.download_mesh` the parameter `token` was renamed to `sharing_token` to clarify that it is meant for a dataset sharing token. Otherwise, use an authenticated webknossos context instead. [#1400](https://github.com/scalableminds/webknossos-libs/pull/1400)
+
+### Fixed
+- Fixed a bug where user tokens would sometimes show up in the logging as a GET parameter. [#1400](https://github.com/scalableminds/webknossos-libs/pull/1400)
 
 
 ## [3.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.3) - 2025-11-11
