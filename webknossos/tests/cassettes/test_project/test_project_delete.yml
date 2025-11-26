@@ -21,7 +21,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 10 Nov 2025 13:20:08 GMT
+        date: Wed, 26 Nov 2025 10:04:10 GMT
         content-type: application/json
         content-length: '440'
       body:
@@ -51,7 +51,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 10 Nov 2025 13:20:08 GMT
+        date: Wed, 26 Nov 2025 10:04:10 GMT
         content-type: application/json
         content-length: '717'
       body:
@@ -86,17 +86,17 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 10 Nov 2025 13:20:08 GMT
+        date: Wed, 26 Nov 2025 10:04:10 GMT
         content-type: application/json
         content-length: '625'
       body:
         encoding: utf8
         data: >-
-          {"name":"test_delete_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"6911e688010000b100075abd","created":1762780808422}
+          {"name":"test_delete_project","team":"570b9f4b2a7c0e3b008da6ec","teamName":"team_X1","owner":{"id":"570b9f4d2a7c0e4d008da6ef","email":"user_a@scalableminds.com","firstName":"user_A","lastName":"last_A","isAdmin":true,"isDatasetManager":true,"isAnonymous":false,"teams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","isTeamManager":true},{"id":"59882b370d889b84020efd3f","name":"team_X3","isTeamManager":false},{"id":"59882b370d889b84020efd6f","name":"team_X4","isTeamManager":true}]},"priority":1,"paused":false,"expectedTime":1234,"isBlacklistedFromReport":false,"id":"6926d09a010000b300611ff4","created":1764151450414}
         compression: none
   - request:
       method: DELETE
-      path: /api/v12/projects/6911e688010000b100075abd
+      path: /api/v12/projects/6926d09a010000b300611ff4
       headers:
         host: localhost:9000
         accept: '*/*'
@@ -116,7 +116,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 10 Nov 2025 13:20:08 GMT
+        date: Wed, 26 Nov 2025 10:04:10 GMT
         content-type: application/json
         content-length: '61'
       body:
@@ -145,7 +145,7 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Mon, 10 Nov 2025 13:20:08 GMT
+        date: Wed, 26 Nov 2025 10:04:10 GMT
         content-type: application/json
         content-length: '53'
       body:
