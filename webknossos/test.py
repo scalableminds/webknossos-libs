@@ -205,13 +205,14 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
         yield
     finally:
         if proxay_process is not None:
-            print(
-                "Terminating proxay and its subprocesses with killpg (SIGTERM)...",
-                flush=True,
-            )
             if IS_WINDOWS:
+                print("Terminating proxay...")
                 proxay_process.terminate()
             else:
+                print(
+                    "Terminating proxay and its subprocesses with killpg (SIGTERM)...",
+                    flush=True,
+                )
                 pgid = os.getpgid(proxay_process.pid)
                 try:
                     os.killpg(pgid, signal.SIGTERM)
