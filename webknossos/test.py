@@ -206,13 +206,19 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
         yield
     finally:
         if proxay_process is not None:
-            print("Terminating proxay and its subprocesses with killpg (SIGTERM)...", flush=True)
+            print(
+                "Terminating proxay and its subprocesses with killpg (SIGTERM)...",
+                flush=True,
+            )
             pgid = os.getpgid(proxay_process.pid)
             try:
                 os.killpg(pgid, signal.SIGTERM)
                 proxay_process.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                print("Terminating proxay and its subprocesses with killpg (SIGKILL)...", flush=True)
+                print(
+                    "Terminating proxay and its subprocesses with killpg (SIGKILL)...",
+                    flush=True,
+                )
                 os.killpg(pgid, signal.SIGKILL)
 
 
