@@ -199,8 +199,7 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
             )
         else:
             proxay_process = subprocess.Popen(
-                cmd,
-                shell=IS_WINDOWS,
+                cmd, shell=IS_WINDOWS, start_new_session=True
             )
         sleep(1)
         yield
@@ -210,16 +209,19 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
                 "Terminating proxay and its subprocesses with killpg (SIGTERM)...",
                 flush=True,
             )
-            pgid = os.getpgid(proxay_process.pid)
-            try:
-                os.killpg(pgid, signal.SIGTERM)
-                proxay_process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                print(
-                    "Terminating proxay and its subprocesses with killpg (SIGKILL)...",
-                    flush=True,
-                )
-                os.killpg(pgid, signal.SIGKILL)
+            if IS_WINDOWS:
+                proxay_process.terminate()
+            else:
+                pgid = os.getpgid(proxay_process.pid)
+                try:
+                    os.killpg(pgid, signal.SIGTERM)
+                    proxay_process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    print(
+                        "Terminating proxay and its subprocesses with killpg (SIGKILL)...",
+                        flush=True,
+                    )
+                    os.killpg(pgid, signal.SIGKILL)
 
 
 def run_pytest(args: list[str]) -> None:
