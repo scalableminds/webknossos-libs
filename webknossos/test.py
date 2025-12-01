@@ -199,7 +199,7 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
             )
         else:
             proxay_process = subprocess.Popen(
-                cmd, shell=IS_WINDOWS, start_new_session=True
+                cmd, shell=IS_WINDOWS, start_new_session=(not IS_WINDOWS)
             )
         sleep(1)
         yield
