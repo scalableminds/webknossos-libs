@@ -12,7 +12,6 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-        group: [1, 2, 3]
       fail-fast: false
     defaults:
       run:
@@ -38,12 +37,12 @@ jobs:
       - name: Python tests, refreshing the network snapshots
         env:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        run: uv run test.py --refresh-snapshots --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --refresh-snapshots --splitting-algorithm least_duration
 
       - name: Python tests, using the new snapshots
         env:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --splitting-algorithm least_duration
 
       - uses: slackapi/slack-github-action@v2.1.1
         if: failure() || cancelled()
