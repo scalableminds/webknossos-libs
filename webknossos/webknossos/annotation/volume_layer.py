@@ -21,8 +21,11 @@ from zipp import Path as ZipPath
 
 from webknossos.dataset_properties import (
     SEGMENTATION_CATEGORY,
+    AttachmentProperties,
     DataFormat,
     DatasetProperties,
+    MagViewProperties,
+    SegmentationLayerProperties,
     get_dataset_converter,
 )
 
@@ -283,9 +286,37 @@ class VolumeLayer:
                 assert len(datasource_properties.data_layers) == 1, (
                     f"Volume data zip must contain exactly one layer, got {len(datasource_properties.data_layers)}"
                 )
-                layer_properties = datasource_properties.data_layers[0]
+                layer_properties = cast(
+                    SegmentationLayerProperties, datasource_properties.data_layers[0]
+                )
                 internal_layer_name = layer_properties.name
                 layer_properties.name = layer_name
+
+                def replace_property_path(
+                    layer_property: AttachmentProperties | None,
+                ) -> None:
+                    if layer_property:
+                        layer_property.path = layer_property.path.replace(
+                            internal_layer_name, layer_name
+                        )
+
+                def replace_properties_path(
+                    properties: Sequence[AttachmentProperties | MagViewProperties]
+                    | None,
+                ) -> None:
+                    if properties:
+                        for layer_property in properties:
+                            if layer_property.path:
+                                layer_property.path = layer_property.path.replace(
+                                    internal_layer_name, layer_name
+                                )
+
+                replace_properties_path(layer_properties.mags)
+                replace_properties_path(layer_properties.attachments.meshes)
+                replace_properties_path(layer_properties.attachments.agglomerates)
+                replace_property_path(layer_properties.attachments.segment_index)
+                replace_property_path(layer_properties.attachments.cumsum)
+                replace_properties_path(layer_properties.attachments.connectomes)
 
                 _extract_zip_folder(
                     data_zip, dataset.path / layer_name, f"{internal_layer_name}/"
