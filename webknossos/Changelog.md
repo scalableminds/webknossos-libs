@@ -17,6 +17,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Relaxed layer name validation to match WEBKNOSSOS behavior. [#1402](https://github.com/scalableminds/webknossos-libs/pull/1402)
+- Better heuristic for detecting number of channels, when `numChannels` is missing. [#1402](https://github.com/scalableminds/webknossos-libs/pull/1402)
 
 ### Fixed
 - Fix mag and attachment paths in Zarr annotation volume layer export. [#1401](https://github.com/scalableminds/webknossos-libs/pull/1401)
