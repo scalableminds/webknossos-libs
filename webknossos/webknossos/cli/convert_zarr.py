@@ -37,14 +37,12 @@ logger = logging.getLogger(__name__)
 
 
 def _try_open_zarr(path: UPath) -> tensorstore.TensorStore:
-    try:
-        return tensorstore.open(
-            {"driver": "zarr3", "kvstore": {"driver": "file", "path": path}}
-        ).result()
-    except tensorstore.TensorStoreError:
-        return tensorstore.open(
-            {"driver": "zarr", "kvstore": {"driver": "file", "path": path}}
-        ).result()
+    return tensorstore.open(
+        {
+            "driver": "auto",
+            "kvstore": {"driver": "file", "path": str(path)},
+        }
+    ).result()
 
 
 def _zarr_chunk_converter(
@@ -86,7 +84,7 @@ def convert_zarr(
     ref_time = time.time()
 
     file = _try_open_zarr(source_zarr_path)
-    input_dtype: np.dtype = file.dtype
+    input_dtype: np.dtype = file.dtype.numpy_dtype
     shape: tuple[int, ...] = file.domain.exclusive_max
 
     wk_ds = Dataset(
