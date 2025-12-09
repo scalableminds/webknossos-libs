@@ -33,6 +33,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - In the methods `Dataset.trigger_dataset_import`, `Dataset.trigger_reload_in_datastore` and `RemoteDataset.trigger_reload_in_datastore` the parameter `token` was deprecated (use an authenticated webknossos context instead). In `RemoteDataset.download_mesh` and `RemoteSegmentationLayer.download_mesh` the parameter `token` was renamed to `sharing_token` to clarify that it is meant for a dataset sharing token. Otherwise, use an authenticated webknossos context instead. [#1400](https://github.com/scalableminds/webknossos-libs/pull/1400)
 
 ### Fixed
+- Fixed bug in convert-zarr CLI command. [#1405](https://github.com/scalableminds/webknossos-libs/pull/1405)
 - Fixed a bug where user tokens would sometimes show up in the logging as a GET parameter. [#1400](https://github.com/scalableminds/webknossos-libs/pull/1400)
 
 

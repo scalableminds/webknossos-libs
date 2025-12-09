@@ -8,9 +8,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from math import ceil
 from tempfile import TemporaryDirectory
+from typing import Literal
 
 import numpy as np
 import pytest
+import tensorstore as ts
 from PIL import Image
 from typer.testing import CliRunner
 from upath import UPath
@@ -258,7 +260,7 @@ def test_convert() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff"
-        wkw_path = UPath("wkw_from_tiff_simple")
+        wkw_path = UPath("wk_from_tiff_simple")
 
         result = runner.invoke(
             app,
@@ -281,7 +283,7 @@ def test_convert_single_file() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff" / "test.0000.tiff"
-        wkw_path = UPath("wkw_from_tiff_single_file")
+        wkw_path = UPath("wk_from_tiff_single_file")
 
         result = runner.invoke(
             app,
@@ -303,7 +305,7 @@ def test_convert_with_all_params() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff_with_different_shapes"
-        wkw_path = UPath(f"wkw_from_{origin_path.name}")
+        wkw_path = UPath(f"wk_from_{origin_path.name}")
         with pytest.warns(UserWarning, match="Some images are larger than expected,"):
             result = runner.invoke(
                 app,
@@ -314,7 +316,7 @@ def test_convert_with_all_params() -> None:
                     "--data-format",
                     "wkw",
                     "--name",
-                    "wkw_from_tiff",
+                    "wk_from_tiff",
                     "--compress",
                     str(origin_path),
                     str(wkw_path),
@@ -333,7 +335,7 @@ def test_convert_raw() -> None:
         origin_path.write_bytes(
             np.array([[0.2, 0.4], [0.6, 0.8]], dtype="float32").tobytes(order="F")
         )
-        out_path = UPath(f"wkw_from_{origin_path.name}")
+        out_path = UPath(f"wk_from_{origin_path.name}")
         result = runner.invoke(
             app,
             [
@@ -360,6 +362,62 @@ def test_convert_raw() -> None:
         np.testing.assert_array_equal(
             out_ds.get_layer("color").get_finest_mag().read()[0],
             np.array([[[0], [85]], [[170], [255]]], dtype="uint8"),
+        )
+
+
+@pytest.mark.parametrize("zarr_format", ["zarr", "zarr3"])
+def test_convert_zarr(zarr_format: Literal["zarr", "zarr3"]) -> None:
+    """Tests the functionality of convert-zarr subcommand."""
+
+    with tmp_cwd():
+        test_data = np.arange(32 * 32 * 32, dtype="uint16").reshape(32, 32, 32)
+
+        origin_path = UPath("test.zarr")
+        metadata = (
+            {
+                "shape": [32, 32, 32],
+                "chunk_grid": {
+                    "name": "regular",
+                    "configuration": {"chunk_shape": [32, 32, 32]},
+                },
+                "data_type": "uint16",
+            }
+            if zarr_format == "zarr3"
+            else {
+                "shape": [32, 32, 32],
+                "chunks": [32, 32, 32],
+                "dtype": "<u2",
+            }
+        )
+
+        ts.open(
+            {
+                "driver": zarr_format,
+                "kvstore": {"driver": "file", "path": str(origin_path)},
+                "metadata": metadata,
+                "create": True,
+            }
+        ).result().write(test_data).result()
+
+        out_path = UPath(f"wk_from_{origin_path.name}")
+        result = runner.invoke(
+            app,
+            [
+                "convert-zarr",
+                "--voxel-size",
+                "11.0,11.0,11.0",
+                str(origin_path),
+                str(out_path),
+            ],
+        )
+
+        assert result.exit_code == 0, result.stdout
+        assert (out_path / PROPERTIES_FILE_NAME).exists()
+
+        out_ds = Dataset.open(out_path)
+        np.testing.assert_array_equal(
+            out_ds.get_layer("color").get_finest_mag().read()[0],
+            test_data,
         )
 
 
