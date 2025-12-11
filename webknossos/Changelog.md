@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.0) - 2025-12-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.4...v3.1.0)
 
 ### Added
 - Added `--folder` option to `upload` CLI command. [#1408](https://github.com/scalableminds/webknossos-libs/pull/1408)
@@ -23,6 +33,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fix mag and attachment paths in Zarr annotation volume layer export. [#1401](https://github.com/scalableminds/webknossos-libs/pull/1401)
+
 
 
 ## [3.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.4) - 2025-11-26
