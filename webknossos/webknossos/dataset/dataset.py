@@ -707,7 +707,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             from ..client._upload_dataset import upload_dataset
 
             new_dataset_id = upload_dataset(
-                self, new_dataset_name, converted_layers_to_link, jobs
+                self,
+                new_dataset_name,
+                converted_layers_to_link,
+                jobs,
+                folder_id=folder_id,
             )
 
         return RemoteDataset.open(dataset_id=new_dataset_id)
