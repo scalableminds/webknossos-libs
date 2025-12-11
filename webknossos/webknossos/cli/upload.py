@@ -42,7 +42,14 @@ def main(
         str | None,
         typer.Option(
             help="Alternative name to rename your dataset on upload to WEBKNOSSOS. "
-            "(if not provided, current name of dataset is used)",
+            "If not provided, current name of dataset is used.",
+        ),
+    ] = None,
+    folder_name: Annotated[
+        str | None,
+        typer.Option(
+            help="Folder name where the dataset is uploaded to WEBKNOSSOS. "
+            "If not provided, the root folder is used.",
         ),
     ] = None,
     jobs: Annotated[
@@ -57,5 +64,5 @@ def main(
 
     with webknossos_context(url=webknossos_url, token=token):
         Dataset.open(dataset_path=source).upload(
-            new_dataset_name=dataset_name, jobs=jobs
+            new_dataset_name=dataset_name, jobs=jobs, folder_name=folder_name
         )

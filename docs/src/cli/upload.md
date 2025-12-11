@@ -32,6 +32,10 @@ webknossos upload [OPTIONS] SOURCE
     Number of processes to spawn for parallel upload execution.  
     Default: 5.
 
+- `--folder-name`  
+    Folder name where the dataset is uploaded to WEBKNOSSOS.  
+    If not provided, the root folder is used.
+
 ### Environment Variables for Remote Paths
 
 When using remote paths (e.g., HTTP or S3), configure the following environment variables:
