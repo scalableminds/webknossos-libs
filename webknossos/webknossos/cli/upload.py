@@ -7,7 +7,7 @@ import typer
 from ..client import webknossos_context
 from ..client._defaults import DEFAULT_WEBKNOSSOS_URL
 from ..client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
-from ..dataset import Dataset
+from ..dataset import Dataset, RemoteFolder
 from ._utils import parse_path
 
 
@@ -45,10 +45,10 @@ def main(
             "If not provided, current name of dataset is used.",
         ),
     ] = None,
-    folder_name: Annotated[
+    folder: Annotated[
         str | None,
         typer.Option(
-            help="Folder name where the dataset is uploaded to WEBKNOSSOS. "
+            help="Folder where the dataset is uploaded to WEBKNOSSOS. Specify the folder name as a string, separated by `/`. "
             "If not provided, the root folder is used.",
         ),
     ] = None,
@@ -63,6 +63,9 @@ def main(
     """Upload a dataset to a WEBKNOSSOS server."""
 
     with webknossos_context(url=webknossos_url, token=token):
+        folder_id: None | RemoteFolder = None
+        if folder is not None:
+            folder_id = RemoteFolder.get_by_path(folder)
         Dataset.open(dataset_path=source).upload(
-            new_dataset_name=dataset_name, jobs=jobs, folder_name=folder_name
+            new_dataset_name=dataset_name, jobs=jobs, folder_id=folder_id
         )

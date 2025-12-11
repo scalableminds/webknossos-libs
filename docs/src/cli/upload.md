@@ -32,8 +32,8 @@ webknossos upload [OPTIONS] SOURCE
     Number of processes to spawn for parallel upload execution.  
     Default: 5.
 
-- `--folder-name`  
-    Folder name where the dataset is uploaded to WEBKNOSSOS.  
+- `--folder`  
+    Folder where the dataset is uploaded to WEBKNOSSOS. Specify the folder name as a string, separated by `/`.
     If not provided, the root folder is used.
 
 ### Environment Variables for Remote Paths
