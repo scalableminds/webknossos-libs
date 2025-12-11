@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `--folder` option to `upload` CLI command. [#1408](https://github.com/scalableminds/webknossos-libs/pull/1408)
 
 ### Changed
 - Relaxed layer name validation to match WEBKNOSSOS behavior. [#1402](https://github.com/scalableminds/webknossos-libs/pull/1402)
