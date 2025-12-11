@@ -42,13 +42,13 @@ def main(
         str | None,
         typer.Option(
             help="Alternative name to rename your dataset on upload to WEBKNOSSOS. "
-            "If not provided, current name of dataset is used.",
+            "If not provided, current dataset name is used.",
         ),
     ] = None,
     folder: Annotated[
         str | None,
         typer.Option(
-            help="Folder where the dataset is uploaded to WEBKNOSSOS. Specify the folder name as a string, separated by `/`. "
+            help="WEBKNOSSOS dataset folder in which the dataset should be placed. Specify the folder path as a string, separated by `/`. Note that this is about the folders listed in the dataset dashboard, and is independent of the underlying storage location. Example: `Datasets/mySubfolder`. "
             "If not provided, the root folder is used.",
         ),
     ] = None,

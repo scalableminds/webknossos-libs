@@ -33,7 +33,7 @@ webknossos upload [OPTIONS] SOURCE
     Default: 5.
 
 - `--folder`  
-    Folder where the dataset is uploaded to WEBKNOSSOS. Specify the folder name as a string, separated by `/`.
+    WEBKNOSSOS dataset folder in which the dataset should be placed. Specify the folder path as a string, separated by `/`. Note that this is about the folders listed in the dataset dashboard, and is independent of the underlying storage location. Example: `Datasets/mySubfolder`.  
     If not provided, the root folder is used.
 
 ### Environment Variables for Remote Paths
