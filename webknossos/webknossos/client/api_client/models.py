@@ -2,6 +2,7 @@ from typing import Any, Literal
 
 import attr
 
+from webknossos.ai_model.ai_model_category import AiModelCategory
 from webknossos.dataset_properties import DatasetProperties
 
 # Request and response bodies for wk/datastore routes
@@ -466,19 +467,11 @@ class ApiReserveDatasetUploadToPathsForPreliminaryResponse:
 
 @attr.s(auto_attribs=True)
 class ApiReserveAiModelUploadToPathParameters:
-    existing_ai_model_id: (
-        str | None
-    )  # pass id to reserve upload for existing preliminary model
+    existing_ai_model_id: str | None
     data_store_name: str
     name: str
     comment: str | None
-    category: Literal[
-        "em_neurons",
-        "em_nuclei",
-        "em_synapses",
-        "em_neuron_types",
-        "em_cell_organelles",
-    ]
+    category: AiModelCategory | None
     path_prefix: str | None
 
 
