@@ -2,7 +2,6 @@ from typing import Any, Literal
 
 import attr
 
-from webknossos.ai_model.ai_model_category import AiModelCategory
 from webknossos.dataset_properties import DatasetProperties
 
 # Request and response bodies for wk/datastore routes
@@ -471,7 +470,7 @@ class ApiReserveAiModelUploadToPathParameters:
     data_store_name: str
     name: str
     comment: str | None
-    category: AiModelCategory | None
+    category: str | None
     path_prefix: str | None
 
 

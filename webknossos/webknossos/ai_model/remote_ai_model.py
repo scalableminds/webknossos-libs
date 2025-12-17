@@ -47,7 +47,7 @@ class RemoteAiModel:
                 data_store_name,
                 name,
                 comment,
-                category,
+                str(category) if category is not None else None,
                 path_prefix,
             )
         )
