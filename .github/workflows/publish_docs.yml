@@ -30,7 +30,7 @@ jobs:
         run: |
           CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
           NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-          uvx --from awscli aws s3 cp -r --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
+          uvx --from awscli aws s3 cp --recursive --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
 
       - name: Check links (on master)
         env:
