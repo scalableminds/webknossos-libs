@@ -1,9 +1,10 @@
 import json
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
 from webknossos.client.api_client.models import (
+    ApiAiModel,
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
@@ -18,6 +19,7 @@ from webknossos.client.api_client.models import (
     ApiNmlTaskParameters,
     ApiProject,
     ApiProjectCreate,
+    ApiReserveAiModelUploadToPathParameters,
     ApiReserveAttachmentUploadToPathParameters,
     ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
@@ -421,3 +423,41 @@ class WkApiClient(AbstractApiClient):
 
     def finish_dataset_upload_to_paths(self, dataset_id: str) -> None:
         self._post(f"/datasets/{dataset_id}/finishUploadToPaths")
+
+    def reserve_ai_model_upload_to_path(
+        self,
+        existing_ai_model_id: str | None,
+        data_store_name: str,
+        name: str,
+        comment: str | None,
+        category: Literal[
+            "em_neurons",
+            "em_nuclei",
+            "em_synapses",
+            "em_neuron_types",
+            "em_cell_organelles",
+        ],
+        path_prefix: str | None,
+    ) -> tuple[str, str]:
+        route = "/aiModels/reserveUploadToPath"
+        ai_model = self._post_json_with_json_response(
+            route,
+            ApiReserveAiModelUploadToPathParameters(
+                existing_ai_model_id,
+                data_store_name,
+                name,
+                comment,
+                category,
+                path_prefix,
+            ),
+            ApiAiModel,
+        )
+        return ai_model.id, ai_model.path
+
+    def finish_ai_model_upload_to_path(self, ai_model_id: str) -> None:
+        self._post(f"/aiModels/{ai_model_id}/finishUploadToPath")
+
+    def get_ai_model_path(self, ai_model_id: str) -> str:
+        route = f"/aiModels/{ai_model_id}"
+        ai_model = self._get_json(route, ApiAiModel)
+        return ai_model.path
