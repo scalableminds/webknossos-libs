@@ -222,7 +222,9 @@ class RemoteAttachments(AbstractAttachments):
             )
         )
         # transfer to target dataset
-        transfer_mode.transfer(attachment.path, new_path)
+        transfer_mode.transfer(
+            attachment.path, new_path, progress_desc_label="attachment"
+        )
 
         client.finish_attachment_upload_to_path(
             target_dataset_id,
