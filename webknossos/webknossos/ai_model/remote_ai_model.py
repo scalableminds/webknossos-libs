@@ -52,7 +52,9 @@ class RemoteAiModel:
             )
         )
 
-        transfer_mode.transfer(src_path, UPath(target_info.path))
+        transfer_mode.transfer(
+            src_path, UPath(target_info.path), progress_desc_label="AI model"
+        )
 
         api_client.finish_ai_model_upload_to_path(target_info.id)
 
