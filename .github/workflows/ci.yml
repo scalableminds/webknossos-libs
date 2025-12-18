@@ -304,21 +304,19 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: "eu-west-1"
         run: |
           CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
           NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-          aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${NORMALIZED_CI_BRANCH}
+          aws s3 sync --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
 
       - name: Push docs (for tag)
         if: github.ref_type == 'tag'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: "eu-west-1"
         run: |
           CI_TAG=$(git describe --tags)
-          aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${CI_TAG}
+          aws s3 sync --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${CI_TAG}
 
       - name: Check links (on master)
         if: github.ref == 'refs/heads/master'
