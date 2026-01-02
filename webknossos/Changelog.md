@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `chunk_shape` argument to `View.content_is_equal`. [#1410](https://github.com/scalableminds/webknossos-libs/pull/1410)
 
 ### Changed
 

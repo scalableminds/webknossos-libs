@@ -1316,6 +1316,8 @@ class View:
         if self.bounding_box.size != other.bounding_box.size:
             return False
         with get_executor_for_args(None, executor) as executor:
+            # read-only views are required for more flexible chunk shapes
+            # otherwise, shard-aligned chunk shapes would be required
             read_only_self = self.get_view(read_only=True)
             read_only_other = other.get_view(read_only=True)
             try:
