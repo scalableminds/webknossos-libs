@@ -2436,7 +2436,9 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
         allow_resize=True,
     )
-    source_view = mag.get_view(absolute_offset=(0, 0, 0), size=(256, 256, 256))
+    source_view = mag.get_view(
+        absolute_offset=(0, 0, 0), size=(256, 256, 256), read_only=True
+    )
 
     target_mag = (
         Dataset(dst_dataset_path, voxel_size=(1, 1, 2))
