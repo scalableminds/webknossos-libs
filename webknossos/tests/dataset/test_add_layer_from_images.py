@@ -246,17 +246,8 @@ def download_and_unpack(
     for url_i, filename_i in zip(url, filename):
         with NamedTemporaryFile() as download_file:
             with httpx.stream("GET", url_i, follow_redirects=True) as response:
-                total = int(response.headers["Content-Length"])
-
-                with wk.utils.get_rich_progress() as progress:
-                    download_task = progress.add_task(
-                        "Download Image Data", total=total
-                    )
-                    for chunk in response.iter_bytes():
-                        download_file.write(chunk)
-                        progress.update(
-                            download_task, completed=response.num_bytes_downloaded
-                        )
+                for chunk in response.iter_bytes():
+                    download_file.write(chunk)
             try:
                 with ZipFile(download_file, "r") as zip_file:
                     zip_file.extractall(str(out_path))
