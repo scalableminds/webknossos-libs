@@ -1282,6 +1282,7 @@ class View:
         other: "View",
         executor: Executor | None = None,
         progress_desc: str | None = None,
+        chunk_shape: Vec3IntLike | None = None,
     ) -> bool:
         """Compare the content of this view with another view.
 
@@ -1321,6 +1322,8 @@ class View:
                     other,
                     executor=executor,
                     progress_desc=progress_desc or "Comparing contents",
+                    source_chunk_shape=chunk_shape,
+                    target_chunk_shape=chunk_shape,
                 )
             except AssertionError:
                 return False
