@@ -661,7 +661,7 @@ class MagView(View, Generic[LayerTypeT]):
                     "[WARNING] The underlying array storage does not support listing the stored bounding boxes. "
                     + "Instead all bounding boxes are iterated, which can be slow."
                 )
-                self.for_zipped_chunks(
+                self.get_view(read_only=True).for_zipped_chunks(
                     target_view=rechunked_mag,
                     executor=executor,
                     func_per_chunk=_copy_view_data,
