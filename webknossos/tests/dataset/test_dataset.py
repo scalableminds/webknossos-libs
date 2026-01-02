@@ -775,7 +775,7 @@ def test_views_are_equal(data_format: DataFormat, output_path: UPath) -> None:
 
     mag_a.write(data)
     mag_b.write(data)
-    assert mag_a.content_is_equal(mag_b)
+    assert mag_a.content_is_equal(mag_b, chunk_shape=Vec3Int.full(64))
 
     data = data + 10
     mag_b.write(data)
