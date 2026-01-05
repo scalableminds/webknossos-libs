@@ -309,7 +309,7 @@ def is_writable_path(path: UPath) -> bool:
 
 def strip_trailing_slash(path: UPath) -> UPath:
     path_parts = path.parts
-    if path_parts[-1] == "":
+    if len(path_parts) > 1 and path_parts[-1] == "":
         path_parts = path_parts[:-1]
     return path.with_segments(*path_parts)
 
