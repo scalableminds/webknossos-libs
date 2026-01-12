@@ -470,9 +470,8 @@ class View:
                 in Mag(1) coordinates. Defaults to None.
 
         Returns:
-            np.ndarray: The requested data as a numpy array. The shape will be either
-                (channels, x, y, z) for multi-channel data or (x, y, z) for
-                single-channel data. Areas outside the dataset are zero-padded.
+            np.ndarray: The requested data as a numpy array. The shape will be
+                (channels, x, y, z). Areas outside the dataset are zero-padded.
 
         Raises:
             AssertionError: If incompatible parameters are provided (e.g., both
@@ -482,7 +481,7 @@ class View:
             ```python
             # Read entire view's data
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
-            data = view.read()  # Returns (x, y, z) array for single-channel data
+            data = view.read()  # Returns (1, x, y, z) array for single-channel data
 
             # Read with relative offset and size
             data = view.read(
@@ -502,8 +501,7 @@ class View:
         Note:
             - Use only one method to specify the region (offset+size or bounding_box)
             - All coordinates are in Mag(1)
-            - For multi-channel data, the returned array has shape (C, X, Y, Z)
-            - For single-channel data, the returned array has shape (X, Y, Z)
+            - The returned array always has the shape (C, X, Y, Z), even for single channel-data
             - Regions outside the dataset are automatically zero-padded
             - The view's magnification affects the actual data resolution
             - Data shape must match the target region size
