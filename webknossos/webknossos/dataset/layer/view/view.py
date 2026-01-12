@@ -501,7 +501,7 @@ class View:
         Note:
             - Use only one method to specify the region (offset+size or bounding_box)
             - All coordinates are in Mag(1)
-            - The returned array always has the shape (C, X, Y, Z), even for single channel-data
+            - The returned array always has the shape (C, X, Y, Z), even for single channel data
             - Regions outside the dataset are automatically zero-padded
             - The view's magnification affects the actual data resolution
             - Data shape must match the target region size
