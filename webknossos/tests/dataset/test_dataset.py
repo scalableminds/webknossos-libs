@@ -3619,7 +3619,7 @@ def test_copy_dataset_exists_ok() -> None:
 @pytest.mark.use_proxay
 def test_remote_dataset_access_metadata() -> None:
     ds = RemoteDataset.open("l4_sample", "Organization_X")
-    assert len(ds.metadata) == 0
+    assert len(ds.metadata) == 2  # has 2 by default
 
     ds.metadata["key"] = "value"
     assert ds.metadata["key"] == "value"
