@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `chunk_shape` argument to `View.content_is_equal`. [#1410](https://github.com/scalableminds/webknossos-libs/pull/1410)
 
 ### Changed
+- Bump `python-dateutil` dependency for py3.12 support without deprecation warning. [#1414](https://github.com/scalableminds/webknossos-libs/pull/1414)
 
 ### Fixed
 
