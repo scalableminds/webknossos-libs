@@ -43,6 +43,7 @@ dependencies = [
     "loxun ~=2.0.0",
     "natsort ~=8.4.0",
     "networkx ~=3.2.1",
+    "numba ~=0.61",
     "numpy >=2.0.0,<3.0.0",
     "pims ~=0.7.0",
     "protobuf<7,>=3.12.0",
