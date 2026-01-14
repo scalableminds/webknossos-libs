@@ -7,7 +7,7 @@ import typer
 from ..client import webknossos_context
 from ..client._defaults import DEFAULT_WEBKNOSSOS_URL
 from ..client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
-from ..dataset import Dataset, RemoteFolder
+from ..dataset import Dataset, RemoteFolder, TransferMode
 from ._utils import parse_path
 
 
@@ -59,6 +59,9 @@ def main(
             rich_help_panel="Executor options",
         ),
     ] = DEFAULT_SIMULTANEOUS_UPLOADS,
+    transfer_mode: Annotated[
+        TransferMode, typer.Option(help="The transfer mode to use.")
+    ] = TransferMode.HTTP,
 ) -> None:
     """Upload a dataset to a WEBKNOSSOS server."""
 
@@ -67,5 +70,8 @@ def main(
         if folder is not None:
             folder_id = RemoteFolder.get_by_path(folder)
         Dataset.open(dataset_path=source).upload(
-            new_dataset_name=dataset_name, jobs=jobs, folder_id=folder_id
+            new_dataset_name=dataset_name,
+            jobs=jobs,
+            folder_id=folder_id,
+            transfer_mode=transfer_mode,
         )

@@ -36,6 +36,10 @@ webknossos upload [OPTIONS] SOURCE
     WEBKNOSSOS dataset folder in which the dataset should be placed. Specify the folder path as a string, separated by `/`. Note that this is about the folders listed in the dataset dashboard, and is independent of the underlying storage location. Example: `Datasets/mySubfolder`.  
     If not provided, the root folder is used.
 
+- `--transfer-mode`  
+    The transfer mode to use. Available options are `http`, `copy`, `move+symlink`, `symlink`.  
+    Default: `http`.
+
 ### Environment Variables for Remote Paths
 
 When using remote paths (e.g., HTTP or S3), configure the following environment variables:
