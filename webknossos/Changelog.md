@@ -10,17 +10,57 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.2...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
-- Updated pylibCZIrw package to 5.1.1, which does not require custom-built wheels anymore. [#1394](https://github.com/scalableminds/webknossos-libs/pull/1394)
 
 ### Fixed
+
+
+## [3.1.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.2) - 2026-01-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.1...v3.1.2)
+
+
+## [3.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.1) - 2026-01-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.0...v3.1.1)
+
+### Added
+- Added `chunk_shape` argument to `View.content_is_equal`. [#1410](https://github.com/scalableminds/webknossos-libs/pull/1410)
+
+### Changed
+- Bump `python-dateutil` dependency for py3.12 support without deprecation warning. [#1414](https://github.com/scalableminds/webknossos-libs/pull/1414)
+
+
+## [3.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.0) - 2025-12-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.4...v3.1.0)
+
+### Added
+- Added `--folder` option to `upload` CLI command. [#1408](https://github.com/scalableminds/webknossos-libs/pull/1408)
+
+### Changed
+- Relaxed layer name validation to match WEBKNOSSOS behavior. [#1402](https://github.com/scalableminds/webknossos-libs/pull/1402)
+- Better heuristic for detecting number of channels, when `numChannels` is missing. [#1402](https://github.com/scalableminds/webknossos-libs/pull/1402)
+
+### Fixed
+- Fix mag and attachment paths in Zarr annotation volume layer export. [#1401](https://github.com/scalableminds/webknossos-libs/pull/1401)
+
+
+
+## [3.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.4) - 2025-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...v3.0.4)
+
+### Changed
+- The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
+- Updated pylibCZIrw package to 5.1.1, which does not require custom-built wheels anymore. [#1394](https://github.com/scalableminds/webknossos-libs/pull/1394)
+- In the methods `Dataset.trigger_dataset_import`, `Dataset.trigger_reload_in_datastore` and `RemoteDataset.trigger_reload_in_datastore` the parameter `token` was deprecated (use an authenticated webknossos context instead). In `RemoteDataset.download_mesh` and `RemoteSegmentationLayer.download_mesh` the parameter `token` was renamed to `sharing_token` to clarify that it is meant for a dataset sharing token. Otherwise, use an authenticated webknossos context instead. [#1400](https://github.com/scalableminds/webknossos-libs/pull/1400)
+
+### Fixed
+- Fixed bug in convert-zarr CLI command. [#1405](https://github.com/scalableminds/webknossos-libs/pull/1405)
+- Fixed a bug where user tokens would sometimes show up in the logging as a GET parameter. [#1400](https://github.com/scalableminds/webknossos-libs/pull/1400)
 
 
 ## [3.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.3) - 2025-11-11

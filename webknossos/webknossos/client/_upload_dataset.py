@@ -49,6 +49,7 @@ def upload_dataset(
     layers_to_link: list[LayerToLink] | None = None,
     jobs: int | None = None,
     datastore_url: str | None = None,
+    folder_id: str | None = None,
 ) -> str:
     if new_dataset_name is None:
         new_dataset_name = dataset.name
@@ -103,7 +104,7 @@ def upload_dataset(
             layers_to_link=[
                 layer._as_api_linked_layer_identifier() for layer in layers_to_link
             ],
-            folder_id=None,
+            folder_id=folder_id,
             initial_teams=[],
         ),
         retry_count=MAXIMUM_RETRY_COUNT,

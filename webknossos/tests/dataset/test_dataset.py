@@ -775,7 +775,7 @@ def test_views_are_equal(data_format: DataFormat, output_path: UPath) -> None:
 
     mag_a.write(data)
     mag_b.write(data)
-    assert mag_a.content_is_equal(mag_b)
+    assert mag_a.content_is_equal(mag_b, chunk_shape=Vec3Int.full(64))
 
     data = data + 10
     mag_b.write(data)
@@ -2436,7 +2436,9 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         data=(np.random.rand(3, 256, 256, 256) * 255).astype(np.uint8),
         allow_resize=True,
     )
-    source_view = mag.get_view(absolute_offset=(0, 0, 0), size=(256, 256, 256))
+    source_view = mag.get_view(
+        absolute_offset=(0, 0, 0), size=(256, 256, 256), read_only=True
+    )
 
     target_mag = (
         Dataset(dst_dataset_path, voxel_size=(1, 1, 2))
@@ -3617,7 +3619,7 @@ def test_copy_dataset_exists_ok() -> None:
 @pytest.mark.use_proxay
 def test_remote_dataset_access_metadata() -> None:
     ds = RemoteDataset.open("l4_sample", "Organization_X")
-    assert len(ds.metadata) == 0
+    assert len(ds.metadata) == 2  # has 2 by default
 
     ds.metadata["key"] = "value"
     assert ds.metadata["key"] == "value"

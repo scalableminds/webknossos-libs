@@ -224,7 +224,7 @@ class Layer(AbstractLayer):
         Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
         Only layers on local file systems can be renamed.
         """
-        from webknossos.dataset.layer.abstract_layer import _ALLOWED_LAYER_NAME_REGEX
+        from webknossos.dataset.dataset import _validate_layer_name
 
         if layer_name == self.name:
             return
@@ -235,10 +235,8 @@ class Layer(AbstractLayer):
             raise ValueError(
                 f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
             )
-        if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
-            raise ValueError(
-                f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
-            )
+
+        _validate_layer_name(layer_name)
 
         if self.path.exists():
             assert is_fs_path(self.dataset.path), (
@@ -704,7 +702,7 @@ class Layer(AbstractLayer):
 
         # use the target shard shape for the copy operation
         copy_shape = mag_view.info.shard_shape * mag_view.mag.to_vec3_int()
-        foreign_mag_view.for_zipped_chunks(
+        foreign_mag_view.get_view(read_only=True).for_zipped_chunks(
             func_per_chunk=_copy_job,
             target_view=mag_view,
             executor=executor,
@@ -1381,7 +1379,7 @@ class Layer(AbstractLayer):
                     buffer_shape=buffer_shape,
                 )
                 prev_mag_view.get_view(
-                    absolute_bounding_box=bbox_mag1
+                    absolute_bounding_box=bbox_mag1, read_only=True
                 ).for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
                     func,
