@@ -10,17 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.1...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.1) - 2026-01-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.0...v3.1.1)
 
 ### Added
 - Added `chunk_shape` argument to `View.content_is_equal`. [#1410](https://github.com/scalableminds/webknossos-libs/pull/1410)
 
 ### Changed
 - Bump `python-dateutil` dependency for py3.12 support without deprecation warning. [#1414](https://github.com/scalableminds/webknossos-libs/pull/1414)
-
-### Fixed
 
 
 ## [3.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.0) - 2025-12-11
