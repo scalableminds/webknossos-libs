@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.3...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `--transfer-mode` option to `webknossos upload` CLI command. [#1415](https://github.com/scalableminds/webknossos-libs/pull/1415)
 
 ### Changed
 
 ### Fixed
+
+
+## [3.1.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.3) - 2026-01-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.2...v3.1.3)
+
+### Added
+- Added `--transfer-mode` option to `webknossos upload` CLI command. [#1415](https://github.com/scalableminds/webknossos-libs/pull/1415)
 
 
 ## [3.1.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.2) - 2026-01-14
