@@ -6,13 +6,17 @@ from datetime import datetime
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Union
 
+import attr
+import numpy as np
 from boltons.typeutils import make_sentinel
+from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.client import webknossos_context
 from webknossos.client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
+    ApiLayerRenaming,
     ApiMetadata,
     ApiUnusableDataSource,
 )
@@ -23,25 +27,60 @@ from webknossos.dataset.abstract_dataset import (
     AbstractDataset,
 )
 from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer
-from webknossos.dataset_properties import (
-    DatasetProperties,
+from webknossos.dataset.layer.abstract_layer import (
+    _dtype_per_layer_to_dtype_per_channel,
 )
-from webknossos.geometry import BoundingBox, Vec3Int
+from webknossos.dataset_properties import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    DataFormat,
+    DatasetProperties,
+    LayerCategoryType,
+    SegmentationLayerProperties,
+)
+from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int
 from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
 from ..client.api_client.errors import UnexpectedStatusError
+from ..dataset_properties.structuring import (
+    _properties_floating_type_to_python_type,
+    _python_floating_type_to_properties_type,
+)
 from ..ssl_context import SSL_CONTEXT
+from .defaults import DEFAULT_BIT_DEPTH, DEFAULT_DATA_FORMAT
+from .layer.abstract_layer import _dtype_per_channel_to_dtype_per_layer
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 
 logger = logging.getLogger(__name__)
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
+from webknossos.dataset_properties import LayerProperties
+
 if TYPE_CHECKING:
     from webknossos.administration.user import Team
     from webknossos.dataset import Dataset
-    from webknossos.dataset_properties import LayerProperties
+
+
+def _dtype_per_channel_to_element_class(
+    dtype_per_channel: DTypeLike, num_channels: int
+) -> str:
+    dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
+        dtype_per_channel, num_channels
+    )
+    return _python_floating_type_to_properties_type.get(
+        dtype_per_layer, dtype_per_layer
+    )
+
+
+def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
+    try:
+        return np.dtype(dtype_per_channel)
+    except TypeError as e:
+        raise TypeError(
+            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
+        ) from e
 
 
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
@@ -250,7 +289,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def _apply_server_dataset_properties(self) -> None:
         self._properties = self._load_dataset_properties()
 
-    def _save_dataset_properties_impl(self) -> None:
+    def _save_dataset_properties_impl(
+        self, layer_renaming: tuple[str, str] | None = None
+    ) -> None:
         """
         Exports the current dataset properties to the server.
         Note that some edits will not be accepted by the server.
@@ -264,11 +305,20 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             self._apply_server_dataset_properties()
             raise RuntimeError("zarr streaming does not support updating this property")
 
+        layer_renamings = []
+        if layer_renaming is not None:
+            layer_renamings.append(
+                ApiLayerRenaming(old_name=layer_renaming[0], new_name=layer_renaming[1])
+            )
+
         with self._context:
             client = _get_api_client()
             client.dataset_update(
                 dataset_id=self._dataset_id,
-                dataset_updates={"dataSource": self._properties},
+                dataset_updates={
+                    "dataSource": self._properties,
+                    "layerRenamings": layer_renamings,
+                },
             )
             self._apply_server_dataset_properties()
 
@@ -708,6 +758,108 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             token,
             sharing_token,
         )
+
+    def delete_layer(self, layer_name: str) -> None:
+        self._ensure_writable()
+
+        if layer_name not in self.layers.keys():
+            raise IndexError(
+                f"Removing layer {layer_name} failed. There is no layer with this name"
+            )
+        del self._layers[layer_name]
+        self._properties.data_layers = [
+            layer for layer in self._properties.data_layers if layer.name != layer_name
+        ]
+        self._save_dataset_properties()
+
+    def add_layer(
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        *,
+        dtype_per_layer: DTypeLike | None = None,
+        dtype_per_channel: DTypeLike | None = None,
+        num_channels: int | None = None,
+        data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
+        bounding_box: NDBoundingBox | None = None,
+        **kwargs: Any,
+    ) -> RemoteLayer:
+        self._ensure_writable()
+
+        if num_channels is None:
+            num_channels = 1
+
+        if dtype_per_layer is not None and dtype_per_channel is not None:
+            raise AttributeError(
+                "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
+            )
+        elif dtype_per_channel is not None:
+            dtype_per_channel = _properties_floating_type_to_python_type.get(
+                dtype_per_channel,  # type: ignore[arg-type]
+                dtype_per_channel,  # type: ignore[arg-type]
+            )
+            dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
+        elif dtype_per_layer is not None:
+            warn_deprecated("dtype_per_layer", "dtype_per_channel")
+            dtype_per_layer = _properties_floating_type_to_python_type.get(
+                dtype_per_layer,  # type: ignore[arg-type]
+                dtype_per_layer,  # type: ignore[arg-type]
+            )
+            dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
+            dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
+                dtype_per_layer, num_channels
+            )
+        else:
+            dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
+
+        if layer_name in self.layers.keys():
+            raise IndexError(
+                f"Adding layer {layer_name} failed. There is already a layer with this name"
+            )
+
+        assert data_format != DataFormat.WKW, (
+            "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
+        )
+
+        layer_properties = LayerProperties(
+            name=layer_name,
+            category=category,
+            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
+            element_class=_dtype_per_channel_to_element_class(
+                dtype_per_channel, num_channels
+            ),
+            mags=[],
+            num_channels=num_channels,
+            data_format=DataFormat(data_format),
+        )
+
+        if category == COLOR_CATEGORY:
+            self._properties.data_layers += [layer_properties]
+            self._layers[layer_name] = RemoteLayer(
+                self, layer_properties, read_only=False
+            )
+        elif category == SEGMENTATION_CATEGORY:
+            segmentation_layer_properties: SegmentationLayerProperties = (
+                SegmentationLayerProperties(
+                    **(
+                        attr.asdict(layer_properties, recurse=False)
+                    ),  # use all attributes from LayerProperties
+                    largest_segment_id=kwargs.get("largest_segment_id"),
+                )
+            )
+            if "mappings" in kwargs:
+                segmentation_layer_properties.mappings = kwargs["mappings"]
+            self._properties.data_layers += [segmentation_layer_properties]
+            self._layers[layer_name] = RemoteSegmentationLayer(
+                self, segmentation_layer_properties, read_only=False
+            )
+        else:
+            raise RuntimeError(
+                f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"
+            )
+
+        self._save_dataset_properties()
+        return self.layers[layer_name]
 
     @classmethod
     def list(

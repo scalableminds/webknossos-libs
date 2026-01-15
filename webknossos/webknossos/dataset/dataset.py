@@ -491,11 +491,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
         return self._load_dataset_properties_from_path(self.path)
 
-    def _save_dataset_properties_impl(self) -> None:
+    def _save_dataset_properties_impl(
+        self, layer_renaming: tuple[str, str] | None = None
+    ) -> None:
         """
         Exports the current dataset properties to json on disk.
         And writes out Zarr and OME-Ngff metadata if there is a Zarr layer.
         """
+        del layer_renaming  # only used in remote case
         (self.path / PROPERTIES_FILE_NAME).write_text(
             json.dumps(
                 get_dataset_converter().unstructure(self._properties),

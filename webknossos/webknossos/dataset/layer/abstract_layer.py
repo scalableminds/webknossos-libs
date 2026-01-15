@@ -171,8 +171,10 @@ class AbstractLayer:
             if layer_property.name == self.name
         )
 
-    def _save_layer_properties(self) -> None:
-        self.dataset._save_dataset_properties()
+    def _save_layer_properties(
+        self, layer_renaming: tuple[str, str] | None = None
+    ) -> None:
+        self.dataset._save_dataset_properties(layer_renaming=layer_renaming)
 
     def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
         """Initialize a magnification level when opening the Dataset.

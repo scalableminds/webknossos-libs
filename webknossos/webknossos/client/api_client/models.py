@@ -468,7 +468,13 @@ class ApiReserveDatasetUploadToPathsForPreliminaryResponse:
 class ApiReserveMagUploadToPathParameters:
     layer_name: str
     mag: list[int]
-    axis_order: AxisOrder | None  # TODO ApiAxisOrder?
+    axis_order: dict[str, int] | None
     channel_index: int | None
     path_prefix: str | None
     overwrite_pending: bool
+
+
+@attr.s(auto_attribs=True)
+class ApiLayerRenaming:
+    old_name: str
+    new_name: str
