@@ -1,11 +1,12 @@
 import logging
-import math
+import math  #
 import warnings
 from collections.abc import Callable
 from enum import Enum
 from itertools import product
 from typing import TYPE_CHECKING, Union
 
+import numba
 import numpy as np
 from scipy.ndimage import zoom
 
@@ -32,10 +33,10 @@ class InterpolationModes(Enum):
 
 def determine_downsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
     # This is the shape of the data in the downsampling target magnification, so the
-    # data that is read is up to 512³ vx in the source magnification. Using larger
+    # data that is read is up to 1024³ vx in the source magnification. Using larger
     # shapes uses a lot of RAM, especially for segmentation layers which use the mode filter.
     # See https://scm.slack.com/archives/CMBMU5684/p1749771929954699 for more context.
-    return Vec3Int.full(256).pairmin(array_info.shard_shape)
+    return Vec3Int.full(512).pairmin(array_info.shard_shape)
 
 
 def determine_upsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
@@ -262,6 +263,32 @@ def _mode(x: np.ndarray) -> np.ndarray:
     return sort[tuple(index)]
 
 
+@numba.jit(nopython=True, nogil=True)
+def fast_mode(input_array: np.ndarray) -> np.ndarray:
+    values = np.zeros(input_array.shape[0], dtype=input_array.dtype)
+    counter = np.zeros(input_array.shape[0], dtype=np.uint8)
+    output_array = np.zeros(input_array.shape[1], dtype=input_array.dtype)
+    for row_index in range(input_array.shape[1]):
+        values[0] = input_array[0, row_index]
+        counter[:] = 0
+        value_offset = 1
+        for col_index in range(1, input_array.shape[0]):
+            value = input_array[col_index, row_index]
+            found_value = False
+            for i in range(col_index):  # iterate one less
+                if value == values[i]:
+                    counter[i] = counter[i] + 1
+                    found_value = True
+                    break
+            if not found_value:
+                values[value_offset] = value
+                value_offset += 1
+        mode = values[np.argmax(counter)]
+        output_array[row_index] = mode
+
+    return output_array
+
+
 def downsample_unpadded_data(
     buffer: np.ndarray, target_mag: Mag, interpolation_mode: InterpolationModes
 ) -> np.ndarray:
@@ -288,7 +315,7 @@ def downsample_cube(
     cube_buffer: np.ndarray, factors: list[int], interpolation_mode: InterpolationModes
 ) -> np.ndarray:
     if interpolation_mode == InterpolationModes.MODE:
-        return non_linear_filter_3d(cube_buffer, factors, _mode)
+        return non_linear_filter_3d(cube_buffer, factors, fast_mode)
     elif interpolation_mode == InterpolationModes.MEDIAN:
         return non_linear_filter_3d(cube_buffer, factors, _median)
     elif interpolation_mode == InterpolationModes.NEAREST:
@@ -318,7 +345,7 @@ def downsample_cube_job(
         target_bbox_in_mag = target_view.bounding_box.in_mag(target_view.mag)
         shape = (num_channels,) + target_bbox_in_mag.size.to_tuple()
         shape_xyz = target_bbox_in_mag.size_xyz
-        file_buffer = np.zeros(shape, target_view.get_dtype())
+        file_buffer = np.zeros(shape, target_view.get_dtype(), order="F")
 
         tiles = product(
             *(
