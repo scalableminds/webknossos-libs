@@ -1,3 +1,4 @@
+import copy
 import inspect
 import logging
 import warnings
@@ -288,6 +289,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     def _apply_server_dataset_properties(self) -> None:
         self._properties = self._load_dataset_properties()
+        self._last_read_properties = copy.deepcopy(self._properties)
 
     def _save_dataset_properties_impl(
         self, layer_renaming: tuple[str, str] | None = None
