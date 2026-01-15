@@ -60,7 +60,7 @@ def main(
         ),
     ] = DEFAULT_SIMULTANEOUS_UPLOADS,
     transfer_mode: Annotated[
-        TransferMode, typer.Option(help="The transfer mode to use.")
+        TransferMode, typer.Option(help="The transfer mode to use. 'http' is the default. Other modes like 'copy', 'move+symlink', 'symlink' are for users with direct filesystem access to the WEBKNOSSOS datastore.")
     ] = TransferMode.HTTP,
 ) -> None:
     """Upload a dataset to a WEBKNOSSOS server."""
