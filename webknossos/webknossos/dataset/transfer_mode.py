@@ -42,7 +42,7 @@ class TransferMode(Enum):
         copytree(
             src_path,
             dst_path,
-            progress_desc=f"copying attachment {src_path.path} to {dst_path.path}",
+            progress_desc=f"Copying {src_path.path} to {dst_path.path}",
         )
 
     def transfer(self, src_path: UPath, dst_path: UPath) -> None:
