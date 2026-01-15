@@ -37,6 +37,7 @@ from webknossos.dataset_properties import (
     DataFormat,
     DatasetProperties,
     LayerCategoryType,
+    LayerProperties,
     SegmentationLayerProperties,
 )
 from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int
@@ -57,13 +58,13 @@ from .remote_folder import RemoteFolder
 logger = logging.getLogger(__name__)
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
-from webknossos.dataset_properties import LayerProperties
 
 if TYPE_CHECKING:
     from webknossos.administration.user import Team
     from webknossos.dataset import Dataset
 
 
+# TODO duplicated from dataset, clean up
 def _dtype_per_channel_to_element_class(
     dtype_per_channel: DTypeLike, num_channels: int
 ) -> str:
@@ -75,6 +76,7 @@ def _dtype_per_channel_to_element_class(
     )
 
 
+# TODO duplicated from dataset, clean up
 def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
     try:
         return np.dtype(dtype_per_channel)
@@ -82,6 +84,15 @@ def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
         raise TypeError(
             "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
         ) from e
+
+
+# TODO duplicated from dataset, clean up
+def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
+    try:
+        dtype_per_layer = str(np.dtype(dtype_per_layer))
+    except Exception:
+        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
+    return dtype_per_layer  # type: ignore[return-value]
 
 
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):

@@ -59,7 +59,7 @@ class RemoteLayer(AbstractLayer):
 
     def add_mag_as_copy(
         self, foreign_mag_view_or_path: PathLike | UPath | str | MagView
-    ):
+    ) -> MagView["RemoteLayer"]:
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
@@ -75,15 +75,19 @@ class RemoteLayer(AbstractLayer):
                 path_prefix=None,
                 overwrite_pending=True,
             )
-            path = client.reserve_mag_upload_to_paths(
+            path_str = client.reserve_mag_upload_to_paths(
                 self._dataset.dataset_id, reserve_parameters
             )
-            print(f"writing new mag to {path}...")
+            path = UPath(path_str)
+            UPath.mkdir(path, parents=True, exist_ok=True)
+            with open(str(path / "test.txt"), "w") as testfile:
+                testfile.write("hi!")
             # TODO write actual data
             client.finish_mag_upload_to_paths(
                 self._dataset.dataset_id, reserve_parameters
             )
         self._apply_server_layer_properties()
+        return self.get_mag(foreign_mag_view.mag)
 
     def delete_mag(self, mag: MagLike) -> None:
         self._ensure_writable()
