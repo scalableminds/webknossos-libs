@@ -462,3 +462,13 @@ class ApiReserveDatasetUploadToPathsForPreliminaryParameters:
 @attr.s(auto_attribs=True)
 class ApiReserveDatasetUploadToPathsForPreliminaryResponse:
     data_source: DatasetProperties
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveMagUploadToPathParameters:
+    layer_name: str
+    mag: list[int]
+    axis_order: AxisOrder | None  # TODO ApiAxisOrder?
+    channel_index: int | None
+    path_prefix: str | None
+    overwrite_pending: bool

@@ -23,6 +23,7 @@ from webknossos.client.api_client.models import (
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryResponse,
     ApiReserveDatasetUploadToPathsResponse,
+    ApiReserveMagUploadToPathParameters,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
@@ -122,6 +123,8 @@ class WkApiClient(AbstractApiClient):
         # So we need to craft the updates dict manually, depending on what fields should be updated.
         route = f"/datasets/{dataset_id}/updatePartial"
         self._patch_json(route, dataset_updates)
+
+    def dataset_reserve
 
     def dataset_sharing_token(self, *, dataset_id: str) -> ApiSharingToken:
         route = f"/datasets/{dataset_id}/sharingToken"
@@ -421,3 +424,6 @@ class WkApiClient(AbstractApiClient):
 
     def finish_dataset_upload_to_paths(self, dataset_id: str) -> None:
         self._post(f"/datasets/{dataset_id}/finishUploadToPaths")
+
+    def reserve_mag_upload_to_paths(self, dataset_id: str, reserve_mag_upload_to_path_parameters: ApiReserveMagUploadToPathParameters):
+        
