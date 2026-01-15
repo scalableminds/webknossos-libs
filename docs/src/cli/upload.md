@@ -38,6 +38,7 @@ webknossos upload [OPTIONS] SOURCE
 
 - `--transfer-mode`  
     The transfer mode to use. Available options are `http`, `copy`, `move+symlink`, `symlink`.  
+    `copy`, `move+symlink`, `symlink` are only for users with direct filesystem access to the WEBKNOSSOS datastore.
     Default: `http`.
 
 ### Environment Variables for Remote Paths
