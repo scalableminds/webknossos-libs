@@ -1169,7 +1169,7 @@ class Layer(AbstractLayer):
             # The downsampling computation is chunked using buffer_shape anyways.
             # The target_chunk_shape determines how many jobs are spawned. Increase it
             # to avoid job computation overhead.
-            target_chunk_shape = Vec3Int([2048, 2048, 2048]).pairmax(
+            target_chunk_shape = Vec3Int([1024, 1024, 1024]).pairmax(
                 target_view.info.shard_shape
             )
             source_view.for_zipped_chunks(
