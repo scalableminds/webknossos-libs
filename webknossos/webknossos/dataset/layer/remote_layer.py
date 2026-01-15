@@ -8,6 +8,7 @@ from webknossos.dataset_properties import LayerProperties, MagViewProperties
 from ...client.api_client.models import ApiReserveMagUploadToPathParameters
 from ...geometry.mag import Mag, MagLike
 from ...utils import enrich_path
+from ..transfer_mode import TransferMode
 from .abstract_layer import AbstractLayer
 from .view import MagView
 
@@ -58,7 +59,11 @@ class RemoteLayer(AbstractLayer):
         return super().get_finest_mag()
 
     def add_mag_as_copy(
-        self, foreign_mag_view_or_path: PathLike | UPath | str | MagView
+        self,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
     ) -> MagView["RemoteLayer"]:
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
@@ -70,19 +75,17 @@ class RemoteLayer(AbstractLayer):
             reserve_parameters = ApiReserveMagUploadToPathParameters(
                 layer_name=self.name,
                 mag=foreign_mag_view.mag.to_list(),
-                axis_order=None,
+                axis_order=foreign_mag_view._properties.axis_order,
                 channel_index=None,
-                path_prefix=None,
-                overwrite_pending=True,
+                path_prefix=common_storage_path_prefix,
+                overwrite_pending=overwrite_pending,
             )
             path_str = client.reserve_mag_upload_to_paths(
                 self._dataset.dataset_id, reserve_parameters
             )
             path = UPath(path_str)
             UPath.mkdir(path, parents=True, exist_ok=True)
-            with open(str(path / "test.txt"), "w") as testfile:
-                testfile.write("hi!")
-            # TODO write actual data
+            transfer_mode.transfer(foreign_mag_view.path, path)
             client.finish_mag_upload_to_paths(
                 self._dataset.dataset_id, reserve_parameters
             )

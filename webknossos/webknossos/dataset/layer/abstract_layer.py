@@ -23,6 +23,7 @@ from webknossos.dataset_properties.structuring import (
 from webknossos.geometry import NDBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
 
+from ...dataset_properties.structuring import _python_floating_type_to_properties_type
 from ...utils import warn_deprecated
 from .view import ArrayException, MagView
 
@@ -91,6 +92,34 @@ def _element_class_to_dtype_per_channel(
         element_class, element_class
     )
     return _dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
+
+
+def _dtype_per_channel_to_element_class(
+    dtype_per_channel: DTypeLike, num_channels: int
+) -> str:
+    dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
+        dtype_per_channel, num_channels
+    )
+    return _python_floating_type_to_properties_type.get(
+        dtype_per_layer, dtype_per_layer
+    )
+
+
+def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
+    try:
+        return np.dtype(dtype_per_channel)
+    except TypeError as e:
+        raise TypeError(
+            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
+        ) from e
+
+
+def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
+    try:
+        dtype_per_layer = str(np.dtype(dtype_per_layer))
+    except Exception:
+        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
+    return dtype_per_layer  # type: ignore[return-value]
 
 
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.

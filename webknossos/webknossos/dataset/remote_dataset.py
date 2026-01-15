@@ -30,6 +30,8 @@ from webknossos.dataset.abstract_dataset import (
 from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer
 from webknossos.dataset.layer.abstract_layer import (
     _dtype_per_layer_to_dtype_per_channel,
+    _normalize_dtype_per_channel,
+    _normalize_dtype_per_layer,
 )
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
@@ -47,11 +49,10 @@ from webknossos.utils import infer_metadata_type, warn_deprecated
 from ..client.api_client.errors import UnexpectedStatusError
 from ..dataset_properties.structuring import (
     _properties_floating_type_to_python_type,
-    _python_floating_type_to_properties_type,
 )
 from ..ssl_context import SSL_CONTEXT
 from .defaults import DEFAULT_BIT_DEPTH, DEFAULT_DATA_FORMAT
-from .layer.abstract_layer import _dtype_per_channel_to_dtype_per_layer
+from .layer.abstract_layer import _dtype_per_channel_to_element_class
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 
@@ -62,37 +63,6 @@ _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 if TYPE_CHECKING:
     from webknossos.administration.user import Team
     from webknossos.dataset import Dataset
-
-
-# TODO duplicated from dataset, clean up
-def _dtype_per_channel_to_element_class(
-    dtype_per_channel: DTypeLike, num_channels: int
-) -> str:
-    dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
-        dtype_per_channel, num_channels
-    )
-    return _python_floating_type_to_properties_type.get(
-        dtype_per_layer, dtype_per_layer
-    )
-
-
-# TODO duplicated from dataset, clean up
-def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
-    try:
-        return np.dtype(dtype_per_channel)
-    except TypeError as e:
-        raise TypeError(
-            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
-        ) from e
-
-
-# TODO duplicated from dataset, clean up
-def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
-    try:
-        dtype_per_layer = str(np.dtype(dtype_per_layer))
-    except Exception:
-        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
-    return dtype_per_layer  # type: ignore[return-value]
 
 
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
