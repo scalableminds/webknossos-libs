@@ -1,16 +1,20 @@
 from os import PathLike
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
+from cluster_tools import Executor
 from upath import UPath
 
+from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset_properties import LayerProperties, MagViewProperties
 
 from ...client.api_client.models import ApiReserveMagUploadToPathParameters
+from ...geometry import Vec3Int
 from ...geometry.mag import Mag, MagLike
 from ...utils import enrich_path
 from ..transfer_mode import TransferMode
 from .abstract_layer import AbstractLayer
-from .view import MagView
+from .view import MagView, Zarr3Config
 
 if TYPE_CHECKING:
     from webknossos.dataset import RemoteDataset
@@ -92,6 +96,67 @@ class RemoteLayer(AbstractLayer):
         self._apply_server_layer_properties()
         return self.get_mag(foreign_mag_view.mag)
 
+    def downsample(
+        self,
+        *,
+        from_mag: Mag | None = None,
+        coarsest_mag: Mag | None = None,
+        interpolation_mode: str = "default",
+        compress: bool | Zarr3Config = True,
+        sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
+        align_with_other_layers: bool = True,
+        buffer_shape: Vec3Int | None = None,
+        force_sampling_scheme: bool = False,
+        allow_overwrite: bool = False,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
+        executor: Executor | None = None,
+    ) -> None:
+        if from_mag is None:
+            assert len(self.mags.keys()) > 0, (
+                "Failed to downsample data because no existing mag was found."
+            )
+            from_mag = max(self.mags.keys())
+
+        assert from_mag in self.mags.keys(), (
+            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist. Existing mags: {self.mags.keys()}."
+        )
+        from_mag_view = self.get_mag(from_mag)
+        print(from_mag_view)
+
+        # todo align with other layers
+
+        from ..dataset import Dataset
+
+        with TemporaryDirectory() as tmpdir:
+            tmp_dataset = Dataset(
+                dataset_path=tmpdir,
+                voxel_size_with_unit=self.dataset.voxel_size_with_unit,
+            )
+            tmp_layer = tmp_dataset.add_layer_like(self, self.name)
+            tmp_layer.downsample(
+                from_mag=from_mag,
+                from_mag_view=from_mag_view,
+                coarsest_mag=coarsest_mag,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                sampling_mode=sampling_mode,
+                align_with_other_layers=False,
+                buffer_shape=buffer_shape,
+                force_sampling_scheme=force_sampling_scheme,
+                executor=executor,
+            )
+
+            for mag in tmp_layer.mags.keys():
+                print(f"uploading mag {mag}...")
+                self.add_mag_as_copy(
+                    tmp_layer.mags[mag],
+                    transfer_mode=transfer_mode,
+                    common_storage_path_prefix=common_storage_path_prefix,
+                    overwrite_pending=overwrite_pending,
+                )
+
     def delete_mag(self, mag: MagLike) -> None:
         self._ensure_writable()
         mag = Mag(mag)
@@ -144,3 +209,5 @@ class RemoteLayer(AbstractLayer):
 
     def _apply_server_layer_properties(self) -> None:
         self.dataset._apply_server_dataset_properties()
+        layer_properties = next(layer_properties for layer_properties in self._dataset._properties.data_layers if layer_properties.name == self.name)
+        self._apply_properties(layer_properties, self.read_only)

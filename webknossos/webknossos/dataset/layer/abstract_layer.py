@@ -137,13 +137,16 @@ class AbstractLayer:
     def __init__(
         self, dataset: "AbstractDataset", properties: LayerProperties, read_only: bool
     ) -> None:
+        self._dataset = dataset
+        self._apply_properties(properties, read_only)
+
+    def _apply_properties(self, properties: LayerProperties, read_only: bool):
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
         assert "/" not in properties.name and not properties.name.startswith("."), (
             f"The layer name '{properties.name}' is invalid."
         )
-        self._dataset = dataset
         self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
 
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
