@@ -973,7 +973,7 @@ class Layer(AbstractLayer):
         force_sampling_scheme: bool = False,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
-        from_mag_view: MagView | None = None,  # todo docstring
+        from_mag_view: MagView | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Downsample data from a source magnification to coarser magnifications.
@@ -994,6 +994,7 @@ class Layer(AbstractLayer):
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
             allow_overwrite (bool): Whether existing mags can be overwritten. False by default.
             only_setup_mags (bool): Only create mags without data. False by default.
+            from_mag_view: Source magnification view, pass only if the source data should be from another layer or dataset.
             executor (Executor | None): Executor for parallel processing. None by default.
 
         Raises:
@@ -1103,7 +1104,7 @@ class Layer(AbstractLayer):
         buffer_shape: Vec3Int | None = None,
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
-        from_mag_view: MagView | None = None,  # todo docstring
+        from_mag_view: MagView | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Performs a single downsampling step between magnification levels.
@@ -1116,6 +1117,7 @@ class Layer(AbstractLayer):
             buffer_shape: Shape of processing buffer
             allow_overwrite: Whether to allow overwriting existing mag
             only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
+            from_mag_view: Source magnification view, pass only if the source data should be from another layer or dataset.
             executor: Executor for parallel processing
 
         Raises:

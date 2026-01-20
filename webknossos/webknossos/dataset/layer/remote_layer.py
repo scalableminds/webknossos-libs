@@ -123,7 +123,6 @@ class RemoteLayer(AbstractLayer):
             f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist. Existing mags: {self.mags.keys()}."
         )
         from_mag_view = self.get_mag(from_mag)
-        print(from_mag_view)
 
         # todo align with other layers
 
@@ -149,7 +148,6 @@ class RemoteLayer(AbstractLayer):
             )
 
             for mag in tmp_layer.mags.keys():
-                print(f"uploading mag {mag}...")
                 self.add_mag_as_copy(
                     tmp_layer.mags[mag],
                     transfer_mode=transfer_mode,
@@ -209,5 +207,9 @@ class RemoteLayer(AbstractLayer):
 
     def _apply_server_layer_properties(self) -> None:
         self.dataset._apply_server_dataset_properties()
-        layer_properties = next(layer_properties for layer_properties in self._dataset._properties.data_layers if layer_properties.name == self.name)
+        layer_properties = next(
+            layer_properties
+            for layer_properties in self._dataset._properties.data_layers
+            if layer_properties.name == self.name
+        )
         self._apply_properties(layer_properties, self.read_only)

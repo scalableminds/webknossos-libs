@@ -140,7 +140,7 @@ class AbstractLayer:
         self._dataset = dataset
         self._apply_properties(properties, read_only)
 
-    def _apply_properties(self, properties: LayerProperties, read_only: bool):
+    def _apply_properties(self, properties: LayerProperties, read_only: bool) -> None:
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
