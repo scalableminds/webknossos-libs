@@ -69,6 +69,11 @@ class RemoteLayer(AbstractLayer):
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
     ) -> MagView["RemoteLayer"]:
+        """
+        Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
+        to the current remote dataset. Additionally, the relevant information from the
+        `datasource-properties.json` of the other dataset are copied, too.
+        """
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
 
@@ -112,6 +117,34 @@ class RemoteLayer(AbstractLayer):
         overwrite_pending: bool = True,
         executor: Executor | None = None,
     ) -> None:
+        """Downsample data from a source magnification to coarser magnifications.
+
+        Downsamples the data starting from from_mag until a magnification is >= max(coarsest_mag).
+        Different sampling modes control how dimensions are downsampled.
+
+        Args:
+            from_mag (Mag | None): Source magnification to downsample from. Defaults to highest existing mag.
+            coarsest_mag (Mag | None): Target magnification to stop at. Defaults to calculated value.
+            interpolation_mode (str): Interpolation method to use. Defaults to "default".
+                Supported modes: "median", "mode", "nearest", "bilinear", "bicubic"
+            compress (bool | Zarr3Config): Whether to compress the generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
+            sampling_mode (str | SamplingModes): How dimensions should be downsampled.
+                Defaults to ANISOTROPIC.
+            align_with_other_layers (bool | Dataset | RemoteDataset): Whether to align with other layers. True by default.
+            buffer_shape (Vec3Int | None): Shape of processing buffer. Defaults to None.
+            force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
+            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to COPY
+            common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
+                                        to select one of the available WEBKNOSSOS storages.
+            overwrite_pending (bool). If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
+            executor (Executor | None): Executor for parallel processing. None by default.
+
+        Raises:
+            AssertionError: If from_mag does not exist
+            RuntimeError: If sampling scheme produces invalid magnifications
+            AttributeError: If sampling_mode is invalid
+        """
+
         from ..dataset import Dataset
 
         if from_mag is None:

@@ -1162,6 +1162,44 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         overwrite_pending: bool = True,
         executor: Executor | None = None,
     ) -> None:
+        """Generate downsampled magnifications for all layers.
+
+        Creates lower resolution versions (coarser magnifications) of all layers that are not
+        yet downsampled, up to the specified coarsest magnification.
+
+        Args:
+            sampling_mode: Strategy for downsampling (e.g. ANISOTROPIC, MAX)
+            coarsest_mag: Optional maximum/coarsest magnification to generate
+            interpolation_mode: Interpolation method to use. Defaults to "default" (= "mode" for segmentation, "median" for color).
+            compress: Whether to compress generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
+            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to COPY
+            common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
+                                        to select one of the available WEBKNOSSOS storages.
+            overwrite_pending (bool). If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
+            executor: Optional executor for parallel processing
+
+        Raises:
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            Basic downsampling:
+                ```
+                ds.downsample()
+                ```
+
+            With custom parameters:
+                ```
+                ds.downsample(
+                    sampling_mode=SamplingModes.ANISOTROPIC,
+                    coarsest_mag=Mag(8),
+                )
+                ```
+
+        Note:
+            - ANISOTROPIC sampling creates anisotropic downsampling until dataset is isotropic
+            - Other modes like MAX, CONSTANT etc create regular downsampling patterns
+            - If magnifications already exist they will not be regenerated
+        """
         for layer in self.layers.values():
             layer.downsample(
                 coarsest_mag=coarsest_mag,
