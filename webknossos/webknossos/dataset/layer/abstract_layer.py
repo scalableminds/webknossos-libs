@@ -122,6 +122,13 @@ def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
     return dtype_per_layer  # type: ignore[return-value]
 
 
+def _validate_layer_name(layer_name: str) -> None:
+    if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
+        raise ValueError(
+            f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+        )
+
+
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
 # As the begin and the end are anchored, all of the name must match the regex.
 # The first regex group ensures that the name does not start with a dot.

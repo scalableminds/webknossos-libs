@@ -33,6 +33,7 @@ from webknossos.dataset.layer.abstract_layer import (
     _dtype_per_layer_to_dtype_per_channel,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
+    _validate_layer_name,
 )
 from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset_properties import (
@@ -771,6 +772,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         **kwargs: Any,
     ) -> RemoteLayer:
         self._ensure_writable()
+
+        _validate_layer_name(layer_name)
 
         if num_channels is None:
             num_channels = 1

@@ -13,7 +13,7 @@ from ...geometry import Vec3Int
 from ...geometry.mag import Mag, MagLike
 from ...utils import enrich_path
 from ..transfer_mode import TransferMode
-from .abstract_layer import AbstractLayer
+from .abstract_layer import AbstractLayer, _validate_layer_name
 from .view import MagView, Zarr3Config
 
 if TYPE_CHECKING:
@@ -89,11 +89,11 @@ class RemoteLayer(AbstractLayer):
                 path_prefix=common_storage_path_prefix,
                 overwrite_pending=overwrite_pending,
             )
-            path_str = client.reserve_mag_upload_to_paths(
-                self._dataset.dataset_id, reserve_parameters
+            path = enrich_path(
+                client.reserve_mag_upload_to_paths(
+                    self._dataset.dataset_id, reserve_parameters
+                )
             )
-            path = UPath(path_str)
-            UPath.mkdir(path, parents=True, exist_ok=True)
             transfer_mode.transfer(
                 foreign_mag_view.path, path, progress_desc_label="mag"
             )
@@ -132,7 +132,7 @@ class RemoteLayer(AbstractLayer):
             compress (bool | Zarr3Config): Whether to compress the generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             sampling_mode (str | SamplingModes): How dimensions should be downsampled.
                 Defaults to ANISOTROPIC.
-            align_with_other_layers (bool | Dataset | RemoteDataset): Whether to align with other layers. True by default.
+            align_with_other_layers (bool): Whether to align the mag selection with the dataset’s other layers. True by default.
             buffer_shape (Vec3Int | None): Shape of processing buffer. Defaults to None.
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
             transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to COPY
@@ -213,10 +213,9 @@ class RemoteLayer(AbstractLayer):
     @name.setter
     def name(self, layer_name: str) -> None:
         """
-        Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
-        Only layers on local file systems can be renamed.
+        Renames the layer to `layer_name`. This changes the layer name on the server.
+        CAUTION: existing annotations that use this layer as fallback segmentation layer will break.
         """
-        from webknossos.dataset.dataset import _validate_layer_name
 
         if layer_name == self.name:
             return

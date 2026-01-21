@@ -55,6 +55,7 @@ from .layer.abstract_layer import (
     _dtype_per_channel_to_element_class,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
+    _validate_layer_name,
 )
 from .layer.layer import _get_shard_shape
 from .ome_metadata import write_ome_metadata
@@ -145,15 +146,6 @@ def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
             except ArrayException:
                 pass
     return None
-
-
-def _validate_layer_name(layer_name: str) -> None:
-    from webknossos.dataset.layer.abstract_layer import _ALLOWED_LAYER_NAME_REGEX
-
-    if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
-        raise ValueError(
-            f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
-        )
 
 
 class Dataset(AbstractDataset[Layer, SegmentationLayer]):
