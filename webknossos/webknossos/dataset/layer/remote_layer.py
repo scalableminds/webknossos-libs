@@ -125,9 +125,9 @@ class RemoteLayer(AbstractLayer):
         )
         from_mag_view = self.get_mag(from_mag)
 
-        dataset_to_align_with = None
+        align_with_other_layers_dataset: bool | RemoteDataset = False
         if align_with_other_layers:
-            dataset_to_align_with = self.dataset
+            align_with_other_layers_dataset = self.dataset
 
         with TemporaryDirectory() as tmpdir:
             tmp_dataset = Dataset(
@@ -142,7 +142,7 @@ class RemoteLayer(AbstractLayer):
                 interpolation_mode=interpolation_mode,
                 compress=compress,
                 sampling_mode=sampling_mode,
-                align_with_other_layers=dataset_to_align_with,
+                align_with_other_layers=align_with_other_layers_dataset,
                 buffer_shape=buffer_shape,
                 force_sampling_scheme=force_sampling_scheme,
                 executor=executor,
