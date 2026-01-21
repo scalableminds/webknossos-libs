@@ -739,7 +739,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 src_mag = src_layer.mags[mag.mag]
                 assert mag.path is not None, "mag.path must be set to copy/move data"
                 dst_mag_path = enrich_path(mag.path)
-                transfer_mode.transfer(src_mag.path, dst_mag_path)
+                transfer_mode.transfer(
+                    src_mag.path, dst_mag_path, progress_desc_label="mag"
+                )
             if isinstance(src_layer, SegmentationLayer):
                 assert isinstance(layer, SegmentationLayerProperties), (
                     "If src_layer is a SegmentationLayer, then layer must be a SegmentationLayerProperties"
@@ -749,7 +751,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     src_layer.attachments, layer.attachments
                 ):
                     dst_attachment_path = enrich_path(dst_attachment.path)
-                    transfer_mode.transfer(src_attachment.path, dst_attachment_path)
+                    transfer_mode.transfer(
+                        src_attachment.path,
+                        dst_attachment_path,
+                        progress_desc_label="attachment",
+                    )
 
     @staticmethod
     def get_remote_datasets(

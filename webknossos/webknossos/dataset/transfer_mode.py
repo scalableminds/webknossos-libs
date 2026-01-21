@@ -38,16 +38,23 @@ class TransferMode(Enum):
         src_path.symlink_to(dst_path.resolve())
 
     @staticmethod
-    def copy(src_path: UPath, dst_path: UPath) -> None:
+    def copy(
+        src_path: UPath, dst_path: UPath, progress_desc_label: str | None = None
+    ) -> None:
+        progress_desc_label = (
+            progress_desc_label + " " if progress_desc_label is not None else ""
+        )
         copytree(
             src_path,
             dst_path,
-            progress_desc=f"copying attachment {src_path.path} to {dst_path.path}",
+            progress_desc=f"copying {progress_desc_label}{src_path.path} to {dst_path.path}",
         )
 
-    def transfer(self, src_path: UPath, dst_path: UPath) -> None:
+    def transfer(
+        self, src_path: UPath, dst_path: UPath, progress_desc_label: str | None = None
+    ) -> None:
         if self.name == TransferMode.COPY.name:
-            self.copy(src_path, dst_path)
+            self.copy(src_path, dst_path, progress_desc_label)
         elif self.name == TransferMode.MOVE_AND_SYMLINK.name:
             self.move_and_symlink(src_path, dst_path)
         elif self.name == TransferMode.SYMLINK.name:

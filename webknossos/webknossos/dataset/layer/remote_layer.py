@@ -94,7 +94,9 @@ class RemoteLayer(AbstractLayer):
             )
             path = UPath(path_str)
             UPath.mkdir(path, parents=True, exist_ok=True)
-            transfer_mode.transfer(foreign_mag_view.path, path)
+            transfer_mode.transfer(
+                foreign_mag_view.path, path, progress_desc_label="mag"
+            )
             client.finish_mag_upload_to_paths(
                 self._dataset.dataset_id, reserve_parameters
             )
