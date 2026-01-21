@@ -216,66 +216,21 @@ def _median(x: np.ndarray) -> np.ndarray:
     return np.median(x, axis=0).astype(x.dtype)
 
 
-def _mode(x: np.ndarray) -> np.ndarray:
-    """
-    Fast mode implementation from: https://stackoverflow.com/a/35674754
-    """
-    # Check inputs
-    ndim = x.ndim
-    axis = 0
-    # Sort array
-    sort = np.sort(x, axis=axis)
-    # Create array to transpose along the axis and get padding shape
-    transpose = np.roll(np.arange(ndim)[::-1], axis)
-    shape = list(sort.shape)
-    shape[axis] = 1
-    # Create a boolean array along strides of unique values
-    strides = (
-        np.concatenate(
-            [
-                np.zeros(shape=shape, dtype="bool"),
-                np.diff(sort, axis=axis) == 0,
-                np.zeros(shape=shape, dtype="bool"),
-            ],
-            axis=axis,
-        )
-        .transpose(transpose)
-        .ravel()
-    )
-    # Count the stride lengths
-    counts = np.cumsum(strides)
-    counts[~strides] = np.concatenate([[0], np.diff(counts[~strides])])
-    counts[strides] = 0
-    # Get shape of padded counts and slice to return to the original shape
-    shape_array = np.array(sort.shape)
-    shape_array[axis] += 1
-    shape_array = shape_array[transpose]
-    slices = [slice(None)] * ndim
-    slices[axis] = slice(1, None)
-    # Reshape and compute final counts
-    counts = counts.reshape(shape_array).transpose(transpose)[tuple(slices)] + 1
-
-    # Find maximum counts and return modals/counts
-    slices = [slice(None, i) for i in sort.shape]
-    del slices[axis]
-    index = list(np.ogrid[slices])
-    index.insert(axis, np.argmax(counts, axis=axis))
-    return sort[tuple(index)]
-
-
 @numba.jit(nopython=True, nogil=True)
-def fast_mode(input_array: np.ndarray) -> np.ndarray:
+def _mode(input_array: np.ndarray) -> np.ndarray:
     values = np.zeros(input_array.shape[0], dtype=input_array.dtype)
     counter = np.zeros(input_array.shape[0], dtype=np.uint8)
     output_array = np.zeros(input_array.shape[1], dtype=input_array.dtype)
     for row_index in range(input_array.shape[1]):
         values[0] = input_array[0, row_index]
-        counter[:] = 0
+        counter[:] = 1
         value_offset = 1
         for col_index in range(1, input_array.shape[0]):
             value = input_array[col_index, row_index]
             found_value = False
-            for i in range(col_index):  # iterate one less
+            for i in range(
+                value_offset
+            ):  # Only iterate the values that were already seen
                 if value == values[i]:
                     counter[i] = counter[i] + 1
                     found_value = True
@@ -315,7 +270,7 @@ def downsample_cube(
     cube_buffer: np.ndarray, factors: list[int], interpolation_mode: InterpolationModes
 ) -> np.ndarray:
     if interpolation_mode == InterpolationModes.MODE:
-        return non_linear_filter_3d(cube_buffer, factors, fast_mode)
+        return non_linear_filter_3d(cube_buffer, factors, _mode)
     elif interpolation_mode == InterpolationModes.MEDIAN:
         return non_linear_filter_3d(cube_buffer, factors, _median)
     elif interpolation_mode == InterpolationModes.NEAREST:
