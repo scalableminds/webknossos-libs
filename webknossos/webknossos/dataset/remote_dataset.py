@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Literal, Union
 import attr
 import numpy as np
 from boltons.typeutils import make_sentinel
+from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
@@ -27,12 +28,13 @@ from webknossos.dataset.abstract_dataset import (
     _DATASET_URL_REGEX,
     AbstractDataset,
 )
-from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer
+from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer, Zarr3Config
 from webknossos.dataset.layer.abstract_layer import (
     _dtype_per_layer_to_dtype_per_channel,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
 )
+from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -55,6 +57,7 @@ from .defaults import DEFAULT_BIT_DEPTH, DEFAULT_DATA_FORMAT
 from .layer.abstract_layer import _dtype_per_channel_to_element_class
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
+from .transfer_mode import TransferMode
 
 logger = logging.getLogger(__name__)
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
@@ -1146,3 +1149,27 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         dataset_id = client.dataset_explore_and_add_remote(dataset=dataset)
 
         return cls.open(dataset_id=dataset_id)
+
+    def downsample(
+        self,
+        *,
+        sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
+        coarsest_mag: Mag | None = None,
+        interpolation_mode: str = "default",
+        compress: bool | Zarr3Config = True,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
+        executor: Executor | None = None,
+    ) -> None:
+        for layer in self.layers.values():
+            layer.downsample(
+                coarsest_mag=coarsest_mag,
+                sampling_mode=sampling_mode,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                transfer_mode=transfer_mode,
+                common_storage_path_prefix=common_storage_path_prefix,
+                overwrite_pending=overwrite_pending,
+                executor=executor,
+            )

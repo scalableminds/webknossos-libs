@@ -107,12 +107,13 @@ class RemoteLayer(AbstractLayer):
         align_with_other_layers: bool = True,
         buffer_shape: Vec3Int | None = None,
         force_sampling_scheme: bool = False,
-        allow_overwrite: bool = False,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
         executor: Executor | None = None,
     ) -> None:
+        from ..dataset import Dataset
+
         if from_mag is None:
             assert len(self.mags.keys()) > 0, (
                 "Failed to downsample data because no existing mag was found."
@@ -124,9 +125,9 @@ class RemoteLayer(AbstractLayer):
         )
         from_mag_view = self.get_mag(from_mag)
 
-        # todo align with other layers
-
-        from ..dataset import Dataset
+        dataset_to_align_with = None
+        if align_with_other_layers:
+            dataset_to_align_with = self.dataset
 
         with TemporaryDirectory() as tmpdir:
             tmp_dataset = Dataset(
@@ -141,7 +142,7 @@ class RemoteLayer(AbstractLayer):
                 interpolation_mode=interpolation_mode,
                 compress=compress,
                 sampling_mode=sampling_mode,
-                align_with_other_layers=False,
+                align_with_other_layers=dataset_to_align_with,
                 buffer_shape=buffer_shape,
                 force_sampling_scheme=force_sampling_scheme,
                 executor=executor,
