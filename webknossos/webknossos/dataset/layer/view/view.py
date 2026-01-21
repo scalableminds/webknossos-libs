@@ -470,9 +470,8 @@ class View:
                 in Mag(1) coordinates. Defaults to None.
 
         Returns:
-            np.ndarray: The requested data as a numpy array. The shape will be either
-                (channels, x, y, z) for multi-channel data or (x, y, z) for
-                single-channel data. Areas outside the dataset are zero-padded.
+            np.ndarray: The requested data as a numpy array. The shape will be
+                (channels, x, y, z). Areas outside the dataset are zero-padded.
 
         Raises:
             AssertionError: If incompatible parameters are provided (e.g., both
@@ -482,7 +481,7 @@ class View:
             ```python
             # Read entire view's data
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
-            data = view.read()  # Returns (x, y, z) array for single-channel data
+            data = view.read()  # Returns (1, x, y, z) array for single-channel data
 
             # Read with relative offset and size
             data = view.read(
@@ -502,8 +501,7 @@ class View:
         Note:
             - Use only one method to specify the region (offset+size or bounding_box)
             - All coordinates are in Mag(1)
-            - For multi-channel data, the returned array has shape (C, X, Y, Z)
-            - For single-channel data, the returned array has shape (X, Y, Z)
+            - The returned array always has the shape (C, X, Y, Z), even for single channel data
             - Regions outside the dataset are automatically zero-padded
             - The view's magnification affects the actual data resolution
             - Data shape must match the target region size
@@ -1130,7 +1128,7 @@ class View:
         self,
         chunk_shape: VecIntLike,
         chunk_border_alignments: VecIntLike | None = None,
-        read_only: bool = False,
+        read_only: bool | None = None,
     ) -> Generator["View", None, None]:
         """Generate a sequence of sub-views by chunking the current view.
 
@@ -1144,7 +1142,7 @@ class View:
                 borders in Mag(1) coordinates. If None, aligns to (0, 0, 0).
                 Defaults to None.
             read_only (bool, optional): Whether the generated chunks should be read-only.
-                Defaults to False.
+                Defaults to self.read_only.
 
         Yields:
             View: Sub-views representing each chunk of the original view.
@@ -1155,6 +1153,8 @@ class View:
         chunks = mag1.chunk(chunk_shape=(100, 100, 100), chunk_border_alignments=(50, 50, 50))
         ```
         """
+        if read_only is None:
+            read_only = self.read_only
 
         for chunk in self.bounding_box.chunk(chunk_shape, chunk_border_alignments):
             yield self.get_view(absolute_bounding_box=chunk, read_only=read_only)
@@ -1226,7 +1226,7 @@ class View:
         else:
             source_chunk_shape = Vec3Int(source_chunk_shape)
             target_chunk_shape = Vec3Int(target_chunk_shape)
-            self._check_chunk_shape(source_chunk_shape, read_only=True)
+            self._check_chunk_shape(source_chunk_shape, read_only=self.read_only)
             target_view._check_chunk_shape(
                 target_chunk_shape, read_only=target_view.read_only
             )
@@ -1245,9 +1245,7 @@ class View:
             + f"(source_chunk_shape in Mag(1) = {source_chunk_shape}, target_chunk_shape in Mag(1) = {target_chunk_shape})"
         )
 
-        source_views = self.chunk(
-            source_chunk_shape, source_chunk_shape, read_only=True
-        )
+        source_views = self.chunk(source_chunk_shape, source_chunk_shape)
         target_views = target_view.chunk(target_chunk_shape, target_chunk_shape)
 
         job_args = (
@@ -1282,6 +1280,7 @@ class View:
         other: "View",
         executor: Executor | None = None,
         progress_desc: str | None = None,
+        chunk_shape: Vec3IntLike | None = None,
     ) -> bool:
         """Compare the content of this view with another view.
 
@@ -1315,12 +1314,18 @@ class View:
         if self.bounding_box.size != other.bounding_box.size:
             return False
         with get_executor_for_args(None, executor) as executor:
+            # read-only views are required for more flexible chunk shapes
+            # otherwise, shard-aligned chunk shapes would be required
+            read_only_self = self.get_view(read_only=True)
+            read_only_other = other.get_view(read_only=True)
             try:
-                self.for_zipped_chunks(
+                read_only_self.for_zipped_chunks(
                     _assert_check_equality,
-                    other,
+                    read_only_other,
                     executor=executor,
                     progress_desc=progress_desc or "Comparing contents",
+                    source_chunk_shape=chunk_shape,
+                    target_chunk_shape=chunk_shape,
                 )
             except AssertionError:
                 return False

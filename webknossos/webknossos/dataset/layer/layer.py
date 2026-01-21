@@ -702,7 +702,7 @@ class Layer(AbstractLayer):
 
         # use the target shard shape for the copy operation
         copy_shape = mag_view.info.shard_shape * mag_view.mag.to_vec3_int()
-        foreign_mag_view.for_zipped_chunks(
+        foreign_mag_view.get_view(read_only=True).for_zipped_chunks(
             func_per_chunk=_copy_job,
             target_view=mag_view,
             executor=executor,
@@ -1375,7 +1375,7 @@ class Layer(AbstractLayer):
                     buffer_shape=buffer_shape,
                 )
                 prev_mag_view.get_view(
-                    absolute_bounding_box=bbox_mag1
+                    absolute_bounding_box=bbox_mag1, read_only=True
                 ).for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
                     func,
