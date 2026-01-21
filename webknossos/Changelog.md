@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Improved downsampling performance of segmentation data by at least 4x and of other data by at least 2x. [#1406](https://github.com/scalableminds/webknossos-libs/pull/1406)
 
 ### Fixed
 
