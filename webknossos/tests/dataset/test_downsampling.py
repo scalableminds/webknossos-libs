@@ -39,7 +39,7 @@ def test_downsample_mode() -> None:
     a = np.array([[1, 3, 4, 2, 2, 7], [5, 2, 2, 1, 4, 1], [3, 3, 2, 2, 1, 1]])
 
     result = _mode(a)
-    expected_result = np.array([1, 3, 2, 2, 1, 1])
+    expected_result = np.array([1, 3, 2, 2, 2, 1])
 
     assert np.all(result == expected_result)
 

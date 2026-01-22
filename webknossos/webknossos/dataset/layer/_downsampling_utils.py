@@ -6,6 +6,7 @@ from enum import Enum
 from itertools import product
 from typing import TYPE_CHECKING, Union
 
+import numba
 import numpy as np
 from scipy.ndimage import zoom
 
@@ -32,10 +33,10 @@ class InterpolationModes(Enum):
 
 def determine_downsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
     # This is the shape of the data in the downsampling target magnification, so the
-    # data that is read is up to 512³ vx in the source magnification. Using larger
+    # data that is read is up to 1024³ vx in the source magnification. Using larger
     # shapes uses a lot of RAM, especially for segmentation layers which use the mode filter.
     # See https://scm.slack.com/archives/CMBMU5684/p1749771929954699 for more context.
-    return Vec3Int.full(256).pairmin(array_info.shard_shape)
+    return Vec3Int.full(512).pairmin(array_info.shard_shape)
 
 
 def determine_upsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
@@ -215,51 +216,32 @@ def _median(x: np.ndarray) -> np.ndarray:
     return np.median(x, axis=0).astype(x.dtype)
 
 
-def _mode(x: np.ndarray) -> np.ndarray:
-    """
-    Fast mode implementation from: https://stackoverflow.com/a/35674754
-    """
-    # Check inputs
-    ndim = x.ndim
-    axis = 0
-    # Sort array
-    sort = np.sort(x, axis=axis)
-    # Create array to transpose along the axis and get padding shape
-    transpose = np.roll(np.arange(ndim)[::-1], axis)
-    shape = list(sort.shape)
-    shape[axis] = 1
-    # Create a boolean array along strides of unique values
-    strides = (
-        np.concatenate(
-            [
-                np.zeros(shape=shape, dtype="bool"),
-                np.diff(sort, axis=axis) == 0,
-                np.zeros(shape=shape, dtype="bool"),
-            ],
-            axis=axis,
-        )
-        .transpose(transpose)
-        .ravel()
-    )
-    # Count the stride lengths
-    counts = np.cumsum(strides)
-    counts[~strides] = np.concatenate([[0], np.diff(counts[~strides])])
-    counts[strides] = 0
-    # Get shape of padded counts and slice to return to the original shape
-    shape_array = np.array(sort.shape)
-    shape_array[axis] += 1
-    shape_array = shape_array[transpose]
-    slices = [slice(None)] * ndim
-    slices[axis] = slice(1, None)
-    # Reshape and compute final counts
-    counts = counts.reshape(shape_array).transpose(transpose)[tuple(slices)] + 1
+@numba.jit(nopython=True, nogil=True)
+def _mode(input_array: np.ndarray) -> np.ndarray:
+    values = np.zeros(input_array.shape[0], dtype=input_array.dtype)
+    counter = np.zeros(input_array.shape[0], dtype=np.uint8)
+    output_array = np.zeros(input_array.shape[1], dtype=input_array.dtype)
+    for row_index in range(input_array.shape[1]):
+        values[0] = input_array[0, row_index]
+        counter[:] = 1
+        value_offset = 1
+        for col_index in range(1, input_array.shape[0]):
+            value = input_array[col_index, row_index]
+            found_value = False
+            for i in range(
+                value_offset
+            ):  # Only iterate the values that were already seen
+                if value == values[i]:
+                    counter[i] = counter[i] + 1
+                    found_value = True
+                    break
+            if not found_value:
+                values[value_offset] = value
+                value_offset += 1
+        mode = values[np.argmax(counter)]
+        output_array[row_index] = mode
 
-    # Find maximum counts and return modals/counts
-    slices = [slice(None, i) for i in sort.shape]
-    del slices[axis]
-    index = list(np.ogrid[slices])
-    index.insert(axis, np.argmax(counts, axis=axis))
-    return sort[tuple(index)]
+    return output_array
 
 
 def downsample_unpadded_data(
@@ -318,7 +300,7 @@ def downsample_cube_job(
         target_bbox_in_mag = target_view.bounding_box.in_mag(target_view.mag)
         shape = (num_channels,) + target_bbox_in_mag.size.to_tuple()
         shape_xyz = target_bbox_in_mag.size_xyz
-        file_buffer = np.zeros(shape, target_view.get_dtype())
+        file_buffer = np.zeros(shape, target_view.get_dtype(), order="F")
 
         tiles = product(
             *(
