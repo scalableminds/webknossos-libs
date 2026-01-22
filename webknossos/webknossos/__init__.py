@@ -24,6 +24,7 @@ Server interactions may require [authentication](webknossos/client/context.html)
 # The table above contains zero-width spaces in the code examples after each dot to enforce correct line-breaks.
 # ruff: noqa: F403
 from .administration import *
+from .ai_model import *
 from .annotation import *
 from .client import *
 from .dataset import *

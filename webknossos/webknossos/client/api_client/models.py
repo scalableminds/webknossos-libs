@@ -462,3 +462,21 @@ class ApiReserveDatasetUploadToPathsForPreliminaryParameters:
 @attr.s(auto_attribs=True)
 class ApiReserveDatasetUploadToPathsForPreliminaryResponse:
     data_source: DatasetProperties
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveAiModelUploadToPathParameters:
+    existing_ai_model_id: str | None
+    data_store_name: str
+    name: str
+    comment: str | None
+    category: str | None
+    path_prefix: str | None
+
+
+@attr.s(auto_attribs=True)
+class ApiAiModel:
+    id: str
+    path: str
+    name: str
+    is_usable: bool
