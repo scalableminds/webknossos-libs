@@ -732,7 +732,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 assert mag.path is not None, "mag.path must be set to copy/move data"
                 dst_mag_path = enrich_path(mag.path)
                 transfer_mode.transfer(
-                    src_mag.path, dst_mag_path, progress_desc_label="mag"
+                    src_mag.path,
+                    dst_mag_path,
+                    progress_desc_label=f"{layer.name}/{mag.mag}",
                 )
             if isinstance(src_layer, SegmentationLayer):
                 assert isinstance(layer, SegmentationLayerProperties), (
@@ -746,7 +748,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     transfer_mode.transfer(
                         src_attachment.path,
                         dst_attachment_path,
-                        progress_desc_label="attachment",
+                        progress_desc_label=f"{layer.name}/{src_attachment.type_name}:{src_attachment.name}",
                     )
 
     @staticmethod

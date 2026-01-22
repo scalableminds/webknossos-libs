@@ -95,7 +95,9 @@ class RemoteLayer(AbstractLayer):
                 )
             )
             transfer_mode.transfer(
-                foreign_mag_view.path, path, progress_desc_label="mag"
+                foreign_mag_view.path,
+                path,
+                progress_desc_label=f"{self.name}/{foreign_mag_view.mag}",
             )
             client.finish_mag_upload_to_paths(
                 self._dataset.dataset_id, reserve_parameters
@@ -123,6 +125,8 @@ class RemoteLayer(AbstractLayer):
 
         Downsamples the data starting from from_mag until a magnification is >= max(coarsest_mag).
         Different sampling modes control how dimensions are downsampled.
+
+        Note that the data is written temporarily on the local disk and uploaded afterwards so some local disk space is required.
 
         Args:
             from_mag (Mag | None): Source magnification to downsample from. Defaults to highest existing mag.
