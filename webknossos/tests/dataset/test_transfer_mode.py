@@ -16,7 +16,7 @@ def test_transfer_mode_move_and_symlink() -> None:
         src.mkdir(parents=True, exist_ok=True)
         (src / "a.txt").touch()
 
-        transfer_mode.transfer(src, dst)
+        transfer_mode.transfer(src, dst, progress_desc_label="test data")
 
         assert (dst / "a.txt").exists()
         assert (src / "a.txt").exists()
@@ -24,11 +24,11 @@ def test_transfer_mode_move_and_symlink() -> None:
 
         # try to move again to same destination
         with pytest.raises(AssertionError):
-            transfer_mode.transfer(src, dst)
+            transfer_mode.transfer(src, dst, progress_desc_label="test data")
 
         # try to move again to different destination
         dst2 = UPath(tmp_dir) / "dst_test2"
-        transfer_mode.transfer(src, dst2)
+        transfer_mode.transfer(src, dst2, progress_desc_label="test data")
 
         assert (dst / "a.txt").exists()
         assert not dst.is_symlink()
@@ -47,7 +47,7 @@ def test_transfer_mode_symlink() -> None:
         src.mkdir(parents=True, exist_ok=True)
         (src / "a.txt").touch()
 
-        transfer_mode.transfer(src, dst)
+        transfer_mode.transfer(src, dst, progress_desc_label="test data")
 
         assert (dst / "a.txt").exists()
         assert (src / "a.txt").exists()
@@ -55,11 +55,11 @@ def test_transfer_mode_symlink() -> None:
 
         # try to move again to same destination
         with pytest.raises(AssertionError):
-            transfer_mode.transfer(src, dst)
+            transfer_mode.transfer(src, dst, progress_desc_label="test data")
 
         # try to move again to different destination
         dst2 = UPath(tmp_dir) / "dst_test2"
-        transfer_mode.transfer(src, dst2)
+        transfer_mode.transfer(src, dst2, progress_desc_label="test data")
 
         assert (dst / "a.txt").exists()
         assert dst.is_symlink()

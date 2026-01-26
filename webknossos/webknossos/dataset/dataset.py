@@ -52,7 +52,10 @@ from .layer import (
 )
 from .layer.abstract_layer import (
     _UNALLOWED_LAYER_NAME_CHARS,
-    _dtype_per_channel_to_dtype_per_layer,
+    _dtype_per_channel_to_element_class,
+    _normalize_dtype_per_channel,
+    _normalize_dtype_per_layer,
+    _validate_layer_name,
 )
 from .layer.layer import _get_shard_shape
 from .ome_metadata import write_ome_metadata
@@ -87,7 +90,6 @@ from ..dataset_properties import (
 )
 from ..dataset_properties.structuring import (
     _properties_floating_type_to_python_type,
-    _python_floating_type_to_properties_type,
     get_dataset_converter,
 )
 from ..utils import (
@@ -144,15 +146,6 @@ def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
             except ArrayException:
                 pass
     return None
-
-
-def _validate_layer_name(layer_name: str) -> None:
-    from webknossos.dataset.layer.abstract_layer import _ALLOWED_LAYER_NAME_REGEX
-
-    if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
-        raise ValueError(
-            f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
-        )
 
 
 class Dataset(AbstractDataset[Layer, SegmentationLayer]):
@@ -491,11 +484,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
         return self._load_dataset_properties_from_path(self.path)
 
-    def _save_dataset_properties_impl(self) -> None:
+    def _save_dataset_properties_impl(
+        self, layer_renaming: tuple[str, str] | None = None
+    ) -> None:
         """
         Exports the current dataset properties to json on disk.
         And writes out Zarr and OME-Ngff metadata if there is a Zarr layer.
         """
+        del layer_renaming  # only used in remote case
         (self.path / PROPERTIES_FILE_NAME).write_text(
             json.dumps(
                 get_dataset_converter().unstructure(self._properties),
@@ -735,7 +731,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 src_mag = src_layer.mags[mag.mag]
                 assert mag.path is not None, "mag.path must be set to copy/move data"
                 dst_mag_path = enrich_path(mag.path)
-                transfer_mode.transfer(src_mag.path, dst_mag_path)
+                transfer_mode.transfer(
+                    src_mag.path,
+                    dst_mag_path,
+                    progress_desc_label=f"{layer.name}/{mag.mag}",
+                )
             if isinstance(src_layer, SegmentationLayer):
                 assert isinstance(layer, SegmentationLayerProperties), (
                     "If src_layer is a SegmentationLayer, then layer must be a SegmentationLayerProperties"
@@ -745,7 +745,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     src_layer.attachments, layer.attachments
                 ):
                     dst_attachment_path = enrich_path(dst_attachment.path)
-                    transfer_mode.transfer(src_attachment.path, dst_attachment_path)
+                    transfer_mode.transfer(
+                        src_attachment.path,
+                        dst_attachment_path,
+                        progress_desc_label=f"{layer.name}/{src_attachment.type_name}:{src_attachment.name}",
+                    )
 
     @staticmethod
     def get_remote_datasets(
@@ -2629,31 +2633,3 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             raise IndexError(
                 f"Failed to get segmentation layer: There are multiple {category} layer."
             )
-
-
-def _dtype_per_channel_to_element_class(
-    dtype_per_channel: DTypeLike, num_channels: int
-) -> str:
-    dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
-        dtype_per_channel, num_channels
-    )
-    return _python_floating_type_to_properties_type.get(
-        dtype_per_layer, dtype_per_layer
-    )
-
-
-def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
-    try:
-        return np.dtype(dtype_per_channel)
-    except TypeError as e:
-        raise TypeError(
-            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
-        ) from e
-
-
-def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
-    try:
-        dtype_per_layer = str(np.dtype(dtype_per_layer))
-    except Exception:
-        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
-    return dtype_per_layer  # type: ignore[return-value]

@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- New functions for RemoteDataset `add_layer`, `downsample` and RemoteLayer `add_mag_as_copy`, `delete_mag`, `name` (setter), `downsample`
 
 ### Changed
 - Improved downsampling performance of segmentation data by at least 4x and of other data by at least 2x. [#1406](https://github.com/scalableminds/webknossos-libs/pull/1406)

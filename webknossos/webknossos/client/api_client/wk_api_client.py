@@ -23,6 +23,7 @@ from webknossos.client.api_client.models import (
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryResponse,
     ApiReserveDatasetUploadToPathsResponse,
+    ApiReserveMagUploadToPathParameters,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
@@ -421,3 +422,21 @@ class WkApiClient(AbstractApiClient):
 
     def finish_dataset_upload_to_paths(self, dataset_id: str) -> None:
         self._post(f"/datasets/{dataset_id}/finishUploadToPaths")
+
+    def reserve_mag_upload_to_paths(
+        self,
+        dataset_id: str,
+        reserve_mag_upload_to_path_parameters: ApiReserveMagUploadToPathParameters,
+    ) -> str:
+        route = f"/datasets/{dataset_id}/reserveMagUploadToPath"
+        return self._post_json_with_json_response(
+            route, reserve_mag_upload_to_path_parameters, str
+        )
+
+    def finish_mag_upload_to_paths(
+        self,
+        dataset_id: str,
+        reserve_mag_upload_to_path_parameters: ApiReserveMagUploadToPathParameters,
+    ) -> None:
+        route = f"/datasets/{dataset_id}/finishMagUploadToPath"
+        self._post_json(route, reserve_mag_upload_to_path_parameters)
