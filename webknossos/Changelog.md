@@ -10,17 +10,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.4...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.1.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.4) - 2026-01-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.3...v3.1.4)
 
 ### Added
 - New functions for RemoteDataset `add_layer`, `downsample` and RemoteLayer `add_mag_as_copy`, `delete_mag`, `name` (setter), `downsample`
 
 ### Changed
 - Improved downsampling performance of segmentation data by at least 4x and of other data by at least 2x. [#1406](https://github.com/scalableminds/webknossos-libs/pull/1406)
-
-### Fixed
 
 
 ## [3.1.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.3) - 2026-01-15
