@@ -36,6 +36,11 @@ class RemoteAiModel:
         path_prefix: str | None,
         transfer_mode: TransferMode = TransferMode.COPY,
     ) -> "RemoteAiModel":
+        """
+        Uploads an AI model from a local or remote path to the webknossos data store.
+
+        :param src_path: The path of the model artifact.
+        """
         if transfer_mode == TransferMode.HTTP:
             raise ValueError("HTTP transfer mode is not supported for this method")
 
@@ -52,8 +57,31 @@ class RemoteAiModel:
             )
         )
 
+        # this is the **parent** directory where we need to upload the model
+        # after uploading, we want the following structure:
+        # target_info.path/
+        #   config_train_model.yaml
+        #   model/
+        target_path = UPath(target_info.path)
+        # the parent dir needs to exist before copying the config
+        target_path.mkdir(parents=True, exist_ok=True)
+
+        # depending on whether the model was trained locally or on s3, the folder name may differ
+        # also, the parent may contain unwanted folders like "logs", "cfut", etc.
+        # therefor we directly transfer only the config and the model folder to the desired target structure
+
+        # copy config_train_model.yaml
         transfer_mode.transfer(
-            src_path, UPath(target_info.path), progress_desc_label="AI model"
+            src_path.parent / "config_train_model.yaml",
+            target_path / "config_train_model.yaml",
+            progress_desc_label="AI model config",
+        )
+
+        # for uploaded models, the target folder name should always just be "model"
+        transfer_mode.transfer(
+            src_path,
+            target_path / "model",
+            progress_desc_label="AI model",
         )
 
         api_client.finish_ai_model_upload_to_path(target_info.id)
