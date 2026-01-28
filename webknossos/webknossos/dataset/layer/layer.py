@@ -973,6 +973,7 @@ class Layer(AbstractLayer):
         force_sampling_scheme: bool = False,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
+        from_mag_view: MagView | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Downsample data from a source magnification to coarser magnifications.
@@ -993,6 +994,7 @@ class Layer(AbstractLayer):
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
             allow_overwrite (bool): Whether existing mags can be overwritten. False by default.
             only_setup_mags (bool): Only create mags without data. False by default.
+            from_mag_view: Source magnification view, pass only if the source data should be from another layer or dataset.
             executor (Executor | None): Executor for parallel processing. None by default.
 
         Raises:
@@ -1023,9 +1025,10 @@ class Layer(AbstractLayer):
             )
             from_mag = max(self.mags.keys())
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        if from_mag_view is None:
+            assert from_mag in self.mags.keys(), (
+                f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+            )
 
         if coarsest_mag is None:
             coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size_xyz)
@@ -1074,8 +1077,10 @@ class Layer(AbstractLayer):
             else:
                 raise RuntimeError(msg)
 
-        for prev_mag, target_mag in zip(
-            [from_mag] + mags_to_downsample[:-1], mags_to_downsample
+        prev_mag_views = [from_mag_view] + [None] * (len(mags_to_downsample) - 1)
+
+        for prev_mag, target_mag, prev_mag_view in zip(
+            [from_mag] + mags_to_downsample[:-1], mags_to_downsample, prev_mag_views
         ):
             self.downsample_mag(
                 from_mag=prev_mag,
@@ -1085,6 +1090,7 @@ class Layer(AbstractLayer):
                 buffer_shape=buffer_shape,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
+                from_mag_view=prev_mag_view,
                 executor=executor,
             )
 
@@ -1098,6 +1104,7 @@ class Layer(AbstractLayer):
         buffer_shape: Vec3Int | None = None,
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
+        from_mag_view: MagView | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Performs a single downsampling step between magnification levels.
@@ -1110,15 +1117,12 @@ class Layer(AbstractLayer):
             buffer_shape: Shape of processing buffer
             allow_overwrite: Whether to allow overwriting existing mag
             only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
+            from_mag_view: Source magnification view, pass only if the source data should be from another layer or dataset.
             executor: Executor for parallel processing
 
         Raises:
             AssertionError: If from_mag doesn't exist or target exists without overwrite"""
         self._dataset._ensure_writable()
-
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
 
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.category
@@ -1128,8 +1132,15 @@ class Layer(AbstractLayer):
         assert allow_overwrite or target_mag not in self.mags, (
             "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
         )
-
-        prev_mag_view = self.mags[from_mag]
+        if from_mag_view is not None:
+            assert from_mag_view.mag == from_mag, (
+                f"from_mag_view {from_mag_view.mag} was supplied to downsample, but does not match from_mag {from_mag}."
+            )
+        else:
+            assert from_mag in self.mags.keys(), (
+                f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+            )
+            from_mag_view = self.mags[from_mag]
 
         mag_factors = target_mag.to_vec3_int() // from_mag.to_vec3_int()
 
@@ -1139,7 +1150,7 @@ class Layer(AbstractLayer):
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
                 target_mag,
-                prev_mag_view,
+                from_mag_view,
                 compress=compress,
             )
 
@@ -1151,7 +1162,7 @@ class Layer(AbstractLayer):
         # Get target view
         target_view = target_mag_view.get_view(absolute_bounding_box=bb_mag1)
 
-        source_view = prev_mag_view.get_view(
+        source_view = from_mag_view.get_view(
             absolute_bounding_box=bb_mag1,
             read_only=True,
         )
