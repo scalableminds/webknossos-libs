@@ -205,6 +205,7 @@ nav:
       - AI Automations and Jobs:
         - webknossos/automation/index.md
         - AI Segmentations: webknossos/automation/ai_segmentation.md
+        - AI Model Training: webknossos/automation/ai_training.md
         - Alignment: webknossos/automation/alignment.md
         - Animations: webknossos/automation/animations.md
         - Jobs: webknossos/automation/jobs.md
