@@ -205,6 +205,7 @@ nav:
       - AI Automations and Jobs:
         - webknossos/automation/index.md
         - AI Segmentations: webknossos/automation/ai_segmentation.md
+        - AI Model Training: webknossos/automation/ai_training.md
         - Alignment: webknossos/automation/alignment.md
         - Animations: webknossos/automation/animations.md
         - Jobs: webknossos/automation/jobs.md
@@ -219,9 +220,10 @@ nav:
         - Installation: webknossos/open_source/installation.md
         - Dataset Handling: webknossos/open_source/dataset_handling.md
     - Tutorials:
-      - Volume Annotation: webknossos/tutorial_volume_annotation.md
-      - Data Sharing: webknossos/tutorial_data_sharing.md
-      - Automation: webknossos/tutorial_automation.md
+      - Volume Annotation: webknossos/tutorials/volume_annotation.md
+      - Data Sharing: webknossos/tutorials/data_sharing.md
+      - Automation: webknossos/tutorials/automation.md
+      - AI Training Data Annotation: webknossos/tutorials/trainingdata_annotation.md
       - Today I Learned: webknossos/today_i_learned.md
     - Reference:
       - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
