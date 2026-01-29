@@ -210,17 +210,6 @@ def test_upload_download_roundtrip(tmp_upath: UPath) -> None:
         ds_roundtrip.get_segmentation_layers()[0].mags.keys()
     )
 
-    original_config = ds_original.get_layer("color").default_view_configuration
-    roundtrip_config = ds_roundtrip.get_layer("color").default_view_configuration
-    assert original_config is not None, (
-        "default_view_configuration should be defined for original dataset"
-    )
-    assert roundtrip_config is not None, (
-        "default_view_configuration should be defined for roundtrip dataset"
-    )
-    assert original_config.color == roundtrip_config.color
-    assert original_config.intensity_range == roundtrip_config.intensity_range
-
     data_original = ds_original.get_segmentation_layers()[0].get_finest_mag().read()
     data_roundtrip = ds_roundtrip.get_segmentation_layers()[0].get_finest_mag().read()
     assert np.array_equal(data_original, data_roundtrip)

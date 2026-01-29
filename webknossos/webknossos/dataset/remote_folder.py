@@ -130,7 +130,17 @@ class RemoteFolder:
         client.folder_update(folder_id=self.id, folder=new_folder)
 
     def move_to(self, new_parent: "RemoteFolder") -> "RemoteFolder":
-        """Move the folder to a new parent folder."""
+        """Move the folder to a new parent folder.
+
+        This method returns a new `RemoteFolder` instance representing the moved folder.
+        The original `RemoteFolder` object is not modified, so you should use the returned value.
+
+        Args:
+            new_parent: The new parent folder.
+
+        Returns:
+            A new `RemoteFolder` instance in the new location.
+        """
         from ..client.context import _get_api_client
 
         client = _get_api_client()
@@ -173,22 +183,24 @@ class RemoteFolder:
 
     @property
     def parent(self) -> "RemoteFolder | None":
-        """The parent folder of the folder in the WEBKNOSSOS interface.
-        Changes are immediately synchronized with WEBKNOSSOS.
-        """
+        """The parent folder of the folder in the WEBKNOSSOS interface."""
         if self._parent is None:
             return None
         return self.get_by_id(self._parent)
 
     @property
     def path(self) -> str:
-        """The path for the folder in the WEBKNOSSOS interface.
-        Changes are immediately synchronized with WEBKNOSSOS.
-        """
-        parent = self.parent
-        if parent is None:
-            return self.name
-        return f"{parent.path}/{self.name}"
+        """The path for the folder in the WEBKNOSSOS interface."""
+        from ..client.context import _get_api_client
+
+        client = _get_api_client()
+        folder_tree_response: list[ApiFolderWithParent] = client.folder_tree()
+
+        self_info = next((f for f in folder_tree_response if f.id == self.id), None)
+        if self_info is None:
+            raise KeyError(f"Could not find folder {self.id} in folder tree.")
+
+        return _get_folder_path(self_info, folder_tree_response)
 
     @property
     def name(self) -> str:

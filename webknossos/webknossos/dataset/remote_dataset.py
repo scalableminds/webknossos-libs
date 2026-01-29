@@ -1212,22 +1212,24 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         """
         from ..client.context import _get_api_client
 
+        folder_obj: RemoteFolder | None = None
         if folder_path is not None:
             warn_deprecated("folder_path", "folder")
             if folder is not None:
                 raise ValueError(
                     "Both folder_path and folder were provided. Only one is allowed."
                 )
-            folder = RemoteFolder.get_by_path(folder_path)
-
-        if isinstance(folder, str):
-            folder = RemoteFolder.get_by_path(folder)
+            folder_obj = RemoteFolder.get_by_path(folder_path)
+        elif isinstance(folder, str):
+            folder_obj = RemoteFolder.get_by_path(folder)
+        elif isinstance(folder, RemoteFolder):
+            folder_obj = folder
 
         client = _get_api_client()
         dataset = ApiDatasetExploreAndAddRemote(
             UPath(dataset_uri).resolve().as_uri(),
             dataset_name,
-            None if folder is None else folder.path,
+            None if folder_obj is None else folder_obj.id,
         )
         dataset_id = client.dataset_explore_and_add_remote(dataset=dataset)
 
