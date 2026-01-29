@@ -74,9 +74,14 @@ def test_url_download(url: str, tmp_upath: UPath) -> None:
         # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
-def test_url_open_remote(url: str, tmp_upath: UPath) -> None:
+@pytest.mark.parametrize(
+    "access_mode", [wk.RemoteAccessMode.ZARR_STREAMING, wk.RemoteAccessMode.PROXY_PATH]
+)
+def test_url_open_remote(
+    url: str, tmp_upath: UPath, access_mode: wk.RemoteAccessMode
+) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
-    ds = wk.RemoteDataset.open(url)
+    ds = wk.RemoteDataset.open(url, access_mode=access_mode)
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = (
         ds.get_color_layers()[0]
