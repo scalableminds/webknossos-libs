@@ -227,6 +227,12 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             annotation_id_or_url=annotation_id_or_url,
         )
 
+        if annotation_id is not None and access_mode != RemoteAccessMode.ZARR_STREAMING:
+            raise ValueError(
+                "Annotations are only supported with zarr streaming. "
+                + f"Got {access_mode} instead."
+            )
+
         with context_manager:
             wk_context = _get_context()
             token = sharing_token or wk_context.token
@@ -281,7 +287,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     zarr_streaming_path=zarr_path,
                     dataset_properties=None,
                     dataset_id=dataset_id,
-                    annotation_id=annotation_id,
                     context=context_manager,
                     read_only=read_only,
                 )
