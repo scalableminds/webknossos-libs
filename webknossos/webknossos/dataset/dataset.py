@@ -59,7 +59,7 @@ from .layer.abstract_layer import (
 )
 from .layer.layer import _get_shard_shape
 from .ome_metadata import write_ome_metadata
-from .remote_dataset import RemoteDataset
+from .remote_dataset import RemoteAccessMode, RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .transfer_mode import TransferMode
@@ -455,24 +455,27 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def open_remote(
         cls,
         dataset_name_or_url: str | None = None,
+        *,
         organization_id: str | None = None,
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
         annotation_id: str | None = None,
-        use_zarr_streaming: bool = True,
+        access_mode: RemoteAccessMode | None = None,
         read_only: bool = False,
-    ) -> "RemoteDataset":
+        use_zarr_streaming: bool | None = None,
+    ) -> RemoteDataset:
         warn_deprecated("Dataset.open_remote", "RemoteDataset.open")
         return RemoteDataset.open(
-            dataset_name_or_url,
-            organization_id,
-            sharing_token,
-            webknossos_url,
-            dataset_id,
-            annotation_id,
-            use_zarr_streaming,
-            read_only,
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=sharing_token,
+            webknossos_url=webknossos_url,
+            dataset_id=dataset_id,
+            annotation_id_or_url=annotation_id,
+            use_zarr_streaming=use_zarr_streaming,
+            access_mode=access_mode,
+            read_only=read_only,
         )
 
     def __repr__(self) -> str:
@@ -485,7 +488,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         return self._load_dataset_properties_from_path(self.path)
 
     def _save_dataset_properties_impl(
-        self, layer_renaming: tuple[str, str] | None = None
+        self, *, layer_renaming: tuple[str, str] | None = None
     ) -> None:
         """
         Exports the current dataset properties to json on disk.
@@ -559,15 +562,24 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         warn_deprecated("Dataset.download", "RemoteDataset.download")
 
         remote_dataset = RemoteDataset.open(
-            dataset_name_or_url, organization_id, sharing_token, webknossos_url
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=sharing_token,
+            webknossos_url=webknossos_url,
         )
         return remote_dataset.download(
-            sharing_token, bbox, layers, mags, path, exist_ok
+            sharing_token=sharing_token,
+            bbox=bbox,
+            layers=layers,
+            mags=mags,
+            path=path,
+            exist_ok=exist_ok,
         )
 
     def publish_to_preliminary_dataset(
         self,
         dataset_id: str,
+        *,
         path_prefix: str | None = None,
         transfer_mode: TransferMode = TransferMode.COPY,
     ) -> None:
@@ -599,6 +611,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def upload(
         self,
+        *,
         new_dataset_name: str | None = None,
         initial_team_ids: list[str] | None = None,
         folder_id: str | RemoteFolder | None = None,
@@ -767,6 +780,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     @classmethod
     def trigger_reload_in_datastore(
         cls,
+        *,
         dataset_name_or_url: str | None = None,
         organization_id: str | None = None,
         webknossos_url: str | None = None,

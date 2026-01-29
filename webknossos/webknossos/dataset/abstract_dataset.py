@@ -116,12 +116,13 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
 
     @abstractmethod
     def _save_dataset_properties_impl(
-        self, layer_renaming: tuple[str, str] | None = None
+        self, *, layer_renaming: tuple[str, str] | None = None
     ) -> None:
         pass
 
     def _save_dataset_properties(
         self,
+        *,
         check_existing_properties: bool = True,
         layer_renaming: tuple[str, str] | None = None,
     ) -> None:
@@ -142,7 +143,7 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
                     "[WARNING] Properties changed in a way that they are not comparable anymore. Most likely "
                     + "the bounding box naming or axis order changed."
                 )
-        self._save_dataset_properties_impl(layer_renaming)
+        self._save_dataset_properties_impl(layer_renaming=layer_renaming)
         self._last_read_properties = copy.deepcopy(self._properties)
 
     @property
