@@ -97,6 +97,7 @@ class LayerProperties:
     data_format: DataFormat
     mags: list[MagViewProperties]
     num_channels: int | None = None
+    channel_index: int | None = None
     default_view_configuration: LayerViewConfiguration | None = None
 
 

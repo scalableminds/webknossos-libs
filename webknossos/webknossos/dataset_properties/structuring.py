@@ -85,6 +85,13 @@ def layer_properties_post_unstructure(
         obj: LayerProperties | SegmentationLayerProperties,
     ) -> dict[str, Any]:
         d = converter_fn(obj)
+
+        for mag in d["mags"]:
+            if "axisOrder" in d["boundingBox"]:
+                mag["axisOrder"] = d["boundingBox"]["axisOrder"]
+            if "channelIndex" in d["boundingBox"]:
+                mag["channelIndex"] = d["boundingBox"]["channelIndex"]
+
         if d["dataFormat"] == "wkw":
             d["wkwResolutions"] = [
                 mag_view_properties_post_unstructure(m) for m in d["mags"]
@@ -129,6 +136,8 @@ def layer_properties_pre_structure(
             del d["additionalAxes"]
         if len(d["mags"]) > 0:
             first_mag = d["mags"][0]
+            if "channelIndex" in first_mag:
+                d["boundingBox"]["channelIndex"] = first_mag["channelIndex"]
             if "axisOrder" in first_mag:
                 assert (
                     "c" not in first_mag["axisOrder"]
