@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Generator, Iterable
+from collections.abc import Generator, Iterable, Sequence
 from itertools import product
 from typing import (
     TypeVar,
@@ -28,6 +28,21 @@ def int_tpl(vec_int_like: VecIntLike) -> VecInt:
     return VecInt(
         vec_int_like, axes=(f"unset_{i}" for i in range(len(list(vec_int_like))))
     )
+
+
+def _find_index_by_name(axes: Sequence["Axis"], name: str) -> int:
+    for i, axis in enumerate(axes):
+        if axis.name == name:
+            return i
+    raise ValueError(f"Axis {name} not found in {axes}")
+
+
+@attr.frozen
+class Axis:
+    name: str
+    min: int
+    size: int
+    index: int
 
 
 @attr.frozen
@@ -70,7 +85,6 @@ class NDBoundingBox:
     Note:
         - The top-left coordinate is inclusive while bottom-right is exclusive
         - Each axis must have a unique index starting from 1
-        - Index 0 is reserved for channel information
     """
 
     topleft: VecInt = attr.field(converter=int_tpl)
@@ -88,9 +102,6 @@ class NDBoundingBox:
         ), (
             f"The dimensions of topleft, size, axes and index ({len(self.topleft)}, "
             + f"{len(self.size)}, {len(self.axes)} and {len(self.index)}) do not match."
-        )
-        assert "c" not in self.axes or self.index[self.axes.index("c")] == 0, (
-            "Index 0 is reserved for channels."
         )
 
         # Convert the delivered tuples to VecInts
@@ -315,30 +326,59 @@ class NDBoundingBox:
             AssertionError: If additionalAxes are present but axisOrder is not provided.
         """
 
-        topleft: tuple[int, ...] = bbox["topLeft"]
-        size: tuple[int, ...] = (bbox["width"], bbox["height"], bbox["depth"])
-        axes: tuple[str, ...] = ("x", "y", "z")
-        index: tuple[int, ...] = (1, 2, 3)
+        if (
+            bbox.get("channelIndex", 0) == 0
+            and "additionalAxes" not in bbox
+            and "axisOrder" not in bbox
+        ):
+            # Delegate to BoundingBox.from_wkw_dict, if only 3d
+            from .bounding_box import BoundingBox
+
+            return BoundingBox.from_wkw_dict(bbox)
+
+        axes = [
+            Axis(
+                name="c",
+                min=bbox.get("channelIndex", 0),
+                size=bbox.get("numChannels", 1),
+                index=0,
+            ),
+            Axis(name="x", min=bbox["topLeft"][0], size=bbox["width"], index=1),
+            Axis(name="y", min=bbox["topLeft"][1], size=bbox["height"], index=2),
+            Axis(name="z", min=bbox["topLeft"][2], size=bbox["depth"], index=3),
+        ]
+
+        if "additionalAxes" in bbox:
+            assert "axisOrder" in bbox, (
+                "If there are additionalAxes an axisOrder needs to be provided."
+            )
+            axes.extend(
+                Axis(
+                    name=axis["name"],
+                    min=axis["bounds"][0],
+                    size=axis["bounds"][1] - axis["bounds"][0],
+                    index=axis["index"],
+                )
+                for axis in bbox["additionalAxes"]
+            )
 
         if "axisOrder" in bbox:
-            axes = tuple(bbox["axisOrder"].keys())
-            index = tuple(bbox["axisOrder"][axis] for axis in axes)
+            for axis_name, axis_index in bbox["axisOrder"].items():
+                idx = _find_index_by_name(axes, axis_name)
+                axes[idx] = attr.evolve(axes[idx], index=axis_index)
 
-            if "additionalAxes" in bbox:
-                assert "axisOrder" in bbox, (
-                    "If there are additionalAxes an axisOrder needs to be provided."
-                )
-                for axis in bbox["additionalAxes"]:
-                    topleft += (axis["bounds"][0],)
-                    size += (axis["bounds"][1] - axis["bounds"][0],)
-                    axes += (axis["name"],)
-                    index += (axis["index"],)
+        axes = sorted(axes, key=lambda axis: axis.index)
+
+        topleft = [axis.min for axis in axes]
+        size = [axis.size for axis in axes]
+        axis_names = [axis.name for axis in axes]
+        index = [axis.index for axis in axes]
 
         return cls(
-            topleft=VecInt(topleft, axes=axes),
-            size=VecInt(size, axes=axes),
-            axes=axes,
-            index=VecInt(index, axes=axes),
+            topleft=VecInt(topleft, axes=axis_names),
+            size=VecInt(size, axes=axis_names),
+            axes=axis_names,
+            index=VecInt(index, axes=axis_names),
         )
 
     def to_wkw_dict(self) -> dict:
@@ -361,6 +401,8 @@ class NDBoundingBox:
             elif axis == "z":
                 topleft[2] = self.topleft[i]
                 depth = self.size[i]
+            elif axis == "c":
+                pass
             else:
                 additional_axes.append(
                     {
@@ -369,20 +411,24 @@ class NDBoundingBox:
                         "index": self.index[i],
                     }
                 )
-        if additional_axes:
-            return {
-                "topLeft": topleft,
-                "width": width,
-                "height": height,
-                "depth": depth,
-                "additionalAxes": additional_axes,
-            }
-        return {
+        out = {
             "topLeft": topleft,
             "width": width,
             "height": height,
             "depth": depth,
         }
+        if additional_axes:
+            out["additionalAxes"] = additional_axes
+        if any(axis not in ("c", "x", "y", "z") for axis in self.axes):
+            out["axisOrder"] = {
+                axis: self.index[self.axes.index(axis)]
+                for axis in self.axes
+                if axis not in ("c", "x", "y", "z")
+            }
+        if "c" in self.axes and self.topleft.c != 0:
+            out["channelIndex"] = self.topleft.c
+
+        return out
 
     def to_config_dict(self) -> dict:
         """

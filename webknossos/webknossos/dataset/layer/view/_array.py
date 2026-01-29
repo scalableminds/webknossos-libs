@@ -606,29 +606,28 @@ class TensorStoreArray(BaseArray):
             raise ArrayException(f"Could not open array at {path}.") from exc
 
     def _requested_domain(
-        self, bbox: NDBoundingBox, num_channels: int, has_channel_dimension: bool
+        self, bbox: NDBoundingBox, num_channels: int
     ) -> tensorstore.IndexDomain:
-        if not has_channel_dimension:
-            requested_domain = tensorstore.IndexDomain(
-                bbox.ndim,
-                inclusive_min=bbox.topleft.to_tuple(),
-                shape=bbox.size.to_tuple(),
-            )
+        topleft: tuple[int, ...]
+        size: tuple[int, ...]
+        if isinstance(bbox, BoundingBox):
+            topleft = (0,) + bbox.topleft.to_tuple()
+            size = (num_channels,) + bbox.size.to_tuple()
         else:
-            requested_domain = tensorstore.IndexDomain(
-                bbox.ndim + 1,
-                inclusive_min=(0,) + bbox.topleft.to_tuple(),
-                shape=(num_channels,) + bbox.size.to_tuple(),
-            )
+            topleft = bbox.topleft.to_tuple()
+            size = bbox.size.to_tuple()
+
+        requested_domain = tensorstore.IndexDomain(
+            len(topleft),
+            inclusive_min=topleft,
+            shape=size,
+        )
         return requested_domain
 
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
         array = self._array
 
-        has_channel_dimension = len(self.info.shape) == len(array.domain)
-        requested_domain = self._requested_domain(
-            bbox, self.info.num_channels, has_channel_dimension
-        )
+        requested_domain = self._requested_domain(bbox, self.info.num_channels)
         available_domain = requested_domain.intersect(array.domain)
 
         data = call_with_retries(
@@ -643,8 +642,6 @@ class TensorStoreArray(BaseArray):
             out[tuple(slice(0, data.shape[i]) for i in range(len(data.shape)))] = data
         else:
             out = data
-        if not has_channel_dimension:
-            out = np.expand_dims(out, 0)
         return out
 
     def resize(self, new_bbox: NDBoundingBox) -> None:
@@ -655,6 +652,7 @@ class TensorStoreArray(BaseArray):
         new_bbox = new_bbox.with_bottomright_xyz(
             new_bbox.bottomright_xyz.ceildiv(shard_shape) * shard_shape
         )
+        # TODO adapt for ndbbox
         new_domain = tensorstore.IndexDomain(
             new_bbox.ndim + 1,
             shape=(self.info.num_channels,) + new_bbox.bottomright.to_tuple(),
@@ -693,21 +691,22 @@ class TensorStoreArray(BaseArray):
             )
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
-        if data.ndim == len(bbox):
-            # the bbox does not include the channels, if data and bbox have the same size there is only 1 channel
-            data = data.reshape((1,) + data.shape)
+        if isinstance(bbox, BoundingBox):
+            if data.ndim == len(bbox):
+                # the bbox does not include the channels, if data and bbox have the same size there is only 1 channel
+                data = data.reshape((1,) + data.shape)
 
-        assert data.ndim == len(bbox) + 1, (
-            "The data has to have the same number of dimensions as the bounding box."
-        )
+            assert data.ndim == len(bbox) + 1, (
+                "The data has to have the same number of dimensions as the bounding box."
+            )
+        else:
+            assert data.ndim == len(bbox), (
+                "The data has to have the same number of dimensions as the bounding box."
+            )
 
         array = self._array
 
-        requested_domain = tensorstore.IndexDomain(
-            bbox.ndim + 1,
-            inclusive_min=(0,) + bbox.topleft.to_tuple(),
-            shape=(self.info.num_channels,) + bbox.size.to_tuple(),
-        )
+        requested_domain = self._requested_domain(bbox, self.info.num_channels)
         call_with_retries(
             lambda: array[requested_domain].write(data).result(),
             description="Writing tensorstore array",
@@ -1049,9 +1048,9 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
         raise RuntimeError("Neuroglancer precomputed arrays cannot be written to.")
 
     def _requested_domain(
-        self, bbox: NDBoundingBox, num_channels: int, has_channel_dimension: bool
+        self, bbox: NDBoundingBox, num_channels: int
     ) -> tensorstore.IndexDomain:
-        assert has_channel_dimension
+        assert isinstance(bbox, BoundingBox)
         return tensorstore.IndexDomain(
             bbox.ndim + 1,
             inclusive_min=(0,) + bbox.topleft.to_tuple(),

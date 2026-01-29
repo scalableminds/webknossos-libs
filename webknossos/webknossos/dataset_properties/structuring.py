@@ -139,16 +139,13 @@ def layer_properties_pre_structure(
             if "channelIndex" in first_mag:
                 d["boundingBox"]["channelIndex"] = first_mag["channelIndex"]
             if "axisOrder" in first_mag:
-                assert (
-                    "c" not in first_mag["axisOrder"]
-                    or first_mag["axisOrder"]["c"] == 0
-                ), "The channels c must have index 0 in axis order."
                 assert all(
                     first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
                 )
                 d["boundingBox"]["axisOrder"] = copy.deepcopy(first_mag["axisOrder"])
-                if "c" in d["boundingBox"]["axisOrder"]:
-                    del d["boundingBox"]["axisOrder"]["c"]
+
+        if "numChannels" in d:
+            d["boundingBox"]["numChannels"] = d["numChannels"]
 
         obj = converter_fn(d, type_value)
         return obj
