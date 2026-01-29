@@ -24,6 +24,7 @@ from webknossos import (
     Dataset,
     LayerCategoryType,
     RemoteDataset,
+    RemoteFolder,
     View,
 )
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
@@ -1149,7 +1150,7 @@ def test_explore_and_add_remote() -> None:
     remote_ds = RemoteDataset.explore_and_add_remote(
         "http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/",
         "added_remote_ds",
-        "/Organization_X",
+        folder=RemoteFolder.get_by_path("Organization_X"),
     )
     assert remote_ds.name == "added_remote_ds"
 
@@ -3618,7 +3619,7 @@ def test_copy_dataset_exists_ok() -> None:
 
 @pytest.mark.use_proxay
 def test_remote_dataset_access_metadata() -> None:
-    ds = RemoteDataset.open("l4_sample", "Organization_X")
+    ds = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     assert len(ds.metadata) == 2  # has 2 by default
 
     ds.metadata["key"] = "value"
@@ -3639,7 +3640,7 @@ def test_remote_dataset_access_metadata() -> None:
 
 @pytest.mark.use_proxay
 def test_remote_dataset_urls() -> None:
-    ds = RemoteDataset.open("l4_sample", "Organization_X")
+    ds = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     dataset_id = ds._dataset_id
     assert dataset_id in ds.url
 

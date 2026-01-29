@@ -33,9 +33,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Added `parent` and `path` properties to `RemoteFolder`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 
 ### Changed
 - The `RemoteDataset.open` method now accepts `access_mode` instead of `use_zarr_streaming`. `use_zarr_streaming` is still supported, but deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Renamed `folder_path` to `folder` in `RemoteDataset.explore_and_add_remote`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Renamed `folder_id` to `folder` in `Dataset.upload`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Renamed `folder_id` to `folder` in `RemoteDataset.list`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 
 ### Fixed
 

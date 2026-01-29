@@ -195,7 +195,8 @@ def test_upload_download_roundtrip(tmp_upath: UPath) -> None:
         new_dataset_name="test_upload_download_roundtrip"
     )
     wk.RemoteDataset.trigger_reload_in_datastore(
-        "test_upload_download_roundtrip", "Organization_X"
+        dataset_name_or_url="test_upload_download_roundtrip",
+        organization_id="Organization_X",
     )
     ds_roundtrip = wk.RemoteDataset.open(uploaded_dataset.url).download(
         path=tmp_upath / "ds", layers=["color", "segmentation"]

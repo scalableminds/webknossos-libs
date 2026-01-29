@@ -28,6 +28,7 @@ class RemoteFolder:
 
     id: str
     _name: str
+    _parent: str | None
 
     def add_subfolder(self, name: str) -> "RemoteFolder":
         """Adds a new folder with the specified name."""
@@ -35,7 +36,7 @@ class RemoteFolder:
 
         client = _get_api_client()
         api_folder = client.folder_add(folder_name=name, parent_id=self.id)
-        return RemoteFolder(name=api_folder.name, id=api_folder.id)
+        return RemoteFolder(name=api_folder.name, id=api_folder.id, parent=self.id)
 
     @classmethod
     def get_by_id(cls, folder_id: str) -> "RemoteFolder":
@@ -47,7 +48,9 @@ class RemoteFolder:
 
         for folder_info in folder_tree_response:
             if folder_info.id == folder_id:
-                return cls(name=folder_info.name, id=folder_info.id)
+                return cls(
+                    name=folder_info.name, id=folder_info.id, parent=folder_info.parent
+                )
 
         raise KeyError(f"Could not find folder {folder_id}.")
 
@@ -64,7 +67,9 @@ class RemoteFolder:
         for folder_info in folder_tree_response:
             folder_path = _get_folder_path(folder_info, folder_tree_response)
             if folder_path == path:
-                return cls(name=folder_info.name, id=folder_info.id)
+                return cls(
+                    name=folder_info.name, id=folder_info.id, parent=folder_info.parent
+                )
 
         raise KeyError(f"Could not find folder {path}.")
 
@@ -76,7 +81,7 @@ class RemoteFolder:
 
         client = _get_api_client()
         root_folder = client.folder_root()
-        return cls(name=root_folder.name, id=root_folder.id)
+        return cls(name=root_folder.name, id=root_folder.id, parent=None)
 
     def get_datasets(self) -> Mapping[str, "RemoteDataset"]:
         """Returns all datasets in this folder."""
@@ -93,7 +98,9 @@ class RemoteFolder:
         folder_tree_response: list[ApiFolderWithParent] = client.folder_tree()
 
         return tuple(
-            RemoteFolder(name=folder_info.name, id=folder_info.id)
+            RemoteFolder(
+                name=folder_info.name, id=folder_info.id, parent=folder_info.parent
+            )
             for folder_info in folder_tree_response
             if folder_info.parent == self.id
         )
@@ -122,12 +129,13 @@ class RemoteFolder:
         )
         client.folder_update(folder_id=self.id, folder=new_folder)
 
-    def move_to(self, new_parent: "RemoteFolder") -> None:
+    def move_to(self, new_parent: "RemoteFolder") -> "RemoteFolder":
         """Move the folder to a new parent folder."""
         from ..client.context import _get_api_client
 
         client = _get_api_client()
         client.folder_move(folder_id=self.id, new_parent_id=new_parent.id)
+        return RemoteFolder(name=self.name, id=self.id, parent=new_parent.id)
 
     @property
     def allowed_teams(self) -> tuple[Team, ...]:
@@ -162,6 +170,25 @@ class RemoteFolder:
             metadata=folder.metadata,
         )
         client.folder_update(folder_id=self.id, folder=new_folder)
+
+    @property
+    def parent(self) -> "RemoteFolder | None":
+        """The parent folder of the folder in the WEBKNOSSOS interface.
+        Changes are immediately synchronized with WEBKNOSSOS.
+        """
+        if self._parent is None:
+            return None
+        return self.get_by_id(self._parent)
+
+    @property
+    def path(self) -> str:
+        """The path for the folder in the WEBKNOSSOS interface.
+        Changes are immediately synchronized with WEBKNOSSOS.
+        """
+        parent = self.parent
+        if parent is None:
+            return self.name
+        return f"{parent.path}/{self.name}"
 
     @property
     def name(self) -> str:

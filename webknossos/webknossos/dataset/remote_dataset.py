@@ -211,9 +211,13 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         if access_mode is None:
             access_mode = RemoteAccessMode.ZARR_STREAMING
 
-        if annotation_id_or_url is not None:
-            assert use_zarr_streaming, (
-                "Annotations are only supported with zarr streaming"
+        if (
+            annotation_id_or_url is not None
+            and access_mode != RemoteAccessMode.ZARR_STREAMING
+        ):
+            raise ValueError(
+                "Annotations are only supported with zarr streaming. "
+                + f"Got {access_mode} instead."
             )
 
         from ..client.context import _get_context
@@ -226,12 +230,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             dataset_id=dataset_id,
             annotation_id_or_url=annotation_id_or_url,
         )
-
-        if annotation_id is not None and access_mode != RemoteAccessMode.ZARR_STREAMING:
-            raise ValueError(
-                "Annotations are only supported with zarr streaming. "
-                + f"Got {access_mode} instead."
-            )
 
         with context_manager:
             wk_context = _get_context()
@@ -279,7 +277,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 )
             elif access_mode == RemoteAccessMode.PROXY_PATH:
                 zarr_path = UPath(
-                    f"{url_prefix}/proxy/{dataset_id}/",
+                    f"{url_prefix}/datasets/{dataset_id}/proxy/",
                     headers={} if token is None else {"X-Auth-Token": token},
                     ssl=SSL_CONTEXT,
                 )
@@ -287,6 +285,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     zarr_streaming_path=zarr_path,
                     dataset_properties=None,
                     dataset_id=dataset_id,
+                    annotation_id=None,
                     context=context_manager,
                     read_only=read_only,
                 )
@@ -906,6 +905,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         organization_id: str | None = None,
         tags: str | Sequence[str] | None = None,
         name: str | None = None,
+        folder: RemoteFolder | str | None = None,
         folder_id: RemoteFolder | str | None = None,
     ) -> Mapping[str, "RemoteDataset"]:
         """Get all available datasets from the WEBKNOSSOS server.
@@ -922,6 +922,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 matching name.
             folder: Optional folder to filter datasets by. Only returns datasets in
                 the specified folder.
+            folder_id: Deprecated, use folder instead.
 
         Returns:
             Mapping[str, RemoteDataset]: Dict mapping dataset ids to RemoteDataset objects
@@ -954,11 +955,19 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             RemoteDataset objects are initialized lazily when accessed for the first time.
             The mapping object provides a fast way to list and look up available datasets.
         """
-        if isinstance(folder_id, RemoteFolder):
-            folder_id = folder_id.id
+        if folder_id is not None:
+            warn_deprecated("folder_id", "folder")
+            if folder is not None:
+                raise ValueError(
+                    "Both folder_id and folder were provided. Only one is allowed."
+                )
+            folder = folder_id
+
+        if isinstance(folder, RemoteFolder):
+            folder = folder.id
 
         return RemoteDatasetRegistry(
-            name=name, organization_id=organization_id, tags=tags, folder_id=folder_id
+            name=name, organization_id=organization_id, tags=tags, folder_id=folder
         )
 
     @classmethod
@@ -1171,6 +1180,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         dataset_uri: str | PathLike | UPath,
         dataset_name: str,
         *,
+        folder: str | RemoteFolder | None = None,
         folder_path: str | None = None,
     ) -> "RemoteDataset":
         """Explore and add an external dataset as a remote dataset.
@@ -1181,7 +1191,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         Args:
             dataset_uri: URI pointing to the remote dataset location
             dataset_name: Name to register dataset under in WEBKNOSSOS
-            folder_path: Path in WEBKNOSSOS folder structure where dataset should appear
+            folder: Path in WEBKNOSSOS folder structure where dataset should appear
+            folder_path: Deprecated, use folder instead.
 
         Returns:
             RemoteDataset: The newly added dataset accessible via WEBKNOSSOS
@@ -1191,7 +1202,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             remote = Dataset.explore_and_add_remote(
                 "s3://bucket/dataset",
                 "my_dataset",
-                "Datasets/Research"
+                folder=RemoteFolder.get_by_path("Datasets/Research")
             )
             ```
 
@@ -1201,9 +1212,22 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         """
         from ..client.context import _get_api_client
 
+        if folder_path is not None:
+            warn_deprecated("folder_path", "folder")
+            if folder is not None:
+                raise ValueError(
+                    "Both folder_path and folder were provided. Only one is allowed."
+                )
+            folder = RemoteFolder.get_by_path(folder_path)
+
+        if isinstance(folder, str):
+            folder = RemoteFolder.get_by_path(folder)
+
         client = _get_api_client()
         dataset = ApiDatasetExploreAndAddRemote(
-            UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
+            UPath(dataset_uri).resolve().as_uri(),
+            dataset_name,
+            None if folder is None else folder.path,
         )
         dataset_id = client.dataset_explore_and_add_remote(dataset=dataset)
 
