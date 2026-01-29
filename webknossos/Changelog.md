@@ -29,7 +29,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `layer_name`, `mesh_file_name`, `datastore_url`, `lod`, `mapping_name`, `mapping_type`, `mag`, `seed_position`, `token` and `sharing_token` in `RemoteDataset.download_mesh`
   - `dataset_name_or_url`, `organization_id`, `webknossos_url`, `dataset_id`, `organization`, `datastore_url` and `token` in `RemoteDataset.trigger_reload_in_datastore`
   - `folder_path` in `RemoteDataset.explore_and_add_remote`
-  - `name`, `organization_id`, `tags` and `folder_id` in `RemoteDataset.explore_and_add_remote` (should not be used directly)
+  - `name`, `organization_id`, `tags` and `folder_id` in `RemoteDatasetRegistry.__init__` (should not be used directly)
 
 ### Added
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
