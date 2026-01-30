@@ -298,7 +298,7 @@ def downsample_cube_job(
     try:
         num_channels = target_view.info.num_channels
         target_bbox_in_mag = target_view.bounding_box.in_mag(target_view.mag)
-        shape = (num_channels,) + target_bbox_in_mag.size.to_tuple()
+        shape = target_bbox_in_mag.size.to_tuple()
         shape_xyz = target_bbox_in_mag.size_xyz
         file_buffer = np.zeros(shape, target_view.get_dtype(), order="F")
 
@@ -336,16 +336,20 @@ def downsample_cube_job(
                         interpolation_mode,
                     )
 
-                    buffer_bbox = target_view.bounding_box.with_topleft_xyz(
-                        target_offset
-                    ).with_size_xyz(data_cube.shape)
+                    buffer_bbox = (
+                        target_view.bounding_box.with_topleft_xyz(target_offset)
+                        .with_size_xyz(data_cube.shape)
+                        .with_bounds("c", new_size=1)
+                    )
 
                     # Add missing axes to the data_cube if bbox is nd
                     data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
 
-                    file_buffer[(channel_index,) + buffer_bbox.to_slices_xyz()] = (
-                        data_cube
-                    )
+                    slices: list[int | slice] = list(buffer_bbox.to_slices_xyz())
+                    if "c" in buffer_bbox.axes:
+                        slices[buffer_bbox.index.c] = channel_index
+
+                    file_buffer[tuple(slices)] = data_cube
 
         # Write the downsampled buffer to target
         target_view.write(file_buffer, absolute_bounding_box=target_view.bounding_box)

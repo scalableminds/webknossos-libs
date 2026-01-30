@@ -67,6 +67,13 @@ class VecInt(tuple):
 
         if args:
             if isinstance(args[0], VecInt):
+                if axes is not None:
+                    axes = tuple(axes)
+                    if len(axes) != len(args[0]):
+                        raise ValueError(
+                            "The number of axes must match the number of axes in the VecInt."
+                        )
+                    return cls(args[0].to_tuple(), axes=axes)
                 return args[0]
             if isinstance(args[0], np.ndarray):
                 assert np.count_nonzero(args[0] % 1) == 0, _value_error(args)
@@ -174,6 +181,34 @@ class VecInt(tuple):
         return self.__class__(
             *self[:index], new_element, *self[index + 1 :], axes=self.axes
         )
+
+    def with_c(self: _T, new_c: int) -> _T:
+        """Returns a new ND Vector with the c component replaced by the given value."""
+        if self._c_pos is None:
+            raise ValueError("The vector does not have an c component.")
+        return self.with_replaced(self._c_pos, new_c)
+
+    def with_x(self: _T, new_x: int) -> _T:
+        """Returns a new ND Vector with the x component replaced by the given value."""
+        if self._x_pos is None:
+            raise ValueError("The vector does not have an y component.")
+        return self.with_replaced(self._x_pos, new_x)
+
+    def with_y(self: _T, new_y: int) -> _T:
+        """Returns a new ND Vector with the y component replaced by the given value."""
+        if self._y_pos is None:
+            raise ValueError("The vector does not have an y component.")
+        return self.with_replaced(self._y_pos, new_y)
+
+    def with_z(self: _T, new_z: int) -> _T:
+        """Returns a new ND Vector with the z component replaced by the given value."""
+        if self._z_pos is None:
+            raise ValueError("The vector does not have an z component.")
+        return self.with_replaced(self._z_pos, new_z)
+
+    def with_xyz(self: _T, new_xyz: "Vec3Int") -> _T:
+        """Returns a new ND Vector with the x, y and z components replaced by the given vector."""
+        return self.with_x(new_xyz.x).with_y(new_xyz.y).with_z(new_xyz.z)
 
     def to_np(self) -> np.ndarray:
         """

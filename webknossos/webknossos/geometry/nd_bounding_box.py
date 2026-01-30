@@ -393,23 +393,24 @@ class NDBoundingBox:
         width, height, depth = None, None, None
         additional_axes = []
         for i, axis in enumerate(self.axes):
+            index = self.index[i]
             if axis == "x":
-                topleft[0] = self.topleft[i]
-                width = self.size[i]
+                topleft[0] = self.topleft[index]
+                width = self.size[index]
             elif axis == "y":
-                topleft[1] = self.topleft[i]
-                height = self.size[i]
+                topleft[1] = self.topleft[index]
+                height = self.size[index]
             elif axis == "z":
-                topleft[2] = self.topleft[i]
-                depth = self.size[i]
+                topleft[2] = self.topleft[index]
+                depth = self.size[index]
             elif axis == "c":
                 pass
             else:
                 additional_axes.append(
                     {
                         "name": axis,
-                        "bounds": [self.topleft[i], self.bottomright[i]],
-                        "index": self.index[i],
+                        "bounds": [self.topleft[index], self.bottomright[index]],
+                        "index": index,
                     }
                 )
         out = {
@@ -842,14 +843,11 @@ class NDBoundingBox:
         try:
             # If a 3D chunk_shape is given it is assumed that iteration over xyz is
             # intended. Therefore NDBoundingBoxes are generated that have a shape of
-            # x: chunk_shape.x, y: chunk_shape.y, z: chunk_shape.z and 1 for all other
+            # x: chunk_shape.x, y: chunk_shape.y, z: chunk_shape.z, c: size.c and 1 for all other
             # axes.
             chunk_shape = Vec3Int(chunk_shape)
-
             chunk_shape = (
-                self.with_size(VecInt.ones(self.axes))
-                .with_size_xyz(chunk_shape)
-                .size.to_np()
+                VecInt.ones(self.axes).with_xyz(chunk_shape).with_c(self.size.c).to_np()
             )
         except AssertionError:
             chunk_shape = VecInt(chunk_shape, axes=self.axes).to_np()
@@ -860,9 +858,10 @@ class NDBoundingBox:
                 chunk_border_alignments = Vec3Int(chunk_border_alignments)
 
                 chunk_border_alignments = (
-                    self.with_size(VecInt.ones(self.axes))
-                    .with_size_xyz(chunk_border_alignments)
-                    .size.to_np()
+                    VecInt.ones(self.axes)
+                    .with_xyz(chunk_border_alignments)
+                    .with_c(self.size.c)
+                    .to_np()
                 )
             except AssertionError:
                 chunk_border_alignments = VecInt(
@@ -913,9 +912,9 @@ class NDBoundingBox:
         """
         assert all(
             size == 1 for size, axis in zip(self.size, self.axes) if axis not in "xyz"
-        ), "The view's bounding box must be flat in all dimensions except xyz."
+        ), "The view's bounding box must be flat in all dimensions except x, y and z."
         data = np.expand_dims(data, axis=tuple(range(3, len(self))))
-        return np.moveaxis(
+        data = np.moveaxis(
             data,
             [0, 1, 2],
             (
@@ -924,6 +923,7 @@ class NDBoundingBox:
                 self.axes.index("z"),
             ),
         )
+        return data
 
     def to_slices(self) -> tuple[slice, ...]:
         """
@@ -940,7 +940,7 @@ class NDBoundingBox:
         """
         assert all(
             size == 1 for size, axis in zip(self.size, self.axes) if axis not in "xyz"
-        ), "The view's bounding box must be flat in all dimensions except xyz."
+        ), "The view's bounding box must be flat in all dimensions except x, y and z."
         return (
             NDBoundingBox(VecInt.zeros(self.axes), self.size, self.axes, self.index)
             .with_topleft_xyz(self.topleft_xyz)
@@ -962,6 +962,10 @@ class NDBoundingBox:
         except AssertionError:
             return self.with_topleft(self.topleft + VecInt(vector, axes=self.axes))
 
+    def normalize_axes(self, num_channels: int) -> "NDBoundingBox":
+        assert ("c" in self.axes and num_channels == self.size.c) or num_channels == 1
+        return self
+
 
 def derive_nd_bounding_box_from_shape(
     data_shape: tuple[int, ...],
@@ -973,22 +977,15 @@ def derive_nd_bounding_box_from_shape(
     if axes is not None:
         axes = tuple(axes)
         assert len(axes) == data_ndim
+        bbox = NDBoundingBox(
+            absolute_offset or VecInt.zeros(axes),
+            VecInt(data_shape, axes=axes),
+            axes=axes,
+            index=tuple(range(len(axes))),
+        )
         if "c" in axes:
-            assert axes[0] == "c"
-            bbox = NDBoundingBox(
-                absolute_offset or VecInt.zeros(axes[1:]),
-                VecInt(data_shape[1:], axes=axes[1:]),
-                axes=axes[1:],
-                index=tuple(range(1, len(axes))),
-            )
-            num_channels = data_shape[0]
+            num_channels = data_shape[axes.index("c")]
         else:
-            bbox = NDBoundingBox(
-                absolute_offset or VecInt.zeros(axes),
-                VecInt(data_shape, axes=axes),
-                axes=axes,
-                index=tuple(range(1, len(axes) + 1)),
-            )
             num_channels = 1
     else:
         from .bounding_box import BoundingBox

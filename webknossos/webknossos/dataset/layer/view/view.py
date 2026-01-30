@@ -332,13 +332,24 @@ class View:
             data_shape = Vec3Int(data.shape[-3:])
 
         num_channels = self._array.info.num_channels
-        if len(data.shape) == len(self.bounding_box):
-            assert num_channels == 1, (
-                f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
-            )
+        self_bbox = self.bounding_box.normalize_axes(num_channels)
+        if self_bbox.axes == ("c", "x", "y", "z"):
+            if len(data.shape) == 3:
+                assert self_bbox.size.c == 1, (
+                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data (1)"
+                )
+                data = np.expand_dims(data, axis=0)
+            elif len(data.shape) != 4:
+                raise ValueError(
+                    f"The data has to have the dimensions (c, x, y, z) or (x, y, z), got shape {data.shape}"
+                )
         else:
-            assert num_channels == data.shape[0], (
-                f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
+            if "c" in self_bbox.axes:
+                assert self_bbox.size.c == data.shape[self_bbox.index.c], (
+                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
+                )
+            assert len(data.shape) == len(self_bbox.axes), (
+                f"The data has to have the dimensions {self_bbox.axes}, got shape {data.shape}"
             )
 
         mag1_bbox = self._get_mag1_bbox(
@@ -347,9 +358,9 @@ class View:
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=data_shape,
-        )
-        assert self.bounding_box.contains_bbox(mag1_bbox), (
-            f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
+        ).normalize_axes(num_channels)
+        assert self_bbox.contains_bbox(mag1_bbox), (
+            f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self_bbox}"
         )
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
@@ -380,12 +391,13 @@ class View:
         """Check that the bounding box is aligned with the shard grid"""
         shard_shape = self.info.shard_shape
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
-        if shard_bbox.intersected_with(self.bounding_box.in_mag(self._mag)) != bbox:
+        self_bbox = self.bounding_box.normalize_axes(self.info.num_channels)
+        if shard_bbox.intersected_with(self_bbox.in_mag(self._mag)) != bbox:
             raise ValueError(
                 f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
                 + "Performance will be degraded as existing shard data has to be read, combined and "
                 + "written as whole shards. Additionally, writing without shard alignment data can lead to "
-                + f"issues when writing in parallel. Bounding box: {self.bounding_box}",
+                + f"issues when writing in parallel. Bounding box: {self_bbox}",
             )
 
     def _prepare_compressed_write(
@@ -402,16 +414,7 @@ class View:
             chunk_border_alignments=self._array.info.shard_shape,
         )
         for chunked_bbox in chunked_bboxes:
-            source_slice: Any
-            if len(data.shape) == len(current_mag_bbox):
-                source_slice = chunked_bbox.offset(
-                    -current_mag_bbox.topleft
-                ).to_slices()
-            else:
-                source_slice = (slice(None, None),) + chunked_bbox.offset(
-                    -current_mag_bbox.topleft
-                ).to_slices()
-
+            source_slice = chunked_bbox.offset(-current_mag_bbox.topleft).to_slices()
             yield self._prepare_compressed_write_chunk(chunked_bbox, data[source_slice])
 
     def _prepare_compressed_write_chunk(
@@ -432,9 +435,7 @@ class View:
             # The data bbox should either be aligned or match the dataset's bounding box:
             aligned_data = self._read_without_checks(aligned_bbox)
 
-            index_slice = (slice(None, None),) + current_mag_bbox.offset(
-                -aligned_bbox.topleft
-            ).to_slices()
+            index_slice = current_mag_bbox.offset(-aligned_bbox.topleft).to_slices()
             # overwrite the specified data
             aligned_data[index_slice] = data
             return aligned_bbox, aligned_data
@@ -556,7 +557,7 @@ class View:
             abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-        )
+        ).normalize_axes(self.info.num_channels)
         assert not mag1_bbox.is_empty(), (
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
             + "All dimensions must be strictly larger than '0'."
@@ -590,8 +591,7 @@ class View:
 
         Returns:
             np.ndarray: The requested data as a numpy array with dimensions ordered as
-                (channels, X, Y, Z) for multi-channel data or (X, Y, Z) for single-channel
-                data. Areas outside the dataset are zero-padded.
+                (channels, X, Y, Z) data. Areas outside the dataset are zero-padded.
 
         Examples:
             ```python
@@ -613,17 +613,24 @@ class View:
         mag1_bbox = self._get_mag1_bbox(
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
-        )
-        if isinstance(mag1_bbox, BoundingBox):
-            return self._read_without_checks(mag1_bbox.in_mag(self._mag))
+        ).normalize_axes(self.info.num_channels)
 
         data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
         # transform data to xyz order
-        data = np.moveaxis(
-            data,
-            mag1_bbox.index_xyz,
-            [1, 2, 3],
-        )
+        if "c" in mag1_bbox.axes:
+            data = np.moveaxis(
+                data,
+                (mag1_bbox.index.c,) + mag1_bbox.index_xyz.to_tuple(),
+                [0, 1, 2, 3],
+            )
+        else:
+            data = np.expand_dims(data, axis=0)
+            data = np.moveaxis(
+                data,
+                mag1_bbox.index_xyz.to_tuple(),
+                [1, 2, 3],
+            )
+        # all additional axes have been moved to the end, so we can squeeze them
         data = data.squeeze(axis=tuple(range(4, len(data.shape))))
         return data
 
@@ -747,6 +754,7 @@ class View:
             current_mag_size = None
             mag1_size = None
 
+        self_bbox = self.bounding_box.normalize_axes(self.info.num_channels)
         mag1_bbox = self._get_mag1_bbox(
             abs_mag1_bbox=absolute_bounding_box,
             rel_mag1_bbox=relative_bounding_box,
@@ -754,8 +762,8 @@ class View:
             abs_mag1_offset=absolute_offset,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-        )
-        if not self.bounding_box.is_empty():
+        ).normalize_axes(self.info.num_channels)
+        if not self_bbox.is_empty():
             assert not mag1_bbox.is_empty(), (
                 f"The size ({mag1_bbox.size} in mag1) contains a zero. "
                 + "All dimensions must be strictly larger than '0'."
@@ -765,8 +773,8 @@ class View:
         )
 
         if not read_only:
-            assert self.bounding_box.contains_bbox(mag1_bbox), (
-                f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
+            assert self_bbox.contains_bbox(mag1_bbox), (
+                f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self_bbox}. "
                 + "This is only allowed for read-only views."
             )
 
@@ -776,7 +784,7 @@ class View:
                 shard_shape, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
-            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
+            current_mag_view_bbox = self_bbox.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(
                 current_mag_aligned_bbox, dont_assert=True
             ):

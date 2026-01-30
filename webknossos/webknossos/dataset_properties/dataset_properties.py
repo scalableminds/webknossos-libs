@@ -85,7 +85,6 @@ class MagViewProperties:
     Could be None for older datasource-proterties.json files.
     """
     cube_length: int | None = None
-    axis_order: dict[str, int] | None = None
 
 
 @attr.define
@@ -97,7 +96,6 @@ class LayerProperties:
     data_format: DataFormat
     mags: list[MagViewProperties]
     num_channels: int | None = None
-    channel_index: int | None = None
     default_view_configuration: LayerViewConfiguration | None = None
 
 

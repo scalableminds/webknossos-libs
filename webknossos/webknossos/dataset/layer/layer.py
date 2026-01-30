@@ -370,16 +370,6 @@ class Layer(AbstractLayer):
                     if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
-                axis_order=(
-                    dict(
-                        zip(
-                            ("c", "x", "y", "z"),
-                            (0, *self.bounding_box.index_xyz),
-                        )
-                    )
-                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
-                    else None
-                ),
                 path=dump_path(mag_path, self.dataset.resolved_path),
             )
         ]
@@ -429,17 +419,6 @@ class Layer(AbstractLayer):
                 cube_length=(
                     mag_array_info.shard_shape.x
                     if mag_array_info.data_format == DataFormat.WKW
-                    else None
-                ),
-                axis_order=(
-                    {
-                        key: value
-                        for key, value in zip(
-                            ("c", "x", "y", "z"),
-                            (0, *self.bounding_box.index_xyz),
-                        )
-                    }
-                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
                 path=stored_path,
@@ -826,7 +805,6 @@ class Layer(AbstractLayer):
                 mag=mag,
                 path=dump_path(foreign_mag_view.path, self.dataset.resolved_path),
                 cube_length=foreign_mag_view._properties.cube_length,
-                axis_order=foreign_mag_view._properties.axis_order,
             )
         )
         self._save_layer_properties()

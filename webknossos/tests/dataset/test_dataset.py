@@ -956,7 +956,7 @@ def test_write_layer_mag2(
     "data_format,output_path",
     [(DataFormat.Zarr3, TESTOUTPUT_DIR), (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR)],
 )
-@pytest.mark.parametrize("absolute_offset", [None, (3, 12, 12, 12)])
+@pytest.mark.parametrize("absolute_offset", [None, (0, 3, 12, 12, 12)])
 def test_write_layer_5d(
     data_format: DataFormat,
     output_path: UPath,
@@ -975,12 +975,15 @@ def test_write_layer_5d(
         axes=("c", "t", "x", "y", "z"),
         shard_shape=(128, 128, 128),
         absolute_offset=absolute_offset,
+        downsample=False,
     )
+    with get_executor("sequential") as executor:
+        layer.downsample(executor=executor)
 
     np.testing.assert_array_equal(layer.get_mag(1).read().squeeze(), data)
     if absolute_offset is not None:
         assert layer.bounding_box.topleft.to_tuple() == absolute_offset
-    assert layer.bounding_box.size.to_tuple() == data.shape[1:]
+    assert layer.bounding_box.size.to_tuple() == data.shape
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)

@@ -143,15 +143,10 @@ class MagView(View, Generic[LayerTypeT]):
                 warn_deprecated("chunks_per_shard", "shard_shape")
                 shard_shape = chunk_shape * chunks_per_shard
 
-        axis_order = VecInt(
-            0, *layer.bounding_box.index, axes=("c",) + layer.bounding_box.axes
-        )
-        shape = VecInt(
-            layer.num_channels,
-            *VecInt.ones(layer.bounding_box.axes),
-            axes=("c",) + layer.bounding_box.axes,
-        )
-        dimension_names = ("c",) + layer.bounding_box.axes
+        bbox = layer.bounding_box.normalize_axes(layer.num_channels)
+        axis_order = VecInt(*bbox.index, axes=bbox.axes)
+        shape = bbox.bottomright.with_xyz(Vec3Int.ones())
+        dimension_names = bbox.axes
 
         if layer.data_format == DataFormat.Zarr3:
             compression_mode = Zarr3Config.with_defaults(

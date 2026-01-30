@@ -143,6 +143,9 @@ def layer_properties_pre_structure(
                     first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
                 )
                 d["boundingBox"]["axisOrder"] = copy.deepcopy(first_mag["axisOrder"])
+                assert all(
+                    first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
+                ), "axisOrder must be the same for all mags"
 
         if "numChannels" in d:
             d["boundingBox"]["numChannels"] = d["numChannels"]

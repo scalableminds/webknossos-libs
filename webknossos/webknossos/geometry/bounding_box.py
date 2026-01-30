@@ -479,3 +479,14 @@ class BoundingBox(NDBoundingBox):
 
     def __hash__(self) -> int:
         return hash(self.to_tuple6())
+
+    def normalize_axes(self, num_channels: int) -> NDBoundingBox:
+        return NDBoundingBox(
+            topleft=(0,) + self.topleft.to_tuple(),
+            size=(num_channels,) + self.size.to_tuple(),
+            axes=("c",) + self.axes,
+            index=(0,) + self.index,
+            name=self.name,
+            is_visible=self.is_visible,
+            color=self.color,
+        )
