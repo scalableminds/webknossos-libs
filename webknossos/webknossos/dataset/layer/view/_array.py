@@ -614,8 +614,12 @@ class TensorStoreArray(BaseArray):
             topleft = (0,) + bbox.topleft.to_tuple()
             size = (num_channels,) + bbox.size.to_tuple()
         else:
-            topleft = bbox.topleft.to_tuple()
-            size = bbox.size.to_tuple()
+            if "c" in bbox.axes:
+                topleft = bbox.topleft.to_tuple()
+                size = bbox.size.to_tuple()
+            else:
+                topleft = (0,) + bbox.topleft.to_tuple()
+                size = (num_channels,) + bbox.size.to_tuple()
 
         requested_domain = tensorstore.IndexDomain(
             len(topleft),
@@ -699,8 +703,15 @@ class TensorStoreArray(BaseArray):
             assert data.ndim == len(bbox) + 1, (
                 "The data has to have the same number of dimensions as the bounding box."
             )
-        else:
+        elif "c" in bbox.axes:
             assert data.ndim == len(bbox), (
+                "The data has to have the same number of dimensions as the bounding box."
+            )
+        else:
+            if data.ndim == len(bbox):
+                data = data.reshape((1,) + data.shape)
+
+            assert data.ndim == len(bbox) + 1, (
                 "The data has to have the same number of dimensions as the bounding box."
             )
 

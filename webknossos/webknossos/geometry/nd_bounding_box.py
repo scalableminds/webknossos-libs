@@ -14,6 +14,7 @@ from .vec3_int import Vec3Int, Vec3IntLike
 from .vec_int import VecInt, VecIntLike
 
 _DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
+_DEFAULT_AXIS_ORDER = {"c": 0, "x": 1, "y": 2, "z": 3}
 
 _T = TypeVar("_T", bound="NDBoundingBox")
 
@@ -329,10 +330,7 @@ class NDBoundingBox:
         if (
             bbox.get("channelIndex", 0) == 0
             and ("additionalAxes" not in bbox or bbox["additionalAxes"] == [])
-            and (
-                "axisOrder" not in bbox
-                or bbox["axisOrder"] == {"c": 0, "x": 1, "y": 2, "z": 3}
-            )
+            and ("axisOrder" not in bbox or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER)
         ):
             # Delegate to BoundingBox.from_wkw_dict, if only 3d
             from .bounding_box import BoundingBox
@@ -422,12 +420,16 @@ class NDBoundingBox:
         }
         if additional_axes:
             out["additionalAxes"] = additional_axes
-        if any(axis not in ("c", "x", "y", "z") for axis in self.axes):
-            out["axisOrder"] = {
-                axis: self.index[self.axes.index(axis)]
-                for axis in self.axes
-                if axis not in ("c", "x", "y", "z")
-            }
+
+        axis_order = {axis: self.index[i] for i, axis in enumerate(self.axes)}
+        minimal_axis_order = {
+            axis: index
+            for axis, index in axis_order.items()
+            if axis not in _DEFAULT_AXIS_ORDER or _DEFAULT_AXIS_ORDER[axis] != index
+        }
+        if len(minimal_axis_order) > 0:
+            out["axisOrder"] = minimal_axis_order
+
         if "c" in self.axes and self.topleft.c != 0:
             out["channelIndex"] = self.topleft.c
 

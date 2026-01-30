@@ -7,10 +7,8 @@ import attr
 import numpy as np
 
 from .mag import Mag
-from .nd_bounding_box import NDBoundingBox
+from .nd_bounding_box import _DEFAULT_AXIS_ORDER, _DEFAULT_BBOX_NAME, NDBoundingBox
 from .vec3_int import Vec3Int, Vec3IntLike
-
-_DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
 
 
 @attr.frozen
@@ -98,12 +96,7 @@ class BoundingBox(NDBoundingBox):
             BoundingBox: A new bounding box with the specified dimensions
         """
         assert "channelIndex" not in bbox
-        assert "axisOrder" not in bbox or bbox["axisOrder"] == {
-            "c": 0,
-            "x": 1,
-            "y": 2,
-            "z": 3,
-        }
+        assert "axisOrder" not in bbox or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER
         assert "additionalAxes" not in bbox or bbox["additionalAxes"] == []
         return cls(bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]])
 
