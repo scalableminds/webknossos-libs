@@ -328,8 +328,11 @@ class NDBoundingBox:
 
         if (
             bbox.get("channelIndex", 0) == 0
-            and "additionalAxes" not in bbox
-            and "axisOrder" not in bbox
+            and ("additionalAxes" not in bbox or bbox["additionalAxes"] == [])
+            and (
+                "axisOrder" not in bbox
+                or bbox["axisOrder"] == {"c": 0, "x": 1, "y": 2, "z": 3}
+            )
         ):
             # Delegate to BoundingBox.from_wkw_dict, if only 3d
             from .bounding_box import BoundingBox
