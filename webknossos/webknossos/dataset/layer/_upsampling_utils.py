@@ -60,11 +60,11 @@ def upsample_cube_job(
                 if not np.all(cube_buffer == 0):
                     data_cube = upsample_cube(cube_buffer, inverse_factors)
 
-                    buffer_bbox = (
-                        chunk.with_topleft_xyz(Vec3Int.zeros())
-                        .with_size_xyz(data_cube.shape)
-                        .with_bounds("c", new_size=1)
+                    buffer_bbox = chunk.with_topleft_xyz(Vec3Int.zeros()).with_size_xyz(
+                        data_cube.shape
                     )
+                    if "c" in buffer_bbox.axes:
+                        buffer_bbox = buffer_bbox.with_bounds("c", new_size=1)
                     data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
                     slices: list[int | slice] = list(buffer_bbox.to_slices_xyz())
                     if "c" in buffer_bbox.axes:

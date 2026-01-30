@@ -336,11 +336,11 @@ def downsample_cube_job(
                         interpolation_mode,
                     )
 
-                    buffer_bbox = (
-                        target_view.bounding_box.with_topleft_xyz(target_offset)
-                        .with_size_xyz(data_cube.shape)
-                        .with_bounds("c", new_size=1)
-                    )
+                    buffer_bbox = target_view.bounding_box.with_topleft_xyz(
+                        target_offset
+                    ).with_size_xyz(data_cube.shape)
+                    if "c" in buffer_bbox.axes:
+                        buffer_bbox = buffer_bbox.with_bounds("c", new_size=1)
 
                     # Add missing axes to the data_cube if bbox is nd
                     data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)

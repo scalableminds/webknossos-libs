@@ -313,10 +313,12 @@ class WKWArray(BaseArray):
         return WKWArray(path)
 
     def read(self, bbox: NDBoundingBox) -> np.ndarray:
-        return self._wkw_dataset.read(Vec3Int(bbox.topleft), Vec3Int(bbox.size))
+        assert bbox.axes == ("c", "x", "y", "z") or bbox.axes == ("x", "y", "z")
+        return self._wkw_dataset.read(bbox.topleft.xyz, bbox.size.xyz)
 
     def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
-        self._wkw_dataset.write(Vec3Int(bbox.topleft), data)
+        assert bbox.axes == ("c", "x", "y", "z") or bbox.axes == ("x", "y", "z")
+        self._wkw_dataset.write(bbox.topleft.xyz, data)
 
     def resize(self, new_bbox: NDBoundingBox) -> None:
         pass

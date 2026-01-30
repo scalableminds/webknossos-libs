@@ -754,7 +754,6 @@ class View:
             current_mag_size = None
             mag1_size = None
 
-        self_bbox = self.bounding_box.normalize_axes(self.info.num_channels)
         mag1_bbox = self._get_mag1_bbox(
             abs_mag1_bbox=absolute_bounding_box,
             rel_mag1_bbox=relative_bounding_box,
@@ -762,8 +761,8 @@ class View:
             abs_mag1_offset=absolute_offset,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-        ).normalize_axes(self.info.num_channels)
-        if not self_bbox.is_empty():
+        )
+        if not self.bounding_box.is_empty():
             assert not mag1_bbox.is_empty(), (
                 f"The size ({mag1_bbox.size} in mag1) contains a zero. "
                 + "All dimensions must be strictly larger than '0'."
@@ -773,8 +772,8 @@ class View:
         )
 
         if not read_only:
-            assert self_bbox.contains_bbox(mag1_bbox), (
-                f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self_bbox}. "
+            assert self.bounding_box.contains_bbox(mag1_bbox), (
+                f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
                 + "This is only allowed for read-only views."
             )
 
@@ -784,7 +783,7 @@ class View:
                 shard_shape, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
-            current_mag_view_bbox = self_bbox.in_mag(self._mag)
+            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(
                 current_mag_aligned_bbox, dont_assert=True
             ):
