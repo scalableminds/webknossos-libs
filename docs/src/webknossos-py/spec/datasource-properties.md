@@ -9,7 +9,7 @@ This document specifies the format of `datasource-properties.json`, the metadata
 | `id` | [Id](#id) | Yes | | Legacy identifier for the dataset. WEBKNOSSOS derives the actual name and organization from the dataset path, not from this field. |
 | `scale` | [VoxelSize](#voxelsize) or `[number, number, number]` | Yes | | Physical size of one voxel. Can be specified as a `VoxelSize` object or as a legacy 3-element array (interpreted as nanometers). |
 | `dataLayers` | Array of [LayerProperties](#layerproperties) | Yes | | The layers contained in this dataset. |
-| `version` | `integer` | No | `1` | Schema version number. Defaults to `1` if omitted. |
+| `version` | `integer` | No | `1` | Schema version number. Defaults to `1` if omitted. All new files should include this field and use `1`.  |
 | `defaultViewConfiguration` | [DatasetViewConfiguration](#datasetviewconfiguration) | No | `null` | Default view settings applied when opening the dataset in WEBKNOSSOS. |
 
 ### Id
@@ -69,7 +69,7 @@ Each entry in `dataLayers` describes one layer. The schema varies slightly based
 
 All layers use `mags` (array of [MagViewProperties](#magviewproperties)) to describe their magnification levels.
 
-**Deprecated:** WKW layers may also use `wkwResolutions` (array of [WkwMagViewProperties](#wkwmagviewproperties)). This is a legacy format; prefer `mags` for all data formats.
+Deprecated: WKW layers may also use `wkwResolutions` (array of [WkwMagViewProperties](#wkwmagviewproperties)). This is a legacy format; prefer `mags` for all data formats.
 
 ### Segmentation Layer Fields
 
@@ -125,7 +125,7 @@ Describes a single magnification level for non-WKW formats.
 
 ## WkwMagViewProperties (Deprecated)
 
-**Deprecated: Use [MagViewProperties](#magviewproperties) with `mags` instead for all data formats.**
+Deprecated: Use [MagViewProperties](#magviewproperties) with `mags` instead for all data formats.
 
 Legacy format used within `wkwResolutions` for WKW layers. Uses `resolution` instead of `mag`.
 
@@ -168,9 +168,9 @@ A string indicating the on-disk storage format.
 
 | Value | Description |
 |---|---|
-| `"wkw"` | WEBKNOSSOS Wrap format. Uses `wkwResolutions` for mags. |
-| `"zarr"` | Zarr v2 format. |
 | `"zarr3"` | Zarr v3 format. |
+| `"zarr"` | Zarr v2 format. |
+| `"wkw"` | WEBKNOSSOS Wrap format. |
 | `"n5"` | N5 format. |
 | `"neuroglancerPrecomputed"` | Neuroglancer Precomputed format. |
 
@@ -243,7 +243,6 @@ The entire `attachments` object is omitted from the JSON if all sub-fields are e
 
 - All field names in the JSON use **camelCase** (e.g. `dataLayers`, `elementClass`, `boundingBox`).
 - Optional fields with `null` / default values are **omitted** from the serialized JSON.
-- For WKW layers, mags are serialized under `wkwResolutions` with `resolution` as the key. For all other formats, mags are serialized under `mags` with `mag` as the key.
 - The `additionalAxes` field (for nD layers) is serialized at the layer level, not nested inside `boundingBox`.
 - The `axisOrder` and `channelIndex` fields (internal to the bounding box representation) are serialized on each mag entry rather than on the layer or bounding box.
 
@@ -255,6 +254,7 @@ The entire `attachments` object is omitted from the JSON if all sub-fields are e
 
 ```json
 {
+  "version": 1,
   "id": { "name": "my_dataset", "team": "" },
   "scale": [11.24, 11.24, 28.0],
   "dataLayers": [
@@ -264,9 +264,9 @@ The entire `attachments` object is omitted from the JSON if all sub-fields are e
       "boundingBox": { "topLeft": [0, 0, 0], "width": 1024, "height": 1024, "depth": 512 },
       "elementClass": "uint8",
       "dataFormat": "wkw",
-      "wkwResolutions": [
-        { "resolution": [1, 1, 1], "cubeLength": 1024 },
-        { "resolution": [2, 2, 2], "cubeLength": 1024 }
+      "mags": [
+        { "mag": [1, 1, 1], "path": "./color/1" },
+        { "mag": [2, 2, 2], "path": "./color/2" }
       ]
     }
   ]
@@ -302,6 +302,7 @@ The entire `attachments` object is omitted from the JSON if all sub-fields are e
 
 ```json
 {
+  "version": 1,
   "id": { "name": "4d_timeseries", "team": "" },
   "scale": [10.0, 10.0, 10.0],
   "dataLayers": [
@@ -321,22 +322,5 @@ The entire `attachments` object is omitted from the JSON if all sub-fields are e
       ]
     }
   ]
-}
-```
-
-### Segmentation layer with mappings
-
-```json
-{
-  "name": "segmentation",
-  "category": "segmentation",
-  "boundingBox": { "topLeft": [0, 0, 0], "width": 1024, "height": 1024, "depth": 1024 },
-  "elementClass": "uint32",
-  "dataFormat": "wkw",
-  "wkwResolutions": [
-    { "resolution": [1, 1, 1], "cubeLength": 1024 }
-  ],
-  "largestSegmentId": 1000000000,
-  "mappings": ["axons", "mitochondria"]
 }
 ```
