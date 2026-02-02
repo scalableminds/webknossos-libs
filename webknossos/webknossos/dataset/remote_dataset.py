@@ -206,7 +206,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     "Both use_zarr_streaming and access_mode were provided. Only one is allowed."
                 )
             warn_deprecated("use_zarr_streaming", "access_mode")
-            access_mode = RemoteAccessMode.ZARR_STREAMING
+            if use_zarr_streaming:
+                access_mode = RemoteAccessMode.ZARR_STREAMING
+            else:
+                access_mode = RemoteAccessMode.DIRECT_PATH
 
         if access_mode is None:
             access_mode = RemoteAccessMode.ZARR_STREAMING
