@@ -607,6 +607,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         transfer_mode: TransferMode = TransferMode.HTTP,
         jobs: int | None = None,
         common_storage_path_prefix: str | None = None,
+        prefix_is_organization_dir: bool = False,
     ) -> "RemoteDataset":
         """Upload this dataset to webknossos.
 
@@ -622,6 +623,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             jobs: Optional number of jobs to use for uploading the data.
             common_storage_path_prefix: Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
                                         to select one of the available WEBKNOSSOS storages.
+            prefix_is_organization_dir (bool): if True, the organization dir is not inserted into new paths. Use this
+                                               only if your setup has a nonstandard organization dir. Used only if server
+                                               returns no individual mag/attachment paths. (non-virtual case)
         Returns:
             RemoteDataset: Reference to the newly created remote dataset
         Note:
@@ -684,7 +688,21 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             new_dataset_id = response.new_dataset_id
             data_source = response.data_source
 
-            self._transfer_dataset_items(data_source, transfer_mode)
+            if data_source is None:
+                if common_storage_path_prefix is None:
+                    raise ValueError(
+                        "A common_storage_path_prefix must be supplied because the WEBKNOSSOS instance did not return individual mag/attachment paths."
+                    )
+                dst_path = UPath(common_storage_path_prefix)
+                if not prefix_is_organization_dir:
+                    dst_path = dst_path / response.organization_id
+                dst_path = dst_path / response.directory_name
+                transfer_mode.transfer(
+                    self.path, dst_path, progress_desc_label=f"dataset {self.name}"
+                )
+                pass
+            else:
+                self._transfer_dataset_items(data_source, transfer_mode)
             # announce finished upload
             client.finish_dataset_upload_to_paths(new_dataset_id)
         else:
