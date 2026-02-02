@@ -1033,7 +1033,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
     def _requested_domain(self, bbox: NDBoundingBox) -> tensorstore.IndexDomain:
         assert bbox.axes == ("c", "x", "y", "z")
         return tensorstore.IndexDomain(
-            bbox.ndim + 1,
+            bbox.ndim,
             inclusive_min=bbox.topleft_xyz.to_tuple() + (0,),
             # note the channels are at the back
             shape=bbox.size_xyz.to_tuple() + (bbox.size.c,),

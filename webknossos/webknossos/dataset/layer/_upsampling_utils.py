@@ -30,6 +30,8 @@ def upsample_cube_job(
 ) -> None:
     (source_view, target_view, _i) = args
 
+    target_bbox = target_view.bounding_box.normalize_axes(target_view.info.num_channels)
+
     assert all(1 >= f for f in mag_factors), (
         f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
     )
@@ -45,7 +47,7 @@ def upsample_cube_job(
     try:
         num_channels = target_view.info.num_channels
 
-        for chunk in target_view.bounding_box.chunk(
+        for chunk in target_bbox.chunk(
             buffer_shape * target_view.mag, buffer_shape * target_view.mag
         ):
             shape = chunk.in_mag(target_view.mag).size.to_tuple()
@@ -74,7 +76,5 @@ def upsample_cube_job(
             target_view.write(file_buffer, absolute_bounding_box=chunk)
 
     except Exception as exc:
-        logger.error(
-            f"Upsampling of target {target_view.bounding_box} failed with {exc}"
-        )
+        logger.error(f"Upsampling of target {target_bbox} failed with {exc}")
         raise exc

@@ -339,7 +339,11 @@ class View:
                     f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data (1)"
                 )
                 data = np.expand_dims(data, axis=0)
-            elif len(data.shape) != 4:
+            elif len(data.shape) == 4:
+                assert self_bbox.size.c == data.shape[self_bbox.index.c], (
+                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
+                )
+            else:
                 raise ValueError(
                     f"The data has to have the dimensions (c, x, y, z) or (x, y, z), got shape {data.shape}"
                 )
