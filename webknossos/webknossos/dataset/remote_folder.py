@@ -145,7 +145,8 @@ class RemoteFolder:
 
         client = _get_api_client()
         client.folder_move(folder_id=self.id, new_parent_id=new_parent.id)
-        return RemoteFolder(name=self.name, id=self.id, parent=new_parent.id)
+        self._parent = new_parent.id
+        return self
 
     @property
     def allowed_teams(self) -> tuple[Team, ...]:
@@ -187,20 +188,6 @@ class RemoteFolder:
         if self._parent is None:
             return None
         return self.get_by_id(self._parent)
-
-    @property
-    def path(self) -> str:
-        """The path for the folder in the WEBKNOSSOS interface."""
-        from ..client.context import _get_api_client
-
-        client = _get_api_client()
-        folder_tree_response: list[ApiFolderWithParent] = client.folder_tree()
-
-        self_info = next((f for f in folder_tree_response if f.id == self.id), None)
-        if self_info is None:
-            raise KeyError(f"Could not find folder {self.id} in folder tree.")
-
-        return _get_folder_path(self_info, folder_tree_response)
 
     @property
     def name(self) -> str:
