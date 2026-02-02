@@ -64,12 +64,6 @@ def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
 # These post-unstructure and pre-structure functions perform the conditional field renames.
-def mag_view_properties_post_unstructure(d: dict[str, Any]) -> dict[str, Any]:
-    d["resolution"] = d["mag"]
-    del d["mag"]
-    return d
-
-
 def mag_view_properties_pre_structure(d: dict[str, Any]) -> dict[str, Any]:
     d["mag"] = d["resolution"]
     del d["resolution"]
@@ -91,12 +85,6 @@ def layer_properties_post_unstructure(
                 mag["axisOrder"] = d["boundingBox"]["axisOrder"]
             if "channelIndex" in d["boundingBox"]:
                 mag["channelIndex"] = d["boundingBox"]["channelIndex"]
-
-        if d["dataFormat"] == "wkw":
-            d["wkwResolutions"] = [
-                mag_view_properties_post_unstructure(m) for m in d["mags"]
-            ]
-            del d["mags"]
 
         # json expects nd_bounding_box to be represented as bounding_box and additional_axes
         if "additionalAxes" in d["boundingBox"]:
