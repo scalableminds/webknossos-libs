@@ -25,14 +25,14 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/json
         content-length: '3056'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1769696855248,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1770047470577,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
@@ -57,14 +57,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/json
         content-length: '3054'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1769696855741,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1770047471081,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: HEAD
@@ -90,7 +90,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/json
         content-length: '1482'
@@ -123,7 +123,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/json
         content-length: '1482'
@@ -155,14 +155,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/json
         content-length: '3054'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1769696855783,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1770047471132,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: GET
@@ -192,7 +192,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '700'
@@ -228,7 +228,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '300'
@@ -264,7 +264,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '175'
@@ -300,7 +300,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '75'
@@ -336,7 +336,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '63'
@@ -372,7 +372,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '27'
@@ -407,7 +407,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:10 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '16'
@@ -442,7 +442,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '8'
@@ -478,7 +478,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '12'
@@ -513,7 +513,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '2800'
@@ -549,7 +549,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '1200'
@@ -585,7 +585,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:35 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '700'
@@ -621,7 +621,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '300'
@@ -657,7 +657,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '252'
@@ -693,7 +693,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '108'
@@ -729,7 +729,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '64'
@@ -765,7 +765,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '32'
@@ -800,7 +800,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '48'
@@ -833,14 +833,14 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/json
         content-length: '3056'
       body:
         encoding: utf8
         data: >-
-          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1769696855783,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
+          [{"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1770047471132,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}]
         compression: none
   - request:
       method: GET
@@ -865,14 +865,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:11 GMT
         connection: close
         content-type: application/json
         content-length: '3054'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1769696857254,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1770047472553,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: HEAD
@@ -898,7 +898,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:12 GMT
         connection: close
         content-type: application/json
         content-length: '1482'
@@ -931,7 +931,7 @@ http_interactions:
         access-control-max-age: '600'
         access-control-allow-origin: '*'
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:12 GMT
         connection: close
         content-type: application/json
         content-length: '1482'
@@ -963,14 +963,14 @@ http_interactions:
         cache-control: no-cache
         referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:12 GMT
         connection: close
         content-type: application/json
         content-length: '3054'
       body:
         encoding: utf8
         data: >-
-          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1769696857297,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
+          {"id":"59e9cfbdba632ac2ab8b23b5","name":"l4_sample","dataSource":{"id":{"name":"l4_sample","team":"Organization_X"},"dataLayers":[{"name":"color","elementClass":"uint8","category":"color","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/color/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}},{"largestSegmentId":2504697,"name":"segmentation","elementClass":"uint32","category":"segmentation","dataFormat":"zarr3","resolutions":[[1,1,1],[2,2,1],[4,4,1],[8,8,2],[16,16,4]],"mags":[{"mag":[1,1,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[2,2,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/2-2-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[4,4,1],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/4-4-1","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[8,8,2],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/8-8-2","axisOrder":{"x":1,"y":2,"z":3,"c":0}},{"mag":[16,16,4],"path":"/Users/norman/scalableminds/binaryData/Organization_X/l4_sample/segmentation/16-16-4","axisOrder":{"x":1,"y":2,"z":3,"c":0}}],"numChannels":1,"boundingBox":{"topLeft":[3072,3072,512],"width":1024,"height":1024,"depth":1024}}],"scale":{"factor":[11.239999771118164,11.239999771118164,28],"unit":"nanometer"}},"dataStore":{"name":"localhost","url":"http://localhost:9000","allowsUpload":true,"jobsSupportedByAvailableWorkers":[],"jobsEnabled":false},"owningOrganization":"Organization_X","allowedTeams":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"allowedTeamsCumulative":[{"id":"570b9f4b2a7c0e3b008da6ec","name":"team_X1","organization":"Organization_X","isOrganizationTeam":true}],"isActive":true,"isPublic":true,"description":null,"directoryName":"l4_sample","created":1508495293789,"isEditable":true,"lastUsedByUser":1770047472600,"logoUrl":"/assets/images/mpi-logos.svg","sortingKey":1508495293789,"metadata":[{"key":"species","type":"string","value":"mouse"},{"key":"acquisition","type":"string","value":"SBEM"}],"isUnreported":false,"tags":[],"folderId":"570b9f4e4bb848d0885ea917","usedStorageBytes":0,"isVirtual":false}
         compression: none
   - request:
       method: GET
@@ -1000,7 +1000,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:12 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '700'
@@ -1036,7 +1036,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:12 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '300'
@@ -1072,7 +1072,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:12 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '2800'
@@ -1108,7 +1108,7 @@ http_interactions:
         access-control-allow-origin: '*'
         access-control-expose-headers: MISSING-BUCKETS
         x-permitted-cross-domain-policies: master-only
-        date: Thu, 29 Jan 2026 14:27:36 GMT
+        date: Mon, 02 Feb 2026 15:51:12 GMT
         connection: close
         content-type: application/octet-stream
         content-length: '1200'
