@@ -368,6 +368,14 @@ class NDBoundingBox:
                 idx = _find_index_by_name(axes, axis_name)
                 axes[idx] = attr.evolve(axes[idx], index=axis_index)
 
+        axes = [
+            axis
+            for axis in axes
+            if axis.name in bbox.get("axisOrder", {}).keys()  # in axisOrder
+            or any(
+                a["name"] == axis.name for a in bbox.get("additionalAxes", [])
+            )  # or in additionalAxes
+        ]
         axes = sorted(axes, key=lambda axis: axis.index)
 
         topleft = [axis.min for axis in axes]

@@ -307,7 +307,6 @@ def downsample_cube_job(
         shape = target_bbox_in_mag.size.to_tuple()
         shape_xyz = target_bbox_in_mag.size_xyz
         file_buffer = np.zeros(shape, target_view.get_dtype(), order="F")
-        print(num_channels, target_bbox, shape, file_buffer.shape)
 
         tiles = product(
             *(

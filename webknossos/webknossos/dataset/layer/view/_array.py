@@ -516,9 +516,6 @@ class TensorStoreArray(BaseArray):
                 )
 
         shape = array.domain.exclusive_max
-        if "c" not in dimension_names:
-            shape = (num_channels,) + shape
-            dimension_names = ("c",) + dimension_names
 
         return (
             dimension_names,
@@ -812,7 +809,6 @@ class Zarr3Array(TensorStoreArray):
         dimension_names, chunk_shape, shard_shape, num_channels, shape = (
             self._get_array_dimensions(array)
         )
-
         if len(array_codecs) == 1 and array_codecs[0]["name"] == "sharding_indexed":
             return Zarr3ArrayInfo(
                 data_format=DataFormat.Zarr3,
