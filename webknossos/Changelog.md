@@ -10,16 +10,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.5...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `--data-format` option to `webknossos download` CLI command. [#1422](https://github.com/scalableminds/webknossos-libs/pull/1422)
 
 ### Changed
 
 ### Fixed
+
+
+## [3.1.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.5) - 2026-02-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.4...v3.1.5)
+
+### Added
+- Added `--data-format` option to `webknossos download` CLI command. [#1422](https://github.com/scalableminds/webknossos-libs/pull/1422)
 
 
 ## [3.1.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.4) - 2026-01-26
