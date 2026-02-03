@@ -430,14 +430,26 @@ class NDBoundingBox:
         if additional_axes:
             out["additionalAxes"] = additional_axes
 
-        axis_order = {axis: self.index[i] for i, axis in enumerate(self.axes)}
-        minimal_axis_order = {
-            axis: index
-            for axis, index in axis_order.items()
-            if axis not in _DEFAULT_AXIS_ORDER or _DEFAULT_AXIS_ORDER[axis] != index
-        }
-        if len(minimal_axis_order) > 0:
-            out["axisOrder"] = minimal_axis_order
+        def _axis_order_field(
+            axes: tuple[str, ...], index: tuple[int, ...]
+        ) -> dict[str, int]:
+            axis_order = {axis: index[i] for i, axis in enumerate(axes)}
+            ndim = len(axes)
+            # Include only axes that are default axes (c, x, y, z) and not in the
+            # default axis order. The default axis order is c, x, y, z from the
+            # back (z is the last, c is the 4th last).
+            minimal_axis_order = {
+                axis: index
+                for axis, index in axis_order.items()
+                if axis not in _DEFAULT_AXIS_ORDER
+                or (ndim - len(_DEFAULT_AXIS_ORDER) - _DEFAULT_AXIS_ORDER[axis])
+                != index
+            }
+            return minimal_axis_order
+
+        axis_order = _axis_order_field(self.axes, self.index)
+        if len(axis_order) > 0:
+            out["axisOrder"] = axis_order
 
         if "c" in self.axes and self.topleft.c != 0:
             out["channelIndex"] = self.topleft.c
@@ -853,7 +865,10 @@ class NDBoundingBox:
             # x: chunk_shape.x, y: chunk_shape.y, z: chunk_shape.z, c: size.c and 1 for all other
             # axes.
             chunk_shape = Vec3Int(chunk_shape)
-            chunk_shape = VecInt.ones(self.axes).with_xyz(chunk_shape).to_np()
+            chunk_shape = VecInt.ones(self.axes).with_xyz(chunk_shape)
+            if "c" in self.axes:
+                chunk_shape = chunk_shape.with_c(self.size.c)
+            chunk_shape = chunk_shape.to_np()
         except AssertionError:
             chunk_shape = VecInt(chunk_shape, axes=self.axes).to_np()
 
@@ -862,9 +877,14 @@ class NDBoundingBox:
             try:
                 chunk_border_alignments = Vec3Int(chunk_border_alignments)
 
-                chunk_border_alignments = (
-                    VecInt.ones(self.axes).with_xyz(chunk_border_alignments).to_np()
+                chunk_border_alignments = VecInt.ones(self.axes).with_xyz(
+                    chunk_border_alignments
                 )
+                if "c" in self.axes:
+                    chunk_border_alignments = chunk_border_alignments.with_c(
+                        self.size.c
+                    )
+                chunk_border_alignments = chunk_border_alignments.to_np()
             except AssertionError:
                 chunk_border_alignments = VecInt(
                     chunk_border_alignments, axes=self.axes

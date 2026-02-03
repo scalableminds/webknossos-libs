@@ -479,6 +479,9 @@ def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
         dtype_per_channel="int8",
     )
 
+    print(target_layer.bounding_box)
+    print((target_path / "datasource-properties.json").read_text())
+
     source_mag = source_layer.get_mag("1")
 
     target_layer.add_mag_as_copy(source_mag)

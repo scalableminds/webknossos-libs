@@ -18,22 +18,18 @@ from tests.constants import (
     TESTOUTPUT_DIR,
     use_minio,
 )
-from webknossos import (
-    COLOR_CATEGORY,
-    SEGMENTATION_CATEGORY,
-    Dataset,
-    LayerCategoryType,
-    RemoteDataset,
-    View,
-)
+from webknossos.dataset import Dataset, RemoteDataset, View
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
 from webknossos.dataset.layer.view._array import Zarr3ArrayInfo, Zarr3Config
 from webknossos.dataset_properties import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
     AttachmentDataFormat,
     DataFormat,
     DatasetProperties,
     DatasetViewConfiguration,
+    LayerCategoryType,
     LayerViewConfiguration,
     SegmentationLayerProperties,
 )
@@ -975,11 +971,7 @@ def test_write_layer_5d(
         axes=("c", "t", "x", "y", "z"),
         shard_shape=(128, 128, 128),
         absolute_offset=absolute_offset,
-        downsample=False,
     )
-    with get_executor("sequential") as executor:
-        layer.downsample(executor=executor)
-
     np.testing.assert_array_equal(layer.get_mag(1).read().squeeze(), data)
     if absolute_offset is not None:
         assert layer.bounding_box.topleft.to_tuple() == absolute_offset
@@ -3413,7 +3405,8 @@ def test_downsampling(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = copy_simple_dataset(data_format, output_path, "downsampling")
 
     color_layer = Dataset.open(ds_path).get_layer("color")
-    color_layer.downsample()
+    with get_executor("sequential") as executor:
+        color_layer.downsample(executor=executor)
 
     assert (ds_path / "color" / "2").exists()
     assert (ds_path / "color" / "4").exists()
