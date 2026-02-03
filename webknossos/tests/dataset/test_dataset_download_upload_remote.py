@@ -187,6 +187,8 @@ def test_folders_and_teams() -> None:
 
     subfolder = remote_folder.add_subfolder(f"{folder_name}_subfolder")
     assert remote_folder.get_subfolders() == (subfolder,)
+    subfolder.parent = wk.RemoteFolder.get_root()
+    assert remote_folder.get_subfolders() == ()
     subfolder.delete()
     assert remote_folder.get_subfolders() == ()
 

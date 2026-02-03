@@ -5,7 +5,7 @@ import attr
 
 from ..administration.team import Team
 from ..client.api_client.models import ApiFolderUpdate, ApiFolderWithParent, ApiMetadata
-from ..utils import infer_metadata_type
+from ..utils import infer_metadata_type, warn_deprecated
 from ._metadata import FolderMetadata
 
 if TYPE_CHECKING:
@@ -130,7 +130,8 @@ class RemoteFolder:
         client.folder_update(folder_id=self.id, folder=new_folder)
 
     def move_to(self, new_parent: "RemoteFolder") -> "RemoteFolder":
-        """Move the folder to a new parent folder.
+        """Deprecated. Use `RemoteFolder.parent` instead.
+        Move the folder to a new parent folder.
 
         This method returns a new `RemoteFolder` instance representing the moved folder.
         The original `RemoteFolder` object is not modified, so you should use the returned value.
@@ -141,11 +142,9 @@ class RemoteFolder:
         Returns:
             A new `RemoteFolder` instance in the new location.
         """
-        from ..client.context import _get_api_client
+        warn_deprecated("move_to", "parent")
 
-        client = _get_api_client()
-        client.folder_move(folder_id=self.id, new_parent_id=new_parent.id)
-        self._parent = new_parent.id
+        self.parent = new_parent
         return self
 
     @property
@@ -188,6 +187,15 @@ class RemoteFolder:
         if self._parent is None:
             return None
         return self.get_by_id(self._parent)
+
+    @parent.setter
+    def parent(self, new_parent: "RemoteFolder") -> None:
+        """Move the folder to a new parent folder."""
+        from ..client.context import _get_api_client
+
+        client = _get_api_client()
+        client.folder_move(folder_id=self.id, new_parent_id=new_parent.id)
+        self._parent = new_parent.id
 
     @property
     def name(self) -> str:
