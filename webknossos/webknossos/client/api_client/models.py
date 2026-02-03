@@ -441,7 +441,9 @@ class ApiReserveDatasetUplaodToPathsParameters:
 @attr.s(auto_attribs=True)
 class ApiReserveDatasetUploadToPathsResponse:
     new_dataset_id: str
-    data_source: DatasetProperties
+    data_source: DatasetProperties | None
+    organization_id: str
+    directory_name: str
 
 
 @attr.s(auto_attribs=True)
