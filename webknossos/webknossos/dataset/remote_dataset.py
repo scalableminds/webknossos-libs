@@ -71,7 +71,7 @@ if TYPE_CHECKING:
 
 
 class RemoteAccessMode(Enum):
-    """The access mode determines how the dataset is accessed."""
+    """Determines how data of a remote dataset is accessed. Note that DIRECT_PATH can only be used if the client has access to the underlying storage."""
 
     ZARR_STREAMING = "zarr_streaming"
     DIRECT_PATH = "direct_path"
