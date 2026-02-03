@@ -6,12 +6,12 @@ from urllib.parse import urlparse
 
 import typer
 
-from webknossos import RemoteDataset
-
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
 from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
+from ..dataset.remote_dataset import RemoteDataset
+from ..dataset_properties import DataFormat
 from ..geometry import BoundingBox, Mag
 from ._utils import parse_bbox, parse_mag, parse_path
 
@@ -71,6 +71,14 @@ def main(
             metavar="MAG",
         ),
     ] = None,
+    data_format: Annotated[
+        DataFormat | None,
+        typer.Option(
+            rich_help_panel="Partial download",
+            help="Data format of the downloaded dataset.",
+            metavar="DATA_FORMAT",
+        ),
+    ] = None,
 ) -> None:
     """Download a dataset from a WEBKNOSSOS server."""
 
@@ -89,6 +97,7 @@ def main(
                 bbox=bbox,
                 layers=layers,
                 mags=mags,
+                data_format=data_format,
             )
         elif re.match(_ANNOTATION_URL_REGEX, url):
             Annotation.download(annotation_id_or_url=url).save(target)

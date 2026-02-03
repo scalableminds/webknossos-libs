@@ -7,10 +7,9 @@ from upath import UPath
 
 from .. import LayerCategoryType
 from ..dataset import Dataset
+from ..dataset.defaults import DEFAULT_DATA_FORMAT
 from ..dataset.layer.abstract_layer import _element_class_to_dtype_per_channel
-from ..dataset_properties import (
-    LayerProperties,
-)
+from ..dataset_properties import DataFormat, LayerProperties
 from ..geometry import BoundingBox, Mag, Vec3Int
 from .api_client.models import ApiUnusableDataSource
 from .context import _get_context
@@ -26,12 +25,14 @@ _DOWNLOAD_CHUNK_SHAPE = Vec3Int(512, 512, 512)
 
 def download_dataset(
     dataset_id: str,
+    *,
     sharing_token: str | None = None,
     bbox: BoundingBox | None = None,
     layers: list[str] | None = None,
     mags: list[Mag] | None = None,
     path: UPath | str | None = None,
     exist_ok: bool = False,
+    data_format: DataFormat | None = None,
 ) -> Dataset:
     context = _get_context()
     api_client = context.api_client
@@ -78,6 +79,7 @@ def download_dataset(
         layer = dataset.add_layer(
             layer_name=layer_name,
             category=category,
+            data_format=data_format or DEFAULT_DATA_FORMAT,
             dtype_per_channel=dtype_per_channel,
             num_channels=num_channels,
             largest_segment_id=getattr(api_data_layer, "largest_segment_id", None),
