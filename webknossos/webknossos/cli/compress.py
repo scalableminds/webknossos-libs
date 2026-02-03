@@ -6,9 +6,8 @@ from typing import Annotated, Any
 
 import typer
 
-from webknossos.geometry.mag import Mag
-
 from ..dataset import Dataset
+from ..geometry.mag import Mag
 from ..utils import get_executor_for_args
 from ._utils import DistributionStrategy, parse_mag, parse_path
 

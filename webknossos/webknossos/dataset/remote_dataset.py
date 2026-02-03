@@ -732,6 +732,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         bbox: BoundingBox | None = None,
         layers: list[str] | str | None = None,
         mags: list[Mag] | None = None,
+        data_format: DataFormat | None = None,
         path: PathLike | UPath | str | None = None,
         exist_ok: bool = False,
     ) -> "Dataset":
@@ -741,6 +742,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
           If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
         * `path` and `exist_ok` specify where to save the downloaded dataset and whether to overwrite
           if the `path` exists.
+        * `data_format` specifies the data format of the downloaded dataset.
         """
         from ..client._download_dataset import download_dataset
 
@@ -752,6 +754,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             bbox=bbox,
             layers=layers,
             mags=mags,
+            data_format=data_format,
             path=UPath(path) if path is not None else None,
             exist_ok=exist_ok,
         )
