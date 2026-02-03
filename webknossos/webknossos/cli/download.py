@@ -100,6 +100,10 @@ def main(
                 data_format=data_format,
             )
         elif re.match(_ANNOTATION_URL_REGEX, url):
+            if data_format is not None:
+                raise typer.BadParameter(
+                    "The --data-format option is not supported for annotation downloads."
+                )
             Annotation.download(annotation_id_or_url=url).save(target)
         else:
             raise RuntimeError(
