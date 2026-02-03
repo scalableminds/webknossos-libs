@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `--data-format` option to `webknossos download` CLI command. [#1422](https://github.com/scalableminds/webknossos-libs/pull/1422)
 
 ### Changed
 

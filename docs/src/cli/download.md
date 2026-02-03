@@ -40,6 +40,12 @@ webknossos download [OPTIONS] TARGET
     For multiple mags, use the option multiple times.  
     Example: `--mag 1 --mag 2`.
 
+- `--data-format`  
+    Specify the data format of the downloaded dataset.  
+    The value can be `zarr3`, `zarr` or `wkw`.  
+    Example: `--data-format zarr3`.
+    Default: `zarr3`.
+
 ## Example Commands
 
 ### Download a dataset:

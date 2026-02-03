@@ -562,7 +562,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             dataset_name_or_url, organization_id, sharing_token, webknossos_url
         )
         return remote_dataset.download(
-            sharing_token, bbox, layers, mags, path, exist_ok
+            sharing_token=sharing_token,
+            bbox=bbox,
+            layers=layers,
+            mags=mags,
+            path=path,
+            exist_ok=exist_ok,
         )
 
     def publish_to_preliminary_dataset(
