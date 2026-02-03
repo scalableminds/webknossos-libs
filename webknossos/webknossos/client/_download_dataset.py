@@ -5,10 +5,12 @@ import numpy as np
 from rich.progress import track
 from upath import UPath
 
-from .. import LayerCategoryType
 from ..dataset import Dataset
-from ..dataset.defaults import DEFAULT_DATA_FORMAT
-from ..dataset.layer.abstract_layer import _element_class_to_dtype_per_channel
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
+from ..dataset.layer.abstract_layer import (
+    LayerCategoryType,
+    _element_class_to_dtype_per_channel,
+)
 from ..dataset_properties import DataFormat, LayerProperties
 from ..geometry import BoundingBox, Mag, Vec3Int
 from .api_client.models import ApiUnusableDataSource
@@ -100,8 +102,10 @@ def download_dataset(
             mag_view = layer.get_or_add_mag(
                 mag,
                 compress=True,
-                chunk_shape=Vec3Int.full(32),
-                shard_shape=_DOWNLOAD_CHUNK_SHAPE,
+                chunk_shape=DEFAULT_CHUNK_SHAPE,
+                shard_shape=_DOWNLOAD_CHUNK_SHAPE
+                if data_format != DataFormat.Zarr
+                else DEFAULT_CHUNK_SHAPE,
             )
             aligned_bbox = layer.bounding_box.align_with_mag(mag, ceil=True)
             download_chunk_shape_in_mag = _DOWNLOAD_CHUNK_SHAPE * mag.to_vec3_int()

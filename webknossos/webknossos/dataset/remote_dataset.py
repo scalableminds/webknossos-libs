@@ -677,7 +677,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     def download(
         self,
-        *,
         sharing_token: str | None = None,
         bbox: BoundingBox | None = None,
         layers: list[str] | str | None = None,
