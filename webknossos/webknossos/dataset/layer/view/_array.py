@@ -841,13 +841,22 @@ class Zarr3Array(TensorStoreArray):
     def create(cls, path: UPath, array_info: ArrayInfo) -> "Zarr3Array":
         assert array_info.data_format == cls.data_format
         array_info = Zarr3ArrayInfo.from_array_info(array_info)
-        chunk_shape = (array_info.num_channels,) + tuple(
-            getattr(array_info.chunk_shape, axis, 1)
-            for axis in array_info.dimension_names[1:]
+
+        chunk_shape = tuple(
+            (
+                array_info.num_channels
+                if axis == "c"
+                else array_info.chunk_shape.get(axis, 1)
+            )
+            for axis in array_info.dimension_names
         )
-        shard_shape = (array_info.num_channels,) + tuple(
-            getattr(array_info.shard_shape, axis, 1)
-            for axis in array_info.dimension_names[1:]
+        shard_shape = tuple(
+            (
+                array_info.num_channels
+                if axis == "c"
+                else array_info.shard_shape.get(axis, 1)
+            )
+            for axis in array_info.dimension_names
         )
         shape = tuple(
             shape_a - (shape_a % shard_shape_a)

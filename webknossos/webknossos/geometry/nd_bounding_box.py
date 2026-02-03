@@ -35,7 +35,7 @@ def _find_index_by_name(axes: Sequence["Axis"], name: str) -> int:
     for i, axis in enumerate(axes):
         if axis.name == name:
             return i
-    raise ValueError(f"Axis {name} not found in {axes}")
+    raise KeyError(f"Axis {name} not found in {axes}")
 
 
 @attr.frozen
@@ -255,13 +255,13 @@ class NDBoundingBox:
             NDBoundingBox: A new NDBoundingBox object with updated bounds.
 
         Raises:
-            ValueError: If the given axis name does not exist.
+            KeyError: If the given axis name does not exist.
 
         """
         try:
             index = self.axes.index(axis)
         except ValueError as err:
-            raise ValueError("The given axis name does not exist.") from err
+            raise KeyError("The given axis name does not exist.") from err
 
         _new_topleft = (
             self.topleft.with_replaced(index, new_topleft)
@@ -289,7 +289,7 @@ class NDBoundingBox:
         try:
             index = self.axes.index(axis)
         except ValueError as err:
-            raise ValueError("The given axis name does not exist.") from err
+            raise KeyError("The given axis name does not exist.") from err
 
         return (self.topleft[index], self.topleft[index] + self.size[index])
 
@@ -467,7 +467,8 @@ class NDBoundingBox:
         return f"{'_'.join(str(element) for element in self.topleft)}_{'_'.join(str(element) for element in self.size)}"
 
     def __repr__(self) -> str:
-        return f"NDBoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()}, axes={self.axes})"
+        axes = {axis: index for axis, index in zip(self.axes, self.index)}
+        return f"NDBoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()}, axes={axes})"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -496,9 +497,7 @@ class NDBoundingBox:
             index = self.axes.index(axis_name)
             return self.size[index]
         except ValueError as err:
-            raise ValueError(
-                f"Axis {axis_name} doesn't exist in NDBoundingBox."
-            ) from err
+            raise KeyError(f"Axis {axis_name} doesn't exist in NDBoundingBox.") from err
 
     def _get_attr_xyz(self, attr_name: str) -> Vec3Int:
         axes = ("x", "y", "z")
@@ -854,9 +853,7 @@ class NDBoundingBox:
             # x: chunk_shape.x, y: chunk_shape.y, z: chunk_shape.z, c: size.c and 1 for all other
             # axes.
             chunk_shape = Vec3Int(chunk_shape)
-            chunk_shape = (
-                VecInt.ones(self.axes).with_xyz(chunk_shape).with_c(self.size.c).to_np()
-            )
+            chunk_shape = VecInt.ones(self.axes).with_xyz(chunk_shape).to_np()
         except AssertionError:
             chunk_shape = VecInt(chunk_shape, axes=self.axes).to_np()
 
@@ -866,10 +863,7 @@ class NDBoundingBox:
                 chunk_border_alignments = Vec3Int(chunk_border_alignments)
 
                 chunk_border_alignments = (
-                    VecInt.ones(self.axes)
-                    .with_xyz(chunk_border_alignments)
-                    .with_c(self.size.c)
-                    .to_np()
+                    VecInt.ones(self.axes).with_xyz(chunk_border_alignments).to_np()
                 )
             except AssertionError:
                 chunk_border_alignments = VecInt(

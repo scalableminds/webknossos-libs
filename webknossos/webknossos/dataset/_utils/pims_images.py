@@ -648,10 +648,10 @@ class PimsImages:
             else:
                 if isinstance(images, pims.FramesSequenceND):
                     axes_names = (self._iter_axes or []) + [
-                        axis for axis in self._bundle_axes if axis != "c"
+                        axis for axis in self._bundle_axes
                     ]
                     axes_sizes = [images.sizes[axis] for axis in axes_names]
-                    axes_index = list(range(1, len(axes_names) + 1))
+                    axes_index = list(range(0, len(axes_names)))
                     topleft = VecInt.zeros(tuple(axes_names))
 
                     if self._swap_xy:

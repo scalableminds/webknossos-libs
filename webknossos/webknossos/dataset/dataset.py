@@ -1694,7 +1694,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
             if (
                 additional_axes := set(layer.bounding_box.axes).difference(
-                    "x", "y", "z"
+                    "c", "x", "y", "z"
                 )
             ) and layer.data_format == DataFormat.WKW:
                 if all(
@@ -1717,6 +1717,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     Vec3Int(1, 1, batch_size),
                 )
             )
+            print(args)
 
             with warnings.catch_warnings():
                 # We need to catch and ignore a warning here about comparing persisted properties.
