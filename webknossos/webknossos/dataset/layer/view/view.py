@@ -196,7 +196,7 @@ class View:
         rel_mag1_offset: Vec3IntLike | None = None,
         mag1_size: Vec3IntLike | None = None,
         current_mag_size: Vec3IntLike | None = None,
-    ) -> NDBoundingBox:
+    ) -> NormalizedBoundingBox:
         num_bboxes = count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
         num_offsets = count_defined_values([abs_mag1_offset, rel_mag1_offset])
         num_sizes = count_defined_values([mag1_size, current_mag_size])
@@ -217,27 +217,35 @@ class View:
             )
 
         if abs_mag1_bbox is not None:
-            return abs_mag1_bbox
+            return abs_mag1_bbox.normalize_axes(self.info.num_channels)
 
         if rel_mag1_bbox is not None:
-            return rel_mag1_bbox.offset(self.bounding_box.topleft)
-
-        else:
-            mag_vec = self._mag.to_vec3_int()
-            if rel_mag1_offset is not None:
-                abs_mag1_offset = self.bounding_box.topleft + rel_mag1_offset
-
-            if current_mag_size is not None:
-                mag1_size = Vec3Int(current_mag_size) * mag_vec
-
-            assert abs_mag1_offset is not None, "No offset was supplied."
-            assert mag1_size is not None, "No size was supplied."
-
-            assert len(self.bounding_box) == 3, (
-                "The delivered offset and size are only usable for 3D views."
+            return rel_mag1_bbox.normalize_axes(self.info.num_channels).offset(
+                self.bounding_box.topleft
             )
 
-            return self.bounding_box.with_topleft(abs_mag1_offset).with_size(mag1_size)
+        mag_vec = self._mag.to_vec3_int()
+        if rel_mag1_offset is not None:
+            abs_mag1_offset = self.bounding_box.topleft_xyz + Vec3Int(rel_mag1_offset)
+
+        if current_mag_size is not None:
+            mag1_size = Vec3Int(current_mag_size) * mag_vec
+
+        assert abs_mag1_offset is not None, "No offset was supplied."
+        assert mag1_size is not None, "No size was supplied."
+
+        assert self.bounding_box.axes == ("x", "y", "z") or self.bounding_box.axes == (
+            "c",
+            "x",
+            "y",
+            "z",
+        ), "The delivered offset and size are only usable for 3D views."
+
+        return (
+            self.bounding_box.normalize_axes(self.info.num_channels)
+            .with_topleft_xyz(abs_mag1_offset)
+            .with_size_xyz(mag1_size)
+        )
 
     def write(
         self,
@@ -773,7 +781,7 @@ class View:
             abs_mag1_offset=absolute_offset,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-        )
+        ).normalize_axes(self.info.num_channels)
         if not self.bounding_box.is_empty():
             assert not mag1_bbox.is_empty(), (
                 f"The size ({mag1_bbox.size} in mag1) contains a zero. "
@@ -784,7 +792,9 @@ class View:
         )
 
         if not read_only:
-            assert self.bounding_box.contains_bbox(mag1_bbox), (
+            assert self.bounding_box.normalize_axes(
+                self.info.num_channels
+            ).contains_bbox(mag1_bbox), (
                 f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
                 + "This is only allowed for read-only views."
             )
@@ -795,7 +805,9 @@ class View:
                 shard_shape, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
-            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
+            current_mag_view_bbox = self.bounding_box.normalize_axes(
+                self.info.num_channels
+            ).in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(
                 current_mag_aligned_bbox, dont_assert=True
             ):
@@ -1033,10 +1045,7 @@ class View:
 
         job_args = []
         for i, chunk in enumerate(self.bounding_box.chunk(chunk_shape, chunk_shape)):
-            chunk_view = self.get_view(
-                absolute_offset=chunk.topleft,
-                size=chunk.size,
-            )
+            chunk_view = self.get_view(absolute_bounding_box=chunk)
             job_args.append((chunk_view, i))
 
         # execute the work for each chunk
@@ -1129,10 +1138,7 @@ class View:
 
         job_args = []
         for chunk in self.bounding_box.chunk(chunk_shape, chunk_shape):
-            chunk_view = self.get_view(
-                absolute_offset=chunk.topleft,
-                size=chunk.size,
-            )
+            chunk_view = self.get_view(absolute_bounding_box=chunk)
             job_args.append(chunk_view)
 
         # execute the work for each chunk

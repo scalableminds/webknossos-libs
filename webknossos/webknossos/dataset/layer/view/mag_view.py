@@ -19,7 +19,14 @@ from webknossos.utils import (
 )
 
 from ....dataset_properties import DataFormat, MagViewProperties
-from ....geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
+from ....geometry import (
+    Mag,
+    NDBoundingBox,
+    NormalizedBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+    VecInt,
+)
 from ._array import (
     ArrayInfo,
     BaseArray,
@@ -383,9 +390,15 @@ class MagView(View, Generic[LayerTypeT]):
 
         # Only update the layer's bbox if we are actually larger
         # than the mag-aligned, rounded up bbox (self.bounding_box):
-        if not self.bounding_box.contains_bbox(mag1_bbox):
+        if not self.bounding_box.normalize_axes(self.info.num_channels).contains_bbox(
+            mag1_bbox
+        ):
             if allow_resize:
-                self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
+                self.layer.bounding_box = (
+                    self.layer.bounding_box.normalize_axes(self.info.num_channels)
+                    .extended_by(mag1_bbox)
+                    .denormalize()
+                )
             else:
                 raise ValueError(
                     f"The bounding box to write {mag1_bbox} does not fit in the layer's bounding box {self.layer.bounding_box}. "
@@ -434,11 +447,13 @@ class MagView(View, Generic[LayerTypeT]):
                 "[WARNING] The underlying array storage does not support listing the stored bounding boxes. "
                 + "Instead all bounding boxes are iterated, which can be slow."
             )
-            bboxes = self.bounding_box.in_mag(self.mag).chunk(
-                self._array.info.shard_shape
+            bboxes = (
+                self.bounding_box.in_mag(self.mag)
+                .normalize_axes(self.info.num_channels)
+                .chunk(self._array.info.shard_shape)
             )
         for bbox in bboxes:
-            yield bbox.from_mag_to_mag1(self._mag)
+            yield bbox.from_mag_to_mag1(self._mag).denormalize()
 
     def get_views_on_disk(
         self,
@@ -475,9 +490,7 @@ class MagView(View, Generic[LayerTypeT]):
             - Memory efficient as only one chunk is loaded at a time
         """
         for bbox in self.get_bounding_boxes_on_disk():
-            yield self.get_view(
-                absolute_offset=bbox.topleft, size=bbox.size, read_only=read_only
-            )
+            yield self.get_view(absolute_bounding_box=bbox, read_only=read_only)
 
     def compress(
         self,
@@ -597,8 +610,8 @@ class MagView(View, Generic[LayerTypeT]):
         )
 
         def _rechunk_bboxes(
-            source_bbox_iterator: Iterator[NDBoundingBox],
-        ) -> Iterator[NDBoundingBox]:
+            source_bbox_iterator: Iterator[NormalizedBoundingBox],
+        ) -> Iterator[NormalizedBoundingBox]:
             # Finding suitable bounding boxes for rechunking
             # The boxes need to be compatible with the source shard shape and target shard shape
             # If both are equal, the boxes are compatible and can be used directly
@@ -611,7 +624,8 @@ class MagView(View, Generic[LayerTypeT]):
             if source_shard_shape == target_shard_shape:
                 for bbox in source_bbox_iterator:
                     bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
-                        self.layer.bounding_box, dont_assert=True
+                        self.layer.bounding_box.normalize_axes(self.info.num_channels),
+                        dont_assert=True,
                     )
                     if not bbox.is_empty():
                         yield bbox
@@ -626,9 +640,12 @@ class MagView(View, Generic[LayerTypeT]):
                 ]
                 for bbox in rechunked_layer.bounding_box.chunk(combined_shard_shape):
                     if any(
-                        not bbox.intersected_with(
-                            source_bbox, dont_assert=True
-                        ).is_empty()
+                        not bbox.normalize_axes(self.info.num_channels)
+                        .intersected_with(
+                            source_bbox.normalize_axes(self.info.num_channels),
+                            dont_assert=True,
+                        )
+                        .is_empty()
                         for source_bbox in all_source_bboxes
                     ):
                         yield bbox

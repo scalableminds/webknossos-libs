@@ -288,6 +288,8 @@ class BoundingBox(NDBoundingBox):
         return ",".join(map(str, self.to_tuple6()))
 
     def __eq__(self, other: object) -> bool:
+        if isinstance(other, NormalizedBoundingBox):
+            other = other.denormalize()
         if isinstance(other, NDBoundingBox):
             self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
