@@ -984,9 +984,20 @@ class NDBoundingBox:
         except AssertionError:
             return self.with_topleft(self.topleft + VecInt(vector, axes=self.axes))
 
-    def normalize_axes(self, num_channels: int) -> "NDBoundingBox":
+    def normalize_axes(self, num_channels: int) -> "NormalizedBoundingBox":
         assert ("c" in self.axes and num_channels == self.size.c) or num_channels == 1
-        return self
+        return NormalizedBoundingBox(
+            topleft=self.topleft,
+            size=self.size,
+            axes=self.axes,
+            index=self.index,
+            is_visible=self.is_visible,
+            color=self.color,
+        )
+
+
+class NormalizedBoundingBox(NDBoundingBox):
+    pass
 
 
 def derive_nd_bounding_box_from_shape(

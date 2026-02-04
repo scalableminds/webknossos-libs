@@ -19,7 +19,7 @@ from typing_extensions import NotRequired, Self
 from upath import UPath
 
 from webknossos.dataset_properties import DataFormat
-from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
+from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int, VecInt
 from webknossos.utils import call_with_retries, is_fs_path
 
 logger = getLogger(__name__)
@@ -198,19 +198,19 @@ class BaseArray(ABC):
         pass
 
     @abstractmethod
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
+    def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
         pass
 
     @abstractmethod
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+    def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
         pass
 
     @abstractmethod
-    def resize(self, new_bbox: NDBoundingBox) -> None:
+    def resize(self, new_bbox: NormalizedBoundingBox) -> None:
         pass
 
     @abstractmethod
-    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
         "The bounding boxes are measured in voxels of the current mag."
 
     @abstractmethod
@@ -312,18 +312,18 @@ class WKWArray(BaseArray):
             raise ArrayException(f"Exception while creating array {path}") from e
         return WKWArray(path)
 
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
+    def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
         assert bbox.axes == ("c", "x", "y", "z") or bbox.axes == ("x", "y", "z")
         return self._wkw_dataset.read(bbox.topleft.xyz, bbox.size.xyz)
 
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+    def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
         assert bbox.axes == ("c", "x", "y", "z") or bbox.axes == ("x", "y", "z")
         self._wkw_dataset.write(bbox.topleft.xyz, data)
 
-    def resize(self, new_bbox: NDBoundingBox) -> None:
+    def resize(self, new_bbox: NormalizedBoundingBox) -> None:
         pass
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
         def _extract_num(s: str) -> int:
             match = re.search("[0-9]+", s)
             assert match is not None
@@ -338,7 +338,9 @@ class WKWArray(BaseArray):
             cube_index = _extract_file_index(file_path)
             cube_offset = cube_index * shard_shape
 
-            yield BoundingBox(cube_offset, shard_shape)
+            yield BoundingBox(cube_offset, shard_shape).normalize_axes(
+                self.info.num_channels
+            )
 
     def close(self) -> None:
         if self._cached_wkw_dataset is not None:
@@ -604,14 +606,14 @@ class TensorStoreArray(BaseArray):
         except Exception as exc:
             raise ArrayException(f"Could not open array at {path}.") from exc
 
-    def _requested_domain(self, bbox: NDBoundingBox) -> tensorstore.IndexDomain:
+    def _requested_domain(self, bbox: NormalizedBoundingBox) -> tensorstore.IndexDomain:
         return tensorstore.IndexDomain(
             bbox.ndim,
             inclusive_min=bbox.topleft.to_tuple(),
             shape=bbox.size.to_tuple(),
         )
 
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
+    def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
         bbox = bbox.normalize_axes(self.info.num_channels)
         array = self._array
 
@@ -632,7 +634,7 @@ class TensorStoreArray(BaseArray):
             out = data
         return out
 
-    def resize(self, new_bbox: NDBoundingBox) -> None:
+    def resize(self, new_bbox: NormalizedBoundingBox) -> None:
         new_bbox = new_bbox.normalize_axes(self.info.num_channels)
         array = self._array
 
@@ -678,7 +680,7 @@ class TensorStoreArray(BaseArray):
                 description="Resizing tensorstore array",
             )
 
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+    def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
         bbox = bbox.normalize_axes(self.info.num_channels)
         assert data.ndim == len(bbox), (
             "The data has to have the same number of dimensions as the bounding box."
@@ -697,7 +699,7 @@ class TensorStoreArray(BaseArray):
 
     def _list_bounding_boxes(
         self, kvstore: Any, shard_shape: Vec3Int, shape: VecInt
-    ) -> Iterator[BoundingBox]:
+    ) -> Iterator[NormalizedBoundingBox]:
         _type, separator = self._chunk_key_encoding()
 
         def _try_parse_ints(vec: Iterable[Any]) -> list[int] | None:
@@ -729,9 +731,11 @@ class TensorStoreArray(BaseArray):
             else:
                 chunk_coords = Vec3Int(chunk_coords_list)
 
-            yield BoundingBox(chunk_coords * shard_shape, shard_shape)
+            yield BoundingBox(chunk_coords * shard_shape, shard_shape).normalize_axes(
+                self.info.num_channels
+            )
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
         kvstore = self._array.kvstore
 
         if kvstore.spec().to_json()["driver"] == "s3":
@@ -1032,10 +1036,10 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         raise NotImplementedError()
 
-    def write(self, _bbox: NDBoundingBox, _data: np.ndarray) -> None:
+    def write(self, _bbox: NormalizedBoundingBox, _data: np.ndarray) -> None:
         raise RuntimeError("Neuroglancer precomputed arrays cannot be written to.")
 
-    def _requested_domain(self, bbox: NDBoundingBox) -> tensorstore.IndexDomain:
+    def _requested_domain(self, bbox: NormalizedBoundingBox) -> tensorstore.IndexDomain:
         assert bbox.axes == ("c", "x", "y", "z")
         return tensorstore.IndexDomain(
             bbox.ndim,
@@ -1044,7 +1048,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
             shape=bbox.size_xyz.to_tuple() + (bbox.size.c,),
         )
 
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
+    def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
         return np.moveaxis(super().read(bbox), 3, 0)
 
 
@@ -1080,5 +1084,5 @@ class N5Array(TensorStoreArray):
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
         raise NotImplementedError()
 
-    def write(self, _bbox: NDBoundingBox, _data: np.ndarray) -> None:
+    def write(self, _bbox: NormalizedBoundingBox, _data: np.ndarray) -> None:
         raise RuntimeError("N5 arrays cannot be written to.")

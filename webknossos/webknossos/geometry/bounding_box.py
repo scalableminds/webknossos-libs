@@ -7,7 +7,12 @@ import attr
 import numpy as np
 
 from .mag import Mag
-from .nd_bounding_box import _DEFAULT_AXIS_ORDER, _DEFAULT_BBOX_NAME, NDBoundingBox
+from .nd_bounding_box import (
+    _DEFAULT_AXIS_ORDER,
+    _DEFAULT_BBOX_NAME,
+    NDBoundingBox,
+    NormalizedBoundingBox,
+)
 from .vec3_int import Vec3Int, Vec3IntLike
 
 
@@ -480,8 +485,8 @@ class BoundingBox(NDBoundingBox):
     def __hash__(self) -> int:
         return hash(self.to_tuple6())
 
-    def normalize_axes(self, num_channels: int) -> NDBoundingBox:
-        return NDBoundingBox(
+    def normalize_axes(self, num_channels: int) -> NormalizedBoundingBox:
+        return NormalizedBoundingBox(
             topleft=(0,) + self.topleft.to_tuple(),
             size=(num_channels,) + self.size.to_tuple(),
             axes=("c",) + self.axes,

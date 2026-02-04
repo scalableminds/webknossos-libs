@@ -426,6 +426,7 @@ class MagView(View, Generic[LayerTypeT]):
             - For unsupported formats, falls back to chunk-based iteration
             - Useful for understanding actual data distribution on disk
         """
+        bboxes: Iterator[NDBoundingBox]
         try:
             bboxes = self._array.list_bounding_boxes()
         except NotImplementedError:

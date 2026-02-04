@@ -10,7 +10,13 @@ from cluster_tools import Executor
 from upath import UPath
 
 from ....dataset_properties import DataFormat
-from ....geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ....geometry import (
+    Mag,
+    NDBoundingBox,
+    NormalizedBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+)
 from ....geometry.vec_int import VecIntLike
 from ....utils import (
     count_defined_values,
@@ -392,7 +398,7 @@ class View:
         else:
             self._array.write(current_mag_bbox, data)
 
-    def _check_shard_alignment(self, bbox: NDBoundingBox) -> None:
+    def _check_shard_alignment(self, bbox: NormalizedBoundingBox) -> None:
         """Check that the bounding box is aligned with the shard grid"""
         shard_shape = self.info.shard_shape
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
@@ -407,9 +413,9 @@ class View:
 
     def _prepare_compressed_write(
         self,
-        current_mag_bbox: NDBoundingBox,
+        current_mag_bbox: NormalizedBoundingBox,
         data: np.ndarray,
-    ) -> Iterator[tuple[NDBoundingBox, np.ndarray]]:
+    ) -> Iterator[tuple[NormalizedBoundingBox, np.ndarray]]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox,
         divides these into chunks of shard_shape size and delegates
         the preparation to _prepare_compressed_write_chunk."""
@@ -424,9 +430,9 @@ class View:
 
     def _prepare_compressed_write_chunk(
         self,
-        current_mag_bbox: NDBoundingBox,
+        current_mag_bbox: NormalizedBoundingBox,
         data: np.ndarray,
-    ) -> tuple[NDBoundingBox, np.ndarray]:
+    ) -> tuple[NormalizedBoundingBox, np.ndarray]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox
         (ideally not larger than a shard) and enlarges that chunk to fit the shard it
         resides in (by reading the entire shard data and writing the passed data ndarray
@@ -642,7 +648,7 @@ class View:
 
     def _read_without_checks(
         self,
-        current_mag_bbox: NDBoundingBox,
+        current_mag_bbox: NormalizedBoundingBox,
     ) -> np.ndarray:
         data = self._array.read(current_mag_bbox)
         return data
