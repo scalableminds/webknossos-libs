@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.5...HEAD)
 
 ### Breaking Changes
 - Moved from positional argument to keyword-only argument [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418):
@@ -34,7 +34,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Added `parent` property to `RemoteFolder`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
-- Added `--data-format` option to `webknossos download` CLI command. [#1422](https://github.com/scalableminds/webknossos-libs/pull/1422)
 
 ### Changed
 - The `RemoteDataset.open` method now accepts `access_mode` instead of `use_zarr_streaming`. `use_zarr_streaming` is still supported, but deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
@@ -43,6 +42,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Renamed `folder_id` to `folder` in `RemoteDataset.list`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 
 ### Fixed
+
+
+## [3.1.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.5) - 2026-02-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.4...v3.1.5)
+
+### Added
+- Added `--data-format` option to `webknossos download` CLI command. [#1422](https://github.com/scalableminds/webknossos-libs/pull/1422)
 
 
 ## [3.1.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.4) - 2026-01-26
