@@ -638,14 +638,13 @@ class MagView(View, Generic[LayerTypeT]):
                 all_source_bboxes = [
                     bbox.from_mag_to_mag1(self._mag) for bbox in source_bbox_iterator
                 ]
-                for bbox in rechunked_layer.bounding_box.chunk(combined_shard_shape):
+                for bbox in rechunked_layer.bounding_box.normalize_axes(
+                    self.info.num_channels
+                ).chunk(combined_shard_shape):
                     if any(
-                        not bbox.normalize_axes(self.info.num_channels)
-                        .intersected_with(
-                            source_bbox.normalize_axes(self.info.num_channels),
-                            dont_assert=True,
-                        )
-                        .is_empty()
+                        not bbox.intersected_with(
+                            source_bbox, dont_assert=True
+                        ).is_empty()
                         for source_bbox in all_source_bboxes
                     ):
                         yield bbox
