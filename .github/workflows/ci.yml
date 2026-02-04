@@ -129,7 +129,7 @@ jobs:
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
-    runs-on: ubicloud-standard-4
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.13", "3.12", "3.11", "3.10"]

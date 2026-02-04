@@ -851,7 +851,9 @@ def test_write_multi_channel_uint8(data_format: DataFormat, output_path: UPath) 
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     mag = ds.add_layer(
         "color", COLOR_CATEGORY, num_channels=3, data_format=data_format
-    ).add_mag("1")
+    ).add_mag(
+        "1", shard_shape=(512, 512, 32) if data_format == DataFormat.Zarr3 else None
+    )
 
     data = get_multichanneled_data(np.uint8)
 
@@ -874,7 +876,9 @@ def test_wkw_write_multi_channel_uint16(
         num_channels=3,
         dtype_per_channel="uint16",
         data_format=data_format,
-    ).add_mag("1")
+    ).add_mag(
+        "1", shard_shape=(512, 512, 32) if data_format == DataFormat.Zarr3 else None
+    )
 
     data = get_multichanneled_data(np.uint16)
 
