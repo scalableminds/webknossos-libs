@@ -177,6 +177,9 @@ class AbstractAttachments:
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         pass
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({list(self)})"
+
 
 class RemoteAttachments(AbstractAttachments):
     _layer: "RemoteSegmentationLayer"
@@ -188,7 +191,7 @@ class RemoteAttachments(AbstractAttachments):
         self._layer._apply_server_layer_properties()
 
     def _get_optional_dataset_path(self) -> UPath | None:
-        return None
+        return self._layer.dataset.zarr_streaming_path
 
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         return self.upload_attachment(attachment, transfer_mode=TransferMode.COPY)

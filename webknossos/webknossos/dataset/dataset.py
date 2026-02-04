@@ -59,7 +59,7 @@ from .layer.abstract_layer import (
 )
 from .layer.layer import _get_shard_shape
 from .ome_metadata import write_ome_metadata
-from .remote_dataset import RemoteDataset
+from .remote_dataset import RemoteAccessMode, RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .transfer_mode import TransferMode
@@ -455,24 +455,27 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def open_remote(
         cls,
         dataset_name_or_url: str | None = None,
+        *,
         organization_id: str | None = None,
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
         annotation_id: str | None = None,
-        use_zarr_streaming: bool = True,
+        access_mode: RemoteAccessMode | None = None,
         read_only: bool = False,
-    ) -> "RemoteDataset":
+        use_zarr_streaming: bool | None = None,
+    ) -> RemoteDataset:
         warn_deprecated("Dataset.open_remote", "RemoteDataset.open")
         return RemoteDataset.open(
-            dataset_name_or_url,
-            organization_id,
-            sharing_token,
-            webknossos_url,
-            dataset_id,
-            annotation_id,
-            use_zarr_streaming,
-            read_only,
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=sharing_token,
+            webknossos_url=webknossos_url,
+            dataset_id=dataset_id,
+            annotation_id_or_url=annotation_id,
+            use_zarr_streaming=use_zarr_streaming,
+            access_mode=access_mode,
+            read_only=read_only,
         )
 
     def __repr__(self) -> str:
@@ -485,7 +488,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         return self._load_dataset_properties_from_path(self.path)
 
     def _save_dataset_properties_impl(
-        self, layer_renaming: tuple[str, str] | None = None
+        self, *, layer_renaming: tuple[str, str] | None = None
     ) -> None:
         """
         Exports the current dataset properties to json on disk.
@@ -559,7 +562,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         warn_deprecated("Dataset.download", "RemoteDataset.download")
 
         remote_dataset = RemoteDataset.open(
-            dataset_name_or_url, organization_id, sharing_token, webknossos_url
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=sharing_token,
+            webknossos_url=webknossos_url,
         )
         return remote_dataset.download(
             sharing_token=sharing_token,
@@ -573,6 +579,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def publish_to_preliminary_dataset(
         self,
         dataset_id: str,
+        *,
         path_prefix: str | None = None,
         transfer_mode: TransferMode = TransferMode.COPY,
     ) -> None:
@@ -604,14 +611,16 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def upload(
         self,
+        *,
         new_dataset_name: str | None = None,
         initial_team_ids: list[str] | None = None,
-        folder_id: str | RemoteFolder | None = None,
+        folder: str | RemoteFolder | None = None,
         require_unique_name: bool = False,
         layers_to_link: Sequence[LayerToLink | RemoteLayer] | None = None,
         transfer_mode: TransferMode = TransferMode.HTTP,
         jobs: int | None = None,
         common_storage_path_prefix: str | None = None,
+        folder_id: str | RemoteFolder | None = None,
     ) -> "RemoteDataset":
         """Upload this dataset to webknossos.
 
@@ -621,12 +630,13 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Args:
             new_dataset_name: Name for the new dataset defaults to the current name.
             initial_team_ids: Optional list of team IDs to grant initial access
-            folder_id: Optional ID of folder where dataset should be placed
+            folder: Optional ID of folder where dataset should be placed
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
             layers_to_link: Optional list of LayerToLink to link already published layers to the dataset.
             jobs: Optional number of jobs to use for uploading the data.
             common_storage_path_prefix: Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
                                         to select one of the available WEBKNOSSOS storages.
+            folder_id: Deprecated, use folder instead.
         Returns:
             RemoteDataset: Reference to the newly created remote dataset
         Note:
@@ -652,8 +662,16 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         new_dataset_name = new_dataset_name or self.name
 
-        if isinstance(folder_id, RemoteFolder):
-            folder_id = folder_id.id
+        if folder_id is not None:
+            warn_deprecated("folder_id", "folder")
+            if folder is not None:
+                raise ValueError(
+                    "Both folder_id and folder were provided. Only one is allowed."
+                )
+            folder = folder_id
+
+        if isinstance(folder, RemoteFolder):
+            folder = folder.id
 
         converted_layers_to_link = (
             None
@@ -674,7 +692,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 ApiReserveDatasetUplaodToPathsParameters(
                     dataset_name=new_dataset_name,
                     initial_team_ids=initial_team_ids or [],
-                    folder_id=folder_id,
+                    folder_id=folder,
                     require_unique_name=require_unique_name,
                     data_source=self._properties,
                     layers_to_link=[
@@ -712,7 +730,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 new_dataset_name,
                 converted_layers_to_link,
                 jobs,
-                folder_id=folder_id,
+                folder_id=folder,
             )
 
         return RemoteDataset.open(dataset_id=new_dataset_id)
@@ -772,6 +790,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     @classmethod
     def trigger_reload_in_datastore(
         cls,
+        *,
         dataset_name_or_url: str | None = None,
         organization_id: str | None = None,
         webknossos_url: str | None = None,

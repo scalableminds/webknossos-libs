@@ -65,7 +65,8 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     if not (org_binary_data_dir / "l4_sample").exists():
         org_binary_data_dir.mkdir(parents=True, exist_ok=True)
         download_and_unpack(
-            "https://static.webknossos.org/data/l4_sample.zip", org_binary_data_dir
+            "https://static.webknossos.org/data/zarr_v3/l4_sample.zip",
+            org_binary_data_dir,
         )
 
     # Start the webknossos server

@@ -100,6 +100,22 @@ class AbstractApiClient(ABC):
         )
         return self._parse_json(response, response_type)
 
+    def _put_with_json_response(
+        self,
+        route: str,
+        response_type: type[T],
+        query: Query | None = None,
+        retry_count: int = 0,
+        timeout_seconds: float | None = None,
+    ) -> T:
+        response = self._put(
+            route,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
+        )
+        return self._parse_json(response, response_type)
+
     def _patch_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
         self._patch(route, body_json)

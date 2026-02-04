@@ -59,7 +59,7 @@ from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
-from webknossos.dataset import RemoteDataset
+from webknossos.dataset import RemoteAccessMode, RemoteDataset
 from webknossos.geometry.mag import Mag, MagLike
 
 from ..client.api_client.models import (
@@ -979,7 +979,7 @@ class Annotation:
             organization_id=organization_id,
             dataset_id=self.dataset_id,
             annotation_id_or_url=self.annotation_id,
-            use_zarr_streaming=True,
+            access_mode=RemoteAccessMode.ZARR_STREAMING,
         )
 
     def get_remote_base_dataset(
@@ -1011,7 +1011,7 @@ class Annotation:
         """
         return RemoteDataset.open(
             self.dataset_name,
-            self.organization_id,
+            organization_id=self.organization_id,
             sharing_token=sharing_token,
             webknossos_url=webknossos_url,
             dataset_id=self.dataset_id,

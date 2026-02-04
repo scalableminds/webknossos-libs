@@ -24,6 +24,7 @@ from webknossos import (
     Dataset,
     LayerCategoryType,
     RemoteDataset,
+    RemoteFolder,
     View,
 )
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
@@ -850,7 +851,9 @@ def test_write_multi_channel_uint8(data_format: DataFormat, output_path: UPath) 
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     mag = ds.add_layer(
         "color", COLOR_CATEGORY, num_channels=3, data_format=data_format
-    ).add_mag("1")
+    ).add_mag(
+        "1", shard_shape=(512, 512, 32) if data_format == DataFormat.Zarr3 else None
+    )
 
     data = get_multichanneled_data(np.uint8)
 
@@ -873,7 +876,9 @@ def test_wkw_write_multi_channel_uint16(
         num_channels=3,
         dtype_per_channel="uint16",
         data_format=data_format,
-    ).add_mag("1")
+    ).add_mag(
+        "1", shard_shape=(512, 512, 32) if data_format == DataFormat.Zarr3 else None
+    )
 
     data = get_multichanneled_data(np.uint16)
 
@@ -1149,7 +1154,7 @@ def test_explore_and_add_remote() -> None:
     remote_ds = RemoteDataset.explore_and_add_remote(
         "http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/",
         "added_remote_ds",
-        "/Organization_X",
+        folder=RemoteFolder.get_by_path("Organization_X"),
     )
     assert remote_ds.name == "added_remote_ds"
 
@@ -3618,7 +3623,7 @@ def test_copy_dataset_exists_ok() -> None:
 
 @pytest.mark.use_proxay
 def test_remote_dataset_access_metadata() -> None:
-    ds = RemoteDataset.open("l4_sample", "Organization_X")
+    ds = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     assert len(ds.metadata) == 2  # has 2 by default
 
     ds.metadata["key"] = "value"
@@ -3639,7 +3644,7 @@ def test_remote_dataset_access_metadata() -> None:
 
 @pytest.mark.use_proxay
 def test_remote_dataset_urls() -> None:
-    ds = RemoteDataset.open("l4_sample", "Organization_X")
+    ds = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     dataset_id = ds._dataset_id
     assert dataset_id in ds.url
 

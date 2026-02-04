@@ -82,7 +82,7 @@ def main() -> None:
 
     out_layer.downsample()
     output_dataset.upload(
-        "l4_sample_remapped",
+        new_dataset_name="l4_sample_remapped",
         layers_to_link=[input_dataset.get_layer("color")],
     )
 

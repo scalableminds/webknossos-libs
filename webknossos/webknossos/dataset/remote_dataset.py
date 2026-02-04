@@ -4,6 +4,7 @@ import logging
 import warnings
 from collections.abc import Mapping, Sequence
 from datetime import datetime
+from enum import Enum
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Union
 
@@ -69,6 +70,14 @@ if TYPE_CHECKING:
     from webknossos.dataset import Dataset
 
 
+class RemoteAccessMode(Enum):
+    """Determines how data of a remote dataset is accessed. Note that DIRECT_PATH can only be used if the client has access to the underlying storage."""
+
+    ZARR_STREAMING = "zarr_streaming"
+    DIRECT_PATH = "direct_path"
+    PROXY_PATH = "proxy_path"
+
+
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     """A representation of a dataset managed by a WEBKNOSSOS server.
 
@@ -111,6 +120,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     def __init__(
         self,
+        *,
         zarr_streaming_path: UPath | None,
         dataset_properties: DatasetProperties | None,
         dataset_id: str,
@@ -152,13 +162,15 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def open(
         cls,
         dataset_name_or_url: str | None = None,
+        *,
         organization_id: str | None = None,
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
         annotation_id_or_url: str | None = None,
-        use_zarr_streaming: bool = True,
+        access_mode: RemoteAccessMode | None = None,
         read_only: bool = False,
+        use_zarr_streaming: bool | None = None,
     ) -> "RemoteDataset":
         """Opens a remote webknossos dataset. Image data is accessed via network requests.
         Dataset metadata such as allowed teams or the sharing token can be read and set
@@ -172,7 +184,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
             dataset_id: Optional unique ID of the dataset
             annotation_id_or_url: Optional unique ID or URL of the annotation to stream the data from the annotation.
-            use_zarr_streaming: Whether to use zarr streaming
+            access_mode: Access mode for the dataset. Defaults to RemoteAccessMode.ZARR_STREAMING.
+            use_zarr_streaming: Whether to use zarr streaming. Deprecated, use access_mode instead.
 
         Returns:
             RemoteDataset: Dataset instance for remote access
@@ -187,20 +200,38 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             must not be set.
         """
 
-        if annotation_id_or_url is not None:
-            assert use_zarr_streaming, (
-                "Annotations are only supported with zarr streaming"
+        if use_zarr_streaming is not None:
+            if access_mode is not None:
+                raise ValueError(
+                    "Both use_zarr_streaming and access_mode were provided. Only one is allowed."
+                )
+            warn_deprecated("use_zarr_streaming", "access_mode")
+            if use_zarr_streaming:
+                access_mode = RemoteAccessMode.ZARR_STREAMING
+            else:
+                access_mode = RemoteAccessMode.DIRECT_PATH
+
+        if access_mode is None:
+            access_mode = RemoteAccessMode.ZARR_STREAMING
+
+        if (
+            annotation_id_or_url is not None
+            and access_mode != RemoteAccessMode.ZARR_STREAMING
+        ):
+            raise ValueError(
+                "Annotations are only supported with zarr streaming. "
+                + f"Got {access_mode} instead."
             )
 
         from ..client.context import _get_context
 
         (context_manager, dataset_id, annotation_id, sharing_token) = cls._parse_remote(
-            dataset_name_or_url,
-            organization_id,
-            sharing_token,
-            webknossos_url,
-            dataset_id,
-            annotation_id_or_url,
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=sharing_token,
+            webknossos_url=webknossos_url,
+            dataset_id=dataset_id,
+            annotation_id_or_url=annotation_id_or_url,
         )
 
         with context_manager:
@@ -212,7 +243,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
-            if use_zarr_streaming:
+            if access_mode == RemoteAccessMode.ZARR_STREAMING:
                 if annotation_id is not None:
                     zarr_path = UPath(
                         f"{url_prefix}/annotations/zarr/{annotation_id}/",
@@ -226,26 +257,44 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                         ssl=SSL_CONTEXT,
                     )
                 return cls(
-                    zarr_path,
-                    None,
-                    dataset_id,
-                    annotation_id,
-                    context_manager,
+                    zarr_streaming_path=zarr_path,
+                    dataset_properties=None,
+                    dataset_id=dataset_id,
+                    annotation_id=annotation_id,
+                    context=context_manager,
                     read_only=read_only,
                 )
-            else:
+            elif access_mode == RemoteAccessMode.DIRECT_PATH:
                 if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
                     raise RuntimeError(
                         f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
                     )
 
                 return cls(
-                    None,
-                    api_dataset_info.data_source,
-                    dataset_id,
-                    annotation_id,
-                    context_manager,
-                    read_only,
+                    zarr_streaming_path=None,
+                    dataset_properties=api_dataset_info.data_source,
+                    dataset_id=dataset_id,
+                    annotation_id=annotation_id,
+                    context=context_manager,
+                    read_only=read_only,
+                )
+            elif access_mode == RemoteAccessMode.PROXY_PATH:
+                zarr_path = UPath(
+                    f"{url_prefix}/datasets/{dataset_id}/proxy/",
+                    headers={} if token is None else {"X-Auth-Token": token},
+                    ssl=SSL_CONTEXT,
+                )
+                return cls(
+                    zarr_streaming_path=zarr_path,
+                    dataset_properties=None,
+                    dataset_id=dataset_id,
+                    annotation_id=None,
+                    context=context_manager,
+                    read_only=read_only,
+                )
+            else:
+                raise ValueError(
+                    f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
                 )
 
     def _initialize_layer_from_properties(
@@ -277,7 +326,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self._last_read_properties = copy.deepcopy(self._properties)
 
     def _save_dataset_properties_impl(
-        self, layer_renaming: tuple[str, str] | None = None
+        self, *, layer_renaming: tuple[str, str] | None = None
     ) -> None:
         """
         Exports the current dataset properties to the server.
@@ -377,6 +426,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     def _update_dataset_info(
         self,
+        *,
         name: str = _UNSET,
         description: str | None = _UNSET,
         is_public: bool = _UNSET,
@@ -677,6 +727,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     def download(
         self,
+        *,
         sharing_token: str | None = None,
         bbox: BoundingBox | None = None,
         layers: list[str] | str | None = None,
@@ -712,6 +763,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self,
         segment_id: int,
         output_dir: PathLike | UPath | str,
+        *,
         layer_name: str | None = None,
         mesh_file_name: str | None = None,
         datastore_url: str | None = None,
@@ -859,6 +911,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         organization_id: str | None = None,
         tags: str | Sequence[str] | None = None,
         name: str | None = None,
+        folder: RemoteFolder | str | None = None,
         folder_id: RemoteFolder | str | None = None,
     ) -> Mapping[str, "RemoteDataset"]:
         """Get all available datasets from the WEBKNOSSOS server.
@@ -875,6 +928,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 matching name.
             folder: Optional folder to filter datasets by. Only returns datasets in
                 the specified folder.
+            folder_id: Deprecated, use folder instead.
 
         Returns:
             Mapping[str, RemoteDataset]: Dict mapping dataset ids to RemoteDataset objects
@@ -907,11 +961,19 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             RemoteDataset objects are initialized lazily when accessed for the first time.
             The mapping object provides a fast way to list and look up available datasets.
         """
-        if isinstance(folder_id, RemoteFolder):
-            folder_id = folder_id.id
+        if folder_id is not None:
+            warn_deprecated("folder_id", "folder")
+            if folder is not None:
+                raise ValueError(
+                    "Both folder_id and folder were provided. Only one is allowed."
+                )
+            folder = folder_id
+
+        if isinstance(folder, RemoteFolder):
+            folder = folder.id
 
         return RemoteDatasetRegistry(
-            name=name, organization_id=organization_id, tags=tags, folder_id=folder_id
+            name=name, organization_id=organization_id, tags=tags, folder_id=folder
         )
 
     @classmethod
@@ -951,6 +1013,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     @classmethod
     def _parse_remote(
         cls,
+        *,
         dataset_name_or_url: str | None = None,
         organization_id: str | None = None,
         sharing_token: str | None = None,
@@ -1050,6 +1113,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     @classmethod
     def trigger_reload_in_datastore(
         cls,
+        *,
         dataset_name_or_url: str | None = None,
         organization_id: str | None = None,
         webknossos_url: str | None = None,
@@ -1099,11 +1163,11 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 )
 
         (context_manager, dataset_id, _, _) = cls._parse_remote(
-            dataset_name_or_url,
-            organization_id,
-            token,
-            webknossos_url,
-            dataset_id,
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=token,
+            webknossos_url=webknossos_url,
+            dataset_id=dataset_id,
         )
 
         with context_manager:
@@ -1118,7 +1182,12 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     @classmethod
     def explore_and_add_remote(
-        cls, dataset_uri: str | PathLike | UPath, dataset_name: str, folder_path: str
+        cls,
+        dataset_uri: str | PathLike | UPath,
+        dataset_name: str,
+        *,
+        folder: str | RemoteFolder | None = None,
+        folder_path: str | None = None,
     ) -> "RemoteDataset":
         """Explore and add an external dataset as a remote dataset.
 
@@ -1128,7 +1197,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         Args:
             dataset_uri: URI pointing to the remote dataset location
             dataset_name: Name to register dataset under in WEBKNOSSOS
-            folder_path: Path in WEBKNOSSOS folder structure where dataset should appear
+            folder: Path in WEBKNOSSOS folder structure where dataset should appear
+            folder_path: Deprecated, use folder instead.
 
         Returns:
             RemoteDataset: The newly added dataset accessible via WEBKNOSSOS
@@ -1138,7 +1208,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             remote = Dataset.explore_and_add_remote(
                 "s3://bucket/dataset",
                 "my_dataset",
-                "Datasets/Research"
+                folder=RemoteFolder.get_by_path("Datasets/Research")
             )
             ```
 
@@ -1148,9 +1218,24 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         """
         from ..client.context import _get_api_client
 
+        folder_obj: RemoteFolder | None = None
+        if folder_path is not None:
+            warn_deprecated("folder_path", "folder")
+            if folder is not None:
+                raise ValueError(
+                    "Both folder_path and folder were provided. Only one is allowed."
+                )
+            folder_obj = RemoteFolder.get_by_path(folder_path)
+        elif isinstance(folder, str):
+            folder_obj = RemoteFolder.get_by_path(folder)
+        elif isinstance(folder, RemoteFolder):
+            folder_obj = folder
+
         client = _get_api_client()
         dataset = ApiDatasetExploreAndAddRemote(
-            UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
+            UPath(dataset_uri).resolve().as_uri(),
+            dataset_name,
+            None if folder_obj is None else folder_obj.id,
         )
         dataset_id = client.dataset_explore_and_add_remote(dataset=dataset)
 
