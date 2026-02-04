@@ -130,7 +130,7 @@ class ApiDatasetId:
 class ApiDatasetExploreAndAddRemote:
     remote_uri: str
     dataset_name: str
-    folder_path: str | None = None
+    folder_id: str | None = None
     data_store_name: str | None = None
 
 

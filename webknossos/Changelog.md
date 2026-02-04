@@ -10,15 +10,45 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.5...HEAD)
 
 ### Breaking Changes
+- Moved from positional argument to keyword-only argument [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418):
+  - `relative_bounding_box` and `absolute_bounding_box` in `View.read_xyz`
+  - `chunk_shape`, `executor` and `progress_desc` in `View.for_each_chunk`
+  - `chunk_shape`, `executor` and `progress_desc` in `View.map_chunk`
+  - `chunk_border_alignments` and `read_only` in `View.chunk`
+  - `source_chunk_shape`, `target_chunk_shape`, `executor` and `progress_desc` in `View.for_zipped_chunks`
+  - `chunk_shape`, `executor` and `progress_desc` in `View.content_is_equal`
+  - `organization_id`, `sharing_token`, `webknossos_url`, `dataset_id`, `annotation_id`, `access_mode`, `use_zarr_streaming` and `read_only` in `Dataset.open_remote`
+  - `path_prefix` and `transfer_mode` in `Dataset.publish_to_preliminary_dataset`
+  - `dataset_name_or_url`, `organization_id`, `webknossos_url`, `dataset_id`, `organization`, `datastore_url` and `token` in `Dataset.trigger_reload_in_datastore`
+  - `zarr_streaming_path`, `dataset_properties`, `dataset_id`, `annotation_id`, `context` and `read_only` in `RemoteDataset.__init__` (should not be used directly)
+  - `organization_id`, `sharing_token`, `webknossos_url`, `dataset_id`, `annotation_id_or_url`, `use_zarr_streaming`, `access_mode` and `read_only` in `RemoteDataset.open`
+  - `sharing_token`, `bbox`, `layers`, `mags`, `path` and `exist_ok` in `RemoteDataset.download`
+  - `layer_name`, `mesh_file_name`, `datastore_url`, `lod`, `mapping_name`, `mapping_type`, `mag`, `seed_position`, `token` and `sharing_token` in `RemoteDataset.download_mesh`
+  - `dataset_name_or_url`, `organization_id`, `webknossos_url`, `dataset_id`, `organization`, `datastore_url` and `token` in `RemoteDataset.trigger_reload_in_datastore`
+  - `folder_path` in `RemoteDataset.explore_and_add_remote`
+  - `name`, `organization_id`, `tags` and `folder_id` in `RemoteDatasetRegistry.__init__` (should not be used directly)
 
 ### Added
+- Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Added `parent` property to `RemoteFolder`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 
 ### Changed
+- The `RemoteDataset.open` method now accepts `access_mode` instead of `use_zarr_streaming`. `use_zarr_streaming` is still supported, but deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Renamed `folder_path` to `folder` in `RemoteDataset.explore_and_add_remote`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Renamed `folder_id` to `folder` in `Dataset.upload`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Renamed `folder_id` to `folder` in `RemoteDataset.list`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 
 ### Fixed
+
+
+## [3.1.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.5) - 2026-02-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.4...v3.1.5)
+
+### Added
+- Added `--data-format` option to `webknossos download` CLI command. [#1422](https://github.com/scalableminds/webknossos-libs/pull/1422)
 
 
 ## [3.1.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.4) - 2026-01-26

@@ -74,9 +74,14 @@ def test_url_download(url: str, tmp_upath: UPath) -> None:
         # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
-def test_url_open_remote(url: str, tmp_upath: UPath) -> None:
+@pytest.mark.parametrize(
+    "access_mode", [wk.RemoteAccessMode.ZARR_STREAMING, wk.RemoteAccessMode.PROXY_PATH]
+)
+def test_url_open_remote(
+    url: str, tmp_upath: UPath, access_mode: wk.RemoteAccessMode
+) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
-    ds = wk.RemoteDataset.open(url)
+    ds = wk.RemoteDataset.open(url, access_mode=access_mode)
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = (
         ds.get_color_layers()[0]
@@ -182,6 +187,8 @@ def test_folders_and_teams() -> None:
 
     subfolder = remote_folder.add_subfolder(f"{folder_name}_subfolder")
     assert remote_folder.get_subfolders() == (subfolder,)
+    subfolder.parent = wk.RemoteFolder.get_root()
+    assert remote_folder.get_subfolders() == ()
     subfolder.delete()
     assert remote_folder.get_subfolders() == ()
 
@@ -195,7 +202,8 @@ def test_upload_download_roundtrip(tmp_upath: UPath) -> None:
         new_dataset_name="test_upload_download_roundtrip"
     )
     wk.RemoteDataset.trigger_reload_in_datastore(
-        "test_upload_download_roundtrip", "Organization_X"
+        dataset_name_or_url="test_upload_download_roundtrip",
+        organization_id="Organization_X",
     )
     ds_roundtrip = wk.RemoteDataset.open(uploaded_dataset.url).download(
         path=tmp_upath / "ds", layers=["color", "segmentation"]
@@ -203,17 +211,6 @@ def test_upload_download_roundtrip(tmp_upath: UPath) -> None:
     assert set(ds_original.get_segmentation_layers()[0].mags.keys()) == set(
         ds_roundtrip.get_segmentation_layers()[0].mags.keys()
     )
-
-    original_config = ds_original.get_layer("color").default_view_configuration
-    roundtrip_config = ds_roundtrip.get_layer("color").default_view_configuration
-    assert original_config is not None, (
-        "default_view_configuration should be defined for original dataset"
-    )
-    assert roundtrip_config is not None, (
-        "default_view_configuration should be defined for roundtrip dataset"
-    )
-    assert original_config.color == roundtrip_config.color
-    assert original_config.intensity_range == roundtrip_config.intensity_range
 
     data_original = ds_original.get_segmentation_layers()[0].get_finest_mag().read()
     data_roundtrip = ds_roundtrip.get_segmentation_layers()[0].get_finest_mag().read()

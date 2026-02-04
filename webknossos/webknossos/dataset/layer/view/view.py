@@ -183,6 +183,7 @@ class View:
 
     def _get_mag1_bbox(
         self,
+        *,
         abs_mag1_bbox: NDBoundingBox | None = None,
         rel_mag1_bbox: NDBoundingBox | None = None,
         abs_mag1_offset: Vec3IntLike | None = None,
@@ -574,6 +575,7 @@ class View:
 
     def read_xyz(
         self,
+        *,
         relative_bounding_box: NDBoundingBox | None = None,
         absolute_bounding_box: NDBoundingBox | None = None,
     ) -> np.ndarray:
@@ -966,6 +968,7 @@ class View:
     def for_each_chunk(
         self,
         func_per_chunk: Callable[[tuple["View", int]], None],
+        *,
         chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
         executor: Executor | None = None,
         progress_desc: str | None = None,
@@ -1056,6 +1059,7 @@ class View:
     def map_chunk(
         self,
         func_per_chunk: Callable[["View"], Any],
+        *,
         chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
         executor: Executor | None = None,
         progress_desc: str | None = None,
@@ -1138,6 +1142,7 @@ class View:
     def chunk(
         self,
         chunk_shape: VecIntLike,
+        *,
         chunk_border_alignments: VecIntLike | None = None,
         read_only: bool | None = None,
     ) -> Generator["View", None, None]:
@@ -1174,6 +1179,7 @@ class View:
         self,
         func_per_chunk: Callable[[tuple["View", "View", int]], None],
         target_view: "View",
+        *,
         source_chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
         target_chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
         executor: Executor | None = None,
@@ -1256,8 +1262,12 @@ class View:
             + f"(source_chunk_shape in Mag(1) = {source_chunk_shape}, target_chunk_shape in Mag(1) = {target_chunk_shape})"
         )
 
-        source_views = self.chunk(source_chunk_shape, source_chunk_shape)
-        target_views = target_view.chunk(target_chunk_shape, target_chunk_shape)
+        source_views = self.chunk(
+            source_chunk_shape, chunk_border_alignments=source_chunk_shape
+        )
+        target_views = target_view.chunk(
+            target_chunk_shape, chunk_border_alignments=target_chunk_shape
+        )
 
         job_args = (
             (source_view, target_view, i)
@@ -1289,6 +1299,7 @@ class View:
     def content_is_equal(
         self,
         other: "View",
+        *,
         executor: Executor | None = None,
         progress_desc: str | None = None,
         chunk_shape: Vec3IntLike | None = None,

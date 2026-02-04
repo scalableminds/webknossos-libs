@@ -534,7 +534,7 @@ if __name__ == "__main__":
             print(repo_image)
             print(
                 _test_repo_images(UPath(tempdir), *repo_image)
-                .upload(f"test_repo_images_{name}_{time()}")
+                .upload(new_dataset_name=f"test_repo_images_{name}_{time()}")
                 .url
             )
 
@@ -544,7 +544,7 @@ if __name__ == "__main__":
             print(bioformat_image)
             print(
                 _test_bioformats(UPath(tempdir), *bioformat_image)
-                .upload(f"test_bioformats_{name}_{time()}")
+                .upload(new_dataset_name=f"test_bioformats_{name}_{time()}")
                 .url
             )
 
@@ -554,6 +554,6 @@ if __name__ == "__main__":
             print(*test_images_args)
             print(
                 _test_test_images(UPath(tempdir), *test_images_args)
-                .upload(f"test_test_images_{name}_{time()}")
+                .upload(new_dataset_name=f"test_test_images_{name}_{time()}")
                 .url
             )
