@@ -830,8 +830,12 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         _validate_layer_name(layer_name)
 
-        if num_channels is None:
-            num_channels = 1
+        bounding_box = bounding_box or BoundingBox((0, 0, 0), (0, 0, 0))
+        if num_channels is not None:
+            assert "c" not in bounding_box.axes or bounding_box.size.c == num_channels
+            bounding_box = bounding_box.with_num_channels(num_channels)
+        else:
+            bounding_box = bounding_box.with_num_channels(1)
 
         if dtype_per_layer is not None and dtype_per_channel is not None:
             raise AttributeError(
@@ -851,7 +855,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             )
             dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
             dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
-                dtype_per_layer, num_channels
+                dtype_per_layer, bounding_box.size.get("c", 1)
             )
         else:
             dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
@@ -868,12 +872,11 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
+            bounding_box=bounding_box,
             element_class=_dtype_per_channel_to_element_class(
-                dtype_per_channel, num_channels
+                dtype_per_channel, bounding_box.size.get("c", 1)
             ),
             mags=[],
-            num_channels=num_channels,
             data_format=DataFormat(data_format),
         )
 

@@ -418,17 +418,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def _SegmentationLayerType(self) -> type[SegmentationLayer]:
         return SegmentationLayer
 
-    def _initialize_layer_from_properties(
-        self, properties: LayerProperties, read_only: bool
-    ) -> Layer:
-        # If the numChannels key is not present in the dataset properties, assume it is 1 unless we have uint24.
-        if properties.num_channels is None:
-            if properties.element_class == "uint24":
-                properties.num_channels = 3
-            else:
-                properties.num_channels = 1
-        return super()._initialize_layer_from_properties(properties, read_only)
-
     @classmethod
     def open(
         cls, dataset_path: str | PathLike | UPath, read_only: bool = False
@@ -1098,8 +1087,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         _validate_layer_name(layer_name)
 
-        if num_channels is None:
-            num_channels = 1
+        bounding_box = bounding_box or BoundingBox((0, 0, 0), (0, 0, 0))
+        if num_channels is not None:
+            assert "c" not in bounding_box.axes or bounding_box.size.c == num_channels
+            bounding_box = bounding_box.with_num_channels(num_channels)
+        else:
+            bounding_box = bounding_box.with_num_channels(1)
 
         if dtype_per_layer is not None and dtype_per_channel is not None:
             raise AttributeError(
@@ -1119,7 +1112,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             )
             dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
             dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
-                dtype_per_layer, num_channels
+                dtype_per_layer, bounding_box.size.get("c", 1)
             )
         else:
             dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
@@ -1152,12 +1145,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
+            bounding_box=bounding_box,
             element_class=_dtype_per_channel_to_element_class(
-                dtype_per_channel, num_channels
+                dtype_per_channel, bounding_box.size.get("c", 1)
             ),
             mags=[],
-            num_channels=num_channels,
             data_format=DataFormat(data_format),
         )
 
@@ -1676,11 +1668,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             # Setting a large enough bounding box, because the exact bounding box
             # cannot be know a priori all the time. It will be replaced with the
             # correct bounding box after reading through all actual images.
-            safe_expected_bbox = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
-            safe_size = safe_expected_bbox.size.with_replaced(
-                safe_expected_bbox.axes.index("x"), SAFE_LARGE_XY
-            ).with_replaced(safe_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
-            safe_expected_bbox = safe_expected_bbox.with_size(safe_size)
+            safe_expected_bbox = (
+                expected_bbox.from_mag_to_mag1(mag)
+                .offset(topleft)
+                .with_bounds("x", new_size=SAFE_LARGE_XY)
+                .with_bounds("y", new_size=SAFE_LARGE_XY)
+            )
             layer.bounding_box = safe_expected_bbox
 
             mag_view = layer.add_mag(
@@ -1741,7 +1734,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     Vec3Int(1, 1, batch_size),
                 )
             )
-            print(args)
 
             with warnings.catch_warnings():
                 # We need to catch and ignore a warning here about comparing persisted properties.
@@ -1858,7 +1850,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             mag: Magnification to write the data at.
         """
         mag = Mag(mag)
-        bbox, num_channels = derive_nd_bounding_box_from_shape(
+        bbox = derive_nd_bounding_box_from_shape(
             data.shape, axes=axes, absolute_offset=absolute_offset
         )
         mag1_bbox = bbox.with_size_xyz(bbox.size_xyz * mag.to_vec3_int())
@@ -1866,7 +1858,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             layer_name,
             category,
             data_format=data_format,
-            num_channels=num_channels,
             dtype_per_channel=data.dtype,
             bounding_box=mag1_bbox,
         )
@@ -2026,7 +2017,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 new_layer_name,
                 category=foreign_layer.category,
                 dtype_per_channel=foreign_layer.dtype_per_channel,
-                num_channels=foreign_layer.num_channels,
                 data_format=data_format or foreign_layer.data_format,
                 largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
                 bounding_box=foreign_layer.bounding_box,
@@ -2040,7 +2030,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 new_layer_name,
                 category=foreign_layer.category,
                 dtype_per_channel=foreign_layer.dtype_per_channel,
-                num_channels=foreign_layer.num_channels,
                 data_format=data_format or foreign_layer.data_format,
                 largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
                 bounding_box=foreign_layer.bounding_box,

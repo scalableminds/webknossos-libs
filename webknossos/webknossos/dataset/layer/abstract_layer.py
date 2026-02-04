@@ -20,7 +20,7 @@ from webknossos.dataset_properties.structuring import (
     MagViewProperties,
     _properties_floating_type_to_python_type,
 )
-from webknossos.geometry import NDBoundingBox
+from webknossos.geometry import BoundingBox, NDBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
 
 from ...dataset_properties.structuring import _python_floating_type_to_properties_type
@@ -148,16 +148,13 @@ class AbstractLayer:
         self._apply_properties(properties, read_only)
 
     def _apply_properties(self, properties: LayerProperties, read_only: bool) -> None:
-        # It is possible that the properties on disk do not contain the number of channels.
-        # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
-        assert properties.num_channels is not None
         assert "/" not in properties.name and not properties.name.startswith("."), (
             f"The layer name '{properties.name}' is invalid."
         )
         self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
 
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
-            properties.element_class, properties.num_channels
+            properties.element_class, properties.bounding_box.size.get("c", 1)
         )
         self._mags = {}
         self._read_only = read_only
@@ -209,6 +206,11 @@ class AbstractLayer:
             for layer_property in self.dataset._properties.data_layers
             if layer_property.name == self.name
         )
+
+    @property
+    def num_channels(self) -> int:
+        """Returns the number of channels of the layer."""
+        return self.bounding_box.size.get("c", 1)
 
     def _save_layer_properties(
         self, layer_renaming: tuple[str, str] | None = None
@@ -279,10 +281,19 @@ class AbstractLayer:
         assert bbox.topleft.is_positive(), (
             f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         )
+        if (
+            isinstance(self._properties.bounding_box, BoundingBox)
+            and self._properties.bounding_box.num_channels != 0
+            and isinstance(bbox, BoundingBox)
+            and bbox.num_channels == 0
+        ):
+            bbox = bbox.with_num_channels(self._properties.bounding_box.num_channels)
         self._properties.bounding_box = bbox
         self._save_layer_properties()
         for mag in self.mags.values():
-            mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
+            mag._array.resize(
+                bbox.normalize_axes().align_with_mag(mag.mag).in_mag(mag.mag)
+            )
 
     @property
     def category(self) -> LayerCategoryType:
@@ -317,20 +328,6 @@ class AbstractLayer:
         """
 
         return self._dtype_per_channel
-
-    @property
-    def num_channels(self) -> int:
-        """Gets the number of channels in this layer.
-
-        Returns:
-            int: Number of channels
-
-        Raises:
-            AssertionError: If num_channels is not set in properties
-        """
-
-        assert self._properties.num_channels is not None
-        return self._properties.num_channels
 
     @property
     def data_format(self) -> DataFormat:

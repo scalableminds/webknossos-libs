@@ -296,12 +296,8 @@ def downsample_cube_job(
     (source_view, target_view, _i) = args
 
     try:
-        source_bbox = source_view.bounding_box.normalize_axes(
-            source_view.info.num_channels
-        )
-        target_bbox = target_view.bounding_box.normalize_axes(
-            target_view.info.num_channels
-        )
+        source_bbox = source_view.bounding_box.normalize_axes()
+        target_bbox = target_view.bounding_box.normalize_axes()
         num_channels = target_view.info.num_channels
         target_bbox_in_mag = target_bbox.in_mag(target_view.mag)
         shape = target_bbox_in_mag.size.to_tuple()
@@ -351,7 +347,7 @@ def downsample_cube_job(
 
                     slices: list[int | slice] = list(buffer_bbox.to_slices_xyz())
                     if "c" in buffer_bbox.axes:
-                        slices[buffer_bbox.index.c] = channel_index
+                        slices[buffer_bbox.axes.index("c")] = channel_index
 
                     file_buffer[tuple(slices)] = data_cube
 

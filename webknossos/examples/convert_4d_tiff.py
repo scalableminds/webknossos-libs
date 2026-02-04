@@ -37,7 +37,6 @@ def main() -> None:
         topleft=(2, 0, 67, 39),
         size=(2, 5, 100, 400),
         axes=("t", "z", "y", "x"),
-        index=(1, 2, 3, 4),
     )
     data = mag_view.read(absolute_bounding_box=read_bbox)
     # data.shape -> (1, 2, 5, 100, 400) # first value is the channel dimension

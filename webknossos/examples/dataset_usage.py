@@ -24,8 +24,7 @@ def main() -> None:
         layer_name="color",
         category="color",
         dtype_per_channel="uint8",
-        num_channels=3,
-        bounding_box=wk.BoundingBox((10, 20, 30), (512, 512, 32)),
+        bounding_box=wk.BoundingBox((10, 20, 30), (512, 512, 32), num_channels=3),
     )
     mag1 = layer.add_mag("1")
     mag2 = layer.add_mag("2")

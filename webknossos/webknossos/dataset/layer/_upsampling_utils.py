@@ -30,7 +30,7 @@ def upsample_cube_job(
 ) -> None:
     (source_view, target_view, _i) = args
 
-    target_bbox = target_view.bounding_box.normalize_axes(target_view.info.num_channels)
+    target_bbox = target_view.bounding_box.normalize_axes()
 
     assert all(1 >= f for f in mag_factors), (
         f"mag_factors ({mag_factors}) for upsampling must be smaller than 1"
@@ -70,7 +70,7 @@ def upsample_cube_job(
                     data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
                     slices: list[int | slice] = list(buffer_bbox.to_slices_xyz())
                     if "c" in buffer_bbox.axes:
-                        slices[buffer_bbox.index.c] = channel_index
+                        slices[buffer_bbox.axes.index("c")] = channel_index
                     file_buffer[tuple(slices)] = data_cube
 
             target_view.write(file_buffer, absolute_bounding_box=chunk)

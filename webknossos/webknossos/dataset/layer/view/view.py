@@ -10,7 +10,7 @@ from cluster_tools import Executor
 from upath import UPath
 
 from ....dataset_properties import DataFormat
-from ....geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ....geometry import Mag, NDBoundingBox, NormalizedBoundingBox, Vec3Int, Vec3IntLike
 from ....geometry.vec_int import VecIntLike
 from ....utils import (
     count_defined_values,
@@ -332,8 +332,7 @@ class View:
         else:
             data_shape = Vec3Int(data.shape[-3:])
 
-        num_channels = self._array.info.num_channels
-        self_bbox = self.bounding_box.normalize_axes(num_channels)
+        self_bbox = self.bounding_box.normalize_axes()
         if self_bbox.axes == ("c", "x", "y", "z"):
             if len(data.shape) == 3:
                 assert self_bbox.size.c == 1, (
@@ -341,8 +340,8 @@ class View:
                 )
                 data = np.expand_dims(data, axis=0)
             elif len(data.shape) == 4:
-                assert self_bbox.size.c == data.shape[self_bbox.index.c], (
-                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
+                assert self_bbox.size.c == data.shape[self_bbox.axes.index("c")], (
+                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.axes.index('c')]})"
                 )
             else:
                 raise ValueError(
@@ -350,8 +349,8 @@ class View:
                 )
         else:
             if "c" in self_bbox.axes:
-                assert self_bbox.size.c == data.shape[self_bbox.index.c], (
-                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
+                assert self_bbox.size.c == data.shape[self_bbox.axes.index("c")], (
+                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.axes.index('c')]})"
                 )
             assert len(data.shape) == len(self_bbox.axes), (
                 f"The data has to have the dimensions {self_bbox.axes}, got shape {data.shape}"
@@ -363,7 +362,7 @@ class View:
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=data_shape,
-        ).normalize_axes(num_channels)
+        ).normalize_axes()
         assert self_bbox.contains_bbox(mag1_bbox), (
             f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self_bbox}"
         )
@@ -392,11 +391,11 @@ class View:
         else:
             self._array.write(current_mag_bbox, data)
 
-    def _check_shard_alignment(self, bbox: NDBoundingBox) -> None:
+    def _check_shard_alignment(self, bbox: NormalizedBoundingBox) -> None:
         """Check that the bounding box is aligned with the shard grid"""
         shard_shape = self.info.shard_shape
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
-        self_bbox = self.bounding_box.normalize_axes(self.info.num_channels)
+        self_bbox = self.bounding_box.normalize_axes()
         if shard_bbox.intersected_with(self_bbox.in_mag(self._mag)) != bbox:
             raise ValueError(
                 f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
@@ -407,9 +406,9 @@ class View:
 
     def _prepare_compressed_write(
         self,
-        current_mag_bbox: NDBoundingBox,
+        current_mag_bbox: NormalizedBoundingBox,
         data: np.ndarray,
-    ) -> Iterator[tuple[NDBoundingBox, np.ndarray]]:
+    ) -> Iterator[tuple[NormalizedBoundingBox, np.ndarray]]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox,
         divides these into chunks of shard_shape size and delegates
         the preparation to _prepare_compressed_write_chunk."""
@@ -424,9 +423,9 @@ class View:
 
     def _prepare_compressed_write_chunk(
         self,
-        current_mag_bbox: NDBoundingBox,
+        current_mag_bbox: NormalizedBoundingBox,
         data: np.ndarray,
-    ) -> tuple[NDBoundingBox, np.ndarray]:
+    ) -> tuple[NormalizedBoundingBox, np.ndarray]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox
         (ideally not larger than a shard) and enlarges that chunk to fit the shard it
         resides in (by reading the entire shard data and writing the passed data ndarray
@@ -562,7 +561,7 @@ class View:
             abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-        ).normalize_axes(self.info.num_channels)
+        ).normalize_axes()
         assert not mag1_bbox.is_empty(), (
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
             + "All dimensions must be strictly larger than '0'."
@@ -606,7 +605,7 @@ class View:
             xyz_data = view.read_xyz()  # Returns (X, Y, Z) array
 
             # Read with relative bounding box
-            bbox = NDBoundingBox((10, 10, 0), (50, 50, 10), axis=("x", "y", "z"), index=(1, 2, 3))
+            bbox = NDBoundingBox((10, 10, 0), (50, 50, 10), axis=("x", "y", "z"))
             xyz_data = view.read_xyz(relative_bounding_box=bbox)
             ```
 
@@ -619,14 +618,14 @@ class View:
         mag1_bbox = self._get_mag1_bbox(
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
-        ).normalize_axes(self.info.num_channels)
+        ).normalize_axes()
 
         data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
         # transform data to xyz order
         if "c" in mag1_bbox.axes:
             data = np.moveaxis(
                 data,
-                (mag1_bbox.index.c,) + mag1_bbox.index_xyz.to_tuple(),
+                (mag1_bbox.axes.index("c"),) + mag1_bbox.index_xyz.to_tuple(),
                 [0, 1, 2, 3],
             )
         else:
@@ -642,7 +641,7 @@ class View:
 
     def _read_without_checks(
         self,
-        current_mag_bbox: NDBoundingBox,
+        current_mag_bbox: NormalizedBoundingBox,
     ) -> np.ndarray:
         data = self._array.read(current_mag_bbox)
         return data
@@ -778,7 +777,9 @@ class View:
         )
 
         if not read_only:
-            assert self.bounding_box.contains_bbox(mag1_bbox), (
+            assert self.bounding_box.normalize_axes().contains_bbox(
+                mag1_bbox.normalize_axes()
+            ), (
                 f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
                 + "This is only allowed for read-only views."
             )
@@ -790,8 +791,12 @@ class View:
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
             current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
-            if current_mag_bbox != current_mag_view_bbox.intersected_with(
-                current_mag_aligned_bbox, dont_assert=True
+            if (
+                current_mag_bbox.normalize_axes()
+                != current_mag_view_bbox.normalize_axes().intersected_with(
+                    current_mag_aligned_bbox.normalize_axes(),
+                    dont_assert=True,
+                )
             ):
                 bbox_str = str(current_mag_bbox)
                 if self._mag != Mag(1):

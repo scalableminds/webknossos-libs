@@ -268,6 +268,8 @@ class BufferedSliceWriter:
         if absolute_bounding_box is not None:
             self._bbox = absolute_bounding_box
 
+        self._bbox = self._bbox.normalize_axes()
+
     def __enter__(self) -> "BufferedSliceWriter":
         self._generator = self._get_slice_generator()
         next(self._generator)

@@ -15,7 +15,7 @@ def test_add_mag_from_zarrarray3D(tmp_upath: UPath) -> None:
         wk.COLOR_CATEGORY,
         data_format="zarr3",
         bounding_box=wk.NDBoundingBox(
-            topleft=(0, 0, 0), size=(16, 16, 16), axes=("x", "y", "z"), index=(0, 1, 2)
+            topleft=(0, 0, 0), size=(16, 16, 16), axes=("x", "y", "z")
         ),
     )
     zarr_mag_path = tmp_upath / "zarr_data" / "mag1.zarr"

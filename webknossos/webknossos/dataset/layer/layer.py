@@ -357,7 +357,9 @@ class Layer(AbstractLayer):
         )
 
         mag_view._array.resize(
-            self.bounding_box.align_with_mag(mag, ceil=True).in_mag(mag)
+            self.bounding_box.normalize_axes()
+            .align_with_mag(mag, ceil=True)
+            .in_mag(mag)
         )
 
         self._mags[mag] = mag_view

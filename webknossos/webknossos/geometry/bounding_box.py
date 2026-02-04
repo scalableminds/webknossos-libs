@@ -7,8 +7,14 @@ import attr
 import numpy as np
 
 from .mag import Mag
-from .nd_bounding_box import _DEFAULT_AXIS_ORDER, _DEFAULT_BBOX_NAME, NDBoundingBox
+from .nd_bounding_box import (
+    _DEFAULT_AXIS_ORDER,
+    _DEFAULT_BBOX_NAME,
+    NDBoundingBox,
+    NormalizedBoundingBox,
+)
 from .vec3_int import Vec3Int, Vec3IntLike
+from .vec_int import VecInt
 
 
 @attr.frozen
@@ -33,56 +39,73 @@ class BoundingBox(NDBoundingBox):
         topleft (Vec3Int): Top-left corner coordinates (inclusive)
         size (Vec3Int): Size of the bounding box in units of voxels for each dimension (width, height, depth)
         axes (tuple[str, str, str]): Names of the coordinate axes, defaults to ("x", "y", "z")
-        index (Vec3Int): Index values for each dimension, defaults to (1, 2, 3)
+        index (VecInt): Index values for each dimension, defaults to (1, 2, 3)
         bottomright (Vec3Int): Bottom-right corner coordinates (exclusive), computed from topleft + size
         name (str | None): Optional name for the bounding box, defaults to "Unnamed Bounding Box"
         is_visible (bool): Whether the bounding box should be visible, defaults to True
         color (tuple[float, float, float, float] | None): Optional RGBA color values
     """
 
-    topleft: Vec3Int = attr.field(converter=Vec3Int)
-    size: Vec3Int = attr.field(converter=Vec3Int)
-    axes: tuple[str, str, str] = attr.field(default=("x", "y", "z"))
-    index: Vec3Int = attr.field(default=Vec3Int(1, 2, 3))
-    bottomright: Vec3Int = attr.field(init=False)
+    _topleft: VecInt = attr.field(converter=Vec3Int)
+    _size: VecInt = attr.field(converter=Vec3Int)
+    axes: tuple[str, ...] = attr.field(default=("x", "y", "z"))
+    _index: VecInt | None = attr.field(init=False, default=None)
     name: str | None = _DEFAULT_BBOX_NAME
     is_visible: bool = True
     color: tuple[float, float, float, float] | None = None
+    num_channels: int = 0
 
     def __attrs_post_init__(self) -> None:
         if not self.size.is_positive():
             # Flip the size in negative dimensions, so that the topleft is smaller than bottomright.
             # E.g. BoundingBox((10, 10, 10), (-5, 5, 5)) -> BoundingBox((5, 10, 10), (5, 5, 5)).
             negative_size = self.size.pairmin(Vec3Int.zeros())
-            new_topleft = self.topleft + negative_size
-            new_size = self.size.pairmax(-self.size)
-            object.__setattr__(self, "topleft", new_topleft)
-            object.__setattr__(self, "size", new_size)
+            new_topleft = self._topleft + negative_size
+            new_size = self._size.pairmax(-self._size)
+            object.__setattr__(self, "_topleft", new_topleft)
+            object.__setattr__(self, "_size", new_size)
 
-        # Compute bottomright to avoid that it's recomputed every time
-        # it is needed.
-        object.__setattr__(self, "bottomright", self.topleft + self.size)
+    @property
+    def topleft(self) -> Vec3Int:
+        return self._topleft.xyz
+
+    @property
+    def size(self) -> Vec3Int:
+        return self._size.xyz
+
+    @property
+    def bottomright(self) -> Vec3Int:
+        return self.topleft + self.size
+
+    def with_num_channels(self, num_channels: int) -> "BoundingBox":
+        return attr.evolve(self, num_channels=num_channels)
+
+    def with_bounds(
+        self, axis: str, new_topleft: int | None = None, new_size: int | None = None
+    ) -> "BoundingBox":
+        """Returns a copy of the bounding box with topleft.axis optionally replaced and size.axis optionally replaced."""
+        return cast(BoundingBox, super().with_bounds(axis, new_topleft, new_size))
 
     def with_bounds_x(
         self, new_topleft_x: int | None = None, new_size_x: int | None = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.x optionally replaced and size.x optionally replaced."""
 
-        return cast(BoundingBox, self.with_bounds("x", new_topleft_x, new_size_x))
+        return self.with_bounds("x", new_topleft_x, new_size_x)
 
     def with_bounds_y(
         self, new_topleft_y: int | None = None, new_size_y: int | None = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.y optionally replaced and size.y optionally replaced."""
 
-        return cast(BoundingBox, self.with_bounds("y", new_topleft_y, new_size_y))
+        return self.with_bounds("y", new_topleft_y, new_size_y)
 
     def with_bounds_z(
         self, new_topleft_z: int | None = None, new_size_z: int | None = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.z optionally replaced and size.z optionally replaced."""
 
-        return cast(BoundingBox, self.with_bounds("z", new_topleft_z, new_size_z))
+        return self.with_bounds("z", new_topleft_z, new_size_z)
 
     @classmethod
     def from_wkw_dict(cls, bbox: dict) -> "BoundingBox":
@@ -90,7 +113,7 @@ class BoundingBox(NDBoundingBox):
 
         Args:
             bbox (Dict): Dictionary containing wkw-format bounding box data with
-                keys 'topLeft', 'width', 'height', and 'depth'
+                keys 'numChannels', 'topLeft', 'width', 'height', and 'depth'
 
         Returns:
             BoundingBox: A new bounding box with the specified dimensions
@@ -98,7 +121,11 @@ class BoundingBox(NDBoundingBox):
         assert "channelIndex" not in bbox
         assert "axisOrder" not in bbox or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER
         assert "additionalAxes" not in bbox or bbox["additionalAxes"] == []
-        return cls(bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]])
+        return cls(
+            topleft=bbox["topLeft"],
+            size=[bbox["width"], bbox["height"], bbox["depth"]],
+            num_channels=bbox.get("numChannels", 1),
+        )
 
     @classmethod
     def from_config_dict(cls, bbox: dict) -> "BoundingBox":
@@ -175,8 +202,12 @@ class BoundingBox(NDBoundingBox):
         return cls.from_tuple6(cast(tuple[int, int, int, int, int, int], bbox_tuple))
 
     @classmethod
-    def from_ndbbox(cls, bbox: NDBoundingBox) -> "BoundingBox":
-        return cls(bbox.topleft_xyz, bbox.size_xyz)
+    def from_ndbbox(
+        cls, bbox: NDBoundingBox, num_channels: int | None = None
+    ) -> "BoundingBox":
+        if num_channels is None:
+            return cls(bbox.topleft_xyz, bbox.size_xyz)
+        return cls(bbox.topleft_xyz, bbox.size_xyz, num_channels=num_channels)
 
     @classmethod
     def from_auto(
@@ -202,10 +233,10 @@ class BoundingBox(NDBoundingBox):
         raise Exception("Unknown bounding box format.")
 
     @classmethod
-    def empty(
-        cls,
-    ) -> "BoundingBox":
-        return cls(Vec3Int.zeros(), Vec3Int.zeros())
+    def empty(cls, num_channels: int | None = None) -> "BoundingBox":
+        if num_channels is None:
+            return cls(Vec3Int.zeros(), Vec3Int.zeros())
+        return cls(Vec3Int.zeros(), Vec3Int.zeros(), num_channels=num_channels)
 
     def to_wkw_dict(self) -> dict:
         """Converts the bounding box to a wkw-format dictionary.
@@ -225,12 +256,15 @@ class BoundingBox(NDBoundingBox):
             depth,
         ) = self.size.to_list()
 
-        return {
+        out = {
             "topLeft": self.topleft.to_list(),
             "width": width,
             "height": height,
             "depth": depth,
         }
+        if "c" in self.axes:
+            out["numChannels"] = self.num_channels
+        return out
 
     def to_config_dict(self) -> dict:
         """Converts the bounding box to a config-format dictionary.
@@ -480,12 +514,21 @@ class BoundingBox(NDBoundingBox):
     def __hash__(self) -> int:
         return hash(self.to_tuple6())
 
-    def normalize_axes(self, num_channels: int) -> NDBoundingBox:
-        return NDBoundingBox(
+    def normalize_axes(self) -> NormalizedBoundingBox:
+        if self.num_channels == 0:
+            return NormalizedBoundingBox(
+                topleft=self.topleft,
+                size=self.size,
+                axes=self.axes,
+                name=self.name,
+                is_visible=self.is_visible,
+                color=self.color,
+            )
+
+        return NormalizedBoundingBox(
             topleft=(0,) + self.topleft.to_tuple(),
-            size=(num_channels,) + self.size.to_tuple(),
+            size=(self.num_channels,) + self.size.to_tuple(),
             axes=("c",) + self.axes,
-            index=(0,) + self.index,
             name=self.name,
             is_visible=self.is_visible,
             color=self.color,

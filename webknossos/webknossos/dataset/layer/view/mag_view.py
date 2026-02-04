@@ -19,7 +19,14 @@ from webknossos.utils import (
 )
 
 from ....dataset_properties import DataFormat, MagViewProperties
-from ....geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
+from ....geometry import (
+    Mag,
+    NDBoundingBox,
+    NormalizedBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+    VecInt,
+)
 from ._array import (
     ArrayInfo,
     BaseArray,
@@ -143,8 +150,7 @@ class MagView(View, Generic[LayerTypeT]):
                 warn_deprecated("chunks_per_shard", "shard_shape")
                 shard_shape = chunk_shape * chunks_per_shard
 
-        bbox = layer.bounding_box.normalize_axes(layer.num_channels)
-        axis_order = VecInt(*bbox.index, axes=bbox.axes)
+        bbox = layer.bounding_box.normalize_axes()
         shape = bbox.bottomright.with_xyz(Vec3Int.ones())
         dimension_names = bbox.axes
 
@@ -160,7 +166,6 @@ class MagView(View, Generic[LayerTypeT]):
                 num_channels=layer.num_channels,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
-                axis_order=axis_order,
                 shape=shape,
                 dimension_names=dimension_names,
                 codecs=tuple(compression_mode.codecs),
@@ -178,7 +183,6 @@ class MagView(View, Generic[LayerTypeT]):
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compression_mode=compression_mode,
-                axis_order=axis_order,
                 shape=shape,
                 dimension_names=dimension_names,
             )
@@ -433,8 +437,10 @@ class MagView(View, Generic[LayerTypeT]):
                 "[WARNING] The underlying array storage does not support listing the stored bounding boxes. "
                 + "Instead all bounding boxes are iterated, which can be slow."
             )
-            bboxes = self.bounding_box.in_mag(self.mag).chunk(
-                self._array.info.shard_shape
+            bboxes = (
+                self.bounding_box.normalize_axes()
+                .in_mag(self.mag)
+                .chunk(self._array.info.shard_shape)
             )
         for bbox in bboxes:
             yield bbox.from_mag_to_mag1(self._mag)
@@ -474,9 +480,7 @@ class MagView(View, Generic[LayerTypeT]):
             - Memory efficient as only one chunk is loaded at a time
         """
         for bbox in self.get_bounding_boxes_on_disk():
-            yield self.get_view(
-                absolute_offset=bbox.topleft, size=bbox.size, read_only=read_only
-            )
+            yield self.get_view(absolute_bounding_box=bbox, read_only=read_only)
 
     def compress(
         self,
@@ -596,8 +600,8 @@ class MagView(View, Generic[LayerTypeT]):
         )
 
         def _rechunk_bboxes(
-            source_bbox_iterator: Iterator[NDBoundingBox],
-        ) -> Iterator[NDBoundingBox]:
+            source_bbox_iterator: Iterator[NormalizedBoundingBox],
+        ) -> Iterator[NormalizedBoundingBox]:
             # Finding suitable bounding boxes for rechunking
             # The boxes need to be compatible with the source shard shape and target shard shape
             # If both are equal, the boxes are compatible and can be used directly
@@ -605,12 +609,13 @@ class MagView(View, Generic[LayerTypeT]):
             # and use that for iterating over the full mag view
             # Additionally, we filter out boxes that are empty based on bounding boxes in
             # the source on disk
+            self_bbox = self.bounding_box.normalize_axes()
             source_shard_shape = self.info.shard_shape
             target_shard_shape = rechunked_mag.info.shard_shape
             if source_shard_shape == target_shard_shape:
                 for bbox in source_bbox_iterator:
                     bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
-                        self.layer.bounding_box, dont_assert=True
+                        self_bbox, dont_assert=True
                     )
                     if not bbox.is_empty():
                         yield bbox
@@ -623,7 +628,9 @@ class MagView(View, Generic[LayerTypeT]):
                 all_source_bboxes = [
                     bbox.from_mag_to_mag1(self._mag) for bbox in source_bbox_iterator
                 ]
-                for bbox in rechunked_layer.bounding_box.chunk(combined_shard_shape):
+                for bbox in rechunked_layer.bounding_box.normalize_axes().chunk(
+                    combined_shard_shape
+                ):
                     if any(
                         not bbox.intersected_with(
                             source_bbox, dont_assert=True

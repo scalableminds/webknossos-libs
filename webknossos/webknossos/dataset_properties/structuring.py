@@ -91,6 +91,9 @@ def layer_properties_post_unstructure(
             d["additionalAxes"] = d["boundingBox"]["additionalAxes"]
             del d["boundingBox"]["additionalAxes"]
 
+        if "numChannels" in d["boundingBox"]:
+            d["numChannels"] = d["boundingBox"]["numChannels"]
+
         if "attachments" in d:
             if all(p is None or len(p) == 0 for p in d["attachments"].values()):
                 del d["attachments"]
@@ -137,6 +140,9 @@ def layer_properties_pre_structure(
 
         if "numChannels" in d:
             d["boundingBox"]["numChannels"] = d["numChannels"]
+        else:
+            if d["elementClass"] == "uint24":
+                d["boundingBox"]["numChannels"] = 3
 
         obj = converter_fn(d, type_value)
         return obj

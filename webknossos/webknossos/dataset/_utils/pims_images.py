@@ -651,7 +651,6 @@ class PimsImages:
                         axis for axis in self._bundle_axes
                     ]
                     axes_sizes = [images.sizes[axis] for axis in axes_names]
-                    axes_index = list(range(0, len(axes_names)))
                     topleft = VecInt.zeros(tuple(axes_names))
 
                     if self._swap_xy:
@@ -665,7 +664,6 @@ class PimsImages:
                         topleft,
                         VecInt(axes_sizes, axes=axes_names),
                         axes_names,
-                        VecInt(axes_index, axes=axes_names),
                     )
 
                 raise ValueError(

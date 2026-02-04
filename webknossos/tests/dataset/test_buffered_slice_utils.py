@@ -29,6 +29,7 @@ def test_buffered_slice_writer() -> None:
         dtype_per_channel=dtype,
         bounding_box=BoundingBox(origin, (24, 24, 35)),
     )
+    print(layer.bounding_box, layer.bounding_box.normalize_axes())
     mag_view = layer.add_mag(mag, shard_shape=(1024, 1024, 32))
 
     with mag_view.get_buffered_slice_writer(absolute_offset=origin) as writer:

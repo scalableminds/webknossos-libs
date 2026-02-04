@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from hypothesis import given, infer
 
-from webknossos import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag
 
 
 def test_align_with_mag_ceiled() -> None:
