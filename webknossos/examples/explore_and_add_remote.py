@@ -6,7 +6,7 @@ def main() -> None:
     wk.RemoteDataset.explore_and_add_remote(
         "https://data-humerus.webknossos.org/data/zarr/b2275d664e4c2a96/HuaLab-CBA_Ca-mouse-unexposed-M1/color",
         "Ca-mouse-unexposed-M1",
-        "/Datasets",
+        folder=wk.RemoteFolder.get_by_path("Datasets"),
     )
 
 

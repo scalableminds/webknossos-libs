@@ -4,9 +4,6 @@ from webknossos.dataset.remote_folder import RemoteFolder
 
 
 def main() -> None:
-    # Get the folder id of the upload destination:
-    folder_id = RemoteFolder.get_by_path("Datasets/").id
-
     # Open your unpublished dataset
     dataset = wk.Dataset.open("my_dataset.wkw")
 
@@ -17,7 +14,7 @@ def main() -> None:
     # The data will be uploaded to the upload destination folder
     dataset.upload(
         new_dataset_name="my_new_dataset_name",
-        folder_id=folder_id,
+        folder=RemoteFolder.get_by_path("Datasets"),
         layers_to_link=[
             LayerToLink.from_remote_layer(
                 existing_dataset.get_layer("image_230130b"), new_layer_name="image"
