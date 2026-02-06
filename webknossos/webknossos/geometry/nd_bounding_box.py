@@ -1007,6 +1007,9 @@ class NDBoundingBox:
             color=self.color,
         )
 
+    def denormalize(self) -> "NDBoundingBox":
+        return self
+
 
 class NormalizedBoundingBox(NDBoundingBox):
     def denormalize(self) -> "NDBoundingBox":

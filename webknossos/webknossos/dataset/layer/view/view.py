@@ -101,7 +101,7 @@ class View:
         """
         self._path = path_to_mag_view
         self._data_format = data_format
-        self._bounding_box = bounding_box
+        self._bounding_box = bounding_box.denormalize()
         self._read_only = read_only
         self._cached_array = cached_array
         self._mag = mag
@@ -332,6 +332,8 @@ class View:
         ):
             if len(data.shape) == len(self.bounding_box):
                 shape_in_current_mag = data.shape
+            elif len(data.shape) + 1 == len(self.bounding_box):
+                shape_in_current_mag = (1,) + data.shape
             else:
                 shape_in_current_mag = data.shape[1:]
 
