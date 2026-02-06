@@ -19,16 +19,6 @@ from numpy._typing import DTypeLike
 from upath import UPath
 from zipp import Path as ZipPath
 
-from webknossos.dataset_properties import (
-    SEGMENTATION_CATEGORY,
-    AttachmentProperties,
-    DataFormat,
-    DatasetProperties,
-    MagViewProperties,
-    SegmentationLayerProperties,
-    get_dataset_converter,
-)
-
 from ..cli._utils import DistributionStrategy
 from ..dataset import (
     Dataset,
@@ -37,6 +27,15 @@ from ..dataset import (
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME
 from ..dataset.layer import Zarr3Config
+from ..dataset_properties import (
+    SEGMENTATION_CATEGORY,
+    AttachmentProperties,
+    DataFormat,
+    DatasetProperties,
+    MagViewProperties,
+    SegmentationLayerProperties,
+    get_dataset_converter,
+)
 from ..geometry import Vec3Int
 from ..utils import get_executor_for_args, is_fs_path
 

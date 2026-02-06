@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING
 
-from webknossos.dataset.layer.layer import Layer
-from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer import (
+from ....dataset_properties import SegmentationLayerProperties
+from ...layer import Layer
+from .abstract_segmentation_layer import (
     AbstractSegmentationLayer,
 )
-from webknossos.dataset.layer.segmentation_layer.attachments import Attachments
-from webknossos.dataset_properties import SegmentationLayerProperties
+from .attachments import Attachments
 
 if TYPE_CHECKING:
-    from webknossos.dataset import Dataset
+    from ... import Dataset
 
 
 class SegmentationLayer(AbstractSegmentationLayer[Attachments], Layer):

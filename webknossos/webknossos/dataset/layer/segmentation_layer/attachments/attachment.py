@@ -3,8 +3,8 @@ from typing import Literal, cast, get_args, get_type_hints
 from typing_extensions import Self
 from upath import UPath
 
-from webknossos.dataset_properties import AttachmentDataFormat, AttachmentProperties
-from webknossos.utils import dump_path
+from .....dataset_properties import AttachmentDataFormat, AttachmentProperties
+from .....utils import dump_path
 
 
 def _validate_data_format(

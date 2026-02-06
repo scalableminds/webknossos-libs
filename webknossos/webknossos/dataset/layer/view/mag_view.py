@@ -9,7 +9,9 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.utils import (
+from ....dataset_properties import DataFormat, MagViewProperties
+from ....geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
+from ....utils import (
     get_executor_for_args,
     is_fs_path,
     rmtree,
@@ -17,9 +19,6 @@ from webknossos.utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-
-from ....dataset_properties import DataFormat, MagViewProperties
-from ....geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
 from ._array import (
     ArrayInfo,
     BaseArray,
@@ -29,13 +28,13 @@ from ._array import (
     Zarr3ArrayInfo,
     Zarr3Config,
 )
+from .view import View
 
 if TYPE_CHECKING:
     import tensorstore
 
     from ..abstract_layer import AbstractLayer
 
-from .view import View
 
 logger = logging.getLogger(__name__)
 

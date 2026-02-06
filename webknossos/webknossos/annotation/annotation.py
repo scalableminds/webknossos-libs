@@ -58,10 +58,7 @@ from numpy._typing import DTypeLike
 from upath import UPath
 from zipp import Path as ZipPath
 
-import webknossos._nml as wknml
-from webknossos.dataset import RemoteAccessMode, RemoteDataset
-from webknossos.geometry.mag import Mag, MagLike
-
+from .._nml import Nml
 from ..client.api_client.models import (
     ApiAdHocMeshInfo,
     ApiAnnotation,
@@ -70,6 +67,8 @@ from ..client.api_client.models import (
 from ..dataset import (
     Dataset,
     Layer,
+    RemoteAccessMode,
+    RemoteDataset,
     SegmentationLayer,
 )
 from ..dataset_properties import (
@@ -77,7 +76,7 @@ from ..dataset_properties import (
     DataFormat,
     VoxelSize,
 )
-from ..geometry import NDBoundingBox, Vec3Int
+from ..geometry import Mag, MagLike, NDBoundingBox, Vec3Int
 from ..proofreading.agglomerate_graph import AgglomerateGraph
 from ..skeleton import Skeleton
 from ..utils import get_executor_for_args, is_fs_path, time_since_epoch_in_ms
@@ -545,7 +544,7 @@ class Annotation:
         nml_content: IO[bytes],
         possible_volume_paths: list[ZipPath] | None = None,
     ) -> "Annotation":
-        nml = wknml.Nml.parse(nml_content)
+        nml = Nml.parse(nml_content)
 
         annotation = cls(
             name=name,
@@ -569,7 +568,7 @@ class Annotation:
 
     @staticmethod
     def _parse_volumes(
-        nml: wknml.Nml, possible_paths: list[ZipPath] | None
+        nml: Nml, possible_paths: list[ZipPath] | None
     ) -> list[VolumeLayer]:
         volume_layers = []
         layers_with_not_found_location = []

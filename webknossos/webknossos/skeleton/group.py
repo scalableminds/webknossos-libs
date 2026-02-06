@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, Any, Union, cast
 import attr
 from boltons.strutils import unit_len
 
-import webknossos._nml as wknml
-
+from .._nml import Group as nmlGroup
 from .tree import Tree
 
 if TYPE_CHECKING:
@@ -383,19 +382,19 @@ class Group:
                 return group
         raise ValueError(f"No group with id {group_id} was found")
 
-    def as_nml_group(self) -> wknml.Group:
+    def as_nml_group(self) -> nmlGroup:
         """Converts this group to its NML representation.
 
         This method creates a lightweight representation of the group
         suitable for serialization in the NML format.
 
         Returns:
-            wknml.Group: NML representation of this group.
+            Group: NML representation of this group.
 
         Notes:
             This is primarily used internally for file I/O operations.
         """
-        return wknml.Group(
+        return nmlGroup(
             self.id,
             self.name,
             children=[g.as_nml_group() for g in self._child_groups],

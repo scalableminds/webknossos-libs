@@ -4,20 +4,19 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 import numpy as np
 from cluster_tools import Executor
 
-from webknossos.dataset.layer.view import View
-from webknossos.dataset_properties import (
+from ....dataset_properties import (
     SEGMENTATION_CATEGORY,
     LayerCategoryType,
     SegmentationLayerProperties,
 )
-from webknossos.geometry import Vec3Int
-
+from ....geometry import Vec3Int
 from ..abstract_layer import AbstractLayer
+from ..view import View
 from .attachments import AbstractAttachments
 
 AttachmentsTypeT = TypeVar("AttachmentsTypeT", bound=AbstractAttachments)
 if TYPE_CHECKING:
-    from webknossos.dataset.abstract_dataset import AbstractDataset
+    from ...abstract_dataset import AbstractDataset
 
 
 class AbstractSegmentationLayer(AbstractLayer, Generic[AttachmentsTypeT]):

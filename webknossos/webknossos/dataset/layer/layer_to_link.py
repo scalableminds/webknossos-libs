@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING, NamedTuple
 
-from webknossos.client.api_client.models import (
+from ...client.api_client.models import (
     ApiLinkedLayerIdentifier,
 )
 
 if TYPE_CHECKING:
-    from webknossos.dataset.layer import RemoteLayer
+    from ..layer import RemoteLayer
 
 
 class LayerToLink(NamedTuple):

@@ -7,22 +7,29 @@ from abc import abstractmethod
 from collections.abc import Mapping
 from typing import Any, Generic, Literal, TypeVar, cast
 
+from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.dataset_properties import (
+from ..dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     DatasetProperties,
     DatasetViewConfiguration,
+    LayerCategoryType,
     LayerProperties,
     SegmentationLayerProperties,
     VoxelSize,
     get_dataset_converter,
 )
-from webknossos.geometry import BoundingBox, NDBoundingBox
-
+from ..geometry import BoundingBox, NDBoundingBox
+from ..utils import warn_deprecated
 from .defaults import PROPERTIES_FILE_NAME
-from .layer.abstract_layer import AbstractLayer
+from .layer.abstract_layer import (
+    AbstractLayer,
+    _dtype_per_layer_to_dtype_per_channel,
+    _normalize_dtype_per_channel,
+    _normalize_dtype_per_layer,
+)
 from .layer.segmentation_layer.abstract_segmentation_layer import (
     AbstractSegmentationLayer,
 )
@@ -353,6 +360,74 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
         return cast(
             SegmentationLayerType, self.get_layer(layer_name).as_segmentation_layer()
         )
+
+    def _get_or_add_layer_validate_existing(
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        dtype_per_layer: DTypeLike | None,
+        dtype_per_channel: DTypeLike | None,
+        num_channels: int | None,
+    ) -> LayerType | None:
+        """Validate parameters for get_or_add_layer when layer exists.
+
+        If the layer exists, validates that the provided parameters match the existing
+        layer's properties. Returns the layer if validation passes, or None if the
+        layer doesn't exist.
+
+        Args:
+            layer_name: Name of the layer to check
+            category: Expected layer category
+            dtype_per_layer: Deprecated, expected dtype per layer
+            dtype_per_channel: Expected dtype per channel
+            num_channels: Expected number of channels
+
+        Returns:
+            The existing layer if it exists and parameters match, None if layer doesn't exist
+
+        Raises:
+            AssertionError: If layer exists but parameters don't match
+        """
+        if layer_name not in self.layers.keys():
+            return None
+
+        assert (
+            num_channels is None or self.layers[layer_name].num_channels == num_channels
+        ), (
+            f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the number of channels do not match. "
+            + f"The number of channels of the existing layer are '{self.layers[layer_name].num_channels}' "
+            + f"and the passed parameter is '{num_channels}'."
+        )
+        assert self.get_layer(layer_name).category == category, (
+            f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
+            + f"The category of the existing layer is '{self.get_layer(layer_name).category}' "
+            + f"and the passed parameter is '{category}'."
+        )
+
+        if dtype_per_channel is not None:
+            dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
+
+        if dtype_per_layer is not None:
+            warn_deprecated("dtype_per_layer", "dtype_per_channel")
+            dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
+
+        if dtype_per_channel is not None or dtype_per_layer is not None:
+            dtype_per_channel = (
+                dtype_per_channel
+                or _dtype_per_layer_to_dtype_per_channel(
+                    dtype_per_layer,  # type: ignore[arg-type]
+                    num_channels or self.layers[layer_name].num_channels,
+                )
+            )
+            assert (
+                dtype_per_channel is None
+                or self.layers[layer_name].dtype_per_channel == dtype_per_channel
+            ), (
+                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "
+                + f"The dtype_per_channel of the existing layer is '{self.layers[layer_name].dtype_per_channel}' "
+                + f"and the passed parameter would result in a dtype_per_channel of '{dtype_per_channel}'."
+            )
+        return self.layers[layer_name]
 
     def calculate_bounding_box(self) -> NDBoundingBox:
         """Calculate the enclosing bounding box of all layers.

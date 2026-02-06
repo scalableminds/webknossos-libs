@@ -3,21 +3,18 @@ from typing import TYPE_CHECKING, Literal
 
 from upath import UPath
 
-from webknossos.client.api_client.models import ApiAdHocMeshInfo, ApiPrecomputedMeshInfo
-from webknossos.dataset.layer.remote_layer import RemoteLayer
-from webknossos.dataset.layer.segmentation_layer import (
-    RemoteAttachments,
-)
-from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer import (
+from ....client.api_client.models import ApiAdHocMeshInfo, ApiPrecomputedMeshInfo
+from ....dataset_properties import SegmentationLayerProperties
+from ....geometry import Mag, MagLike, Vec3Int
+from ....utils import warn_deprecated
+from ..remote_layer import RemoteLayer
+from .abstract_segmentation_layer import (
     AbstractSegmentationLayer,
 )
-from webknossos.dataset_properties import SegmentationLayerProperties
-from webknossos.geometry import Vec3Int
-from webknossos.geometry.mag import Mag, MagLike
-from webknossos.utils import warn_deprecated
+from .attachments import RemoteAttachments
 
 if TYPE_CHECKING:
-    from webknossos.dataset import RemoteDataset
+    from ... import RemoteDataset
 
 
 class RemoteSegmentationLayer(

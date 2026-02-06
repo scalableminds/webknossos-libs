@@ -1,14 +1,13 @@
 from collections.abc import Iterator
 
-from webknossos.client.api_client.models import (
+from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
+from .models import (
     ApiAdHocMeshInfo,
     ApiDatasetUploadInformation,
     ApiDatasetUploadSuccess,
     ApiPrecomputedMeshInfo,
     ApiReserveDatasetUploadInformation,
 )
-
-from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
 
 
 class DatastoreApiClient(AbstractApiClient):

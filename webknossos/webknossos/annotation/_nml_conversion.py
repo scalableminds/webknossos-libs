@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import networkx as nx
 import numpy as np
 
+# The .._nml notation doesn't allow * imports, so we need to import the module by full path
 import webknossos._nml as wknml
 
 from ..geometry import Vec3Int

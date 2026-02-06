@@ -5,10 +5,17 @@ import numpy as np
 import pytest
 from upath import UPath
 
-import webknossos as wk
-from webknossos import TransferMode
+from webknossos.administration import Team
+from webknossos.dataset import (
+    Dataset,
+    RemoteAccessMode,
+    RemoteDataset,
+    RemoteFolder,
+    TransferMode,
+)
+from webknossos.geometry import BoundingBox, Mag
 
-SAMPLE_BBOX = wk.BoundingBox((3164, 3212, 1017), (10, 10, 10))
+SAMPLE_BBOX = BoundingBox((3164, 3212, 1017), (10, 10, 10))
 
 pytestmark = [
     pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows"),
@@ -16,17 +23,17 @@ pytestmark = [
 ]
 
 
-def get_sample_dataset(tmpdir: UPath) -> wk.Dataset:
+def get_sample_dataset(tmpdir: UPath) -> Dataset:
     url = "http://localhost:9000/datasets/Organization_X/l4_sample"
-    return wk.RemoteDataset.open(url).download(
+    return RemoteDataset.open(url).download(
         path=UPath(tmpdir) / "sample_ds", bbox=SAMPLE_BBOX
     )
 
 
 def test_get_remote_datasets() -> None:
-    datasets = wk.RemoteDataset.list()
+    datasets = RemoteDataset.list()
     assert any(ds.name == "l4_sample" for ds in datasets.values())
-    l4_sample = wk.RemoteDataset.open("l4_sample")
+    l4_sample = RemoteDataset.open("l4_sample")
     l4_sample_id = l4_sample._dataset_id
     assert l4_sample_id in datasets
     l4_from_datasets = datasets[l4_sample_id]
@@ -35,10 +42,10 @@ def test_get_remote_datasets() -> None:
     assert l4_from_datasets.tags == l4_sample.tags
     assert l4_from_datasets.folder == l4_sample.folder
 
-    datasets_by_name = wk.RemoteDataset.list(name="l4_sample")
+    datasets_by_name = RemoteDataset.list(name="l4_sample")
     assert len(datasets_by_name) == 1
 
-    datasets_by_organization = wk.RemoteDataset.list(organization_id="Organization_X")
+    datasets_by_organization = RemoteDataset.list(organization_id="Organization_X")
     assert len(datasets_by_organization) > 0
 
 
@@ -53,8 +60,8 @@ def test_get_remote_datasets() -> None:
 )
 def test_url_download(url: str, tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
-    ds = wk.RemoteDataset.open(url).download(
-        path=tmp_upath / "ds", mags=[wk.Mag(1)], bbox=SAMPLE_BBOX
+    ds = RemoteDataset.open(url).download(
+        path=tmp_upath / "ds", mags=[Mag(1)], bbox=SAMPLE_BBOX
     )
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = ds.get_color_layers()[0].get_finest_mag().read()
@@ -75,13 +82,13 @@ def test_url_download(url: str, tmp_upath: UPath) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "access_mode", [wk.RemoteAccessMode.ZARR_STREAMING, wk.RemoteAccessMode.PROXY_PATH]
+    "access_mode", [RemoteAccessMode.ZARR_STREAMING, RemoteAccessMode.PROXY_PATH]
 )
 def test_url_open_remote(
-    url: str, tmp_upath: UPath, access_mode: wk.RemoteAccessMode
+    url: str, tmp_upath: UPath, access_mode: RemoteAccessMode
 ) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
-    ds = wk.RemoteDataset.open(url, access_mode=access_mode)
+    ds = RemoteDataset.open(url, access_mode=access_mode)
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = (
         ds.get_color_layers()[0]
@@ -161,13 +168,13 @@ def test_remote_dataset(tmp_upath: UPath) -> None:
     assert len(remote_ds.sharing_token) > 0
 
     assert len(remote_ds.allowed_teams) == 0
-    test_teams = (wk.Team.get_by_name("team_X1"),)
+    test_teams = (Team.get_by_name("team_X1"),)
     assert test_teams[0].id == "570b9f4b2a7c0e3b008da6ec"
     remote_ds.allowed_teams = test_teams
     assert remote_ds.allowed_teams == test_teams
     remote_ds.allowed_teams = ["570b9f4b2a7c0e3b008da6ec"]
     assert remote_ds.allowed_teams == test_teams
-    remote_ds.folder = wk.RemoteFolder.get_by_path("Organization_X/A subfolder!")
+    remote_ds.folder = RemoteFolder.get_by_path("Organization_X/A subfolder!")
     assert remote_ds.folder.name == "A subfolder!"
 
 
@@ -175,10 +182,10 @@ def test_folders_and_teams() -> None:
     folder_name = "test_folder"
     team_name = "test_team"
 
-    remote_folder = wk.RemoteFolder.get_root().add_subfolder(folder_name)
+    remote_folder = RemoteFolder.get_root().add_subfolder(folder_name)
     assert remote_folder.name == folder_name
 
-    remote_team = wk.Team.add(team_name)
+    remote_team = Team.add(team_name)
     remote_folder.allowed_teams = (remote_team,)
     assert remote_folder.allowed_teams == (remote_team,)
 
@@ -187,7 +194,7 @@ def test_folders_and_teams() -> None:
 
     subfolder = remote_folder.add_subfolder(f"{folder_name}_subfolder")
     assert remote_folder.get_subfolders() == (subfolder,)
-    subfolder.parent = wk.RemoteFolder.get_root()
+    subfolder.parent = RemoteFolder.get_root()
     assert remote_folder.get_subfolders() == ()
     subfolder.delete()
     assert remote_folder.get_subfolders() == ()
@@ -201,11 +208,7 @@ def test_upload_download_roundtrip(tmp_upath: UPath) -> None:
     uploaded_dataset = ds_original.upload(
         new_dataset_name="test_upload_download_roundtrip"
     )
-    wk.RemoteDataset.trigger_reload_in_datastore(
-        dataset_name_or_url="test_upload_download_roundtrip",
-        organization_id="Organization_X",
-    )
-    ds_roundtrip = wk.RemoteDataset.open(uploaded_dataset.url).download(
+    ds_roundtrip = RemoteDataset.open(uploaded_dataset.url).download(
         path=tmp_upath / "ds", layers=["color", "segmentation"]
     )
     assert set(ds_original.get_segmentation_layers()[0].mags.keys()) == set(

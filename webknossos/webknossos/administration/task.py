@@ -3,9 +3,6 @@ from typing import Any, Literal
 
 import attr
 
-from webknossos.dataset import RemoteDataset
-from webknossos.geometry.vec3_int import Vec3IntLike
-
 from ..annotation import Annotation, AnnotationInfo
 from ..client.api_client.models import (
     ApiBoundingBox,
@@ -18,7 +15,8 @@ from ..client.api_client.models import (
     ApiTaskTypeCreate,
 )
 from ..client.context import _get_api_client, _get_context
-from ..geometry import BoundingBox, Vec3Int
+from ..dataset import RemoteDataset
+from ..geometry import BoundingBox, Vec3Int, Vec3IntLike
 from ..utils import warn_deprecated
 from .project import Project
 from .team import Team

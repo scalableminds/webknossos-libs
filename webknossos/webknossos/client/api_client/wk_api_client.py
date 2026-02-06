@@ -3,7 +3,9 @@ from typing import Any
 
 import httpx
 
-from webknossos.client.api_client.models import (
+from ...utils import time_since_epoch_in_ms
+from ._abstract_api_client import AbstractApiClient
+from .models import (
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
@@ -37,9 +39,6 @@ from webknossos.client.api_client.models import (
     ApiUser,
     ApiWkBuildInfo,
 )
-
-from ...utils import time_since_epoch_in_ms
-from ._abstract_api_client import AbstractApiClient
 
 
 class WkApiClient(AbstractApiClient):

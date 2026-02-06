@@ -1233,56 +1233,21 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             The dtype can be specified either per layer or per channel, but not both.
             For existing layers, the parameters are validated against the layer properties.
         """
+        existing_layer = self._get_or_add_layer_validate_existing(
+            layer_name, category, dtype_per_layer, dtype_per_channel, num_channels
+        )
+        if existing_layer is not None:
+            return existing_layer
 
-        if layer_name in self.layers.keys():
-            assert (
-                num_channels is None
-                or self.layers[layer_name].num_channels == num_channels
-            ), (
-                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the number of channels do not match. "
-                + f"The number of channels of the existing layer are '{self.layers[layer_name].num_channels}' "
-                + f"and the passed parameter is '{num_channels}'."
-            )
-            assert self.get_layer(layer_name).category == category, (
-                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
-                + f"The category of the existing layer is '{self.get_layer(layer_name).category}' "
-                + f"and the passed parameter is '{category}'."
-            )
-
-            if dtype_per_channel is not None:
-                dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
-
-            if dtype_per_layer is not None:
-                warn_deprecated("dtype_per_layer", "dtype_per_channel")
-                dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
-
-            if dtype_per_channel is not None or dtype_per_layer is not None:
-                dtype_per_channel = (
-                    dtype_per_channel
-                    or _dtype_per_layer_to_dtype_per_channel(
-                        dtype_per_layer,  # type: ignore[arg-type]
-                        num_channels or self.layers[layer_name].num_channels,
-                    )
-                )
-                assert (
-                    dtype_per_channel is None
-                    or self.layers[layer_name].dtype_per_channel == dtype_per_channel
-                ), (
-                    f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "
-                    + f"The dtype_per_channel of the existing layer is '{self.layers[layer_name].dtype_per_channel}' "
-                    + f"and the passed parameter would result in a dtype_per_channel of '{dtype_per_channel}'."
-                )
-            return self.layers[layer_name]
-        else:
-            return self.add_layer(
-                layer_name,
-                category,
-                dtype_per_layer=dtype_per_layer,
-                dtype_per_channel=dtype_per_channel,
-                num_channels=num_channels,
-                data_format=DataFormat(data_format),
-                **kwargs,
-            )
+        return self.add_layer(
+            layer_name,
+            category,
+            dtype_per_layer=dtype_per_layer,
+            dtype_per_channel=dtype_per_channel,
+            num_channels=num_channels,
+            data_format=DataFormat(data_format),
+            **kwargs,
+        )
 
     def add_layer_like(
         self, other_layer: Layer | RemoteLayer, layer_name: str

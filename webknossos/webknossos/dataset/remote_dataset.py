@@ -15,29 +15,16 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from webknossos.client import webknossos_context
-from webknossos.client.api_client.models import (
+from ..client import webknossos_context
+from ..client.api_client.errors import UnexpectedStatusError
+from ..client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
     ApiLayerRenaming,
     ApiMetadata,
     ApiUnusableDataSource,
 )
-from webknossos.dataset._metadata import DatasetMetadata
-from webknossos.dataset.abstract_dataset import (
-    _DATASET_DEPRECATED_URL_REGEX,
-    _DATASET_URL_REGEX,
-    AbstractDataset,
-)
-from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer, Zarr3Config
-from webknossos.dataset.layer.abstract_layer import (
-    _dtype_per_layer_to_dtype_per_channel,
-    _normalize_dtype_per_channel,
-    _normalize_dtype_per_layer,
-    _validate_layer_name,
-)
-from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.dataset_properties import (
+from ..dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     DataFormat,
@@ -46,19 +33,38 @@ from webknossos.dataset_properties import (
     LayerProperties,
     SegmentationLayerProperties,
 )
-from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int
-from webknossos.geometry.mag import Mag, MagLike
-from webknossos.utils import infer_metadata_type, warn_deprecated
-
-from ..client.api_client.errors import UnexpectedStatusError
 from ..dataset_properties.structuring import (
     _properties_floating_type_to_python_type,
 )
+from ..geometry import BoundingBox, NDBoundingBox, Vec3Int
+from ..geometry.mag import Mag, MagLike
 from ..ssl_context import SSL_CONTEXT
+from ..utils import infer_metadata_type, warn_deprecated
+from ._metadata import DatasetMetadata
+from .abstract_dataset import (
+    _DATASET_DEPRECATED_URL_REGEX,
+    _DATASET_URL_REGEX,
+    AbstractDataset,
+)
 from .defaults import DEFAULT_BIT_DEPTH, DEFAULT_DATA_FORMAT
-from .layer.abstract_layer import _dtype_per_channel_to_element_class
+from .layer import (
+    RemoteLayer,
+    RemoteSegmentationLayer,
+    Zarr3Config,
+)
+from .layer.abstract_layer import (
+    _dtype_per_channel_to_element_class,
+    _dtype_per_layer_to_dtype_per_channel,
+    _normalize_dtype_per_channel,
+    _normalize_dtype_per_layer,
+    _validate_layer_name,
+)
+from .layer.segmentation_layer.abstract_segmentation_layer import (
+    AbstractSegmentationLayer,
+)
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
+from .sampling_modes import SamplingModes
 from .transfer_mode import TransferMode
 
 logger = logging.getLogger(__name__)
@@ -66,8 +72,9 @@ _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
 
 if TYPE_CHECKING:
-    from webknossos.administration.user import Team
-    from webknossos.dataset import Dataset
+    from ..administration.user import Team
+    from ..dataset import Dataset
+    from ..dataset.layer import Layer
 
 
 class RemoteAccessMode(Enum):
@@ -905,6 +912,68 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self._save_dataset_properties()
         return self.layers[layer_name]
 
+    def get_or_add_layer(
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        *,
+        dtype_per_layer: DTypeLike | None = None,
+        dtype_per_channel: DTypeLike | None = None,
+        num_channels: int | None = None,
+        data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
+        **kwargs: Any,
+    ) -> RemoteLayer:
+        """Get an existing layer or create a new one.
+
+        Gets a layer with the given name if it exists, otherwise creates a new layer
+        with the specified parameters.
+
+        Args:
+            layer_name: Name of the layer to get or create
+            category: Layer category ('color' or 'segmentation')
+            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer
+            dtype_per_channel: Optional data type per channel
+            num_channels: Optional number of channels
+            data_format: Format to store data ('zarr', 'zarr3', etc.). Note: 'wkw' is not supported for remote datasets.
+            **kwargs: Additional arguments passed to add_layer()
+
+        Returns:
+            RemoteLayer: The existing or newly created layer
+
+        Raises:
+            AssertionError: If existing layer's properties don't match specified parameters
+            ValueError: If both dtype_per_layer and dtype_per_channel specified
+            RuntimeError: If invalid category specified
+
+        Examples:
+            ```
+            layer = remote_ds.get_or_add_layer(
+                "segmentation",
+                LayerCategoryType.SEGMENTATION_CATEGORY,
+                dtype_per_channel=np.uint64,
+            )
+            ```
+
+        Note:
+            The dtype can be specified either per layer or per channel, but not both.
+            For existing layers, the parameters are validated against the layer properties.
+        """
+        existing_layer = self._get_or_add_layer_validate_existing(
+            layer_name, category, dtype_per_layer, dtype_per_channel, num_channels
+        )
+        if existing_layer is not None:
+            return existing_layer
+
+        return self.add_layer(
+            layer_name,
+            category,
+            dtype_per_layer=dtype_per_layer,
+            dtype_per_channel=dtype_per_channel,
+            num_channels=num_channels,
+            data_format=DataFormat(data_format),
+            **kwargs,
+        )
+
     @classmethod
     def list(
         cls,
@@ -1302,3 +1371,109 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 overwrite_pending=overwrite_pending,
                 executor=executor,
             )
+
+    def add_layer_as_copy(
+        self,
+        foreign_layer: Union[str, PathLike, UPath, "Layer", RemoteLayer],
+        new_layer_name: str | None = None,
+        *,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
+        exists_ok: bool = False,
+        with_attachments: bool = True,
+    ) -> RemoteLayer:
+        """Copy layer from another dataset to this remote dataset.
+
+        Creates a new layer in this dataset by copying data and metadata from
+        a layer in another dataset.
+
+        Args:
+            foreign_layer: Layer to copy (path or Layer object)
+            new_layer_name: Optional name for the new layer, uses original name if None
+            transfer_mode: How the data is transferred to the remote storage. Defaults to COPY.
+            common_storage_path_prefix: Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
+                                        to select one of the available WEBKNOSSOS storages.
+            overwrite_pending: If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True.
+            exists_ok: Whether to overwrite existing layers
+            with_attachments: Whether to copy attachments (e.g., meshes, agglomerates) for segmentation layers. Defaults to True.
+
+        Returns:
+            RemoteLayer: The newly created copy of the layer
+
+        Raises:
+            IndexError: If target layer name already exists and exists_ok is False
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            Copy layer keeping same name:
+            ```
+            other_ds = Dataset.open("other/dataset")
+            copied = remote_ds.add_layer_as_copy(other_ds.get_layer("color"))
+            ```
+
+            Copy with new name:
+            ```
+            copied = remote_ds.add_layer_as_copy(
+                other_ds.get_layer("color"),
+                new_layer_name="color_copy",
+            )
+            ```
+        """
+        self._ensure_writable()
+
+        from webknossos.dataset.layer import Layer
+
+        foreign_layer = Layer._ensure_layer(foreign_layer)
+
+        if new_layer_name is None:
+            new_layer_name = foreign_layer.name
+        else:
+            _validate_layer_name(new_layer_name)
+
+        if exists_ok:
+            layer = self.get_or_add_layer(
+                new_layer_name,
+                category=foreign_layer.category,
+                dtype_per_channel=foreign_layer.dtype_per_channel,
+                num_channels=foreign_layer.num_channels,
+                largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
+                bounding_box=foreign_layer.bounding_box,
+            )
+        else:
+            if new_layer_name in self.layers.keys():
+                raise IndexError(
+                    f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+                )
+            layer = self.add_layer(
+                new_layer_name,
+                category=foreign_layer.category,
+                dtype_per_channel=foreign_layer.dtype_per_channel,
+                num_channels=foreign_layer.num_channels,
+                largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
+                bounding_box=foreign_layer.bounding_box,
+            )
+
+        for mag_view in foreign_layer.mags.values():
+            layer.add_mag_as_copy(
+                mag_view,
+                transfer_mode=transfer_mode,
+                common_storage_path_prefix=common_storage_path_prefix,
+                overwrite_pending=overwrite_pending,
+            )
+
+        if (
+            with_attachments
+            and isinstance(layer, RemoteSegmentationLayer)
+            and isinstance(foreign_layer, AbstractSegmentationLayer)
+        ):
+            for attachment in foreign_layer.attachments:
+                layer.attachments.add_attachment_as_copy(attachment)
+        elif with_attachments and isinstance(layer, RemoteSegmentationLayer):
+            from webknossos.dataset.layer import SegmentationLayer
+
+            if isinstance(foreign_layer, SegmentationLayer):
+                for attachment in foreign_layer.attachments:
+                    layer.attachments.add_attachment_as_copy(attachment)
+
+        return layer

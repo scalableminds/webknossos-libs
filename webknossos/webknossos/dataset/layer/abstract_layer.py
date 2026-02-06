@@ -9,21 +9,19 @@ import numpy as np
 from numpy._typing import DTypeLike
 from upath import UPath
 
-from webknossos.dataset_properties import (
+from ...dataset_properties import (
     COLOR_CATEGORY,
     DataFormat,
     LayerCategoryType,
     LayerProperties,
     LayerViewConfiguration,
 )
-from webknossos.dataset_properties.structuring import (
+from ...dataset_properties.structuring import (
     MagViewProperties,
     _properties_floating_type_to_python_type,
+    _python_floating_type_to_properties_type,
 )
-from webknossos.geometry import NDBoundingBox
-from webknossos.geometry.mag import Mag, MagLike
-
-from ...dataset_properties.structuring import _python_floating_type_to_properties_type
+from ...geometry import Mag, MagLike, NDBoundingBox
 from ...utils import warn_deprecated
 from .view import ArrayException, MagView
 

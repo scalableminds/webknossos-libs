@@ -9,15 +9,29 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.dataset_properties import (
+from ...dataset_properties import (
     DataFormat,
     LayerProperties,
     MagViewProperties,
 )
-from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
-from webknossos.geometry.mag import MagLike
-
+from ...geometry import Mag, MagLike, Vec3Int, Vec3IntLike
+from ...utils import (
+    cheap_resolve,
+    copytree,
+    dump_path,
+    enrich_path,
+    get_executor_for_args,
+    is_fs_path,
+    movetree,
+    named_partial,
+    rmtree,
+    warn_deprecated,
+)
+from ..defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_SHARD_SHAPE,
+)
+from ..sampling_modes import SamplingModes
 from ._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -39,27 +53,7 @@ from .view import (
 )
 
 if TYPE_CHECKING:
-    from webknossos.dataset import Dataset, RemoteDataset
-    from webknossos.dataset.layer import RemoteLayer
-
-    from .segmentation_layer import SegmentationLayer
-
-from webknossos.dataset.defaults import (
-    DEFAULT_CHUNK_SHAPE,
-    DEFAULT_SHARD_SHAPE,
-)
-from webknossos.utils import (
-    cheap_resolve,
-    copytree,
-    dump_path,
-    enrich_path,
-    get_executor_for_args,
-    is_fs_path,
-    movetree,
-    named_partial,
-    rmtree,
-    warn_deprecated,
-)
+    from .. import Dataset, RemoteDataset, RemoteLayer, SegmentationLayer
 
 logger = logging.getLogger(__name__)
 

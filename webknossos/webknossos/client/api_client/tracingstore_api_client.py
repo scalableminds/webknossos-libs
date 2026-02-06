@@ -1,13 +1,12 @@
 from collections.abc import Iterator
 
-from webknossos.client.api_client.models import (
-    ApiAdHocMeshInfo,
-    ApiPrecomputedMeshInfo,
-)
-
 from ...proofreading.agglomerate_graph import AgglomerateGraph
 from ...proofreading.generated import agglomerate_graph_pb2
 from ._abstract_api_client import AbstractApiClient, Query
+from .models import (
+    ApiAdHocMeshInfo,
+    ApiPrecomputedMeshInfo,
+)
 
 
 class TracingStoreApiClient(AbstractApiClient):

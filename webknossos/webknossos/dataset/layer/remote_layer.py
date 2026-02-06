@@ -5,20 +5,17 @@ from typing import TYPE_CHECKING
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.dataset_properties import LayerProperties, MagViewProperties
-
 from ...client.api_client.models import ApiReserveMagUploadToPathParameters
-from ...geometry import Vec3Int
-from ...geometry.mag import Mag, MagLike
+from ...dataset_properties import LayerProperties, MagViewProperties
+from ...geometry import Mag, MagLike, Vec3Int
 from ...utils import enrich_path
+from ..sampling_modes import SamplingModes
 from ..transfer_mode import TransferMode
 from .abstract_layer import AbstractLayer, _validate_layer_name
 from .view import MagView, Zarr3Config
 
 if TYPE_CHECKING:
-    from webknossos.dataset import RemoteDataset
-
+    from ..remote_dataset import RemoteDataset
     from .segmentation_layer import RemoteSegmentationLayer
 
 
@@ -65,6 +62,7 @@ class RemoteLayer(AbstractLayer):
     def add_mag_as_copy(
         self,
         foreign_mag_view_or_path: PathLike | UPath | str | MagView,
+        *,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,

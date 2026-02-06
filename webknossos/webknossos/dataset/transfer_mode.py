@@ -3,7 +3,7 @@ from enum import Enum
 
 from upath import UPath
 
-from webknossos.utils import copytree, is_fs_path
+from ..utils import copytree, is_fs_path
 
 
 class TransferMode(Enum):

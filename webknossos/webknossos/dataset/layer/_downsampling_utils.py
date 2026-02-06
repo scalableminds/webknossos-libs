@@ -10,13 +10,12 @@ import numba
 import numpy as np
 from scipy.ndimage import zoom
 
-if TYPE_CHECKING:
-    from webknossos.dataset.dataset import Dataset, RemoteDataset
-
-from webknossos.dataset_properties import LayerCategoryType
-from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
-
+from ...dataset_properties import LayerCategoryType
+from ...geometry import Mag, Vec3Int, Vec3IntLike
 from .view import ArrayInfo, View
+
+if TYPE_CHECKING:
+    from .. import Dataset, RemoteDataset
 
 logger = logging.getLogger(__name__)
 
