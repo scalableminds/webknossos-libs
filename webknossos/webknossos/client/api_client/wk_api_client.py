@@ -25,6 +25,7 @@ from webknossos.client.api_client.models import (
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryResponse,
     ApiReserveDatasetUploadToPathsResponse,
+    ApiReserveMagUploadToPathParameters,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
@@ -276,11 +277,11 @@ class WkApiClient(AbstractApiClient):
         )
 
     def folder_move(self, *, folder_id: str, new_parent_id: str) -> ApiFolderWithParent:
-        route = "/folders/create"
-        return self._post_with_json_response(
+        route = f"/folders/{folder_id}/move"
+        return self._put_with_json_response(
             route,
             ApiFolderWithParent,
-            query={"newParentId": new_parent_id, "id": folder_id},
+            query={"newParentId": new_parent_id},
         )
 
     def folder_delete(self, *, folder_id: str) -> None:
@@ -423,6 +424,24 @@ class WkApiClient(AbstractApiClient):
 
     def finish_dataset_upload_to_paths(self, dataset_id: str) -> None:
         self._post(f"/datasets/{dataset_id}/finishUploadToPaths")
+
+    def reserve_mag_upload_to_paths(
+        self,
+        dataset_id: str,
+        reserve_mag_upload_to_path_parameters: ApiReserveMagUploadToPathParameters,
+    ) -> str:
+        route = f"/datasets/{dataset_id}/reserveMagUploadToPath"
+        return self._post_json_with_json_response(
+            route, reserve_mag_upload_to_path_parameters, str
+        )
+
+    def finish_mag_upload_to_paths(
+        self,
+        dataset_id: str,
+        reserve_mag_upload_to_path_parameters: ApiReserveMagUploadToPathParameters,
+    ) -> None:
+        route = f"/datasets/{dataset_id}/finishMagUploadToPath"
+        self._post_json(route, reserve_mag_upload_to_path_parameters)
 
     def reserve_ai_model_upload_to_path(
         self, params: ApiReserveAiModelUploadToPathParameters

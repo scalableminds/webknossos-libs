@@ -130,7 +130,7 @@ class ApiDatasetId:
 class ApiDatasetExploreAndAddRemote:
     remote_uri: str
     dataset_name: str
-    folder_path: str | None = None
+    folder_id: str | None = None
     data_store_name: str | None = None
 
 
@@ -462,6 +462,22 @@ class ApiReserveDatasetUploadToPathsForPreliminaryParameters:
 @attr.s(auto_attribs=True)
 class ApiReserveDatasetUploadToPathsForPreliminaryResponse:
     data_source: DatasetProperties
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveMagUploadToPathParameters:
+    layer_name: str
+    mag: list[int]
+    axis_order: dict[str, int] | None
+    channel_index: int | None
+    path_prefix: str | None
+    overwrite_pending: bool
+
+
+@attr.s(auto_attribs=True)
+class ApiLayerRenaming:
+    old_name: str
+    new_name: str
 
 
 @attr.s(auto_attribs=True)

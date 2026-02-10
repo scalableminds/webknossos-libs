@@ -1,18 +1,25 @@
+import copy
 import inspect
 import logging
 import warnings
 from collections.abc import Mapping, Sequence
 from datetime import datetime
+from enum import Enum
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Union
 
+import attr
+import numpy as np
 from boltons.typeutils import make_sentinel
+from cluster_tools import Executor
+from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.client import webknossos_context
 from webknossos.client.api_client.models import (
     ApiDataset,
     ApiDatasetExploreAndAddRemote,
+    ApiLayerRenaming,
     ApiMetadata,
     ApiUnusableDataSource,
 )
@@ -22,26 +29,53 @@ from webknossos.dataset.abstract_dataset import (
     _DATASET_URL_REGEX,
     AbstractDataset,
 )
-from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer
-from webknossos.dataset_properties import (
-    DatasetProperties,
+from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer, Zarr3Config
+from webknossos.dataset.layer.abstract_layer import (
+    _dtype_per_layer_to_dtype_per_channel,
+    _normalize_dtype_per_channel,
+    _normalize_dtype_per_layer,
+    _validate_layer_name,
 )
-from webknossos.geometry import BoundingBox, Vec3Int
+from webknossos.dataset.sampling_modes import SamplingModes
+from webknossos.dataset_properties import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    DataFormat,
+    DatasetProperties,
+    LayerCategoryType,
+    LayerProperties,
+    SegmentationLayerProperties,
+)
+from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int
 from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
 from ..client.api_client.errors import UnexpectedStatusError
+from ..dataset_properties.structuring import (
+    _properties_floating_type_to_python_type,
+)
 from ..ssl_context import SSL_CONTEXT
+from .defaults import DEFAULT_BIT_DEPTH, DEFAULT_DATA_FORMAT
+from .layer.abstract_layer import _dtype_per_channel_to_element_class
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
+from .transfer_mode import TransferMode
 
 logger = logging.getLogger(__name__)
 _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
+
 if TYPE_CHECKING:
     from webknossos.administration.user import Team
     from webknossos.dataset import Dataset
-    from webknossos.dataset_properties import LayerProperties
+
+
+class RemoteAccessMode(Enum):
+    """Determines how data of a remote dataset is accessed. Note that DIRECT_PATH can only be used if the client has access to the underlying storage."""
+
+    ZARR_STREAMING = "zarr_streaming"
+    DIRECT_PATH = "direct_path"
+    PROXY_PATH = "proxy_path"
 
 
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
@@ -86,6 +120,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     def __init__(
         self,
+        *,
         zarr_streaming_path: UPath | None,
         dataset_properties: DatasetProperties | None,
         dataset_id: str,
@@ -127,13 +162,15 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def open(
         cls,
         dataset_name_or_url: str | None = None,
+        *,
         organization_id: str | None = None,
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
         annotation_id_or_url: str | None = None,
-        use_zarr_streaming: bool = True,
+        access_mode: RemoteAccessMode | None = None,
         read_only: bool = False,
+        use_zarr_streaming: bool | None = None,
     ) -> "RemoteDataset":
         """Opens a remote webknossos dataset. Image data is accessed via network requests.
         Dataset metadata such as allowed teams or the sharing token can be read and set
@@ -147,7 +184,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
             dataset_id: Optional unique ID of the dataset
             annotation_id_or_url: Optional unique ID or URL of the annotation to stream the data from the annotation.
-            use_zarr_streaming: Whether to use zarr streaming
+            access_mode: Access mode for the dataset. Defaults to RemoteAccessMode.ZARR_STREAMING.
+            use_zarr_streaming: Whether to use zarr streaming. Deprecated, use access_mode instead.
 
         Returns:
             RemoteDataset: Dataset instance for remote access
@@ -162,20 +200,38 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             must not be set.
         """
 
-        if annotation_id_or_url is not None:
-            assert use_zarr_streaming, (
-                "Annotations are only supported with zarr streaming"
+        if use_zarr_streaming is not None:
+            if access_mode is not None:
+                raise ValueError(
+                    "Both use_zarr_streaming and access_mode were provided. Only one is allowed."
+                )
+            warn_deprecated("use_zarr_streaming", "access_mode")
+            if use_zarr_streaming:
+                access_mode = RemoteAccessMode.ZARR_STREAMING
+            else:
+                access_mode = RemoteAccessMode.DIRECT_PATH
+
+        if access_mode is None:
+            access_mode = RemoteAccessMode.ZARR_STREAMING
+
+        if (
+            annotation_id_or_url is not None
+            and access_mode != RemoteAccessMode.ZARR_STREAMING
+        ):
+            raise ValueError(
+                "Annotations are only supported with zarr streaming. "
+                + f"Got {access_mode} instead."
             )
 
         from ..client.context import _get_context
 
         (context_manager, dataset_id, annotation_id, sharing_token) = cls._parse_remote(
-            dataset_name_or_url,
-            organization_id,
-            sharing_token,
-            webknossos_url,
-            dataset_id,
-            annotation_id_or_url,
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=sharing_token,
+            webknossos_url=webknossos_url,
+            dataset_id=dataset_id,
+            annotation_id_or_url=annotation_id_or_url,
         )
 
         with context_manager:
@@ -187,7 +243,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
-            if use_zarr_streaming:
+            if access_mode == RemoteAccessMode.ZARR_STREAMING:
                 if annotation_id is not None:
                     zarr_path = UPath(
                         f"{url_prefix}/annotations/zarr/{annotation_id}/",
@@ -201,26 +257,44 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                         ssl=SSL_CONTEXT,
                     )
                 return cls(
-                    zarr_path,
-                    None,
-                    dataset_id,
-                    annotation_id,
-                    context_manager,
+                    zarr_streaming_path=zarr_path,
+                    dataset_properties=None,
+                    dataset_id=dataset_id,
+                    annotation_id=annotation_id,
+                    context=context_manager,
                     read_only=read_only,
                 )
-            else:
+            elif access_mode == RemoteAccessMode.DIRECT_PATH:
                 if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
                     raise RuntimeError(
                         f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
                     )
 
                 return cls(
-                    None,
-                    api_dataset_info.data_source,
-                    dataset_id,
-                    annotation_id,
-                    context_manager,
-                    read_only,
+                    zarr_streaming_path=None,
+                    dataset_properties=api_dataset_info.data_source,
+                    dataset_id=dataset_id,
+                    annotation_id=annotation_id,
+                    context=context_manager,
+                    read_only=read_only,
+                )
+            elif access_mode == RemoteAccessMode.PROXY_PATH:
+                zarr_path = UPath(
+                    f"{url_prefix}/datasets/{dataset_id}/proxy/",
+                    headers={} if token is None else {"X-Auth-Token": token},
+                    ssl=SSL_CONTEXT,
+                )
+                return cls(
+                    zarr_streaming_path=zarr_path,
+                    dataset_properties=None,
+                    dataset_id=dataset_id,
+                    annotation_id=None,
+                    context=context_manager,
+                    read_only=read_only,
+                )
+            else:
+                raise ValueError(
+                    f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
                 )
 
     def _initialize_layer_from_properties(
@@ -249,8 +323,11 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     def _apply_server_dataset_properties(self) -> None:
         self._properties = self._load_dataset_properties()
+        self._last_read_properties = copy.deepcopy(self._properties)
 
-    def _save_dataset_properties_impl(self) -> None:
+    def _save_dataset_properties_impl(
+        self, *, layer_renaming: tuple[str, str] | None = None
+    ) -> None:
         """
         Exports the current dataset properties to the server.
         Note that some edits will not be accepted by the server.
@@ -264,11 +341,20 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             self._apply_server_dataset_properties()
             raise RuntimeError("zarr streaming does not support updating this property")
 
+        layer_renamings = []
+        if layer_renaming is not None:
+            layer_renamings.append(
+                ApiLayerRenaming(old_name=layer_renaming[0], new_name=layer_renaming[1])
+            )
+
         with self._context:
             client = _get_api_client()
             client.dataset_update(
                 dataset_id=self._dataset_id,
-                dataset_updates={"dataSource": self._properties},
+                dataset_updates={
+                    "dataSource": self._properties,
+                    "layerRenamings": layer_renamings,
+                },
             )
             self._apply_server_dataset_properties()
 
@@ -340,6 +426,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     def _update_dataset_info(
         self,
+        *,
         name: str = _UNSET,
         description: str | None = _UNSET,
         is_public: bool = _UNSET,
@@ -640,10 +727,12 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     def download(
         self,
+        *,
         sharing_token: str | None = None,
         bbox: BoundingBox | None = None,
         layers: list[str] | str | None = None,
         mags: list[Mag] | None = None,
+        data_format: DataFormat | None = None,
         path: PathLike | UPath | str | None = None,
         exist_ok: bool = False,
     ) -> "Dataset":
@@ -653,6 +742,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
           If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
         * `path` and `exist_ok` specify where to save the downloaded dataset and whether to overwrite
           if the `path` exists.
+        * `data_format` specifies the data format of the downloaded dataset.
         """
         from ..client._download_dataset import download_dataset
 
@@ -664,6 +754,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             bbox=bbox,
             layers=layers,
             mags=mags,
+            data_format=data_format,
             path=UPath(path) if path is not None else None,
             exist_ok=exist_ok,
         )
@@ -672,6 +763,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self,
         segment_id: int,
         output_dir: PathLike | UPath | str,
+        *,
         layer_name: str | None = None,
         mesh_file_name: str | None = None,
         datastore_url: str | None = None,
@@ -709,12 +801,117 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             sharing_token,
         )
 
+    def delete_layer(self, layer_name: str) -> None:
+        self._ensure_writable()
+
+        if layer_name not in self.layers.keys():
+            raise IndexError(
+                f"Removing layer {layer_name} failed. There is no layer with this name"
+            )
+        del self._layers[layer_name]
+        self._properties.data_layers = [
+            layer for layer in self._properties.data_layers if layer.name != layer_name
+        ]
+        self._save_dataset_properties()
+
+    def add_layer(
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        *,
+        dtype_per_layer: DTypeLike | None = None,
+        dtype_per_channel: DTypeLike | None = None,
+        num_channels: int | None = None,
+        data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
+        bounding_box: NDBoundingBox | None = None,
+        **kwargs: Any,
+    ) -> RemoteLayer:
+        self._ensure_writable()
+
+        _validate_layer_name(layer_name)
+
+        if num_channels is None:
+            num_channels = 1
+
+        if dtype_per_layer is not None and dtype_per_channel is not None:
+            raise AttributeError(
+                "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
+            )
+        elif dtype_per_channel is not None:
+            dtype_per_channel = _properties_floating_type_to_python_type.get(
+                dtype_per_channel,  # type: ignore[arg-type]
+                dtype_per_channel,  # type: ignore[arg-type]
+            )
+            dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
+        elif dtype_per_layer is not None:
+            warn_deprecated("dtype_per_layer", "dtype_per_channel")
+            dtype_per_layer = _properties_floating_type_to_python_type.get(
+                dtype_per_layer,  # type: ignore[arg-type]
+                dtype_per_layer,  # type: ignore[arg-type]
+            )
+            dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
+            dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
+                dtype_per_layer, num_channels
+            )
+        else:
+            dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
+
+        if layer_name in self.layers.keys():
+            raise IndexError(
+                f"Adding layer {layer_name} failed. There is already a layer with this name"
+            )
+
+        assert data_format != DataFormat.WKW, (
+            "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
+        )
+
+        layer_properties = LayerProperties(
+            name=layer_name,
+            category=category,
+            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
+            element_class=_dtype_per_channel_to_element_class(
+                dtype_per_channel, num_channels
+            ),
+            mags=[],
+            num_channels=num_channels,
+            data_format=DataFormat(data_format),
+        )
+
+        if category == COLOR_CATEGORY:
+            self._properties.data_layers += [layer_properties]
+            self._layers[layer_name] = RemoteLayer(
+                self, layer_properties, read_only=False
+            )
+        elif category == SEGMENTATION_CATEGORY:
+            segmentation_layer_properties: SegmentationLayerProperties = (
+                SegmentationLayerProperties(
+                    **(
+                        attr.asdict(layer_properties, recurse=False)
+                    ),  # use all attributes from LayerProperties
+                    largest_segment_id=kwargs.get("largest_segment_id"),
+                )
+            )
+            if "mappings" in kwargs:
+                segmentation_layer_properties.mappings = kwargs["mappings"]
+            self._properties.data_layers += [segmentation_layer_properties]
+            self._layers[layer_name] = RemoteSegmentationLayer(
+                self, segmentation_layer_properties, read_only=False
+            )
+        else:
+            raise RuntimeError(
+                f"Failed to add layer ({layer_name}) because of invalid category ({category}). The supported categories are '{COLOR_CATEGORY}' and '{SEGMENTATION_CATEGORY}'"
+            )
+
+        self._save_dataset_properties()
+        return self.layers[layer_name]
+
     @classmethod
     def list(
         cls,
         organization_id: str | None = None,
         tags: str | Sequence[str] | None = None,
         name: str | None = None,
+        folder: RemoteFolder | str | None = None,
         folder_id: RemoteFolder | str | None = None,
     ) -> Mapping[str, "RemoteDataset"]:
         """Get all available datasets from the WEBKNOSSOS server.
@@ -731,6 +928,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 matching name.
             folder: Optional folder to filter datasets by. Only returns datasets in
                 the specified folder.
+            folder_id: Deprecated, use folder instead.
 
         Returns:
             Mapping[str, RemoteDataset]: Dict mapping dataset ids to RemoteDataset objects
@@ -763,11 +961,19 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             RemoteDataset objects are initialized lazily when accessed for the first time.
             The mapping object provides a fast way to list and look up available datasets.
         """
-        if isinstance(folder_id, RemoteFolder):
-            folder_id = folder_id.id
+        if folder_id is not None:
+            warn_deprecated("folder_id", "folder")
+            if folder is not None:
+                raise ValueError(
+                    "Both folder_id and folder were provided. Only one is allowed."
+                )
+            folder = folder_id
+
+        if isinstance(folder, RemoteFolder):
+            folder = folder.id
 
         return RemoteDatasetRegistry(
-            name=name, organization_id=organization_id, tags=tags, folder_id=folder_id
+            name=name, organization_id=organization_id, tags=tags, folder_id=folder
         )
 
     @classmethod
@@ -807,6 +1013,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     @classmethod
     def _parse_remote(
         cls,
+        *,
         dataset_name_or_url: str | None = None,
         organization_id: str | None = None,
         sharing_token: str | None = None,
@@ -906,6 +1113,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     @classmethod
     def trigger_reload_in_datastore(
         cls,
+        *,
         dataset_name_or_url: str | None = None,
         organization_id: str | None = None,
         webknossos_url: str | None = None,
@@ -955,11 +1163,11 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 )
 
         (context_manager, dataset_id, _, _) = cls._parse_remote(
-            dataset_name_or_url,
-            organization_id,
-            token,
-            webknossos_url,
-            dataset_id,
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=token,
+            webknossos_url=webknossos_url,
+            dataset_id=dataset_id,
         )
 
         with context_manager:
@@ -974,7 +1182,12 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     @classmethod
     def explore_and_add_remote(
-        cls, dataset_uri: str | PathLike | UPath, dataset_name: str, folder_path: str
+        cls,
+        dataset_uri: str | PathLike | UPath,
+        dataset_name: str,
+        *,
+        folder: str | RemoteFolder | None = None,
+        folder_path: str | None = None,
     ) -> "RemoteDataset":
         """Explore and add an external dataset as a remote dataset.
 
@@ -984,7 +1197,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         Args:
             dataset_uri: URI pointing to the remote dataset location
             dataset_name: Name to register dataset under in WEBKNOSSOS
-            folder_path: Path in WEBKNOSSOS folder structure where dataset should appear
+            folder: Path in WEBKNOSSOS folder structure where dataset should appear
+            folder_path: Deprecated, use folder instead.
 
         Returns:
             RemoteDataset: The newly added dataset accessible via WEBKNOSSOS
@@ -994,7 +1208,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             remote = Dataset.explore_and_add_remote(
                 "s3://bucket/dataset",
                 "my_dataset",
-                "Datasets/Research"
+                folder=RemoteFolder.get_by_path("Datasets/Research")
             )
             ```
 
@@ -1004,10 +1218,87 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         """
         from ..client.context import _get_api_client
 
+        folder_obj: RemoteFolder | None = None
+        if folder_path is not None:
+            warn_deprecated("folder_path", "folder")
+            if folder is not None:
+                raise ValueError(
+                    "Both folder_path and folder were provided. Only one is allowed."
+                )
+            folder_obj = RemoteFolder.get_by_path(folder_path)
+        elif isinstance(folder, str):
+            folder_obj = RemoteFolder.get_by_path(folder)
+        elif isinstance(folder, RemoteFolder):
+            folder_obj = folder
+
         client = _get_api_client()
         dataset = ApiDatasetExploreAndAddRemote(
-            UPath(dataset_uri).resolve().as_uri(), dataset_name, folder_path
+            UPath(dataset_uri).resolve().as_uri(),
+            dataset_name,
+            None if folder_obj is None else folder_obj.id,
         )
         dataset_id = client.dataset_explore_and_add_remote(dataset=dataset)
 
         return cls.open(dataset_id=dataset_id)
+
+    def downsample(
+        self,
+        *,
+        sampling_mode: SamplingModes = SamplingModes.ANISOTROPIC,
+        coarsest_mag: Mag | None = None,
+        interpolation_mode: str = "default",
+        compress: bool | Zarr3Config = True,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
+        executor: Executor | None = None,
+    ) -> None:
+        """Generate downsampled magnifications for all layers.
+
+        Creates lower resolution versions (coarser magnifications) of all layers that are not
+        yet downsampled, up to the specified coarsest magnification.
+
+        Args:
+            sampling_mode: Strategy for downsampling (e.g. ANISOTROPIC, MAX)
+            coarsest_mag: Optional maximum/coarsest magnification to generate
+            interpolation_mode: Interpolation method to use. Defaults to "default" (= "mode" for segmentation, "median" for color).
+            compress: Whether to compress generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
+            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to COPY
+            common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
+                                        to select one of the available WEBKNOSSOS storages.
+            overwrite_pending (bool). If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
+            executor: Optional executor for parallel processing
+
+        Raises:
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            Basic downsampling:
+                ```
+                ds.downsample()
+                ```
+
+            With custom parameters:
+                ```
+                ds.downsample(
+                    sampling_mode=SamplingModes.ANISOTROPIC,
+                    coarsest_mag=Mag(8),
+                )
+                ```
+
+        Note:
+            - ANISOTROPIC sampling creates anisotropic downsampling until dataset is isotropic
+            - Other modes like MAX, CONSTANT etc create regular downsampling patterns
+            - If magnifications already exist they will not be regenerated
+        """
+        for layer in self.layers.values():
+            layer.downsample(
+                coarsest_mag=coarsest_mag,
+                sampling_mode=sampling_mode,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                transfer_mode=transfer_mode,
+                common_storage_path_prefix=common_storage_path_prefix,
+                overwrite_pending=overwrite_pending,
+                executor=executor,
+            )

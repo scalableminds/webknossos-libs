@@ -23,6 +23,7 @@ from webknossos.dataset_properties.structuring import (
 from webknossos.geometry import NDBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
 
+from ...dataset_properties.structuring import _python_floating_type_to_properties_type
 from ...utils import warn_deprecated
 from .view import ArrayException, MagView
 
@@ -93,6 +94,41 @@ def _element_class_to_dtype_per_channel(
     return _dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
 
 
+def _dtype_per_channel_to_element_class(
+    dtype_per_channel: DTypeLike, num_channels: int
+) -> str:
+    dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
+        dtype_per_channel, num_channels
+    )
+    return _python_floating_type_to_properties_type.get(
+        dtype_per_layer, dtype_per_layer
+    )
+
+
+def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
+    try:
+        return np.dtype(dtype_per_channel)
+    except TypeError as e:
+        raise TypeError(
+            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
+        ) from e
+
+
+def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
+    try:
+        dtype_per_layer = str(np.dtype(dtype_per_layer))
+    except Exception:
+        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
+    return dtype_per_layer  # type: ignore[return-value]
+
+
+def _validate_layer_name(layer_name: str) -> None:
+    if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
+        raise ValueError(
+            f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+        )
+
+
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
 # As the begin and the end are anchored, all of the name must match the regex.
 # The first regex group ensures that the name does not start with a dot.
@@ -108,13 +144,16 @@ class AbstractLayer:
     def __init__(
         self, dataset: "AbstractDataset", properties: LayerProperties, read_only: bool
     ) -> None:
+        self._dataset = dataset
+        self._apply_properties(properties, read_only)
+
+    def _apply_properties(self, properties: LayerProperties, read_only: bool) -> None:
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
         assert properties.num_channels is not None
         assert "/" not in properties.name and not properties.name.startswith("."), (
             f"The layer name '{properties.name}' is invalid."
         )
-        self._dataset = dataset
         self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
 
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
@@ -171,8 +210,10 @@ class AbstractLayer:
             if layer_property.name == self.name
         )
 
-    def _save_layer_properties(self) -> None:
-        self.dataset._save_dataset_properties()
+    def _save_layer_properties(
+        self, layer_renaming: tuple[str, str] | None = None
+    ) -> None:
+        self.dataset._save_dataset_properties(layer_renaming=layer_renaming)
 
     def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
         """Initialize a magnification level when opening the Dataset.
