@@ -11,6 +11,7 @@ from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset
+from webknossos.geometry import VecInt
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -58,34 +59,59 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
     assert len(ds.layers) == 12
 
     expected_dtype_channels_size_per_layer = {
-        "tiffs_test_CS.tif__channel0": ("uint8", 1, (3, 64, 128, 128)),
-        "tiffs_test_CS.tif__channel1": ("uint8", 1, (3, 64, 128, 128)),
-        "tiffs_test_CS.tif__channel2": ("uint8", 1, (3, 64, 128, 128)),
-        "tiffs_test_CS.tif__channel3": ("uint8", 1, (3, 64, 128, 128)),
-        "tiffs_test_CS.tif__channel4": ("uint8", 1, (3, 64, 128, 128)),
-        "tiffs_test_C.tif__channel0": ("uint8", 1, (128, 128, 64)),
-        "tiffs_test_C.tif__channel1": ("uint8", 1, (128, 128, 64)),
-        "tiffs_test_C.tif__channel2": ("uint8", 1, (128, 128, 64)),
-        "tiffs_test_C.tif__channel3": ("uint8", 1, (128, 128, 64)),
-        "tiffs_test_C.tif__channel4": ("uint8", 1, (128, 128, 64)),
-        "tiffs_test_I.tif": ("uint32", 1, (64, 128, 64)),
-        "tiffs_test_S.tif": ("uint16", 1, (3, 64, 128, 128)),
+        "tiffs_test_CS.tif__channel0": (
+            "uint8",
+            1,
+            VecInt(s=3, x=64, c=5, y=128, z=128),
+        ),
+        "tiffs_test_CS.tif__channel1": (
+            "uint8",
+            1,
+            VecInt(s=3, x=64, c=5, y=128, z=128),
+        ),
+        "tiffs_test_CS.tif__channel2": (
+            "uint8",
+            1,
+            VecInt(s=3, x=64, c=5, y=128, z=128),
+        ),
+        "tiffs_test_CS.tif__channel3": (
+            "uint8",
+            1,
+            VecInt(s=3, x=64, c=5, y=128, z=128),
+        ),
+        "tiffs_test_CS.tif__channel4": (
+            "uint8",
+            1,
+            VecInt(s=3, x=64, c=5, y=128, z=128),
+        ),
+        "tiffs_test_C.tif__channel0": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
+        "tiffs_test_C.tif__channel1": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
+        "tiffs_test_C.tif__channel2": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
+        "tiffs_test_C.tif__channel3": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
+        "tiffs_test_C.tif__channel4": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
+        "tiffs_test_I.tif": ("uint32", 1, VecInt(c=1, x=64, y=128, z=64)),
+        "tiffs_test_S.tif": ("uint16", 1, VecInt(s=3, z=64, x=128, y=128)),
     }
 
     for layer_name, layer in ds.layers.items():
+        print(layer_name)
         dtype, channels, size = expected_dtype_channels_size_per_layer[layer_name]
         assert layer.dtype_per_channel == np.dtype(dtype)
         assert layer.num_channels == channels
-        assert layer.bounding_box.size == size
+        assert layer.bounding_box.normalize_axes(channels).size == size
 
         # Check that the zarr.json metadata is correct
         mag1 = layer.get_finest_mag()
         array_shape = json.loads((mag1.path / "zarr.json").read_bytes())["shape"]
-        shard_aligned_bottomright = layer.bounding_box.with_bottomright_xyz(
-            layer.bounding_box.bottomright_xyz.ceildiv(mag1.info.shard_shape)
-            * mag1.info.shard_shape
-        ).bottomright
-        assert array_shape == [channels] + shard_aligned_bottomright.to_list()
+        shard_aligned_bottomright = (
+            layer.bounding_box.normalize_axes(channels)
+            .with_bottomright_xyz(
+                layer.bounding_box.bottomright_xyz.ceildiv(mag1.info.shard_shape)
+                * mag1.info.shard_shape
+            )
+            .bottomright
+        )
+        assert array_shape == shard_aligned_bottomright.to_list()
 
 
 def test_from_dicom_images(tmp_upath: UPath) -> None:

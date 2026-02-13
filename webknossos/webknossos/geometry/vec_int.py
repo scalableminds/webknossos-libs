@@ -193,8 +193,13 @@ class VecInt(tuple):
         """
         return VecInt(tuple(map(int, re.findall(r"\d+", string))))
 
-    def with_replaced(self: _T, index: int, new_element: int) -> _T:
-        """Returns a new ND Vector with a replaced element at a given index."""
+    def with_replaced(self: _T, axis: str | int, new_element: int) -> _T:
+        """Returns a new ND Vector with a replaced element at a given axis (or index for backwards compatibility)."""
+
+        if isinstance(axis, int):
+            index = axis
+        else:
+            index = self.axes.index(axis)
 
         return self.__class__(
             *self[:index], new_element, *self[index + 1 :], axes=self.axes

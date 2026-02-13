@@ -101,7 +101,7 @@ class View:
         """
         self._path = path_to_mag_view
         self._data_format = data_format
-        self._bounding_box = bounding_box.denormalize()
+        self._bounding_box = bounding_box.denormalize() if bounding_box else None
         self._read_only = read_only
         self._cached_array = cached_array
         self._mag = mag
