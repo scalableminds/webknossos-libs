@@ -328,8 +328,8 @@ class Annotation:
         annotation_path = UPath(annotation_path)
         if not annotation_path.exists():
             raise FileNotFoundError(
-            f"Annotation path {annotation_path} does not exist."
-        )
+                f"Annotation path {annotation_path} does not exist."
+            )
         if annotation_path.suffix == ".zip":
             return cls._load_from_zip(annotation_path)
         elif annotation_path.suffix == ".nml":
