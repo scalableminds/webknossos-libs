@@ -282,7 +282,11 @@ class AbstractLayer:
         self._properties.bounding_box = bbox
         self._save_layer_properties()
         for mag in self.mags.values():
-            mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
+            mag._array.resize(
+                bbox.align_with_mag(mag.mag)
+                .in_mag(mag.mag)
+                .normalize_axes(self.num_channels)
+            )
 
     @property
     def category(self) -> LayerCategoryType:

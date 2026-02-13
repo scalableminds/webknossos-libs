@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Generator, Iterable
+from collections.abc import Generator, Iterable, Sequence
 from itertools import product
 from typing import (
     TypeVar,
@@ -14,6 +14,7 @@ from .vec3_int import Vec3Int, Vec3IntLike
 from .vec_int import VecInt, VecIntLike
 
 _DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
+_DEFAULT_AXIS_ORDER = {"c": 0, "x": 1, "y": 2, "z": 3}
 
 _T = TypeVar("_T", bound="NDBoundingBox")
 
@@ -28,6 +29,21 @@ def int_tpl(vec_int_like: VecIntLike) -> VecInt:
     return VecInt(
         vec_int_like, axes=(f"unset_{i}" for i in range(len(list(vec_int_like))))
     )
+
+
+def _find_index_by_name(axes: Sequence["Axis"], name: str) -> int:
+    for i, axis in enumerate(axes):
+        if axis.name == name:
+            return i
+    raise KeyError(f"Axis {name} not found in {axes}")
+
+
+@attr.frozen
+class Axis:
+    name: str
+    min: int
+    size: int
+    index: int
 
 
 @attr.frozen
@@ -70,7 +86,6 @@ class NDBoundingBox:
     Note:
         - The top-left coordinate is inclusive while bottom-right is exclusive
         - Each axis must have a unique index starting from 1
-        - Index 0 is reserved for channel information
     """
 
     topleft: VecInt = attr.field(converter=int_tpl)
@@ -88,9 +103,6 @@ class NDBoundingBox:
         ), (
             f"The dimensions of topleft, size, axes and index ({len(self.topleft)}, "
             + f"{len(self.size)}, {len(self.axes)} and {len(self.index)}) do not match."
-        )
-        assert "c" not in self.axes or self.index[self.axes.index("c")] == 0, (
-            "Index 0 is reserved for channels."
         )
 
         # Convert the delivered tuples to VecInts
@@ -243,13 +255,13 @@ class NDBoundingBox:
             NDBoundingBox: A new NDBoundingBox object with updated bounds.
 
         Raises:
-            ValueError: If the given axis name does not exist.
+            KeyError: If the given axis name does not exist.
 
         """
         try:
             index = self.axes.index(axis)
         except ValueError as err:
-            raise ValueError("The given axis name does not exist.") from err
+            raise KeyError("The given axis name does not exist.") from err
 
         _new_topleft = (
             self.topleft.with_replaced(index, new_topleft)
@@ -277,7 +289,7 @@ class NDBoundingBox:
         try:
             index = self.axes.index(axis)
         except ValueError as err:
-            raise ValueError("The given axis name does not exist.") from err
+            raise KeyError("The given axis name does not exist.") from err
 
         return (self.topleft[index], self.topleft[index] + self.size[index])
 
@@ -315,30 +327,67 @@ class NDBoundingBox:
             AssertionError: If additionalAxes are present but axisOrder is not provided.
         """
 
-        topleft: tuple[int, ...] = bbox["topLeft"]
-        size: tuple[int, ...] = (bbox["width"], bbox["height"], bbox["depth"])
-        axes: tuple[str, ...] = ("x", "y", "z")
-        index: tuple[int, ...] = (1, 2, 3)
+        if (
+            bbox.get("channelIndex", 0) == 0
+            and ("additionalAxes" not in bbox or bbox["additionalAxes"] == [])
+            and ("axisOrder" not in bbox or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER)
+        ):
+            # Delegate to BoundingBox.from_wkw_dict, if only 3d
+            from .bounding_box import BoundingBox
+
+            return BoundingBox.from_wkw_dict(bbox)
+
+        axes = [
+            Axis(
+                name="c",
+                min=bbox.get("channelIndex", 0),
+                size=bbox.get("numChannels", 1),
+                index=0,
+            ),
+            Axis(name="x", min=bbox["topLeft"][0], size=bbox["width"], index=1),
+            Axis(name="y", min=bbox["topLeft"][1], size=bbox["height"], index=2),
+            Axis(name="z", min=bbox["topLeft"][2], size=bbox["depth"], index=3),
+        ]
+
+        if "additionalAxes" in bbox:
+            assert "axisOrder" in bbox, (
+                "If there are additionalAxes an axisOrder needs to be provided."
+            )
+            axes.extend(
+                Axis(
+                    name=axis["name"],
+                    min=axis["bounds"][0],
+                    size=axis["bounds"][1] - axis["bounds"][0],
+                    index=axis["index"],
+                )
+                for axis in bbox["additionalAxes"]
+            )
 
         if "axisOrder" in bbox:
-            axes = tuple(bbox["axisOrder"].keys())
-            index = tuple(bbox["axisOrder"][axis] for axis in axes)
+            for axis_name, axis_index in bbox["axisOrder"].items():
+                idx = _find_index_by_name(axes, axis_name)
+                axes[idx] = attr.evolve(axes[idx], index=axis_index)
 
-            if "additionalAxes" in bbox:
-                assert "axisOrder" in bbox, (
-                    "If there are additionalAxes an axisOrder needs to be provided."
-                )
-                for axis in bbox["additionalAxes"]:
-                    topleft += (axis["bounds"][0],)
-                    size += (axis["bounds"][1] - axis["bounds"][0],)
-                    axes += (axis["name"],)
-                    index += (axis["index"],)
+        axes = [
+            axis
+            for axis in axes
+            if axis.name in bbox.get("axisOrder", {}).keys()  # in axisOrder
+            or any(
+                a["name"] == axis.name for a in bbox.get("additionalAxes", [])
+            )  # or in additionalAxes
+        ]
+        axes = sorted(axes, key=lambda axis: axis.index)
+
+        topleft = [axis.min for axis in axes]
+        size = [axis.size for axis in axes]
+        axis_names = [axis.name for axis in axes]
+        index = [axis.index for axis in axes]
 
         return cls(
-            topleft=VecInt(topleft, axes=axes),
-            size=VecInt(size, axes=axes),
-            axes=axes,
-            index=VecInt(index, axes=axes),
+            topleft=VecInt(topleft, axes=axis_names),
+            size=VecInt(size, axes=axis_names),
+            axes=axis_names,
+            index=VecInt(index, axes=axis_names),
         )
 
     def to_wkw_dict(self) -> dict:
@@ -352,37 +401,60 @@ class NDBoundingBox:
         width, height, depth = None, None, None
         additional_axes = []
         for i, axis in enumerate(self.axes):
+            index = self.index[i]
             if axis == "x":
-                topleft[0] = self.topleft[i]
-                width = self.size[i]
+                topleft[0] = self.topleft[index]
+                width = self.size[index]
             elif axis == "y":
-                topleft[1] = self.topleft[i]
-                height = self.size[i]
+                topleft[1] = self.topleft[index]
+                height = self.size[index]
             elif axis == "z":
-                topleft[2] = self.topleft[i]
-                depth = self.size[i]
+                topleft[2] = self.topleft[index]
+                depth = self.size[index]
+            elif axis == "c":
+                pass
             else:
                 additional_axes.append(
                     {
                         "name": axis,
-                        "bounds": [self.topleft[i], self.bottomright[i]],
-                        "index": self.index[i],
+                        "bounds": [self.topleft[index], self.bottomright[index]],
+                        "index": index,
                     }
                 )
-        if additional_axes:
-            return {
-                "topLeft": topleft,
-                "width": width,
-                "height": height,
-                "depth": depth,
-                "additionalAxes": additional_axes,
-            }
-        return {
+        out = {
             "topLeft": topleft,
             "width": width,
             "height": height,
             "depth": depth,
         }
+        if additional_axes:
+            out["additionalAxes"] = additional_axes
+
+        def _axis_order_field(
+            axes: tuple[str, ...], index: tuple[int, ...]
+        ) -> dict[str, int]:
+            axis_order = {axis: index[i] for i, axis in enumerate(axes)}
+            ndim = len(axes)
+            # Include only axes that are default axes (c, x, y, z) and not in the
+            # default axis order. The default axis order is c, x, y, z from the
+            # back (z is the last, c is the 4th last).
+            minimal_axis_order = {
+                axis: index
+                for axis, index in axis_order.items()
+                if axis not in _DEFAULT_AXIS_ORDER
+                or (ndim - len(_DEFAULT_AXIS_ORDER) - _DEFAULT_AXIS_ORDER[axis])
+                != index
+            }
+            return minimal_axis_order
+
+        axis_order = _axis_order_field(self.axes, self.index)
+        if len(axis_order) > 0:
+            out["axisOrder"] = axis_order
+
+        if "c" in self.axes and self.topleft.c != 0:
+            out["channelIndex"] = self.topleft.c
+
+        return out
 
     def to_config_dict(self) -> dict:
         """
@@ -407,7 +479,8 @@ class NDBoundingBox:
         return f"{'_'.join(str(element) for element in self.topleft)}_{'_'.join(str(element) for element in self.size)}"
 
     def __repr__(self) -> str:
-        return f"NDBoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()}, axes={self.axes})"
+        axes = {axis: index for axis, index in zip(self.axes, self.index)}
+        return f"{self.__class__.__name__}(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()}, axes={axes})"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -436,9 +509,7 @@ class NDBoundingBox:
             index = self.axes.index(axis_name)
             return self.size[index]
         except ValueError as err:
-            raise ValueError(
-                f"Axis {axis_name} doesn't exist in NDBoundingBox."
-            ) from err
+            raise KeyError(f"Axis {axis_name} doesn't exist in NDBoundingBox.") from err
 
     def _get_attr_xyz(self, attr_name: str) -> Vec3Int:
         axes = ("x", "y", "z")
@@ -791,15 +862,13 @@ class NDBoundingBox:
         try:
             # If a 3D chunk_shape is given it is assumed that iteration over xyz is
             # intended. Therefore NDBoundingBoxes are generated that have a shape of
-            # x: chunk_shape.x, y: chunk_shape.y, z: chunk_shape.z and 1 for all other
+            # x: chunk_shape.x, y: chunk_shape.y, z: chunk_shape.z, c: size.c and 1 for all other
             # axes.
             chunk_shape = Vec3Int(chunk_shape)
-
-            chunk_shape = (
-                self.with_size(VecInt.ones(self.axes))
-                .with_size_xyz(chunk_shape)
-                .size.to_np()
-            )
+            chunk_shape = VecInt.ones(self.axes).with_xyz(chunk_shape)
+            if "c" in self.axes:
+                chunk_shape = chunk_shape.with_c(self.size.c)
+            chunk_shape = chunk_shape.to_np()
         except AssertionError:
             chunk_shape = VecInt(chunk_shape, axes=self.axes).to_np()
 
@@ -808,11 +877,14 @@ class NDBoundingBox:
             try:
                 chunk_border_alignments = Vec3Int(chunk_border_alignments)
 
-                chunk_border_alignments = (
-                    self.with_size(VecInt.ones(self.axes))
-                    .with_size_xyz(chunk_border_alignments)
-                    .size.to_np()
+                chunk_border_alignments = VecInt.ones(self.axes).with_xyz(
+                    chunk_border_alignments
                 )
+                if "c" in self.axes:
+                    chunk_border_alignments = chunk_border_alignments.with_c(
+                        self.size.c
+                    )
+                chunk_border_alignments = chunk_border_alignments.to_np()
             except AssertionError:
                 chunk_border_alignments = VecInt(
                     chunk_border_alignments, axes=self.axes
@@ -862,9 +934,9 @@ class NDBoundingBox:
         """
         assert all(
             size == 1 for size, axis in zip(self.size, self.axes) if axis not in "xyz"
-        ), "The view's bounding box must be flat in all dimensions except xyz."
+        ), "The view's bounding box must be flat in all dimensions except x, y and z."
         data = np.expand_dims(data, axis=tuple(range(3, len(self))))
-        return np.moveaxis(
+        data = np.moveaxis(
             data,
             [0, 1, 2],
             (
@@ -873,6 +945,7 @@ class NDBoundingBox:
                 self.axes.index("z"),
             ),
         )
+        return data
 
     def to_slices(self) -> tuple[slice, ...]:
         """
@@ -889,7 +962,7 @@ class NDBoundingBox:
         """
         assert all(
             size == 1 for size, axis in zip(self.size, self.axes) if axis not in "xyz"
-        ), "The view's bounding box must be flat in all dimensions except xyz."
+        ), "The view's bounding box must be flat in all dimensions except x, y and z."
         return (
             NDBoundingBox(VecInt.zeros(self.axes), self.size, self.axes, self.index)
             .with_topleft_xyz(self.topleft_xyz)
@@ -911,6 +984,48 @@ class NDBoundingBox:
         except AssertionError:
             return self.with_topleft(self.topleft + VecInt(vector, axes=self.axes))
 
+    def __hash__(self) -> int:
+        return hash(
+            (
+                self.topleft,
+                self.size,
+                self.axes,
+                self.index,
+                self.is_visible,
+                self.color,
+            )
+        )
+
+    def normalize_axes(self, num_channels: int) -> "NormalizedBoundingBox":
+        assert ("c" in self.axes and num_channels == self.size.c) or num_channels == 1
+        return NormalizedBoundingBox(
+            topleft=self.topleft,
+            size=self.size,
+            axes=self.axes,
+            index=self.index,
+            is_visible=self.is_visible,
+            color=self.color,
+        )
+
+    def denormalize(self) -> "NDBoundingBox":
+        return self
+
+
+class NormalizedBoundingBox(NDBoundingBox):
+    def denormalize(self) -> "NDBoundingBox":
+        if self.axes == ("c", "x", "y", "z"):
+            from .bounding_box import BoundingBox
+
+            return BoundingBox(
+                self.topleft_xyz,
+                self.size_xyz,
+                name=self.name,
+                color=self.color,
+                is_visible=self.is_visible,
+            )
+        else:
+            return self
+
 
 def derive_nd_bounding_box_from_shape(
     data_shape: tuple[int, ...],
@@ -922,22 +1037,15 @@ def derive_nd_bounding_box_from_shape(
     if axes is not None:
         axes = tuple(axes)
         assert len(axes) == data_ndim
+        bbox = NDBoundingBox(
+            absolute_offset or VecInt.zeros(axes),
+            VecInt(data_shape, axes=axes),
+            axes=axes,
+            index=tuple(range(len(axes))),
+        )
         if "c" in axes:
-            assert axes[0] == "c"
-            bbox = NDBoundingBox(
-                absolute_offset or VecInt.zeros(axes[1:]),
-                VecInt(data_shape[1:], axes=axes[1:]),
-                axes=axes[1:],
-                index=tuple(range(1, len(axes))),
-            )
-            num_channels = data_shape[0]
+            num_channels = data_shape[axes.index("c")]
         else:
-            bbox = NDBoundingBox(
-                absolute_offset or VecInt.zeros(axes),
-                VecInt(data_shape, axes=axes),
-                axes=axes,
-                index=tuple(range(1, len(axes) + 1)),
-            )
             num_channels = 1
     else:
         from .bounding_box import BoundingBox

@@ -112,3 +112,9 @@ def test_custom_initialization() -> None:
         ("x", "y", "z", "t")
     ) == VecInt.zeros(("x", "y", "z", "t"))
     assert VecInt.full(4, ("x", "y", "z", "t")) == VecInt.ones(("x", "y", "z", "t")) * 4
+
+
+def test_new_axes() -> None:
+    old = VecInt(1, 2, 3, 4, axes=("unset_0", "unset_1", "unset_2", "unset_3"))
+    new = VecInt(1, 2, 3, 4, axes=("x", "y", "z", "t"))
+    assert VecInt(old, axes=("x", "y", "z", "t")) == new

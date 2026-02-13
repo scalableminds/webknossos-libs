@@ -85,7 +85,6 @@ class MagViewProperties:
     Could be None for older datasource-proterties.json files.
     """
     cube_length: int | None = None
-    axis_order: dict[str, int] | None = None
 
 
 @attr.define

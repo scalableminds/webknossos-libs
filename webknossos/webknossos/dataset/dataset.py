@@ -1718,7 +1718,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
             if (
                 additional_axes := set(layer.bounding_box.axes).difference(
-                    "x", "y", "z"
+                    "c", "x", "y", "z"
                 )
             ) and layer.data_format == DataFormat.WKW:
                 if all(

@@ -67,6 +67,13 @@ class VecInt(tuple):
 
         if args:
             if isinstance(args[0], VecInt):
+                if axes is not None:
+                    axes = tuple(axes)
+                    if len(axes) != len(args[0]):
+                        raise ValueError(
+                            "The number of axes must match the number of axes in the VecInt."
+                        )
+                    return cls(args[0].to_tuple(), axes=axes)
                 return args[0]
             if isinstance(args[0], np.ndarray):
                 assert np.count_nonzero(args[0] % 1) == 0, _value_error(args)
@@ -117,7 +124,7 @@ class VecInt(tuple):
         if self._c_pos is not None:
             return self[self._c_pos]
 
-        raise ValueError("The vector does not have an c component.")
+        raise KeyError("The vector does not have an c component.")
 
     @property
     def x(self) -> int:
@@ -127,7 +134,7 @@ class VecInt(tuple):
         if self._x_pos is not None:
             return self[self._x_pos]
 
-        raise ValueError("The vector does not have an x component.")
+        raise KeyError("The vector does not have an x component.")
 
     @property
     def y(self) -> int:
@@ -137,7 +144,7 @@ class VecInt(tuple):
         if self._y_pos is not None:
             return self[self._y_pos]
 
-        raise ValueError("The vector does not have an y component.")
+        raise KeyError("The vector does not have an y component.")
 
     @property
     def z(self) -> int:
@@ -147,13 +154,31 @@ class VecInt(tuple):
         if self._z_pos is not None:
             return self[self._z_pos]
 
-        raise ValueError("The vector does not have an z component.")
+        raise KeyError("The vector does not have an z component.")
 
     @property
     def xyz(self) -> "Vec3Int":
         from .vec3_int import Vec3Int
 
         return Vec3Int(self.x, self.y, self.z)
+
+    def get(self, axis: str, default: int | None = None) -> int:
+        """
+        Returns the value of the specified axis.
+
+        Args:
+            axis (str): The name of the axis to get the value for.
+            default (int, optional): The default value to return if the axis is not present. Defaults to None.
+
+        Returns:
+            int: The value of the specified axis.
+        """
+        if axis in self.axes:
+            return self[self.axes.index(axis)]
+        else:
+            if default is None:
+                raise KeyError(f"Axis {axis} not found in {self.axes}")
+            return default
 
     @staticmethod
     def from_str(string: str) -> "VecInt":
@@ -168,12 +193,45 @@ class VecInt(tuple):
         """
         return VecInt(tuple(map(int, re.findall(r"\d+", string))))
 
-    def with_replaced(self: _T, index: int, new_element: int) -> _T:
-        """Returns a new ND Vector with a replaced element at a given index."""
+    def with_replaced(self: _T, axis: str | int, new_element: int) -> _T:
+        """Returns a new ND Vector with a replaced element at a given axis (or index for backwards compatibility)."""
+
+        if isinstance(axis, int):
+            index = axis
+        else:
+            index = self.axes.index(axis)
 
         return self.__class__(
             *self[:index], new_element, *self[index + 1 :], axes=self.axes
         )
+
+    def with_c(self: _T, new_c: int) -> _T:
+        """Returns a new ND Vector with the c component replaced by the given value."""
+        if self._c_pos is None:
+            raise KeyError("The vector does not have an c component.")
+        return self.with_replaced(self._c_pos, new_c)
+
+    def with_x(self: _T, new_x: int) -> _T:
+        """Returns a new ND Vector with the x component replaced by the given value."""
+        if self._x_pos is None:
+            raise KeyError("The vector does not have an y component.")
+        return self.with_replaced(self._x_pos, new_x)
+
+    def with_y(self: _T, new_y: int) -> _T:
+        """Returns a new ND Vector with the y component replaced by the given value."""
+        if self._y_pos is None:
+            raise KeyError("The vector does not have an y component.")
+        return self.with_replaced(self._y_pos, new_y)
+
+    def with_z(self: _T, new_z: int) -> _T:
+        """Returns a new ND Vector with the z component replaced by the given value."""
+        if self._z_pos is None:
+            raise KeyError("The vector does not have an z component.")
+        return self.with_replaced(self._z_pos, new_z)
+
+    def with_xyz(self: _T, new_xyz: "Vec3Int") -> _T:
+        """Returns a new ND Vector with the x, y and z components replaced by the given vector."""
+        return self.with_x(new_xyz.x).with_y(new_xyz.y).with_z(new_xyz.z)
 
     def to_np(self) -> np.ndarray:
         """

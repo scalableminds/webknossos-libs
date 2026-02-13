@@ -7,10 +7,13 @@ import attr
 import numpy as np
 
 from .mag import Mag
-from .nd_bounding_box import NDBoundingBox
+from .nd_bounding_box import (
+    _DEFAULT_AXIS_ORDER,
+    _DEFAULT_BBOX_NAME,
+    NDBoundingBox,
+    NormalizedBoundingBox,
+)
 from .vec3_int import Vec3Int, Vec3IntLike
-
-_DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
 
 
 @attr.frozen
@@ -97,6 +100,9 @@ class BoundingBox(NDBoundingBox):
         Returns:
             BoundingBox: A new bounding box with the specified dimensions
         """
+        assert "channelIndex" not in bbox
+        assert "axisOrder" not in bbox or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER
+        assert "additionalAxes" not in bbox or bbox["additionalAxes"] == []
         return cls(bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]])
 
     @classmethod
@@ -282,6 +288,8 @@ class BoundingBox(NDBoundingBox):
         return ",".join(map(str, self.to_tuple6()))
 
     def __eq__(self, other: object) -> bool:
+        if isinstance(other, NormalizedBoundingBox):
+            other = other.denormalize()
         if isinstance(other, NDBoundingBox):
             self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
@@ -478,3 +486,14 @@ class BoundingBox(NDBoundingBox):
 
     def __hash__(self) -> int:
         return hash(self.to_tuple6())
+
+    def normalize_axes(self, num_channels: int) -> NormalizedBoundingBox:
+        return NormalizedBoundingBox(
+            topleft=(0,) + self.topleft.to_tuple(),
+            size=(num_channels,) + self.size.to_tuple(),
+            axes=("c",) + self.axes,
+            index=(0,) + self.index,
+            name=self.name,
+            is_visible=self.is_visible,
+            color=self.color,
+        )

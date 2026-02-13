@@ -64,12 +64,6 @@ def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
 # These post-unstructure and pre-structure functions perform the conditional field renames.
-def mag_view_properties_post_unstructure(d: dict[str, Any]) -> dict[str, Any]:
-    d["resolution"] = d["mag"]
-    del d["mag"]
-    return d
-
-
 def mag_view_properties_pre_structure(d: dict[str, Any]) -> dict[str, Any]:
     d["mag"] = d["resolution"]
     del d["resolution"]
@@ -85,11 +79,12 @@ def layer_properties_post_unstructure(
         obj: LayerProperties | SegmentationLayerProperties,
     ) -> dict[str, Any]:
         d = converter_fn(obj)
-        if d["dataFormat"] == "wkw":
-            d["wkwResolutions"] = [
-                mag_view_properties_post_unstructure(m) for m in d["mags"]
-            ]
-            del d["mags"]
+
+        for mag in d["mags"]:
+            if "axisOrder" in d["boundingBox"]:
+                mag["axisOrder"] = d["boundingBox"]["axisOrder"]
+            if "channelIndex" in d["boundingBox"]:
+                mag["channelIndex"] = d["boundingBox"]["channelIndex"]
 
         # json expects nd_bounding_box to be represented as bounding_box and additional_axes
         if "additionalAxes" in d["boundingBox"]:
@@ -129,17 +124,19 @@ def layer_properties_pre_structure(
             del d["additionalAxes"]
         if len(d["mags"]) > 0:
             first_mag = d["mags"][0]
+            if "channelIndex" in first_mag:
+                d["boundingBox"]["channelIndex"] = first_mag["channelIndex"]
             if "axisOrder" in first_mag:
-                assert (
-                    "c" not in first_mag["axisOrder"]
-                    or first_mag["axisOrder"]["c"] == 0
-                ), "The channels c must have index 0 in axis order."
                 assert all(
                     first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
                 )
                 d["boundingBox"]["axisOrder"] = copy.deepcopy(first_mag["axisOrder"])
-                if "c" in d["boundingBox"]["axisOrder"]:
-                    del d["boundingBox"]["axisOrder"]["c"]
+                assert all(
+                    first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
+                ), "axisOrder must be the same for all mags"
+
+        if "numChannels" in d:
+            d["boundingBox"]["numChannels"] = d["numChannels"]
 
         obj = converter_fn(d, type_value)
         return obj
