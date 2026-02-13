@@ -30,11 +30,11 @@ def log_memory_consumption(additional_output: str = "") -> None:
 
 def _parse_dimension(dimension: str | int) -> str:
     if isinstance(dimension, int):
-        # warnings.warn(
-        #     f"[DEPRECATION] Setting `dimension` as an integer is deprecated, please use a named axis instead, e.g. `dimension='z'`. Got {dimension}.",
-        #     DeprecationWarning,
-        #     stacklevel=3,
-        # )
+        warnings.warn(
+            f"[DEPRECATION] Setting `dimension` as an integer is deprecated, please use a named axis instead, e.g. `dimension='z'`. Got {dimension}.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
         assert 0 <= dimension <= 2  # either x (0), y (1) or z (2)
         if dimension == 0:
             return "x"

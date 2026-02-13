@@ -835,7 +835,7 @@ class View:
     def get_buffered_slice_writer(
         self,
         buffer_size: int | None = None,
-        dimension: int = 2,  # z
+        dimension: str | int = "z",
         *,
         relative_offset: Vec3IntLike | None = None,  # in mag1
         absolute_offset: Vec3IntLike | None = None,  # in mag1
@@ -852,8 +852,8 @@ class View:
         Args:
             buffer_size (int): Number of slices to buffer before performing a write.
                 Defaults to the size of the shard in the `dimension`.
-            dimension (int): Axis along which to write slices (0=x, 1=y, 2=z).
-                Defaults to 2 (z-axis).
+            dimension (str | int): Axis along which to write slices (0=x, 1=y, 2=z).
+                Defaults to "z".
             relative_offset (Vec3IntLike | None): Offset in mag1 coordinates, relative
                 to the current view's position. Mutually exclusive with absolute_offset.
                 Defaults to None.
@@ -896,14 +896,18 @@ class View:
             - Remember to use the writer in a context manager
             - Only one positioning parameter should be specified
         """
-        from ..._utils.buffered_slice_writer import BufferedSliceWriter
+        from ..._utils.buffered_slice_writer import (
+            BufferedSliceWriter,
+            _parse_dimension,
+        )
 
         assert not self._read_only, (
             "Cannot get a buffered slice writer on a read-only view."
         )
 
+        dimension = _parse_dimension(dimension)
         if buffer_size is None:
-            buffer_size = self.info.shard_shape[dimension]
+            buffer_size = self.info.shard_shape.get(dimension)
 
         return BufferedSliceWriter(
             view=self,
@@ -920,7 +924,7 @@ class View:
     def get_buffered_slice_reader(
         self,
         buffer_size: int | None = None,
-        dimension: int = 2,  # z
+        dimension: str | int = "z",
         *,
         relative_bounding_box: NDBoundingBox | None = None,  # in mag1
         absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
@@ -935,8 +939,8 @@ class View:
         Args:
             buffer_size (int): Number of slices to buffer in memory at once.
                 Defaults to the size of the shard in the `dimension`.
-            dimension (int): Axis along which to read slices (0=x, 1=y, 2=z).
-                Defaults to 2 (z-axis).
+            dimension (str | int): Axis along which to read slices (0=x, 1=y, 2=z).
+                Defaults to "z".
             relative_bounding_box (NDBoundingBox | None): Bounding box in mag1 coordinates,
                 relative to the current view's offset. Mutually exclusive with
                 absolute_bounding_box. Defaults to None.
@@ -960,7 +964,7 @@ class View:
             # Read y-slices with custom buffer size
             with view.get_buffered_slice_reader(
                 buffer_size=10,
-                dimension=1,  # y-axis
+                dimension="y",
                 relative_offset=(10, 0, 0)
             ) as reader:
             ```
@@ -972,9 +976,11 @@ class View:
             - The reader can be used as an iterator
         """
         from ..._utils.buffered_slice_reader import BufferedSliceReader
+        from ..._utils.buffered_slice_writer import _parse_dimension
 
+        dimension = _parse_dimension(dimension)
         if buffer_size is None:
-            buffer_size = self.info.shard_shape[dimension]
+            buffer_size = self.info.shard_shape.get(dimension)
 
         return BufferedSliceReader(
             view=self,
