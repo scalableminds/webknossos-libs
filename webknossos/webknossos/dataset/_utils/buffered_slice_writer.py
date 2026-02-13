@@ -28,6 +28,25 @@ def log_memory_consumption(additional_output: str = "") -> None:
     )
 
 
+def _parse_dimension(dimension: str | int) -> str:
+    if isinstance(dimension, int):
+        # warnings.warn(
+        #     f"[DEPRECATION] Setting `dimension` as an integer is deprecated, please use a named axis instead, e.g. `dimension='z'`. Got {dimension}.",
+        #     DeprecationWarning,
+        #     stacklevel=3,
+        # )
+        assert 0 <= dimension <= 2  # either x (0), y (1) or z (2)
+        if dimension == 0:
+            return "x"
+        elif dimension == 1:
+            return "y"
+        else:
+            return "z"
+    else:
+        assert dimension in ["x", "y", "z"]
+        return dimension
+
+
 class BufferedSliceWriter:
     def __init__(
         self,
@@ -55,22 +74,7 @@ class BufferedSliceWriter:
         self._current_slice: int | None = None
         self._buffer_start_slice: int | None = None
 
-        if isinstance(dimension, int):
-            # warnings.warn(
-            #     f"[DEPRECATION] Setting `dimension` as an integer is deprecated, please use a named axis instead, e.g. `dimension='z'`. Got {dimension}.",
-            #     DeprecationWarning,
-            #     stacklevel=2,
-            # )
-            assert 0 <= dimension <= 2  # either x (0), y (1) or z (2)
-            if dimension == 0:
-                self.dimension = "x"
-            elif dimension == 1:
-                self.dimension = "y"
-            else:
-                self.dimension = "z"
-        else:
-            assert dimension in ["x", "y", "z"]
-            self.dimension = dimension
+        self.dimension = _parse_dimension(dimension)
 
         self.reset_offset(
             relative_offset,

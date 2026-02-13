@@ -59,8 +59,11 @@ def test_buffered_slice_writer() -> None:
     test_img_3d = np.zeros((test_img.shape[0], test_img.shape[1], 35))
     for i in range(35):
         test_img_3d[:, :, i] = test_img
-    assert np.array_equal(test_img_3d, read_data), (
-        "The data from the disk is not the same as the data that should be written."
+
+    np.testing.assert_equal(
+        test_img_3d,
+        read_data,
+        "The data from the disk is not the same as the data that should be written.",
     )
 
 
@@ -95,7 +98,7 @@ def test_buffered_slice_writer_along_different_axis(
             else:  # dim == 2
                 current_slice = test_cube[:, :, :, i]
             writer.send(current_slice)
-    assert np.array_equal(
+    np.testing.assert_equal(
         mag_view.read(absolute_offset=offset, size=cube_size_without_channel),
         test_cube,
     )
@@ -137,8 +140,8 @@ def test_buffered_slice_reader_along_different_axis(tmp_upath: UPath) -> None:
                     original_slice = test_cube[:, :, :, i]
                 i += 1
 
-                assert np.array_equal(slice_data_a, original_slice)
-                assert np.array_equal(slice_data_b, original_slice)
+                np.testing.assert_equal(slice_data_a, original_slice)
+                np.testing.assert_equal(slice_data_b, original_slice)
 
 
 def test_basic_buffered_slice_writer(tmp_upath: UPath) -> None:
