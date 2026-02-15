@@ -100,7 +100,7 @@ class BoundingBox(NDBoundingBox):
         Returns:
             BoundingBox: A new bounding box with the specified dimensions
         """
-        assert "channelIndex" not in bbox
+        assert "channelIndex" not in bbox or bbox["channelIndex"] == 0
         assert "axisOrder" not in bbox or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER
         assert "additionalAxes" not in bbox or bbox["additionalAxes"] == []
         return cls(bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]])
