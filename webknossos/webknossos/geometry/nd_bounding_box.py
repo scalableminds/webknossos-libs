@@ -490,7 +490,7 @@ class NDBoundingBox:
             self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
 
-        raise NotImplementedError()
+        return NotImplemented
 
     def __len__(self) -> int:
         return len(self.axes)
@@ -1025,6 +1025,79 @@ class NormalizedBoundingBox(NDBoundingBox):
             )
         else:
             return self
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality with another bounding box.
+
+        When comparing with a BoundingBox, the channel axis is ignored
+        and only the spatial (x, y, z) dimensions are compared.
+        """
+        from .bounding_box import BoundingBox
+
+        if isinstance(other, BoundingBox):
+            denormalized = self.denormalize()
+            if denormalized is not self:
+                return denormalized == other
+            # Cannot denormalize to BoundingBox, axes are incompatible
+            return False
+        return super().__eq__(other)
+
+    def _denormalize_for_bbox_op(
+        self, other: "NDBoundingBox"
+    ) -> tuple["NDBoundingBox", "NDBoundingBox", int] | None:
+        """Helper for operations with BoundingBox.
+
+        If other is a BoundingBox and self can be denormalized to a BoundingBox,
+        returns (denormalized_self, other, num_channels).
+        Returns None if the operation should proceed with the default behavior.
+        """
+        from .bounding_box import BoundingBox
+
+        if isinstance(other, BoundingBox):
+            denormalized = self.denormalize()
+            if denormalized is not self:
+                num_channels = self.size.c
+                return (denormalized, other, num_channels)
+        return None
+
+    def intersected_with(
+        self, other: "NDBoundingBox", dont_assert: bool = False
+    ) -> "NDBoundingBox":
+        """Returns the intersection of two bounding boxes.
+
+        When intersecting with a BoundingBox, the operation is performed
+        on the spatial (x, y, z) dimensions only, ignoring the channel axis.
+        The result is a NormalizedBoundingBox with the channel count preserved.
+        """
+        denormalized = self._denormalize_for_bbox_op(other)
+        if denormalized is not None:
+            result = denormalized[0].intersected_with(denormalized[1], dont_assert)
+            return result.normalize_axes(denormalized[2])
+        return super().intersected_with(other, dont_assert)
+
+    def extended_by(self, other: "NDBoundingBox") -> "NDBoundingBox":
+        """Returns the smallest bounding box that contains both bounding boxes.
+
+        When extending with a BoundingBox, the operation is performed
+        on the spatial (x, y, z) dimensions only, ignoring the channel axis.
+        The result is a NormalizedBoundingBox with the channel count preserved.
+        """
+        denormalized = self._denormalize_for_bbox_op(other)
+        if denormalized is not None:
+            result = denormalized[0].extended_by(denormalized[1])
+            return result.normalize_axes(denormalized[2])
+        return super().extended_by(other)
+
+    def contains_bbox(self, inner_bbox: "NDBoundingBox") -> bool:
+        """Check whether a bounding box is completely inside this bounding box.
+
+        When checking containment of a BoundingBox, only the spatial
+        (x, y, z) dimensions are considered, ignoring the channel axis.
+        """
+        denormalized = self._denormalize_for_bbox_op(inner_bbox)
+        if denormalized is not None:
+            return denormalized[0].contains_bbox(denormalized[1])
+        return super().contains_bbox(inner_bbox)
 
 
 def derive_nd_bounding_box_from_shape(

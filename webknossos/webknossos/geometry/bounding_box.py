@@ -288,13 +288,62 @@ class BoundingBox(NDBoundingBox):
         return ",".join(map(str, self.to_tuple6()))
 
     def __eq__(self, other: object) -> bool:
+        """Check equality with another bounding box.
+
+        When comparing with a NormalizedBoundingBox, the channel axis is ignored
+        and only the spatial (x, y, z) dimensions are compared.
+        """
         if isinstance(other, NormalizedBoundingBox):
             other = other.denormalize()
         if isinstance(other, NDBoundingBox):
             self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
 
-        raise NotImplementedError()
+        return NotImplemented
+
+    def intersected_with(
+        self, other: "BoundingBox | NormalizedBoundingBox", dont_assert: bool = False
+    ) -> "BoundingBox | NormalizedBoundingBox":
+        """Returns the intersection of two bounding boxes.
+
+        When intersecting with a NormalizedBoundingBox, the operation is performed
+        on the spatial (x, y, z) dimensions only, ignoring the channel axis.
+        The result is a NormalizedBoundingBox with the channel count preserved
+        from the NormalizedBoundingBox operand.
+        """
+        if isinstance(other, NormalizedBoundingBox):
+            num_channels = other.size.c
+            other_denorm = cast(BoundingBox, other.denormalize())
+            result = cast(BoundingBox, super().intersected_with(other_denorm, dont_assert))
+            return result.normalize_axes(num_channels)
+        return cast(BoundingBox, super().intersected_with(other, dont_assert))
+
+    def extended_by(
+        self, other: "BoundingBox | NormalizedBoundingBox"
+    ) -> "BoundingBox | NormalizedBoundingBox":
+        """Returns the smallest bounding box that contains both bounding boxes.
+
+        When extending with a NormalizedBoundingBox, the operation is performed
+        on the spatial (x, y, z) dimensions only, ignoring the channel axis.
+        The result is a NormalizedBoundingBox with the channel count preserved
+        from the NormalizedBoundingBox operand.
+        """
+        if isinstance(other, NormalizedBoundingBox):
+            num_channels = other.size.c
+            other_denorm = cast(BoundingBox, other.denormalize())
+            result = cast(BoundingBox, super().extended_by(other_denorm))
+            return result.normalize_axes(num_channels)
+        return cast(BoundingBox, super().extended_by(other))
+
+    def contains_bbox(self, inner_bbox: "BoundingBox | NormalizedBoundingBox") -> bool:
+        """Check whether a bounding box is completely inside this bounding box.
+
+        When checking containment of a NormalizedBoundingBox, only the spatial
+        (x, y, z) dimensions are considered, ignoring the channel axis.
+        """
+        if isinstance(inner_bbox, NormalizedBoundingBox):
+            inner_bbox = cast(BoundingBox, inner_bbox.denormalize())
+        return super().contains_bbox(inner_bbox)
 
     def __repr__(self) -> str:
         return f"BoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()})"

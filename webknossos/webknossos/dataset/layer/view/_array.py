@@ -1034,7 +1034,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
         raise RuntimeError("Neuroglancer precomputed arrays cannot be created.")
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
-        raise NotImplementedError()
+        return NotImplemented
 
     def write(self, _bbox: NormalizedBoundingBox, _data: np.ndarray) -> None:
         raise RuntimeError("Neuroglancer precomputed arrays cannot be written to.")
@@ -1082,7 +1082,7 @@ class N5Array(TensorStoreArray):
         raise RuntimeError("N5 arrays cannot be created.")
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
-        raise NotImplementedError()
+        return NotImplemented
 
     def write(self, _bbox: NormalizedBoundingBox, _data: np.ndarray) -> None:
         raise RuntimeError("N5 arrays cannot be written to.")
