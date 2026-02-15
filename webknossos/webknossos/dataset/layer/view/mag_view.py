@@ -25,7 +25,6 @@ from ....geometry import (
     NormalizedBoundingBox,
     Vec3Int,
     Vec3IntLike,
-    VecInt,
 )
 from ._array import (
     ArrayInfo,
@@ -387,9 +386,13 @@ class MagView(View, Generic[LayerTypeT]):
 
         # Only update the layer's bbox if we are actually larger
         # than the mag-aligned, rounded up bbox (self.bounding_box):
-        if not self.bounding_box.contains_bbox(mag1_bbox):
+        if not self.bounding_box.normalize_axes().contains_bbox(mag1_bbox):
             if allow_resize:
-                self.layer.bounding_box = self.layer.bounding_box.extended_by(mag1_bbox)
+                self.layer.bounding_box = (
+                    self.layer.bounding_box.normalize_axes()
+                    .extended_by(mag1_bbox)
+                    .denormalize()
+                )
             else:
                 raise ValueError(
                     f"The bounding box to write {mag1_bbox} does not fit in the layer's bounding box {self.layer.bounding_box}. "
@@ -430,6 +433,7 @@ class MagView(View, Generic[LayerTypeT]):
             - For unsupported formats, falls back to chunk-based iteration
             - Useful for understanding actual data distribution on disk
         """
+        bboxes: Iterator[NDBoundingBox]
         try:
             bboxes = self._array.list_bounding_boxes()
         except NotImplementedError:
@@ -443,7 +447,7 @@ class MagView(View, Generic[LayerTypeT]):
                 .chunk(self._array.info.shard_shape)
             )
         for bbox in bboxes:
-            yield bbox.from_mag_to_mag1(self._mag)
+            yield bbox.from_mag_to_mag1(self._mag).denormalize()
 
     def get_views_on_disk(
         self,
@@ -609,13 +613,13 @@ class MagView(View, Generic[LayerTypeT]):
             # and use that for iterating over the full mag view
             # Additionally, we filter out boxes that are empty based on bounding boxes in
             # the source on disk
-            self_bbox = self.bounding_box.normalize_axes()
             source_shard_shape = self.info.shard_shape
             target_shard_shape = rechunked_mag.info.shard_shape
             if source_shard_shape == target_shard_shape:
                 for bbox in source_bbox_iterator:
                     bbox = bbox.from_mag_to_mag1(self._mag).intersected_with(
-                        self_bbox, dont_assert=True
+                        self.layer.bounding_box.normalize_axes(),
+                        dont_assert=True,
                     )
                     if not bbox.is_empty():
                         yield bbox

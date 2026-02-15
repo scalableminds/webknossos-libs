@@ -524,7 +524,7 @@ class PimsImages:
             assert all(
                 size == 1
                 for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
-                if axis not in ("x", "y", "z")
+                if axis not in ("c", "x", "y", "z")
             ), (
                 "The delivered BoundingBox has to be flat except for x,y and z dimension."
             )

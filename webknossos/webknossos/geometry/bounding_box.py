@@ -118,7 +118,7 @@ class BoundingBox(NDBoundingBox):
         Returns:
             BoundingBox: A new bounding box with the specified dimensions
         """
-        assert "channelIndex" not in bbox
+        assert "channelIndex" not in bbox or bbox["channelIndex"] == 0
         assert "axisOrder" not in bbox or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER
         assert "additionalAxes" not in bbox or bbox["additionalAxes"] == []
         return cls(
@@ -317,6 +317,8 @@ class BoundingBox(NDBoundingBox):
         return ",".join(map(str, self.to_tuple6()))
 
     def __eq__(self, other: object) -> bool:
+        if isinstance(other, NormalizedBoundingBox):
+            other = other.denormalize()
         if isinstance(other, NDBoundingBox):
             self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size

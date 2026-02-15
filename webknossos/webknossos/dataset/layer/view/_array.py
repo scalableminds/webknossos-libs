@@ -19,11 +19,7 @@ from typing_extensions import NotRequired, Self
 from upath import UPath
 
 from webknossos.dataset_properties import DataFormat
-from webknossos.geometry import (
-    NormalizedBoundingBox,
-    Vec3Int,
-    VecInt,
-)
+from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int, VecInt
 from webknossos.utils import call_with_retries, is_fs_path
 
 logger = getLogger(__name__)
@@ -340,18 +336,13 @@ class WKWArray(BaseArray):
             cube_index = _extract_file_index(file_path)
             cube_offset = cube_index * shard_shape
 
-            if "c" in self.info.dimension_names:
-                yield NormalizedBoundingBox(
-                    (0,) + cube_offset.to_tuple(),
-                    (self.info.num_channels,) + shard_shape.to_tuple(),
-                    axes=self.info.dimension_names,
-                )
-            else:
-                yield NormalizedBoundingBox(
-                    cube_offset,
-                    shard_shape,
-                    axes=self.info.dimension_names,
-                )
+            yield BoundingBox(
+                cube_offset,
+                shard_shape,
+                num_channels=self.info.num_channels
+                if "c" in self.info.dimension_names
+                else 0,
+            ).normalize_axes()
 
     def close(self) -> None:
         if self._cached_wkw_dataset is not None:
@@ -739,18 +730,11 @@ class TensorStoreArray(BaseArray):
             else:
                 chunk_coords = Vec3Int(chunk_coords_list)
 
-            if "c" in shape.axes:
-                yield NormalizedBoundingBox(
-                    (0,) + (chunk_coords * shard_shape).to_tuple(),
-                    (self.info.num_channels,) + shard_shape.to_tuple(),
-                    axes=shape.axes,
-                )
-            else:
-                yield NormalizedBoundingBox(
-                    chunk_coords * shard_shape,
-                    shard_shape,
-                    axes=shape.axes,
-                )
+            yield BoundingBox(
+                chunk_coords * shard_shape,
+                shard_shape,
+                num_channels=self.info.num_channels if "c" in shape.axes else 0,
+            ).normalize_axes()
 
     def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
         kvstore = self._array.kvstore

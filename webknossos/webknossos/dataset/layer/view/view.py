@@ -10,7 +10,13 @@ from cluster_tools import Executor
 from upath import UPath
 
 from ....dataset_properties import DataFormat
-from ....geometry import Mag, NDBoundingBox, NormalizedBoundingBox, Vec3Int, Vec3IntLike
+from ....geometry import (
+    Mag,
+    NDBoundingBox,
+    NormalizedBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+)
 from ....geometry.vec_int import VecIntLike
 from ....utils import (
     count_defined_values,
@@ -95,7 +101,7 @@ class View:
         """
         self._path = path_to_mag_view
         self._data_format = data_format
-        self._bounding_box = bounding_box
+        self._bounding_box = bounding_box.denormalize() if bounding_box else None
         self._read_only = read_only
         self._cached_array = cached_array
         self._mag = mag
@@ -190,7 +196,7 @@ class View:
         rel_mag1_offset: Vec3IntLike | None = None,
         mag1_size: Vec3IntLike | None = None,
         current_mag_size: Vec3IntLike | None = None,
-    ) -> NDBoundingBox:
+    ) -> NormalizedBoundingBox:
         num_bboxes = count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
         num_offsets = count_defined_values([abs_mag1_offset, rel_mag1_offset])
         num_sizes = count_defined_values([mag1_size, current_mag_size])
@@ -211,27 +217,33 @@ class View:
             )
 
         if abs_mag1_bbox is not None:
-            return abs_mag1_bbox
+            return abs_mag1_bbox.normalize_axes()
 
         if rel_mag1_bbox is not None:
-            return rel_mag1_bbox.offset(self.bounding_box.topleft)
+            return rel_mag1_bbox.normalize_axes().offset(self.bounding_box.topleft)
 
-        else:
-            mag_vec = self._mag.to_vec3_int()
-            if rel_mag1_offset is not None:
-                abs_mag1_offset = self.bounding_box.topleft + rel_mag1_offset
+        mag_vec = self._mag.to_vec3_int()
+        if rel_mag1_offset is not None:
+            abs_mag1_offset = self.bounding_box.topleft_xyz + Vec3Int(rel_mag1_offset)
 
-            if current_mag_size is not None:
-                mag1_size = Vec3Int(current_mag_size) * mag_vec
+        if current_mag_size is not None:
+            mag1_size = Vec3Int(current_mag_size) * mag_vec
 
-            assert abs_mag1_offset is not None, "No offset was supplied."
-            assert mag1_size is not None, "No size was supplied."
+        assert abs_mag1_offset is not None, "No offset was supplied."
+        assert mag1_size is not None, "No size was supplied."
 
-            assert len(self.bounding_box) == 3, (
-                "The delivered offset and size are only usable for 3D views."
-            )
+        assert self.bounding_box.axes == ("x", "y", "z") or self.bounding_box.axes == (
+            "c",
+            "x",
+            "y",
+            "z",
+        ), "The delivered offset and size are only usable for 3D views."
 
-            return self.bounding_box.with_topleft(abs_mag1_offset).with_size(mag1_size)
+        return (
+            self.bounding_box.normalize_axes()
+            .with_topleft_xyz(abs_mag1_offset)
+            .with_size_xyz(mag1_size)
+        )
 
     def write(
         self,
@@ -318,6 +330,8 @@ class View:
         ):
             if len(data.shape) == len(self.bounding_box):
                 shape_in_current_mag = data.shape
+            elif len(data.shape) + 1 == len(self.bounding_box):
+                shape_in_current_mag = (1,) + data.shape
             else:
                 shape_in_current_mag = data.shape[1:]
 
@@ -766,7 +780,7 @@ class View:
             abs_mag1_offset=absolute_offset,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-        )
+        ).normalize_axes()
         if not self.bounding_box.is_empty():
             assert not mag1_bbox.is_empty(), (
                 f"The size ({mag1_bbox.size} in mag1) contains a zero. "
@@ -777,9 +791,7 @@ class View:
         )
 
         if not read_only:
-            assert self.bounding_box.normalize_axes().contains_bbox(
-                mag1_bbox.normalize_axes()
-            ), (
+            assert self.bounding_box.normalize_axes().contains_bbox(mag1_bbox), (
                 f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
                 + "This is only allowed for read-only views."
             )
@@ -790,13 +802,9 @@ class View:
                 shard_shape, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
-            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
-            if (
-                current_mag_bbox.normalize_axes()
-                != current_mag_view_bbox.normalize_axes().intersected_with(
-                    current_mag_aligned_bbox.normalize_axes(),
-                    dont_assert=True,
-                )
+            current_mag_view_bbox = self.bounding_box.normalize_axes().in_mag(self._mag)
+            if current_mag_bbox != current_mag_view_bbox.intersected_with(
+                current_mag_aligned_bbox, dont_assert=True
             ):
                 bbox_str = str(current_mag_bbox)
                 if self._mag != Mag(1):
@@ -820,7 +828,7 @@ class View:
     def get_buffered_slice_writer(
         self,
         buffer_size: int | None = None,
-        dimension: int = 2,  # z
+        dimension: str | int = "z",
         *,
         relative_offset: Vec3IntLike | None = None,  # in mag1
         absolute_offset: Vec3IntLike | None = None,  # in mag1
@@ -837,8 +845,8 @@ class View:
         Args:
             buffer_size (int): Number of slices to buffer before performing a write.
                 Defaults to the size of the shard in the `dimension`.
-            dimension (int): Axis along which to write slices (0=x, 1=y, 2=z).
-                Defaults to 2 (z-axis).
+            dimension (str | int): Axis along which to write slices (0=x, 1=y, 2=z).
+                Defaults to "z".
             relative_offset (Vec3IntLike | None): Offset in mag1 coordinates, relative
                 to the current view's position. Mutually exclusive with absolute_offset.
                 Defaults to None.
@@ -881,14 +889,18 @@ class View:
             - Remember to use the writer in a context manager
             - Only one positioning parameter should be specified
         """
-        from ..._utils.buffered_slice_writer import BufferedSliceWriter
+        from ..._utils.buffered_slice_writer import (
+            BufferedSliceWriter,
+            _parse_dimension,
+        )
 
         assert not self._read_only, (
             "Cannot get a buffered slice writer on a read-only view."
         )
 
+        dimension = _parse_dimension(dimension)
         if buffer_size is None:
-            buffer_size = self.info.shard_shape[dimension]
+            buffer_size = self.info.shard_shape.get(dimension)
 
         return BufferedSliceWriter(
             view=self,
@@ -905,7 +917,7 @@ class View:
     def get_buffered_slice_reader(
         self,
         buffer_size: int | None = None,
-        dimension: int = 2,  # z
+        dimension: str | int = "z",
         *,
         relative_bounding_box: NDBoundingBox | None = None,  # in mag1
         absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
@@ -920,8 +932,8 @@ class View:
         Args:
             buffer_size (int): Number of slices to buffer in memory at once.
                 Defaults to the size of the shard in the `dimension`.
-            dimension (int): Axis along which to read slices (0=x, 1=y, 2=z).
-                Defaults to 2 (z-axis).
+            dimension (str | int): Axis along which to read slices (0=x, 1=y, 2=z).
+                Defaults to "z".
             relative_bounding_box (NDBoundingBox | None): Bounding box in mag1 coordinates,
                 relative to the current view's offset. Mutually exclusive with
                 absolute_bounding_box. Defaults to None.
@@ -945,7 +957,7 @@ class View:
             # Read y-slices with custom buffer size
             with view.get_buffered_slice_reader(
                 buffer_size=10,
-                dimension=1,  # y-axis
+                dimension="y",
                 relative_offset=(10, 0, 0)
             ) as reader:
             ```
@@ -957,9 +969,11 @@ class View:
             - The reader can be used as an iterator
         """
         from ..._utils.buffered_slice_reader import BufferedSliceReader
+        from ..._utils.buffered_slice_writer import _parse_dimension
 
+        dimension = _parse_dimension(dimension)
         if buffer_size is None:
-            buffer_size = self.info.shard_shape[dimension]
+            buffer_size = self.info.shard_shape.get(dimension)
 
         return BufferedSliceReader(
             view=self,
@@ -1032,10 +1046,7 @@ class View:
 
         job_args = []
         for i, chunk in enumerate(self.bounding_box.chunk(chunk_shape, chunk_shape)):
-            chunk_view = self.get_view(
-                absolute_offset=chunk.topleft,
-                size=chunk.size,
-            )
+            chunk_view = self.get_view(absolute_bounding_box=chunk)
             job_args.append((chunk_view, i))
 
         # execute the work for each chunk
@@ -1128,10 +1139,7 @@ class View:
 
         job_args = []
         for chunk in self.bounding_box.chunk(chunk_shape, chunk_shape):
-            chunk_view = self.get_view(
-                absolute_offset=chunk.topleft,
-                size=chunk.size,
-            )
+            chunk_view = self.get_view(absolute_bounding_box=chunk)
             job_args.append(chunk_view)
 
         # execute the work for each chunk

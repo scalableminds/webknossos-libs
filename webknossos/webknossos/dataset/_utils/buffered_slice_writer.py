@@ -13,7 +13,7 @@ import psutil
 from ...geometry import BoundingBox, NDBoundingBox, Vec3Int, Vec3IntLike
 
 if TYPE_CHECKING:
-    from ..view import View
+    from ..layer.view import View
 
 
 logger = logging.getLogger(__name__)
@@ -28,13 +28,32 @@ def log_memory_consumption(additional_output: str = "") -> None:
     )
 
 
+def _parse_dimension(dimension: str | int) -> str:
+    if isinstance(dimension, int):
+        warnings.warn(
+            f"[DEPRECATION] Setting `dimension` as an integer is deprecated, please use a named axis instead, e.g. `dimension='z'`. Got {dimension}.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        assert 0 <= dimension <= 2  # either x (0), y (1) or z (2)
+        if dimension == 0:
+            return "x"
+        elif dimension == 1:
+            return "y"
+        else:
+            return "z"
+    else:
+        assert dimension in ["x", "y", "z"]
+        return dimension
+
+
 class BufferedSliceWriter:
     def __init__(
         self,
         view: "View",
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
-        dimension: int = 2,  # z
+        dimension: str | int = "z",  # z
         *,
         relative_offset: Vec3IntLike | None = None,  # in mag1
         absolute_offset: Vec3IntLike | None = None,  # in mag1
@@ -55,6 +74,8 @@ class BufferedSliceWriter:
         self._current_slice: int | None = None
         self._buffer_start_slice: int | None = None
 
+        self.dimension = _parse_dimension(dimension)
+
         self.reset_offset(
             relative_offset,
             absolute_offset,
@@ -62,18 +83,15 @@ class BufferedSliceWriter:
             absolute_bounding_box,
         )
 
-        assert 0 <= dimension <= 2  # either x (0), y (1) or z (2)
-        self.dimension = dimension
-
-        view_shard_depth = self._view.info.chunk_shape[dimension]
+        view_shard_depth = self._view.info.chunk_shape.get(self.dimension)
         if (
             self._bbox is not None
-            and self._bbox.topleft_xyz[self.dimension] % view_shard_depth != 0
+            and self._bbox.topleft.get(self.dimension) % view_shard_depth != 0
         ):
             msg = (
                 "Using an offset that doesn't align with the datataset's shard shape, "
                 + "will slow down the buffered slice writer, because twice as many shards will be written. "
-                + f"Got offset {self._bbox.topleft_xyz[self.dimension]} and shard depth {view_shard_depth}."
+                + f"Got offset {self._bbox.topleft.get(self.dimension)} and shard depth {view_shard_depth}."
             )
             if allow_unaligned:
                 warnings.warn("[WARNING] " + msg, category=UserWarning)
@@ -90,12 +108,29 @@ class BufferedSliceWriter:
             else:
                 raise ValueError(msg)
 
+    def _get_other_axes(self) -> tuple[str, str]:
+        if self.dimension == "x":
+            width_axis = "y"
+            height_axis = "z"
+        elif self.dimension == "y":
+            width_axis = "x"
+            height_axis = "z"
+        else:
+            width_axis = "x"
+            height_axis = "y"
+        return width_axis, height_axis
+
     def _flush_buffer(self) -> None:
+        width_axis, height_axis = self._get_other_axes()
+
         if len(self._slices_to_write) == 0:
             return
 
         assert len(self._slices_to_write) <= self._buffer_size, (
             "The WKW buffer is larger than the defined batch_size. The buffer should have been flushed earlier. This is probably a bug in the BufferedSliceWriter."
+        )
+        assert all(len(s.shape) == len(self._bbox) for s in self._slices_to_write), (
+            "The slices in the buffer are not 3D."
         )
 
         uniq_dtypes = set(map(lambda _slice: _slice.dtype, self._slices_to_write))
@@ -117,81 +152,85 @@ class BufferedSliceWriter:
             assert self._buffer_start_slice is not None, (
                 "Failed to write buffer: The buffer_start_slice is not set."
             )
-            max_width = max(section.shape[-2] for section in self._slices_to_write)
-            max_height = max(section.shape[-1] for section in self._slices_to_write)
-            channel_count = self._slices_to_write[0].shape[0]
+            max_width = max(
+                section.shape[self._bbox.axes.index(width_axis)]
+                for section in self._slices_to_write
+            )
+            max_height = max(
+                section.shape[self._bbox.axes.index(height_axis)]
+                for section in self._slices_to_write
+            )
             buffer_depth = min(self._buffer_size, len(self._slices_to_write))
-            buffer_start = Vec3Int.zeros().with_replaced(
-                self.dimension, self._buffer_start_slice
+
+            bbox = (
+                self._bbox.with_bounds(
+                    self.dimension,
+                    new_topleft=self._bbox.topleft.get(self.dimension)
+                    + self._buffer_start_slice,
+                    new_size=buffer_depth,
+                )
+                .with_bounds(width_axis, new_size=max_width)
+                .with_bounds(height_axis, new_size=max_height)
             )
 
-            bbox = self._bbox.with_size_xyz(
-                Vec3Int(max_width, max_height, buffer_depth).moveaxis(
-                    -1, self.dimension
+            shard_shape = self._view.info.shard_shape
+            chunk_shape = (
+                shard_shape.with_replaced(self.dimension, buffer_depth)
+                .with_replaced(width_axis, min(shard_shape.get(width_axis), max_width))
+                .with_replaced(
+                    height_axis, min(shard_shape.get(height_axis), max_height)
                 )
-            ).offset(buffer_start)
+            )
 
-            shard_dimensions = self._view._get_file_dimensions()
-            chunk_size = Vec3Int(
-                min(shard_dimensions[0], max_width),
-                min(shard_dimensions[1], max_height),
-                buffer_depth,
-            ).moveaxis(-1, self.dimension)
-            for chunk_bbox in bbox.chunk(chunk_size):
+            for chunk_bbox in bbox.chunk(chunk_shape):
                 if self._use_logging:
                     logger.info(f"Writing chunk {chunk_bbox}.")
 
                 data = np.zeros(
-                    (channel_count, *chunk_bbox.size),
+                    chunk_bbox.size.to_tuple(),
                     dtype=self._slices_to_write[0].dtype,
                 )
-                section_topleft = Vec3Int(
-                    (chunk_bbox.topleft_xyz - bbox.topleft_xyz).moveaxis(
-                        self.dimension, -1
-                    )
-                )
-                section_bottomright = Vec3Int(
-                    (chunk_bbox.bottomright_xyz - bbox.topleft_xyz).moveaxis(
-                        self.dimension, -1
-                    )
-                )
 
-                z_index = chunk_bbox.index_xyz[self.dimension]
+                section_selector_list: list[slice] = []
+                for axis in bbox.axes:
+                    if axis == width_axis:
+                        section_selector_list.append(
+                            slice(
+                                chunk_bbox.topleft.get(width_axis)
+                                - bbox.topleft.get(width_axis),
+                                chunk_bbox.bottomright.get(width_axis)
+                                - bbox.topleft.get(width_axis),
+                            )
+                        )
+                    elif axis == height_axis:
+                        section_selector_list.append(
+                            slice(
+                                chunk_bbox.topleft.get(height_axis)
+                                - bbox.topleft.get(height_axis),
+                                chunk_bbox.bottomright.get(height_axis)
+                                - bbox.topleft.get(height_axis),
+                            )
+                        )
+                    else:
+                        section_selector_list.append(slice(None))
+                section_selector = tuple(section_selector_list)
+
+                z_index = chunk_bbox.axes.index(self.dimension)
 
                 z = 0
                 for section in self._slices_to_write:
-                    section_chunk = section[
-                        :,
-                        section_topleft.x : section_bottomright.x,
-                        section_topleft.y : section_bottomright.y,
-                    ]
-                    # Section chunk includes the axes c, x, y. The remaining axes are added by considering
-                    # the length of the bbox. Since the bbox does not contain the channel, we subtract 2
-                    # instead of 3.
-                    section_chunk = section_chunk[
-                        (slice(None), slice(None), slice(None))
-                        + tuple(np.newaxis for _ in range(len(bbox) - 2))
-                    ]
-                    section_chunk = np.moveaxis(
-                        section_chunk,
-                        [1, 2],
-                        bbox.index_xyz[: self.dimension]
-                        + bbox.index_xyz[self.dimension + 1 :],
-                    )
+                    section_chunk = section[section_selector]
 
-                    slice_tuple = (slice(None),) + tuple(
+                    data_selector = tuple(
                         slice(0, min(size1, size2))
-                        for size1, size2 in zip(
-                            chunk_bbox.size, section_chunk.shape[1:]
-                        )
+                        for size1, size2 in zip(chunk_bbox.size, section_chunk.shape)
                     )
-
-                    data[
-                        slice_tuple[:z_index]
+                    data_selector = (
+                        data_selector[:z_index]
                         + (slice(z, z + 1),)
-                        + slice_tuple[z_index + 1 :]
-                    ] = section_chunk
-
+                        + data_selector[z_index + 1 :]
+                    )
+                    data[data_selector] = section_chunk
                     z += 1
 
                 self._view.write(
@@ -215,14 +254,28 @@ class BufferedSliceWriter:
 
     def _get_slice_generator(self) -> Generator[None, np.ndarray, None]:
         current_slice = 0
+        width_axis, height_axis = self._get_other_axes()
         while True:
             data = yield  # Data gets send from the user
             if len(self._slices_to_write) == 0:
                 self._buffer_start_slice = current_slice
             if len(data.shape) == 2:
-                # The input data might contain channel data or not.
-                # Bringing it into the same shape simplifies the code
-                data = np.expand_dims(data, axis=0)
+                axis_map = {width_axis: 0, height_axis: 1}
+            elif len(data.shape) == 3:
+                assert "c" in self._bbox.axes
+                axis_map = {"c": 0, width_axis: 1, height_axis: 2}
+            else:
+                raise ValueError(f"Unsupported data shape: {data.shape}")
+
+            # The order of the axes in the input data might not match the order of the axes in the bbox
+            data = np.transpose(
+                data, [axis_map[a] for a in self._bbox.axes if a in axis_map]
+            )
+            # Add missing axes to the data
+            for i, a in enumerate(self._bbox.axes):
+                if a not in axis_map:
+                    data = np.expand_dims(data, axis=i)
+
             self._slices_to_write.append(data)
             current_slice += 1
 
@@ -254,21 +307,25 @@ class BufferedSliceWriter:
         ):
             relative_offset = Vec3Int.zeros()
 
+        bbox: NDBoundingBox
         if relative_offset is not None:
-            self._bbox = BoundingBox(
+            bbox = BoundingBox(
                 self._view.bounding_box.topleft + relative_offset, Vec3Int.zeros()
             )
 
-        if absolute_offset is not None:
-            self._bbox = BoundingBox(absolute_offset, Vec3Int.zeros())
+        elif absolute_offset is not None:
+            bbox = BoundingBox(absolute_offset, Vec3Int.zeros()).normalize_axes()
 
-        if relative_bounding_box is not None:
-            self._bbox = relative_bounding_box.offset(self._view.bounding_box.topleft)
+        elif relative_bounding_box is not None:
+            bbox = relative_bounding_box.offset(self._view.bounding_box.topleft)
 
-        if absolute_bounding_box is not None:
-            self._bbox = absolute_bounding_box
+        elif absolute_bounding_box is not None:
+            bbox = absolute_bounding_box
 
-        self._bbox = self._bbox.normalize_axes()
+        else:
+            raise ValueError("No bounding box specified.")
+
+        self._bbox = bbox.normalize_axes()
 
     def __enter__(self) -> "BufferedSliceWriter":
         self._generator = self._get_slice_generator()

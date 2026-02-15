@@ -2821,7 +2821,7 @@ requires-dist = [
     { name = "webknossos", extras = ["imagecodecs"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["tifffile"], marker = "extra == 'all'" },
     { name = "wkw", specifier = "==1.1.24" },
-    { name = "zipp", specifier = "~=3.5.0" },
+    { name = "zipp", specifier = ">=3.5.0,<4.0.0" },
 ]
 provides-extras = ["tifffile", "imagecodecs", "bioformats", "czi", "examples", "all"]
 

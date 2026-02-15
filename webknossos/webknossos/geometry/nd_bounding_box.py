@@ -485,7 +485,8 @@ class NDBoundingBox:
         return f"{'_'.join(str(element) for element in self.topleft)}_{'_'.join(str(element) for element in self.size)}"
 
     def __repr__(self) -> str:
-        return f"NDBoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()}, axes={self.axes})"
+        axes = {axis: index for axis, index in zip(self.axes, self.index)}
+        return f"{self.__class__.__name__}(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()}, axes={axes})"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -974,6 +975,17 @@ class NDBoundingBox:
         except AssertionError:
             return self.with_topleft(self.topleft + VecInt(vector, axes=self.axes))
 
+    def __hash__(self) -> int:
+        return hash(
+            (
+                self.topleft,
+                self.size,
+                self.axes,
+                self.is_visible,
+                self.color,
+            )
+        )
+
     def normalize_axes(self) -> "NormalizedBoundingBox":
         return NormalizedBoundingBox(
             topleft=self.topleft,
@@ -983,12 +995,24 @@ class NDBoundingBox:
             color=self.color,
         )
 
-    def __hash__(self) -> int:
-        return hash(self.topleft.to_tuple() + self.size.to_tuple() + self.axes)
+    def denormalize(self) -> "NDBoundingBox":
+        return self
 
 
 class NormalizedBoundingBox(NDBoundingBox):
-    pass
+    def denormalize(self) -> "NDBoundingBox":
+        if self.axes == ("c", "x", "y", "z"):
+            from .bounding_box import BoundingBox
+
+            return BoundingBox(
+                self.topleft_xyz,
+                self.size_xyz,
+                name=self.name,
+                color=self.color,
+                is_visible=self.is_visible,
+            )
+        else:
+            return self
 
 
 def derive_nd_bounding_box_from_shape(

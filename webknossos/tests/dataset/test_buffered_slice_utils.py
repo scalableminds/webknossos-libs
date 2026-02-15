@@ -60,21 +60,23 @@ def test_buffered_slice_writer() -> None:
     test_img_3d = np.zeros((test_img.shape[0], test_img.shape[1], 35))
     for i in range(35):
         test_img_3d[:, :, i] = test_img
-    assert np.array_equal(test_img_3d, read_data), (
-        "The data from the disk is not the same as the data that should be written."
+
+    np.testing.assert_equal(
+        test_img_3d,
+        read_data,
+        "The data from the disk is not the same as the data that should be written.",
     )
 
 
-@pytest.mark.parametrize("dim", [0, 1, 2])
+@pytest.mark.parametrize("dim", ["x", "y", "z"])
 def test_buffered_slice_writer_along_different_axis(
-    tmp_upath: UPath, dim: Literal[0, 1, 2]
+    tmp_upath: UPath, dim: Literal["x", "y", "z"]
 ) -> None:
     test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
-    cube_size_without_channel = test_cube.shape[1:]
+    cube_size_without_channel = Vec3Int(test_cube.shape[1:])
     offset = Vec3Int(64, 96, 32)
 
-    shard_shape = [1024, 1024, 1024]
-    shard_shape[dim] = 32
+    shard_shape = Vec3Int(1024, 1024, 1024).with_replaced(dim, 32)
 
     ds = Dataset(tmp_upath / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
     layer = ds.add_layer(
@@ -88,15 +90,15 @@ def test_buffered_slice_writer_along_different_axis(
     with mag_view.get_buffered_slice_writer(
         absolute_offset=offset, buffer_size=5, dimension=dim, allow_unaligned=True
     ) as writer:
-        for i in range(cube_size_without_channel[dim]):
-            if dim == 0:
+        for i in range(cube_size_without_channel.get(dim)):
+            if dim == "x":
                 current_slice = test_cube[:, i, :, :]
-            elif dim == 1:
+            elif dim == "y":
                 current_slice = test_cube[:, :, i, :]
-            else:  # dim == 2
+            else:  # dim == "z"
                 current_slice = test_cube[:, :, :, i]
             writer.send(current_slice)
-    assert np.array_equal(
+    np.testing.assert_equal(
         mag_view.read(absolute_offset=offset, size=cube_size_without_channel),
         test_cube,
     )
@@ -107,7 +109,7 @@ def test_buffered_slice_reader_along_different_axis(tmp_upath: UPath) -> None:
     cube_size_without_channel = Vec3Int(test_cube.shape[1:])
     offset = Vec3Int(5, 10, 20)
 
-    for dim in [0, 1, 2]:
+    for dim in ["x", "y", "z"]:
         ds = Dataset(tmp_upath / f"buffered_slice_reader_{dim}", voxel_size=(1, 1, 1))
         layer = ds.add_layer(
             "color",
@@ -130,16 +132,16 @@ def test_buffered_slice_reader_along_different_axis(tmp_upath: UPath) -> None:
         ):
             i = 0
             for slice_data_a, slice_data_b in zip(reader_a, reader_b):
-                if dim == 0:
+                if dim == "x":
                     original_slice = test_cube[:, i, :, :]
-                elif dim == 1:
+                elif dim == "y":
                     original_slice = test_cube[:, :, i, :]
-                else:  # dim == 2
+                else:  # dim == "z"
                     original_slice = test_cube[:, :, :, i]
                 i += 1
 
-                assert np.array_equal(slice_data_a, original_slice)
-                assert np.array_equal(slice_data_b, original_slice)
+                np.testing.assert_equal(slice_data_a, original_slice)
+                np.testing.assert_equal(slice_data_b, original_slice)
 
 
 def test_basic_buffered_slice_writer(tmp_upath: UPath) -> None:
