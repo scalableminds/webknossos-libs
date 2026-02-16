@@ -41,8 +41,10 @@ class ArrayInfo:
     voxel_type: np.dtype
     chunk_shape: Vec3Int
     shard_shape: Vec3Int
-    shape: NormalizedBoundingBox = NormalizedBoundingBox(
-        (0, 0, 0, 0), (1, 1, 1, 1), axes=("c", "x", "y", "z")
+    shape: NormalizedBoundingBox = field(
+        default_factory=lambda: NormalizedBoundingBox(
+            (0, 0, 0, 0), (1, 1, 1, 1), axes=("c", "x", "y", "z")
+        )
     )
     compression_mode: bool = False
 
