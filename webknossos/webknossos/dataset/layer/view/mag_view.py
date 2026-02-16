@@ -25,7 +25,6 @@ from ....geometry import (
     NormalizedBoundingBox,
     Vec3Int,
     Vec3IntLike,
-    VecInt,
 )
 from ._array import (
     ArrayInfo,
@@ -151,25 +150,17 @@ class MagView(View, Generic[LayerTypeT]):
                 shard_shape = chunk_shape * chunks_per_shard
 
         bbox = layer.normalized_bounding_box
-        axis_order = VecInt(*bbox.index, axes=bbox.axes)
-        shape = bbox.bottomright.with_xyz(Vec3Int.ones())
-        dimension_names = bbox.axes
 
         if layer.data_format == DataFormat.Zarr3:
-            compression_mode = Zarr3Config.with_defaults(
-                compression_mode, len(dimension_names)
-            )
+            compression_mode = Zarr3Config.with_defaults(compression_mode, len(bbox))
             assert compression_mode.codecs is not None  # for mypy
             assert compression_mode.chunk_key_encoding is not None  # for mypy
             zarr3_array_info = Zarr3ArrayInfo(
                 data_format=DataFormat.Zarr3,
                 voxel_type=layer.dtype_per_channel,
-                num_channels=layer.num_channels,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
-                axis_order=axis_order,
-                shape=shape,
-                dimension_names=dimension_names,
+                shape=bbox,
                 codecs=tuple(compression_mode.codecs),
                 chunk_key_encoding=compression_mode.chunk_key_encoding,
             )
@@ -181,13 +172,10 @@ class MagView(View, Generic[LayerTypeT]):
             array_info = ArrayInfo(
                 data_format=layer._properties.data_format,
                 voxel_type=layer.dtype_per_channel,
-                num_channels=layer.num_channels,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compression_mode=compression_mode,
-                axis_order=axis_order,
-                shape=shape,
-                dimension_names=dimension_names,
+                shape=bbox,
             )
             BaseArray.get_class(array_info.data_format).create(path, array_info)
 

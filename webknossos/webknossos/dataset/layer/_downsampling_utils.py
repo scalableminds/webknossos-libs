@@ -298,7 +298,7 @@ def downsample_cube_job(
     try:
         source_bbox = source_view.normalized_bounding_box
         target_bbox = target_view.normalized_bounding_box
-        num_channels = target_view.info.num_channels
+        num_channels = target_view.info.shape.size.c
         target_bbox_in_mag = target_bbox.in_mag(target_view.mag)
         shape = target_bbox_in_mag.size.to_tuple()
         shape_xyz = target_bbox_in_mag.size_xyz

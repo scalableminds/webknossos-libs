@@ -325,7 +325,7 @@ class BufferedSliceWriter:
         else:
             raise ValueError("No bounding box specified.")
 
-        self._bbox = bbox.normalize_axes(self._view.info.num_channels)
+        self._bbox = bbox.normalize_axes(self._view.num_channels)
 
     def __enter__(self) -> "BufferedSliceWriter":
         self._generator = self._get_slice_generator()

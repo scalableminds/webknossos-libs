@@ -112,14 +112,14 @@ class View:
 
         Returns:
             ArrayInfo: Object containing array metadata such as data type,
-                num_channels, and other array-specific information.
+                shape, and other array-specific information.
 
         Examples:
             ```python
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
             array_info = view.info
             print(f"Data type: {array_info.data_type}")
-            print(f"Num channels: {array_info.num_channels}")
+            print(f"Shape: {array_info.shape}")
             ```
         """
         return self._array.info
@@ -156,6 +156,16 @@ class View:
         """
         assert self._normalized_bounding_box is not None
         return self._normalized_bounding_box
+
+    @property
+    def num_channels(self) -> int:
+        """Gets the number of channels in this view.
+
+        Returns:
+            int: Number of channels
+        """
+        assert self._normalized_bounding_box is not None
+        return self._normalized_bounding_box.size.get("c", 0)
 
     @property
     def mag(self) -> Mag:
@@ -227,10 +237,10 @@ class View:
             )
 
         if abs_mag1_bbox is not None:
-            return abs_mag1_bbox.normalize_axes(self.info.num_channels)
+            return abs_mag1_bbox.normalize_axes(self.num_channels)
 
         if rel_mag1_bbox is not None:
-            return rel_mag1_bbox.normalize_axes(self.info.num_channels).offset(
+            return rel_mag1_bbox.normalize_axes(self.num_channels).offset(
                 self.bounding_box.topleft
             )
 

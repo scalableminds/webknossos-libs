@@ -31,6 +31,14 @@ def int_tpl(vec_int_like: VecIntLike) -> VecInt:
     )
 
 
+def int_none_tpl(vec_int_like: VecIntLike | None) -> VecInt | None:
+    if vec_int_like is None:
+        return None
+    return VecInt(
+        vec_int_like, axes=(f"unset_{i}" for i in range(len(list(vec_int_like))))
+    )
+
+
 def _find_index_by_name(axes: Sequence["Axis"], name: str) -> int:
     for i, axis in enumerate(axes):
         if axis.name == name:
@@ -91,27 +99,49 @@ class NDBoundingBox:
     topleft: VecInt = attr.field(converter=int_tpl)
     size: VecInt = attr.field(converter=int_tpl)
     axes: tuple[str, ...] = attr.field(converter=str_tpl)
-    index: VecInt = attr.field(converter=int_tpl)
+    index: VecInt = attr.field(converter=int_none_tpl, default=None)
     bottomright: VecInt = attr.field(init=False)
     name: str | None = _DEFAULT_BBOX_NAME
     is_visible: bool = True
     color: tuple[float, float, float, float] | None = None
 
     def __attrs_post_init__(self) -> None:
-        assert (
-            len(self.topleft) == len(self.size) == len(self.axes) == len(self.index)
-        ), (
+        assert len(self.topleft) == len(self.size) == len(self.axes), (
             f"The dimensions of topleft, size, axes and index ({len(self.topleft)}, "
-            + f"{len(self.size)}, {len(self.axes)} and {len(self.index)}) do not match."
+            + f"{len(self.size)}, {len(self.axes)} do not match."
         )
 
         # Convert the delivered tuples to VecInts
         object.__setattr__(self, "topleft", VecInt(self.topleft, axes=self.axes))
         object.__setattr__(self, "size", VecInt(self.size, axes=self.axes))
-        object.__setattr__(self, "index", VecInt(self.index, axes=self.axes))
 
-        if not self._is_sorted():
-            self._sort_positions_of_axes()
+        if self.index is not None:
+            assert len(self.index) == len(self.axes), (
+                f"The dimensions of index ({len(self.index)}) and axes ({len(self.axes)}) do not match."
+            )
+            object.__setattr__(self, "index", VecInt(self.index, axes=self.axes))
+
+            # Sort axes, if necessary
+            if not all(
+                self.index[i - 1] < self.index[i] for i in range(1, len(self.index))
+            ):
+                # Bring topleft and size in required order
+                # defined in axisOrder and index of additionalAxes
+
+                size, topleft, axes, index = zip(
+                    *sorted(
+                        zip(self.size, self.topleft, self.axes, self.index),
+                        key=lambda x: x[3],
+                    )
+                )
+                object.__setattr__(self, "size", VecInt(size, axes=axes))
+                object.__setattr__(self, "topleft", VecInt(topleft, axes=axes))
+                object.__setattr__(self, "axes", axes)
+                object.__setattr__(self, "index", VecInt(index, axes=axes))
+        else:
+            object.__setattr__(
+                self, "index", VecInt(range(len(self.axes)), axes=self.axes)
+            )
 
         if not self.size.is_positive():
             # Flip the size in negative dimensions, so that the topleft is smaller than bottomright.
@@ -131,23 +161,6 @@ class NDBoundingBox:
             "bottomright",
             self.topleft + self.size,
         )
-
-    def _sort_positions_of_axes(self) -> None:
-        # Bring topleft and size in required order
-        # defined in axisOrder and index of additionalAxes
-
-        size, topleft, axes, index = zip(
-            *sorted(
-                zip(self.size, self.topleft, self.axes, self.index), key=lambda x: x[3]
-            )
-        )
-        object.__setattr__(self, "size", VecInt(size, axes=axes))
-        object.__setattr__(self, "topleft", VecInt(topleft, axes=axes))
-        object.__setattr__(self, "axes", axes)
-        object.__setattr__(self, "index", VecInt(index, axes=axes))
-
-    def _is_sorted(self) -> bool:
-        return all(self.index[i - 1] < self.index[i] for i in range(1, len(self.index)))
 
     def with_name(self: _T, name: str | None) -> _T:
         """

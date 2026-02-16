@@ -45,7 +45,7 @@ class BufferedSliceReader:
 
         assert absolute_bounding_box is not None
         self.bbox_current_mag = absolute_bounding_box.in_mag(view.mag).normalize_axes(
-            view.info.num_channels
+            view.num_channels
         )
 
     def _get_slice_generator(self) -> Generator[np.ndarray, None, None]:
