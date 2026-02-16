@@ -98,19 +98,15 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         dtype, channels, size = expected_dtype_channels_size_per_layer[layer_name]
         assert layer.dtype_per_channel == np.dtype(dtype)
         assert layer.num_channels == channels
-        assert layer.bounding_box.normalize_axes(channels).size == size
+        assert layer.normalized_bounding_box.size == size
 
         # Check that the zarr.json metadata is correct
         mag1 = layer.get_finest_mag()
         array_shape = json.loads((mag1.path / "zarr.json").read_bytes())["shape"]
-        shard_aligned_bottomright = (
-            layer.bounding_box.normalize_axes(channels)
-            .with_bottomright_xyz(
-                layer.bounding_box.bottomright_xyz.ceildiv(mag1.info.shard_shape)
-                * mag1.info.shard_shape
-            )
-            .bottomright
-        )
+        shard_aligned_bottomright = layer.normalized_bounding_box.with_bottomright_xyz(
+            layer.bounding_box.bottomright_xyz.ceildiv(mag1.info.shard_shape)
+            * mag1.info.shard_shape
+        ).bottomright
         assert array_shape == shard_aligned_bottomright.to_list()
 
 

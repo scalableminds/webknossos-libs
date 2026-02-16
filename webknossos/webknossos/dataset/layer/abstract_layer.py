@@ -22,6 +22,7 @@ from webknossos.dataset_properties.structuring import (
 )
 from webknossos.geometry import NDBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
+from webknossos.geometry.nd_bounding_box import NormalizedBoundingBox
 
 from ...dataset_properties.structuring import _python_floating_type_to_properties_type
 from ...utils import warn_deprecated
@@ -271,6 +272,15 @@ class AbstractLayer:
         """
 
         return self._properties.bounding_box
+
+    @property
+    def normalized_bounding_box(self) -> NormalizedBoundingBox:
+        """Gets the bounding box with axes normalized to include the channel dimension.
+
+        Returns:
+            NormalizedBoundingBox: Bounding box with channel axis included
+        """
+        return self.bounding_box.normalize_axes(self.num_channels)
 
     @bounding_box.setter
     def bounding_box(self, bbox: NDBoundingBox) -> None:

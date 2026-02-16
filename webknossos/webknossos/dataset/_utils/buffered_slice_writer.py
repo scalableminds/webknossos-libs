@@ -314,9 +314,7 @@ class BufferedSliceWriter:
             )
 
         elif absolute_offset is not None:
-            bbox = BoundingBox(absolute_offset, Vec3Int.zeros()).normalize_axes(
-                self._view.info.num_channels
-            )
+            bbox = BoundingBox(absolute_offset, Vec3Int.zeros())
 
         elif relative_bounding_box is not None:
             bbox = relative_bounding_box.offset(self._view.bounding_box.topleft)

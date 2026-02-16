@@ -148,6 +148,15 @@ class View:
         return self._bounding_box
 
     @property
+    def normalized_bounding_box(self) -> NormalizedBoundingBox:
+        """Gets the bounding box with axes normalized to include the channel dimension.
+
+        Returns:
+            NormalizedBoundingBox: Bounding box with channel axis included
+        """
+        return self.bounding_box.normalize_axes(self.info.num_channels)
+
+    @property
     def mag(self) -> Mag:
         """Gets the magnification level of this view.
 
@@ -241,11 +250,9 @@ class View:
             "z",
         ), "The delivered offset and size are only usable for 3D views."
 
-        return (
-            self.bounding_box.normalize_axes(self.info.num_channels)
-            .with_topleft_xyz(abs_mag1_offset)
-            .with_size_xyz(mag1_size)
-        )
+        return self.normalized_bounding_box.with_topleft_xyz(
+            abs_mag1_offset
+        ).with_size_xyz(mag1_size)
 
     def write(
         self,
@@ -348,8 +355,7 @@ class View:
         else:
             data_shape = Vec3Int(data.shape[-3:])
 
-        num_channels = self._array.info.num_channels
-        self_bbox = self.bounding_box.normalize_axes(num_channels)
+        self_bbox = self.normalized_bounding_box
         if self_bbox.axes == ("c", "x", "y", "z"):
             if len(data.shape) == 3:
                 assert self_bbox.size.c == 1, (
@@ -379,7 +385,7 @@ class View:
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=data_shape,
-        ).normalize_axes(num_channels)
+        )
         assert self_bbox.contains_bbox(mag1_bbox), (
             f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self_bbox}"
         )
@@ -412,7 +418,7 @@ class View:
         """Check that the bounding box is aligned with the shard grid"""
         shard_shape = self.info.shard_shape
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
-        self_bbox = self.bounding_box.normalize_axes(self.info.num_channels)
+        self_bbox = self.normalized_bounding_box
         if shard_bbox.intersected_with(self_bbox.in_mag(self._mag)) != bbox:
             raise ValueError(
                 f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
@@ -578,7 +584,7 @@ class View:
             abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-        ).normalize_axes(self.info.num_channels)
+        )
         assert not mag1_bbox.is_empty(), (
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
             + "All dimensions must be strictly larger than '0'."
@@ -635,7 +641,7 @@ class View:
         mag1_bbox = self._get_mag1_bbox(
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
-        ).normalize_axes(self.info.num_channels)
+        )
 
         data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
         # transform data to xyz order
@@ -783,7 +789,7 @@ class View:
             abs_mag1_offset=absolute_offset,
             current_mag_size=current_mag_size,
             mag1_size=mag1_size,
-        ).normalize_axes(self.info.num_channels)
+        )
         if not self.bounding_box.is_empty():
             assert not mag1_bbox.is_empty(), (
                 f"The size ({mag1_bbox.size} in mag1) contains a zero. "
@@ -794,9 +800,7 @@ class View:
         )
 
         if not read_only:
-            assert self.bounding_box.normalize_axes(
-                self.info.num_channels
-            ).contains_bbox(mag1_bbox), (
+            assert self.normalized_bounding_box.contains_bbox(mag1_bbox), (
                 f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
                 + "This is only allowed for read-only views."
             )
@@ -807,9 +811,7 @@ class View:
                 shard_shape, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
-            current_mag_view_bbox = self.bounding_box.normalize_axes(
-                self.info.num_channels
-            ).in_mag(self._mag)
+            current_mag_view_bbox = self.normalized_bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(
                 current_mag_aligned_bbox, dont_assert=True
             ):

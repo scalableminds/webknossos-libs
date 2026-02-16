@@ -82,9 +82,7 @@ class RemoteLayer(AbstractLayer):
         with self._dataset._context:
             client = _get_api_client()
             foreign_layer = foreign_mag_view.layer
-            foreign_layer_bbox = foreign_layer.bounding_box.normalize_axes(
-                foreign_layer.num_channels
-            )
+            foreign_layer_bbox = foreign_layer.normalized_bounding_box
             reserve_parameters = ApiReserveMagUploadToPathParameters(
                 layer_name=self.name,
                 mag=foreign_mag_view.mag.to_list(),

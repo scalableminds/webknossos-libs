@@ -219,7 +219,7 @@ def _test_repo_images(
         assert layer.dtype_per_channel == np.dtype(dtype)
         assert layer.num_channels == num_channels
         assert len(ds.layers) == num_layers
-        assert layer.bounding_box.normalize_axes(num_channels).size == size
+        assert layer.normalized_bounding_box.size == size
         if isinstance(layer, wk.SegmentationLayer):
             assert layer.largest_segment_id is not None
             assert layer.largest_segment_id > 0
