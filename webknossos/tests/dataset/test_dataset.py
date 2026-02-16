@@ -398,7 +398,7 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     else:
         assert mag_view.info.shard_shape.xyz == Vec3Int.full(1024)
         assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(32)
-    assert mag_view.info.num_channels == 1
+    assert mag_view.info.shape.size.c == 1
     assert mag_view.info.compression_mode == True
 
 
@@ -2370,7 +2370,7 @@ def test_dataset_conversion_wkw_only() -> None:
             origin_info = origin_ds.layers[layer_name].mags[mag].info
             converted_info = converted_ds.layers[layer_name].mags[mag].info
             assert origin_info.voxel_type == converted_info.voxel_type
-            assert origin_info.num_channels == converted_info.num_channels
+            assert origin_info.shape.size.c == converted_info.shape.size.c
             assert origin_info.compression_mode == converted_info.compression_mode
             assert origin_info.chunk_shape == converted_info.chunk_shape
             assert origin_info.data_format == converted_info.data_format

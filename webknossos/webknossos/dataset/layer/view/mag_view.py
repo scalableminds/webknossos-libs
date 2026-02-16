@@ -230,6 +230,15 @@ class MagView(View, Generic[LayerTypeT]):
         """
         return self.layer.normalized_bounding_box.align_with_mag(self._mag, ceil=True)
 
+    @property
+    def num_channels(self) -> int:
+        """Gets the number of channels in this view.
+
+        Returns:
+            int: Number of channels
+        """
+        return self.layer.num_channels
+
     # Own methods:
 
     @property

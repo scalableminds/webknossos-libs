@@ -264,7 +264,7 @@ class WKWArray(BaseArray):
             * Vec3Int.full(header.block_len),
             shape=NormalizedBoundingBox(
                 (0, 0, 0, 0),
-                (header.num_channels, 0, 0, 0, 0),
+                (header.num_channels, 0, 0, 0),
                 axes=("c", "x", "y", "z"),
             ),
         )
