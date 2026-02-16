@@ -614,7 +614,6 @@ class TensorStoreArray(BaseArray):
         )
 
     def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
-        bbox = bbox.normalize_axes(self.info.num_channels)
         array = self._array
 
         requested_domain = self._requested_domain(bbox)
@@ -635,7 +634,6 @@ class TensorStoreArray(BaseArray):
         return out
 
     def resize(self, new_bbox: NormalizedBoundingBox) -> None:
-        new_bbox = new_bbox.normalize_axes(self.info.num_channels)
         array = self._array
 
         # Align with shards
@@ -681,7 +679,6 @@ class TensorStoreArray(BaseArray):
             )
 
     def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
-        bbox = bbox.normalize_axes(self.info.num_channels)
         assert data.ndim == len(bbox), (
             "The data has to have the same number of dimensions as the bounding box."
         )
