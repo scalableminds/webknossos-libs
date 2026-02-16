@@ -326,7 +326,6 @@ class NDBoundingBox:
         Raises:
             AssertionError: If additionalAxes are present but axisOrder is not provided.
         """
-        print(bbox)
         num_channels = bbox.get("numChannels", 1)
         if (
             bbox.get("channelIndex", 0) == 0
