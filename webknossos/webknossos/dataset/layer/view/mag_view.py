@@ -206,7 +206,7 @@ class MagView(View, Generic[LayerTypeT]):
 
         super().__init__(
             path,
-            bounding_box=layer.bounding_box,
+            bounding_box=None,
             mag=mag,
             data_format=layer.data_format,
             read_only=read_only,
@@ -232,6 +232,15 @@ class MagView(View, Generic[LayerTypeT]):
         # Overwrites View's method since no extra bbox is stored for a MagView,
         # but the Layer's bbox is used:
         return self.layer.bounding_box.align_with_mag(self._mag, ceil=True)
+
+    @property
+    def normalized_bounding_box(self) -> NormalizedBoundingBox:
+        """Gets the bounding box with axes normalized to include the channel dimension.
+
+        Returns:
+            NormalizedBoundingBox: Bounding box with channel axis included
+        """
+        return self.layer.normalized_bounding_box.align_with_mag(self._mag, ceil=True)
 
     # Own methods:
 

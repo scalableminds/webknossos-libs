@@ -21,7 +21,7 @@ from ..dataset_properties import (
     length_unit_from_str,
 )
 from ..dataset_properties.dataset_properties import DEFAULT_LENGTH_UNIT_STR
-from ..geometry import Mag, NDBoundingBox, Vec3Int
+from ..geometry import Mag, NormalizedBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
 from .layer_categories import LayerCategoryType
 
@@ -38,7 +38,7 @@ _python_floating_type_to_properties_type = {
 
 
 # register (un-)structure hooks for non-attr-classes
-bbox_to_wkw: Callable[[NDBoundingBox], dict] = lambda o: o.to_wkw_dict()  # noqa: E731
+bbox_to_wkw: Callable[[NormalizedBoundingBox], dict] = lambda o: o.to_wkw_dict()  # noqa: E731
 
 
 def mag_unstructure(mag: Mag) -> list[int]:
@@ -147,9 +147,9 @@ def layer_properties_pre_structure(
 @cache
 def get_dataset_converter() -> cattr.Converter:
     dataset_converter = cattr.Converter()
-    dataset_converter.register_unstructure_hook(NDBoundingBox, bbox_to_wkw)
+    dataset_converter.register_unstructure_hook(NormalizedBoundingBox, bbox_to_wkw)
     dataset_converter.register_structure_hook(
-        NDBoundingBox, lambda d, _: NDBoundingBox.from_wkw_dict(d)
+        NormalizedBoundingBox, lambda d, _: NormalizedBoundingBox.from_wkw_dict(d)
     )
     dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
     dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))

@@ -63,7 +63,7 @@ class View:
 
     _path: UPath
     _data_format: DataFormat
-    _bounding_box: NDBoundingBox | None
+    _normalized_bounding_box: NormalizedBoundingBox | None
     _read_only: bool
     _cached_array: BaseArray | None
     _mag: Mag
@@ -71,7 +71,7 @@ class View:
     def __init__(
         self,
         path_to_mag_view: UPath,
-        bounding_box: NDBoundingBox
+        bounding_box: NormalizedBoundingBox
         | None,  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
         data_format: DataFormat,
@@ -101,7 +101,7 @@ class View:
         """
         self._path = path_to_mag_view
         self._data_format = data_format
-        self._bounding_box = bounding_box.denormalize() if bounding_box else None
+        self._normalized_bounding_box = bounding_box
         self._read_only = read_only
         self._cached_array = cached_array
         self._mag = mag
@@ -144,8 +144,8 @@ class View:
             print(f"Size: {bbox.size}")
             ```
         """
-        assert self._bounding_box is not None
-        return self._bounding_box
+        assert self._normalized_bounding_box is not None
+        return self._normalized_bounding_box.denormalize()
 
     @property
     def normalized_bounding_box(self) -> NormalizedBoundingBox:
@@ -154,7 +154,8 @@ class View:
         Returns:
             NormalizedBoundingBox: Bounding box with channel axis included
         """
-        return self.bounding_box.normalize_axes(self.info.num_channels)
+        assert self._normalized_bounding_box is not None
+        return self._normalized_bounding_box
 
     @property
     def mag(self) -> Mag:

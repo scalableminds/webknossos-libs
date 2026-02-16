@@ -271,16 +271,7 @@ class AbstractLayer:
             NDBoundingBox: Bounding box with layer dimensions
         """
 
-        return self._properties.bounding_box
-
-    @property
-    def normalized_bounding_box(self) -> NormalizedBoundingBox:
-        """Gets the bounding box with axes normalized to include the channel dimension.
-
-        Returns:
-            NormalizedBoundingBox: Bounding box with channel axis included
-        """
-        return self.bounding_box.normalize_axes(self.num_channels)
+        return self._properties.bounding_box.denormalize()
 
     @bounding_box.setter
     def bounding_box(self, bbox: NDBoundingBox) -> None:
@@ -289,14 +280,20 @@ class AbstractLayer:
         assert bbox.topleft.is_positive(), (
             f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         )
+        bbox = bbox.normalize_axes(self.num_channels)
         self._properties.bounding_box = bbox
         self._save_layer_properties()
         for mag in self.mags.values():
-            mag._array.resize(
-                bbox.align_with_mag(mag.mag)
-                .in_mag(mag.mag)
-                .normalize_axes(self.num_channels)
-            )
+            mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
+
+    @property
+    def normalized_bounding_box(self) -> NormalizedBoundingBox:
+        """Gets the bounding box with axes normalized to include the channel dimension.
+
+        Returns:
+            NormalizedBoundingBox: Bounding box with channel axis included
+        """
+        return self._properties.bounding_box
 
     @property
     def category(self) -> LayerCategoryType:

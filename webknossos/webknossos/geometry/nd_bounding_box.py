@@ -321,12 +321,13 @@ class NDBoundingBox:
             bbox (Dict): The dictionary representation of the bounding box.
 
         Returns:
-            NDBoundingBox: An instance of NDBoundingBox.
+            NDBoundingBox: An instance of NDBoundingBox (or a subclass).
 
         Raises:
             AssertionError: If additionalAxes are present but axisOrder is not provided.
         """
-
+        print(bbox)
+        num_channels = bbox.get("numChannels", 1)
         if (
             bbox.get("channelIndex", 0) == 0
             and ("additionalAxes" not in bbox or bbox["additionalAxes"] == [])
@@ -335,13 +336,13 @@ class NDBoundingBox:
             # Delegate to BoundingBox.from_wkw_dict, if only 3d
             from .bounding_box import BoundingBox
 
-            return BoundingBox.from_wkw_dict(bbox)
+            return BoundingBox.from_wkw_dict(bbox).normalize_axes(num_channels)
 
         axes = [
             Axis(
                 name="c",
                 min=bbox.get("channelIndex", 0),
-                size=bbox.get("numChannels", 1),
+                size=num_channels,
                 index=0,
             ),
             Axis(name="x", min=bbox["topLeft"][0], size=bbox["width"], index=1),
@@ -388,7 +389,7 @@ class NDBoundingBox:
             size=VecInt(size, axes=axis_names),
             axes=axis_names,
             index=VecInt(index, axes=axis_names),
-        )
+        ).normalize_axes(num_channels)
 
     def to_wkw_dict(self) -> dict:
         """
@@ -1017,14 +1018,22 @@ class NormalizedBoundingBox(NDBoundingBox):
             from .bounding_box import BoundingBox
 
             return BoundingBox(
-                self.topleft_xyz,
-                self.size_xyz,
+                topleft=self.topleft_xyz,
+                size=self.size_xyz,
                 name=self.name,
                 color=self.color,
                 is_visible=self.is_visible,
             )
         else:
-            return self
+            return NDBoundingBox(
+                topleft=self.topleft,
+                size=self.size,
+                axes=self.axes,
+                index=self.index,
+                name=self.name,
+                color=self.color,
+                is_visible=self.is_visible,
+            )
 
     def __eq__(self, other: object) -> bool:
         """Check equality with another bounding box.
@@ -1062,7 +1071,7 @@ class NormalizedBoundingBox(NDBoundingBox):
 
     def intersected_with(
         self, other: "NDBoundingBox", dont_assert: bool = False
-    ) -> "NDBoundingBox":
+    ) -> "NormalizedBoundingBox":
         """Returns the intersection of two bounding boxes.
 
         When intersecting with a BoundingBox, the operation is performed
@@ -1073,9 +1082,9 @@ class NormalizedBoundingBox(NDBoundingBox):
         if denormalized is not None:
             result = denormalized[0].intersected_with(denormalized[1], dont_assert)
             return result.normalize_axes(denormalized[2])
-        return super().intersected_with(other, dont_assert)
+        return super().intersected_with(other, dont_assert)  # type: ignore[arg-type]
 
-    def extended_by(self, other: "NDBoundingBox") -> "NDBoundingBox":
+    def extended_by(self, other: "NDBoundingBox") -> "NormalizedBoundingBox":
         """Returns the smallest bounding box that contains both bounding boxes.
 
         When extending with a BoundingBox, the operation is performed
@@ -1086,7 +1095,7 @@ class NormalizedBoundingBox(NDBoundingBox):
         if denormalized is not None:
             result = denormalized[0].extended_by(denormalized[1])
             return result.normalize_axes(denormalized[2])
-        return super().extended_by(other)
+        return super().extended_by(other)  # type: ignore[arg-type]
 
     def contains_bbox(self, inner_bbox: "NDBoundingBox") -> bool:
         """Check whether a bounding box is completely inside this bounding box.
@@ -1097,7 +1106,10 @@ class NormalizedBoundingBox(NDBoundingBox):
         denormalized = self._denormalize_for_bbox_op(inner_bbox)
         if denormalized is not None:
             return denormalized[0].contains_bbox(denormalized[1])
-        return super().contains_bbox(inner_bbox)
+        return super().contains_bbox(inner_bbox)  # type: ignore[arg-type]
+
+    def to_wkw_dict(self) -> dict:
+        return self.denormalize().to_wkw_dict()
 
 
 def derive_nd_bounding_box_from_shape(

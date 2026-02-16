@@ -2,7 +2,7 @@ from collections.abc import Iterable, Iterator
 
 import attr
 
-from ..geometry import Mag, NDBoundingBox
+from ..geometry import Mag, NormalizedBoundingBox
 from .data_format import AttachmentDataFormat, DataFormat
 from .layer_categories import LayerCategoryType
 from .length_unit import _LENGTH_UNIT_TO_NANOMETER, LengthUnit
@@ -91,7 +91,7 @@ class MagViewProperties:
 class LayerProperties:
     name: str
     category: LayerCategoryType
-    bounding_box: NDBoundingBox
+    bounding_box: NormalizedBoundingBox
     element_class: str
     data_format: DataFormat
     mags: list[MagViewProperties]

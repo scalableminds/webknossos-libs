@@ -1,7 +1,7 @@
 import json
 import re
 from collections.abc import Callable, Generator, Iterable
-from typing import Union, cast
+from typing import Union, cast, overload
 
 import attr
 import numpy as np
@@ -301,6 +301,16 @@ class BoundingBox(NDBoundingBox):
 
         return NotImplemented
 
+    @overload
+    def intersected_with(
+        self, other: "NormalizedBoundingBox", dont_assert: bool = False
+    ) -> "NormalizedBoundingBox": ...
+
+    @overload
+    def intersected_with(
+        self, other: "BoundingBox", dont_assert: bool = False
+    ) -> "BoundingBox": ...
+
     def intersected_with(
         self, other: "BoundingBox | NormalizedBoundingBox", dont_assert: bool = False
     ) -> "BoundingBox | NormalizedBoundingBox":
@@ -314,9 +324,19 @@ class BoundingBox(NDBoundingBox):
         if isinstance(other, NormalizedBoundingBox):
             num_channels = other.size.c
             other_denorm = cast(BoundingBox, other.denormalize())
-            result = cast(BoundingBox, super().intersected_with(other_denorm, dont_assert))
+            result = cast(
+                BoundingBox, super().intersected_with(other_denorm, dont_assert)
+            )
             return result.normalize_axes(num_channels)
         return cast(BoundingBox, super().intersected_with(other, dont_assert))
+
+    @overload
+    def extended_by(
+        self, other: "NormalizedBoundingBox"
+    ) -> "NormalizedBoundingBox": ...
+
+    @overload
+    def extended_by(self, other: "BoundingBox") -> "BoundingBox": ...
 
     def extended_by(
         self, other: "BoundingBox | NormalizedBoundingBox"

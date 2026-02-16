@@ -1148,11 +1148,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         assert is_fs_path(self.path) or data_format != DataFormat.WKW, (
             "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
         )
-
+        bounding_box = bounding_box or BoundingBox((0, 0, 0), (0, 0, 0))
+        bounding_box = bounding_box.normalize_axes(num_channels)
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
+            bounding_box=bounding_box,
             element_class=_dtype_per_channel_to_element_class(
                 dtype_per_channel, num_channels
             ),
