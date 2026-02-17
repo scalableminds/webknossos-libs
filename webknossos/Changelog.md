@@ -30,6 +30,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `dataset_name_or_url`, `organization_id`, `webknossos_url`, `dataset_id`, `organization`, `datastore_url` and `token` in `RemoteDataset.trigger_reload_in_datastore`
   - `folder_path` in `RemoteDataset.explore_and_add_remote`
   - `name`, `organization_id`, `tags` and `folder_id` in `RemoteDatasetRegistry.__init__` (should not be used directly)
+- `VecInt` and `Vec3Int` don't inherit from tuple anymore. Instead, they have an internal attribute that holds the data. Instance checks for tuple don't work anymore. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
 
 ### Added
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
