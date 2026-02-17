@@ -66,11 +66,17 @@ def _dtype_maybe(
         warn_deprecated("dtype_per_channel", "dtype")
         return np.dtype(
             properties_floating_type_to_python_type.get(
-                dtype_per_channel, dtype_per_channel
+                dtype_per_channel,  # type: ignore[arg-type]
+                dtype_per_channel,  # type: ignore[arg-type]
             )
         )
     elif dtype is not None:
-        return np.dtype(properties_floating_type_to_python_type.get(dtype, dtype))
+        return np.dtype(
+            properties_floating_type_to_python_type.get(
+                dtype,  # type: ignore[arg-type]
+                dtype,  # type: ignore[arg-type]
+            )
+        )
     return None
 
 
