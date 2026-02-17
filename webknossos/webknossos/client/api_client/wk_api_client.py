@@ -4,6 +4,7 @@ from typing import Any
 import httpx
 
 from webknossos.client.api_client.models import (
+    ApiAiModel,
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
@@ -18,6 +19,7 @@ from webknossos.client.api_client.models import (
     ApiNmlTaskParameters,
     ApiProject,
     ApiProjectCreate,
+    ApiReserveAiModelUploadToPathParameters,
     ApiReserveAttachmentUploadToPathParameters,
     ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
@@ -440,3 +442,17 @@ class WkApiClient(AbstractApiClient):
     ) -> None:
         route = f"/datasets/{dataset_id}/finishMagUploadToPath"
         self._post_json(route, reserve_mag_upload_to_path_parameters)
+
+    def reserve_ai_model_upload_to_path(
+        self, params: ApiReserveAiModelUploadToPathParameters
+    ) -> ApiAiModel:
+        route = "/aiModels/reserveUploadToPath"
+        return self._post_json_with_json_response(route, params, ApiAiModel)
+
+    def finish_ai_model_upload_to_path(self, ai_model_id: str) -> None:
+        self._post(f"/aiModels/{ai_model_id}/finishUploadToPath")
+
+    def get_ai_model_info(self, ai_model_id: str) -> ApiAiModel:
+        route = f"/aiModels/{ai_model_id}"
+        ai_model = self._get_json(route, ApiAiModel)
+        return ai_model
