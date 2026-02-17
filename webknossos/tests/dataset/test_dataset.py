@@ -424,7 +424,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert len(ds.get_layer("color").mags) == 2
 
     assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
-    assert ds.get_layer("color")._properties.element_class == "uint48"
+    assert ds.get_layer("color")._properties.dtype == "uint16"
     assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
     assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(4096)
     assert ds.get_layer("color").get_mag(1).info.chunks_per_shard.xyz == Vec3Int.full(
@@ -468,7 +468,7 @@ def test_deprecated_chunks_per_shard() -> None:
         assert len(ds.get_layer("color").mags) == 2
 
         assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
-        assert ds.get_layer("color")._properties.element_class == "uint48"
+        assert ds.get_layer("color")._properties.dtype == "uint16"
         assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
         assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(
             4096

@@ -52,7 +52,6 @@ from .layer import (
 )
 from .layer.abstract_layer import (
     _UNALLOWED_LAYER_NAME_CHARS,
-    _dtype_per_channel_to_element_class,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
     _validate_layer_name,
@@ -73,9 +72,6 @@ from webknossos.dataset.layer import (
     RemoteLayer,
     SegmentationLayer,
 )
-from webknossos.dataset.layer.abstract_layer import (
-    _dtype_per_layer_to_dtype_per_channel,
-)
 
 from ..dataset_properties import (
     COLOR_CATEGORY,
@@ -88,10 +84,11 @@ from ..dataset_properties import (
     SegmentationLayerProperties,
     VoxelSize,
 )
-from ..dataset_properties.structuring import (
+from ..dataset_properties.dtype_conversion import (
+    _dtype_per_layer_to_dtype_per_channel,
     _properties_floating_type_to_python_type,
-    get_dataset_converter,
 )
+from ..dataset_properties.structuring import get_dataset_converter
 from ..utils import (
     cheap_resolve,
     copytree,
@@ -1143,9 +1140,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             name=layer_name,
             category=category,
             bounding_box=bounding_box,
-            element_class=_dtype_per_channel_to_element_class(
-                dtype_per_channel, num_channels
-            ),
+            dtype=dtype_per_channel.name,
             mags=[],
             data_format=DataFormat(data_format),
         )
@@ -1604,11 +1599,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     current_dtype = current_dtype.newbyteorder("<")
             else:
                 current_dtype = np.dtype(dtype)
-            print(
-                layer_name + layer_name_suffix,
-                pims_image_sequence.num_channels,
-                pims_image_sequence.expected_bbox,
-            )
+
             layer = self.add_layer(
                 layer_name=layer_name + layer_name_suffix,
                 category=category,

@@ -1,6 +1,7 @@
 from collections.abc import Iterable, Iterator
 
 import attr
+import numpy as np
 
 from ..geometry import Mag, NormalizedBoundingBox
 from .data_format import AttachmentDataFormat, DataFormat
@@ -92,10 +93,14 @@ class LayerProperties:
     name: str
     category: LayerCategoryType
     bounding_box: NormalizedBoundingBox
-    element_class: str
+    dtype: str
     data_format: DataFormat
     mags: list[MagViewProperties]
     default_view_configuration: LayerViewConfiguration | None = None
+
+    @property
+    def dtype_np(self) -> np.dtype:
+        return np.dtype(self.dtype)
 
 
 @attr.define

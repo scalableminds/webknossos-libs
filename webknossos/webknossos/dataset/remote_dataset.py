@@ -31,7 +31,6 @@ from webknossos.dataset.abstract_dataset import (
 )
 from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer, Zarr3Config
 from webknossos.dataset.layer.abstract_layer import (
-    _dtype_per_layer_to_dtype_per_channel,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
     _validate_layer_name,
@@ -51,12 +50,12 @@ from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
 from ..client.api_client.errors import UnexpectedStatusError
-from ..dataset_properties.structuring import (
+from ..dataset_properties.dtype_conversion import (
+    _dtype_per_layer_to_dtype_per_channel,
     _properties_floating_type_to_python_type,
 )
 from ..ssl_context import SSL_CONTEXT
 from .defaults import DEFAULT_BIT_DEPTH, DEFAULT_DATA_FORMAT
-from .layer.abstract_layer import _dtype_per_channel_to_element_class
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .transfer_mode import TransferMode
@@ -870,9 +869,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             name=layer_name,
             category=category,
             bounding_box=bounding_box,
-            element_class=_dtype_per_channel_to_element_class(
-                dtype_per_channel, num_channels
-            ),
+            dtype=dtype_per_channel.name,
             mags=[],
             data_format=DataFormat(data_format),
         )

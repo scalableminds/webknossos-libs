@@ -5,7 +5,6 @@ from typing import Any
 
 import attr
 import cattr
-import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from ..dataset_properties import (
@@ -23,19 +22,12 @@ from ..dataset_properties import (
 from ..dataset_properties.dataset_properties import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import Mag, NormalizedBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
+from .dtype_conversion import (
+    _dtype_per_channel_to_element_class,
+    _element_class_to_dtype_per_channel,
+    _properties_floating_type_to_python_type,  # noqa: F401
+)
 from .layer_categories import LayerCategoryType
-
-_properties_floating_type_to_python_type: dict[str | type, np.dtype] = {
-    "float": np.dtype("float32"),
-    #  np.float: np.dtype("float32"),  # np.float is an alias for float
-    float: np.dtype("float32"),
-    "double": np.dtype("float64"),
-}
-_python_floating_type_to_properties_type = {
-    "float32": "float",
-    "float64": "double",
-}
-
 
 # register (un-)structure hooks for non-attr-classes
 bbox_to_wkw: Callable[[NormalizedBoundingBox], dict] = lambda o: o.to_wkw_dict()  # noqa: E731
@@ -101,6 +93,11 @@ def layer_properties_post_unstructure(
         else:
             d["numChannels"] = 1
 
+        d["elementClass"] = _dtype_per_channel_to_element_class(
+            d["dtype"], d["numChannels"]
+        )
+        del d["dtype"]
+
         return d
 
     return __layer_properties_post_unstructure
@@ -144,6 +141,12 @@ def layer_properties_pre_structure(
 
         if "numChannels" in d:
             d["boundingBox"]["numChannels"] = d["numChannels"]
+            d["dtype"] = _element_class_to_dtype_per_channel(
+                d["elementClass"], d["numChannels"]
+            )
+        else:
+            d["dtype"] = _element_class_to_dtype_per_channel(d["elementClass"], 1)
+        del d["elementClass"]
 
         obj = converter_fn(d, type_value)
         return obj
