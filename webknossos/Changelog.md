@@ -40,6 +40,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Renamed `folder_path` to `folder` in `RemoteDataset.explore_and_add_remote`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Renamed `folder_id` to `folder` in `Dataset.upload`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Renamed `folder_id` to `folder` in `RemoteDataset.list`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- The elementClass parsing is done in the structuring now. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- The restriction to have the channel axis as first axis is now removed. Arbitrary axes are allowed. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 
 ### Fixed
 
