@@ -44,6 +44,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The elementClass parsing is done in the structuring now. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - The restriction to have the channel axis as first axis is now removed. Arbitrary axes are allowed. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Annotation loading now throws a `FileNotFoundError` instead of `AssertionError` if the specified path does not exist. [#1425](https://github.com/scalableminds/webknossos-libs/pull/1425)
+- The `dimension` argument in `View.get_buffered_slice_writer`, `View.get_buffered_slice_reader`, `BufferedSliceWriter.__init__` and `BufferedSliceReader.__init__` now takes named axis (string) instead of integer index. Integers are deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 
 ### Fixed
 
