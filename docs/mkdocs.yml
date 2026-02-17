@@ -312,6 +312,8 @@ nav:
     - Community:
       - webknossos-py/CONTRIBUTING.md
       - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
+    - Specifications:
+      - Datasource Properties: webknossos-py/spec/datasource_properties.md
   - Community:
     - webknossos/faq.md
     - Terminology: webknossos/terminology.md
