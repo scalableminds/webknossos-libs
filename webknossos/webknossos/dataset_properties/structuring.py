@@ -94,6 +94,13 @@ def layer_properties_post_unstructure(
         if "attachments" in d:
             if all(p is None or len(p) == 0 for p in d["attachments"].values()):
                 del d["attachments"]
+
+        if "numChannels" in d["boundingBox"]:
+            d["numChannels"] = d["boundingBox"]["numChannels"]
+            del d["boundingBox"]["numChannels"]
+        else:
+            d["numChannels"] = 1
+
         return d
 
     return __layer_properties_post_unstructure

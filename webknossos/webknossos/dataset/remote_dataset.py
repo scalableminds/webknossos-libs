@@ -874,7 +874,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 dtype_per_channel, num_channels
             ),
             mags=[],
-            num_channels=num_channels,
             data_format=DataFormat(data_format),
         )
 

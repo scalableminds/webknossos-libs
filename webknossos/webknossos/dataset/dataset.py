@@ -418,17 +418,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def _SegmentationLayerType(self) -> type[SegmentationLayer]:
         return SegmentationLayer
 
-    def _initialize_layer_from_properties(
-        self, properties: LayerProperties, read_only: bool
-    ) -> Layer:
-        # If the numChannels key is not present in the dataset properties, assume it is 1 unless we have uint24.
-        if properties.num_channels is None:
-            if properties.element_class == "uint24":
-                properties.num_channels = 3
-            else:
-                properties.num_channels = 1
-        return super()._initialize_layer_from_properties(properties, read_only)
-
     @classmethod
     def open(
         cls, dataset_path: str | PathLike | UPath, read_only: bool = False
@@ -1158,7 +1147,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 dtype_per_channel, num_channels
             ),
             mags=[],
-            num_channels=num_channels,
             data_format=DataFormat(data_format),
         )
 

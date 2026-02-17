@@ -151,14 +151,13 @@ class AbstractLayer:
     def _apply_properties(self, properties: LayerProperties, read_only: bool) -> None:
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
-        assert properties.num_channels is not None
         assert "/" not in properties.name and not properties.name.startswith("."), (
             f"The layer name '{properties.name}' is invalid."
         )
         self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
 
         self._dtype_per_channel = _element_class_to_dtype_per_channel(
-            properties.element_class, properties.num_channels
+            properties.element_class, properties.bounding_box.size.get("c", 1)
         )
         self._mags = {}
         self._read_only = read_only
@@ -340,8 +339,7 @@ class AbstractLayer:
             AssertionError: If num_channels is not set in properties
         """
 
-        assert self._properties.num_channels is not None
-        return self._properties.num_channels
+        return self.normalized_bounding_box.size.get("c", 1)
 
     @property
     def data_format(self) -> DataFormat:

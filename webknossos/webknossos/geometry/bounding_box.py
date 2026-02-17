@@ -8,7 +8,6 @@ import numpy as np
 
 from .mag import Mag
 from .nd_bounding_box import (
-    _DEFAULT_AXIS_ORDER,
     _DEFAULT_BBOX_NAME,
     NDBoundingBox,
     NormalizedBoundingBox,
@@ -88,22 +87,6 @@ class BoundingBox(NDBoundingBox):
         """Returns a copy of the bounding box with topleft.z optionally replaced and size.z optionally replaced."""
 
         return cast(BoundingBox, self.with_bounds("z", new_topleft_z, new_size_z))
-
-    @classmethod
-    def from_wkw_dict(cls, bbox: dict) -> "BoundingBox":
-        """Creates a BoundingBox from a wkw-format dictionary.
-
-        Args:
-            bbox (Dict): Dictionary containing wkw-format bounding box data with
-                keys 'topLeft', 'width', 'height', and 'depth'
-
-        Returns:
-            BoundingBox: A new bounding box with the specified dimensions
-        """
-        assert "channelIndex" not in bbox or bbox["channelIndex"] == 0
-        assert "axisOrder" not in bbox or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER
-        assert "additionalAxes" not in bbox or bbox["additionalAxes"] == []
-        return cls(bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]])
 
     @classmethod
     def from_config_dict(cls, bbox: dict) -> "BoundingBox":
@@ -197,7 +180,9 @@ class BoundingBox(NDBoundingBox):
         elif isinstance(obj, dict):
             if "size" in obj:
                 return cls.from_config_dict(obj)
-            return cls.from_wkw_dict(obj)
+            return cast(
+                BoundingBox, NormalizedBoundingBox.from_wkw_dict(obj).denormalize()
+            )
         elif isinstance(obj, list) or isinstance(obj, tuple):
             if len(obj) == 2:
                 return cls.from_tuple2(obj)  # type: ignore
@@ -211,31 +196,6 @@ class BoundingBox(NDBoundingBox):
         cls,
     ) -> "BoundingBox":
         return cls(Vec3Int.zeros(), Vec3Int.zeros())
-
-    def to_wkw_dict(self) -> dict:
-        """Converts the bounding box to a wkw-format dictionary.
-
-        Creates a dictionary with wkw-format fields containing the bounding box dimensions.
-
-        Returns:
-            dict: A dictionary with keys:
-                - topLeft: list[int] of (x,y,z) coordinates
-                - width: int width in x dimension
-                - height: int height in y dimension
-                - depth: int depth in z dimension
-        """
-        (
-            width,
-            height,
-            depth,
-        ) = self.size.to_list()
-
-        return {
-            "topLeft": self.topleft.to_list(),
-            "width": width,
-            "height": height,
-            "depth": depth,
-        }
 
     def to_config_dict(self) -> dict:
         """Converts the bounding box to a config-format dictionary.
