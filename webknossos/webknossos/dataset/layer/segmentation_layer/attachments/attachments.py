@@ -7,9 +7,8 @@ from typing import TYPE_CHECKING
 
 from upath import UPath
 
-from webknossos.dataset.transfer_mode import TransferMode
-from webknossos.dataset_properties import AttachmentDataFormat, AttachmentsProperties
-from webknossos.utils import (
+from .....dataset_properties import AttachmentDataFormat, AttachmentsProperties
+from .....utils import (
     cheap_resolve,
     copytree,
     enrich_path,
@@ -17,7 +16,7 @@ from webknossos.utils import (
     snake_to_camel_case,
     warn_deprecated,
 )
-
+from ....transfer_mode import TransferMode
 from .attachment import (
     AgglomerateAttachment,
     Attachment,
@@ -28,11 +27,11 @@ from .attachment import (
 )
 
 if TYPE_CHECKING:
-    from webknossos.dataset.layer import (
+    from .. import (
         RemoteSegmentationLayer,
         SegmentationLayer,
     )
-    from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer import (
+    from ..abstract_segmentation_layer import (
         AbstractSegmentationLayer,
     )
 
@@ -41,6 +40,28 @@ def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -
     if data_format == AttachmentDataFormat.Zarr3:
         return attachment_name
     return f"{attachment_name}.{data_format.value.lower()}"
+
+
+def _assert_absolute_path(path: str | PathLike | UPath) -> UPath:
+    path = UPath(path)
+    if not path.is_absolute():
+        raise ValueError("Attachment paths must be absolute.")
+    return path
+
+
+def _deprecated_add_method(
+    _self: "AbstractAttachments", method_name: str, class_name: str
+) -> None:
+    from inspect import getframeinfo, stack
+
+    caller = getframeinfo(stack()[2][0])
+    warnings.warn(
+        f"[DEPRECATION] `{method_name}` is deprecated, please use `{class_name}.from_path_and_name` "
+        f"and `{_self.__class__.__name__}.add_attachment_as_copy` or "
+        f"`{_self.__class__.__name__}.add_attachment_as_ref` instead (see {caller.filename}:{caller.lineno})",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
 
 class AbstractAttachments:
@@ -193,12 +214,16 @@ class RemoteAttachments(AbstractAttachments):
     def _get_optional_dataset_path(self) -> UPath | None:
         return self._layer.dataset.zarr_streaming_path
 
-    def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
-        return self.upload_attachment(attachment, transfer_mode=TransferMode.COPY)
+    def delete_attachment(self, attachment: Attachment) -> None:
+        raise NotImplementedError()
 
-    def upload_attachment(
+    def add_attachment_as_ref(self, attachment: Attachment) -> Attachment:
+        raise NotImplementedError()
+
+    def add_attachment_as_copy(
         self,
         attachment: Attachment,
+        *,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_prefix: str | None = None,
     ) -> Attachment:
@@ -249,6 +274,20 @@ class RemoteAttachments(AbstractAttachments):
 
         return new_attachment
 
+    def upload_attachment(
+        self,
+        attachment: Attachment,
+        *,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_prefix: str | None = None,
+    ) -> Attachment:
+        warn_deprecated("upload_attachment", "add_attachment_as_copy")
+        return self.add_attachment_as_copy(
+            attachment,
+            transfer_mode=transfer_mode,
+            common_storage_prefix=common_storage_prefix,
+        )
+
 
 class Attachments(AbstractAttachments):
     _layer: "SegmentationLayer"
@@ -259,27 +298,6 @@ class Attachments(AbstractAttachments):
     def _get_optional_dataset_path(self) -> UPath:
         return self._layer.dataset.resolved_path
 
-    def _remove_attachment(
-        self,
-        attachment: Attachment,
-    ) -> None:
-        self._ensure_writable()
-        container_name = attachment.container_name
-        if isinstance(attachment, CumsumAttachment) or isinstance(
-            attachment, SegmentIndexAttachment
-        ):
-            if getattr(self, container_name) != attachment:
-                raise KeyError(
-                    f"Attachment {attachment} is not part of {container_name}."
-                )
-            setattr(self._properties, container_name, None)
-        else:
-            properties_container = getattr(self._properties, container_name)
-            properties_container.remove(attachment._properties)
-            if len(properties_container) == 0:
-                setattr(self._properties, container_name, None)
-        self._save_properties()
-
     def add_mesh(
         self,
         path: str | PathLike | UPath,
@@ -287,6 +305,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> MeshAttachment:
+        _deprecated_add_method(self, "add_mesh", "MeshAttachment")
         attachment = MeshAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -303,6 +322,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> AgglomerateAttachment:
+        _deprecated_add_method(self, "add_agglomerate", "AgglomerateAttachment")
         attachment = AgglomerateAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -319,6 +339,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> ConnectomeAttachment:
+        _deprecated_add_method(self, "add_connectome", "ConnectomeAttachment")
         attachment = ConnectomeAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -335,6 +356,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> SegmentIndexAttachment:
+        _deprecated_add_method(self, "set_segment_index", "SegmentIndexAttachment")
         attachment = SegmentIndexAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -351,6 +373,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> CumsumAttachment:
+        _deprecated_add_method(self, "set_cumsum", "CumsumAttachment")
         attachment = CumsumAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -361,18 +384,22 @@ class Attachments(AbstractAttachments):
         return attachment
 
     def delete_attachment(self, attachment: Attachment) -> None:
-        if isinstance(attachment, MeshAttachment):
-            self._remove_attachment(attachment)
-        elif isinstance(attachment, AgglomerateAttachment):
-            self._remove_attachment(attachment)
-        elif isinstance(attachment, ConnectomeAttachment):
-            self._remove_attachment(attachment)
-        elif isinstance(attachment, SegmentIndexAttachment):
-            self._remove_attachment(attachment)
-        elif isinstance(attachment, CumsumAttachment):
-            self._remove_attachment(attachment)
+        self._ensure_writable()
+        container_name = attachment.container_name
+        if isinstance(attachment, CumsumAttachment) or isinstance(
+            attachment, SegmentIndexAttachment
+        ):
+            if getattr(self, container_name) != attachment:
+                raise KeyError(
+                    f"Attachment {attachment} is not part of {container_name}."
+                )
+            setattr(self._properties, container_name, None)
         else:
-            raise TypeError(f"Cannot delete attachment of type {attachment.__class__}")
+            properties_container = getattr(self._properties, container_name)
+            properties_container.remove(attachment._properties)
+            if len(properties_container) == 0:
+                setattr(self._properties, container_name, None)
+        self._save_properties()
 
     def add_attachments(self, *other: Attachment) -> list[Attachment]:
         warn_deprecated("add_attachments", "add_attachment_as_ref")
