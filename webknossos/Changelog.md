@@ -43,8 +43,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Renamed `folder_id` to `folder` in `RemoteDataset.list`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - The elementClass parsing is done in the structuring now. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - The restriction to have the channel axis as first axis is now removed. Arbitrary axes are allowed. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Within the library a new `NormalizedBoundingBox` class is used to represent bounding boxes with an explicit c-axis (channels). The `NormalizedBoundingBox` is used as the primary bounding box attribute throughout the library. It is also used for de/serialization of the dataset properties. The interface of the `BoundingBox` class is intentionally kept stable, but computed from the `NormalizedBoundingBox`. Likewise, the `num_channels` attribute is computed from the `NormalizedBoundingBox`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- The `dimension` argument in `View.get_buffered_slice_writer`, `View.get_buffered_slice_reader`, `BufferedSliceWriter.__init__` and `BufferedSliceReader.__init__` now takes named axis (string) instead of integer index, e.g. `"z"` instead of `2`. Integers are deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Annotation loading now throws a `FileNotFoundError` instead of `AssertionError` if the specified path does not exist. [#1425](https://github.com/scalableminds/webknossos-libs/pull/1425)
-- The `dimension` argument in `View.get_buffered_slice_writer`, `View.get_buffered_slice_reader`, `BufferedSliceWriter.__init__` and `BufferedSliceReader.__init__` now takes named axis (string) instead of integer index. Integers are deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 
 ### Fixed
 
