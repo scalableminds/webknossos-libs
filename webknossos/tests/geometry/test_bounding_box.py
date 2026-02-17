@@ -3,6 +3,7 @@ import pytest
 from hypothesis import given, infer
 
 from webknossos import BoundingBox, Mag
+from webknossos.geometry import NormalizedBoundingBox
 
 
 def test_align_with_mag_ceiled() -> None:
@@ -106,3 +107,92 @@ def test_negative_inversion(
     """Flipping the topleft and bottomright (by padding both with the negative size)
     results in the original bbox, as negative sizes are converted to positive ones."""
     assert bbox == bbox.padded_with_margins(-bbox.size, -bbox.size)
+
+
+def test_eq_with_normalized_bbox() -> None:
+    """Test equality between BoundingBox and NormalizedBoundingBox ignoring channel axis."""
+    bbox = BoundingBox((1, 2, 3), (4, 5, 6))
+    normalized = bbox.normalize_axes(3)
+
+    # Both directions should work
+    assert bbox == normalized
+    assert normalized == bbox
+
+    # Different bboxes should not be equal
+    other_bbox = BoundingBox((0, 0, 0), (1, 1, 1))
+    other_normalized = other_bbox.normalize_axes(2)
+    assert bbox != other_normalized
+    assert normalized != other_bbox
+
+
+def test_intersected_with_normalized_bbox() -> None:
+    """Test intersection between BoundingBox and NormalizedBoundingBox."""
+    bbox1 = BoundingBox((0, 0, 0), (10, 10, 10))
+    bbox2 = BoundingBox((5, 5, 5), (10, 10, 10))
+    normalized1 = bbox1.normalize_axes(3)
+    normalized2 = bbox2.normalize_axes(2)
+
+    expected = BoundingBox((5, 5, 5), (5, 5, 5))
+
+    # BoundingBox.intersected_with(NormalizedBoundingBox)
+    assert bbox1.intersected_with(normalized2) == expected
+    assert bbox2.intersected_with(normalized1) == expected
+
+    # NormalizedBoundingBox.intersected_with(BoundingBox)
+    assert normalized1.intersected_with(bbox2) == expected
+    assert normalized2.intersected_with(bbox1) == expected
+
+    # Result type should be NormalizedBoundingBox with correct channel count
+    result1 = bbox1.intersected_with(normalized2)
+    assert isinstance(result1, NormalizedBoundingBox)
+    assert result1.size.c == 2
+
+    result2 = normalized1.intersected_with(bbox2)
+    assert isinstance(result2, NormalizedBoundingBox)
+    assert result2.size.c == 3
+
+
+def test_extended_by_normalized_bbox() -> None:
+    """Test extension between BoundingBox and NormalizedBoundingBox."""
+    bbox1 = BoundingBox((0, 0, 0), (5, 5, 5))
+    bbox2 = BoundingBox((10, 10, 10), (5, 5, 5))
+    normalized1 = bbox1.normalize_axes(3)
+    normalized2 = bbox2.normalize_axes(2)
+
+    expected = BoundingBox((0, 0, 0), (15, 15, 15))
+
+    # BoundingBox.extended_by(NormalizedBoundingBox)
+    assert bbox1.extended_by(normalized2) == expected
+    assert bbox2.extended_by(normalized1) == expected
+
+    # NormalizedBoundingBox.extended_by(BoundingBox)
+    assert normalized1.extended_by(bbox2) == expected
+    assert normalized2.extended_by(bbox1) == expected
+
+    # Result type should be NormalizedBoundingBox with correct channel count
+    result1 = bbox1.extended_by(normalized2)
+    assert isinstance(result1, NormalizedBoundingBox)
+    assert result1.size.c == 2
+
+    result2 = normalized1.extended_by(bbox2)
+    assert isinstance(result2, NormalizedBoundingBox)
+    assert result2.size.c == 3
+
+
+def test_contains_bbox_with_normalized_bbox() -> None:
+    """Test contains_bbox between BoundingBox and NormalizedBoundingBox."""
+    outer = BoundingBox((0, 0, 0), (10, 10, 10))
+    inner = BoundingBox((2, 2, 2), (3, 3, 3))
+    not_contained = BoundingBox((8, 8, 8), (5, 5, 5))
+
+    outer_normalized = outer.normalize_axes(3)
+    inner_normalized = inner.normalize_axes(2)
+    not_contained_normalized = not_contained.normalize_axes(1)
+
+    # BoundingBox.contains_bbox(NormalizedBoundingBox)
+    assert outer.contains_bbox(inner_normalized)
+    assert not outer.contains_bbox(not_contained_normalized)
+
+    # NormalizedBoundingBox.contains_bbox(BoundingBox)
+    assert outer_normalized.contains_bbox(inner)
+    assert not outer_normalized.contains_bbox(not_contained)

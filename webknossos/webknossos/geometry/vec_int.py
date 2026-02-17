@@ -1,7 +1,14 @@
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from operator import add, floordiv, mod, mul, sub
-from typing import TYPE_CHECKING, Any, Optional, TypeAlias, TypeVar, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Optional,
+    TypeAlias,
+    TypeVar,
+    Union,
+)
 
 import numpy as np
 
@@ -21,12 +28,13 @@ def _value_error(args: Any) -> str:
 _T = TypeVar("_T", bound="VecInt")
 
 
-class VecInt(tuple):
+class VecInt(Sequence[int]):
     """
     A specialized vector class for storing and manipulating integer values with named axes.
 
-    This class extends the built-in tuple type to provide vector operations while preserving
-    axis information. It allows for initialization with both positional and named arguments.
+    This class uses composition (an internal `_data` tuple) to provide vector operations
+    while preserving axis information. It allows for initialization with both positional
+    and named arguments.
 
     Attributes:
         axes (tuple[str, ...]): Names of the vector's axes, e.g. ('x', 'y', 'z')
@@ -51,6 +59,7 @@ class VecInt(tuple):
         ```
     """
 
+    _data: tuple[int, ...]
     axes: tuple[str, ...]
     _c_pos: int | None
     _x_pos: int | None
@@ -67,6 +76,13 @@ class VecInt(tuple):
 
         if args:
             if isinstance(args[0], VecInt):
+                if axes is not None:
+                    axes = tuple(axes)
+                    if len(axes) != len(args[0]):
+                        raise ValueError(
+                            "The number of axes must match the number of axes in the VecInt."
+                        )
+                    return cls(args[0].to_tuple(), axes=axes)
                 return args[0]
             if isinstance(args[0], np.ndarray):
                 assert np.count_nonzero(args[0] % 1) == 0, _value_error(args)
@@ -91,7 +107,8 @@ class VecInt(tuple):
 
         assert as_tuple is not None, _value_error(args)
 
-        self = super().__new__(cls, cast(Iterable, as_tuple))
+        self = object.__new__(cls)
+        self._data = as_tuple
         # self.axes is set in __new__ instead of __init__ so that pickling/unpickling
         # works without problems. As long as the deserialization of a tree instance
         # is not finished, the object is only half-initialized. Since self.axes
@@ -106,6 +123,35 @@ class VecInt(tuple):
 
         return self
 
+    def __getitem__(self, index: Any) -> Any:
+        if isinstance(index, str):
+            if index not in self.axes:
+                raise KeyError(f"Axis {index} not found in {self.axes}")
+            return self[self.axes.index(index)]
+        return self._data[index]
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self) -> Iterator[int]:
+        return iter(self._data)
+
+    def __hash__(self) -> int:
+        return hash(self._data)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, VecInt):
+            return self._data == other._data
+        if isinstance(other, tuple):
+            return self._data == other
+        return NotImplemented
+
+    def __contains__(self, item: object) -> bool:
+        return item in self._data
+
+    def __bool__(self) -> bool:
+        return len(self._data) > 0
+
     def __getnewargs__(self) -> tuple[tuple[int, ...], tuple[str, ...]]:
         return (self.to_tuple(), self.axes)
 
@@ -117,7 +163,7 @@ class VecInt(tuple):
         if self._c_pos is not None:
             return self[self._c_pos]
 
-        raise ValueError("The vector does not have an c component.")
+        raise KeyError("The vector does not have an c component.")
 
     @property
     def x(self) -> int:
@@ -127,7 +173,7 @@ class VecInt(tuple):
         if self._x_pos is not None:
             return self[self._x_pos]
 
-        raise ValueError("The vector does not have an x component.")
+        raise KeyError("The vector does not have an x component.")
 
     @property
     def y(self) -> int:
@@ -137,7 +183,7 @@ class VecInt(tuple):
         if self._y_pos is not None:
             return self[self._y_pos]
 
-        raise ValueError("The vector does not have an y component.")
+        raise KeyError("The vector does not have an y component.")
 
     @property
     def z(self) -> int:
@@ -147,13 +193,31 @@ class VecInt(tuple):
         if self._z_pos is not None:
             return self[self._z_pos]
 
-        raise ValueError("The vector does not have an z component.")
+        raise KeyError("The vector does not have an z component.")
 
     @property
     def xyz(self) -> "Vec3Int":
         from .vec3_int import Vec3Int
 
         return Vec3Int(self.x, self.y, self.z)
+
+    def get(self, axis: str, default: int | None = None) -> int:
+        """
+        Returns the value of the specified axis.
+
+        Args:
+            axis (str): The name of the axis to get the value for.
+            default (int, optional): The default value to return if the axis is not present. Defaults to None.
+
+        Returns:
+            int: The value of the specified axis.
+        """
+        if axis in self.axes:
+            return self[self.axes.index(axis)]
+        else:
+            if default is None:
+                raise KeyError(f"Axis {axis} not found in {self.axes}")
+            return default
 
     @staticmethod
     def from_str(string: str) -> "VecInt":
@@ -168,30 +232,63 @@ class VecInt(tuple):
         """
         return VecInt(tuple(map(int, re.findall(r"\d+", string))))
 
-    def with_replaced(self: _T, index: int, new_element: int) -> _T:
-        """Returns a new ND Vector with a replaced element at a given index."""
+    def with_replaced(self: _T, axis: str | int, new_element: int) -> _T:
+        """Returns a new ND Vector with a replaced element at a given axis (or index for backwards compatibility)."""
+
+        if isinstance(axis, int):
+            index = axis
+        else:
+            index = self.axes.index(axis)
 
         return self.__class__(
-            *self[:index], new_element, *self[index + 1 :], axes=self.axes
+            *self._data[:index], new_element, *self._data[index + 1 :], axes=self.axes
         )
+
+    def with_c(self: _T, new_c: int) -> _T:
+        """Returns a new ND Vector with the c component replaced by the given value."""
+        if self._c_pos is None:
+            raise KeyError("The vector does not have an c component.")
+        return self.with_replaced(self._c_pos, new_c)
+
+    def with_x(self: _T, new_x: int) -> _T:
+        """Returns a new ND Vector with the x component replaced by the given value."""
+        if self._x_pos is None:
+            raise KeyError("The vector does not have an y component.")
+        return self.with_replaced(self._x_pos, new_x)
+
+    def with_y(self: _T, new_y: int) -> _T:
+        """Returns a new ND Vector with the y component replaced by the given value."""
+        if self._y_pos is None:
+            raise KeyError("The vector does not have an y component.")
+        return self.with_replaced(self._y_pos, new_y)
+
+    def with_z(self: _T, new_z: int) -> _T:
+        """Returns a new ND Vector with the z component replaced by the given value."""
+        if self._z_pos is None:
+            raise KeyError("The vector does not have an z component.")
+        return self.with_replaced(self._z_pos, new_z)
+
+    def with_xyz(self: _T, new_xyz: "Vec3Int") -> _T:
+        """Returns a new ND Vector with the x, y and z components replaced by the given vector."""
+        return self.with_x(new_xyz.x).with_y(new_xyz.y).with_z(new_xyz.z)
 
     def to_np(self) -> np.ndarray:
         """
         Returns the vector as a numpy array.
         """
-        return np.array(self)
+        return np.array(self._data)
 
     def to_list(self) -> list[int]:
         """
         Returns the vector as a list.
         """
-        return list(self)
+        return list(self._data)
 
     def to_tuple(self) -> tuple[int, ...]:
         """
         Returns the vector as a tuple.
         """
-        return tuple(self)
+        return self._data
 
     def contains(self, needle: int) -> bool:
         """

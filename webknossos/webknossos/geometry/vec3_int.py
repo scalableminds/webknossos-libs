@@ -101,10 +101,15 @@ class Vec3Int(VecInt):
     def from_xyz(x: int, y: int, z: int) -> "Vec3Int":
         """Use Vec3Int.from_xyz for fast construction."""
 
-        # By calling __new__ of tuple directly, we circumvent
+        # By calling object.__new__ directly, we circumvent
         # the tolerant (and potentially) slow Vec3Int.__new__ method.
-        vec3int = tuple.__new__(Vec3Int, (x, y, z))
+        vec3int = object.__new__(Vec3Int)
+        vec3int._data = (x, y, z)
         vec3int.axes = ("x", "y", "z")
+        vec3int._c_pos = None
+        vec3int._x_pos = 0
+        vec3int._y_pos = 1
+        vec3int._z_pos = 2
         return vec3int
 
     @staticmethod

@@ -5,7 +5,6 @@ from typing import Any
 
 import attr
 import cattr
-import numpy as np
 from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from ..dataset_properties import (
@@ -21,24 +20,17 @@ from ..dataset_properties import (
     length_unit_from_str,
 )
 from ..dataset_properties.dataset_properties import DEFAULT_LENGTH_UNIT_STR
-from ..geometry import Mag, NDBoundingBox, Vec3Int
+from ..geometry import Mag, NormalizedBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
+from .dtype_conversion import (
+    _dtype_per_channel_to_element_class,
+    _element_class_to_dtype_per_channel,
+    _properties_floating_type_to_python_type,  # noqa: F401
+)
 from .layer_categories import LayerCategoryType
 
-_properties_floating_type_to_python_type: dict[str | type, np.dtype] = {
-    "float": np.dtype("float32"),
-    #  np.float: np.dtype("float32"),  # np.float is an alias for float
-    float: np.dtype("float32"),
-    "double": np.dtype("float64"),
-}
-_python_floating_type_to_properties_type = {
-    "float32": "float",
-    "float64": "double",
-}
-
-
 # register (un-)structure hooks for non-attr-classes
-bbox_to_wkw: Callable[[NDBoundingBox], dict] = lambda o: o.to_wkw_dict()  # noqa: E731
+bbox_to_wkw: Callable[[NormalizedBoundingBox], dict] = lambda o: o.to_wkw_dict()  # noqa: E731
 
 
 def mag_unstructure(mag: Mag) -> list[int]:
@@ -64,12 +56,6 @@ def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
 
 # The serialization of `LayerProperties` differs slightly based on whether it is a `wkw` or `zarr` layer.
 # These post-unstructure and pre-structure functions perform the conditional field renames.
-def mag_view_properties_post_unstructure(d: dict[str, Any]) -> dict[str, Any]:
-    d["resolution"] = d["mag"]
-    del d["mag"]
-    return d
-
-
 def mag_view_properties_pre_structure(d: dict[str, Any]) -> dict[str, Any]:
     d["mag"] = d["resolution"]
     del d["resolution"]
@@ -85,11 +71,12 @@ def layer_properties_post_unstructure(
         obj: LayerProperties | SegmentationLayerProperties,
     ) -> dict[str, Any]:
         d = converter_fn(obj)
-        if d["dataFormat"] == "wkw":
-            d["wkwResolutions"] = [
-                mag_view_properties_post_unstructure(m) for m in d["mags"]
-            ]
-            del d["mags"]
+
+        for mag in d["mags"]:
+            if "axisOrder" in d["boundingBox"]:
+                mag["axisOrder"] = d["boundingBox"]["axisOrder"]
+            if "channelIndex" in d["boundingBox"]:
+                mag["channelIndex"] = d["boundingBox"]["channelIndex"]
 
         # json expects nd_bounding_box to be represented as bounding_box and additional_axes
         if "additionalAxes" in d["boundingBox"]:
@@ -99,6 +86,18 @@ def layer_properties_post_unstructure(
         if "attachments" in d:
             if all(p is None or len(p) == 0 for p in d["attachments"].values()):
                 del d["attachments"]
+
+        if "numChannels" in d["boundingBox"]:
+            d["numChannels"] = d["boundingBox"]["numChannels"]
+            del d["boundingBox"]["numChannels"]
+        else:
+            d["numChannels"] = 1
+
+        d["elementClass"] = _dtype_per_channel_to_element_class(
+            d["dtype"], d["numChannels"]
+        )
+        del d["dtype"]
+
         return d
 
     return __layer_properties_post_unstructure
@@ -129,17 +128,25 @@ def layer_properties_pre_structure(
             del d["additionalAxes"]
         if len(d["mags"]) > 0:
             first_mag = d["mags"][0]
+            if "channelIndex" in first_mag:
+                d["boundingBox"]["channelIndex"] = first_mag["channelIndex"]
             if "axisOrder" in first_mag:
-                assert (
-                    "c" not in first_mag["axisOrder"]
-                    or first_mag["axisOrder"]["c"] == 0
-                ), "The channels c must have index 0 in axis order."
                 assert all(
                     first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
                 )
                 d["boundingBox"]["axisOrder"] = copy.deepcopy(first_mag["axisOrder"])
-                if "c" in d["boundingBox"]["axisOrder"]:
-                    del d["boundingBox"]["axisOrder"]["c"]
+                assert all(
+                    first_mag["axisOrder"] == mag["axisOrder"] for mag in d["mags"]
+                ), "axisOrder must be the same for all mags"
+
+        if "numChannels" in d:
+            d["boundingBox"]["numChannels"] = d["numChannels"]
+            d["dtype"] = _element_class_to_dtype_per_channel(
+                d["elementClass"], d["numChannels"]
+            )
+        else:
+            d["dtype"] = _element_class_to_dtype_per_channel(d["elementClass"], 1)
+        del d["elementClass"]
 
         obj = converter_fn(d, type_value)
         return obj
@@ -150,9 +157,9 @@ def layer_properties_pre_structure(
 @cache
 def get_dataset_converter() -> cattr.Converter:
     dataset_converter = cattr.Converter()
-    dataset_converter.register_unstructure_hook(NDBoundingBox, bbox_to_wkw)
+    dataset_converter.register_unstructure_hook(NormalizedBoundingBox, bbox_to_wkw)
     dataset_converter.register_structure_hook(
-        NDBoundingBox, lambda d, _: NDBoundingBox.from_wkw_dict(d)
+        NormalizedBoundingBox, lambda d, _: NormalizedBoundingBox.from_wkw_dict(d)
     )
     dataset_converter.register_unstructure_hook(Mag, mag_unstructure)
     dataset_converter.register_structure_hook(Mag, lambda d, _: Mag(d))

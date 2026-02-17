@@ -524,7 +524,7 @@ class PimsImages:
             assert all(
                 size == 1
                 for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
-                if axis not in ("x", "y", "z")
+                if axis not in ("c", "x", "y", "z")
             ), (
                 "The delivered BoundingBox has to be flat except for x,y and z dimension."
             )
@@ -648,10 +648,10 @@ class PimsImages:
             else:
                 if isinstance(images, pims.FramesSequenceND):
                     axes_names = (self._iter_axes or []) + [
-                        axis for axis in self._bundle_axes if axis != "c"
+                        axis for axis in self._bundle_axes
                     ]
                     axes_sizes = [images.sizes[axis] for axis in axes_names]
-                    axes_index = list(range(1, len(axes_names) + 1))
+                    axes_index = list(range(0, len(axes_names)))
                     topleft = VecInt.zeros(tuple(axes_names))
 
                     if self._swap_xy:

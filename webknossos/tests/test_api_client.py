@@ -67,7 +67,7 @@ def test_dataset_info(client: WkApiClient) -> None:
     data_layers = data_source.data_layers
     assert data_layers is not None
     assert sorted(
-        (layer.name, layer.category, layer.element_class) for layer in data_layers
+        (layer.name, layer.category, layer.dtype) for layer in data_layers
     ) == [
         ("color", "color", "uint8"),
         ("segmentation", "segmentation", "uint32"),

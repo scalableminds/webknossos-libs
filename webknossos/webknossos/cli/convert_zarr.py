@@ -49,7 +49,7 @@ def _zarr_chunk_converter(
     bounding_box: BoundingBox,
     source_zarr_path: UPath,
     target_mag_view: MagView,
-    flip_axes: int | tuple[int, ...] | None,
+    flip_axes: tuple[int, ...] | None,
 ) -> int:
     logger.info("Conversion of %s", bounding_box.topleft)
 
@@ -76,7 +76,7 @@ def convert_zarr(
     shard_shape: Vec3Int,
     is_segmentation_layer: bool = False,
     voxel_size_with_unit: VoxelSize = VoxelSize((1.0, 1.0, 1.0)),
-    flip_axes: int | tuple[int, ...] | None = None,
+    flip_axes: tuple[int, ...] | None = None,
     compress: bool = True,
     executor_args: Namespace | None = None,
 ) -> MagView:
@@ -305,7 +305,7 @@ When converting a folder, this option is ignored."
         shard_shape=shard_shape or DEFAULT_SHARD_SHAPE,
         is_segmentation_layer=is_segmentation_layer,
         voxel_size_with_unit=voxel_size_with_unit,
-        flip_axes=flip_axes,
+        flip_axes=flip_axes.to_tuple() if flip_axes else None,
         compress=compress,
         executor_args=executor_args,
     )

@@ -6,10 +6,11 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-if TYPE_CHECKING:
-    from ..view import View
-
 from ...geometry import NDBoundingBox
+from .buffered_slice_writer import _parse_dimension
+
+if TYPE_CHECKING:
+    from ..layer.view import View
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class BufferedSliceReader:
         view: "View",
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
-        dimension: int = 2,  # z
+        dimension: str | int = "z",
         *,
         relative_bounding_box: NDBoundingBox | None = None,  # in mag1
         absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
@@ -31,8 +32,7 @@ class BufferedSliceReader:
         self.view = view
         self.buffer_size = buffer_size
         self.dtype = self.view.get_dtype()
-        assert 0 <= dimension <= 2
-        self.dimension = dimension
+        self.dimension = _parse_dimension(dimension)
         self.use_logging = use_logging
 
         if relative_bounding_box is None and absolute_bounding_box is None:
@@ -44,20 +44,23 @@ class BufferedSliceReader:
             )
 
         assert absolute_bounding_box is not None
-        self.bbox_current_mag = absolute_bounding_box.in_mag(view.mag)
+        self.bbox_current_mag = absolute_bounding_box.in_mag(view.mag).normalize_axes(
+            view.num_channels
+        )
 
     def _get_slice_generator(self) -> Generator[np.ndarray, None, None]:
-        chunk_size = self.bbox_current_mag.size_xyz.to_list()
-        chunk_size[self.dimension] = self.buffer_size
+        chunk_shape = self.bbox_current_mag.size_xyz.with_replaced(
+            self.dimension, self.buffer_size
+        )
 
-        for chunk in self.bbox_current_mag.chunk(chunk_size):
+        for chunk_bbox in self.bbox_current_mag.chunk(chunk_shape):
             if self.use_logging:
-                logger.info(f"({getpid()}) Reading data from bbox {chunk}.")
+                logger.info(f"({getpid()}) Reading data from bbox {chunk_bbox}.")
             data = self.view.read(
-                absolute_bounding_box=chunk.from_mag_to_mag1(self.view.mag)
+                absolute_bounding_box=chunk_bbox.from_mag_to_mag1(self.view.mag)
             )
 
-            yield from np.rollaxis(data, chunk.index_xyz[self.dimension])
+            yield from np.rollaxis(data, chunk_bbox.axes.index(self.dimension))
 
     def __enter__(self) -> Generator[np.ndarray, None, None]:
         return self._get_slice_generator()
