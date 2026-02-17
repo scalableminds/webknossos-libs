@@ -28,11 +28,10 @@ from webknossos.dataset.abstract_dataset import (
     _DATASET_DEPRECATED_URL_REGEX,
     _DATASET_URL_REGEX,
     AbstractDataset,
+    _dtype_maybe,
 )
 from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer, Zarr3Config
 from webknossos.dataset.layer.abstract_layer import (
-    _normalize_dtype_per_channel,
-    _normalize_dtype_per_layer,
     _validate_layer_name,
 )
 from webknossos.dataset.sampling_modes import SamplingModes
@@ -50,12 +49,8 @@ from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
 from ..client.api_client.errors import UnexpectedStatusError
-from ..dataset_properties.dtype_conversion import (
-    _dtype_per_layer_to_dtype_per_channel,
-    _properties_floating_type_to_python_type,
-)
 from ..ssl_context import SSL_CONTEXT
-from .defaults import DEFAULT_BIT_DEPTH, DEFAULT_DATA_FORMAT
+from .defaults import DEFAULT_DATA_FORMAT, DEFAULT_DTYPE
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .transfer_mode import TransferMode
@@ -818,7 +813,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         layer_name: str,
         category: LayerCategoryType,
         *,
-        dtype_per_layer: DTypeLike | None = None,
+        dtype: DTypeLike | None = None,
         dtype_per_channel: DTypeLike | None = None,
         num_channels: int | None = None,
         data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
@@ -832,28 +827,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         if num_channels is None:
             num_channels = 1
 
-        if dtype_per_layer is not None and dtype_per_channel is not None:
-            raise AttributeError(
-                "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
-            )
-        elif dtype_per_channel is not None:
-            dtype_per_channel = _properties_floating_type_to_python_type.get(
-                dtype_per_channel,  # type: ignore[arg-type]
-                dtype_per_channel,  # type: ignore[arg-type]
-            )
-            dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
-        elif dtype_per_layer is not None:
-            warn_deprecated("dtype_per_layer", "dtype_per_channel")
-            dtype_per_layer = _properties_floating_type_to_python_type.get(
-                dtype_per_layer,  # type: ignore[arg-type]
-                dtype_per_layer,  # type: ignore[arg-type]
-            )
-            dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
-            dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
-                dtype_per_layer, num_channels
-            )
-        else:
-            dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
+        dtype = _dtype_maybe(dtype, dtype_per_channel)
+        if dtype is None:
+            dtype = DEFAULT_DTYPE
 
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -869,7 +845,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             name=layer_name,
             category=category,
             bounding_box=bounding_box,
-            dtype=dtype_per_channel.name,
+            dtype=dtype.name,
             mags=[],
             data_format=DataFormat(data_format),
         )

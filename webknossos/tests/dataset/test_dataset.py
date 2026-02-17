@@ -402,6 +402,23 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     assert mag_view.info.compression_mode == True
 
 
+def test_dtype_per_channel() -> None:
+    ds_path = prepare_dataset_path(DEFAULT_DATA_FORMAT, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    with pytest.warns(DeprecationWarning):
+        layer = ds.add_layer(
+            "color",
+            COLOR_CATEGORY,
+            dtype_per_channel="uint16",
+            num_channels=3,
+            data_format=DataFormat.WKW,
+        )
+    assert layer.dtype == np.dtype("uint16")
+
+    with pytest.warns(DeprecationWarning):
+        assert layer.dtype_per_channel == np.dtype("uint16")
+
+
 def test_create_dataset_with_explicit_header_fields() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
 
@@ -409,7 +426,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="uint16",
+        dtype="uint16",
         num_channels=3,
         data_format=DataFormat.WKW,
     )
@@ -423,7 +440,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert len(ds.layers) == 1
     assert len(ds.get_layer("color").mags) == 2
 
-    assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
+    assert ds.get_layer("color").dtype == np.dtype("uint16")
     assert ds.get_layer("color")._properties.dtype == "uint16"
     assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
     assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(4096)
@@ -453,7 +470,7 @@ def test_deprecated_chunks_per_shard() -> None:
         ds.add_layer(
             "color",
             COLOR_CATEGORY,
-            dtype_per_channel="uint16",
+            dtype="uint16",
             num_channels=3,
             data_format=DataFormat.WKW,
         )
@@ -467,7 +484,7 @@ def test_deprecated_chunks_per_shard() -> None:
         assert len(ds.layers) == 1
         assert len(ds.get_layer("color").mags) == 2
 
-        assert ds.get_layer("color").dtype_per_channel == np.dtype("uint16")
+        assert ds.get_layer("color").dtype == np.dtype("uint16")
         assert ds.get_layer("color")._properties.dtype == "uint16"
         assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
         assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(
@@ -508,7 +525,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: UPath) ->
     ds1.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="float",
+        dtype="float",
         num_channels=1,
         data_format=data_format,
     )
@@ -518,7 +535,7 @@ def test_modify_existing_dataset(data_format: DataFormat, output_path: UPath) ->
     ds2.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         largest_segment_id=100000,
         data_format=data_format,
     ).add_mag("1")
@@ -869,7 +886,7 @@ def test_wkw_write_multi_channel_uint16(
         "color",
         COLOR_CATEGORY,
         num_channels=3,
-        dtype_per_channel="uint16",
+        dtype="uint16",
         data_format=data_format,
     ).add_mag(
         "1", shard_shape=(512, 512, 32) if data_format == DataFormat.Zarr3 else None
@@ -1031,7 +1048,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: UPath) -> None:
     layer = ds.get_or_add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         data_format=data_format,
     )
@@ -1043,7 +1060,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: UPath) -> None:
     layer = ds.get_or_add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         data_format=data_format,
     )
@@ -1056,7 +1073,7 @@ def test_get_or_add_layer(data_format: DataFormat, output_path: UPath) -> None:
         ds.get_or_add_layer(
             "color",
             COLOR_CATEGORY,
-            dtype_per_channel="uint16",
+            dtype="uint16",
             num_channels=1,
             data_format=data_format,
         )
@@ -1071,10 +1088,10 @@ def test_get_or_add_layer_idempotence(
     ds_path = prepare_dataset_path(data_format, output_path)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     ds.get_or_add_layer(
-        "color2", category="color", dtype_per_channel=np.uint8, data_format=data_format
+        "color2", category="color", dtype=np.uint8, data_format=data_format
     ).get_or_add_mag("1")
     ds.get_or_add_layer(
-        "color2", category="color", dtype_per_channel=np.uint8, data_format=data_format
+        "color2", category="color", dtype=np.uint8, data_format=data_format
     ).get_or_add_mag("1")
 
     assure_exported_properties(ds)
@@ -1282,7 +1299,7 @@ def test_chunking_wkw_advanced(data_format: DataFormat) -> None:
     mag = ds.add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=3,
     ).add_mag(
         "1",
@@ -1312,7 +1329,7 @@ def test_chunking_wkw_wrong_chunk_shape(
     mag = ds.add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=3,
         data_format=data_format,
     ).add_mag(
@@ -1528,59 +1545,6 @@ def test_get_view() -> None:
         mag.get_view(absolute_offset=(-1, -2, -3))
 
     assure_exported_properties(ds)
-
-
-def test_adding_layer_with_invalid_dtype_per_layer() -> None:
-    with pytest.warns(DeprecationWarning):
-        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "invalid_dtype")
-        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-        with pytest.raises(TypeError):
-            # this would lead to a dtype_per_channel of "uint10", but that is not a valid dtype
-            ds.add_layer(
-                "color",
-                COLOR_CATEGORY,
-                dtype_per_layer="uint30",
-                num_channels=3,
-            )
-        with pytest.raises(TypeError):
-            # "int" is interpreted as "int64", but 64 bit cannot be split into 3 channels
-            ds.add_layer("color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=3)
-        ds.add_layer(
-            "color", COLOR_CATEGORY, dtype_per_layer="int", num_channels=4
-        )  # "int"/"int64" works with 4 channels
-
-        assure_exported_properties(ds)
-
-
-def test_adding_layer_with_valid_dtype_per_layer() -> None:
-    with pytest.warns(DeprecationWarning):
-        ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "valid_dtype")
-        ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-        ds.add_layer("color1", COLOR_CATEGORY, dtype_per_layer="uint24", num_channels=3)
-        ds.add_layer("color2", COLOR_CATEGORY, dtype_per_layer=np.uint8, num_channels=1)
-        ds.add_layer(
-            "color3", COLOR_CATEGORY, dtype_per_channel=np.uint8, num_channels=3
-        )
-        ds.add_layer(
-            "color4", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
-        )
-
-        data = json.loads((ds_path / PROPERTIES_FILE_NAME).read_text())
-        # The order of the layers in the properties equals the order of creation
-        assert data["dataLayers"][0]["elementClass"] == "uint24"
-        assert data["dataLayers"][1]["elementClass"] == "uint8"
-        assert data["dataLayers"][2]["elementClass"] == "uint24"
-        assert data["dataLayers"][3]["elementClass"] == "uint24"
-
-        reopened_ds = Dataset.open(
-            ds_path
-        )  # reopen the dataset to check if the data is read from the properties correctly
-        assert reopened_ds.get_layer("color1").dtype_per_layer == "uint24"
-        assert reopened_ds.get_layer("color2").dtype_per_layer == "uint8"
-        assert reopened_ds.get_layer("color3").dtype_per_layer == "uint24"
-        assert reopened_ds.get_layer("color4").dtype_per_layer == "uint24"
-
-        assure_exported_properties(ds)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
@@ -1867,12 +1831,10 @@ def test_add_layer_as_ref(
 @pytest.mark.parametrize("output_path", OUTPUT_PATHS)
 def test_add_layer_as_ref_prefix(output_path: UPath) -> None:
     source = Dataset(output_path / "name_with_suffix", (1, 1, 1))
-    source.add_layer(
-        "consensus", SEGMENTATION_CATEGORY, dtype_per_channel="uint8"
-    ).add_mag(1)
+    source.add_layer("consensus", SEGMENTATION_CATEGORY, dtype="uint8").add_mag(1)
 
     target = Dataset(output_path / "name", (1, 1, 1))
-    target.add_layer("raw", COLOR_CATEGORY, dtype_per_channel="uint8").add_mag(1)
+    target.add_layer("raw", COLOR_CATEGORY, dtype="uint8").add_mag(1)
 
     glom = source.get_layer("consensus")
     target.add_layer_as_ref(foreign_layer=glom, new_layer_name="glomeruli")
@@ -1934,7 +1896,7 @@ def test_add_mag_as_ref(data_format: DataFormat, output_path: UPath) -> None:
     original_layer = original_ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         bounding_box=BoundingBox((0, 0, 0), (10, 20, 30)),
     )
     original_layer.add_mag(1).write(
@@ -1949,7 +1911,7 @@ def test_add_mag_as_ref(data_format: DataFormat, output_path: UPath) -> None:
     layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         bounding_box=BoundingBox((6, 6, 6), (10, 20, 30)),
     )
     layer.add_mag(1).write(
@@ -2000,7 +1962,7 @@ def test_add_mag_as_ref_with_mag(data_format: DataFormat, output_path: UPath) ->
     original_layer = original_ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         bounding_box=BoundingBox((0, 0, 0), (10, 20, 30)),
     )
     original_layer.add_mag(1).write(
@@ -2011,7 +1973,7 @@ def test_add_mag_as_ref_with_mag(data_format: DataFormat, output_path: UPath) ->
     layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         bounding_box=BoundingBox((6, 6, 6), (10, 20, 30)),
     )
     layer.add_mag_as_ref(original_layer.get_mag(1), mag="2")
@@ -2052,7 +2014,7 @@ def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
 
     dst_ds = Dataset(dst_dataset_path, voxel_size=(1, 1, 1))
     dst_layer = dst_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
+        "color", COLOR_CATEGORY, dtype="uint8", data_format=data_format
     )
     assert not dst_layer.read_only
 
@@ -2069,7 +2031,7 @@ def test_add_mag_as_copy(data_format: DataFormat, output_path: UPath) -> None:
     original_layer = original_ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         data_format=data_format,
         bounding_box=BoundingBox((6, 6, 6), (10, 20, 30)),
     )
@@ -2079,7 +2041,7 @@ def test_add_mag_as_copy(data_format: DataFormat, output_path: UPath) -> None:
 
     copy_ds = Dataset(copy_ds_path, voxel_size=(1, 1, 1))
     copy_layer = copy_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
+        "color", COLOR_CATEGORY, dtype="uint8", data_format=data_format
     )
     copy_mag = copy_layer.add_mag_as_copy(original_mag, extend_layer_bounding_box=True)
     assert not copy_mag.read_only
@@ -2117,7 +2079,7 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: UPath) -> None:
     original_layer = original_ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         data_format=data_format,
         bounding_box=BoundingBox((6, 6, 6), (10, 20, 30)),
     )
@@ -2127,7 +2089,7 @@ def test_add_fs_copy_mag(data_format: DataFormat, output_path: UPath) -> None:
 
     copy_ds = Dataset(copy_ds_path, voxel_size=(1, 1, 1))
     copy_layer = copy_ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8", data_format=data_format
+        "color", COLOR_CATEGORY, dtype="uint8", data_format=data_format
     )
 
     with mock.patch.object(
@@ -2222,7 +2184,7 @@ def test_dataset_shallow_copy(data_format: DataFormat, output_path: UPath) -> No
     original_layer_1 = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel=np.uint8,
+        dtype=np.uint8,
         num_channels=1,
         data_format=data_format,
     )
@@ -2231,7 +2193,7 @@ def test_dataset_shallow_copy(data_format: DataFormat, output_path: UPath) -> No
     original_layer_2 = ds.add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
-        dtype_per_channel=np.uint32,
+        dtype=np.uint32,
         largest_segment_id=0,
         data_format=data_format,
     ).as_segmentation_layer()
@@ -2281,7 +2243,7 @@ def test_dataset_shallow_copy_downsample() -> None:
     original_layer_1 = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel=np.uint8,
+        dtype=np.uint8,
         num_channels=1,
         data_format=DEFAULT_DATA_FORMAT,
         bounding_box=BoundingBox((0, 0, 0), (512, 512, 512)),
@@ -2427,7 +2389,7 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
     mag = ds.add_layer(
         "color",
         category=COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=3,
         data_format=data_format,
     ).add_mag("1")
@@ -2444,7 +2406,7 @@ def test_for_zipped_chunks(data_format: DataFormat) -> None:
         .get_or_add_layer(
             "color",
             COLOR_CATEGORY,
-            dtype_per_channel="uint8",
+            dtype="uint8",
             num_channels=3,
             data_format=data_format,
         )
@@ -3208,7 +3170,7 @@ def test_add_layer_like(data_format: DataFormat, output_path: UPath) -> None:
     color_layer1 = ds.add_layer(
         "color1",
         COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=3,
         data_format=data_format,
     )
@@ -3216,7 +3178,7 @@ def test_add_layer_like(data_format: DataFormat, output_path: UPath) -> None:
     segmentation_layer1 = ds.add_layer(
         "segmentation1",
         SEGMENTATION_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         largest_segment_id=999,
         data_format=data_format,
     ).as_segmentation_layer()
@@ -3231,11 +3193,7 @@ def test_add_layer_like(data_format: DataFormat, output_path: UPath) -> None:
     assert len(color_layer1.mags) == 1
     assert len(color_layer2.mags) == 0
     assert color_layer1.category == color_layer2.category == COLOR_CATEGORY
-    assert (
-        color_layer1.dtype_per_channel
-        == color_layer2.dtype_per_channel
-        == np.dtype("uint8")
-    )
+    assert color_layer1.dtype == color_layer2.dtype == np.dtype("uint8")
     assert color_layer1.num_channels == color_layer2.num_channels == 3
     assert color_layer1.data_format == color_layer2.data_format == data_format
 
@@ -3248,11 +3206,7 @@ def test_add_layer_like(data_format: DataFormat, output_path: UPath) -> None:
         == segmentation_layer2.category
         == SEGMENTATION_CATEGORY
     )
-    assert (
-        segmentation_layer1.dtype_per_channel
-        == segmentation_layer2.dtype_per_channel
-        == np.dtype("uint8")
-    )
+    assert segmentation_layer1.dtype == segmentation_layer2.dtype == np.dtype("uint8")
     assert segmentation_layer1.num_channels == segmentation_layer2.num_channels == 1
     assert (
         segmentation_layer1.data_format
@@ -3269,7 +3223,7 @@ def test_add_layer_like(data_format: DataFormat, output_path: UPath) -> None:
 
 
 @pytest.mark.parametrize(
-    "dtype_per_channel,category,is_supported",
+    "dtype,category,is_supported",
     [
         ("uint8", COLOR_CATEGORY, True),
         ("uint16", COLOR_CATEGORY, True),
@@ -3293,20 +3247,18 @@ def test_add_layer_like(data_format: DataFormat, output_path: UPath) -> None:
         ("float64", SEGMENTATION_CATEGORY, False),
     ],
 )
-def test_add_layer_dtype_per_channel(
-    dtype_per_channel: str, category: LayerCategoryType, is_supported: bool
+def test_add_layer_dtype(
+    dtype: str, category: LayerCategoryType, is_supported: bool
 ) -> None:
-    ds_path = prepare_dataset_path(
-        DataFormat.Zarr3, TESTOUTPUT_DIR, "dtype_per_channel"
-    )
+    ds_path = prepare_dataset_path(DataFormat.Zarr3, TESTOUTPUT_DIR, "dtype")
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     if is_supported:
         layer = ds.add_layer(
             "test_layer",
             category=category,
-            dtype_per_channel=dtype_per_channel,
+            dtype=dtype,
         )
-        assert layer.dtype_per_channel == np.dtype(dtype_per_channel)
+        assert layer.dtype == np.dtype(dtype)
     else:
         with pytest.raises(
             ValueError,
@@ -3315,7 +3267,7 @@ def test_add_layer_dtype_per_channel(
             ds.add_layer(
                 "test_layer",
                 category=category,
-                dtype_per_channel=dtype_per_channel,
+                dtype=dtype,
             )
 
 
@@ -3437,7 +3389,7 @@ def test_aligned_downsampling(data_format: DataFormat, output_path: UPath) -> No
     test_layer = dataset.add_layer(
         layer_name="color_2",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=3,
         data_format=input_layer.data_format,
     )
@@ -3499,7 +3451,7 @@ def test_guided_downsampling(data_format: DataFormat, output_path: UPath) -> Non
     output_layer = output_dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel=input_layer.dtype_per_channel,
+        dtype=input_layer.dtype,
         num_channels=input_layer.num_channels,
         data_format=input_layer.data_format,
     )

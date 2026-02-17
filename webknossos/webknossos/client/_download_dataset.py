@@ -74,7 +74,7 @@ def download_dataset(
             layer_name=layer_name,
             category=category,
             data_format=data_format or DEFAULT_DATA_FORMAT,
-            dtype_per_channel=api_data_layer.dtype_np,
+            dtype=api_data_layer.dtype_np,
             largest_segment_id=getattr(api_data_layer, "largest_segment_id", None),
         )
 
@@ -124,8 +124,8 @@ def download_dataset(
                 assert missing_buckets == "[]", (
                     f"Download contained missing buckets {missing_buckets}."
                 )
-                data = np.frombuffer(
-                    chunk_bytes, dtype=layer.dtype_per_channel
-                ).reshape(layer.num_channels, *chunk_in_mag.size, order="F")
+                data = np.frombuffer(chunk_bytes, dtype=layer.dtype).reshape(
+                    layer.num_channels, *chunk_in_mag.size, order="F"
+                )
                 mag_view.write(data, absolute_offset=chunk.topleft)
     return dataset

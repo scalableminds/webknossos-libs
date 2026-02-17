@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 from ..dataset_properties.data_format import DataFormat
 from ..geometry import Vec3Int
 
@@ -22,6 +24,7 @@ DEFAULT_SHARD_SHAPE_FROM_IMAGES = (
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES * DEFAULT_CHUNK_SHAPE
 )
 
+DEFAULT_DTYPE = np.dtype("uint8")
 DEFAULT_BIT_DEPTH = 8
 PROPERTIES_FILE_NAME = "datasource-properties.json"
 ZGROUP_FILE_NAME = ".zgroup"
