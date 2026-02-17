@@ -50,9 +50,9 @@ def _raw_chunk_converter(
     target_mag_view: MagView,
     source_dtype: np.dtype,
     target_dtype: np.dtype,
-    shape: tuple[int, int, int],
+    shape: Vec3Int,
     order: Literal["C", "F"],
-    flip_axes: int | tuple[int, ...] | None,
+    flip_axes: tuple[int, ...] | None,
     rescale_min_max: RescaleValues | None,
 ) -> None:
     logger.info("Conversion of %s", bounding_box.topleft)
@@ -63,7 +63,7 @@ def _raw_chunk_converter(
         ),  # this is fine, because we checked that source_raw_path is a fs_path
         dtype=source_dtype,
         mode="r",
-        shape=(1,) + shape,
+        shape=(1,) + shape.to_tuple(),
         order=order,
     )
 
@@ -105,7 +105,7 @@ def convert_raw(
     shard_shape: Vec3Int,
     order: Literal["C", "F"] = "F",
     voxel_size_with_unit: VoxelSize = VoxelSize((1.0, 1.0, 1.0)),
-    flip_axes: int | tuple[int, ...] | None = None,
+    flip_axes: tuple[int, ...] | None = None,
     compress: bool = True,
     rescale_min_max: RescaleValues | None = None,
     executor_args: Namespace | None = None,
@@ -374,7 +374,7 @@ def main(
         shard_shape=shard_shape or DEFAULT_SHARD_SHAPE,
         order=order.value,
         voxel_size_with_unit=voxel_size_with_unit,
-        flip_axes=flip_axes,
+        flip_axes=flip_axes.to_tuple() if flip_axes else None,
         compress=compress,
         rescale_min_max=rescale_min_max,
         executor_args=executor_args,

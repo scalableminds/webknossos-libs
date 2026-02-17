@@ -1,7 +1,7 @@
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from operator import add, floordiv, mod, mul, sub
-from typing import TYPE_CHECKING, Any, Optional, TypeAlias, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Optional, TypeAlias, TypeVar, Union
 
 import numpy as np
 
@@ -21,12 +21,13 @@ def _value_error(args: Any) -> str:
 _T = TypeVar("_T", bound="VecInt")
 
 
-class VecInt(tuple):
+class VecInt:
     """
     A specialized vector class for storing and manipulating integer values with named axes.
 
-    This class extends the built-in tuple type to provide vector operations while preserving
-    axis information. It allows for initialization with both positional and named arguments.
+    This class uses composition (an internal `_data` tuple) to provide vector operations
+    while preserving axis information. It allows for initialization with both positional
+    and named arguments.
 
     Attributes:
         axes (tuple[str, ...]): Names of the vector's axes, e.g. ('x', 'y', 'z')
@@ -51,6 +52,7 @@ class VecInt(tuple):
         ```
     """
 
+    _data: tuple[int, ...]
     axes: tuple[str, ...]
     _c_pos: int | None
     _x_pos: int | None
@@ -98,7 +100,8 @@ class VecInt(tuple):
 
         assert as_tuple is not None, _value_error(args)
 
-        self = super().__new__(cls, cast(Iterable, as_tuple))
+        self = object.__new__(cls)
+        self._data = as_tuple
         # self.axes is set in __new__ instead of __init__ so that pickling/unpickling
         # works without problems. As long as the deserialization of a tree instance
         # is not finished, the object is only half-initialized. Since self.axes
@@ -112,6 +115,35 @@ class VecInt(tuple):
         self._z_pos = self.axes.index("z") if "z" in self.axes else None
 
         return self
+
+    def __getitem__(self, index: Any) -> Any:
+        if isinstance(index, str):
+            if index not in self.axes:
+                raise KeyError(f"Axis {index} not found in {self.axes}")
+            return self[self.axes.index(index)]
+        return self._data[index]
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self) -> Iterator[int]:
+        return iter(self._data)
+
+    def __hash__(self) -> int:
+        return hash(self._data)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, VecInt):
+            return self._data == other._data
+        if isinstance(other, tuple):
+            return self._data == other
+        return NotImplemented
+
+    def __contains__(self, item: object) -> bool:
+        return item in self._data
+
+    def __bool__(self) -> bool:
+        return len(self._data) > 0
 
     def __getnewargs__(self) -> tuple[tuple[int, ...], tuple[str, ...]]:
         return (self.to_tuple(), self.axes)
@@ -202,7 +234,7 @@ class VecInt(tuple):
             index = self.axes.index(axis)
 
         return self.__class__(
-            *self[:index], new_element, *self[index + 1 :], axes=self.axes
+            *self._data[:index], new_element, *self._data[index + 1 :], axes=self.axes
         )
 
     def with_c(self: _T, new_c: int) -> _T:
@@ -237,19 +269,19 @@ class VecInt(tuple):
         """
         Returns the vector as a numpy array.
         """
-        return np.array(self)
+        return np.array(self._data)
 
     def to_list(self) -> list[int]:
         """
         Returns the vector as a list.
         """
-        return list(self)
+        return list(self._data)
 
     def to_tuple(self) -> tuple[int, ...]:
         """
         Returns the vector as a tuple.
         """
-        return tuple(self)
+        return self._data
 
     def contains(self, needle: int) -> bool:
         """

@@ -67,9 +67,6 @@ def test_operator_arithmetic() -> None:
     # other is VecIntLike (e.g. tuple)
     assert VecInt(x=1, y=2, z=3, t=4) + (4, 5, 6, 7) == VecInt(x=5, y=7, z=9, t=11)
 
-    # be wary of the tuple “+” operation:
-    assert (1, 2, 3, 4) + VecInt(x=5, y=6, z=7, t=8) == (1, 2, 3, 4, 5, 6, 7, 8)
-
     assert -VecInt(x=1, y=2, z=3, t=4) == VecInt(x=-1, y=-2, z=-3, t=-4)
 
 

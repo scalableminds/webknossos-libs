@@ -521,7 +521,7 @@ class BoundingBox(NDBoundingBox):
             topleft=(0,) + self.topleft.to_tuple(),
             size=(num_channels,) + self.size.to_tuple(),
             axes=("c",) + self.axes,
-            index=(0,) + self.index,
+            index=(0,) + self.index.to_tuple(),
             name=self.name,
             is_visible=self.is_visible,
             color=self.color,
