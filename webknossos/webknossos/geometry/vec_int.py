@@ -1,7 +1,14 @@
 import re
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from operator import add, floordiv, mod, mul, sub
-from typing import TYPE_CHECKING, Any, Optional, TypeAlias, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Optional,
+    TypeAlias,
+    TypeVar,
+    Union,
+)
 
 import numpy as np
 
@@ -21,7 +28,7 @@ def _value_error(args: Any) -> str:
 _T = TypeVar("_T", bound="VecInt")
 
 
-class VecInt:
+class VecInt(Sequence[int]):
     """
     A specialized vector class for storing and manipulating integer values with named axes.
 
