@@ -866,10 +866,14 @@ class NDBoundingBox:
         )
 
     def normalize_axes(self, num_channels: int) -> "NormalizedBoundingBox":
-        assert ("c" in self.axes and num_channels == self.size.c) or num_channels == 1
+        if "c" in self.axes:
+            size = self.size.with_replaced("c", num_channels)
+        else:
+            assert num_channels == 1
+            size = self.size
         return NormalizedBoundingBox(
             topleft=self.topleft,
-            size=self.size,
+            size=size,
             axes=self.axes,
             index=self.index,
             is_visible=self.is_visible,

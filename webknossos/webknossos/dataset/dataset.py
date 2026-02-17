@@ -1604,6 +1604,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     current_dtype = current_dtype.newbyteorder("<")
             else:
                 current_dtype = np.dtype(dtype)
+            print(
+                layer_name + layer_name_suffix,
+                pims_image_sequence.num_channels,
+                pims_image_sequence.expected_bbox,
+            )
             layer = self.add_layer(
                 layer_name=layer_name + layer_name_suffix,
                 category=category,

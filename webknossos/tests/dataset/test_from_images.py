@@ -62,27 +62,27 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         "tiffs_test_CS.tif__channel0": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=5, y=128, z=128),
+            VecInt(s=3, x=64, c=1, y=128, z=128),
         ),
         "tiffs_test_CS.tif__channel1": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=5, y=128, z=128),
+            VecInt(s=3, x=64, c=1, y=128, z=128),
         ),
         "tiffs_test_CS.tif__channel2": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=5, y=128, z=128),
+            VecInt(s=3, x=64, c=1, y=128, z=128),
         ),
         "tiffs_test_CS.tif__channel3": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=5, y=128, z=128),
+            VecInt(s=3, x=64, c=1, y=128, z=128),
         ),
         "tiffs_test_CS.tif__channel4": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=5, y=128, z=128),
+            VecInt(s=3, x=64, c=1, y=128, z=128),
         ),
         "tiffs_test_C.tif__channel0": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
         "tiffs_test_C.tif__channel1": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),

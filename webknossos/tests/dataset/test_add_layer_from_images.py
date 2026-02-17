@@ -143,7 +143,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         5,
-        wk.VecInt(s=3, x=64, c=5, y=128, z=128),
+        wk.VecInt(s=3, x=64, c=1, y=128, z=128),
     ),
     (
         "testdata/various_tiff_formats/test_C.tif",
