@@ -4,7 +4,7 @@ import re
 import numpy as np
 from numpy.typing import DTypeLike
 
-properties_floating_type_to_python_type: dict[str | type, np.dtype] = {
+properties_floating_type_to_python_type: dict[DTypeLike, np.dtype] = {
     "float": np.dtype("float32"),
     #  np.float: np.dtype("float32"),  # np.float is an alias for float
     float: np.dtype("float32"),
