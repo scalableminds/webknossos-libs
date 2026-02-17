@@ -5,7 +5,6 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy._typing import DTypeLike
 from upath import UPath
 
 from webknossos.dataset_properties import (
@@ -14,9 +13,6 @@ from webknossos.dataset_properties import (
     LayerCategoryType,
     LayerProperties,
     LayerViewConfiguration,
-)
-from webknossos.dataset_properties.dtype_conversion import (
-    _dtype_per_channel_to_dtype_per_layer,
 )
 from webknossos.dataset_properties.structuring import (
     MagViewProperties,
@@ -33,23 +29,6 @@ if TYPE_CHECKING:
     from .segmentation_layer.abstract_segmentation_layer import (
         AbstractSegmentationLayer,
     )
-
-
-def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
-    try:
-        return np.dtype(dtype_per_channel)
-    except TypeError as e:
-        raise TypeError(
-            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
-        ) from e
-
-
-def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
-    try:
-        dtype_per_layer = str(np.dtype(dtype_per_layer))
-    except Exception:
-        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
-    return dtype_per_layer  # type: ignore[return-value]
 
 
 def _validate_layer_name(layer_name: str) -> None:
@@ -85,7 +64,7 @@ class AbstractLayer:
         )
         self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
 
-        self._dtype_per_channel = properties.dtype_np
+        self._dtype = properties.dtype_np
         self._mags = {}
         self._read_only = read_only
 
@@ -232,28 +211,24 @@ class AbstractLayer:
         return COLOR_CATEGORY
 
     @property
-    def dtype_per_layer(self) -> str:
-        """Deprecated, use dtype_per_channel instead.
-        Gets the data type used for the entire layer.
-
-        Returns:
-            str: Data type string (e.g. "uint8")
-        """
-
-        warn_deprecated("dtype_per_layer", "dtype_per_channel")
-        return _dtype_per_channel_to_dtype_per_layer(
-            self.dtype_per_channel, self.num_channels
-        )
-
-    @property
-    def dtype_per_channel(self) -> np.dtype:
+    def dtype(self) -> np.dtype:
         """Gets the data type used per channel.
 
         Returns:
             np.dtype: NumPy data type for individual channels
         """
+        return self._dtype
 
-        return self._dtype_per_channel
+    @property
+    def dtype_per_channel(self) -> np.dtype:
+        """Deprecated. Use `dtype` instead.
+        Gets the data type used per channel.
+
+        Returns:
+            np.dtype: NumPy data type for individual channels
+        """
+        warn_deprecated("dtype_per_channel", "dtype")
+        return self._dtype
 
     @property
     def num_channels(self) -> int:

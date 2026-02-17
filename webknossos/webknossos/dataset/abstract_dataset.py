@@ -7,6 +7,8 @@ from abc import abstractmethod
 from collections.abc import Mapping
 from typing import Any, Generic, Literal, TypeVar, cast
 
+import numpy as np
+from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.dataset_properties import (
@@ -19,7 +21,11 @@ from webknossos.dataset_properties import (
     VoxelSize,
     get_dataset_converter,
 )
+from webknossos.dataset_properties.dtype_conversion import (
+    properties_floating_type_to_python_type,
+)
 from webknossos.geometry import BoundingBox, NDBoundingBox
+from webknossos.utils import warn_deprecated
 
 from .defaults import PROPERTIES_FILE_NAME
 from .layer.abstract_layer import AbstractLayer
@@ -47,6 +53,25 @@ LayerType = TypeVar("LayerType", bound=AbstractLayer)
 SegmentationLayerType = TypeVar(
     "SegmentationLayerType", bound=AbstractSegmentationLayer[Any]
 )
+
+
+def _dtype_maybe(
+    dtype: DTypeLike | None, dtype_per_channel: DTypeLike | None
+) -> np.dtype | None:
+    if dtype is not None and dtype_per_channel is not None:
+        raise AttributeError(
+            "Cannot add layer. Specifying both 'dtype' and 'dtype_per_channel' is not allowed"
+        )
+    elif dtype_per_channel is not None:
+        warn_deprecated("dtype_per_channel", "dtype")
+        return np.dtype(
+            properties_floating_type_to_python_type.get(
+                dtype_per_channel, dtype_per_channel
+            )
+        )
+    elif dtype is not None:
+        return np.dtype(properties_floating_type_to_python_type.get(dtype, dtype))
+    return None
 
 
 class AbstractDataset(Generic[LayerType, SegmentationLayerType]):

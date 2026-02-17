@@ -140,8 +140,7 @@ class Layer(AbstractLayer):
             dataset (Dataset): Parent dataset containing this layer
             path (Path): Filesystem path to this layer's data
             category (LayerCategoryType): Category of data (e.g. color, segmentation)
-            dtype_per_layer (str): Deprecated, use dtype_per_channel. Data type used for the entire layer
-            dtype_per_channel (np.dtype): Data type used per channel
+            dtype (np.dtype): Data type used per channel
             num_channels (int): Number of channels in the layer
             data_format (DataFormat): Format used to store the data
             default_view_configuration (LayerViewConfiguration | None): View configuration
@@ -792,9 +791,9 @@ class Layer(AbstractLayer):
             f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
             + f"does not match the layers data format {self.data_format}"
         )
-        assert self.dtype_per_channel == foreign_mag_view.get_dtype(), (
+        assert self.dtype == foreign_mag_view.get_dtype(), (
             f"The dtype/elementClass of the remote mag {foreign_mag_view.get_dtype()} "
-            + f"must match the layer's dtype {self.dtype_per_channel}"
+            + f"must match the layer's dtype {self.dtype}"
         )
 
         self._setup_mag(mag, foreign_mag_view.path, read_only=True)
@@ -1401,7 +1400,7 @@ class Layer(AbstractLayer):
         )
 
     def __repr__(self) -> str:
-        return f"Layer({repr(self.name)}, dtype_per_channel={self.dtype_per_channel}, num_channels={self.num_channels})"
+        return f"Layer({repr(self.name)}, dtype={self.dtype}, num_channels={self.num_channels})"
 
     def as_segmentation_layer(self) -> "SegmentationLayer":
         """Casts into SegmentationLayer."""

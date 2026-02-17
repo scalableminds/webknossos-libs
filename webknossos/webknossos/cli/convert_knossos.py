@@ -198,7 +198,7 @@ def convert_knossos(
         layer_name,
         COLOR_CATEGORY,
         data_format=data_format,
-        dtype_per_channel=dtype,
+        dtype=dtype,
     )
 
     with open_knossos(source_knossos_info) as source_knossos:

@@ -688,7 +688,7 @@ def test_merge_fallback_no_fallback_layer(
         .add_layer(
             "fallback_layer",
             SEGMENTATION_CATEGORY,
-            dtype_per_channel=fallback_layer_data.dtype,
+            dtype=fallback_layer_data.dtype,
             data_format=DataFormat.WKW,
         )
         .add_mag(
@@ -716,7 +716,7 @@ def test_merge_fallback_no_fallback_layer(
         "Volume",
         SEGMENTATION_CATEGORY,
         data_format=DataFormat.WKW,
-        dtype_per_channel=annotation_data.dtype,
+        dtype=annotation_data.dtype,
         largest_segment_id=largest_segment_id,
     )
 

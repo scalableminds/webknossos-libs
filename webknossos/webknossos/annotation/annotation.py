@@ -1106,7 +1106,7 @@ class Annotation:
                 volume_layer.layer_name,
                 SEGMENTATION_CATEGORY,
                 data_format=DataFormat.Zarr3,
-                dtype_per_channel=dtype,
+                dtype=dtype,
             )
             volume_layer._write_dir_to_zip(tempdir)
         return volume_layer

@@ -26,7 +26,7 @@ def test_buffered_slice_writer() -> None:
     layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel=dtype,
+        dtype=dtype,
         bounding_box=BoundingBox(origin, (24, 24, 35)),
     )
     mag_view = layer.add_mag(mag, shard_shape=(1024, 1024, 32))
@@ -153,7 +153,7 @@ def test_basic_buffered_slice_writer(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), shape),
     )
@@ -181,7 +181,7 @@ def test_buffered_slice_writer_unaligned(
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (513, 513, 36)),
     )
@@ -227,7 +227,7 @@ def test_buffered_slice_writer_should_raise_unaligned_usage(
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (513, 513, 33)),
     )
@@ -258,7 +258,7 @@ def test_basic_buffered_slice_writer_multi_shard(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (160, 150, 140)),
     )
@@ -291,7 +291,7 @@ def test_basic_buffered_slice_writer_multi_shard_multi_channel(
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=3,
         bounding_box=BoundingBox((0, 0, 0), (160, 150, 140)),
     )
@@ -318,7 +318,7 @@ def test_buffered_slice_writer_reset_offset(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (512, 512, 40)),
     )
@@ -365,7 +365,7 @@ def test_buffered_slice_writer_resize_error(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
     )  # intentionally not setting a bounding box
     mag1 = layer.add_mag("1")

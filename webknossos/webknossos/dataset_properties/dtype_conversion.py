@@ -4,13 +4,13 @@ import re
 import numpy as np
 from numpy.typing import DTypeLike
 
-_properties_floating_type_to_python_type: dict[str | type, np.dtype] = {
+properties_floating_type_to_python_type: dict[DTypeLike, np.dtype] = {
     "float": np.dtype("float32"),
     #  np.float: np.dtype("float32"),  # np.float is an alias for float
     float: np.dtype("float32"),
     "double": np.dtype("float64"),
 }
-_python_floating_type_to_properties_type = {
+python_floating_type_to_properties_type = {
     "float32": "float",
     "float64": "double",
 }
@@ -27,6 +27,7 @@ def _is_int(s: str) -> bool:
 def _convert_dtypes(
     dtype: DTypeLike,
     num_channels: int,
+    *,
     dtype_per_layer_to_dtype_per_channel: bool,
 ) -> str:
     op = operator.truediv if dtype_per_layer_to_dtype_per_channel else operator.mul
@@ -67,21 +68,19 @@ def _dtype_per_channel_to_dtype_per_layer(
     )
 
 
-def _element_class_to_dtype_per_channel(
+def element_class_to_dtype_per_channel(
     element_class: str, num_channels: int
 ) -> np.dtype:
-    dtype_per_layer = _properties_floating_type_to_python_type.get(
+    dtype_per_layer = properties_floating_type_to_python_type.get(
         element_class, element_class
     )
     return _dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
 
 
-def _dtype_per_channel_to_element_class(
+def dtype_per_channel_to_element_class(
     dtype_per_channel: DTypeLike, num_channels: int
 ) -> str:
     dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
         dtype_per_channel, num_channels
     )
-    return _python_floating_type_to_properties_type.get(
-        dtype_per_layer, dtype_per_layer
-    )
+    return python_floating_type_to_properties_type.get(dtype_per_layer, dtype_per_layer)

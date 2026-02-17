@@ -65,6 +65,7 @@ class RemoteLayer(AbstractLayer):
     def add_mag_as_copy(
         self,
         foreign_mag_view_or_path: PathLike | UPath | str | MagView,
+        *,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
@@ -261,4 +262,4 @@ class RemoteLayer(AbstractLayer):
         self._apply_properties(layer_properties, self.read_only)
 
     def __repr__(self) -> str:
-        return f"RemoteLayer({repr(self.name)}, dtype_per_channel={self.dtype_per_channel}, num_channels={self.num_channels})"
+        return f"RemoteLayer({repr(self.name)}, dtype={self.dtype}, num_channels={self.num_channels})"

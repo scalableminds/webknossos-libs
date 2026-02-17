@@ -31,10 +31,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `folder_path` in `RemoteDataset.explore_and_add_remote`
   - `name`, `organization_id`, `tags` and `folder_id` in `RemoteDatasetRegistry.__init__` (should not be used directly)
 - `VecInt` and `Vec3Int` don't inherit from tuple anymore. Instead, they have an internal attribute that holds the data. Instance checks for tuple don't work anymore. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
+- Removed `dtype_per_layer` arguments and properties as they have been deprecated for a long time. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
+- Deprecated `dtype_per_channel` argument in `Dataset.add_layer` and `Dataset.get_or_add_layer` and property in `Layer`. Use `dtype` instead. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
 
 ### Added
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Added `parent` property to `RemoteFolder`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Added `dtype` argument to `Dataset.add_layer`, `Dataset.get_or_add_layer`. Added `dtype` property to `Layer`. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
 
 ### Changed
 - The `RemoteDataset.open` method now accepts `access_mode` instead of `use_zarr_streaming`. `use_zarr_streaming` is still supported, but deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)

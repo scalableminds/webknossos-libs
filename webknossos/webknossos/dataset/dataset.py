@@ -31,11 +31,11 @@ from ..geometry import (
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._utils import pims_images
-from .abstract_dataset import DEFAULT_VERSION, AbstractDataset
+from .abstract_dataset import DEFAULT_VERSION, AbstractDataset, _dtype_maybe
 from .defaults import (
-    DEFAULT_BIT_DEPTH,
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_DATA_FORMAT,
+    DEFAULT_DTYPE,
     DEFAULT_SHARD_SHAPE,
     DEFAULT_SHARD_SHAPE_FROM_IMAGES,
     PROPERTIES_FILE_NAME,
@@ -52,8 +52,6 @@ from .layer import (
 )
 from .layer.abstract_layer import (
     _UNALLOWED_LAYER_NAME_CHARS,
-    _normalize_dtype_per_channel,
-    _normalize_dtype_per_layer,
     _validate_layer_name,
 )
 from .layer.layer import _get_shard_shape
@@ -83,10 +81,6 @@ from ..dataset_properties import (
     LayerProperties,
     SegmentationLayerProperties,
     VoxelSize,
-)
-from ..dataset_properties.dtype_conversion import (
-    _dtype_per_layer_to_dtype_per_channel,
-    _properties_floating_type_to_python_type,
 )
 from ..dataset_properties.structuring import get_dataset_converter
 from ..utils import (
@@ -1023,7 +1017,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         layer_name: str,
         category: LayerCategoryType,
         *,
-        dtype_per_layer: DTypeLike | None = None,
+        dtype: DTypeLike | None = None,
         dtype_per_channel: DTypeLike | None = None,
         num_channels: int | None = None,
         data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
@@ -1037,8 +1031,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Args:
             layer_name: Name for the new layer
             category: Either 'color' or 'segmentation'
-            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer, e.g. np.uint8
-            dtype_per_channel: Optional data type per channel, e.g. np.uint8
+            dtype: Optional data type per channel, e.g. np.uint8
+            dtype_per_channel: Deprecated, use dtype.
             num_channels: Number of channels (default 1)
             data_format: Format to store data ('wkw', 'zarr', 'zarr3')
             bounding_box: Optional initial bounding box of layer
@@ -1052,7 +1046,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Raises:
             IndexError: If layer with given name already exists
             RuntimeError: If invalid category specified
-            AttributeError: If both dtype_per_layer and dtype_per_channel specified
+            AttributeError: If both dtype and dtype_per_channel specified
             AssertionError: If invalid layer name or WKW format used with remote dataset
 
         Examples:
@@ -1061,7 +1055,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 layer = ds.add_layer(
                     "my_raw_microscopy_layer",
                     LayerCategoryType.COLOR_CATEGORY,
-                    dtype_per_channel=np.uint8,
+                    dtype=np.uint8,
                 )
                 ```
 
@@ -1070,7 +1064,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 layer = ds.add_layer(
                     "my_segmentation_labels",
                     LayerCategoryType.SEGMENTATION_CATEGORY,
-                    dtype_per_channel=np.uint64
+                    dtype=np.uint64
                 )
                 ```
 
@@ -1087,44 +1081,32 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         if num_channels is None:
             num_channels = 1
 
-        if dtype_per_layer is not None and dtype_per_channel is not None:
-            raise AttributeError(
-                "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
-            )
-        elif dtype_per_channel is not None:
-            dtype_per_channel = _properties_floating_type_to_python_type.get(
-                dtype_per_channel,  # type: ignore[arg-type]
-                dtype_per_channel,  # type: ignore[arg-type]
-            )
-            dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
-        elif dtype_per_layer is not None:
-            warn_deprecated("dtype_per_layer", "dtype_per_channel")
-            dtype_per_layer = _properties_floating_type_to_python_type.get(
-                dtype_per_layer,  # type: ignore[arg-type]
-                dtype_per_layer,  # type: ignore[arg-type]
-            )
-            dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
-            dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
-                dtype_per_layer, num_channels
-            )
-        else:
-            dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
+        dtype = _dtype_maybe(dtype, dtype_per_channel)
+        if dtype is None:
+            dtype = DEFAULT_DTYPE
 
-        # assert that the dtype_per_channel is supported by webknossos
+        # assert that the dtype is supported by webknossos
         if category == COLOR_CATEGORY:
-            if dtype_per_channel.name not in _ALLOWED_COLOR_LAYER_DTYPES:
+            if dtype.name not in _ALLOWED_COLOR_LAYER_DTYPES:
                 raise ValueError(
-                    f"Cannot add color layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(_ALLOWED_COLOR_LAYER_DTYPES)}."
+                    f"Cannot add color layer with dtype {dtype.name}. "
+                    f"Supported dtypes are: {', '.join(_ALLOWED_COLOR_LAYER_DTYPES)}. "
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
         else:
-            if dtype_per_channel.name not in _ALLOWED_SEGMENTATION_LAYER_DTYPES:
+            if dtype.name not in _ALLOWED_SEGMENTATION_LAYER_DTYPES:
                 raise ValueError(
-                    f"Cannot add segmentation layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(_ALLOWED_SEGMENTATION_LAYER_DTYPES)}."
+                    f"Cannot add segmentation layer with dtype {dtype.name}. "
+                    f"Supported dtypes are: {', '.join(_ALLOWED_SEGMENTATION_LAYER_DTYPES)}. "
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
+
+        if (num_channels > 1 and dtype.name != "uint8") or (
+            num_channels not in (1, 3) and dtype.name == "uint8"
+        ):
+            warnings.warn(
+                f"Data type {dtype.name} with multiple channels (got {num_channels}) not supported by WEBKNOSSOS. Create multiple layers instead."
+            )
 
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -1140,7 +1122,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             name=layer_name,
             category=category,
             bounding_box=bounding_box,
-            dtype=dtype_per_channel.name,
+            dtype=dtype.name,
             mags=[],
             data_format=DataFormat(data_format),
         )
@@ -1176,7 +1158,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         layer_name: str,
         category: LayerCategoryType,
         *,
-        dtype_per_layer: DTypeLike | None = None,
+        dtype: DTypeLike | None = None,
         dtype_per_channel: DTypeLike | None = None,
         num_channels: int | None = None,
         data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
@@ -1190,8 +1172,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Args:
             layer_name: Name of the layer to get or create
             category: Layer category ('color' or 'segmentation')
-            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer
-            dtype_per_channel: Optional data type per channel
+            dtype: Optional data type per channel
+            dtype_per_channel: Deprecated, use dtype.
             num_channels: Optional number of channels
             data_format: Format to store data ('wkw', 'zarr', etc.)
             **kwargs: Additional arguments passed to add_layer()
@@ -1201,7 +1183,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         Raises:
             AssertionError: If existing layer's properties don't match specified parameters
-            ValueError: If both dtype_per_layer and dtype_per_channel specified
+            ValueError: If both dtype and dtype_per_channel specified
             RuntimeError: If invalid category specified
 
         Examples:
@@ -1209,7 +1191,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             layer = ds.get_or_add_layer(
                 "segmentation",
                 LayerCategoryType.SEGMENTATION_CATEGORY,
-                dtype_per_channel=np.uint64,
+                dtype=np.uint64,
             )
             ```
 
@@ -1233,36 +1215,19 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 + f"and the passed parameter is '{category}'."
             )
 
-            if dtype_per_channel is not None:
-                dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
-
-            if dtype_per_layer is not None:
-                warn_deprecated("dtype_per_layer", "dtype_per_channel")
-                dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
-
-            if dtype_per_channel is not None or dtype_per_layer is not None:
-                dtype_per_channel = (
-                    dtype_per_channel
-                    or _dtype_per_layer_to_dtype_per_channel(
-                        dtype_per_layer,  # type: ignore[arg-type]
-                        num_channels or self.layers[layer_name].num_channels,
-                    )
-                )
-                assert (
-                    dtype_per_channel is None
-                    or self.layers[layer_name].dtype_per_channel == dtype_per_channel
-                ), (
+            dtype = _dtype_maybe(dtype, dtype_per_channel)
+            if dtype is not None:
+                assert dtype is None or self.layers[layer_name].dtype == dtype, (
                     f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "
-                    + f"The dtype_per_channel of the existing layer is '{self.layers[layer_name].dtype_per_channel}' "
-                    + f"and the passed parameter would result in a dtype_per_channel of '{dtype_per_channel}'."
+                    + f"The dtype of the existing layer is '{self.layers[layer_name].dtype}' "
+                    + f"and the passed parameter would result in a dtype of '{dtype}'."
                 )
             return self.layers[layer_name]
         else:
             return self.add_layer(
                 layer_name,
                 category,
-                dtype_per_layer=dtype_per_layer,
-                dtype_per_channel=dtype_per_channel,
+                dtype=dtype,
                 num_channels=num_channels,
                 data_format=DataFormat(data_format),
                 **kwargs,
@@ -1336,7 +1301,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             category: Layer category ('color' or 'segmentation')
             **kwargs: Additional arguments:
                 - num_channels: Override detected number of channels
-                - dtype_per_channel: Override detected data type
+                - dtype: Override detected data type
+                - dtype_per_channel: Deprecated, use dtype instead
                 - data_format: Override detected data format
                 - bounding_box: Override detected bounding box
 
@@ -1361,7 +1327,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 layer = ds.add_layer_for_existing_files(
                     "segmentation_data",
                     "segmentation",
-                    dtype_per_channel=np.uint64
+                    dtype=np.uint64
                 )
                 ```
 
@@ -1381,14 +1347,19 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
 
         num_channels = kwargs.pop("num_channels", array_info.shape.size.get("c", 0))
-        dtype_per_channel = kwargs.pop("dtype_per_channel", array_info.voxel_type)
+        dtype = (
+            _dtype_maybe(
+                kwargs.pop("dtype", None), kwargs.pop("dtype_per_channel", None)
+            )
+            or array_info.voxel_type
+        )
         data_format = kwargs.pop("data_format", array_info.data_format)
 
         layer = self.add_layer(
             layer_name,
             category=category,
             num_channels=num_channels,
-            dtype_per_channel=dtype_per_channel,
+            dtype=dtype,
             data_format=data_format,
             **kwargs,
         )
@@ -1604,7 +1575,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 layer_name=layer_name + layer_name_suffix,
                 category=category,
                 data_format=data_format,
-                dtype_per_channel=current_dtype,
+                dtype=current_dtype,
                 num_channels=pims_image_sequence.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
@@ -1851,7 +1822,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             category,
             data_format=data_format,
             num_channels=num_channels,
-            dtype_per_channel=data.dtype,
+            dtype=data.dtype,
             bounding_box=mag1_bbox,
         )
 
@@ -2009,7 +1980,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             layer = self.get_or_add_layer(
                 new_layer_name,
                 category=foreign_layer.category,
-                dtype_per_channel=foreign_layer.dtype_per_channel,
+                dtype=foreign_layer.dtype,
                 num_channels=foreign_layer.num_channels,
                 data_format=data_format or foreign_layer.data_format,
                 largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
@@ -2023,7 +1994,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             layer = self.add_layer(
                 new_layer_name,
                 category=foreign_layer.category,
-                dtype_per_channel=foreign_layer.dtype_per_channel,
+                dtype=foreign_layer.dtype,
                 num_channels=foreign_layer.num_channels,
                 data_format=data_format or foreign_layer.data_format,
                 largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),

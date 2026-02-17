@@ -23,7 +23,7 @@ def main() -> None:
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=3,
         bounding_box=wk.BoundingBox((10, 20, 30), (512, 512, 32)),
     )
@@ -73,7 +73,7 @@ def main() -> None:
     new_layer = dataset.add_layer(
         layer_name="segmentation",
         category="segmentation",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         largest_segment_id=0,
     )
     # Link a layer of the initial dataset to the copy:

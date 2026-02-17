@@ -216,7 +216,7 @@ def _test_repo_images(
             use_bioformats=False,
             **kwargs,
         )
-        assert layer.dtype_per_channel == np.dtype(dtype)
+        assert layer.dtype == np.dtype(dtype)
         assert layer.num_channels == num_channels
         assert len(ds.layers) == num_layers
         assert layer.normalized_bounding_box.size == size
@@ -332,7 +332,7 @@ def _test_bioformats(
             use_bioformats=True,
             **kwargs,
         )
-        assert layer.dtype_per_channel == np.dtype(dtype)
+        assert layer.dtype == np.dtype(dtype)
         assert layer.num_channels == num_channels
         assert layer.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
     assert len(ds.layers) == num_layers
@@ -487,7 +487,7 @@ def _test_test_images(
             print(e)
             l_bio = None
         else:
-            assert l_bio.dtype_per_channel == np.dtype(dtype)
+            assert l_bio.dtype == np.dtype(dtype)
             assert l_bio.num_channels == num_channels
             assert l_bio.bounding_box.size.to_tuple() == size
         l_normal = ds.add_layer_from_images(
@@ -498,7 +498,7 @@ def _test_test_images(
             use_bioformats=False,
             **kwargs,
         )
-        assert l_normal.dtype_per_channel == np.dtype(dtype)
+        assert l_normal.dtype == np.dtype(dtype)
         assert l_normal.num_channels == num_channels
         assert l_normal.bounding_box.size.to_tuple() == size
         if l_bio is not None:
