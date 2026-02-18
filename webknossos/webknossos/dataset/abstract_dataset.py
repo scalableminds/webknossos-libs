@@ -315,6 +315,19 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
             raise IndexError(f"The layer {layer_name} is not a layer of this dataset")
         return self.layers[layer_name]
 
+    @abstractmethod
+    def add_layer(
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        *,
+        dtype: DTypeLike | None = None,
+        dtype_per_channel: DTypeLike | None = None,
+        num_channels: int | None = None,
+        data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
+        **kwargs: Any,
+    ) -> LayerType: ...
+
     def get_or_add_layer(
         self,
         layer_name: str,
@@ -363,28 +376,26 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
         """
 
         if layer_name in self.layers.keys():
-            assert (
-                num_channels is None
-                or self.layers[layer_name].num_channels == num_channels
-            ), (
+            layer = self.layers[layer_name]
+            assert num_channels is None or layer.num_channels == num_channels, (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the number of channels do not match. "
-                + f"The number of channels of the existing layer are '{self.layers[layer_name].num_channels}' "
+                + f"The number of channels of the existing layer are '{layer.num_channels}' "
                 + f"and the passed parameter is '{num_channels}'."
             )
-            assert self.get_layer(layer_name).category == category, (
+            assert layer.category == category, (
                 f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
-                + f"The category of the existing layer is '{self.get_layer(layer_name).category}' "
+                + f"The category of the existing layer is '{layer.category}' "
                 + f"and the passed parameter is '{category}'."
             )
 
             dtype = _dtype_maybe(dtype, dtype_per_channel)
             if dtype is not None:
-                assert dtype is None or self.layers[layer_name].dtype == dtype, (
+                assert dtype is None or layer.dtype == dtype, (
                     f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "
-                    + f"The dtype of the existing layer is '{self.layers[layer_name].dtype}' "
+                    + f"The dtype of the existing layer is '{layer.dtype}' "
                     + f"and the passed parameter would result in a dtype of '{dtype}'."
                 )
-            return self.layers[layer_name]
+            return layer
         else:
             return self.add_layer(
                 layer_name,

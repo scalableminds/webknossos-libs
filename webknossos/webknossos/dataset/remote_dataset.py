@@ -9,7 +9,6 @@ from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Union
 
 import attr
-import numpy as np
 from boltons.typeutils import make_sentinel
 from cluster_tools import Executor
 from numpy.typing import DTypeLike
