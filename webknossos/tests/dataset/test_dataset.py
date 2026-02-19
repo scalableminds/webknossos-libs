@@ -18,7 +18,14 @@ from tests.constants import (
     TESTOUTPUT_DIR,
     use_minio,
 )
-from webknossos.dataset import Dataset, RemoteDataset, RemoteFolder, View
+from webknossos.dataset import (
+    AgglomerateAttachment,
+    Dataset,
+    MeshAttachment,
+    RemoteDataset,
+    RemoteFolder,
+    View,
+)
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
 from webknossos.dataset.layer.view._array import Zarr3ArrayInfo, Zarr3Config
@@ -2201,10 +2208,12 @@ def test_dataset_shallow_copy(data_format: DataFormat, output_path: UPath) -> No
     agglomerates_path = original_layer_2.path / "agglomerates" / "agglomerate_view.hdf5"
     agglomerates_path.parent.mkdir(parents=True)
     agglomerates_path.touch()
-    original_layer_2.attachments.add_agglomerate(
-        agglomerates_path,
-        name="agglomerate_view",
-        data_format=AttachmentDataFormat.HDF5,
+    original_layer_2.attachments.add_attachment_as_ref(
+        AgglomerateAttachment.from_path_and_name(
+            agglomerates_path,
+            name="agglomerate_view",
+            data_format=AttachmentDataFormat.HDF5,
+        )
     )
 
     shallow_copy_of_ds = ds.shallow_copy_dataset(copy_path)
@@ -3525,10 +3534,10 @@ def test_copy_dataset_with_attachments(input_path: UPath, output_path: UPath) ->
     meshfile_path.mkdir(parents=True, exist_ok=True)
     (meshfile_path / "zarr.json").write_text("test")
 
-    seg_layer.attachments.add_mesh(
-        meshfile_path,
-        name="meshfile",
-        data_format=AttachmentDataFormat.Zarr3,
+    seg_layer.attachments.add_attachment_as_ref(
+        MeshAttachment.from_path_and_name(
+            meshfile_path, "meshfile", data_format=AttachmentDataFormat.Zarr3
+        )
     )
 
     # Copy
