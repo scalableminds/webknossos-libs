@@ -500,8 +500,11 @@ class Attachments(AbstractAttachments):
         _detect_hdf5(SegmentIndexAttachment)
 
         if (self._layer.resolved_path / "agglomerates" / "cumsum.json").exists():
-            self.set_cumsum(
-                self._layer.resolved_path / "agglomerates" / "cumsum.json",
-                name="cumsum",
-                data_format=AttachmentDataFormat.JSON,
+            self._add_attachment(
+                CumsumAttachment.from_path_and_name(
+                    self._layer.resolved_path / "agglomerates" / "cumsum.json",
+                    name="cumsum",
+                    data_format=AttachmentDataFormat.JSON,
+                    dataset_path=self._layer.dataset.resolved_path,
+                )
             )

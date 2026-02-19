@@ -129,10 +129,10 @@ class AbstractSegmentationLayer(AbstractLayer, Generic[AttachmentsTypeT]):
         Examples:
             ```
             # Add a mesh attachment to the segmentation layer
-            layer.attachments.add_mesh(
-                mesh_path,
-                name="meshfile",
-                data_format=AttachmentDataFormat.Zarr3,
+            layer.attachments.add_attachment_as_ref(
+                MeshAttachment.from_path_and_name(
+                    mesh_path, "meshfile", data_format=AttachmentDataFormat.Zarr3
+                )
             )
 
             # Access the mesh attachment path
