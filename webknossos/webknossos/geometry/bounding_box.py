@@ -7,11 +7,8 @@ import attr
 import numpy as np
 
 from .mag import Mag
-from .nd_bounding_box import (
-    _DEFAULT_BBOX_NAME,
-    NDBoundingBox,
-    NormalizedBoundingBox,
-)
+from .nd_bounding_box import _DEFAULT_BBOX_NAME, NDBoundingBox
+from .normalized_bounding_box import NormalizedBoundingBox
 from .vec3_int import Vec3Int, Vec3IntLike
 
 

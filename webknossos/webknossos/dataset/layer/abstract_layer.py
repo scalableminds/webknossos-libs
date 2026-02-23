@@ -21,9 +21,8 @@ from webknossos.dataset_properties.dtype_conversion import (
 from webknossos.dataset_properties.structuring import (
     MagViewProperties,
 )
-from webknossos.geometry import NDBoundingBox
+from webknossos.geometry import NDBoundingBox, NormalizedBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
-from webknossos.geometry.nd_bounding_box import NormalizedBoundingBox
 
 from ...utils import warn_deprecated
 from .view import ArrayException, MagView
