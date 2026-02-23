@@ -682,13 +682,11 @@ class TensorStoreArray(BaseArray):
                 )
 
             self._cached_array = call_with_retries(
-                lambda: (
-                    array.resize(
-                        inclusive_min=None,
-                        exclusive_max=new_domain.exclusive_max,
-                        resize_metadata_only=True,
-                    ).result()
-                ),
+                lambda: array.resize(
+                    inclusive_min=None,
+                    exclusive_max=new_domain.exclusive_max,
+                    resize_metadata_only=True,
+                ).result(),
                 description="Resizing tensorstore array",
             )
 
