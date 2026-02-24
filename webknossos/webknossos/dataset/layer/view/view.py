@@ -99,6 +99,11 @@ class View:
             view = mag_view.get_view(size=(100, 100, 10))
             ```
         """
+        from .mag_view import MagView
+
+        if not isinstance(self, MagView) and bounding_box is None:
+            raise ValueError("Please provide a bounding box when creating a View.")
+
         self._path = path_to_mag_view
         self._data_format = data_format
         self._normalized_bounding_box = bounding_box
@@ -112,14 +117,14 @@ class View:
 
         Returns:
             ArrayInfo: Object containing array metadata such as data type,
-                shape, and other array-specific information.
+                bounding box, and other array-specific information.
 
         Examples:
             ```python
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
             array_info = view.info
             print(f"Data type: {array_info.data_type}")
-            print(f"Shape: {array_info.shape}")
+            print(f"Shape: {array_info.bounding_box.size}")
             ```
         """
         return self._array.info
@@ -144,8 +149,7 @@ class View:
             print(f"Size: {bbox.size}")
             ```
         """
-        assert self._normalized_bounding_box is not None
-        return self._normalized_bounding_box.denormalize()
+        return self.normalized_bounding_box.denormalize()
 
     @property
     def normalized_bounding_box(self) -> NormalizedBoundingBox:
@@ -154,7 +158,9 @@ class View:
         Returns:
             NormalizedBoundingBox: Bounding box with channel axis included
         """
-        assert self._normalized_bounding_box is not None
+        assert self._normalized_bounding_box is not None, (
+            "Invalid state. Non-MagView views must have a bounding box."
+        )
         return self._normalized_bounding_box
 
     @property
@@ -164,8 +170,7 @@ class View:
         Returns:
             int: Number of channels
         """
-        assert self._normalized_bounding_box is not None
-        return self._normalized_bounding_box.size.get("c", 0)
+        return self.normalized_bounding_box.size.get("c", 0)
 
     @property
     def mag(self) -> Mag:
@@ -379,7 +384,7 @@ class View:
                 )
             else:
                 raise ValueError(
-                    f"The data has to have the dimensions (c, x, y, z) or (x, y, z), got shape {data.shape}"
+                    f"The passed data has to have the dimensions (c, x, y, z) or (x, y, z), got shape {data.shape}"
                 )
         else:
             if "c" in self_bbox.axes:
@@ -387,7 +392,7 @@ class View:
                     f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
                 )
             assert len(data.shape) == len(self_bbox.axes), (
-                f"The data has to have the dimensions {self_bbox.axes}, got shape {data.shape}"
+                f"The passed data has to have the dimensions {self_bbox.axes}, got shape {data.shape}"
             )
 
         mag1_bbox = self._get_mag1_bbox(
@@ -433,9 +438,9 @@ class View:
         if shard_bbox.intersected_with(self_bbox.in_mag(self._mag)) != bbox:
             raise ValueError(
                 f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
-                + "Performance will be degraded as existing shard data has to be read, combined and "
-                + "written as whole shards. Additionally, writing without shard alignment data can lead to "
-                + f"issues when writing in parallel. Bounding box: {self_bbox}",
+                + "This is disallowed because of issues with performance and concurrent writes. "
+                + "Either, ensure that you write shard-aligned chunks OR pass allow_unaligned=True. "
+                + f"When using the latter, take care to not write concurrently. Bounding box: {self_bbox}"
             )
 
     def _prepare_compressed_write(

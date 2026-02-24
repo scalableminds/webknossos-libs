@@ -58,7 +58,7 @@ def test_add_mag_from_zarrarray3D(tmp_upath: UPath) -> None:
     layer.add_mag_from_zarrarray("1", zarr_mag_path, extend_layer_bounding_box=False)
 
     assert layer.get_mag("1").read().shape == (16, 16, 16)
-    assert layer.get_mag("1").info.shape.axes == ("x", "y", "z")
+    assert layer.get_mag("1").info.bounding_box.axes == ("x", "y", "z")
     np.testing.assert_array_equal(layer.get_mag("1").read(), zarr_data)
 
 
@@ -113,8 +113,8 @@ def test_add_mag_from_zarrarray4D(tmp_upath: UPath) -> None:
     layer.add_mag_from_zarrarray("1", zarr_mag_path, extend_layer_bounding_box=False)
 
     assert layer.get_mag("1").read().shape == (3, 16, 16, 16)
-    assert layer.get_mag("1").info.shape.size.c == 3
-    assert layer.get_mag("1").info.shape.axes == ("c", "x", "y", "z")
+    assert layer.get_mag("1").info.bounding_box.size.c == 3
+    assert layer.get_mag("1").info.bounding_box.axes == ("c", "x", "y", "z")
     np.testing.assert_array_equal(layer.get_mag("1").read(), zarr_data)
 
 

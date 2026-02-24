@@ -25,10 +25,10 @@ A legacy object. WEBKNOSSOS ignores these values and derives them from the datas
 
 Describes the physical size of a single voxel.
 
-| Field | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `factor` | `[number, number, number]` | Yes | | Voxel dimensions as `[x, y, z]`. |
-| `unit` | [LengthUnit](#lengthunit) | No | `"nanometer"` | Unit of the voxel size factor. |
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `factor` | `[number, number, number]` | Yes | Voxel dimensions as `[x, y, z]`. |
+| `unit` | [LengthUnit](#lengthunit) | Yes | Unit of the voxel size factor. |
 
 **Legacy format:** `scale` may also be a plain `[number, number, number]` array. In that case the unit is implicitly `"nanometer"`.
 
@@ -36,14 +36,14 @@ Describes the physical size of a single voxel.
 
 A string enum. Common values:
 
-| Value | Abbreviation |
+| Value | Unit |
 |---|---|
 | `"nanometer"` | nm |
-| `"micrometer"` | um |
+| `"micrometer"` | µm |
 | `"millimeter"` | mm |
 | `"centimeter"` | cm |
 | `"meter"` | m |
-| `"angstrom"` | A |
+| `"angstrom"` | Å |
 
 Additional supported values: `"yoctometer"`, `"zeptometer"`, `"attometer"`, `"femtometer"`, `"picometer"`, `"decimeter"`, `"hectometer"`, `"kilometer"`, `"megameter"`, `"gigameter"`, `"terameter"`, `"petameter"`, `"exameter"`, `"zettameter"`, `"yottameter"`, `"inch"`, `"foot"`, `"yard"`, `"mile"`, `"parsec"`.
 
@@ -51,7 +51,7 @@ Additional supported values: `"yoctometer"`, `"zeptometer"`, `"attometer"`, `"fe
 
 ## LayerProperties
 
-Each entry in `dataLayers` describes one layer. The schema varies slightly based on `category` and `dataFormat`.
+Each entry in `dataLayers` describes one layer. The schema varies slightly based on `category`.
 
 ### Common Fields (all layers)
 
@@ -120,7 +120,6 @@ Describes a single magnification level for non-WKW formats.
 |---|---|---|---|---|
 | `mag` | `[integer, integer, integer]` | Yes | | Downsampling factor as `[x, y, z]` (e.g. `[2, 2, 2]` for 2x downsampling). |
 | `path` | `string` | No | `null` | Relative path to the mag data directory (e.g. `"./color/1"`). |
-| `cubeLength` | `integer` | No | `null` | Shard/chunk cube length. Deprecated. |
 | `axisOrder` | `object` | Conditional | `null` | Maps axis names to dimension indices in the underlying array (e.g. `{"c": 0, "x": 4, "y": 3, "z": 2}`). Required when the `c` (optional), `x`, `y`, `z` axes are not the last axes in that order. Replicated on every mag but must be identical across all mags. |
 
 ## WkwMagViewProperties (Deprecated)
@@ -201,17 +200,17 @@ Optional defaults for how a single layer is displayed in WEBKNOSSOS.
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `color` | `[integer, integer, integer]` | No | `null` | RGB color from 0 to 255. WEBKNOSSOS default: `[255, 255, 255]`. |
-| `alpha` | `number` | No | `null` | Opacity from 0 to 100. WEBKNOSSOS default: `100` (or `20` for segmentation layers). |
-| `intensityRange` | `[number, number]` | No | `null` | Min and max data value range for thresholding. Default: full value range. |
-| `min` | `number` | No | `null` | Minimum data value that might be encountered. Restricts the histogram. |
-| `max` | `number` | No | `null` | Maximum data value that might be encountered. Restricts the histogram. |
-| `isDisabled` | `boolean` | No | `null` | Disable the layer. Default: `false`. |
-| `isInverted` | `boolean` | No | `null` | Invert the layer. Default: `false`. |
-| `isInEditMode` | `boolean` | No | `null` | Enable histogram edit mode. Default: `false`. |
-| `mapping` | `object` | No | `null` | Enable an ID mapping for a segmentation layer. Expected format: `{"name": "<mapping_name>", "type": "HDF5"}`. |
+| `color` | `[integer, integer, integer]` | No | `[255, 255, 255]` | RGB color from 0 to 255. |
+| `alpha` | `number` | No | `100` or `20` for segmentation layers | Opacity from 0 to 100. |
+| `intensityRange` | `[number, number]` | No | full value range | Min and max data value range for thresholding. |
+| `min` | `number` | No | | Minimum data value that might be encountered. Restricts the histogram. |
+| `max` | `number` | No | | Maximum data value that might be encountered. Restricts the histogram. |
+| `isDisabled` | `boolean` | No | `false` | Disable the layer. |
+| `isInverted` | `boolean` | No | `false` | Invert the layer. |
+| `isInEditMode` | `boolean` | No | `false` | Enable histogram edit mode. |
+| `mapping` | `object` | No | | Enable an ID mapping for a segmentation layer. Expected format: `{"name": "<mapping_name>", "type": "HDF5"}`. |
 
-All fields are optional. Only non-null values are serialized.
+All fields are optional. Default values do not need to be serialized, the field can be omitted.
 
 ---
 

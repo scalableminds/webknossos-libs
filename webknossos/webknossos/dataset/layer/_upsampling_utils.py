@@ -45,7 +45,7 @@ def upsample_cube_job(
     inverse_factors = [int(1 / f) for f in mag_factors]
 
     try:
-        num_channels = target_view.info.shape.size.c
+        num_channels = target_view.info.bounding_box.size.c
 
         for chunk in target_bbox.chunk(
             buffer_shape * target_view.mag, buffer_shape * target_view.mag

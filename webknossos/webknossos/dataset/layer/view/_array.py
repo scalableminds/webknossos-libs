@@ -41,7 +41,7 @@ class ArrayInfo:
     voxel_type: np.dtype
     chunk_shape: Vec3Int
     shard_shape: Vec3Int
-    shape: NormalizedBoundingBox = field(
+    bounding_box: NormalizedBoundingBox = field(
         default_factory=lambda: NormalizedBoundingBox(
             (0, 0, 0, 0), (1, 1, 1, 1), axes=("c", "x", "y", "z")
         )
@@ -54,7 +54,7 @@ class ArrayInfo:
 
     @property
     def ndim(self) -> int:
-        return len(self.shape)
+        return len(self.bounding_box)
 
 
 class Zarr3ChunkKeyEncodingConfiguration(TypedDict):
@@ -121,7 +121,7 @@ class Zarr3ArrayInfo(ArrayInfo):
         else:
             return cls(
                 data_format=DataFormat.Zarr3,
-                shape=array_info.shape,
+                bounding_box=array_info.bounding_box,
                 voxel_type=array_info.voxel_type,
                 chunk_shape=array_info.chunk_shape,
                 shard_shape=array_info.shard_shape,
@@ -262,7 +262,7 @@ class WKWArray(BaseArray):
                 header.file_len,
             )
             * Vec3Int.full(header.block_len),
-            shape=NormalizedBoundingBox(
+            bounding_box=NormalizedBoundingBox(
                 (0, 0, 0, 0),
                 (header.num_channels, 0, 0, 0),
                 axes=("c", "x", "y", "z"),
@@ -272,7 +272,7 @@ class WKWArray(BaseArray):
     @classmethod
     def create(cls, path: UPath, array_info: ArrayInfo) -> "WKWArray":
         assert array_info.data_format == cls.data_format
-        assert array_info.shape.axes == ("c", "x", "y", "z")
+        assert array_info.bounding_box.axes == ("c", "x", "y", "z")
 
         assert array_info.chunk_shape.is_uniform(), (
             f"`chunk_shape` needs to be uniform for WKW storage. Got {array_info.chunk_shape}."
@@ -302,7 +302,7 @@ class WKWArray(BaseArray):
                 str(path),
                 wkw.Header(
                     voxel_type=array_info.voxel_type,
-                    num_channels=array_info.shape.size.c,
+                    num_channels=array_info.bounding_box.size.c,
                     block_len=array_info.chunk_shape.x,
                     file_len=array_info.chunks_per_shard.x,
                     block_type=(
@@ -343,7 +343,7 @@ class WKWArray(BaseArray):
             cube_offset = cube_index * shard_shape
 
             yield BoundingBox(cube_offset, shard_shape).normalize_axes(
-                self.info.shape.size.c
+                self.info.bounding_box.size.c
             )
 
     def close(self) -> None:
@@ -726,7 +726,7 @@ class TensorStoreArray(BaseArray):
                 chunk_coords = Vec3Int(chunk_coords_list)
 
             yield BoundingBox(chunk_coords * shard_shape, shard_shape).normalize_axes(
-                self.info.shape.size.c
+                self.info.bounding_box.size.c
             )
 
     def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
@@ -811,7 +811,7 @@ class Zarr3Array(TensorStoreArray):
                 voxel_type=array.dtype.numpy_dtype,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
-                shape=shape,
+                bounding_box=shape,
                 codecs=tuple(array_codecs[0]["configuration"]["codecs"]),
                 chunk_key_encoding=chunk_key_encoding,
             )
@@ -820,7 +820,7 @@ class Zarr3Array(TensorStoreArray):
             voxel_type=array.dtype.numpy_dtype,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
-            shape=shape,
+            bounding_box=shape,
             codecs=tuple(array_codecs),
             chunk_key_encoding=chunk_key_encoding,
         )
@@ -836,23 +836,25 @@ class Zarr3Array(TensorStoreArray):
 
         chunk_shape = tuple(
             (
-                array_info.shape.size.c
+                array_info.bounding_box.size.c
                 if axis == "c"
                 else array_info.chunk_shape.get(axis, 1)
             )
-            for axis in array_info.shape.axes
+            for axis in array_info.bounding_box.axes
         )
         shard_shape = tuple(
             (
-                array_info.shape.size.c
+                array_info.bounding_box.size.c
                 if axis == "c"
                 else array_info.shard_shape.get(axis, 1)
             )
-            for axis in array_info.shape.axes
+            for axis in array_info.bounding_box.axes
         )
         shape = tuple(
             shape_a - (shape_a % shard_shape_a)
-            for shape_a, shard_shape_a in zip(array_info.shape.bottomright, shard_shape)
+            for shape_a, shard_shape_a in zip(
+                array_info.bounding_box.bottomright, shard_shape
+            )
         )
         if chunk_shape == shard_shape:
             codecs: tuple[Any, ...] = array_info.codecs
@@ -886,7 +888,7 @@ class Zarr3Array(TensorStoreArray):
                     },
                     "chunk_key_encoding": array_info.chunk_key_encoding,
                     "fill_value": 0,
-                    "dimension_names": array_info.shape.axes,
+                    "dimension_names": array_info.bounding_box.axes,
                     "codecs": codecs,
                 },
             },
@@ -927,7 +929,7 @@ class Zarr2Array(TensorStoreArray):
             compression_mode=array.codec.to_json()["compressor"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
-            shape=shape,
+            bounding_box=shape,
         )
 
     @classmethod
@@ -936,13 +938,15 @@ class Zarr2Array(TensorStoreArray):
         assert array_info.chunks_per_shard == Vec3Int.full(1), (
             "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
         )
-        chunk_shape = (array_info.shape.size.c,) + tuple(
+        chunk_shape = (array_info.bounding_box.size.c,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
-            for axis in array_info.shape.axes[1:]
+            for axis in array_info.bounding_box.axes[1:]
         )
         shape = tuple(
             shape_a - (shape_a % chunk_shape_a)
-            for shape_a, chunk_shape_a in zip(array_info.shape.bottomright, chunk_shape)
+            for shape_a, chunk_shape_a in zip(
+                array_info.bounding_box.bottomright, chunk_shape
+            )
         )
         _array = tensorstore.open(
             {
@@ -1008,7 +1012,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
             compression_mode=array.codec.to_json()["encoding"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
-            shape=shape,
+            bounding_box=shape,
         )
 
     @classmethod
@@ -1053,7 +1057,7 @@ class N5Array(TensorStoreArray):
             compression_mode=array.codec.to_json()["compression"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
-            shape=shape,
+            bounding_box=shape,
         )
 
     @classmethod

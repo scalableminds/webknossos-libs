@@ -1266,7 +1266,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             f"Could not find any valid mags in {self.path / layer_name}. Cannot add layer."
         )
 
-        num_channels = kwargs.pop("num_channels", array_info.shape.size.get("c", 0))
+        num_channels = kwargs.pop(
+            "num_channels", array_info.bounding_box.size.get("c", 0)
+        )
         dtype = (
             _dtype_maybe(
                 kwargs.pop("dtype", None), kwargs.pop("dtype_per_channel", None)

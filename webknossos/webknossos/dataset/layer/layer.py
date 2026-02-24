@@ -912,7 +912,7 @@ class Layer(AbstractLayer):
             if extend_layer_bounding_box:
                 # assumption: the topleft of the bounding box is still the same, the size might differ
                 # axes of the layer and the zarr array provided are the same
-                size = self.bounding_box.size.pairmax(mag_view.info.shape.size)
+                size = self.bounding_box.size.pairmax(mag_view.info.bounding_box.size)
                 self.bounding_box = self.bounding_box.with_size(size)
 
             return mag_view
