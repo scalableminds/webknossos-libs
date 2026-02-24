@@ -160,7 +160,7 @@ class MagView(View, Generic[LayerTypeT]):
                 voxel_type=layer.dtype,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
-                shape=bbox,
+                bounding_box=bbox,
                 codecs=tuple(compression_mode.codecs),
                 chunk_key_encoding=compression_mode.chunk_key_encoding,
             )
@@ -175,7 +175,7 @@ class MagView(View, Generic[LayerTypeT]):
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compression_mode=compression_mode,
-                shape=bbox,
+                bounding_box=bbox,
             )
             BaseArray.get_class(array_info.data_format).create(path, array_info)
 

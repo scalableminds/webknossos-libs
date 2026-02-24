@@ -31,6 +31,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `folder_path` in `RemoteDataset.explore_and_add_remote`
   - `name`, `organization_id`, `tags` and `folder_id` in `RemoteDatasetRegistry.__init__` (should not be used directly)
 - `VecInt` and `Vec3Int` don't inherit from tuple anymore. Instead, they have an internal attribute that holds the data. Instance checks for tuple don't work anymore. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
+- Calling the `x`, `y`, `z` and `c` properties of `VecInt` or `Vec3Int` now raises a `KeyError` instead of a `ValueError` if the axis is missing. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
 - Removed `dtype_per_layer` arguments and properties as they have been deprecated for a long time. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
 - Deprecated `dtype_per_channel` argument in `Dataset.add_layer` and `Dataset.get_or_add_layer` and property in `Layer`. Use `dtype` instead. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
 

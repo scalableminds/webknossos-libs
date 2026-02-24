@@ -398,7 +398,7 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     else:
         assert mag_view.info.shard_shape.xyz == Vec3Int.full(1024)
         assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(32)
-    assert mag_view.info.shape.size.c == 1
+    assert mag_view.info.bounding_box.size.c == 1
     assert mag_view.info.compression_mode == True
 
 
@@ -441,6 +441,7 @@ def test_create_dataset_with_explicit_header_fields() -> None:
     assert len(ds.get_layer("color").mags) == 2
 
     assert ds.get_layer("color").dtype == np.dtype("uint16")
+    assert ds.get_layer("color").num_channels == 3
     assert ds.get_layer("color")._properties.dtype == "uint16"
     assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
     assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(4096)
@@ -485,6 +486,7 @@ def test_deprecated_chunks_per_shard() -> None:
         assert len(ds.get_layer("color").mags) == 2
 
         assert ds.get_layer("color").dtype == np.dtype("uint16")
+        assert ds.get_layer("color")._properties.bounding_box.size.c == 3
         assert ds.get_layer("color")._properties.dtype == "uint16"
         assert ds.get_layer("color").get_mag(1).info.chunk_shape.xyz == Vec3Int.full(64)
         assert ds.get_layer("color").get_mag(1).info.shard_shape.xyz == Vec3Int.full(
@@ -2332,7 +2334,7 @@ def test_dataset_conversion_wkw_only() -> None:
             origin_info = origin_ds.layers[layer_name].mags[mag].info
             converted_info = converted_ds.layers[layer_name].mags[mag].info
             assert origin_info.voxel_type == converted_info.voxel_type
-            assert origin_info.shape.size.c == converted_info.shape.size.c
+            assert origin_info.bounding_box.size.c == converted_info.bounding_box.size.c
             assert origin_info.compression_mode == converted_info.compression_mode
             assert origin_info.chunk_shape == converted_info.chunk_shape
             assert origin_info.data_format == converted_info.data_format
