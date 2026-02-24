@@ -438,9 +438,9 @@ class View:
         if shard_bbox.intersected_with(self_bbox.in_mag(self._mag)) != bbox:
             raise ValueError(
                 f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
-                + "Performance will be degraded as existing shard data has to be read, combined and "
-                + "written as whole shards. Additionally, writing without shard alignment data can lead to "
-                + f"consistency issues when writing in parallel. Bounding box: {self_bbox}",
+                + "This is disallowed because of issues with performance and concurrent writes. "
+                + "Either, ensure that you write shard-aligned chunks OR pass allow_unaligned=True. "
+                + f"When using the latter, take care to not write concurrently. Bounding box: {self_bbox}"
             )
 
     def _prepare_compressed_write(
