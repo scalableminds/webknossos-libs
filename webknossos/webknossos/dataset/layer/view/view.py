@@ -99,6 +99,11 @@ class View:
             view = mag_view.get_view(size=(100, 100, 10))
             ```
         """
+        from .mag_view import MagView
+
+        if not isinstance(self, MagView) and bounding_box is None:
+            raise ValueError("Please provide a bounding box when creating a View.")
+
         self._path = path_to_mag_view
         self._data_format = data_format
         self._normalized_bounding_box = bounding_box
@@ -144,8 +149,7 @@ class View:
             print(f"Size: {bbox.size}")
             ```
         """
-        assert self._normalized_bounding_box is not None
-        return self._normalized_bounding_box.denormalize()
+        return self.normalized_bounding_box.denormalize()
 
     @property
     def normalized_bounding_box(self) -> NormalizedBoundingBox:
@@ -154,7 +158,9 @@ class View:
         Returns:
             NormalizedBoundingBox: Bounding box with channel axis included
         """
-        assert self._normalized_bounding_box is not None
+        assert self._normalized_bounding_box is not None, (
+            "Invalid state. Non-MagView views must have a bounding box."
+        )
         return self._normalized_bounding_box
 
     @property
@@ -164,8 +170,7 @@ class View:
         Returns:
             int: Number of channels
         """
-        assert self._normalized_bounding_box is not None
-        return self._normalized_bounding_box.size.get("c", 0)
+        return self.normalized_bounding_box.size.get("c", 0)
 
     @property
     def mag(self) -> Mag:

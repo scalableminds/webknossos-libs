@@ -296,8 +296,8 @@ class NDBoundingBox:
 
     @classmethod
     def group_boxes_with_aligned_mag(
-        cls, bounding_boxes: Iterable[NDBoundingBox], aligning_mag: Mag
-    ) -> dict[NDBoundingBox, list[NDBoundingBox]]:
+        cls, bounding_boxes: "Iterable[NDBoundingBox]", aligning_mag: Mag
+    ) -> "dict[NDBoundingBox, list[NDBoundingBox]]":
         """
         Groups the given BoundingBox instances by aligning each
         bbox to the given mag and using that as the key.
@@ -475,7 +475,7 @@ class NDBoundingBox:
 
         return self.with_index(new_index)
 
-    def _check_compatibility(self, other: NDBoundingBox) -> None:
+    def _check_compatibility(self, other: "NDBoundingBox") -> None:
         """Checks if two bounding boxes are comparable. To be comparable they need the same number of axes, with same names and same order."""
 
         if self.axes != other.axes:
@@ -871,7 +871,7 @@ class NDBoundingBox:
             color=self.color,
         )
 
-    def denormalize(self) -> NDBoundingBox:
+    def denormalize(self) -> "NDBoundingBox":
         return self
 
 
