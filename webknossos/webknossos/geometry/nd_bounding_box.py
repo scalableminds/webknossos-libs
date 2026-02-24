@@ -22,7 +22,7 @@ _DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
 _T = TypeVar("_T", bound="NDBoundingBox")
 
 
-def parse_str_tuple(str_list: Iterable[str]) -> tuple[str, ...]:
+def str_iterable_to_tuple(str_list: Iterable[str]) -> tuple[str, ...]:
     # Fix for mypy bug https://github.com/python/mypy/issues/5313.
     # Solution based on other issue for the same bug: https://github.com/python/mypy/issues/8389.
     return tuple(str_list)
@@ -54,7 +54,7 @@ class NDBoundingBox:
         topleft: The coordinates of the upper-left corner (inclusive)
         size: The size/extent in each dimension
         axes: The names of the axes/dimensions (e.g. "x", "y", "z", "t")
-        index: The order/position of each axis, starting from 1 (0 is reserved for channels)
+        index: The order/position of each axis, starting from 0. Deprecated, index is inferred from axes.
         name: Optional name for this bounding box
         is_visible: Whether this bounding box should be visible
         color: Optional RGBA color tuple (4 floats) for display
@@ -66,7 +66,6 @@ class NDBoundingBox:
                 topleft=(0, 0),
                 size=(100, 100),
                 axes=("x", "y"),
-                index=(1,2)
             )
             ```
         Create a 4D bounding box:
@@ -75,18 +74,17 @@ class NDBoundingBox:
                 topleft=(75, 75, 75, 0),
                 size=(100, 100, 100, 20),
                 axes=("x", "y", "z", "t"),
-                index=(2,3,4,1)
             )
             ```
 
     Note:
         - The top-left coordinate is inclusive while bottom-right is exclusive
-        - Each axis must have a unique index starting from 0
+        - Each axis must have a unique dense index starting from 0
     """
 
     topleft: VecInt = attr.field(converter=parse_vec_int)
     size: VecInt = attr.field(converter=parse_vec_int)
-    axes: tuple[str, ...] = attr.field(converter=parse_str_tuple)
+    axes: tuple[str, ...] = attr.field(converter=str_iterable_to_tuple)
     index: VecInt = attr.field(
         converter=parse_vec_int_or_none, default=None
     )  # not used, but left for backwards compatibility

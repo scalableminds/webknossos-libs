@@ -112,14 +112,14 @@ class View:
 
         Returns:
             ArrayInfo: Object containing array metadata such as data type,
-                shape, and other array-specific information.
+                bounding box, and other array-specific information.
 
         Examples:
             ```python
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
             array_info = view.info
             print(f"Data type: {array_info.data_type}")
-            print(f"Shape: {array_info.shape}")
+            print(f"Shape: {array_info.bounding_box.size}")
             ```
         """
         return self._array.info
@@ -379,7 +379,7 @@ class View:
                 )
             else:
                 raise ValueError(
-                    f"The data has to have the dimensions (c, x, y, z) or (x, y, z), got shape {data.shape}"
+                    f"The passed data has to have the dimensions (c, x, y, z) or (x, y, z), got shape {data.shape}"
                 )
         else:
             if "c" in self_bbox.axes:
@@ -387,7 +387,7 @@ class View:
                     f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
                 )
             assert len(data.shape) == len(self_bbox.axes), (
-                f"The data has to have the dimensions {self_bbox.axes}, got shape {data.shape}"
+                f"The passed data has to have the dimensions {self_bbox.axes}, got shape {data.shape}"
             )
 
         mag1_bbox = self._get_mag1_bbox(
@@ -435,7 +435,7 @@ class View:
                 f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
                 + "Performance will be degraded as existing shard data has to be read, combined and "
                 + "written as whole shards. Additionally, writing without shard alignment data can lead to "
-                + f"issues when writing in parallel. Bounding box: {self_bbox}",
+                + f"consistency issues when writing in parallel. Bounding box: {self_bbox}",
             )
 
     def _prepare_compressed_write(

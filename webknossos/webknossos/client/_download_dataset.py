@@ -75,6 +75,7 @@ def download_dataset(
             category=category,
             data_format=data_format or DEFAULT_DATA_FORMAT,
             dtype_per_channel=api_data_layer.dtype_np,
+            num_channels=api_data_layer.bounding_box.size.c,
             largest_segment_id=getattr(api_data_layer, "largest_segment_id", None),
         )
 
