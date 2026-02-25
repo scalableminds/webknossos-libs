@@ -44,6 +44,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `RemoteDataset.add_layer_as_copy`. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
 - Added `RemoteDataset.get_or_add_layer`. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
 - Added `RemoteAttachments.add_attachment_as_copy`. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Added `RemoteAiModel` class, allowing to access information about trained AI models registered in WEBKNOSSOS. [#1409](https://github.com/scalableminds/webknossos-libs/pull/1409)
 
 ### Changed
 - The `RemoteDataset.open` method now accepts `access_mode` instead of `use_zarr_streaming`. `use_zarr_streaming` is still supported, but deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
