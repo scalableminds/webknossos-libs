@@ -1,9 +1,11 @@
+from shutil import ignore_patterns
 from unittest.mock import Mock, patch
 
 import pytest
 from upath import UPath
 
-from webknossos.utils import call_with_retries, dump_path
+from tests.utils import TestTemporaryDirectoryNonLocal
+from webknossos.utils import call_with_retries, copytree, dump_path
 
 
 def test_call_with_retries_success() -> None:
@@ -189,3 +191,45 @@ def test_dump_path(tmp_upath: UPath) -> None:
         / "test.txt"
     )
     assert dump_path(path, dataset_path) == "./test.txt"
+
+
+def test_copytree_with_ignore() -> None:
+    # use in-memory fs to demonstrate functionality with non-local UPaths
+    with TestTemporaryDirectoryNonLocal() as tmp_dir:
+        """
+        Folder structure:
+        tmp_dir/
+            src/
+                file1.txt
+                file2.log --> X
+                subdir/
+                    file3.txt
+                    file4.log --> X
+                subdir2/ --> X
+                    file5.txt
+        """
+        src_dir = tmp_dir / "src"
+        src_dir.mkdir()
+
+        (src_dir / "file1.txt").write_text("File 1")
+        (src_dir / "file2.log").write_text("File 2")
+        (src_dir / "subdir").mkdir()
+        (src_dir / "subdir" / "file3.txt").write_text("File 3")
+        (src_dir / "subdir" / "file4.log").write_text("File 4")
+        (src_dir / "subdir2").mkdir()
+        (src_dir / "subdir2" / "file5.txt").write_text("File 5")
+
+        dst_dir = tmp_dir / "dst"
+
+        copytree(src_dir, dst_dir, ignore=ignore_patterns("*.log", "subdir2"))
+
+        # txt files should have been copied
+        assert (dst_dir / "file1.txt").exists()
+        assert (dst_dir / "subdir" / "file3.txt").exists()
+
+        # log files should have been ignored
+        assert not (dst_dir / "file2.log").exists()
+        assert not (dst_dir / "subdir" / "file4.log").exists()
+
+        # subdir2 should have been ignored entirely
+        assert not (dst_dir / "subdir2").exists()
