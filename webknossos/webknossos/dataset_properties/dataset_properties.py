@@ -1,8 +1,9 @@
 from collections.abc import Iterable, Iterator
 
 import attr
+import numpy as np
 
-from ..geometry import Mag, NDBoundingBox
+from ..geometry import Mag, NormalizedBoundingBox
 from .data_format import AttachmentDataFormat, DataFormat
 from .layer_categories import LayerCategoryType
 from .length_unit import _LENGTH_UNIT_TO_NANOMETER, LengthUnit
@@ -85,19 +86,21 @@ class MagViewProperties:
     Could be None for older datasource-proterties.json files.
     """
     cube_length: int | None = None
-    axis_order: dict[str, int] | None = None
 
 
 @attr.define
 class LayerProperties:
     name: str
     category: LayerCategoryType
-    bounding_box: NDBoundingBox
-    element_class: str
+    bounding_box: NormalizedBoundingBox
+    dtype: str
     data_format: DataFormat
     mags: list[MagViewProperties]
-    num_channels: int | None = None
     default_view_configuration: LayerViewConfiguration | None = None
+
+    @property
+    def dtype_np(self) -> np.dtype:
+        return np.dtype(self.dtype)
 
 
 @attr.define

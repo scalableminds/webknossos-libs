@@ -28,15 +28,17 @@ def ignore_warnings() -> Iterator:
 
 def test_compare_tifffile(tmp_upath: UPath) -> None:
     ds = wk.Dataset(tmp_upath, (1, 1, 1))
-    layer = ds.add_layer_from_images(
-        "testdata/tiff/test.02*.tiff",
-        layer_name="compare_tifffile",
-        compress=True,
-        category="segmentation",
-        topleft=(100, 100, 55),
-        chunk_shape=(8, 8, 8),
-        shard_shape=(64, 64, 64),
-    )
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            "testdata/tiff/test.02*.tiff",
+            layer_name="compare_tifffile",
+            compress=True,
+            category="segmentation",
+            topleft=(100, 100, 55),
+            chunk_shape=(8, 8, 8),
+            shard_shape=(64, 64, 64),
+            executor=executor,
+        )
     assert layer.bounding_box.topleft == wk.Vec3Int(100, 100, 55)
     data = layer.get_finest_mag().read()[0, :, :]
     for z_index in range(0, data.shape[-1]):
@@ -58,23 +60,19 @@ def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
             shard_shape=(64, 64, 64),
             executor=executor,
         )
-    assert layer.bounding_box.topleft == wk.VecInt(
-        2, 55, 100, 100, axes=("t", "z", "y", "x")
-    )
-    assert layer.bounding_box.size == wk.VecInt(
-        7, 5, 167, 439, axes=("t", "z", "y", "x")
-    )
+    assert layer.bounding_box.topleft == wk.VecInt(t=2, z=55, y=100, x=100)
+    assert layer.bounding_box.size == wk.VecInt(t=7, z=5, y=167, x=439)
     read_with_tifffile_reader = TiffFile(
         "testdata/4D/4D_series/4D-series.ome.tif"
     ).asarray()
-    read_first_channel_from_dataset = layer.get_finest_mag().read()[0]
-    np.testing.assert_array_equal(
-        read_with_tifffile_reader, read_first_channel_from_dataset
-    )
+    # For ND data without explicit channel axis, read() returns data directly
+    # without a channel wrapper dimension
+    read_from_dataset = layer.get_finest_mag().read()
+    np.testing.assert_array_equal(read_with_tifffile_reader, read_from_dataset)
 
 
 REPO_IMAGES_ARGS: list[
-    tuple[str | list[UPath], dict[str, Any], str, int, int, tuple[int, ...]]
+    tuple[str | list[UPath], dict[str, Any], str, int, int, wk.VecInt]
 ] = [
     (
         "testdata/tiff/test.*.tiff",
@@ -82,7 +80,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (265, 265, 257),
+        wk.VecInt(c=1, x=265, y=265, z=257),
     ),
     (
         [
@@ -94,7 +92,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (265, 265, 3),
+        wk.VecInt(c=1, x=265, y=265, z=3),
     ),
     (
         "testdata/rgb_tiff/test_rgb.tif",
@@ -102,7 +100,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (64, 64, 6),
+        wk.VecInt(c=1, x=64, y=64, z=6),
     ),
     (
         "testdata/rgb_tiff",
@@ -110,7 +108,7 @@ REPO_IMAGES_ARGS: list[
         "uint32",
         1,
         1,
-        (64, 64, 6),
+        wk.VecInt(c=1, x=64, y=64, z=6),
     ),
     (
         "testdata/temca2/*/*/*.jpg",
@@ -118,7 +116,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (1024, 1024, 12),
+        wk.VecInt(c=1, x=1024, y=1024, z=12),
     ),
     (
         "testdata/temca2",
@@ -129,7 +127,7 @@ REPO_IMAGES_ARGS: list[
         # The topmost folder contains an extra image,
         # which is included here as well, but not in
         # the glob pattern above. Therefore z is +1.
-        (1024, 1024, 13),
+        wk.VecInt(c=1, x=1024, y=1024, z=13),
     ),
     (
         "testdata/tiff_with_different_shapes/*",
@@ -137,7 +135,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (2970, 2521, 4),
+        wk.VecInt(c=1, x=2970, y=2521, z=4),
     ),
     (
         "testdata/various_tiff_formats/test_CS.tif",
@@ -145,7 +143,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         5,
-        (3, 64, 128, 128),
+        wk.VecInt(s=3, x=64, c=1, y=128, z=128),
     ),
     (
         "testdata/various_tiff_formats/test_C.tif",
@@ -153,7 +151,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         5,
-        (128, 128, 64),
+        wk.VecInt(c=1, x=128, y=128, z=64),
     ),
     # same as test_C.tif above, but as a single file in a folder:
     (
@@ -162,16 +160,23 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         5,
-        (128, 128, 64),
+        wk.VecInt(c=1, x=128, y=128, z=64),
     ),
-    ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, 1, (64, 128, 64)),
+    (
+        "testdata/various_tiff_formats/test_I.tif",
+        {},
+        "uint32",
+        1,
+        1,
+        wk.VecInt(c=1, x=64, y=128, z=64),
+    ),
     (
         "testdata/various_tiff_formats/test_S.tif",
         {"data_format": "zarr3"},
         "uint16",
         1,
         1,
-        (3, 64, 128, 128),
+        wk.VecInt(s=3, x=64, y=128, z=128),
     ),
     (
         "testdata/4D/single_channel/single-channel.ome.tiff",
@@ -179,7 +184,7 @@ REPO_IMAGES_ARGS: list[
         "int8",
         1,
         1,
-        (439, 167, 1),
+        wk.VecInt(c=1, x=439, y=167, z=1),
     ),
     (
         "testdata/4D/multi_channel_z_series/multi-channel-z-series.ome.tif",
@@ -187,7 +192,7 @@ REPO_IMAGES_ARGS: list[
         "int8",
         1,
         3,
-        (439, 167, 5),
+        wk.VecInt(c=1, x=439, y=167, z=5),
     ),
 ]
 
@@ -199,7 +204,7 @@ def _test_repo_images(
     dtype: str,
     num_channels: int,
     num_layers: int,
-    size: tuple[int, ...],
+    size: wk.VecInt,
 ) -> wk.Dataset:
     with SequentialExecutor() as executor:
         ds = wk.Dataset(tmp_upath, (1, 1, 1))
@@ -214,7 +219,7 @@ def _test_repo_images(
         assert layer.dtype_per_channel == np.dtype(dtype)
         assert layer.num_channels == num_channels
         assert len(ds.layers) == num_layers
-        assert layer.bounding_box.size.to_tuple() == size
+        assert layer.normalized_bounding_box.size == size
         if isinstance(layer, wk.SegmentationLayer):
             assert layer.largest_segment_id is not None
             assert layer.largest_segment_id > 0
@@ -231,7 +236,7 @@ def test_repo_images(
     dtype: str,
     num_channels: int,
     num_layers: int,
-    size: tuple[int, ...],
+    size: wk.VecInt,
 ) -> None:
     _test_repo_images(tmp_upath, path, kwargs, dtype, num_channels, num_layers, size)
 

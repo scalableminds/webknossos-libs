@@ -1,16 +1,15 @@
 import json
 import re
 from collections.abc import Callable, Generator, Iterable
-from typing import Union, cast
+from typing import Union, cast, overload
 
 import attr
 import numpy as np
 
 from .mag import Mag
-from .nd_bounding_box import NDBoundingBox
+from .nd_bounding_box import _DEFAULT_BBOX_NAME, NDBoundingBox
+from .normalized_bounding_box import NormalizedBoundingBox
 from .vec3_int import Vec3Int, Vec3IntLike
-
-_DEFAULT_BBOX_NAME = "Unnamed Bounding Box"
 
 
 @attr.frozen
@@ -85,19 +84,6 @@ class BoundingBox(NDBoundingBox):
         """Returns a copy of the bounding box with topleft.z optionally replaced and size.z optionally replaced."""
 
         return cast(BoundingBox, self.with_bounds("z", new_topleft_z, new_size_z))
-
-    @classmethod
-    def from_wkw_dict(cls, bbox: dict) -> "BoundingBox":
-        """Creates a BoundingBox from a wkw-format dictionary.
-
-        Args:
-            bbox (Dict): Dictionary containing wkw-format bounding box data with
-                keys 'topLeft', 'width', 'height', and 'depth'
-
-        Returns:
-            BoundingBox: A new bounding box with the specified dimensions
-        """
-        return cls(bbox["topLeft"], [bbox["width"], bbox["height"], bbox["depth"]])
 
     @classmethod
     def from_config_dict(cls, bbox: dict) -> "BoundingBox":
@@ -191,7 +177,9 @@ class BoundingBox(NDBoundingBox):
         elif isinstance(obj, dict):
             if "size" in obj:
                 return cls.from_config_dict(obj)
-            return cls.from_wkw_dict(obj)
+            return cast(
+                BoundingBox, NormalizedBoundingBox.from_wkw_dict(obj).denormalize()
+            )
         elif isinstance(obj, list) or isinstance(obj, tuple):
             if len(obj) == 2:
                 return cls.from_tuple2(obj)  # type: ignore
@@ -205,31 +193,6 @@ class BoundingBox(NDBoundingBox):
         cls,
     ) -> "BoundingBox":
         return cls(Vec3Int.zeros(), Vec3Int.zeros())
-
-    def to_wkw_dict(self) -> dict:
-        """Converts the bounding box to a wkw-format dictionary.
-
-        Creates a dictionary with wkw-format fields containing the bounding box dimensions.
-
-        Returns:
-            dict: A dictionary with keys:
-                - topLeft: list[int] of (x,y,z) coordinates
-                - width: int width in x dimension
-                - height: int height in y dimension
-                - depth: int depth in z dimension
-        """
-        (
-            width,
-            height,
-            depth,
-        ) = self.size.to_list()
-
-        return {
-            "topLeft": self.topleft.to_list(),
-            "width": width,
-            "height": height,
-            "depth": depth,
-        }
 
     def to_config_dict(self) -> dict:
         """Converts the bounding box to a config-format dictionary.
@@ -282,11 +245,82 @@ class BoundingBox(NDBoundingBox):
         return ",".join(map(str, self.to_tuple6()))
 
     def __eq__(self, other: object) -> bool:
+        """Check equality with another bounding box.
+
+        When comparing with a NormalizedBoundingBox, the channel axis is ignored
+        and only the spatial (x, y, z) dimensions are compared.
+        """
+        if isinstance(other, NormalizedBoundingBox):
+            other = other.denormalize()
         if isinstance(other, NDBoundingBox):
             self._check_compatibility(other)
             return self.topleft == other.topleft and self.size == other.size
 
-        raise NotImplementedError()
+        return NotImplemented
+
+    @overload
+    def intersected_with(
+        self, other: "NormalizedBoundingBox", dont_assert: bool = False
+    ) -> "NormalizedBoundingBox": ...
+
+    @overload
+    def intersected_with(
+        self, other: "BoundingBox", dont_assert: bool = False
+    ) -> "BoundingBox": ...
+
+    def intersected_with(
+        self, other: "BoundingBox | NormalizedBoundingBox", dont_assert: bool = False
+    ) -> "BoundingBox | NormalizedBoundingBox":
+        """Returns the intersection of two bounding boxes.
+
+        When intersecting with a NormalizedBoundingBox, the operation is performed
+        on the spatial (x, y, z) dimensions only, ignoring the channel axis.
+        The result is a NormalizedBoundingBox with the channel count preserved
+        from the NormalizedBoundingBox operand.
+        """
+        if isinstance(other, NormalizedBoundingBox):
+            num_channels = other.size.c
+            other_denorm = cast(BoundingBox, other.denormalize())
+            result = cast(
+                BoundingBox, super().intersected_with(other_denorm, dont_assert)
+            )
+            return result.normalize_axes(num_channels)
+        return cast(BoundingBox, super().intersected_with(other, dont_assert))
+
+    @overload
+    def extended_by(
+        self, other: "NormalizedBoundingBox"
+    ) -> "NormalizedBoundingBox": ...
+
+    @overload
+    def extended_by(self, other: "BoundingBox") -> "BoundingBox": ...
+
+    def extended_by(
+        self, other: "BoundingBox | NormalizedBoundingBox"
+    ) -> "BoundingBox | NormalizedBoundingBox":
+        """Returns the smallest bounding box that contains both bounding boxes.
+
+        When extending with a NormalizedBoundingBox, the operation is performed
+        on the spatial (x, y, z) dimensions only, ignoring the channel axis.
+        The result is a NormalizedBoundingBox with the channel count preserved
+        from the NormalizedBoundingBox operand.
+        """
+        if isinstance(other, NormalizedBoundingBox):
+            num_channels = other.size.c
+            other_denorm = cast(BoundingBox, other.denormalize())
+            result = cast(BoundingBox, super().extended_by(other_denorm))
+            return result.normalize_axes(num_channels)
+        return cast(BoundingBox, super().extended_by(other))
+
+    def contains_bbox(self, inner_bbox: "BoundingBox | NormalizedBoundingBox") -> bool:
+        """Check whether a bounding box is completely inside this bounding box.
+
+        When checking containment of a NormalizedBoundingBox, only the spatial
+        (x, y, z) dimensions are considered, ignoring the channel axis.
+        """
+        if isinstance(inner_bbox, NormalizedBoundingBox):
+            inner_bbox = cast(BoundingBox, inner_bbox.denormalize())
+        return super().contains_bbox(inner_bbox)
 
     def __repr__(self) -> str:
         return f"BoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()})"
@@ -478,3 +512,14 @@ class BoundingBox(NDBoundingBox):
 
     def __hash__(self) -> int:
         return hash(self.to_tuple6())
+
+    def normalize_axes(self, num_channels: int) -> NormalizedBoundingBox:
+        return NormalizedBoundingBox(
+            topleft=(0,) + self.topleft.to_tuple(),
+            size=(num_channels,) + self.size.to_tuple(),
+            axes=("c",) + self.axes,
+            index=(0,) + self.index.to_tuple(),
+            name=self.name,
+            is_visible=self.is_visible,
+            color=self.color,
+        )

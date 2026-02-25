@@ -357,7 +357,7 @@ class Layer(AbstractLayer):
         )
 
         mag_view._array.resize(
-            self.bounding_box.align_with_mag(mag, ceil=True).in_mag(mag)
+            self.normalized_bounding_box.align_with_mag(mag, ceil=True).in_mag(mag)
         )
 
         self._mags[mag] = mag_view
@@ -368,16 +368,6 @@ class Layer(AbstractLayer):
                 cube_length=(
                     mag_array_info.shard_shape.x
                     if mag_array_info.data_format == DataFormat.WKW
-                    else None
-                ),
-                axis_order=(
-                    dict(
-                        zip(
-                            ("c", "x", "y", "z"),
-                            (0, *self.bounding_box.index_xyz),
-                        )
-                    )
-                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
                 path=dump_path(mag_path, self.dataset.resolved_path),
@@ -429,17 +419,6 @@ class Layer(AbstractLayer):
                 cube_length=(
                     mag_array_info.shard_shape.x
                     if mag_array_info.data_format == DataFormat.WKW
-                    else None
-                ),
-                axis_order=(
-                    {
-                        key: value
-                        for key, value in zip(
-                            ("c", "x", "y", "z"),
-                            (0, *self.bounding_box.index_xyz),
-                        )
-                    }
-                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
                 path=stored_path,
@@ -826,7 +805,6 @@ class Layer(AbstractLayer):
                 mag=mag,
                 path=dump_path(foreign_mag_view.path, self.dataset.resolved_path),
                 cube_length=foreign_mag_view._properties.cube_length,
-                axis_order=foreign_mag_view._properties.axis_order,
             )
         )
         self._save_layer_properties()
@@ -935,12 +913,7 @@ class Layer(AbstractLayer):
             if extend_layer_bounding_box:
                 # assumption: the topleft of the bounding box is still the same, the size might differ
                 # axes of the layer and the zarr array provided are the same
-                zarray_size = (
-                    mag_view.info.shape[mag_view.info.dimension_names.index(axis)]
-                    for axis in self.bounding_box.axes
-                    if axis != "c"
-                )
-                size = self.bounding_box.size.pairmax(zarray_size)
+                size = self.bounding_box.size.pairmax(mag_view.info.bounding_box.size)
                 self.bounding_box = self.bounding_box.with_size(size)
 
             return mag_view

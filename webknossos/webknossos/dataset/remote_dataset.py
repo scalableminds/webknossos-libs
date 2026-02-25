@@ -31,7 +31,6 @@ from webknossos.dataset.abstract_dataset import (
 )
 from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer, Zarr3Config
 from webknossos.dataset.layer.abstract_layer import (
-    _dtype_per_layer_to_dtype_per_channel,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
     _validate_layer_name,
@@ -51,12 +50,12 @@ from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
 from ..client.api_client.errors import UnexpectedStatusError
-from ..dataset_properties.structuring import (
+from ..dataset_properties.dtype_conversion import (
+    _dtype_per_layer_to_dtype_per_channel,
     _properties_floating_type_to_python_type,
 )
 from ..ssl_context import SSL_CONTEXT
 from .defaults import DEFAULT_BIT_DEPTH, DEFAULT_DATA_FORMAT
-from .layer.abstract_layer import _dtype_per_channel_to_element_class
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .transfer_mode import TransferMode
@@ -864,16 +863,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         assert data_format != DataFormat.WKW, (
             "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
         )
-
+        bounding_box = bounding_box or BoundingBox((0, 0, 0), (0, 0, 0))
+        bounding_box = bounding_box.normalize_axes(num_channels)
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
-            element_class=_dtype_per_channel_to_element_class(
-                dtype_per_channel, num_channels
-            ),
+            bounding_box=bounding_box,
+            dtype=dtype_per_channel.name,
             mags=[],
-            num_channels=num_channels,
             data_format=DataFormat(data_format),
         )
 

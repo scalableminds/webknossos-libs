@@ -52,7 +52,6 @@ from .layer import (
 )
 from .layer.abstract_layer import (
     _UNALLOWED_LAYER_NAME_CHARS,
-    _dtype_per_channel_to_element_class,
     _normalize_dtype_per_channel,
     _normalize_dtype_per_layer,
     _validate_layer_name,
@@ -73,9 +72,6 @@ from webknossos.dataset.layer import (
     RemoteLayer,
     SegmentationLayer,
 )
-from webknossos.dataset.layer.abstract_layer import (
-    _dtype_per_layer_to_dtype_per_channel,
-)
 
 from ..dataset_properties import (
     COLOR_CATEGORY,
@@ -88,10 +84,11 @@ from ..dataset_properties import (
     SegmentationLayerProperties,
     VoxelSize,
 )
-from ..dataset_properties.structuring import (
+from ..dataset_properties.dtype_conversion import (
+    _dtype_per_layer_to_dtype_per_channel,
     _properties_floating_type_to_python_type,
-    get_dataset_converter,
 )
+from ..dataset_properties.structuring import get_dataset_converter
 from ..utils import (
     cheap_resolve,
     copytree,
@@ -417,17 +414,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     @property
     def _SegmentationLayerType(self) -> type[SegmentationLayer]:
         return SegmentationLayer
-
-    def _initialize_layer_from_properties(
-        self, properties: LayerProperties, read_only: bool
-    ) -> Layer:
-        # If the numChannels key is not present in the dataset properties, assume it is 1 unless we have uint24.
-        if properties.num_channels is None:
-            if properties.element_class == "uint24":
-                properties.num_channels = 3
-            else:
-                properties.num_channels = 1
-        return super()._initialize_layer_from_properties(properties, read_only)
 
     @classmethod
     def open(
@@ -1148,16 +1134,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         assert is_fs_path(self.path) or data_format != DataFormat.WKW, (
             "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
         )
-
+        bounding_box = bounding_box or BoundingBox((0, 0, 0), (0, 0, 0))
+        bounding_box = bounding_box.normalize_axes(num_channels)
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
-            element_class=_dtype_per_channel_to_element_class(
-                dtype_per_channel, num_channels
-            ),
+            bounding_box=bounding_box,
+            dtype=dtype_per_channel.name,
             mags=[],
-            num_channels=num_channels,
             data_format=DataFormat(data_format),
         )
 
@@ -1396,7 +1380,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             f"Could not find any valid mags in {self.path / layer_name}. Cannot add layer."
         )
 
-        num_channels = kwargs.pop("num_channels", array_info.num_channels)
+        num_channels = kwargs.pop(
+            "num_channels", array_info.bounding_box.size.get("c", 0)
+        )
         dtype_per_channel = kwargs.pop("dtype_per_channel", array_info.voxel_type)
         data_format = kwargs.pop("data_format", array_info.data_format)
 
@@ -1615,6 +1601,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     current_dtype = current_dtype.newbyteorder("<")
             else:
                 current_dtype = np.dtype(dtype)
+
             layer = self.add_layer(
                 layer_name=layer_name + layer_name_suffix,
                 category=category,
@@ -1718,7 +1705,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
             if (
                 additional_axes := set(layer.bounding_box.axes).difference(
-                    "x", "y", "z"
+                    "c", "x", "y", "z"
                 )
             ) and layer.data_format == DataFormat.WKW:
                 if all(

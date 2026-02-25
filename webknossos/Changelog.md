@@ -30,6 +30,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
   - `dataset_name_or_url`, `organization_id`, `webknossos_url`, `dataset_id`, `organization`, `datastore_url` and `token` in `RemoteDataset.trigger_reload_in_datastore`
   - `folder_path` in `RemoteDataset.explore_and_add_remote`
   - `name`, `organization_id`, `tags` and `folder_id` in `RemoteDatasetRegistry.__init__` (should not be used directly)
+- `VecInt` and `Vec3Int` don't inherit from tuple anymore. Instead, they have an internal attribute that holds the data. Instance checks for tuple don't work anymore. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
+- Calling the `x`, `y`, `z` and `c` properties of `VecInt` or `Vec3Int` now raises a `KeyError` instead of a `ValueError` if the axis is missing. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
 
 ### Added
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
@@ -41,6 +43,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Renamed `folder_path` to `folder` in `RemoteDataset.explore_and_add_remote`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Renamed `folder_id` to `folder` in `Dataset.upload`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Renamed `folder_id` to `folder` in `RemoteDataset.list`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- The elementClass parsing is done in the structuring now. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- The restriction to have the channel axis as first axis is now removed. Arbitrary axes are allowed. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Within the library a new `NormalizedBoundingBox` class is used to represent bounding boxes with an explicit c-axis (channels). The `NormalizedBoundingBox` is used as the primary bounding box attribute throughout the library. It is also used for de/serialization of the dataset properties. The interface of the `BoundingBox` class is intentionally kept stable, but computed from the `NormalizedBoundingBox`. Likewise, the `num_channels` attribute is computed from the `NormalizedBoundingBox`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- The `dimension` argument in `View.get_buffered_slice_writer`, `View.get_buffered_slice_reader`, `BufferedSliceWriter.__init__` and `BufferedSliceReader.__init__` now takes named axis (string) instead of integer index, e.g. `"z"` instead of `2`. Integers are deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Annotation loading now throws a `FileNotFoundError` instead of `AssertionError` if the specified path does not exist. [#1425](https://github.com/scalableminds/webknossos-libs/pull/1425)
 
 ### Fixed

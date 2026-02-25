@@ -296,9 +296,11 @@ def downsample_cube_job(
     (source_view, target_view, _i) = args
 
     try:
-        num_channels = target_view.info.num_channels
-        target_bbox_in_mag = target_view.bounding_box.in_mag(target_view.mag)
-        shape = (num_channels,) + target_bbox_in_mag.size.to_tuple()
+        source_bbox = source_view.normalized_bounding_box
+        target_bbox = target_view.normalized_bounding_box
+        num_channels = target_view.info.bounding_box.size.c
+        target_bbox_in_mag = target_bbox.in_mag(target_view.mag)
+        shape = target_bbox_in_mag.size.to_tuple()
         shape_xyz = target_bbox_in_mag.size_xyz
         file_buffer = np.zeros(shape, target_view.get_dtype(), order="F")
 
@@ -312,14 +314,12 @@ def downsample_cube_job(
         for tile in tiles:
             target_offset = Vec3Int(tile) * buffer_shape
             source_offset = target_offset * target_view.mag
-            source_size = source_view.bounding_box.size_xyz
+            source_size = source_bbox.size_xyz
             source_size = (buffer_shape * target_view.mag).pairmin(
                 source_size - source_offset
             )
 
-            bbox = source_view.bounding_box.offset(source_offset).with_size_xyz(
-                source_size
-            )
+            bbox = source_bbox.offset(source_offset).with_size_xyz(source_size)
 
             cube_buffer_channels = source_view.read_xyz(
                 absolute_bounding_box=bbox,
@@ -336,22 +336,24 @@ def downsample_cube_job(
                         interpolation_mode,
                     )
 
-                    buffer_bbox = target_view.bounding_box.with_topleft_xyz(
+                    buffer_bbox = target_bbox.with_topleft_xyz(
                         target_offset
                     ).with_size_xyz(data_cube.shape)
+                    if "c" in buffer_bbox.axes:
+                        buffer_bbox = buffer_bbox.with_bounds("c", new_size=1)
 
                     # Add missing axes to the data_cube if bbox is nd
                     data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
 
-                    file_buffer[(channel_index,) + buffer_bbox.to_slices_xyz()] = (
-                        data_cube
-                    )
+                    slices: list[int | slice] = list(buffer_bbox.to_slices_xyz())
+                    if "c" in buffer_bbox.axes:
+                        slices[buffer_bbox.index.c] = channel_index
+
+                    file_buffer[tuple(slices)] = data_cube
 
         # Write the downsampled buffer to target
-        target_view.write(file_buffer, absolute_bounding_box=target_view.bounding_box)
+        target_view.write(file_buffer, absolute_bounding_box=target_bbox)
 
     except Exception as exc:
-        logger.error(
-            f"Downsampling of target {target_view.bounding_box} failed with {exc}"
-        )
+        logger.exception(f"Downsampling of target {target_bbox} failed with {exc}")
         raise exc

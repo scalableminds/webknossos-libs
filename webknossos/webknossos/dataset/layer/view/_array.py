@@ -19,7 +19,7 @@ from typing_extensions import NotRequired, Self
 from upath import UPath
 
 from webknossos.dataset_properties import DataFormat
-from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int, VecInt
+from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
 from webknossos.utils import call_with_retries, is_fs_path
 
 logger = getLogger(__name__)
@@ -38,13 +38,14 @@ class ArrayException(Exception):
 @dataclass(frozen=True)
 class ArrayInfo:
     data_format: DataFormat
-    num_channels: int
     voxel_type: np.dtype
     chunk_shape: Vec3Int
     shard_shape: Vec3Int
-    shape: VecInt = VecInt(c=1, x=1, y=1, z=1)
-    dimension_names: tuple[str, ...] = ("c", "x", "y", "z")
-    axis_order: VecInt = VecInt(c=3, x=2, y=1, z=0)
+    bounding_box: NormalizedBoundingBox = field(
+        default_factory=lambda: NormalizedBoundingBox(
+            (0, 0, 0, 0), (1, 1, 1, 1), axes=("c", "x", "y", "z")
+        )
+    )
     compression_mode: bool = False
 
     @property
@@ -53,7 +54,7 @@ class ArrayInfo:
 
     @property
     def ndim(self) -> int:
-        return len(self.shape)
+        return len(self.bounding_box)
 
 
 class Zarr3ChunkKeyEncodingConfiguration(TypedDict):
@@ -120,15 +121,13 @@ class Zarr3ArrayInfo(ArrayInfo):
         else:
             return cls(
                 data_format=DataFormat.Zarr3,
-                shape=array_info.shape,
-                num_channels=array_info.num_channels,
+                bounding_box=array_info.bounding_box,
                 voxel_type=array_info.voxel_type,
                 chunk_shape=array_info.chunk_shape,
                 shard_shape=array_info.shard_shape,
                 codecs=_default_zarr3_codecs(
                     array_info.ndim, array_info.compression_mode
                 ),
-                axis_order=array_info.axis_order,
             )
 
     @property
@@ -198,19 +197,19 @@ class BaseArray(ABC):
         pass
 
     @abstractmethod
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
+    def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
         pass
 
     @abstractmethod
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
+    def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
         pass
 
     @abstractmethod
-    def resize(self, new_bbox: NDBoundingBox) -> None:
+    def resize(self, new_bbox: NormalizedBoundingBox) -> None:
         pass
 
     @abstractmethod
-    def list_bounding_boxes(self) -> Iterator[NDBoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
         "The bounding boxes are measured in voxels of the current mag."
 
     @abstractmethod
@@ -256,7 +255,6 @@ class WKWArray(BaseArray):
         header = self._wkw_dataset.header
         return ArrayInfo(
             data_format=self.data_format,
-            num_channels=header.num_channels,
             voxel_type=header.voxel_type,
             compression_mode=header.block_type != wkw.Header.BLOCK_TYPE_RAW,
             chunk_shape=Vec3Int.full(header.block_len),
@@ -264,11 +262,17 @@ class WKWArray(BaseArray):
                 header.file_len,
             )
             * Vec3Int.full(header.block_len),
+            bounding_box=NormalizedBoundingBox(
+                (0, 0, 0, 0),
+                (header.num_channels, 0, 0, 0),
+                axes=("c", "x", "y", "z"),
+            ),
         )
 
     @classmethod
     def create(cls, path: UPath, array_info: ArrayInfo) -> "WKWArray":
         assert array_info.data_format == cls.data_format
+        assert array_info.bounding_box.axes == ("c", "x", "y", "z")
 
         assert array_info.chunk_shape.is_uniform(), (
             f"`chunk_shape` needs to be uniform for WKW storage. Got {array_info.chunk_shape}."
@@ -298,7 +302,7 @@ class WKWArray(BaseArray):
                 str(path),
                 wkw.Header(
                     voxel_type=array_info.voxel_type,
-                    num_channels=array_info.num_channels,
+                    num_channels=array_info.bounding_box.size.c,
                     block_len=array_info.chunk_shape.x,
                     file_len=array_info.chunks_per_shard.x,
                     block_type=(
@@ -312,16 +316,18 @@ class WKWArray(BaseArray):
             raise ArrayException(f"Exception while creating array {path}") from e
         return WKWArray(path)
 
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
-        return self._wkw_dataset.read(Vec3Int(bbox.topleft), Vec3Int(bbox.size))
+    def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
+        assert bbox.axes == ("c", "x", "y", "z")
+        return self._wkw_dataset.read(bbox.topleft.xyz, bbox.size.xyz)
 
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
-        self._wkw_dataset.write(Vec3Int(bbox.topleft), data)
+    def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
+        assert bbox.axes == ("c", "x", "y", "z")
+        self._wkw_dataset.write(bbox.topleft.xyz, data)
 
-    def resize(self, new_bbox: NDBoundingBox) -> None:
+    def resize(self, new_bbox: NormalizedBoundingBox) -> None:
         pass
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
         def _extract_num(s: str) -> int:
             match = re.search("[0-9]+", s)
             assert match is not None
@@ -336,7 +342,9 @@ class WKWArray(BaseArray):
             cube_index = _extract_file_index(file_path)
             cube_offset = cube_index * shard_shape
 
-            yield BoundingBox(cube_offset, shard_shape)
+            yield BoundingBox(cube_offset, shard_shape).normalize_axes(
+                self.info.bounding_box.size.c
+            )
 
     def close(self) -> None:
         if self._cached_wkw_dataset is not None:
@@ -439,7 +447,7 @@ class TensorStoreArray(BaseArray):
     @staticmethod
     def _get_array_dimensions(
         array: tensorstore.TensorStore,
-    ) -> tuple[tuple[str, ...], Vec3Int, Vec3Int, int, VecInt]:
+    ) -> tuple[Vec3Int, Vec3Int, NormalizedBoundingBox]:
         axes = array.domain.labels
         axes = tuple("c" if a == "channel" else a for a in axes)
         array_chunk_shape = array.chunk_layout.read_chunk.shape
@@ -447,7 +455,6 @@ class TensorStoreArray(BaseArray):
 
         chunk_shape = Vec3Int.ones()
         shard_shape = Vec3Int.ones()
-        num_channels = 1
         dimension_names: tuple[str, ...] = ()
         if all(a == "" for a in axes):
             if len(array.shape) == 2:
@@ -464,7 +471,6 @@ class TensorStoreArray(BaseArray):
                 )
             elif len(array.shape) == 4:
                 dimension_names = ("c", "x", "y", "z")
-                num_channels = array.domain[0].exclusive_max
                 chunk_shape = Vec3Int(
                     array_chunk_shape[1], array_chunk_shape[2], array_chunk_shape[3]
                 )
@@ -505,25 +511,19 @@ class TensorStoreArray(BaseArray):
                         array_shard_shape[y_index],
                         1,
                     )
-                if "c" in dimension_names:
-                    c_index = dimension_names.index("c")
-                    num_channels = array.domain[c_index].exclusive_max
             else:
                 raise ArrayException(
                     f"Zarr3 arrays without x and y dimensions are not supported. Got {axes} dimensions."
                 )
 
         shape = array.domain.exclusive_max
-        if "c" not in dimension_names:
-            shape = (num_channels,) + shape
-            dimension_names = ("c",) + dimension_names
 
         return (
-            dimension_names,
             chunk_shape,
             shard_shape,
-            num_channels,
-            VecInt(shape, axes=dimension_names),
+            NormalizedBoundingBox(
+                (0,) * len(dimension_names), shape, axes=dimension_names
+            ),
         )
 
     @staticmethod
@@ -605,30 +605,17 @@ class TensorStoreArray(BaseArray):
         except Exception as exc:
             raise ArrayException(f"Could not open array at {path}.") from exc
 
-    def _requested_domain(
-        self, bbox: NDBoundingBox, num_channels: int, has_channel_dimension: bool
-    ) -> tensorstore.IndexDomain:
-        if not has_channel_dimension:
-            requested_domain = tensorstore.IndexDomain(
-                bbox.ndim,
-                inclusive_min=bbox.topleft.to_tuple(),
-                shape=bbox.size.to_tuple(),
-            )
-        else:
-            requested_domain = tensorstore.IndexDomain(
-                bbox.ndim + 1,
-                inclusive_min=(0,) + bbox.topleft.to_tuple(),
-                shape=(num_channels,) + bbox.size.to_tuple(),
-            )
-        return requested_domain
+    def _requested_domain(self, bbox: NormalizedBoundingBox) -> tensorstore.IndexDomain:
+        return tensorstore.IndexDomain(
+            bbox.ndim,
+            inclusive_min=bbox.topleft.to_tuple(),
+            shape=bbox.size.to_tuple(),
+        )
 
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
+    def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
         array = self._array
 
-        has_channel_dimension = len(self.info.shape) == len(array.domain)
-        requested_domain = self._requested_domain(
-            bbox, self.info.num_channels, has_channel_dimension
-        )
+        requested_domain = self._requested_domain(bbox)
         available_domain = requested_domain.intersect(array.domain)
 
         data = call_with_retries(
@@ -643,11 +630,9 @@ class TensorStoreArray(BaseArray):
             out[tuple(slice(0, data.shape[i]) for i in range(len(data.shape)))] = data
         else:
             out = data
-        if not has_channel_dimension:
-            out = np.expand_dims(out, 0)
         return out
 
-    def resize(self, new_bbox: NDBoundingBox) -> None:
+    def resize(self, new_bbox: NormalizedBoundingBox) -> None:
         array = self._array
 
         # Align with shards
@@ -656,9 +641,9 @@ class TensorStoreArray(BaseArray):
             new_bbox.bottomright_xyz.ceildiv(shard_shape) * shard_shape
         )
         new_domain = tensorstore.IndexDomain(
-            new_bbox.ndim + 1,
-            shape=(self.info.num_channels,) + new_bbox.bottomright.to_tuple(),
-            implicit_upper_bounds=tuple(True for _ in range(new_bbox.ndim + 1)),
+            new_bbox.ndim,
+            shape=new_bbox.bottomright.to_tuple(),
+            implicit_upper_bounds=tuple(True for _ in range(new_bbox.ndim)),
             labels=array.domain.labels,
         )
 
@@ -690,22 +675,14 @@ class TensorStoreArray(BaseArray):
                 description="Resizing tensorstore array",
             )
 
-    def write(self, bbox: NDBoundingBox, data: np.ndarray) -> None:
-        if data.ndim == len(bbox):
-            # the bbox does not include the channels, if data and bbox have the same size there is only 1 channel
-            data = data.reshape((1,) + data.shape)
-
-        assert data.ndim == len(bbox) + 1, (
+    def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
+        assert data.ndim == len(bbox), (
             "The data has to have the same number of dimensions as the bounding box."
         )
 
         array = self._array
 
-        requested_domain = tensorstore.IndexDomain(
-            bbox.ndim + 1,
-            inclusive_min=(0,) + bbox.topleft.to_tuple(),
-            shape=(self.info.num_channels,) + bbox.size.to_tuple(),
-        )
+        requested_domain = self._requested_domain(bbox)
         call_with_retries(
             lambda: array[requested_domain].write(data).result(),
             description="Writing tensorstore array",
@@ -715,8 +692,8 @@ class TensorStoreArray(BaseArray):
         raise NotImplementedError
 
     def _list_bounding_boxes(
-        self, kvstore: Any, shard_shape: Vec3Int, shape: VecInt
-    ) -> Iterator[BoundingBox]:
+        self, kvstore: Any, shard_shape: Vec3Int, shape: NormalizedBoundingBox
+    ) -> Iterator[NormalizedBoundingBox]:
         _type, separator = self._chunk_key_encoding()
 
         def _try_parse_ints(vec: Iterable[Any]) -> list[int] | None:
@@ -748,9 +725,11 @@ class TensorStoreArray(BaseArray):
             else:
                 chunk_coords = Vec3Int(chunk_coords_list)
 
-            yield BoundingBox(chunk_coords * shard_shape, shard_shape)
+            yield BoundingBox(chunk_coords * shard_shape, shard_shape).normalize_axes(
+                self.info.bounding_box.size.c
+            )
 
-    def list_bounding_boxes(self) -> Iterator[BoundingBox]:
+    def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
         kvstore = self._array.kvstore
 
         if kvstore.spec().to_json()["driver"] == "s3":
@@ -758,7 +737,7 @@ class TensorStoreArray(BaseArray):
                 "list_bounding_boxes() is not supported for s3 arrays."
             )
 
-        _, _, shard_shape, _, shape = self._get_array_dimensions(self._array)
+        _, shard_shape, shape = self._get_array_dimensions(self._array)
 
         if shape.axes != ("c", "x", "y", "z") and shape.axes != ("x", "y", "z"):
             raise NotImplementedError(
@@ -825,30 +804,23 @@ class Zarr3Array(TensorStoreArray):
         array_codecs = array.codec.to_json()["codecs"]
         chunk_key_encoding = array.spec().to_json()["metadata"]["chunk_key_encoding"]
 
-        dimension_names, chunk_shape, shard_shape, num_channels, shape = (
-            self._get_array_dimensions(array)
-        )
-
+        chunk_shape, shard_shape, shape = self._get_array_dimensions(array)
         if len(array_codecs) == 1 and array_codecs[0]["name"] == "sharding_indexed":
             return Zarr3ArrayInfo(
                 data_format=DataFormat.Zarr3,
-                num_channels=num_channels,
                 voxel_type=array.dtype.numpy_dtype,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
-                shape=shape,
-                dimension_names=dimension_names,
+                bounding_box=shape,
                 codecs=tuple(array_codecs[0]["configuration"]["codecs"]),
                 chunk_key_encoding=chunk_key_encoding,
             )
         return Zarr3ArrayInfo(
             data_format=DataFormat.Zarr3,
-            num_channels=num_channels,
             voxel_type=array.dtype.numpy_dtype,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
-            shape=shape,
-            dimension_names=dimension_names,
+            bounding_box=shape,
             codecs=tuple(array_codecs),
             chunk_key_encoding=chunk_key_encoding,
         )
@@ -861,17 +833,28 @@ class Zarr3Array(TensorStoreArray):
     def create(cls, path: UPath, array_info: ArrayInfo) -> "Zarr3Array":
         assert array_info.data_format == cls.data_format
         array_info = Zarr3ArrayInfo.from_array_info(array_info)
-        chunk_shape = (array_info.num_channels,) + tuple(
-            getattr(array_info.chunk_shape, axis, 1)
-            for axis in array_info.dimension_names[1:]
+
+        chunk_shape = tuple(
+            (
+                array_info.bounding_box.size.c
+                if axis == "c"
+                else array_info.chunk_shape.get(axis, 1)
+            )
+            for axis in array_info.bounding_box.axes
         )
-        shard_shape = (array_info.num_channels,) + tuple(
-            getattr(array_info.shard_shape, axis, 1)
-            for axis in array_info.dimension_names[1:]
+        shard_shape = tuple(
+            (
+                array_info.bounding_box.size.c
+                if axis == "c"
+                else array_info.shard_shape.get(axis, 1)
+            )
+            for axis in array_info.bounding_box.axes
         )
         shape = tuple(
             shape_a - (shape_a % shard_shape_a)
-            for shape_a, shard_shape_a in zip(array_info.shape, shard_shape)
+            for shape_a, shard_shape_a in zip(
+                array_info.bounding_box.bottomright, shard_shape
+            )
         )
         if chunk_shape == shard_shape:
             codecs: tuple[Any, ...] = array_info.codecs
@@ -905,7 +888,7 @@ class Zarr3Array(TensorStoreArray):
                     },
                     "chunk_key_encoding": array_info.chunk_key_encoding,
                     "fill_value": 0,
-                    "dimension_names": array_info.dimension_names,
+                    "dimension_names": array_info.bounding_box.axes,
                     "codecs": codecs,
                 },
             },
@@ -938,18 +921,15 @@ class Zarr2Array(TensorStoreArray):
     @property
     def info(self) -> ArrayInfo:
         array = self._array
-        _, chunk_shape, shard_shape, num_channels, shape = self._get_array_dimensions(
-            array
-        )
+        chunk_shape, shard_shape, shape = self._get_array_dimensions(array)
 
         return ArrayInfo(
             data_format=DataFormat.Zarr,
-            num_channels=num_channels,
             voxel_type=array.dtype.numpy_dtype,
             compression_mode=array.codec.to_json()["compressor"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
-            shape=shape,
+            bounding_box=shape,
         )
 
     @classmethod
@@ -958,13 +938,15 @@ class Zarr2Array(TensorStoreArray):
         assert array_info.chunks_per_shard == Vec3Int.full(1), (
             "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
         )
-        chunk_shape = (array_info.num_channels,) + tuple(
+        chunk_shape = (array_info.bounding_box.size.c,) + tuple(
             getattr(array_info.chunk_shape, axis, 1)
-            for axis in array_info.dimension_names[1:]
+            for axis in array_info.bounding_box.axes[1:]
         )
         shape = tuple(
             shape_a - (shape_a % chunk_shape_a)
-            for shape_a, chunk_shape_a in zip(array_info.shape, chunk_shape)
+            for shape_a, chunk_shape_a in zip(
+                array_info.bounding_box.bottomright, chunk_shape
+            )
         )
         _array = tensorstore.open(
             {
@@ -1022,18 +1004,15 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
     @property
     def info(self) -> ArrayInfo:
         array = self._array
-        _, chunk_shape, shard_shape, num_channels, shape = self._get_array_dimensions(
-            array
-        )
+        chunk_shape, shard_shape, shape = self._get_array_dimensions(array)
 
         return ArrayInfo(
             data_format=DataFormat.NeuroglancerPrecomputed,
-            num_channels=num_channels,
             voxel_type=array.dtype.numpy_dtype,
             compression_mode=array.codec.to_json()["encoding"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
-            shape=shape,
+            bounding_box=shape,
         )
 
     @classmethod
@@ -1041,23 +1020,21 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
         raise RuntimeError("Neuroglancer precomputed arrays cannot be created.")
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
-        raise NotImplementedError()
+        return NotImplemented
 
-    def write(self, _bbox: NDBoundingBox, _data: np.ndarray) -> None:
+    def write(self, _bbox: NormalizedBoundingBox, _data: np.ndarray) -> None:
         raise RuntimeError("Neuroglancer precomputed arrays cannot be written to.")
 
-    def _requested_domain(
-        self, bbox: NDBoundingBox, num_channels: int, has_channel_dimension: bool
-    ) -> tensorstore.IndexDomain:
-        assert has_channel_dimension
+    def _requested_domain(self, bbox: NormalizedBoundingBox) -> tensorstore.IndexDomain:
+        assert bbox.axes == ("c", "x", "y", "z")
         return tensorstore.IndexDomain(
-            bbox.ndim + 1,
-            inclusive_min=(0,) + bbox.topleft.to_tuple(),
+            bbox.ndim,
+            inclusive_min=bbox.topleft_xyz.to_tuple() + (0,),
             # note the channels are at the back
-            shape=bbox.size.to_tuple() + (num_channels,),
+            shape=bbox.size_xyz.to_tuple() + (bbox.size.c,),
         )
 
-    def read(self, bbox: NDBoundingBox) -> np.ndarray:
+    def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
         return np.moveaxis(super().read(bbox), 3, 0)
 
 
@@ -1072,18 +1049,15 @@ class N5Array(TensorStoreArray):
     @property
     def info(self) -> ArrayInfo:
         array = self._array
-        _, chunk_shape, shard_shape, num_channels, shape = self._get_array_dimensions(
-            array
-        )
+        chunk_shape, shard_shape, shape = self._get_array_dimensions(array)
 
         return ArrayInfo(
             data_format=DataFormat.N5,
-            num_channels=num_channels,
             voxel_type=array.dtype.numpy_dtype,
             compression_mode=array.codec.to_json()["compression"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
-            shape=shape,
+            bounding_box=shape,
         )
 
     @classmethod
@@ -1091,7 +1065,7 @@ class N5Array(TensorStoreArray):
         raise RuntimeError("N5 arrays cannot be created.")
 
     def _chunk_key_encoding(self) -> tuple[Literal["default", "v2"], Literal["/", "."]]:
-        raise NotImplementedError()
+        return NotImplemented
 
-    def write(self, _bbox: NDBoundingBox, _data: np.ndarray) -> None:
+    def write(self, _bbox: NormalizedBoundingBox, _data: np.ndarray) -> None:
         raise RuntimeError("N5 arrays cannot be written to.")
