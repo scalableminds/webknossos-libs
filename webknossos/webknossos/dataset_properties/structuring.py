@@ -23,9 +23,8 @@ from ..dataset_properties.dataset_properties import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import Mag, NormalizedBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
 from .dtype_conversion import (
-    _dtype_per_channel_to_element_class,
-    _element_class_to_dtype_per_channel,
-    _properties_floating_type_to_python_type,  # noqa: F401
+    dtype_per_channel_to_element_class,
+    element_class_to_dtype_per_channel,
 )
 from .layer_categories import LayerCategoryType
 
@@ -93,7 +92,7 @@ def layer_properties_post_unstructure(
         else:
             d["numChannels"] = 1
 
-        d["elementClass"] = _dtype_per_channel_to_element_class(
+        d["elementClass"] = dtype_per_channel_to_element_class(
             d["dtype"], d["numChannels"]
         )
         del d["dtype"]
@@ -141,11 +140,11 @@ def layer_properties_pre_structure(
 
         if "numChannels" in d:
             d["boundingBox"]["numChannels"] = d["numChannels"]
-            d["dtype"] = _element_class_to_dtype_per_channel(
+            d["dtype"] = element_class_to_dtype_per_channel(
                 d["elementClass"], d["numChannels"]
             )
         else:
-            d["dtype"] = _element_class_to_dtype_per_channel(d["elementClass"], 1)
+            d["dtype"] = element_class_to_dtype_per_channel(d["elementClass"], 1)
         del d["elementClass"]
 
         obj = converter_fn(d, type_value)

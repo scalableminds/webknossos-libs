@@ -54,7 +54,7 @@ def test_add_remote_mags_from_mag_view(
             layer_name,
             layer_type,
             data_format=remote_mag.info.data_format,
-            dtype_per_channel=remote_mag.get_dtype(),
+            dtype=remote_mag.get_dtype(),
         )
         new_layer.add_mag_as_ref(remote_mag)
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
@@ -84,7 +84,7 @@ def test_add_remote_mags_from_path(
             layer_name,
             layer_type,
             data_format=remote_mag.info.data_format,
-            dtype_per_channel=remote_mag.get_dtype(),
+            dtype=remote_mag.get_dtype(),
         )
         new_layer.add_mag_as_ref(str(remote_mag.path))
         added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]

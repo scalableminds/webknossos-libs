@@ -337,9 +337,7 @@ def test_default_parameter(tmp_upath: UPath) -> None:
     target_path = tmp_upath / "downsaple_default"
 
     ds = Dataset(target_path, voxel_size=(1, 1, 1))
-    layer = ds.add_layer(
-        "color", COLOR_CATEGORY, dtype_per_channel="uint8", num_channels=3
-    )
+    layer = ds.add_layer("color", COLOR_CATEGORY, dtype="uint8", num_channels=3)
     mag = layer.add_mag("2")
     mag.write(
         data=(np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8), allow_resize=True
@@ -476,7 +474,7 @@ def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
         COLOR_CATEGORY,
         bounding_box=source_layer.bounding_box,
         data_format="zarr3",
-        dtype_per_channel="int8",
+        dtype="int8",
     )
 
     source_mag = source_layer.get_mag("1")

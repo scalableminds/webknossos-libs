@@ -157,7 +157,7 @@ class MagView(View, Generic[LayerTypeT]):
             assert compression_mode.chunk_key_encoding is not None  # for mypy
             zarr3_array_info = Zarr3ArrayInfo(
                 data_format=DataFormat.Zarr3,
-                voxel_type=layer.dtype_per_channel,
+                voxel_type=layer.dtype,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 bounding_box=bbox,
@@ -171,7 +171,7 @@ class MagView(View, Generic[LayerTypeT]):
             )
             array_info = ArrayInfo(
                 data_format=layer._properties.data_format,
-                voxel_type=layer.dtype_per_channel,
+                voxel_type=layer.dtype,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compression_mode=compression_mode,
@@ -598,7 +598,7 @@ class MagView(View, Generic[LayerTypeT]):
         rechunked_layer = rechunked_dataset.get_or_add_layer(
             layer_name=self.layer.name,
             category=self.layer.category,
-            dtype_per_channel=self.layer.dtype_per_channel,
+            dtype=self.layer.dtype,
             num_channels=self.layer.num_channels,
             data_format=self.layer.data_format,
             largest_segment_id=self.layer._get_largest_segment_id_maybe(),

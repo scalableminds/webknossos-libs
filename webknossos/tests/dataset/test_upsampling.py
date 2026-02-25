@@ -121,7 +121,7 @@ def test_upsample_multi_channel(tmp_upath: UPath) -> None:
     layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=num_channels,
     )
     mag2 = layer.add_mag("2")
@@ -154,7 +154,7 @@ def test_upsample_multi_channel(tmp_upath: UPath) -> None:
 def test_upsampling_non_aligned(tmp_upath: UPath) -> None:
     ds = Dataset(tmp_upath / "test", (50, 50, 50))
     layer = ds.add_layer(
-        "color", SEGMENTATION_CATEGORY, dtype_per_channel="uint8", largest_segment_id=0
+        "color", SEGMENTATION_CATEGORY, dtype="uint8", largest_segment_id=0
     )
     layer.bounding_box = BoundingBox(topleft=(0, 0, 0), size=(8409, 10267, 5271))
     layer.add_mag(32)
@@ -184,7 +184,7 @@ def test_upsample_nd_dataset(tmp_upath: UPath) -> None:
         "color",
         COLOR_CATEGORY,
         bounding_box=source_layer.bounding_box,
-        dtype_per_channel=source_layer.dtype_per_channel,
+        dtype=source_layer.dtype,
         data_format="zarr3",
     )
 
