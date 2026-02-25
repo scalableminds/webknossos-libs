@@ -39,6 +39,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Added `parent` property to `RemoteFolder`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Added `dtype` argument to `Dataset.add_layer`, `Dataset.get_or_add_layer`. Added `dtype` property to `Layer`. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
+- Added `RemoteAiModel` class, allowing to access information about trained AI models registered in WEBKNOSSOS. [#1409](https://github.com/scalableminds/webknossos-libs/pull/1409)
 
 ### Changed
 - The `RemoteDataset.open` method now accepts `access_mode` instead of `use_zarr_streaming`. `use_zarr_streaming` is still supported, but deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)

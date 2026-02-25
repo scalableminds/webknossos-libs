@@ -339,6 +339,7 @@ def copytree(
     in_path: UPath,
     out_path: UPath,
     *,
+    ignore: Callable[[UPath, list[str]], set[str]] | None = None,
     threads: int | None = 10,
     progress_desc: str | None = None,
 ) -> None:
@@ -349,8 +350,12 @@ def copytree(
         yield (path, tuple(path.parts[len(base_path.parts) :]))
 
         if path.is_dir():
+            ignored_names: set[str] = set()
+            if ignore is not None:
+                ignored_names.update(ignore(path, [p.name for p in path.iterdir()]))
             for p in path.iterdir():
-                yield from _walk(p, base_path)
+                if p.name not in ignored_names:
+                    yield from _walk(p, base_path)
 
     def _append(path: UPath, parts: tuple[str, ...]) -> UPath:
         for p in parts:
