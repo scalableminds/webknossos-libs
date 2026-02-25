@@ -1200,6 +1200,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             For existing layers, the parameters are validated against the layer properties.
         """
 
+        dtype = _dtype_maybe(dtype, dtype_per_channel)
         if layer_name in self.layers.keys():
             assert (
                 num_channels is None
@@ -1215,7 +1216,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 + f"and the passed parameter is '{category}'."
             )
 
-            dtype = _dtype_maybe(dtype, dtype_per_channel)
             if dtype is not None:
                 assert dtype is None or self.layers[layer_name].dtype == dtype, (
                     f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "

@@ -416,6 +416,16 @@ def test_dtype_per_channel() -> None:
     assert layer.dtype == np.dtype("uint16")
 
     with pytest.warns(DeprecationWarning):
+        layer2 = ds.get_or_add_layer(
+            "color2",
+            COLOR_CATEGORY,
+            dtype_per_channel="float32",
+            num_channels=3,
+            data_format=DataFormat.WKW,
+        )
+    assert layer2.dtype == np.dtype("float32")
+
+    with pytest.warns(DeprecationWarning):
         assert layer.dtype_per_channel == np.dtype("uint16")
 
 
