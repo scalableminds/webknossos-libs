@@ -301,6 +301,7 @@ nav:
         - Compress: cli/compress.md
         - Copy Datasets: cli/copy.md
         - Download: cli/download.md
+        - Remote Convert: cli/remote-convert.md
         - Upload: cli/upload.md
         - Downsample: cli/downsample.md
         - Upsample: cli/upsample.md

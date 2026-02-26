@@ -14,6 +14,7 @@ from . import (
     downsample,
     export_as_tiff,
     merge_fallback,
+    remote_convert,
     upload,
     upsample,
 )
@@ -57,5 +58,6 @@ app.command("downsample")(downsample.main)
 app.command("export-wkw-as-tiff")(export_as_tiff.main)
 app.command("export-as-tiff")(export_as_tiff.main)
 app.command("merge-fallback")(merge_fallback.main)
+app.command("remote-convert")(remote_convert.main)
 app.command("upload")(upload.main)
 app.command("upsample")(upsample.main)

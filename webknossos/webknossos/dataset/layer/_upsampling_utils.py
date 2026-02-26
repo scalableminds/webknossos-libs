@@ -76,5 +76,5 @@ def upsample_cube_job(
             target_view.write(file_buffer, absolute_bounding_box=chunk)
 
     except Exception as exc:
-        logger.error(f"Upsampling of target {target_bbox} failed with {exc}")
+        logger.exception(f"Upsampling of target {target_bbox} failed with {exc}")
         raise exc

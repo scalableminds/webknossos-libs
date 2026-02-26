@@ -19,6 +19,7 @@ The WEBKNOSSOS CLI offers many useful commands to work with WEBKNOSSOS datasets:
 - [`webknossos download`](download.md): Download a dataset from a WEBKNOSSOS server
 - [`webknossos downsample`](downsample.md): Downsample a WEBKNOSSOS dataset
 - [`webknossos merge-fallback`](merge-fallback.md): Merge a volume layer of a WEBKNOSSOS dataset with an annotation
+- [`webknossos remote-convert`](remote-convert.md): Convert an image stack and upload it to WEBKNOSSOS in one step
 - [`webknossos upload`](upload.md): Upload a local WEBKNOSSOS dataset to a remote location
 - [`webknossos upsample`](upsample.md): Upsample a WEBKNOSSOS dataset
 - [`webknossos export-as-tiff`](export-as-tiff.md): Export a part of a WEBKNOSSOS dataset as a TIFF sequence

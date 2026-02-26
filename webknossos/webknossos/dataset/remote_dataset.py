@@ -1,8 +1,9 @@
 import copy
 import inspect
 import logging
+import tempfile
 import warnings
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from enum import Enum
 from os import PathLike
@@ -42,6 +43,7 @@ from webknossos.dataset_properties import (
     LayerCategoryType,
     LayerProperties,
     SegmentationLayerProperties,
+    VoxelSize,
 )
 from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int
 from webknossos.geometry.mag import Mag, MagLike
@@ -1212,6 +1214,131 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         dataset_id = client.dataset_explore_and_add_remote(dataset=dataset)
 
         return cls.open(dataset_id=dataset_id)
+
+    @classmethod
+    def from_images(
+        cls,
+        input_path: str | PathLike | UPath,
+        voxel_size: tuple[float, float, float] | None = None,
+        name: str | None = None,
+        *,
+        map_filepath_to_layer_name: Any = None,
+        z_slices_sort_key: Callable[[UPath], Any] | None = None,
+        voxel_size_with_unit: VoxelSize | None = None,
+        layer_name: str | None = None,
+        layer_category: LayerCategoryType | None = None,
+        data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
+        chunk_shape: Vec3Int | int | None = None,
+        shard_shape: Vec3Int | int | None = None,
+        chunks_per_shard: int | Vec3Int | None = None,
+        compress: bool = True,
+        swap_xy: bool = False,
+        flip_x: bool = False,
+        flip_y: bool = False,
+        flip_z: bool = False,
+        use_bioformats: bool | None = None,
+        max_layers: int = 20,
+        batch_size: int | None = None,
+        executor: Executor | None = None,
+        url: str | None = None,
+        token: str | None = None,
+        folder: str | RemoteFolder | None = None,
+    ) -> "RemoteDataset":
+        """Convert images to a WEBKNOSSOS dataset, upload it, and return the RemoteDataset.
+
+        This combines `Dataset.from_images` and `Dataset.upload` into a single step.
+        Images are converted to a temporary local dataset which is then uploaded to
+        the WEBKNOSSOS server. The temporary files are cleaned up automatically.
+
+        Args:
+            input_path: Path to input image files
+            voxel_size: Optional tuple of floats (x,y,z) for voxel size in nm
+            name: Optional name for the uploaded dataset
+            map_filepath_to_layer_name: Strategy for mapping files to layers
+            z_slices_sort_key: Optional key function for sorting z-slices
+            voxel_size_with_unit: Optional voxel size with unit specification
+            layer_name: Optional name for layer(s)
+            layer_category: Optional category override
+            data_format: Format to store data in
+            chunk_shape: Optional shape of chunks
+            shard_shape: Optional shape of shards
+            chunks_per_shard: Deprecated, use shard_shape
+            compress: Whether to compress the data
+            swap_xy: Whether to swap x and y axes
+            flip_x: Whether to flip the x axis
+            flip_y: Whether to flip the y axis
+            flip_z: Whether to flip the z axis
+            use_bioformats: Whether to use bioformats for reading
+            max_layers: Maximum number of layers to create
+            batch_size: Size of batches for processing
+            executor: Optional executor for parallelization
+            url: Optional WEBKNOSSOS server URL
+            token: Optional authentication token
+            folder: Optional WEBKNOSSOS folder path or RemoteFolder object
+
+        Returns:
+            RemoteDataset: The uploaded remote dataset
+
+        Examples:
+            ```
+            remote_ds = RemoteDataset.from_images(
+                "path/to/images/",
+                voxel_size=(11.0, 11.0, 20.0),
+                name="my_dataset",
+                url="https://webknossos.org",
+                token="my_token",
+            )
+            ```
+        """
+        from ..client.context import webknossos_context as _webknossos_context
+        from .dataset import Dataset
+
+        from_images_kwargs: dict[str, Any] = {}
+        if map_filepath_to_layer_name is not None:
+            from_images_kwargs["map_filepath_to_layer_name"] = (
+                map_filepath_to_layer_name
+            )
+        if z_slices_sort_key is not None:
+            from_images_kwargs["z_slices_sort_key"] = z_slices_sort_key
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            dataset: Dataset = Dataset.from_images(
+                input_path,
+                UPath(tmp_dir) / "dataset",
+                voxel_size=voxel_size,
+                name=name,
+                voxel_size_with_unit=voxel_size_with_unit,
+                layer_name=layer_name,
+                layer_category=layer_category,
+                data_format=data_format,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                chunks_per_shard=chunks_per_shard,
+                compress=compress,
+                swap_xy=swap_xy,
+                flip_x=flip_x,
+                flip_y=flip_y,
+                flip_z=flip_z,
+                use_bioformats=use_bioformats,
+                max_layers=max_layers,
+                batch_size=batch_size,
+                executor=executor,
+                **from_images_kwargs,
+            )
+
+            folder_obj: RemoteFolder | None = None
+            if isinstance(folder, str):
+                folder_obj = RemoteFolder.get_by_path(folder)
+            elif isinstance(folder, RemoteFolder):
+                folder_obj = folder
+
+            with _webknossos_context(url=url, token=token):
+                remote_dataset = dataset.upload(
+                    new_dataset_name=name,
+                    folder=folder_obj,
+                )
+
+        return remote_dataset
 
     def downsample(
         self,
