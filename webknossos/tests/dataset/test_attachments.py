@@ -5,7 +5,10 @@ from upath import UPath
 
 from webknossos import (
     SEGMENTATION_CATEGORY,
+    AgglomerateAttachment,
     AttachmentDataFormat,
+    ConnectomeAttachment,
+    CumsumAttachment,
     Dataset,
     MeshAttachment,
     RemoteDataset,
@@ -30,10 +33,12 @@ def make_dataset(dataset_path: UPath) -> tuple[Dataset, SegmentationLayer]:
 def test_attachments(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
     # meshes
-    seg_layer.attachments.add_mesh(
-        dataset.path / "seg" / "meshfile",
-        name="meshfile",
-        data_format=AttachmentDataFormat.Zarr3,
+    seg_layer.attachments.add_attachment_as_ref(
+        MeshAttachment.from_path_and_name(
+            dataset.path / "seg" / "meshfile",
+            name="meshfile",
+            data_format=AttachmentDataFormat.Zarr3,
+        ),
     )
     assert seg_layer._properties.attachments.meshes is not None
     assert seg_layer._properties.attachments.meshes[0].path == "./seg/meshfile"
@@ -44,13 +49,15 @@ def test_attachments(tmp_upath: UPath) -> None:
     assert len(seg_layer._properties.attachments.meshes) == 1
 
     # agglomerates
-    seg_layer.attachments.add_agglomerate(
-        UPath(
-            "s3://bucket/agglomerate.zarr",
-            endpoint_url="https://s3.eu-central-1.amazonaws.com",
-        ),
-        name="identity",
-        data_format=AttachmentDataFormat.Zarr3,
+    seg_layer.attachments.add_attachment_as_ref(
+        AgglomerateAttachment.from_path_and_name(
+            UPath(
+                "s3://bucket/agglomerate.zarr",
+                endpoint_url="https://s3.eu-central-1.amazonaws.com",
+            ),
+            name="identity",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
     )
     assert seg_layer._properties.attachments.agglomerates is not None
     assert (
@@ -64,10 +71,12 @@ def test_attachments(tmp_upath: UPath) -> None:
     assert len(seg_layer._properties.attachments.agglomerates) == 1
 
     # connectomes
-    seg_layer.attachments.add_connectome(
-        UPath("http://example.com/connectome.zarr"),
-        name="connectome",
-        data_format=AttachmentDataFormat.Zarr3,
+    seg_layer.attachments.add_attachment_as_ref(
+        ConnectomeAttachment.from_path_and_name(
+            UPath("http://example.com/connectome.zarr"),
+            name="connectome",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
     )
     assert seg_layer._properties.attachments.connectomes is not None
     assert (
@@ -81,10 +90,12 @@ def test_attachments(tmp_upath: UPath) -> None:
     assert len(seg_layer._properties.attachments.connectomes) == 1
 
     # segment index
-    seg_layer.attachments.set_segment_index(
-        UPath.home() / "segment_index.hdf5",
-        name="main",
-        data_format=AttachmentDataFormat.HDF5,
+    seg_layer.attachments.add_attachment_as_ref(
+        SegmentIndexAttachment.from_path_and_name(
+            UPath.home() / "segment_index.hdf5",
+            name="main",
+            data_format=AttachmentDataFormat.HDF5,
+        )
     )
     assert seg_layer._properties.attachments.segment_index is not None
     assert (
@@ -97,10 +108,12 @@ def test_attachments(tmp_upath: UPath) -> None:
     )
 
     # cumsum
-    seg_layer.attachments.set_cumsum(
-        dataset.path / "seg" / "cumsum.json",
-        name="main",
-        data_format=AttachmentDataFormat.JSON,
+    seg_layer.attachments.add_attachment_as_ref(
+        CumsumAttachment.from_path_and_name(
+            dataset.path / "seg" / "cumsum.json",
+            name="main",
+            data_format=AttachmentDataFormat.JSON,
+        )
     )
     assert seg_layer._properties.attachments.cumsum is not None
     assert seg_layer._properties.attachments.cumsum.path == "./seg/cumsum.json"
@@ -153,15 +166,18 @@ def test_copy_layer(tmp_upath: UPath) -> None:
     agglomerate_path.mkdir(parents=True, exist_ok=True)
     (agglomerate_path / "zarr.json").write_text("test")
 
-    seg_layer.attachments.add_mesh(
-        mesh_path,
-        name="meshfile",
-        data_format=AttachmentDataFormat.HDF5,
+    seg_layer.attachments.add_attachment_as_ref(
+        MeshAttachment.from_path_and_name(
+            mesh_path, name="meshfile", data_format=AttachmentDataFormat.HDF5
+        )
     )
-    seg_layer.attachments.add_agglomerate(
-        UPath("../agglomerate_view_15"),
-        name="agglomerate_view_15",
-        data_format=AttachmentDataFormat.Zarr3,
+    seg_layer.attachments.add_attachment_as_ref(
+        AgglomerateAttachment.from_path_and_name(
+            UPath("../agglomerate_view_15"),
+            name="agglomerate_view_15",
+            data_format=AttachmentDataFormat.Zarr3,
+            dataset_path=dataset.path,
+        )
     )
 
     copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
@@ -201,16 +217,21 @@ def test_symlink_layer(tmp_upath: UPath) -> None:
     agglomerate_path.mkdir(parents=True, exist_ok=True)
     (agglomerate_path / "zarr.json").write_text("test")
 
-    seg_layer.attachments.add_mesh(
-        mesh_path,
-        name="meshfile",
-        data_format=AttachmentDataFormat.HDF5,
+    seg_layer.attachments.add_attachment_as_ref(
+        MeshAttachment.from_path_and_name(
+            mesh_path,
+            name="meshfile",
+            data_format=AttachmentDataFormat.HDF5,
+        )
     )
 
-    seg_layer.attachments.add_agglomerate(
-        UPath("../agglomerate_view_15"),
-        name="agglomerate_view_15",
-        data_format=AttachmentDataFormat.Zarr3,
+    seg_layer.attachments.add_attachment_as_ref(
+        AgglomerateAttachment.from_path_and_name(
+            UPath("../agglomerate_view_15"),
+            name="agglomerate_view_15",
+            data_format=AttachmentDataFormat.Zarr3,
+            dataset_path=dataset.path,
+        )
     )
 
     copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
@@ -246,10 +267,12 @@ def test_remote_layer(tmp_upath: UPath) -> None:
         endpoint_url="https://s3.eu-central-1.amazonaws.com",
     )
 
-    seg_layer.attachments.add_mesh(
-        mesh_path,
-        name="meshfile",
-        data_format=AttachmentDataFormat.Zarr3,
+    seg_layer.attachments.add_attachment_as_ref(
+        MeshAttachment.from_path_and_name(
+            mesh_path,
+            name="meshfile",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
     )
 
     copy_dataset = Dataset(tmp_upath / "test_copy", voxel_size=(10, 10, 10))
@@ -266,10 +289,12 @@ def test_remote_layer(tmp_upath: UPath) -> None:
 def test_upload_fail(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
 
-    seg_layer.attachments.add_mesh(
-        dataset.path / "seg" / "meshfile",
-        name="meshfile",
-        data_format=AttachmentDataFormat.Zarr3,
+    seg_layer.attachments.add_attachment_as_ref(
+        MeshAttachment.from_path_and_name(
+            dataset.path / "seg" / "meshfile",
+            name="meshfile",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
     )
 
     with pytest.raises(NotImplementedError):
@@ -310,16 +335,20 @@ def test_upload_attachment(tmp_upath: UPath) -> None:
 def test_unique_attachment_names(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
 
-    seg_layer.attachments.add_mesh(
-        UPath("http://example.com/meshfile.zarr"),
-        name="meshfile",
-        data_format=AttachmentDataFormat.Zarr3,
-    )
-    with pytest.raises(ValueError):
-        seg_layer.attachments.add_mesh(
+    seg_layer.attachments.add_attachment_as_ref(
+        MeshAttachment.from_path_and_name(
             UPath("http://example.com/meshfile.zarr"),
             name="meshfile",
             data_format=AttachmentDataFormat.Zarr3,
+        )
+    )
+    with pytest.raises(ValueError):
+        seg_layer.attachments.add_attachment_as_ref(
+            MeshAttachment.from_path_and_name(
+                UPath("http://example.com/meshfile.zarr"),
+                name="meshfile",
+                data_format=AttachmentDataFormat.Zarr3,
+            )
         )
 
 
@@ -327,10 +356,12 @@ def test_acceptable_attachment_names(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
 
     with pytest.raises(ValueError):
-        seg_layer.attachments.add_mesh(
-            UPath("http://example.com/meshfile.zarr"),
-            name="meshfile/test",
-            data_format=AttachmentDataFormat.Zarr3,
+        seg_layer.attachments.add_attachment_as_ref(
+            MeshAttachment.from_path_and_name(
+                UPath("http://example.com/meshfile.zarr"),
+                name="meshfile/test",
+                data_format=AttachmentDataFormat.Zarr3,
+            )
         )
 
 
@@ -341,10 +372,12 @@ def test_remote_dataset() -> None:
     mesh_path.parent.mkdir(parents=True, exist_ok=True)
     mesh_path.write_text("test")
 
-    seg_layer.attachments.add_mesh(
-        mesh_path,
-        name="meshfile",
-        data_format=AttachmentDataFormat.Zarr3,
+    seg_layer.attachments.add_attachment_as_ref(
+        MeshAttachment.from_path_and_name(
+            mesh_path,
+            name="meshfile",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
     )
 
     assert seg_layer.attachments.meshes[0]._properties.path == "./seg/meshes/meshfile"
@@ -447,6 +480,71 @@ def test_add_symlink_attachments(tmp_upath: UPath) -> None:
     assert (
         dataset.path / "seg" / "segmentIndex" / "main"
     ).resolve() == segment_index_path
+
+
+def test_deprecated_add_methods(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
+
+    mesh_path = dataset.path / "seg" / "meshes" / "meshfile"
+    mesh_path.parent.mkdir(parents=True, exist_ok=True)
+    mesh_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="add_mesh.*is deprecated"):
+        seg_layer.attachments.add_mesh(
+            mesh_path,
+            name="meshfile",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
+    assert seg_layer._properties.attachments.meshes is not None
+    assert len(seg_layer._properties.attachments.meshes) == 1
+
+    agglomerate_path = dataset.path / "seg" / "agglomerates" / "agglomerate"
+    agglomerate_path.parent.mkdir(parents=True, exist_ok=True)
+    agglomerate_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="add_agglomerate.*is deprecated"):
+        seg_layer.attachments.add_agglomerate(
+            agglomerate_path,
+            name="agglomerate",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
+    assert seg_layer._properties.attachments.agglomerates is not None
+
+    connectome_path = dataset.path / "seg" / "connectomes" / "connectome"
+    connectome_path.parent.mkdir(parents=True, exist_ok=True)
+    connectome_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="add_connectome.*is deprecated"):
+        seg_layer.attachments.add_connectome(
+            connectome_path,
+            name="connectome",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
+    assert seg_layer._properties.attachments.connectomes is not None
+
+    segment_index_path = dataset.path / "seg" / "segmentIndex" / "main"
+    segment_index_path.parent.mkdir(parents=True, exist_ok=True)
+    segment_index_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="set_segment_index.*is deprecated"):
+        seg_layer.attachments.set_segment_index(
+            segment_index_path,
+            name="main",
+            data_format=AttachmentDataFormat.HDF5,
+        )
+    assert seg_layer._properties.attachments.segment_index is not None
+
+    cumsum_path = dataset.path / "seg" / "cumsum.json"
+    cumsum_path.parent.mkdir(parents=True, exist_ok=True)
+    cumsum_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="set_cumsum.*is deprecated"):
+        seg_layer.attachments.set_cumsum(
+            cumsum_path,
+            name="main",
+            data_format=AttachmentDataFormat.JSON,
+        )
+    assert seg_layer._properties.attachments.cumsum is not None
 
 
 def test_detect_legacy_attachments(tmp_upath: UPath) -> None:
