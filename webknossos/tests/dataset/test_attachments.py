@@ -482,6 +482,71 @@ def test_add_symlink_attachments(tmp_upath: UPath) -> None:
     ).resolve() == segment_index_path
 
 
+def test_deprecated_add_methods(tmp_upath: UPath) -> None:
+    dataset, seg_layer = make_dataset(tmp_upath)
+
+    mesh_path = dataset.path / "seg" / "meshes" / "meshfile"
+    mesh_path.parent.mkdir(parents=True, exist_ok=True)
+    mesh_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="add_mesh.*is deprecated"):
+        seg_layer.attachments.add_mesh(
+            mesh_path,
+            name="meshfile",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
+    assert seg_layer._properties.attachments.meshes is not None
+    assert len(seg_layer._properties.attachments.meshes) == 1
+
+    agglomerate_path = dataset.path / "seg" / "agglomerates" / "agglomerate"
+    agglomerate_path.parent.mkdir(parents=True, exist_ok=True)
+    agglomerate_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="add_agglomerate.*is deprecated"):
+        seg_layer.attachments.add_agglomerate(
+            agglomerate_path,
+            name="agglomerate",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
+    assert seg_layer._properties.attachments.agglomerates is not None
+
+    connectome_path = dataset.path / "seg" / "connectomes" / "connectome"
+    connectome_path.parent.mkdir(parents=True, exist_ok=True)
+    connectome_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="add_connectome.*is deprecated"):
+        seg_layer.attachments.add_connectome(
+            connectome_path,
+            name="connectome",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
+    assert seg_layer._properties.attachments.connectomes is not None
+
+    segment_index_path = dataset.path / "seg" / "segmentIndex" / "main"
+    segment_index_path.parent.mkdir(parents=True, exist_ok=True)
+    segment_index_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="set_segment_index.*is deprecated"):
+        seg_layer.attachments.set_segment_index(
+            segment_index_path,
+            name="main",
+            data_format=AttachmentDataFormat.HDF5,
+        )
+    assert seg_layer._properties.attachments.segment_index is not None
+
+    cumsum_path = dataset.path / "seg" / "cumsum.json"
+    cumsum_path.parent.mkdir(parents=True, exist_ok=True)
+    cumsum_path.write_text("test")
+
+    with pytest.warns(DeprecationWarning, match="set_cumsum.*is deprecated"):
+        seg_layer.attachments.set_cumsum(
+            cumsum_path,
+            name="main",
+            data_format=AttachmentDataFormat.JSON,
+        )
+    assert seg_layer._properties.attachments.cumsum is not None
+
+
 def test_detect_legacy_attachments(tmp_upath: UPath) -> None:
     _, seg_layer = make_dataset(tmp_upath)
     # legacy meshes

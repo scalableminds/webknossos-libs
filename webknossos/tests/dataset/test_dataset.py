@@ -18,6 +18,7 @@ from tests.constants import (
     TESTOUTPUT_DIR,
     use_minio,
 )
+from tests.utils import TestTemporaryDirectoryNonLocal
 from webknossos.dataset import (
     AgglomerateAttachment,
     Dataset,
@@ -3684,3 +3685,83 @@ def test_n5_and_ng_datasets(data_format: DataFormat) -> None:
         test_mag.write(
             absolute_offset=(0, 0, 0), data=np.ones((3, 24, 24, 24), dtype="uint8")
         )
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_add_layer_as_copy_exists_ok(
+    data_format: DataFormat, output_path: UPath
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "copy_exists_ok")
+    source_path = prepare_dataset_path(data_format, output_path, "copy_exists_ok_src")
+
+    ds = Dataset(ds_path, voxel_size=(2, 2, 1))
+
+    # Create source dataset with a color layer
+    source_ds = Dataset(source_path, voxel_size=(2, 2, 1))
+    source_layer = source_ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
+    source_layer.add_mag(1).write(
+        absolute_offset=(0, 0, 0),
+        data=(np.random.rand(16, 16, 16) * 255).astype(np.uint8),
+        allow_resize=True,
+    )
+
+    # First copy should succeed
+    ds.add_layer_as_copy(source_layer)
+    assert "color" in ds.layers
+
+    # Second copy without exists_ok should fail
+    with pytest.raises(IndexError):
+        ds.add_layer_as_copy(source_layer)
+
+    assure_exported_properties(ds)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_add_layer_as_copy_with_rename(
+    data_format: DataFormat, output_path: UPath
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "copy_rename")
+    source_path = prepare_dataset_path(data_format, output_path, "copy_rename_src")
+
+    ds = Dataset(ds_path, voxel_size=(2, 2, 1))
+
+    # Create source dataset
+    source_ds = Dataset(source_path, voxel_size=(2, 2, 1))
+    source_layer = source_ds.add_layer("color", COLOR_CATEGORY, data_format=data_format)
+    write_data = (np.random.rand(16, 16, 16) * 255).astype(np.uint8)
+    source_layer.add_mag(1).write(
+        absolute_offset=(0, 0, 0),
+        data=write_data,
+        allow_resize=True,
+    )
+
+    # Copy with a different name
+    ds.add_layer_as_copy(source_layer, new_layer_name="color_copy")
+    assert "color_copy" in ds.layers
+    assert "color" not in ds.layers
+
+    np.testing.assert_array_equal(
+        ds.get_layer("color_copy").get_mag(1).read(),
+        source_layer.get_mag(1).read(),
+    )
+
+    assure_exported_properties(ds)
+
+
+def test_create_dataset_remote_storage() -> None:
+    """Test creating a dataset with remote storage."""
+    with TestTemporaryDirectoryNonLocal() as temp_dir:
+        dataset = Dataset(temp_dir / "ds", voxel_size=(10, 10, 10), exist_ok=True)
+        layer = dataset.add_layer(
+            "color",
+            COLOR_CATEGORY,
+            data_format="zarr3",
+            bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
+        )
+        mag1 = layer.add_mag(1)
+        mag1.write(np.ones((16, 16, 16), dtype="uint8"))
+        ds = Dataset.open(temp_dir / "ds")
+        read_data = ds.get_layer("color").get_mag(1).read()
+        assert read_data.shape == (1, 16, 16, 16)
+        assert read_data.dtype == np.uint8
+        assert np.all(read_data == 1)
