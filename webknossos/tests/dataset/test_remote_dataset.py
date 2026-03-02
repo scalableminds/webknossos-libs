@@ -1,9 +1,7 @@
-import inspect
 import itertools
 import pickle
 import sys
 from collections.abc import Iterable, Iterator
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -54,8 +52,10 @@ def _prepare_dataset_path(output_path: UPath, suffix: str) -> UPath:
     return new_dataset_path
 
 
+@pytest.mark.skip(
+    reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
+)
 def test_remote_dataset_add_layer_as_copy() -> None:
-    """Test that RemoteDataset.add_layer_as_copy correctly delegates to add_layer and add_mag_as_copy."""
     ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_src")
     source_ds = Dataset(ds_path, voxel_size=(2, 2, 1))
     source_layer = source_ds.add_layer(
@@ -73,10 +73,43 @@ def test_remote_dataset_add_layer_as_copy() -> None:
     remote_ds = RemoteDataset.open(
         dataset_id=remote_ds.dataset_id, access_mode=RemoteAccessMode.DIRECT_PATH
     )
-    remote_ds.add_layer_as_copy(
+    layer2 = remote_ds.add_layer_as_copy(
         source_layer, new_layer_name="color2", transfer_mode=TransferMode.COPY
     )
     assert len(remote_ds.layers) == 2
+    np.testing.assert_array_equal(
+        layer2.get_mag(1).read(), source_layer.get_mag(1).read()
+    )
+
+
+@pytest.mark.skip(
+    reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
+)
+def test_remote_dataset_add_mag_as_copy() -> None:
+    ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_mag_src")
+    source_ds = Dataset(ds_path, voxel_size=(2, 2, 1))
+    source_layer = source_ds.add_layer(
+        "color", COLOR_CATEGORY, data_format=DataFormat.Zarr3
+    )
+    source_mag = source_layer.add_mag(1)
+    source_mag.write(
+        absolute_offset=(0, 0, 0),
+        data=(np.random.rand(16, 16, 16) * 255).astype(np.uint8),
+        allow_resize=True,
+    )
+
+    remote_ds = source_ds.upload(new_dataset_name="test_remote_dataset_add_mag_as_copy")
+    remote_ds = RemoteDataset.open(
+        dataset_id=remote_ds.dataset_id, access_mode=RemoteAccessMode.DIRECT_PATH
+    )
+    remote_layer = remote_ds.add_layer(
+        "color2", COLOR_CATEGORY, data_format=DataFormat.Zarr3
+    )
+    copied_mag = remote_layer.add_mag_as_copy(
+        source_mag, transfer_mode=TransferMode.COPY
+    )
+    assert Mag(1) in remote_layer.mags
+    np.testing.assert_array_equal(copied_mag.read(), source_mag.read())
 
 
 def test_add_remote_mags_from_mag_view(
