@@ -2071,7 +2071,7 @@ wheels = [
 [[package]]
 name = "webknossos"
 version = "0.0.0"
-source = { editable = "../webknossos" }
+source = { directory = "../webknossos" }
 dependencies = [
     { name = "aiohttp" },
     { name = "attrs" },
@@ -2178,7 +2178,7 @@ dev = [
 ]
 
 [[package]]
-name = "wk-libs-docs"
+name = "webknossos-docs"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [
@@ -2201,7 +2201,7 @@ requires-dist = [
     { name = "mkdocs-redirects", specifier = "~=1.2.0" },
     { name = "mkdocs-video", git = "https://github.com/scalableminds/mkdocs-video.git?branch=master" },
     { name = "mkdocstrings-python", specifier = "~=1.18.1" },
-    { name = "webknossos", editable = "../webknossos" },
+    { name = "webknossos", directory = "../webknossos" },
 ]
 
 [[package]]
