@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- `Attachment.from_path_and_name` now accepts `str` for `path` and `dataset_path`. `dataset_path` is now fully optional, when missing the `path` is being resolved into an absolute path. [#1430](https://github.com/scalableminds/webknossos-libs/pull/1430)
 
 ### Fixed
 
