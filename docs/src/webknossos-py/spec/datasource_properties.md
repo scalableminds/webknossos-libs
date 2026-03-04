@@ -69,7 +69,7 @@ Each entry in `dataLayers` describes one layer. The schema varies slightly based
 
 All layers use `mags` (array of [MagViewProperties](#magviewproperties)) to describe their magnification levels.
 
-Deprecated: WKW layers may also use `wkwResolutions` (array of [WkwMagViewProperties](#wkwmagviewproperties)). This is a legacy format; prefer `mags` for all data formats.
+Deprecated: WKW layers may also use `wkwResolutions` (array of [WkwMagViewProperties](#wkwmagviewproperties-deprecated)). This is a legacy format; prefer `mags` for all data formats.
 
 ### Segmentation Layer Fields
 
