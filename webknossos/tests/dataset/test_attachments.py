@@ -372,7 +372,7 @@ def test_add_attachments(tmp_upath: UPath) -> None:
 def test_add_attachments_relative_path(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
 
-    with contextlib.chdir(dataset.path):
+    with contextlib.chdir(str(dataset.path)):
         mesh = MeshAttachment.from_path_and_name(
             "seg/meshes/meshfile",
             "meshfile_4-4-1",
