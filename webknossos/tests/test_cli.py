@@ -483,11 +483,65 @@ def test_downsample_and_upsample() -> None:
         assert (wkw_path / "color" / "1" / "z0" / "y0" / "x0.wkw").exists()
 
 
+@pytest.mark.use_proxay
 def test_upload() -> None:
     """Tests the functionality of upload subcommand."""
 
     result_without_args = runner.invoke(app, ["upload"])
     assert result_without_args.exit_code == 2
+
+    result = runner.invoke(
+        app,
+        [
+            "upload",
+            "--dataset-name",
+            "test_upload_cli",
+            str(TESTDATA_DIR / "simple_wkw_dataset"),
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+
+
+@pytest.mark.use_proxay
+def test_remote_downsample() -> None:
+    """Tests the functionality of remote-downsample subcommand."""
+
+    result_without_args = runner.invoke(app, ["remote-downsample"])
+    assert result_without_args.exit_code == 2
+
+    result = runner.invoke(
+        app,
+        [
+            "remote-downsample",
+            "--coarsest-mag",
+            "2",
+            "http://localhost:9000/datasets/Organization_X/l4_sample",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+
+
+@pytest.mark.use_proxay
+def test_remote_convert() -> None:
+    """Tests the functionality of remote-convert subcommand."""
+
+    result_without_args = runner.invoke(app, ["remote-convert"])
+    assert result_without_args.exit_code == 2
+
+    with tmp_cwd():
+        result = runner.invoke(
+            app,
+            [
+                "remote-convert",
+                "--voxel-size",
+                "11.24,11.24,25",
+                "--no-downsample",
+                "--dataset-name",
+                "test_remote_convert",
+                str(TESTDATA_DIR / "tiff"),
+            ],
+        )
+        assert result.exit_code == 0, result.stdout
 
 
 def test_export_tiff_stack(tmp_upath: UPath) -> None:
