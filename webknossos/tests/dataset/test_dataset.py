@@ -2279,11 +2279,24 @@ def test_dataset_shallow_copy_downsample() -> None:
     assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only
 
 
-def test_remote_wkw_dataset() -> None:
+def test_write_remote_wkw_dataset() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     with pytest.raises(AssertionError):
         ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
+
+
+def test_read_remote_wkw_dataset() -> None:
+    local_ds_path = copy_simple_dataset(DataFormat.WKW, TESTOUTPUT_DIR, "local")
+    remote_ds_path = copy_simple_dataset(
+        DataFormat.WKW, REMOTE_TESTOUTPUT_DIR, "remote"
+    )
+    local_ds = Dataset.open(local_ds_path)
+    remote_ds = Dataset.open(remote_ds_path)
+    np.testing.assert_equal(
+        local_ds.get_layer("color").get_mag("1").read(),
+        remote_ds.get_layer("color").get_mag("1").read(),
+    )
 
 
 def test_dataset_conversion_wkw_only() -> None:

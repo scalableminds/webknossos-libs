@@ -18,6 +18,7 @@ import wkw
 from typing_extensions import NotRequired, Self
 from upath import UPath
 
+from webknossos.dataset._utils.tinywkw import WkwDataset
 from webknossos.dataset_properties import DataFormat
 from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
 from webknossos.utils import call_with_retries, is_fs_path
@@ -234,7 +235,7 @@ class BaseArray(ABC):
 class WKWArray(BaseArray):
     data_format = DataFormat.WKW
 
-    _cached_wkw_dataset: wkw.Dataset | None
+    _cached_wkw_dataset: wkw.Dataset | WkwDataset | None
 
     def __init__(self, path: UPath):
         super().__init__(path)
@@ -271,6 +272,9 @@ class WKWArray(BaseArray):
 
     @classmethod
     def create(cls, path: UPath, array_info: ArrayInfo) -> "WKWArray":
+        assert is_fs_path(path), (
+            "Creating WKW arrays is only supported for local paths."
+        )
         assert array_info.data_format == cls.data_format
         assert array_info.bounding_box.axes == ("c", "x", "y", "z")
 
@@ -322,6 +326,9 @@ class WKWArray(BaseArray):
 
     def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
         assert bbox.axes == ("c", "x", "y", "z")
+        assert isinstance(self._wkw_dataset, wkw.Dataset), (
+            "Writing to WKW is only supported for local datasets."
+        )
         self._wkw_dataset.write(bbox.topleft.xyz, data)
 
     def resize(self, new_bbox: NormalizedBoundingBox) -> None:
@@ -352,16 +359,24 @@ class WKWArray(BaseArray):
             self._cached_wkw_dataset = None
 
     @property
-    def _wkw_dataset(self) -> wkw.Dataset:
+    def _wkw_dataset(self) -> wkw.Dataset | WkwDataset:
         if self._cached_wkw_dataset is None:
-            try:
-                self._cached_wkw_dataset = wkw.Dataset.open(
-                    str(self._path)
-                )  # No need to pass the header to the wkw.Dataset
-            except wkw.wkw.WKWException as e:
-                raise ArrayException(
-                    f"Exception while opening WKW array for {self._path}"
-                ) from e
+            if is_fs_path(self._path):
+                try:
+                    self._cached_wkw_dataset = wkw.Dataset.open(
+                        str(self._path)
+                    )  # No need to pass the header to the wkw.Dataset
+                except wkw.wkw.WKWException as e:
+                    raise ArrayException(
+                        f"Exception while opening WKW array for {self._path}"
+                    ) from e
+            else:
+                try:
+                    self._cached_wkw_dataset = WkwDataset.open(self._path)
+                except Exception as e:
+                    raise ArrayException(
+                        f"Exception while opening WKW array for {self._path}"
+                    ) from e
         return self._cached_wkw_dataset
 
     @_wkw_dataset.deleter
