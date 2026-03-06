@@ -228,8 +228,9 @@ class WkwDataset:
             for chunk_bbox in shard_bbox.chunk(
                 header.chunk_shape, chunk_border_alignments=header.chunk_shape
             ):
+                # Local chunk index relative to shard origin (shard_topleft is chunk-aligned)
                 morton_index = _morton_encode(
-                    chunk_bbox.offset(-shard_bbox.topleft).topleft // header.chunk_shape
+                    chunk_bbox.offset(-shard_topleft).topleft // header.chunk_shape
                 )
                 if header.chunk_type == ChunkType.RAW:
                     f.seek(shard_data_offset + morton_index * num_chunk_bytes)
@@ -254,7 +255,11 @@ class WkwDataset:
                     order="F",
                 )
 
-                chunk_sel = ALL_SEL + chunk_bbox.offset(-chunk_bbox.topleft).to_slices()
+                # chunk_origin is the aligned start of this chunk in world coordinates
+                chunk_origin = (
+                    chunk_bbox.topleft // header.chunk_shape
+                ) * header.chunk_shape
+                chunk_sel = ALL_SEL + chunk_bbox.offset(-chunk_origin).to_slices()
                 output_sel = ALL_SEL + chunk_bbox.offset(-bbox.topleft).to_slices()
                 output[output_sel] = chunk_data[chunk_sel]
 
@@ -301,7 +306,7 @@ class WkwDataset:
         shard_bbox = bbox.intersected_with(full_shard_bbox)
 
         if shard_bbox == full_shard_bbox:
-            # Fast path: the entire region is already present in the file
+            # Fast path: the entire shard is being written
             data_sel = ALL_SEL + shard_bbox.offset(-bbox.topleft).to_slices()
             shard_buffer = data[data_sel]
             self._write_shard(shard_address, shard_buffer)
@@ -324,6 +329,12 @@ class WkwDataset:
         self._write_shard(shard_address, shard_buffer)
 
     def _write_shard(self, shard_address: Vec3Int, shard_buffer: np.ndarray) -> None:
+        file_path = self._shard_path(shard_address)
+        if not np.any(shard_buffer):
+            if file_path.exists():
+                file_path.unlink()
+            return
+
         header = self._header
         shard_topleft = shard_address * header.shard_shape
         full_shard_bbox = BoundingBox(shard_topleft, header.shard_shape)
@@ -342,7 +353,6 @@ class WkwDataset:
             chunk_sel = ALL_SEL + chunk_bbox.offset(-shard_topleft).to_slices()
             raw_chunks[morton_index] = shard_buffer[chunk_sel].tobytes(order="F")
 
-        file_path = self._shard_path(shard_address)
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
         if header.chunk_type == ChunkType.RAW:

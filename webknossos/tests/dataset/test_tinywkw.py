@@ -7,7 +7,7 @@ from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset._utils.tinywkw import WkwDataset, WkwHeader
-from webknossos.geometry import NormalizedBoundingBox, Vec3Int
+from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
 
 DATASET_PATH = TESTDATA_DIR / "simple_wkw_dataset" / "color" / "1"
 
@@ -26,16 +26,6 @@ def _make_bbox(
         size=(NUM_CHANNELS, sx, sy, sz),
         axes=("c", "x", "y", "z"),
     )
-
-
-def _wkw_read(offset: tuple[int, int, int], size: tuple[int, int, int]) -> np.ndarray:
-    with wkw.Dataset.open(str(DATASET_PATH)) as ds:
-        return ds.read(offset, size)
-
-
-def _tiny_read(bbox: NormalizedBoundingBox) -> np.ndarray:
-    ds = WkwDataset.open(UPath(DATASET_PATH))
-    return ds.read_bbox(bbox)
 
 
 # ---------------------------------------------------------------------------
@@ -75,18 +65,26 @@ def test_header_invalid_version_raises() -> None:
 
 
 @pytest.mark.parametrize(
-    "size",
+    "bbox",
     [
-        (CHUNK_LEN, CHUNK_LEN, CHUNK_LEN),  # exactly one chunk
-        (SHARD, SHARD, SHARD),  # full shard
-        (5, 3, 7),  # sub-chunk, non-aligned
-        (SHARD + CHUNK_LEN, SHARD, SHARD),  # spans two shards in x
+        BoundingBox((0, 0, 0), (CHUNK_LEN, CHUNK_LEN, CHUNK_LEN)),  # exactly one chunk
+        BoundingBox((0, 0, 0), (SHARD, SHARD, SHARD)),  # full shard
+        BoundingBox((0, 0, 0), (5, 3, 7)),  # sub-chunk, non-aligned
+        BoundingBox(
+            (0, 0, 0), (SHARD + CHUNK_LEN, SHARD, SHARD)
+        ),  # spans two shards in x
     ],
 )
-def test_output_shape_and_dtype(size: tuple[int, int, int]) -> None:
-    bbox = _make_bbox(0, 0, 0, *size)
-    data = _tiny_read(bbox)
-    assert data.shape == (NUM_CHANNELS, *size)
+def test_output_shape_and_dtype(bbox: BoundingBox) -> None:
+    data = WkwDataset.open(UPath(DATASET_PATH)).read_bbox(
+        bbox.normalize_axes(NUM_CHANNELS)
+    )
+    assert data.shape == (
+        NUM_CHANNELS,
+        bbox.size_xyz.x,
+        bbox.size_xyz.y,
+        bbox.size_xyz.z,
+    )
     assert data.dtype == np.dtype("uint8")
 
 
@@ -96,21 +94,25 @@ def test_output_shape_and_dtype(size: tuple[int, int, int]) -> None:
 
 
 @pytest.mark.parametrize(
-    "offset,size",
+    "bbox",
     [
-        ((0, 0, 0), (CHUNK_LEN, CHUNK_LEN, CHUNK_LEN)),  # one chunk, aligned
-        ((0, 0, 0), (SHARD, SHARD, SHARD)),  # full shard
-        ((3, 5, 7), (5, 3, 1)),  # sub-chunk unaligned
-        ((16, 16, 16), (SHARD, SHARD, SHARD)),  # cross-shard (missing file → zeros)
-        ((0, 0, 0), (SHARD + CHUNK_LEN, SHARD, SHARD)),  # x spans two shards
+        BoundingBox((0, 0, 0), (CHUNK_LEN, CHUNK_LEN, CHUNK_LEN)),  # one chunk, aligned
+        BoundingBox((0, 0, 0), (SHARD, SHARD, SHARD)),  # full shard
+        BoundingBox((3, 5, 7), (5, 3, 1)),  # sub-chunk unaligned
+        BoundingBox(
+            (16, 16, 16), (SHARD, SHARD, SHARD)
+        ),  # cross-shard (missing file → zeros)
+        BoundingBox((0, 0, 0), (SHARD + CHUNK_LEN, SHARD, SHARD)),  # x spans two shards
     ],
 )
 def test_matches_native_wkw(
-    offset: tuple[int, int, int], size: tuple[int, int, int]
+    bbox: BoundingBox,
 ) -> None:
-    expected = _wkw_read(offset, size)
-    bbox = _make_bbox(*offset, *size)
-    actual = _tiny_read(bbox)
+    with wkw.Dataset.open(str(DATASET_PATH)) as ds:
+        expected = ds.read(bbox.topleft_xyz, bbox.size_xyz)
+    actual = WkwDataset.open(UPath(DATASET_PATH)).read_bbox(
+        bbox.normalize_axes(NUM_CHANNELS)
+    )
     np.testing.assert_array_equal(actual, expected)
 
 
@@ -122,8 +124,10 @@ def test_matches_native_wkw(
 def test_missing_shard_returns_zeros() -> None:
     """Reading a region whose shard file doesn't exist should return all zeros."""
     # Only z0/y0/x0.wkw exists; a non-zero shard index file is absent.
-    bbox = _make_bbox(SHARD, SHARD, SHARD, CHUNK_LEN, CHUNK_LEN, CHUNK_LEN)
-    data = _tiny_read(bbox)
+    bbox = BoundingBox((SHARD, SHARD, SHARD), (CHUNK_LEN, CHUNK_LEN, CHUNK_LEN))
+    data = WkwDataset.open(UPath(DATASET_PATH)).read_bbox(
+        bbox.normalize_axes(NUM_CHANNELS)
+    )
     assert data.shape == (NUM_CHANNELS, CHUNK_LEN, CHUNK_LEN, CHUNK_LEN)
     assert not data.any()
 
@@ -190,6 +194,32 @@ def test_write_cross_shard(fresh_dataset: tuple[WkwDataset, UPath]) -> None:
     ds.write(offset, data)
     result = ds.read(offset, size)
     np.testing.assert_array_equal(result, data)
+
+
+def test_write_zeros_deletes_shard(fresh_dataset: tuple[WkwDataset, UPath]) -> None:
+    ds, path = fresh_dataset
+    shard_file = path / "z0" / "y0" / "x0.wkw"
+    # Write non-zero data to create the file
+    rng = np.random.default_rng(5)
+    data = rng.integers(1, 256, (NUM_CHANNELS, SHARD, SHARD, SHARD), dtype=np.uint8)
+    ds.write(Vec3Int(0, 0, 0), data)
+    assert shard_file.exists()
+    # Overwrite with zeros — file should be removed
+    ds.write(Vec3Int(0, 0, 0), np.zeros_like(data))
+    assert not shard_file.exists()
+    # Read back: should return zeros
+    result = ds.read(Vec3Int(0, 0, 0), Vec3Int(SHARD, SHARD, SHARD))
+    assert not result.any()
+
+
+def test_write_all_zero_never_creates_shard(
+    fresh_dataset: tuple[WkwDataset, UPath],
+) -> None:
+    ds, path = fresh_dataset
+    ds.write(
+        Vec3Int(0, 0, 0), np.zeros((NUM_CHANNELS, SHARD, SHARD, SHARD), dtype=np.uint8)
+    )
+    assert not (path / "z0" / "y0" / "x0.wkw").exists()
 
 
 def test_write_readable_by_native_wkw(fresh_dataset: tuple[WkwDataset, UPath]) -> None:
