@@ -2,24 +2,29 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Annotated, Any
+from typing import Annotated
 
 import typer
+from upath import UPath
 
-from ..dataset import Dataset, SamplingModes
+from ..dataset import SamplingModes
 from ..geometry import Mag
 from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, SamplingMode, parse_mag, parse_path
+from ._utils import (
+    DistributionStrategy,
+    SamplingMode,
+    open_dataset,
+    parse_mag,
+)
 
 
 def main(
     *,
     target: Annotated[
-        Any,
+        str,
         typer.Argument(
-            help="Path to your WEBKNOSSOS dataset.",
+            help="Path to your WEBKNOSSOS dataset, or URL to a dataset on a WEBKNOSSOS server.",
             show_default=False,
-            parser=parse_path,
         ),
     ],
     sampling_mode: Annotated[
@@ -37,6 +42,15 @@ def main(
             help="Mag to stop downsampling at. \
 Should be number or minus separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
+        ),
+    ] = None,
+    token: Annotated[
+        str | None,
+        typer.Option(
+            help="Authentication token for WEBKNOSSOS instance "
+            "(https://webknossos.org/auth/token).",
+            rich_help_panel="WEBKNOSSOS context",
+            envvar="WK_TOKEN",
         ),
     ] = None,
     jobs: Annotated[
@@ -69,19 +83,19 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
         distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
+    sampling_mode_parsed = SamplingModes.parse(sampling_mode.value)
 
-    dataset = Dataset.open(target)
-    with get_executor_for_args(args=executor_args) as executor:
-        if layer_name is None:
-            dataset.downsample(
-                coarsest_mag=coarsest_mag,
-                sampling_mode=SamplingModes.parse(sampling_mode.value),
-                executor=executor,
-            )
-        else:
-            layer = dataset.get_layer(layer_name)
-            layer.downsample(
-                coarsest_mag=coarsest_mag,
-                sampling_mode=SamplingModes.parse(sampling_mode.value),
-                executor=executor,
-            )
+    with open_dataset(UPath(target), annotation_ok=False, token=token) as dataset:
+        with get_executor_for_args(args=executor_args) as executor:
+            if layer_name is None:
+                dataset.downsample(
+                    coarsest_mag=coarsest_mag,
+                    sampling_mode=sampling_mode_parsed,
+                    executor=executor,
+                )
+            else:
+                dataset.get_layer(layer_name).downsample(
+                    coarsest_mag=coarsest_mag,
+                    sampling_mode=sampling_mode_parsed,
+                    executor=executor,
+                )

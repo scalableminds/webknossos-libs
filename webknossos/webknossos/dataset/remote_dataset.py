@@ -45,7 +45,7 @@ from webknossos.dataset_properties import (
     SegmentationLayerProperties,
     VoxelSize,
 )
-from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int
+from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int, Vec3IntLike
 from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
@@ -1228,9 +1228,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         layer_name: str | None = None,
         layer_category: LayerCategoryType | None = None,
         data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
-        chunk_shape: Vec3Int | int | None = None,
-        shard_shape: Vec3Int | int | None = None,
-        chunks_per_shard: int | Vec3Int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
+        chunks_per_shard: int | Vec3IntLike | None = None,
         compress: bool = True,
         swap_xy: bool = False,
         flip_x: bool = False,

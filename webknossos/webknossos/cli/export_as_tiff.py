@@ -1,13 +1,11 @@
 """This module takes care of exporting tiff images."""
 
 import logging
-import re
 from argparse import Namespace
 from functools import partial
 from math import ceil
 from multiprocessing import cpu_count
 from typing import Annotated, Any
-from urllib.parse import urlparse
 
 import numpy as np
 import typer
@@ -15,17 +13,14 @@ from PIL import Image
 from scipy.ndimage import zoom
 from upath import UPath
 
-from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
-from ..client import webknossos_context
-from ..client._resolve_short_link import resolve_short_link
-from ..dataset import Dataset, MagView, RemoteDataset, View
-from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
+from ..dataset import MagView, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, is_fs_path, wait_and_ensure_success
+from ..utils import get_executor_for_args, wait_and_ensure_success
 from ._utils import (
     DistributionStrategy,
     Vec2Int,
+    open_dataset,
     parse_bbox,
     parse_mag,
     parse_path,
@@ -278,28 +273,8 @@ def main(
 
     mag_view: MagView | None = None
     source_path = UPath(source)
-    if not is_fs_path(source_path):
-        url = resolve_short_link(source)
-        parsed = urlparse(url)
-        domain = f"{parsed.scheme}://{parsed.netloc}"
-
-        with webknossos_context(url=domain, token=token):
-            if re.match(_DATASET_URL_REGEX, url) or re.match(
-                _DATASET_DEPRECATED_URL_REGEX, url
-            ):
-                mag_view = RemoteDataset.open(url).get_layer(layer_name).get_mag(mag)
-            elif re.match(_ANNOTATION_URL_REGEX, url):
-                mag_view = (
-                    Annotation.open_as_remote_dataset(annotation_id_or_url=url)
-                    .get_layer(layer_name)
-                    .get_mag(mag)
-                )
-            else:
-                raise ValueError(
-                    "The provided URL does not lead to a dataset or annotation."
-                )
-    else:
-        mag_view = Dataset.open(source_path).get_layer(layer_name).get_mag(mag)
+    with open_dataset(source_path, annotation_ok=True, token=token) as dataset:
+        mag_view = dataset.get_layer(layer_name).get_mag(mag)
 
     if mag_view is None:
         raise ValueError(
