@@ -1,3 +1,4 @@
+from os import PathLike
 from typing import Literal, cast, get_args, get_type_hints
 
 from typing_extensions import Self
@@ -63,18 +64,20 @@ class Attachment:
     @classmethod
     def from_path_and_name(
         cls,
-        path: UPath,
+        path: str | PathLike | UPath,
         name: str,
         *,
         data_format: AttachmentDataFormat,
-        dataset_path: UPath | None = None,
+        dataset_path: str | PathLike | UPath | None = None,
     ) -> Self:
+        path = UPath(path)
+        if dataset_path is not None:
+            dataset_path = UPath(dataset_path)
         if not path.is_absolute():
             if dataset_path is None:
-                raise ValueError(
-                    "dataset_path must be provided when path is not absolute."
-                )
-            path = dataset_path / path
+                path = path.resolve()
+            else:
+                path = dataset_path / path
         return cls(
             AttachmentProperties(
                 name=name, data_format=data_format, path=dump_path(path, dataset_path)

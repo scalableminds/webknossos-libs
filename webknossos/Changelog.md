@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [3.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.2) - 2026-03-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.1...v3.2.2)
+
+### Changed
+- `Attachment.from_path_and_name` now accepts `str` for `path` and `dataset_path`. `dataset_path` is now fully optional, when missing the `path` is being resolved into an absolute path. [#1430](https://github.com/scalableminds/webknossos-libs/pull/1430)
 
 
 ## [3.2.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.1) - 2026-03-02

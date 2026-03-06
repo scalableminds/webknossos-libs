@@ -1839,7 +1839,7 @@ requires-dist = [
     { name = "webknossos", extras = ["imagecodecs"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["tifffile"], marker = "extra == 'all'" },
     { name = "wkw", specifier = "==1.1.24" },
-    { name = "zipp", specifier = "~=3.5.0" },
+    { name = "zipp", specifier = ">=3.5.0,<4.0.0" },
 ]
 provides-extras = ["tifffile", "imagecodecs", "bioformats", "czi", "examples", "all"]
 
@@ -1859,12 +1859,12 @@ dev = [
     { name = "pytest-sugar", specifier = "~=1.0.0" },
     { name = "pytest-timeout", specifier = "~=2.3.0" },
     { name = "pytest-timestamper", specifier = "~=0.0.10" },
-    { name = "ruff", specifier = "~=0.11.0" },
+    { name = "ruff", specifier = "~=0.15.0" },
     { name = "types-python-dateutil", specifier = "~=2.9" },
 ]
 
 [[package]]
-name = "wk-libs-docs"
+name = "webknossos-docs"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [
