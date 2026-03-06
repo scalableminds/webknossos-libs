@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import IntEnum
 
+import lz4.block
 import numpy as np
 from upath import UPath
 
@@ -224,8 +225,6 @@ class WkwDataset:
 
             jump_table = None
             if header.chunk_type in (ChunkType.LZ4, ChunkType.LZ4HC):
-                import lz4.block  # noqa: PLC0415
-
                 num_chunks = header.file_len**3
                 f.seek(16)
                 jump_table = np.frombuffer(f.read(num_chunks * 8), dtype="<u8")
@@ -385,8 +384,6 @@ class WkwDataset:
                 for raw_chunk in raw_chunks:
                     f.write(raw_chunk)
         else:
-            import lz4.block  # noqa: PLC0415
-
             compression_mode = (
                 "high_compression"
                 if header.chunk_type == ChunkType.LZ4HC

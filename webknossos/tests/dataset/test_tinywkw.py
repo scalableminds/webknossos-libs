@@ -18,16 +18,6 @@ SHARD = SHARD_LEN * CHUNK_LEN  # 32
 NUM_CHANNELS = 3
 
 
-def _make_bbox(
-    x: int, y: int, z: int, sx: int, sy: int, sz: int
-) -> NormalizedBoundingBox:
-    return NormalizedBoundingBox(
-        topleft=(0, x, y, z),
-        size=(NUM_CHANNELS, sx, sy, sz),
-        axes=("c", "x", "y", "z"),
-    )
-
-
 # ---------------------------------------------------------------------------
 # Header tests
 # ---------------------------------------------------------------------------
