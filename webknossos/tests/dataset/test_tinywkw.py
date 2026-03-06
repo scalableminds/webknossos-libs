@@ -6,7 +6,7 @@ import wkw
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR
-from webknossos.dataset._utils.tinywkw import WkwDataset, WkwHeader
+from webknossos.dataset._utils.tinywkw import ChunkType, WkwDataset, WkwHeader
 from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
 
 DATASET_PATH = TESTDATA_DIR / "simple_wkw_dataset" / "color" / "1"
@@ -137,10 +137,24 @@ def test_missing_shard_returns_zeros() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture
-def fresh_dataset(tmp_path: UPath) -> tuple[WkwDataset, UPath]:
-    (tmp_path / "header.wkw").write_bytes((DATASET_PATH / "header.wkw").read_bytes())
-    return WkwDataset.open(UPath(tmp_path)), UPath(tmp_path)
+@pytest.fixture(params=[ChunkType.RAW, ChunkType.LZ4])
+def fresh_dataset(
+    tmp_path: UPath, request: pytest.FixtureRequest
+) -> tuple[WkwDataset, UPath]:
+    chunk_type: ChunkType = request.param
+    if chunk_type == ChunkType.RAW:
+        (tmp_path / "header.wkw").write_bytes(
+            (DATASET_PATH / "header.wkw").read_bytes()
+        )
+        return WkwDataset.open(UPath(tmp_path)), UPath(tmp_path)
+    header = WkwHeader(
+        chunk_shape=Vec3Int.full(CHUNK_LEN),
+        shard_shape=Vec3Int.full(SHARD),
+        chunk_type=chunk_type,
+        voxel_type=np.dtype("uint8"),
+        num_channels=NUM_CHANNELS,
+    )
+    return WkwDataset.create(UPath(tmp_path), header), UPath(tmp_path)
 
 
 def test_write_full_shard_roundtrip(fresh_dataset: tuple[WkwDataset, UPath]) -> None:

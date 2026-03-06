@@ -1113,6 +1113,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
             )
 
+        if data_format == DataFormat.WKW and is_fs_path(self.path):
+            warnings.warn(
+                "Creating WKW layers in remote datasets is not recommended because of poor performance. "
+                + "Use `data_format='zarr3'` instead."
+            )
+
         bounding_box = bounding_box or BoundingBox((0, 0, 0), (0, 0, 0))
         bounding_box = bounding_box.normalize_axes(num_channels)
         layer_properties = LayerProperties(
@@ -2343,9 +2349,22 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         new_dataset_path = UPath(new_dataset_path)
 
-        if data_format == DataFormat.WKW:
-            assert is_fs_path(new_dataset_path), (
-                "Cannot create WKW-based remote datasets. Use `data_format='zarr3'` instead."
+        if data_format == DataFormat.WKW and not is_fs_path(new_dataset_path):
+            warnings.warn(
+                "Creating WKW-based remote datasets is not recommended because of poor performance. "
+                + "Use `data_format='zarr3'` instead."
+            )
+
+        if (
+            data_format is None
+            and any(
+                layer.data_format == DataFormat.WKW for layer in self.layers.values()
+            )
+            and not is_fs_path(new_dataset_path)
+        ):
+            warnings.warn(
+                "Creating WKW layers in remote datasets is not recommended because of poor performance. "
+                + "Use explicit `data_format='zarr3'`."
             )
 
         if voxel_size_with_unit is None:
@@ -2414,6 +2433,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         warn_deprecated("fs_copy_dataset", "copy_dataset")
 
         new_dataset_path = UPath(new_dataset_path)
+
+        if any(
+            layer.data_format == DataFormat.WKW for layer in self.layers.values()
+        ) and is_fs_path(new_dataset_path):
+            warnings.warn(
+                "Creating WKW layers in remote datasets is not recommended because of poor performance. "
+                + "Use `Dataset.copy_dataset` with `data_format='zarr3'`."
+            )
 
         new_dataset = Dataset(
             new_dataset_path,

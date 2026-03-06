@@ -326,7 +326,7 @@ class WKWArray(BaseArray):
                         chunk_shape=array_info.chunk_shape,
                         shard_shape=array_info.shard_shape,
                         chunk_type=(
-                            ChunkType.LZ4HC
+                            ChunkType.LZ4
                             if array_info.compression_mode
                             else ChunkType.RAW
                         ),

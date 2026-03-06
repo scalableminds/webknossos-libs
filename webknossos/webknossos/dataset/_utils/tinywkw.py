@@ -2,6 +2,7 @@
 
 import io
 import struct
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import IntEnum
 
@@ -225,25 +226,34 @@ class WkwDataset:
             if header.chunk_type in (ChunkType.LZ4, ChunkType.LZ4HC):
                 import lz4.block  # noqa: PLC0415
 
-                num_chunks = (
-                    header.shard_shape.x * header.shard_shape.y * header.shard_shape.z
-                )
+                num_chunks = header.file_len**3
                 f.seek(16)
                 jump_table = np.frombuffer(f.read(num_chunks * 8), dtype="<u8")
 
-            for chunk_bbox in shard_bbox.chunk(
-                header.chunk_shape, chunk_border_alignments=header.chunk_shape
-            ):
-                # Local chunk index relative to shard origin (shard_topleft is chunk-aligned)
-                morton_index = _morton_encode(
-                    chunk_bbox.offset(-shard_topleft).topleft // header.chunk_shape
-                )
-                if header.chunk_type == ChunkType.RAW:
+            chunk_bboxes = sorted(
+                shard_bbox.chunk(
+                    header.chunk_shape, chunk_border_alignments=header.chunk_shape
+                ),
+                key=lambda bb: _morton_encode(
+                    bb.offset(-shard_topleft).topleft // header.chunk_shape
+                ),
+            )
+
+            if header.chunk_type == ChunkType.RAW:
+                raw_chunks = []
+                for chunk_bbox in chunk_bboxes:
+                    morton_index = _morton_encode(
+                        chunk_bbox.offset(-shard_topleft).topleft // header.chunk_shape
+                    )
                     f.seek(shard_data_offset + morton_index * num_chunk_bytes)
-                    raw_chunk = f.read(num_chunk_bytes)
-                else:
-                    assert jump_table is not None, (
-                        "jump_table must be present for compressed chunks"
+                    raw_chunks.append(f.read(num_chunk_bytes))
+            else:
+                assert jump_table is not None
+                # Phase 1: gather compressed bytes (sequential I/O)
+                compressed_bufs = []
+                for chunk_bbox in chunk_bboxes:
+                    morton_index = _morton_encode(
+                        chunk_bbox.offset(-shard_topleft).topleft // header.chunk_shape
                     )
                     compressed_start = (
                         int(jump_table[morton_index - 1])
@@ -252,22 +262,30 @@ class WkwDataset:
                     )
                     compressed_end = int(jump_table[morton_index])
                     f.seek(compressed_start)
-                    raw_chunk = lz4.block.decompress(
-                        f.read(compressed_end - compressed_start),
-                        uncompressed_size=num_chunk_bytes,
+                    compressed_bufs.append(f.read(compressed_end - compressed_start))
+                # Phase 2: decompress in parallel
+                with ThreadPoolExecutor() as executor:
+                    raw_chunks = list(
+                        executor.map(
+                            lambda cb: lz4.block.decompress(
+                                cb, uncompressed_size=num_chunk_bytes
+                            ),
+                            compressed_bufs,
+                        )
                     )
-                chunk_data = np.frombuffer(raw_chunk, dtype=header.voxel_type).reshape(
-                    (header.num_channels,) + header.chunk_shape.to_tuple(),
-                    order="F",
-                )
 
-                # chunk_origin is the aligned start of this chunk in world coordinates
-                chunk_origin = (
-                    chunk_bbox.topleft // header.chunk_shape
-                ) * header.chunk_shape
-                chunk_sel = ALL_SEL + chunk_bbox.offset(-chunk_origin).to_slices()
-                output_sel = ALL_SEL + chunk_bbox.offset(-bbox.topleft).to_slices()
-                output[output_sel] = chunk_data[chunk_sel]
+        for chunk_bbox, raw_chunk in zip(chunk_bboxes, raw_chunks):
+            chunk_data = np.frombuffer(raw_chunk, dtype=header.voxel_type).reshape(
+                (header.num_channels,) + header.chunk_shape.to_tuple(),
+                order="F",
+            )
+            # chunk_origin is the aligned start of this chunk in world coordinates
+            chunk_origin = (
+                chunk_bbox.topleft // header.chunk_shape
+            ) * header.chunk_shape
+            chunk_sel = ALL_SEL + chunk_bbox.offset(-chunk_origin).to_slices()
+            output_sel = ALL_SEL + chunk_bbox.offset(-bbox.topleft).to_slices()
+            output[output_sel] = chunk_data[chunk_sel]
 
     # ------------------------------------------------------------------
     # Write
@@ -345,7 +363,7 @@ class WkwDataset:
         shard_topleft = shard_address * header.shard_shape
         full_shard_bbox = BoundingBox(shard_topleft, header.shard_shape)
 
-        num_chunks = header.shard_shape.x * header.shard_shape.y * header.shard_shape.z
+        num_chunks = header.file_len**3
 
         # Build chunk payloads in Morton order
         raw_chunks: list[bytes] = [b""] * num_chunks
@@ -374,10 +392,15 @@ class WkwDataset:
                 if header.chunk_type == ChunkType.LZ4HC
                 else "default"
             )
-            compressed_chunks = [
-                lz4.block.compress(rc, store_size=False, mode=compression_mode)
-                for rc in raw_chunks
-            ]
+            with ThreadPoolExecutor() as executor:
+                compressed_chunks = list(
+                    executor.map(
+                        lambda rc: lz4.block.compress(
+                            rc, store_size=False, mode=compression_mode
+                        ),
+                        raw_chunks,
+                    )
+                )
             data_offset = 16 + num_chunks * 8
             jump_table = np.zeros(num_chunks, dtype="<u8")
             offset = data_offset

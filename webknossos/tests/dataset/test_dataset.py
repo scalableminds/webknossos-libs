@@ -55,7 +55,6 @@ def start_minio() -> Iterator[None]:
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr, DataFormat.Zarr3]
 DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.WKW, TESTOUTPUT_DIR),
-    (DataFormat.WKW, REMOTE_TESTOUTPUT_DIR),
     (DataFormat.Zarr, TESTOUTPUT_DIR),
     (DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR),
     (DataFormat.Zarr3, TESTOUTPUT_DIR),
@@ -2283,8 +2282,13 @@ def test_dataset_shallow_copy_downsample() -> None:
 def test_write_remote_wkw_dataset() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
-    with pytest.raises(AssertionError):
-        ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
+    with pytest.warns(UserWarning, match=".*not recommended.*"):
+        layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.WKW)
+    mag = layer.add_mag(1, shard_shape=(256, 256, 256))
+    np.random.seed(1234)
+    data: np.ndarray = (np.random.rand(128, 128, 128) * 255).astype(np.uint8)
+    mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
+    np.testing.assert_array_equal(data, mag.read(absolute_offset=(0, 0, 0))[0])
 
 
 def test_read_remote_wkw_dataset() -> None:
@@ -3573,11 +3577,12 @@ def test_wkw_copy_to_remote_dataset() -> None:
     wkw_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
 
     # Fails with explicit data_format=wkw ...
-    with pytest.raises(AssertionError):
+    with pytest.warns(UserWarning, match=".*not recommended.*"):
         wkw_ds.copy_dataset(ds_path, shard_shape=32, data_format=DataFormat.WKW)
 
     # ... and with implicit data_format=wkw from the source layers.
-    with pytest.raises(AssertionError):
+    ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR, "copied2")
+    with pytest.warns(UserWarning, match=".*not recommended.*"):
         wkw_ds.copy_dataset(
             ds_path,
             shard_shape=32,
