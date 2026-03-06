@@ -7,7 +7,7 @@ from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset._utils.tinywkw import ChunkType, WkwDataset, WkwHeader
-from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
+from webknossos.geometry import BoundingBox, Vec3Int
 
 DATASET_PATH = TESTDATA_DIR / "simple_wkw_dataset" / "color" / "1"
 

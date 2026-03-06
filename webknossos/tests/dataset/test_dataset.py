@@ -2288,7 +2288,8 @@ def test_write_remote_wkw_dataset() -> None:
     np.random.seed(1234)
     data: np.ndarray = (np.random.rand(128, 128, 128) * 255).astype(np.uint8)
     mag.write(data, absolute_offset=(0, 0, 0), allow_resize=True)
-    np.testing.assert_array_equal(data, mag.read(absolute_offset=(0, 0, 0))[0])
+    actual = mag.read(absolute_bounding_box=BoundingBox((0, 0, 0), (128, 128, 128)))[0]
+    np.testing.assert_array_equal(data, actual)
 
 
 def test_read_remote_wkw_dataset() -> None:
