@@ -1113,7 +1113,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
             )
 
-        if data_format == DataFormat.WKW and is_fs_path(self.path):
+        if data_format == DataFormat.WKW and not is_fs_path(self.path):
             warnings.warn(
                 "Creating WKW layers in remote datasets is not recommended because of poor performance. "
                 + "Use `data_format='zarr3'` instead."
@@ -2436,7 +2436,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         if any(
             layer.data_format == DataFormat.WKW for layer in self.layers.values()
-        ) and is_fs_path(new_dataset_path):
+        ) and not is_fs_path(new_dataset_path):
             warnings.warn(
                 "Creating WKW layers in remote datasets is not recommended because of poor performance. "
                 + "Use `Dataset.copy_dataset` with `data_format='zarr3'`."
