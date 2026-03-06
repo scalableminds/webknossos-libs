@@ -48,7 +48,7 @@ def test_header_magic_and_version() -> None:
     header = WkwHeader.from_bytes(raw)
     # Verify the fields we know from introspecting the file
     assert header.chunk_shape == Vec3Int.full(CHUNK_LEN)
-    assert header.shard_shape == Vec3Int.full(SHARD_LEN)
+    assert header.shard_shape == Vec3Int.full(SHARD_LEN) * Vec3Int.full(CHUNK_LEN)
     assert header.num_channels == NUM_CHANNELS
     assert header.voxel_dtype == np.dtype("uint8")
     # header.wkw stores data_offset=0 (no actual data); shard files store 16 for RAW
@@ -126,3 +126,77 @@ def test_missing_shard_returns_zeros() -> None:
     data = _tiny_read(bbox)
     assert data.shape == (NUM_CHANNELS, CHUNK_LEN, CHUNK_LEN, CHUNK_LEN)
     assert not data.any()
+
+
+# ---------------------------------------------------------------------------
+# Write tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def fresh_dataset(tmp_path: UPath) -> tuple[WkwDataset, UPath]:
+    (tmp_path / "header.wkw").write_bytes((DATASET_PATH / "header.wkw").read_bytes())
+    return WkwDataset.open(UPath(tmp_path)), UPath(tmp_path)
+
+
+def test_write_full_shard_roundtrip(fresh_dataset: tuple[WkwDataset, UPath]) -> None:
+    from unittest.mock import patch
+
+    ds, _ = fresh_dataset
+    rng = np.random.default_rng(42)
+    data = rng.integers(0, 256, (NUM_CHANNELS, SHARD, SHARD, SHARD), dtype=np.uint8)
+    with patch.object(ds, "_read_shard_into", wraps=ds._read_shard_into) as mock_read:
+        ds.write(Vec3Int(0, 0, 0), data)
+        mock_read.assert_not_called()
+    result = ds.read(Vec3Int(0, 0, 0), Vec3Int(SHARD, SHARD, SHARD))
+    np.testing.assert_array_equal(result, data)
+
+
+def test_write_partial_chunk_roundtrip(fresh_dataset: tuple[WkwDataset, UPath]) -> None:
+    ds, _ = fresh_dataset
+    rng = np.random.default_rng(7)
+    data = rng.integers(0, 256, (NUM_CHANNELS, 5, 3, 7), dtype=np.uint8)
+    ds.write(Vec3Int(3, 5, 1), data)
+    result = ds.read(Vec3Int(3, 5, 1), Vec3Int(5, 3, 7))
+    np.testing.assert_array_equal(result, data)
+
+
+def test_write_preserves_unwritten_region(
+    fresh_dataset: tuple[WkwDataset, UPath],
+) -> None:
+    ds, _ = fresh_dataset
+    rng = np.random.default_rng(13)
+    first = rng.integers(0, 256, (NUM_CHANNELS, SHARD, SHARD, SHARD), dtype=np.uint8)
+    ds.write(Vec3Int(0, 0, 0), first)
+    # Overwrite only a sub-region
+    patch = rng.integers(
+        0, 256, (NUM_CHANNELS, CHUNK_LEN, CHUNK_LEN, CHUNK_LEN), dtype=np.uint8
+    )
+    ds.write(Vec3Int(0, 0, 0), patch)
+    result = ds.read(Vec3Int(0, 0, 0), Vec3Int(SHARD, SHARD, SHARD))
+    np.testing.assert_array_equal(result[:, :CHUNK_LEN, :CHUNK_LEN, :CHUNK_LEN], patch)
+    np.testing.assert_array_equal(
+        result[:, CHUNK_LEN:, :, :], first[:, CHUNK_LEN:, :, :]
+    )
+
+
+def test_write_cross_shard(fresh_dataset: tuple[WkwDataset, UPath]) -> None:
+    ds, _ = fresh_dataset
+    rng = np.random.default_rng(99)
+    # Region that straddles the boundary between shard x=0 and shard x=1
+    offset = Vec3Int(SHARD - CHUNK_LEN // 2, 0, 0)
+    size = Vec3Int(CHUNK_LEN, SHARD, SHARD)
+    data = rng.integers(0, 256, (NUM_CHANNELS,) + size.to_tuple(), dtype=np.uint8)
+    ds.write(offset, data)
+    result = ds.read(offset, size)
+    np.testing.assert_array_equal(result, data)
+
+
+def test_write_readable_by_native_wkw(fresh_dataset: tuple[WkwDataset, UPath]) -> None:
+    ds, path = fresh_dataset
+    rng = np.random.default_rng(42)
+    data = rng.integers(0, 256, (NUM_CHANNELS, SHARD, SHARD, SHARD), dtype=np.uint8)
+    ds.write(Vec3Int(0, 0, 0), data)
+    with wkw.Dataset.open(str(path)) as native:
+        result = native.read((0, 0, 0), (SHARD, SHARD, SHARD))
+    np.testing.assert_array_equal(result, data)

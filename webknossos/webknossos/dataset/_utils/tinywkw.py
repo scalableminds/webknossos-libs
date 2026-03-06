@@ -1,4 +1,4 @@
-"""Read-only WKW format reader compatible with UPath."""
+"""WKW format reader/writer compatible with UPath."""
 
 import io
 import struct
@@ -18,6 +18,9 @@ VOXEL_TYPES: dict[int, np.dtype] = {
     0x05: np.dtype("float32"),
     0x06: np.dtype("float64"),
 }
+VOXEL_TYPE_KEYS: dict[np.dtype, int] = {v: k for k, v in VOXEL_TYPES.items()}
+
+ALL_SEL = (slice(None),)
 
 
 class ChunkType(IntEnum):
@@ -54,7 +57,7 @@ class WkwHeader:
         assert data[3] == 1
         per_dim_log2 = data[4]
         chunk_shape = Vec3Int.full(1 << (per_dim_log2 & 0x0F))
-        shard_shape = Vec3Int.full(1 << ((per_dim_log2 >> 4) & 0x0F))
+        shard_shape = Vec3Int.full(1 << ((per_dim_log2 >> 4) & 0x0F)) * chunk_shape
         chunk_type = ChunkType(data[5])
         voxel_dtype = VOXEL_TYPES[data[6]]
         voxel_size = data[7]
@@ -69,13 +72,37 @@ class WkwHeader:
             data_offset=data_offset,
         )
 
+    def to_bytes(self) -> bytes:
+        chunk_len_log2 = self.block_len.bit_length() - 1
+        shard_len_log2 = self.file_len.bit_length() - 1
+        per_dim_log2 = (chunk_len_log2 & 0x0F) | ((shard_len_log2 & 0x0F) << 4)
+        voxel_size = self.num_channels * self.voxel_dtype.itemsize
+        num_chunks = self.file_len**3
+        data_offset = 16 if self.chunk_type == ChunkType.RAW else 16 + num_chunks * 8
+        return (
+            b"WKW\x01"
+            + bytes(
+                [
+                    per_dim_log2,
+                    self.chunk_type.value,
+                    VOXEL_TYPE_KEYS[self.voxel_dtype],
+                    voxel_size,
+                ]
+            )
+            + struct.pack("<Q", data_offset)
+        )
+
+    # ------------------------------------------------------------------
+    # Compatibility with wkw.Header
+    # ------------------------------------------------------------------
+
     @property
     def block_len(self) -> int:
         return self.chunk_shape.x
 
     @property
     def file_len(self) -> int:
-        return self.shard_shape.x
+        return self.shard_shape.x // self.chunk_shape.x
 
     @property
     def block_type(self) -> int:
@@ -87,7 +114,7 @@ class WkwHeader:
 
 
 class WkwDataset:
-    """Read-only WKW dataset reader using UPath for remote-compatible I/O."""
+    """WKW dataset reader/writer using UPath for remote-compatible I/O."""
 
     def __init__(self, path: UPath, header: WkwHeader) -> None:
         self._path = path
@@ -106,6 +133,18 @@ class WkwDataset:
     def close(self) -> None:
         """Close the dataset."""
         pass
+
+    def _shard_path(self, shard_address: Vec3Int) -> UPath:
+        return (
+            self._path
+            / f"z{shard_address.z}"
+            / f"y{shard_address.y}"
+            / f"x{shard_address.x}.wkw"
+        )
+
+    # ------------------------------------------------------------------
+    # Read
+    # ------------------------------------------------------------------
 
     def read(self, topleft: Vec3Int, size: Vec3Int) -> np.ndarray:
         """Read voxel data for the given bounding box.
@@ -127,7 +166,6 @@ class WkwDataset:
         bbox_xyz = bbox.denormalize()
         assert isinstance(bbox_xyz, BoundingBox)
         header = self._header
-        voxels_per_shard = header.shard_shape * header.chunk_shape
 
         size = bbox_xyz.size
         output = np.zeros(
@@ -137,29 +175,23 @@ class WkwDataset:
         )
 
         for shard_bbox in bbox_xyz.chunk(
-            voxels_per_shard, chunk_border_alignments=voxels_per_shard
+            header.shard_shape, chunk_border_alignments=header.shard_shape
         ):
-            file_index = shard_bbox.topleft // voxels_per_shard
-            self._read_file_into(file_index, bbox_xyz, output)
+            shard_address = shard_bbox.topleft // header.shard_shape
+            self._read_shard_into(shard_address, bbox_xyz, output)
         return output
 
-    def _read_file_into(
+    def _read_shard_into(
         self,
-        file_index: Vec3Int,
+        shard_address: Vec3Int,
         bbox: BoundingBox,
         output: np.ndarray,
     ) -> None:
-        file_path = (
-            self._path
-            / f"z{file_index.z}"
-            / f"y{file_index.y}"
-            / f"x{file_index.x}.wkw"
-        )
+        file_path = self._shard_path(shard_address)
         if not file_path.exists():
             return
         header = self._header
-        voxels_per_shard = header.shard_shape * header.chunk_shape
-        chunk_bytes = (
+        num_chunk_bytes = (
             header.chunk_shape.x
             * header.chunk_shape.y
             * header.chunk_shape.z
@@ -167,15 +199,15 @@ class WkwDataset:
             * header.voxel_dtype.itemsize
         )
 
-        file_origin = file_index * voxels_per_shard
-        shard_bbox = bbox.intersected_with(
-            bbox.with_topleft(file_origin).with_size(voxels_per_shard)
-        )
+        shard_topleft = shard_address * header.shard_shape
+        full_shard_bbox = BoundingBox(shard_topleft, header.shard_shape)
+        shard_bbox = bbox.intersected_with(full_shard_bbox)
 
         # if full shard is requested, pre-load the whole file
-        full_shard = shard_bbox.size == voxels_per_shard
         f_ctx = (
-            io.BytesIO(file_path.read_bytes()) if full_shard else file_path.open("rb")
+            io.BytesIO(file_path.read_bytes())
+            if shard_bbox == full_shard_bbox
+            else file_path.open("rb")
         )
 
         with f_ctx as f:
@@ -196,32 +228,148 @@ class WkwDataset:
             for chunk_bbox in shard_bbox.chunk(
                 header.chunk_shape, chunk_border_alignments=header.chunk_shape
             ):
-                local_chunk = (
-                    chunk_bbox.topleft // header.chunk_shape
-                    - file_index * header.shard_shape
+                morton_index = _morton_encode(
+                    chunk_bbox.offset(-shard_bbox.topleft).topleft // header.chunk_shape
                 )
-                morton_index = _morton_encode(local_chunk)
                 if header.chunk_type == ChunkType.RAW:
-                    f.seek(shard_data_offset + morton_index * chunk_bytes)
-                    raw_chunk = f.read(chunk_bytes)
+                    f.seek(shard_data_offset + morton_index * num_chunk_bytes)
+                    raw_chunk = f.read(num_chunk_bytes)
                 else:
+                    assert jump_table is not None, (
+                        "jump_table must be present for compressed chunks"
+                    )
                     compressed_start = (
-                        int(jump_table[morton_index - 1])  # type: ignore[index]
+                        int(jump_table[morton_index - 1])
                         if morton_index > 0
                         else shard_data_offset
                     )
-                    compressed_end = int(jump_table[morton_index])  # type: ignore[index]
+                    compressed_end = int(jump_table[morton_index])
                     f.seek(compressed_start)
                     raw_chunk = lz4.block.decompress(
                         f.read(compressed_end - compressed_start),
-                        uncompressed_size=chunk_bytes,
+                        uncompressed_size=num_chunk_bytes,
                     )
                 chunk_data = np.frombuffer(raw_chunk, dtype=header.voxel_dtype).reshape(
                     (header.num_channels,) + header.chunk_shape.to_tuple(),
                     order="F",
                 )
 
-                all_sel = (slice(None),)
-                chunk_sel = all_sel + chunk_bbox.offset(-chunk_bbox.topleft).to_slices()
-                output_sel = all_sel + chunk_bbox.offset(-bbox.topleft).to_slices()
+                chunk_sel = ALL_SEL + chunk_bbox.offset(-chunk_bbox.topleft).to_slices()
+                output_sel = ALL_SEL + chunk_bbox.offset(-bbox.topleft).to_slices()
                 output[output_sel] = chunk_data[chunk_sel]
+
+    # ------------------------------------------------------------------
+    # Write
+    # ------------------------------------------------------------------
+
+    def write(self, topleft: Vec3Int, data: np.ndarray) -> None:
+        """Write voxel data starting at `topleft`.
+
+        `data` must have shape (num_channels, x, y, z) in Fortran order.
+        """
+        size = Vec3Int(*data.shape[1:])
+        self.write_bbox(
+            BoundingBox(topleft, size).normalize_axes(self.header.num_channels),
+            data,
+        )
+
+    def write_bbox(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
+        """Write voxel data for the given bounding box.
+
+        `data` must have shape (num_channels, x, y, z) in Fortran order.
+        """
+        assert bbox.axes == ("c", "x", "y", "z")
+        bbox_xyz = bbox.denormalize()
+        assert isinstance(bbox_xyz, BoundingBox)
+        header = self._header
+
+        for shard_bbox in bbox_xyz.chunk(
+            header.shard_shape, chunk_border_alignments=header.shard_shape
+        ):
+            shard_address = shard_bbox.topleft // header.shard_shape
+            self._write_shard_from(shard_address, bbox_xyz, data)
+
+    def _write_shard_from(
+        self,
+        shard_address: Vec3Int,
+        bbox: BoundingBox,
+        data: np.ndarray,
+    ) -> None:
+        header = self._header
+        shard_topleft = shard_address * header.shard_shape
+        full_shard_bbox = BoundingBox(shard_topleft, header.shard_shape)
+        shard_bbox = bbox.intersected_with(full_shard_bbox)
+
+        if shard_bbox == full_shard_bbox:
+            # Fast path: the entire region is already present in the file
+            data_sel = ALL_SEL + shard_bbox.offset(-bbox.topleft).to_slices()
+            shard_buffer = data[data_sel]
+            self._write_shard(shard_address, shard_buffer)
+            return
+
+        # Allocate shard buffer; read existing file if present (preserves unwritten regions)
+        shard_buffer = np.zeros(
+            (header.num_channels,) + header.shard_shape.to_tuple(),
+            dtype=header.voxel_dtype,
+            order="F",
+        )
+        if self._shard_path(shard_address).exists():
+            self._read_shard_into(shard_address, full_shard_bbox, shard_buffer)
+
+        # Merge new data into shard buffer
+        shard_sel = ALL_SEL + shard_bbox.offset(-shard_topleft).to_slices()
+        data_sel = ALL_SEL + shard_bbox.offset(-bbox.topleft).to_slices()
+        shard_buffer[shard_sel] = data[data_sel]
+
+        self._write_shard(shard_address, shard_buffer)
+
+    def _write_shard(self, shard_address: Vec3Int, shard_buffer: np.ndarray) -> None:
+        header = self._header
+        shard_topleft = shard_address * header.shard_shape
+        full_shard_bbox = BoundingBox(shard_topleft, header.shard_shape)
+
+        num_chunks = header.shard_shape.x * header.shard_shape.y * header.shard_shape.z
+
+        # Build chunk payloads in Morton order
+        raw_chunks: list[bytes] = [b""] * num_chunks
+        for chunk_bbox in full_shard_bbox.chunk(
+            header.chunk_shape, chunk_border_alignments=header.chunk_shape
+        ):
+            morton_index = _morton_encode(
+                chunk_bbox.offset(-full_shard_bbox.topleft).topleft
+                // header.chunk_shape
+            )
+            chunk_sel = ALL_SEL + chunk_bbox.offset(-shard_topleft).to_slices()
+            raw_chunks[morton_index] = shard_buffer[chunk_sel].tobytes(order="F")
+
+        file_path = self._shard_path(shard_address)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if header.chunk_type == ChunkType.RAW:
+            with file_path.open("wb") as f:
+                f.write(header.to_bytes())
+                for raw_chunk in raw_chunks:
+                    f.write(raw_chunk)
+        else:
+            import lz4.block  # noqa: PLC0415
+
+            compression_mode = (
+                "high_compression"
+                if header.chunk_type == ChunkType.LZ4HC
+                else "default"
+            )
+            compressed_chunks = [
+                lz4.block.compress(rc, store_size=False, mode=compression_mode)
+                for rc in raw_chunks
+            ]
+            data_offset = 16 + num_chunks * 8
+            jump_table = np.zeros(num_chunks, dtype="<u8")
+            offset = data_offset
+            for i, c in enumerate(compressed_chunks):
+                offset += len(c)
+                jump_table[i] = offset
+            with file_path.open("wb") as f:
+                f.write(header.to_bytes())
+                f.write(jump_table.tobytes())
+                for c in compressed_chunks:
+                    f.write(c)
