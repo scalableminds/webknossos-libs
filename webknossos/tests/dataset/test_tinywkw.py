@@ -40,7 +40,7 @@ def test_header_magic_and_version() -> None:
     assert header.chunk_shape == Vec3Int.full(CHUNK_LEN)
     assert header.shard_shape == Vec3Int.full(SHARD_LEN) * Vec3Int.full(CHUNK_LEN)
     assert header.num_channels == NUM_CHANNELS
-    assert header.voxel_dtype == np.dtype("uint8")
+    assert header.voxel_type == np.dtype("uint8")
     # header.wkw stores data_offset=0 (no actual data); shard files store 16 for RAW
     assert header.data_offset == 0
 

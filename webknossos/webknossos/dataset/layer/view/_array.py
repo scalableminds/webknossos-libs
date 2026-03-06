@@ -272,9 +272,6 @@ class WKWArray(BaseArray):
 
     @classmethod
     def create(cls, path: UPath, array_info: ArrayInfo) -> "WKWArray":
-        assert is_fs_path(path), (
-            "Creating WKW arrays is only supported for local paths."
-        )
         assert array_info.data_format == cls.data_format
         assert array_info.bounding_box.axes == ("c", "x", "y", "z")
 
@@ -301,23 +298,44 @@ class WKWArray(BaseArray):
             f"`chunks_per_shard` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunks_per_shard.x}."
         )
 
-        try:
-            wkw.Dataset.create(
-                str(path),
-                wkw.Header(
-                    voxel_type=array_info.voxel_type,
-                    num_channels=array_info.bounding_box.size.c,
-                    block_len=array_info.chunk_shape.x,
-                    file_len=array_info.chunks_per_shard.x,
-                    block_type=(
-                        wkw.Header.BLOCK_TYPE_LZ4HC
-                        if array_info.compression_mode
-                        else wkw.Header.BLOCK_TYPE_RAW
+        if is_fs_path(path):
+            try:
+                wkw.Dataset.create(
+                    str(path),
+                    wkw.Header(
+                        voxel_type=array_info.voxel_type,
+                        num_channels=array_info.bounding_box.size.c,
+                        block_len=array_info.chunk_shape.x,
+                        file_len=array_info.chunks_per_shard.x,
+                        block_type=(
+                            wkw.Header.BLOCK_TYPE_LZ4HC
+                            if array_info.compression_mode
+                            else wkw.Header.BLOCK_TYPE_RAW
+                        ),
                     ),
-                ),
-            ).close()
-        except wkw.wkw.WKWException as e:
-            raise ArrayException(f"Exception while creating array {path}") from e
+                ).close()
+            except wkw.wkw.WKWException as e:
+                raise ArrayException(f"Exception while creating array {path}") from e
+        else:
+            try:
+                from webknossos.dataset._utils.tinywkw import ChunkType, WkwHeader
+
+                WkwDataset.create(
+                    path,
+                    WkwHeader(
+                        chunk_shape=array_info.chunk_shape,
+                        shard_shape=array_info.shard_shape,
+                        chunk_type=(
+                            ChunkType.LZ4HC
+                            if array_info.compression_mode
+                            else ChunkType.RAW
+                        ),
+                        voxel_type=array_info.voxel_type,
+                        num_channels=array_info.bounding_box.size.c,
+                    ),
+                )
+            except Exception as e:
+                raise ArrayException(f"Exception while creating array {path}") from e
         return WKWArray(path)
 
     def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
@@ -326,9 +344,6 @@ class WKWArray(BaseArray):
 
     def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
         assert bbox.axes == ("c", "x", "y", "z")
-        assert isinstance(self._wkw_dataset, wkw.Dataset), (
-            "Writing to WKW is only supported for local datasets."
-        )
         self._wkw_dataset.write(bbox.topleft.xyz, data)
 
     def resize(self, new_bbox: NormalizedBoundingBox) -> None:

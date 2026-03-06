@@ -47,9 +47,9 @@ class WkwHeader:
     chunk_shape: Vec3Int
     shard_shape: Vec3Int
     chunk_type: ChunkType
-    voxel_dtype: np.dtype
+    voxel_type: np.dtype
     num_channels: int
-    data_offset: int
+    data_offset: int | None = None
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "WkwHeader":
@@ -59,33 +59,36 @@ class WkwHeader:
         chunk_shape = Vec3Int.full(1 << (per_dim_log2 & 0x0F))
         shard_shape = Vec3Int.full(1 << ((per_dim_log2 >> 4) & 0x0F)) * chunk_shape
         chunk_type = ChunkType(data[5])
-        voxel_dtype = VOXEL_TYPES[data[6]]
+        voxel_type = VOXEL_TYPES[data[6]]
         voxel_size = data[7]
         data_offset = struct.unpack_from("<Q", data, 8)[0]
-        num_channels = voxel_size // voxel_dtype.itemsize
+        num_channels = voxel_size // voxel_type.itemsize
         return cls(
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
             chunk_type=chunk_type,
-            voxel_dtype=voxel_dtype,
+            voxel_type=voxel_type,
             num_channels=num_channels,
             data_offset=data_offset,
         )
 
-    def to_bytes(self) -> bytes:
+    def to_bytes(self, data_offset: int | None = None) -> bytes:
         chunk_len_log2 = self.block_len.bit_length() - 1
         shard_len_log2 = self.file_len.bit_length() - 1
         per_dim_log2 = (chunk_len_log2 & 0x0F) | ((shard_len_log2 & 0x0F) << 4)
-        voxel_size = self.num_channels * self.voxel_dtype.itemsize
-        num_chunks = self.file_len**3
-        data_offset = 16 if self.chunk_type == ChunkType.RAW else 16 + num_chunks * 8
+        voxel_size = self.num_channels * self.voxel_type.itemsize
+        if data_offset is None:
+            num_chunks = self.file_len**3
+            data_offset = (
+                16 if self.chunk_type == ChunkType.RAW else 16 + num_chunks * 8
+            )
         return (
             b"WKW\x01"
             + bytes(
                 [
                     per_dim_log2,
                     self.chunk_type.value,
-                    VOXEL_TYPE_KEYS[self.voxel_dtype],
+                    VOXEL_TYPE_KEYS[self.voxel_type],
                     voxel_size,
                 ]
             )
@@ -108,10 +111,6 @@ class WkwHeader:
     def block_type(self) -> int:
         return self.chunk_type.value
 
-    @property
-    def voxel_type(self) -> np.dtype:
-        return self.voxel_type
-
 
 class WkwDataset:
     """WKW dataset reader/writer using UPath for remote-compatible I/O."""
@@ -128,6 +127,13 @@ class WkwDataset:
     def open(cls, path: UPath) -> "WkwDataset":
         """Open a WKW dataset at `path` (must contain `header.wkw`)."""
         header = WkwHeader.from_bytes((path / "header.wkw").read_bytes())
+        return cls(path, header)
+
+    @classmethod
+    def create(cls, path: UPath, header: WkwHeader) -> "WkwDataset":
+        """Create a new WKW dataset at `path`, writing `header.wkw` with data_offset=0."""
+        path.mkdir(parents=True, exist_ok=True)
+        (path / "header.wkw").write_bytes(header.to_bytes(data_offset=0))
         return cls(path, header)
 
     def close(self) -> None:
@@ -170,7 +176,7 @@ class WkwDataset:
         size = bbox_xyz.size
         output = np.zeros(
             (header.num_channels,) + size.to_tuple(),
-            dtype=header.voxel_dtype,
+            dtype=header.voxel_type,
             order="F",
         )
 
@@ -196,7 +202,7 @@ class WkwDataset:
             * header.chunk_shape.y
             * header.chunk_shape.z
             * header.num_channels
-            * header.voxel_dtype.itemsize
+            * header.voxel_type.itemsize
         )
 
         shard_topleft = shard_address * header.shard_shape
@@ -250,7 +256,7 @@ class WkwDataset:
                         f.read(compressed_end - compressed_start),
                         uncompressed_size=num_chunk_bytes,
                     )
-                chunk_data = np.frombuffer(raw_chunk, dtype=header.voxel_dtype).reshape(
+                chunk_data = np.frombuffer(raw_chunk, dtype=header.voxel_type).reshape(
                     (header.num_channels,) + header.chunk_shape.to_tuple(),
                     order="F",
                 )
@@ -315,7 +321,7 @@ class WkwDataset:
         # Allocate shard buffer; read existing file if present (preserves unwritten regions)
         shard_buffer = np.zeros(
             (header.num_channels,) + header.shard_shape.to_tuple(),
-            dtype=header.voxel_dtype,
+            dtype=header.voxel_type,
             order="F",
         )
         if self._shard_path(shard_address).exists():

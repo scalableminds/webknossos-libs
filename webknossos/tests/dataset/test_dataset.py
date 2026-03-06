@@ -55,6 +55,7 @@ def start_minio() -> Iterator[None]:
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr, DataFormat.Zarr3]
 DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.WKW, TESTOUTPUT_DIR),
+    (DataFormat.WKW, REMOTE_TESTOUTPUT_DIR),
     (DataFormat.Zarr, TESTOUTPUT_DIR),
     (DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR),
     (DataFormat.Zarr3, TESTOUTPUT_DIR),

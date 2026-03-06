@@ -1113,9 +1113,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
             )
 
-        assert is_fs_path(self.path) or data_format != DataFormat.WKW, (
-            "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
-        )
         bounding_box = bounding_box or BoundingBox((0, 0, 0), (0, 0, 0))
         bounding_box = bounding_box.normalize_axes(num_channels)
         layer_properties = LayerProperties(
@@ -2350,12 +2347,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             assert is_fs_path(new_dataset_path), (
                 "Cannot create WKW-based remote datasets. Use `data_format='zarr3'` instead."
             )
-        if data_format is None and any(
-            layer.data_format == DataFormat.WKW for layer in self.layers.values()
-        ):
-            assert is_fs_path(new_dataset_path), (
-                "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
-            )
 
         if voxel_size_with_unit is None:
             if voxel_size is None:
@@ -2423,11 +2414,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         warn_deprecated("fs_copy_dataset", "copy_dataset")
 
         new_dataset_path = UPath(new_dataset_path)
-
-        if any(layer.data_format == DataFormat.WKW for layer in self.layers.values()):
-            assert is_fs_path(new_dataset_path), (
-                "Cannot create WKW layers in remote datasets. Use `Dataset.copy_dataset` with `data_format='zarr3'`."
-            )
 
         new_dataset = Dataset(
             new_dataset_path,

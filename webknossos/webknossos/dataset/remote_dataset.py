@@ -835,9 +835,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
             )
 
-        assert data_format != DataFormat.WKW, (
-            "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
-        )
         bounding_box = bounding_box or BoundingBox((0, 0, 0), (0, 0, 0))
         bounding_box = bounding_box.normalize_axes(num_channels)
         layer_properties = LayerProperties(
