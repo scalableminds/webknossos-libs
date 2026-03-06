@@ -13,7 +13,7 @@ The conversion commands allow you to transform various types of images or image 
 
 ## `convert`
 
-The `convert` command automatically detects an image stack and converts it into a WEBKNOSSOS dataset.
+The `convert` command automatically detects an image stack and converts it into a WEBKNOSSOS dataset. It can save the result locally or convert and upload directly to a WEBKNOSSOS server in one step using `--upload`.
 
 ### Supported input formats
 
@@ -24,100 +24,159 @@ The `convert` command automatically detects an image stack and converts it into 
 ### Usage
 
 ```bash
-webknossos convert [OPTIONS] SOURCE TARGET
+webknossos convert [OPTIONS] SOURCE [TARGET]
 ```
 
 ### Arguments
 
-- **SOURCE**  
-    Path to the source image stack.  
+- **SOURCE**
+    Path to the source image stack.
     Example: `/path/to/source/images`.
 
-- **TARGET**  
-    Path to the target WEBKNOSSOS dataset.  
+- **TARGET**
+    Path to the target WEBKNOSSOS dataset.
+    Required unless `--upload` is set.
     Example: `/path/to/target/dataset`.
 
 ### Options
 
-- `--voxel-size`  
-    The size of one voxel in the source data in nanometers.  
+- `--voxel-size`
+    The size of one voxel in the source data in nanometers.
     Example: `--voxel-size 11.0,11.0,20.0`.
 
-- `--unit`  
-    The unit of the voxel size.  
+- `--unit`
+    The unit of the voxel size.
     Default: `nanometers`.
 
-- `--layer-name`  
-    Name of the layer to be created.  
+- `--layer-name`
+    Name of the layer to be created.
     Default: `None`.
 
-- `--data-format`  
-    Data format to store the target dataset.  
-    Options: `wkw`, `zarr`, `zarr3`  
+- `--name`
+    Name for the WEBKNOSSOS dataset.
+    If not provided, the final component of the target path is used (local) or the source directory name (upload).
+
+- `--category`
+    The category of the layer that should be created.
+    Options: `color`, `segmentation`.
+    Default: `None` (auto-detected).
+
+- `--data-format`
+    Data format to store the target dataset.
+    Options: `wkw`, `zarr`, `zarr3`
     Default: `zarr3`.
 
-- `--chunk-shape`  
-    Number of voxels to be stored as a chunk in the output format.  
+- `--chunk-shape`
+    Number of voxels to be stored as a chunk in the output format.
     Example: `--chunk-shape 32,32,32`.
 
-- `--shard-shape`  
-    Number of voxels to be stored as a shard in the output format.  
+- `--shard-shape`
+    Number of voxels to be stored as a shard in the output format.
     Example: `--shard-shape 1024,1024,1024`.
 
-- `--compress`  
-    Enable compression of the target dataset.  
+- `--compress`
+    Enable compression of the target dataset.
     Default: `True`.
 
-- `--downsample`  
-    Downsample the target dataset. 
+- `--downsample`
+    Downsample the target dataset.
     Default: `True`.
 
-- `--max-mag`  
+- `--max-mag`
     Create downsampled magnifications up to the magnification specified by this argument.
-    If omitted, the coarsest magnification will be determined by using the bounding box of the layer
+    If omitted, the coarsest magnification will be determined by using the bounding box of the layer.
     Example: `--max-mag 2-2-1`.
 
-- `--interpolation-mode`  
+- `--interpolation-mode`
     The interpolation mode that should be used.
     Options: `median`, `mode`, `nearest`, `bilinear`, `bicubic`.
     Default: `default` (= `mode` for segmentation, `median` for color).
 
-- `--sampling-mode`  
+- `--sampling-mode`
     The sampling mode to use.
     Options: `anisotropic`, `isotropic`, `constant_z`.
     Default: `anisotropic`.
 
-- `--overwrite-existing`  
-    Clear target folder, if it already exists. Not enabled by default. Use with caution.  
-
-- `--jobs`  
-    Number of processes to be spawned for parallel execution.  
-    Default: Number of CPU cores.
-
-- `--distribution-strategy`  
-    Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`. 
-    Default: `multiprocessing`.
-
-- `--batch-size`  
-    Number of images to be processed in one batch (influences RAM consumption). 
+- `--batch-size`
+    Number of images to be processed in one batch (influences RAM consumption).
     When creating a WKW dataset, batch-size must be a multiple of chunk-shape's z dimension.
-    When converting to Zarr or Zarr3, batch-size must be a multiple of the z dimension of the 
+    When converting to Zarr or Zarr3, batch-size must be a multiple of the z dimension of the
     shard shape (chunk-shape x chunks-per-shard).
     Default: None (= z dimension of shard-shape).
+
+- `--overwrite-existing`
+    Clear target folder, if it already exists. Not enabled by default. Use with caution.
+
+- `--jobs`
+    Number of processes to be spawned for parallel execution.
+    Default: Number of CPU cores.
+
+- `--distribution-strategy`
+    Strategy to distribute the task across CPUs or nodes.
+    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`.
+    Default: `multiprocessing`.
+
+- `--job-resources`
+    JSON string to specify resources for jobs when using the SLURM distribution strategy.
+    Example: `--job-resources '{"mem": "10M"}'`.
+
+#### WEBKNOSSOS context
+
+The following options are only used when `--upload` is set.
+
+- `--upload`
+    Convert to a temporary directory and upload the result to a WEBKNOSSOS server.
+    `TARGET` must not be provided when this flag is set.
+
+- `--webknossos-url`
+    URL to the WEBKNOSSOS instance.
+    Can also be provided via the `WK_URL` environment variable.
+
+- `--token`
+    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/auth/token).
+    Can also be provided via the `WK_TOKEN` environment variable.
+
+- `--folder`
+    WEBKNOSSOS dataset folder in which the dataset should be placed. Specify the folder path as a string, separated by `/`. Example: `Datasets/mySubfolder`.
+    If not provided, the root folder is used.
 
 ### Example Commands
 
 Convert an image stack locally:
 
 ```bash
-webknossos convert /path/to/source/images /path/to/target/dataset
+webknossos convert --voxel-size 11.0,11.0,20.0 /path/to/source/images /path/to/target/dataset
 ```
 
 Convert an image stack using parallel execution:
 
 ```bash
-webknossos convert --jobs 4 /path/to/source/images /path/to/target/dataset
+webknossos convert --voxel-size 11.0,11.0,20.0 --jobs 4 /path/to/source/images /path/to/target/dataset
+```
+
+Convert and upload to a WEBKNOSSOS server:
+
+```bash
+webknossos convert --upload --token YOUR_TOKEN --voxel-size 11.0,11.0,20.0 /path/to/source/images
+```
+
+Convert and upload to a custom server with a specific name and folder:
+
+```bash
+webknossos convert \
+    --upload \
+    --webknossos-url https://webknossos.example.com \
+    --token YOUR_TOKEN \
+    --name my_dataset \
+    --folder "Datasets/Experiments" \
+    --voxel-size 11.0,11.0,20.0 \
+    /path/to/source/images
+```
+
+Convert and upload without downsampling:
+
+```bash
+webknossos convert --upload --token YOUR_TOKEN --no-downsample --voxel-size 11.0,11.0,20.0 /path/to/source/images
 ```
 
 ---

@@ -2,24 +2,24 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Annotated, Any
+from typing import Annotated
 
 import typer
+from upath import UPath
 
-from ..dataset import Dataset, SamplingModes
+from ..dataset import SamplingModes
 from ..geometry import Mag
 from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, SamplingMode, parse_mag, parse_path
+from ._utils import DistributionStrategy, SamplingMode, open_dataset, parse_mag
 
 
 def main(
     *,
     source: Annotated[
-        Any,
+        str,
         typer.Argument(
-            help="Path to your WEBKNOSSOS dataset.",
+            help="Path to your WEBKNOSSOS dataset, or URL to a dataset on a WEBKNOSSOS server.",
             show_default=False,
-            parser=parse_path,
         ),
     ],
     sampling_mode: Annotated[
@@ -36,7 +36,16 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
     layer_name: Annotated[
         str | None,
         typer.Option(
-            help="Name of the layer that should be downsampled.", show_default=False
+            help="Name of the layer that should be upsampled.", show_default=False
+        ),
+    ] = None,
+    token: Annotated[
+        str | None,
+        typer.Option(
+            help="Authentication token for WEBKNOSSOS instance "
+            "(https://webknossos.org/auth/token).",
+            rich_help_panel="WEBKNOSSOS context",
+            envvar="WK_TOKEN",
         ),
     ] = None,
     jobs: Annotated[
@@ -69,26 +78,17 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
         distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
-    dataset = Dataset.open(source)
     mode = SamplingModes.parse(sampling_mode.value)
 
-    if layer_name is None:
-        upsample_all_layers(dataset, mode, from_mag, executor_args)
-    else:
-        with get_executor_for_args(args=executor_args) as executor:
-            layer = dataset.get_layer(layer_name)
-            layer.upsample(from_mag=from_mag, sampling_mode=mode, executor=executor)
-
-
-def upsample_all_layers(
-    dataset: Dataset, mode: SamplingModes, from_mag: Mag, executor_args: Namespace
-) -> None:
-    """Iterates over all layers and upsamples them."""
-
-    for layer in dataset.layers.values():
-        with get_executor_for_args(args=executor_args) as executor:
-            layer.upsample(
-                from_mag=from_mag,
-                sampling_mode=mode,
-                executor=executor,
-            )
+    with open_dataset(UPath(source), annotation_ok=False, token=token) as dataset:
+        if layer_name is None:
+            for layer in dataset.layers.values():
+                with get_executor_for_args(args=executor_args) as executor:
+                    layer.upsample(
+                        from_mag=from_mag, sampling_mode=mode, executor=executor
+                    )
+        else:
+            with get_executor_for_args(args=executor_args) as executor:
+                dataset.get_layer(layer_name).upsample(
+                    from_mag=from_mag, sampling_mode=mode, executor=executor
+                )

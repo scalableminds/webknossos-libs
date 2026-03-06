@@ -2,6 +2,7 @@ import json
 import warnings
 from collections.abc import Iterator
 from shutil import copytree
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -10,7 +11,7 @@ from tifffile import TiffFile
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR
-from webknossos.dataset import Dataset
+from webknossos.dataset import Dataset, RemoteDataset
 from webknossos.geometry import VecInt
 
 
@@ -143,3 +144,30 @@ def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
             )
 
             assert all("/" not in layername for layername in dataset.layers)
+
+
+def test_remote_dataset_from_images() -> None:
+    """Test that RemoteDataset.from_images converts images and calls upload."""
+    mock_remote_ds = MagicMock(spec=RemoteDataset)
+
+    with patch.object(Dataset, "upload", return_value=mock_remote_ds) as mock_upload:
+        with SequentialExecutor() as executor:
+            result = RemoteDataset.from_images(
+                TESTDATA_DIR / "tiff",
+                voxel_size=(1, 1, 1),
+                name="test_remote",
+                compress=True,
+                layer_name="tiff_layer",
+                layer_category="segmentation",
+                shard_shape=(256, 256, 256),
+                map_filepath_to_layer_name=Dataset.ConversionLayerMapping.ENFORCE_SINGLE_LAYER,
+                executor=executor,
+                url="http://localhost:9000",
+                token="test_token",
+            )
+
+    assert result is mock_remote_ds
+    mock_upload.assert_called_once_with(
+        new_dataset_name="test_remote",
+        folder=None,
+    )

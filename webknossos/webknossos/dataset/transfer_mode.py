@@ -6,7 +6,7 @@ from upath import UPath
 from webknossos.utils import copytree, is_fs_path
 
 
-class TransferMode(Enum):
+class TransferMode(str, Enum):
     """
     The transfer mode determines how mags or attachments are transferred to the remote or local storage.
     """

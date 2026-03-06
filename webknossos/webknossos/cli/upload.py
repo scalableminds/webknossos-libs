@@ -68,13 +68,16 @@ def main(
 ) -> None:
     """Upload a dataset to a WEBKNOSSOS server."""
 
+    print(transfer_mode)
+
     with webknossos_context(url=webknossos_url, token=token):
         folder_obj: None | RemoteFolder = None
         if folder is not None:
             folder_obj = RemoteFolder.get_by_path(folder)
-        Dataset.open(dataset_path=source).upload(
+        uploaded_dataset = Dataset.open(dataset_path=source).upload(
             new_dataset_name=dataset_name,
             jobs=jobs,
             folder=folder_obj,
             transfer_mode=transfer_mode,
         )
+        print(f"Uploaded dataset {uploaded_dataset.name} to {uploaded_dataset.url}")
