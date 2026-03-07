@@ -4,6 +4,7 @@ from .layer_to_link import LayerToLink
 from .remote_layer import RemoteLayer
 from .segmentation_layer import (
     AgglomerateAttachment,
+    AgglomerateGraph,
     Attachment,
     Attachments,
     ConnectomeAttachment,

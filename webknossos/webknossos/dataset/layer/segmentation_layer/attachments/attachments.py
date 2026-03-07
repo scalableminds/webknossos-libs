@@ -18,8 +18,8 @@ from webknossos.utils import (
     warn_deprecated,
 )
 
+from .agglomerate_attachment import AgglomerateAttachment
 from .attachment import (
-    AgglomerateAttachment,
     Attachment,
     ConnectomeAttachment,
     CumsumAttachment,
