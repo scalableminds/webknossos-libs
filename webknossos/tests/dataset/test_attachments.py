@@ -344,6 +344,7 @@ def test_unique_attachment_names(tmp_upath: UPath) -> None:
             data_format=AttachmentDataFormat.Zarr3,
         )
     )
+    # Attachment with the same name already exists
     with pytest.raises(ValueError):
         seg_layer.attachments.add_attachment_as_ref(
             MeshAttachment.from_path_and_name(

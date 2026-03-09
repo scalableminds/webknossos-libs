@@ -32,7 +32,7 @@ SAMPLE_BBOX = BoundingBox((3164, 3212, 1017), (10, 10, 10))
 
 
 @pytest.fixture
-def sample_remote_dataset(tmp_upath: UPath) -> Iterator[Dataset]:
+def sample_downloaded_dataset(tmp_upath: UPath) -> Iterator[Dataset]:
     yield RemoteDataset.open("l4_sample").download(
         path=tmp_upath / "l4_sample",
         bbox=BoundingBox((3457, 3323, 1204), (10, 10, 10)),
@@ -113,7 +113,7 @@ def test_remote_dataset_add_mag_as_copy() -> None:
 
 
 def test_add_remote_mags_from_mag_view(
-    sample_remote_dataset: Dataset,
+    sample_downloaded_dataset: Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
     remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
@@ -126,14 +126,14 @@ def test_add_remote_mags_from_mag_view(
         layer_type = remote_mag.layer.category
         assert is_remote_path(mag_path), "Remote mag does not have remote path."
         layer_name = f"test_remote_layer_{mag_path.parent.name}_{mag_path.name}_object"
-        new_layer = sample_remote_dataset.add_layer(
+        new_layer = sample_downloaded_dataset.add_layer(
             layer_name,
             layer_type,
             data_format=remote_mag.info.data_format,
             dtype=remote_mag.get_dtype(),
         )
         new_layer.add_mag_as_ref(remote_mag)
-        added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
+        added_mag = sample_downloaded_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert (
             str(added_mag.path) == str(mag_path)  # or added_mag.path == mag_path.parent
@@ -141,7 +141,7 @@ def test_add_remote_mags_from_mag_view(
 
 
 def test_add_remote_mags_from_path(
-    sample_remote_dataset: Dataset,
+    sample_downloaded_dataset: Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],
 ) -> None:
     remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
@@ -156,21 +156,21 @@ def test_add_remote_mags_from_path(
         assert is_remote_path(mag_path), "Remote mag does not have remote path."
         # Additional .parent calls are needed as the first .parent only removes the trailing slash.
         layer_name = f"test_remote_layer_{mag_path.parent.name}_{mag_path.name}_path"
-        new_layer = sample_remote_dataset.add_layer(
+        new_layer = sample_downloaded_dataset.add_layer(
             layer_name,
             layer_type,
             data_format=remote_mag.info.data_format,
             dtype=remote_mag.get_dtype(),
         )
         new_layer.add_mag_as_ref(str(remote_mag.path))
-        added_mag = sample_remote_dataset.layers[layer_name].mags[remote_mag.mag]
+        added_mag = sample_downloaded_dataset.layers[layer_name].mags[remote_mag.mag]
         # checking whether the added_mag.path matches the mag_url with or without a trailing slash.
         assert (
             str(added_mag.path) == str(mag_path)  # or added_mag.path == mag_path.parent
         ), "Added remote mag's path does not match remote path of mag added."
 
 
-def test_ref_layer_from_remote_layer(sample_remote_dataset: Dataset) -> None:
+def test_ref_layer_from_remote_layer(sample_downloaded_dataset: Dataset) -> None:
     remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     assert remote_dataset.zarr_streaming_path is not None, (
         "Zarr streaming sets a remote path."
@@ -181,8 +181,8 @@ def test_ref_layer_from_remote_layer(sample_remote_dataset: Dataset) -> None:
     sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
         layer_name = f"test_remote_layer_{layer.category}_object"
-        sample_remote_dataset.add_layer_as_ref(layer, layer_name)
-        new_layer = sample_remote_dataset.layers[layer_name]
+        sample_downloaded_dataset.add_layer_as_ref(layer, layer_name)
+        new_layer = sample_downloaded_dataset.layers[layer_name]
         assert is_remote_path(new_layer.get_mag(1).path) and (
             str(layer.get_mag(1).path) == str(new_layer.get_mag(1).path)
         ), "Mag path of added layer should be equal to mag path in source layer."

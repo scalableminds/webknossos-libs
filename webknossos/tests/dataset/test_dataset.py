@@ -3785,3 +3785,30 @@ def test_create_dataset_remote_storage() -> None:
         assert read_data.shape == (1, 16, 16, 16)
         assert read_data.dtype == np.uint8
         assert np.all(read_data == 1)
+
+
+def test_add_mag_ref_from_local_path(tmp_upath: UPath) -> None:
+    dataset1 = Dataset(tmp_upath / "origin", voxel_size=(10, 10, 10))
+    dataset1.write_layer(
+        "color",
+        COLOR_CATEGORY,
+        data=np.ones((1, 10, 10, 10), dtype="uint8"),
+        downsample=False,
+    )
+
+    dataset2 = Dataset(tmp_upath / "copy", voxel_size=(10, 10, 10))
+    layer1 = dataset2.add_layer_as_ref(tmp_upath / "origin" / "color")
+    layer1_mag1 = layer1.get_mag(1)
+
+    assert layer1_mag1.path == tmp_upath / "origin" / "color" / "1"
+    assert layer1_mag1._properties.path == str(
+        (tmp_upath / "origin" / "color" / "1").resolve()
+    )
+
+    layer2_mag1 = dataset2.add_layer("color2", COLOR_CATEGORY).add_mag_as_ref(
+        tmp_upath / "origin" / "color" / "1"
+    )
+    assert layer2_mag1.path == tmp_upath / "origin" / "color" / "1"
+    assert layer2_mag1._properties.path == str(
+        (tmp_upath / "origin" / "color" / "1").resolve()
+    )
