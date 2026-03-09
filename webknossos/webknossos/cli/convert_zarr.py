@@ -287,7 +287,6 @@ When converting a folder, this option is ignored."
         chunks_per_shard=chunks_per_shard,
     )
 
-    executor = make_executor(distribution_strategy, jobs, job_resources)
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     if overwrite_existing and target.exists():
@@ -304,7 +303,7 @@ When converting a folder, this option is ignored."
         voxel_size_with_unit=voxel_size_with_unit,
         flip_axes=flip_axes.to_tuple() if flip_axes else None,
         compress=compress,
-        executor=executor,
+        executor=make_executor(distribution_strategy, jobs, job_resources),
     )
 
     if downsample:
@@ -314,5 +313,5 @@ When converting a folder, this option is ignored."
             interpolation_mode=interpolation_mode,
             compress=compress,
             sampling_mode=sampling_mode,
-            executor=executor,
+            executor=make_executor(distribution_strategy, jobs, job_resources),
         )

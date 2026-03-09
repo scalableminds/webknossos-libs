@@ -5,7 +5,6 @@ from multiprocessing import cpu_count
 from typing import Annotated, Any
 
 import typer
-from cluster_tools import Executor
 
 from ..dataset import Dataset, Layer
 from ._utils import DistributionStrategy, make_executor, parse_path
@@ -69,8 +68,6 @@ def main(
 
     layer_names = list(source_layer_names)
 
-    executor = make_executor(distribution_strategy, jobs, job_resources)
-
     try:
         if layer_name is not None:
             assert layer_name in source_layer_names, (
@@ -89,7 +86,11 @@ def main(
 
         for name in layer_names:
             compare_layers(
-                source_dataset.get_layer(name), target_dataset.get_layer(name), executor
+                source_dataset.get_layer(name),
+                target_dataset.get_layer(name),
+                jobs,
+                distribution_strategy,
+                job_resources,
             )
 
         print(
@@ -104,7 +105,9 @@ def main(
 def compare_layers(
     source_layer: Layer,
     target_layer: Layer,
-    executor: Executor,
+    jobs: int,
+    distribution_strategy: DistributionStrategy,
+    job_resources: str | None,
 ) -> None:
     """Compares one layer with another layer"""
 
@@ -131,7 +134,7 @@ are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
         target_mag = target_layer.mags[mag]
 
         logger.info("Start verification of %s in mag %s", layer_name, mag)
-        with executor as executor:
+        with make_executor(distribution_strategy, jobs, job_resources) as executor:
             if not source_mag.content_is_equal(
                 target_mag,
                 executor=executor,

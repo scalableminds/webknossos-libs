@@ -240,8 +240,7 @@ def main(
     mode = SamplingModes.parse(sampling_mode.value)
 
     def _convert_and_downsample(target_path: UPath) -> Dataset:
-        executor = make_executor(distribution_strategy, jobs, job_resources)
-        with executor as executor:
+        with make_executor(distribution_strategy, jobs, job_resources) as executor:
             dataset = Dataset.from_images(
                 source,
                 target_path,
@@ -256,8 +255,7 @@ def main(
                 batch_size=batch_size,
                 layer_category=category.value if category else None,
             )
-        if downsample:
-            with executor as executor:
+            if downsample:
                 dataset.downsample(
                     coarsest_mag=max_mag,
                     interpolation_mode=interpolation_mode,

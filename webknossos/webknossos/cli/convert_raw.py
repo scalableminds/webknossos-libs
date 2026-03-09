@@ -352,7 +352,6 @@ def main(
         logger.error("source_path is not a file")
         return
 
-    executor = make_executor(distribution_strategy, jobs, job_resources)
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     if overwrite_existing and target.exists():
@@ -373,7 +372,7 @@ def main(
         flip_axes=flip_axes.to_tuple() if flip_axes else None,
         compress=compress,
         rescale_min_max=rescale_min_max,
-        executor=executor,
+        executor=make_executor(distribution_strategy, jobs, job_resources),
     )
 
     if downsample:
@@ -383,5 +382,5 @@ def main(
             interpolation_mode=interpolation_mode,
             compress=compress,
             sampling_mode=mode,
-            executor=executor,
+            executor=make_executor(distribution_strategy, jobs, job_resources),
         )

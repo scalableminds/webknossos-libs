@@ -114,10 +114,11 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             extra_kwargs: dict = {"transfer_mode": transfer_mode}
         else:
             extra_kwargs = {}
-        executor = make_executor(distribution_strategy, jobs, job_resources)
         if layer_name is None:
             for layer in dataset.layers.values():
-                with executor as executor:
+                with make_executor(
+                    distribution_strategy, jobs, job_resources
+                ) as executor:
                     layer.upsample(
                         from_mag=from_mag,
                         sampling_mode=mode,
@@ -125,7 +126,7 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
                         **extra_kwargs,
                     )
         else:
-            with executor as executor:
+            with make_executor(distribution_strategy, jobs, job_resources) as executor:
                 dataset.get_layer(layer_name).upsample(
                     from_mag=from_mag,
                     sampling_mode=mode,
