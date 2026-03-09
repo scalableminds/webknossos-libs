@@ -205,7 +205,7 @@ class VolumeLayer:
         with executor or SequentialExecutor() as executor:
             if edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
                 with TemporaryDirectory() as tmp_dir:
-                    return _edit(UPath(tmp_dir), executor)
+                    yield from _edit(UPath(tmp_dir), executor)
             elif edit_mode == VolumeLayerEditMode.MEMORY:
                 if not isinstance(executor, SequentialExecutor):
                     raise ValueError(
@@ -216,7 +216,7 @@ class VolumeLayer:
                     f"edit_{self.id}_{self.name}_{uuid.uuid4()}.zip", protocol="memory"
                 )
                 try:
-                    return _edit(path, executor)
+                    yield from _edit(path, executor)
                 finally:
                     if path.exists():
                         path.rmdir(recursive=True)

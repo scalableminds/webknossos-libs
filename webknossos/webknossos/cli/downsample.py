@@ -88,7 +88,7 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
         RemoteAccessMode | None,
         typer.Option(
             help="How to access the remote dataset's data. "
-            "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'zarr_streaming'.",
+            "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'proxy_path'.",
             rich_help_panel="WEBKNOSSOS context",
         ),
     ] = None,
