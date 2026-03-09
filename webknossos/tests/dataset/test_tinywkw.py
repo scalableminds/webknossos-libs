@@ -6,7 +6,7 @@ import wkw
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR
-from webknossos.dataset._utils.tinywkw import ChunkType, TinyWkwDataset, TinyWkwHeader
+from webknossos.dataset._utils.tinywkw import ChunkType, TinyWkwArray, TinyWkwHeader
 from webknossos.geometry import BoundingBox, Vec3Int
 
 DATASET_PATH = TESTDATA_DIR / "simple_wkw_dataset" / "color" / "1"
@@ -66,7 +66,7 @@ def test_header_invalid_version_raises() -> None:
     ],
 )
 def test_output_shape_and_dtype(bbox: BoundingBox) -> None:
-    data = TinyWkwDataset.open(UPath(DATASET_PATH)).read_bbox(
+    data = TinyWkwArray.open(UPath(DATASET_PATH)).read_bbox(
         bbox.normalize_axes(NUM_CHANNELS)
     )
     assert data.shape == (
@@ -100,7 +100,7 @@ def test_matches_native_wkw(
 ) -> None:
     with wkw.Dataset.open(str(DATASET_PATH)) as ds:
         expected = ds.read(bbox.topleft_xyz, bbox.size_xyz)
-    actual = TinyWkwDataset.open(UPath(DATASET_PATH)).read_bbox(
+    actual = TinyWkwArray.open(UPath(DATASET_PATH)).read_bbox(
         bbox.normalize_axes(NUM_CHANNELS)
     )
     np.testing.assert_array_equal(actual, expected)
@@ -115,7 +115,7 @@ def test_missing_shard_returns_zeros() -> None:
     """Reading a region whose shard file doesn't exist should return all zeros."""
     # Only z0/y0/x0.wkw exists; a non-zero shard index file is absent.
     bbox = BoundingBox((SHARD, SHARD, SHARD), (CHUNK_LEN, CHUNK_LEN, CHUNK_LEN))
-    data = TinyWkwDataset.open(UPath(DATASET_PATH)).read_bbox(
+    data = TinyWkwArray.open(UPath(DATASET_PATH)).read_bbox(
         bbox.normalize_axes(NUM_CHANNELS)
     )
     assert data.shape == (NUM_CHANNELS, CHUNK_LEN, CHUNK_LEN, CHUNK_LEN)
@@ -130,13 +130,13 @@ def test_missing_shard_returns_zeros() -> None:
 @pytest.fixture(params=[ChunkType.RAW, ChunkType.LZ4])
 def fresh_dataset(
     tmp_path: UPath, request: pytest.FixtureRequest
-) -> tuple[TinyWkwDataset, UPath]:
+) -> tuple[TinyWkwArray, UPath]:
     chunk_type: ChunkType = request.param
     if chunk_type == ChunkType.RAW:
         (tmp_path / "header.wkw").write_bytes(
             (DATASET_PATH / "header.wkw").read_bytes()
         )
-        return TinyWkwDataset.open(UPath(tmp_path)), UPath(tmp_path)
+        return TinyWkwArray.open(UPath(tmp_path)), UPath(tmp_path)
     header = TinyWkwHeader(
         chunk_shape=Vec3Int.full(CHUNK_LEN),
         shard_shape=Vec3Int.full(SHARD),
@@ -144,11 +144,11 @@ def fresh_dataset(
         voxel_type=np.dtype("uint8"),
         num_channels=NUM_CHANNELS,
     )
-    return TinyWkwDataset.create(UPath(tmp_path), header), UPath(tmp_path)
+    return TinyWkwArray.create(UPath(tmp_path), header), UPath(tmp_path)
 
 
 def test_write_full_shard_roundtrip(
-    fresh_dataset: tuple[TinyWkwDataset, UPath],
+    fresh_dataset: tuple[TinyWkwArray, UPath],
 ) -> None:
     from unittest.mock import patch
 
@@ -163,7 +163,7 @@ def test_write_full_shard_roundtrip(
 
 
 def test_write_partial_chunk_roundtrip(
-    fresh_dataset: tuple[TinyWkwDataset, UPath],
+    fresh_dataset: tuple[TinyWkwArray, UPath],
 ) -> None:
     ds, _ = fresh_dataset
     rng = np.random.default_rng(7)
@@ -174,7 +174,7 @@ def test_write_partial_chunk_roundtrip(
 
 
 def test_write_preserves_unwritten_region(
-    fresh_dataset: tuple[TinyWkwDataset, UPath],
+    fresh_dataset: tuple[TinyWkwArray, UPath],
 ) -> None:
     ds, _ = fresh_dataset
     rng = np.random.default_rng(13)
@@ -192,7 +192,7 @@ def test_write_preserves_unwritten_region(
     )
 
 
-def test_write_cross_shard(fresh_dataset: tuple[TinyWkwDataset, UPath]) -> None:
+def test_write_cross_shard(fresh_dataset: tuple[TinyWkwArray, UPath]) -> None:
     ds, _ = fresh_dataset
     rng = np.random.default_rng(99)
     # Region that straddles the boundary between shard x=0 and shard x=1
@@ -204,7 +204,7 @@ def test_write_cross_shard(fresh_dataset: tuple[TinyWkwDataset, UPath]) -> None:
     np.testing.assert_array_equal(result, data)
 
 
-def test_write_zeros_deletes_shard(fresh_dataset: tuple[TinyWkwDataset, UPath]) -> None:
+def test_write_zeros_deletes_shard(fresh_dataset: tuple[TinyWkwArray, UPath]) -> None:
     ds, path = fresh_dataset
     shard_file = path / "z0" / "y0" / "x0.wkw"
     # Write non-zero data to create the file
@@ -221,7 +221,7 @@ def test_write_zeros_deletes_shard(fresh_dataset: tuple[TinyWkwDataset, UPath]) 
 
 
 def test_write_all_zero_never_creates_shard(
-    fresh_dataset: tuple[TinyWkwDataset, UPath],
+    fresh_dataset: tuple[TinyWkwArray, UPath],
 ) -> None:
     ds, path = fresh_dataset
     ds.write(
@@ -231,7 +231,7 @@ def test_write_all_zero_never_creates_shard(
 
 
 def test_write_readable_by_native_wkw(
-    fresh_dataset: tuple[TinyWkwDataset, UPath],
+    fresh_dataset: tuple[TinyWkwArray, UPath],
 ) -> None:
     ds, path = fresh_dataset
     rng = np.random.default_rng(42)
