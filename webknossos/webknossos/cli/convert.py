@@ -244,7 +244,7 @@ def main(
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
     mode = SamplingModes.parse(sampling_mode.value)
 
-    def _convert_and_downsample(target_path):
+    def _convert_and_downsample(target_path: UPath) -> Dataset:
         with get_executor_for_args(args=executor_args) as executor:
             dataset = Dataset.from_images(
                 source,
@@ -278,7 +278,11 @@ def main(
                 folder_obj: None | RemoteFolder = None
                 if folder is not None:
                     folder_obj = RemoteFolder.get_by_path(folder)
-                dataset.upload(new_dataset_name=name, folder=folder_obj)
+                dataset.upload(
+                    new_dataset_name=name,
+                    folder=folder_obj,
+                    transfer_mode=transfer_mode,
+                )
     else:
         if overwrite_existing and target.exists():
             rmtree(target)

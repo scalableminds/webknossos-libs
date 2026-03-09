@@ -16,8 +16,8 @@ from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
 from ..dataset import Dataset, RemoteDataset
 from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
-from ..dataset.remote_dataset import RemoteAccessMode
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import is_fs_path
 

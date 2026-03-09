@@ -1403,14 +1403,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         from ..client.context import webknossos_context as _webknossos_context
         from .dataset import Dataset
 
-        from_images_kwargs: dict[str, Any] = {}
-        if map_filepath_to_layer_name is not None:
-            from_images_kwargs["map_filepath_to_layer_name"] = (
-                map_filepath_to_layer_name
-            )
-        if z_slices_sort_key is not None:
-            from_images_kwargs["z_slices_sort_key"] = z_slices_sort_key
-
         with tempfile.TemporaryDirectory() as tmp_dir:
             dataset: Dataset = Dataset.from_images(
                 input_path,
@@ -1433,7 +1425,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 max_layers=max_layers,
                 batch_size=batch_size,
                 executor=executor,
-                **from_images_kwargs,
+                map_filepath_to_layer_name=map_filepath_to_layer_name,
+                z_slices_sort_key=z_slices_sort_key,
             )
 
             folder_obj: RemoteFolder | None = None

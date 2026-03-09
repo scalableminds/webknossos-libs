@@ -30,7 +30,7 @@ def main(
         Mag,
         typer.Option(
             help="Mag to start upsampling from. \
-Should be number or minus separated string (e.g. 2 or 2-2-2).",
+Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),
     ],
@@ -103,7 +103,9 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
         else:
             access_mode = RemoteAccessMode.PROXY_PATH
 
-    with open_dataset(UPath(source), annotation_ok=False, token=token, access_mode=access_mode) as dataset:
+    with open_dataset(
+        UPath(source), annotation_ok=False, token=token, access_mode=access_mode
+    ) as dataset:
         if isinstance(dataset, RemoteDataset):
             if transfer_mode is None:
                 raise typer.BadParameter(
@@ -117,10 +119,16 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
             for layer in dataset.layers.values():
                 with get_executor_for_args(args=executor_args) as executor:
                     layer.upsample(
-                        from_mag=from_mag, sampling_mode=mode, executor=executor, **extra_kwargs
+                        from_mag=from_mag,
+                        sampling_mode=mode,
+                        executor=executor,
+                        **extra_kwargs,
                     )
         else:
             with get_executor_for_args(args=executor_args) as executor:
                 dataset.get_layer(layer_name).upsample(
-                    from_mag=from_mag, sampling_mode=mode, executor=executor, **extra_kwargs
+                    from_mag=from_mag,
+                    sampling_mode=mode,
+                    executor=executor,
+                    **extra_kwargs,
                 )

@@ -41,7 +41,7 @@ def main(
         Mag | None,
         typer.Option(
             help="Mag to stop downsampling at. \
-Should be number or minus separated string (e.g. 2 or 2-2-2).",
+Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),
     ] = None,
@@ -108,7 +108,9 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
         else:
             access_mode = RemoteAccessMode.PROXY_PATH
 
-    with open_dataset(UPath(target), annotation_ok=False, token=token, access_mode=access_mode) as dataset:
+    with open_dataset(
+        UPath(target), annotation_ok=False, token=token, access_mode=access_mode
+    ) as dataset:
         with get_executor_for_args(args=executor_args) as executor:
             if isinstance(dataset, RemoteDataset):
                 if transfer_mode is None:

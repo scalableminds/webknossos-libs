@@ -68,8 +68,6 @@ def main(
 ) -> None:
     """Upload a dataset to a WEBKNOSSOS server."""
 
-    print(transfer_mode)
-
     with webknossos_context(url=webknossos_url, token=token):
         folder_obj: None | RemoteFolder = None
         if folder is not None:

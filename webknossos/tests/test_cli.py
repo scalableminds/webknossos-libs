@@ -525,8 +525,6 @@ def test_convert_upload_downsample() -> None:
                 str(TESTDATA_DIR / "tiff"),
             ],
         )
-        print(result.stdout)
-
         assert result.exit_code == 0, result.stdout
 
     result_without_args = runner.invoke(app, ["downsample"])
@@ -545,8 +543,6 @@ def test_convert_upload_downsample() -> None:
             "http://localhost:9000/datasets/Organization_X/test_remote_convert",
         ],
     )
-    print(result.stdout)
-
     assert result.exit_code == 0, result.stdout
 
 
