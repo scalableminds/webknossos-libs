@@ -45,7 +45,7 @@ def _morton_encode(chunk: Vec3Int) -> int:
 
 
 @dataclass(frozen=True)
-class WkwHeader:
+class TinyWkwHeader:
     chunk_shape: Vec3Int
     shard_shape: Vec3Int
     chunk_type: ChunkType
@@ -54,7 +54,7 @@ class WkwHeader:
     data_offset: int | None = None
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "WkwHeader":
+    def from_bytes(cls, data: bytes) -> "TinyWkwHeader":
         assert data[0:3] == b"WKW"
         assert data[3] == 1
         per_dim_log2 = data[4]
@@ -114,25 +114,25 @@ class WkwHeader:
         return self.chunk_type.value
 
 
-class WkwDataset:
+class TinyWkwDataset:
     """WKW dataset reader/writer using UPath for remote-compatible I/O."""
 
-    def __init__(self, path: UPath, header: WkwHeader) -> None:
+    def __init__(self, path: UPath, header: TinyWkwHeader) -> None:
         self._path = path
         self._header = header
 
     @property
-    def header(self) -> WkwHeader:
+    def header(self) -> TinyWkwHeader:
         return self._header
 
     @classmethod
-    def open(cls, path: UPath) -> "WkwDataset":
+    def open(cls, path: UPath) -> "TinyWkwDataset":
         """Open a WKW dataset at `path` (must contain `header.wkw`)."""
-        header = WkwHeader.from_bytes((path / "header.wkw").read_bytes())
+        header = TinyWkwHeader.from_bytes((path / "header.wkw").read_bytes())
         return cls(path, header)
 
     @classmethod
-    def create(cls, path: UPath, header: WkwHeader) -> "WkwDataset":
+    def create(cls, path: UPath, header: TinyWkwHeader) -> "TinyWkwDataset":
         """Create a new WKW dataset at `path`, writing `header.wkw` with data_offset=0."""
         path.mkdir(parents=True, exist_ok=True)
         (path / "header.wkw").write_bytes(header.to_bytes(data_offset=0))
