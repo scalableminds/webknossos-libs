@@ -10,7 +10,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...HEAD)
+
+### Breaking Changes
+
+### Added
+- Added a pure-Python implementation of WKW to support datasets on remote storage. Although, it is strongly recommended to use Zarr3 datasets on remote storage, for performance, interoperability and future-proofing reasons. [#1432](https://github.com/scalableminds/webknossos-libs/pull/1432)
+
+### Changed
+
+### Fixed
+
+
+## [3.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.2) - 2026-03-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.1...v3.2.2)
+
+### Changed
+- `Attachment.from_path_and_name` now accepts `str` for `path` and `dataset_path`. `dataset_path` is now fully optional, when missing the `path` is being resolved into an absolute path. [#1430](https://github.com/scalableminds/webknossos-libs/pull/1430)
+
+
+## [3.2.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.1) - 2026-03-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.0...v3.2.1)
+
+
+## [3.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.0) - 2026-02-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.5...v3.2.0)
 
 ### Breaking Changes
 - Moved from positional argument to keyword-only argument [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418):
@@ -56,8 +80,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Within the library a new `NormalizedBoundingBox` class is used to represent bounding boxes with an explicit c-axis (channels). The `NormalizedBoundingBox` is used as the primary bounding box attribute throughout the library. It is also used for de/serialization of the dataset properties. The interface of the `BoundingBox` class is intentionally kept stable, but computed from the `NormalizedBoundingBox`. Likewise, the `num_channels` attribute is computed from the `NormalizedBoundingBox`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - The `dimension` argument in `View.get_buffered_slice_writer`, `View.get_buffered_slice_reader`, `BufferedSliceWriter.__init__` and `BufferedSliceReader.__init__` now takes named axis (string) instead of integer index, e.g. `"z"` instead of `2`. Integers are deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Annotation loading now throws a `FileNotFoundError` instead of `AssertionError` if the specified path does not exist. [#1425](https://github.com/scalableminds/webknossos-libs/pull/1425)
-
-### Fixed
 
 
 ## [3.1.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.5) - 2026-02-03
