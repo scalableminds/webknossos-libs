@@ -10,15 +10,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...HEAD)
 
 ### Breaking Changes
 
 ### Added
+- Added a pure-Python implementation of WKW to support datasets on remote storage. Although, it is strongly recommended to use Zarr3 datasets on remote storage, for performance, interoperability and future-proofing reasons. [#1432](https://github.com/scalableminds/webknossos-libs/pull/1432)
 
 ### Changed
 
 ### Fixed
+
+
+## [3.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.2) - 2026-03-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.1...v3.2.2)
+
+### Changed
+- `Attachment.from_path_and_name` now accepts `str` for `path` and `dataset_path`. `dataset_path` is now fully optional, when missing the `path` is being resolved into an absolute path. [#1430](https://github.com/scalableminds/webknossos-libs/pull/1430)
+
+
+## [3.2.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.1) - 2026-03-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.0...v3.2.1)
 
 
 ## [3.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.0) - 2026-02-25
@@ -46,11 +58,16 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Calling the `x`, `y`, `z` and `c` properties of `VecInt` or `Vec3Int` now raises a `KeyError` instead of a `ValueError` if the axis is missing. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
 - Removed `dtype_per_layer` arguments and properties as they have been deprecated for a long time. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
 - Deprecated `dtype_per_channel` argument in `Dataset.add_layer` and `Dataset.get_or_add_layer` and property in `Layer`. Use `dtype` instead. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
+- Deprecated `RemoteAttachements.upload_attachment`. Use `RemoteAttachements.add_attachment_as_copy` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Deprecated `Attachments.{add_mesh,add_agglomerate,add_connectome,set_segment_index,set_cumsum}` methods. Use `*Attachment.from_path_and_name` and `Attachements.{add_attachment_as_copy,add_attachment_as_ref}` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
 
 ### Added
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Added `parent` property to `RemoteFolder`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
 - Added `dtype` argument to `Dataset.add_layer`, `Dataset.get_or_add_layer`. Added `dtype` property to `Layer`. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
+- Added `RemoteDataset.add_layer_as_copy`. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Added `RemoteDataset.get_or_add_layer`. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Added `RemoteAttachments.add_attachment_as_copy`. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
 - Added `RemoteAiModel` class, allowing to access information about trained AI models registered in WEBKNOSSOS. [#1409](https://github.com/scalableminds/webknossos-libs/pull/1409)
 
 ### Changed

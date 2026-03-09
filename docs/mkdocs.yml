@@ -86,7 +86,7 @@ plugins:
                     heading_level: 1
                     inherited_members: true
                     merge_init_into_class: true
-                    parameter_headings: true
+                    parameter_headings: false
                     preload_modules: [webknossos]
                     separate_signature: true
                     show_root_heading: true
@@ -96,7 +96,6 @@ plugins:
                     show_symbol_type_toc: true
                     show_if_no_docstring: true
                     signature_crossrefs: true
-                    parameter_headings: false
                     unwrap_annotated: true
                     line_length: 60
                     filters:
@@ -266,6 +265,7 @@ nav:
       - Geometry:
         - BoundingBox: api/webknossos/geometry/bounding_box.md
         - NDBoundingBox: api/webknossos/geometry/nd_bounding_box.md
+        - NormalizedBoundingBox: api/webknossos/geometry/normalized_bounding_box.md
         - Mag: api/webknossos/geometry/mag.md
         - Vec3Int: api/webknossos/geometry/vec3_int.md
         - VecInt: api/webknossos/geometry/vec_int.md
@@ -273,13 +273,20 @@ nav:
         - Dataset: api/webknossos/dataset/dataset.md
         - Layer: api/webknossos/dataset/layer/layer.md
         - SegmentationLayer: api/webknossos/dataset/layer/segmentation_layer/segmentation_layer.md
+        - Attachment: api/webknossos/dataset/layer/segmentation_layer/attachments/attachment.md
+        - Attachments: api/webknossos/dataset/layer/segmentation_layer/attachments/attachments.md
         - MagView: api/webknossos/dataset/layer/view/mag_view.md
         - View: api/webknossos/dataset/layer/view/view.md
         - RemoteDataset: api/webknossos/dataset/remote_dataset.md
+        - RemoteDatasetRegistry: api/webknossos/dataset/remote_dataset_registry.md
         - RemoteLayer: api/webknossos/dataset/layer/remote_layer.md
         - RemoteSegmentationLayer: api/webknossos/dataset/layer/segmentation_layer/remote_segmentation_layer.md
         - RemoteFolder: api/webknossos/dataset/remote_folder.md
-      - Annotation: api/webknossos/annotation/annotation.md
+        - TransferMode: api/webknossos/dataset/transfer_mode.md
+        - SamplingModes: api/webknossos/dataset/sampling_modes.md
+        - DataFormat: api/webknossos/dataset_properties/data_format.md
+        - LengthUnit: api/webknossos/dataset_properties/length_unit.md
+        - LayerToLink: api/webknossos/dataset/layer/layer_to_link.md
       - Skeleton:
         - Skeleton: api/webknossos/skeleton/skeleton.md
         - Group: api/webknossos/skeleton/group.md
