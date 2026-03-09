@@ -18,6 +18,7 @@ import wkw
 from typing_extensions import NotRequired, Self
 from upath import UPath
 
+from webknossos.dataset._utils.tinywkw import TinyWkwArray
 from webknossos.dataset_properties import DataFormat
 from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
 from webknossos.utils import call_with_retries, is_fs_path
@@ -234,7 +235,7 @@ class BaseArray(ABC):
 class WKWArray(BaseArray):
     data_format = DataFormat.WKW
 
-    _cached_wkw_dataset: wkw.Dataset | None
+    _cached_wkw_dataset: wkw.Dataset | TinyWkwArray | None
 
     def __init__(self, path: UPath):
         super().__init__(path)
@@ -297,23 +298,44 @@ class WKWArray(BaseArray):
             f"`chunks_per_shard` needs to be a value between 1 and 32768 for WKW storage. Got {array_info.chunks_per_shard.x}."
         )
 
-        try:
-            wkw.Dataset.create(
-                str(path),
-                wkw.Header(
-                    voxel_type=array_info.voxel_type,
-                    num_channels=array_info.bounding_box.size.c,
-                    block_len=array_info.chunk_shape.x,
-                    file_len=array_info.chunks_per_shard.x,
-                    block_type=(
-                        wkw.Header.BLOCK_TYPE_LZ4HC
-                        if array_info.compression_mode
-                        else wkw.Header.BLOCK_TYPE_RAW
+        if is_fs_path(path):
+            try:
+                wkw.Dataset.create(
+                    str(path),
+                    wkw.Header(
+                        voxel_type=array_info.voxel_type,
+                        num_channels=array_info.bounding_box.size.c,
+                        block_len=array_info.chunk_shape.x,
+                        file_len=array_info.chunks_per_shard.x,
+                        block_type=(
+                            wkw.Header.BLOCK_TYPE_LZ4HC
+                            if array_info.compression_mode
+                            else wkw.Header.BLOCK_TYPE_RAW
+                        ),
                     ),
-                ),
-            ).close()
-        except wkw.wkw.WKWException as e:
-            raise ArrayException(f"Exception while creating array {path}") from e
+                ).close()
+            except wkw.wkw.WKWException as e:
+                raise ArrayException(f"Exception while creating array {path}") from e
+        else:
+            try:
+                from webknossos.dataset._utils.tinywkw import ChunkType, TinyWkwHeader
+
+                TinyWkwArray.create(
+                    path,
+                    TinyWkwHeader(
+                        chunk_shape=array_info.chunk_shape,
+                        shard_shape=array_info.shard_shape,
+                        chunk_type=(
+                            ChunkType.LZ4
+                            if array_info.compression_mode
+                            else ChunkType.RAW
+                        ),
+                        voxel_type=array_info.voxel_type,
+                        num_channels=array_info.bounding_box.size.c,
+                    ),
+                )
+            except Exception as e:
+                raise ArrayException(f"Exception while creating array {path}") from e
         return WKWArray(path)
 
     def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
@@ -352,16 +374,24 @@ class WKWArray(BaseArray):
             self._cached_wkw_dataset = None
 
     @property
-    def _wkw_dataset(self) -> wkw.Dataset:
+    def _wkw_dataset(self) -> wkw.Dataset | TinyWkwArray:
         if self._cached_wkw_dataset is None:
-            try:
-                self._cached_wkw_dataset = wkw.Dataset.open(
-                    str(self._path)
-                )  # No need to pass the header to the wkw.Dataset
-            except wkw.wkw.WKWException as e:
-                raise ArrayException(
-                    f"Exception while opening WKW array for {self._path}"
-                ) from e
+            if is_fs_path(self._path):
+                try:
+                    self._cached_wkw_dataset = wkw.Dataset.open(
+                        str(self._path)
+                    )  # No need to pass the header to the wkw.Dataset
+                except wkw.wkw.WKWException as e:
+                    raise ArrayException(
+                        f"Exception while opening WKW array for {self._path}"
+                    ) from e
+            else:
+                try:
+                    self._cached_wkw_dataset = TinyWkwArray.open(self._path)
+                except Exception as e:
+                    raise ArrayException(
+                        f"Exception while opening WKW array for {self._path}"
+                    ) from e
         return self._cached_wkw_dataset
 
     @_wkw_dataset.deleter
