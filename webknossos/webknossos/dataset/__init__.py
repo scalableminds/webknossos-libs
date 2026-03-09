@@ -18,11 +18,15 @@ from .layer import (
     LayerToLink,
     MagView,
     MeshAttachment,
+    MeshfileMetadata,
+    MeshFragment,
+    MeshLod,
     RemoteAttachments,
     RemoteLayer,
     RemoteSegmentationLayer,
     SegmentationLayer,
     SegmentIndexAttachment,
+    SegmentMesh,
     View,
 )
 from .remote_dataset import RemoteAccessMode, RemoteDataset

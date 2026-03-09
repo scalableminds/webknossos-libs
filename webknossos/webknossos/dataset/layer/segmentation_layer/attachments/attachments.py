@@ -23,9 +23,9 @@ from .attachment import (
     Attachment,
     ConnectomeAttachment,
     CumsumAttachment,
-    MeshAttachment,
     SegmentIndexAttachment,
 )
+from .mesh_attachment import MeshAttachment
 
 if TYPE_CHECKING:
     from webknossos.dataset.layer import (
