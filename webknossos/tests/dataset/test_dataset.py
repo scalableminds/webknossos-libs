@@ -3801,14 +3801,16 @@ def test_add_mag_ref_from_local_path(tmp_upath: UPath) -> None:
     layer1_mag1 = layer1.get_mag(1)
 
     assert layer1_mag1.path == tmp_upath / "origin" / "color" / "1"
-    assert layer1_mag1._properties.path == str(
-        (tmp_upath / "origin" / "color" / "1").resolve()
+    assert (
+        layer1_mag1._properties.path
+        == (tmp_upath / "origin" / "color" / "1").resolve().as_posix()
     )
 
     layer2_mag1 = dataset2.add_layer("color2", COLOR_CATEGORY).add_mag_as_ref(
         tmp_upath / "origin" / "color" / "1"
     )
     assert layer2_mag1.path == tmp_upath / "origin" / "color" / "1"
-    assert layer2_mag1._properties.path == str(
-        (tmp_upath / "origin" / "color" / "1").resolve()
+    assert (
+        layer2_mag1._properties.path
+        == (tmp_upath / "origin" / "color" / "1").resolve().as_posix()
     )
