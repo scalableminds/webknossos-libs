@@ -503,45 +503,51 @@ def test_upload() -> None:
 
 
 @pytest.mark.use_proxay
-def test_remote_downsample() -> None:
-    """Tests the functionality of remote-downsample subcommand."""
+def test_convert_upload_downsample() -> None:
+    """Tests the functionality of convert --upload and downsample subcommand."""
 
-    result_without_args = runner.invoke(app, ["remote-downsample"])
-    assert result_without_args.exit_code == 2
-
-    result = runner.invoke(
-        app,
-        [
-            "remote-downsample",
-            "--coarsest-mag",
-            "2",
-            "http://localhost:9000/datasets/Organization_X/l4_sample",
-        ],
-    )
-    assert result.exit_code == 0, result.stdout
-
-
-@pytest.mark.use_proxay
-def test_remote_convert() -> None:
-    """Tests the functionality of remote-convert subcommand."""
-
-    result_without_args = runner.invoke(app, ["remote-convert"])
+    result_without_args = runner.invoke(app, ["convert", "--upload"])
     assert result_without_args.exit_code == 2
 
     with tmp_cwd():
         result = runner.invoke(
             app,
             [
-                "remote-convert",
+                "convert",
+                "--upload",
                 "--voxel-size",
                 "11.24,11.24,25",
                 "--no-downsample",
-                "--dataset-name",
+                "--name",
                 "test_remote_convert",
+                "--transfer-mode",
+                "copy",
                 str(TESTDATA_DIR / "tiff"),
             ],
         )
+        print(result.stdout)
+
         assert result.exit_code == 0, result.stdout
+
+    result_without_args = runner.invoke(app, ["downsample"])
+    assert result_without_args.exit_code == 2
+
+    result = runner.invoke(
+        app,
+        [
+            "downsample",
+            "--jobs",
+            "2",
+            "--coarsest-mag",
+            "2-2-1",
+            "--transfer-mode",
+            "copy",
+            "http://localhost:9000/datasets/Organization_X/test_remote_convert",
+        ],
+    )
+    print(result.stdout)
+
+    assert result.exit_code == 0, result.stdout
 
 
 def test_export_tiff_stack(tmp_upath: UPath) -> None:

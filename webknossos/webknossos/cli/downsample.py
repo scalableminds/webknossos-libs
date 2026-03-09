@@ -7,7 +7,8 @@ from typing import Annotated
 import typer
 from upath import UPath
 
-from ..dataset import SamplingModes
+from ..dataset import RemoteDataset, SamplingModes, TransferMode
+from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import Mag
 from ..utils import get_executor_for_args
 from ._utils import (
@@ -75,6 +76,22 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
             rich_help_panel="Executor options",
         ),
     ] = None,
+    transfer_mode: Annotated[
+        TransferMode | None,
+        typer.Option(
+            help="The transfer mode to use. Required for remote datasets. "
+            "Options: 'copy', 'move+symlink', 'symlink', 'http'.",
+            rich_help_panel="WEBKNOSSOS context",
+        ),
+    ] = None,
+    access_mode: Annotated[
+        RemoteAccessMode | None,
+        typer.Option(
+            help="How to access the remote dataset's data. "
+            "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'zarr_streaming'.",
+            rich_help_panel="WEBKNOSSOS context",
+        ),
+    ] = None,
 ) -> None:
     """Downsample your WEBKNOSSOS dataset."""
 
@@ -85,17 +102,34 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
     )
     sampling_mode_parsed = SamplingModes.parse(sampling_mode.value)
 
-    with open_dataset(UPath(target), annotation_ok=False, token=token) as dataset:
+    if access_mode is None:
+        if transfer_mode is not None and transfer_mode != TransferMode.HTTP:
+            access_mode = RemoteAccessMode.DIRECT_PATH
+        else:
+            access_mode = RemoteAccessMode.PROXY_PATH
+
+    with open_dataset(UPath(target), annotation_ok=False, token=token, access_mode=access_mode) as dataset:
         with get_executor_for_args(args=executor_args) as executor:
+            if isinstance(dataset, RemoteDataset):
+                if transfer_mode is None:
+                    raise typer.BadParameter(
+                        "--transfer-mode is required for remote datasets.",
+                        param_hint="--transfer-mode",
+                    )
+                extra_kwargs: dict = {"transfer_mode": transfer_mode}
+            else:
+                extra_kwargs = {}
             if layer_name is None:
                 dataset.downsample(
                     coarsest_mag=coarsest_mag,
                     sampling_mode=sampling_mode_parsed,
                     executor=executor,
+                    **extra_kwargs,
                 )
             else:
                 dataset.get_layer(layer_name).downsample(
                     coarsest_mag=coarsest_mag,
                     sampling_mode=sampling_mode_parsed,
                     executor=executor,
+                    **extra_kwargs,
                 )

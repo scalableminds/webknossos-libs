@@ -44,6 +44,14 @@ webknossos downsample [OPTIONS] TARGET
     Can also be provided via the `WK_TOKEN` environment variable.
     Required when TARGET is a WEBKNOSSOS server URL pointing to a non-public dataset.
 
+- `--transfer-mode`
+    Required for remote datasets. The transfer mode to use. Available options are `copy`, `move+symlink`, `symlink`, `http`.
+    `copy`, `move+symlink`, `symlink` require direct filesystem access to the WEBKNOSSOS datastore.
+
+- `--access-mode`
+    How to access the remote dataset's data. Available options are `direct_path`, `zarr_streaming`, `proxy_path`.
+    Defaults to `direct_path` when `--transfer-mode` is not `http`, otherwise `proxy_path`.
+
 #### Executor options
 
 - `--jobs`
@@ -85,17 +93,18 @@ webknossos downsample --jobs 4 --distribution-strategy slurm --job-resources '{"
 
 ### Downsample a dataset on a WEBKNOSSOS server:
 ```bash
-webknossos downsample --token YOUR_TOKEN https://webknossos.org/datasets/Organization_X/my_dataset
+webknossos downsample --token YOUR_TOKEN --transfer-mode copy https://webknossos.org/datasets/Organization_X/my_dataset
 ```
 
 ### Downsample a specific layer of a remote dataset:
 ```bash
-webknossos downsample --token YOUR_TOKEN --layer-name gray https://webknossos.org/datasets/Organization_X/my_dataset
+webknossos downsample --token YOUR_TOKEN --transfer-mode copy --layer-name gray https://webknossos.org/datasets/Organization_X/my_dataset
 ```
 
 ## Notes
 
 - Local and remote datasets are distinguished automatically based on the TARGET: a URL (starting with `http://` or `https://`) is treated as a remote dataset; any other path is treated as local.
 - `--token` is only required when accessing non-public remote datasets. It can be set once via the `WK_TOKEN` environment variable.
+- `--transfer-mode` is required for remote datasets and ignored for local datasets.
 - Use `--layer-name` to downsample a specific layer; if omitted, all layers are processed.
 - Customize parallel execution with `--jobs`, `--distribution-strategy`, and `--job-resources` to optimize performance.

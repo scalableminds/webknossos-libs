@@ -10,7 +10,7 @@ from upath import UPath
 
 from ..client._defaults import DEFAULT_WEBKNOSSOS_URL
 from ..client.context import webknossos_context
-from ..dataset import Dataset, RemoteFolder, SamplingModes
+from ..dataset import Dataset, RemoteFolder, SamplingModes, TransferMode
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
@@ -192,6 +192,14 @@ def main(
             rich_help_panel="WEBKNOSSOS context",
         ),
     ] = None,
+    transfer_mode: Annotated[
+        TransferMode,
+        typer.Option(
+            help="The transfer mode to use when uploading. 'http' is the default. "
+            "Other modes like 'copy', 'move+symlink', 'symlink' are for users with direct filesystem access to the WEBKNOSSOS datastore.",
+            rich_help_panel="WEBKNOSSOS context",
+        ),
+    ] = TransferMode.HTTP,
     jobs: Annotated[
         int,
         typer.Option(
@@ -236,45 +244,11 @@ def main(
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
     mode = SamplingModes.parse(sampling_mode.value)
 
-    if upload:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            with get_executor_for_args(args=executor_args) as executor:
-                dataset = Dataset.from_images(
-                    source,
-                    UPath(tmp_dir) / "dataset",
-                    name=name,
-                    voxel_size_with_unit=voxel_size_with_unit,
-                    chunk_shape=chunk_shape,
-                    shard_shape=shard_shape,
-                    data_format=data_format,
-                    executor=executor,
-                    compress=compress,
-                    layer_name=layer_name,
-                    batch_size=batch_size,
-                    layer_category=category.value if category else None,
-                )
-            if downsample:
-                with get_executor_for_args(args=executor_args) as executor:
-                    dataset.downsample(
-                        coarsest_mag=max_mag,
-                        interpolation_mode=interpolation_mode,
-                        compress=compress,
-                        sampling_mode=mode,
-                        executor=executor,
-                    )
-            with webknossos_context(url=webknossos_url, token=token):
-                folder_obj: None | RemoteFolder = None
-                if folder is not None:
-                    folder_obj = RemoteFolder.get_by_path(folder)
-                dataset.upload(new_dataset_name=name, folder=folder_obj)
-    else:
-        if overwrite_existing and target.exists():
-            rmtree(target)
-
+    def _convert_and_downsample(target_path):
         with get_executor_for_args(args=executor_args) as executor:
             dataset = Dataset.from_images(
                 source,
-                target,
+                target_path,
                 name=name,
                 voxel_size_with_unit=voxel_size_with_unit,
                 chunk_shape=chunk_shape,
@@ -295,3 +269,17 @@ def main(
                     sampling_mode=mode,
                     executor=executor,
                 )
+        return dataset
+
+    if upload:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            dataset = _convert_and_downsample(UPath(tmp_dir) / "dataset")
+            with webknossos_context(url=webknossos_url, token=token):
+                folder_obj: None | RemoteFolder = None
+                if folder is not None:
+                    folder_obj = RemoteFolder.get_by_path(folder)
+                dataset.upload(new_dataset_name=name, folder=folder_obj)
+    else:
+        if overwrite_existing and target.exists():
+            rmtree(target)
+        _convert_and_downsample(target)

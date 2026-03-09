@@ -140,6 +140,11 @@ The following options are only used when `--upload` is set.
     WEBKNOSSOS dataset folder in which the dataset should be placed. Specify the folder path as a string, separated by `/`. Example: `Datasets/mySubfolder`.
     If not provided, the root folder is used.
 
+- `--transfer-mode`
+    The transfer mode to use when uploading. Available options are `http`, `copy`, `move+symlink`, `symlink`.
+    `copy`, `move+symlink`, `symlink` are only for users with direct filesystem access to the WEBKNOSSOS datastore.
+    Default: `http`.
+
 ### Example Commands
 
 Convert an image stack locally:

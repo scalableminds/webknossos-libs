@@ -16,6 +16,7 @@ from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
 from ..dataset import Dataset, RemoteDataset
 from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
+from ..dataset.remote_dataset import RemoteAccessMode
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import is_fs_path
@@ -292,6 +293,7 @@ def open_dataset(
     source: UPath,
     annotation_ok: bool,
     token: str | None = None,
+    access_mode: RemoteAccessMode | None = None,
 ) -> Iterator[Dataset | RemoteDataset]:
     if not is_fs_path(source):
         url = resolve_short_link(str(source))
@@ -301,7 +303,7 @@ def open_dataset(
             if re.match(_DATASET_URL_REGEX, url) or re.match(
                 _DATASET_DEPRECATED_URL_REGEX, url
             ):
-                yield RemoteDataset.open(url)
+                yield RemoteDataset.open(url, access_mode=access_mode)
             elif re.match(_ANNOTATION_URL_REGEX, url):
                 if not annotation_ok:
                     raise ValueError(
