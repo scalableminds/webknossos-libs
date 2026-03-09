@@ -89,7 +89,7 @@ from ..utils import (
     count_defined_values,
     dump_path,
     enrich_path,
-    get_executor_for_args,
+    get_default_executor,
     is_fs_path,
     named_partial,
     rmtree,
@@ -977,41 +977,40 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 filepaths_per_layer = {
                     f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
                 }
-        with get_executor_for_args(None, executor) as executor:
-            with warnings.catch_warnings():
-                warnings.filterwarnings(
-                    "ignore",
-                    category=UserWarning,
-                    module="pims_images",
-                )
-                warnings.filterwarnings(
-                    "ignore",
-                    category=UserWarning,
-                    module="pims",
-                )
-                for layer_name, filepaths in filepaths_per_layer.items():
-                    filepaths.sort(key=z_slices_sort_key)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=UserWarning,
+                module="pims_images",
+            )
+            warnings.filterwarnings(
+                "ignore",
+                category=UserWarning,
+                module="pims",
+            )
+            for layer_name, filepaths in filepaths_per_layer.items():
+                filepaths.sort(key=z_slices_sort_key)
 
-                    ds.add_layer_from_images(
-                        filepaths[0] if len(filepaths) == 1 else filepaths,
-                        layer_name,
-                        category=layer_category,
-                        data_format=data_format,
-                        chunk_shape=chunk_shape,
-                        shard_shape=shard_shape,
-                        chunks_per_shard=chunks_per_shard,
-                        compress=compress,
-                        swap_xy=swap_xy,
-                        flip_x=flip_x,
-                        flip_y=flip_y,
-                        flip_z=flip_z,
-                        use_bioformats=use_bioformats,
-                        batch_size=batch_size,
-                        allow_multiple_layers=True,
-                        max_layers=max_layers - len(ds.layers),
-                        truncate_rgba_to_rgb=False,
-                        executor=executor,
-                    )
+                ds.add_layer_from_images(
+                    filepaths[0] if len(filepaths) == 1 else filepaths,
+                    layer_name,
+                    category=layer_category,
+                    data_format=data_format,
+                    chunk_shape=chunk_shape,
+                    shard_shape=shard_shape,
+                    chunks_per_shard=chunks_per_shard,
+                    compress=compress,
+                    swap_xy=swap_xy,
+                    flip_x=flip_x,
+                    flip_y=flip_y,
+                    flip_z=flip_z,
+                    use_bioformats=use_bioformats,
+                    batch_size=batch_size,
+                    allow_multiple_layers=True,
+                    max_layers=max_layers - len(ds.layers),
+                    truncate_rgba_to_rgb=False,
+                    executor=executor,
+                )
 
         return ds
 
@@ -1641,7 +1640,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     category=UserWarning,
                     module="webknossos",
                 )
-                with get_executor_for_args(None, executor) as executor:
+                with executor or get_default_executor() as executor:
                     shapes_and_max_ids = wait_and_ensure_success(
                         executor.map_to_futures(func_per_chunk, args),
                         executor=executor,
@@ -2302,20 +2301,19 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
         new_dataset.default_view_configuration = self.default_view_configuration
 
-        with get_executor_for_args(None, executor) as executor:
-            for layer in self.layers.values():
-                if layers_to_ignore is not None and layer.name in layers_to_ignore:
-                    continue
-                new_dataset.add_layer_as_copy(
-                    layer,
-                    chunk_shape=chunk_shape,
-                    shard_shape=shard_shape,
-                    chunks_per_shard=chunks_per_shard,
-                    data_format=data_format,
-                    compress=compress,
-                    exists_ok=exists_ok,
-                    executor=executor,
-                )
+        for layer in self.layers.values():
+            if layers_to_ignore is not None and layer.name in layers_to_ignore:
+                continue
+            new_dataset.add_layer_as_copy(
+                layer,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                chunks_per_shard=chunks_per_shard,
+                data_format=data_format,
+                compress=compress,
+                exists_ok=exists_ok,
+                executor=executor,
+            )
         new_dataset._save_dataset_properties()
         return new_dataset
 

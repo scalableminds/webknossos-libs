@@ -1,6 +1,5 @@
 """This module takes care of upsampling WEBKNOSSOS datasets."""
 
-from argparse import Namespace
 from multiprocessing import cpu_count
 from typing import Annotated
 
@@ -10,8 +9,13 @@ from upath import UPath
 from ..dataset import RemoteDataset, SamplingModes, TransferMode
 from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import Mag
-from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, SamplingMode, open_dataset, parse_mag
+from ._utils import (
+    DistributionStrategy,
+    SamplingMode,
+    make_executor,
+    open_dataset,
+    parse_mag,
+)
 
 
 def main(
@@ -90,11 +94,6 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
 ) -> None:
     """Upsample your WEBKNOSSOS dataset."""
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     mode = SamplingModes.parse(sampling_mode.value)
 
     if access_mode is None:
@@ -115,9 +114,10 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             extra_kwargs: dict = {"transfer_mode": transfer_mode}
         else:
             extra_kwargs = {}
+        executor = make_executor(distribution_strategy, jobs, job_resources)
         if layer_name is None:
             for layer in dataset.layers.values():
-                with get_executor_for_args(args=executor_args) as executor:
+                with executor as executor:
                     layer.upsample(
                         from_mag=from_mag,
                         sampling_mode=mode,
@@ -125,7 +125,7 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
                         **extra_kwargs,
                     )
         else:
-            with get_executor_for_args(args=executor_args) as executor:
+            with executor as executor:
                 dataset.get_layer(layer_name).upsample(
                     from_mag=from_mag,
                     sampling_mode=mode,

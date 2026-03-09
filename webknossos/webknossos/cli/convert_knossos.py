@@ -2,7 +2,6 @@
 
 import logging
 import re
-from argparse import Namespace
 from collections import namedtuple
 from collections.abc import Generator, Iterator
 from functools import partial
@@ -13,6 +12,7 @@ from typing import Annotated, Any, cast
 
 import numpy as np
 import typer
+from cluster_tools import Executor
 from upath import UPath
 
 from ..dataset import Dataset, View
@@ -24,10 +24,11 @@ from ..dataset.defaults import (
 from ..dataset_properties import COLOR_CATEGORY, DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, time_start, time_stop
+from ..utils import time_start, time_stop
 from ._utils import (
     DistributionStrategy,
     VoxelSizeTuple,
+    make_executor,
     parse_mag,
     parse_path,
     parse_vec3int,
@@ -184,8 +185,8 @@ def convert_knossos(
     data_format: DataFormat,
     chunk_shape: Vec3Int,  # in target-mag
     shard_shape: Vec3Int,
-    mag: Mag = Mag(1),
-    args: Namespace | None = None,
+    mag: Mag,
+    executor: Executor,
 ) -> None:
     """Performs the conversion of a KNOSSOS dataset to a WEBKNOSSOS dataset."""
 
@@ -220,13 +221,12 @@ def convert_knossos(
         mag, chunk_shape=chunk_shape, shard_shape=shard_shape
     )
 
-    with get_executor_for_args(args) as executor:
-        target_mag.for_each_chunk(
-            partial(convert_cube_job, source_knossos_info),
-            chunk_shape=shard_shape * mag,
-            executor=executor,
-            progress_desc=f"Converting knossos layer {layer_name}",
-        )
+    target_mag.for_each_chunk(
+        partial(convert_cube_job, source_knossos_info),
+        chunk_shape=shard_shape * mag,
+        executor=executor,
+        progress_desc=f"Converting knossos layer {layer_name}",
+    )
 
 
 def main(
@@ -343,11 +343,7 @@ def main(
         chunks_per_shard=chunks_per_shard,
     )
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
+    executor = make_executor(distribution_strategy, jobs, job_resources)
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     convert_knossos(
@@ -360,5 +356,5 @@ def main(
         chunk_shape,
         shard_shape or DEFAULT_SHARD_SHAPE,
         mag,
-        executor_args,
+        executor,
     )

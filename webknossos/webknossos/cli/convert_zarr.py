@@ -2,7 +2,6 @@
 
 import logging
 import time
-from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
 from typing import Annotated, Any, cast
@@ -10,6 +9,7 @@ from typing import Annotated, Any, cast
 import numpy as np
 import tensorstore
 import typer
+from cluster_tools import Executor
 from upath import UPath
 
 from ..dataset import Dataset, MagView, SegmentationLayer
@@ -21,11 +21,12 @@ from ..dataset.defaults import (
 from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, rmtree, wait_and_ensure_success
+from ..utils import rmtree, wait_and_ensure_success
 from ._utils import (
     DistributionStrategy,
     SamplingMode,
     VoxelSizeTuple,
+    make_executor,
     parse_mag,
     parse_path,
     parse_vec3int,
@@ -78,7 +79,7 @@ def convert_zarr(
     voxel_size_with_unit: VoxelSize = VoxelSize((1.0, 1.0, 1.0)),
     flip_axes: tuple[int, ...] | None = None,
     compress: bool = True,
-    executor_args: Namespace | None = None,
+    executor: Executor,
 ) -> MagView:
     """Performs the conversation of a Zarr dataset to a WEBKNOSSOS dataset."""
     ref_time = time.time()
@@ -107,7 +108,7 @@ def convert_zarr(
     )
 
     # Parallel chunk conversion
-    with get_executor_for_args(args=executor_args) as executor:
+    with executor as executor:
         largest_segment_id_per_chunk = wait_and_ensure_success(
             executor.map_to_futures(
                 partial(
@@ -286,11 +287,7 @@ When converting a folder, this option is ignored."
         chunks_per_shard=chunks_per_shard,
     )
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
+    executor = make_executor(distribution_strategy, jobs, job_resources)
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     if overwrite_existing and target.exists():
@@ -307,16 +304,15 @@ When converting a folder, this option is ignored."
         voxel_size_with_unit=voxel_size_with_unit,
         flip_axes=flip_axes.to_tuple() if flip_axes else None,
         compress=compress,
-        executor_args=executor_args,
+        executor=executor,
     )
 
     if downsample:
-        with get_executor_for_args(executor_args) as executor:
-            mag_view.layer.downsample(
-                from_mag=mag_view.mag,
-                coarsest_mag=max_mag,
-                interpolation_mode=interpolation_mode,
-                compress=compress,
-                sampling_mode=sampling_mode,
-                executor=executor,
-            )
+        mag_view.layer.downsample(
+            from_mag=mag_view.mag,
+            coarsest_mag=max_mag,
+            interpolation_mode=interpolation_mode,
+            compress=compress,
+            sampling_mode=sampling_mode,
+            executor=executor,
+        )

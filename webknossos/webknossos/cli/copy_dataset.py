@@ -1,7 +1,6 @@
 """This module copies a WEBKNOSSOS datasets."""
 
 import logging
-from argparse import Namespace
 from multiprocessing import cpu_count
 from typing import Annotated, Any
 
@@ -10,8 +9,7 @@ import typer
 from ..dataset import Dataset
 from ..dataset_properties import DataFormat
 from ..geometry import Vec3Int
-from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, parse_path, parse_vec3int
+from ._utils import DistributionStrategy, make_executor, parse_path, parse_vec3int
 
 logger = logging.getLogger(__name__)
 
@@ -95,15 +93,9 @@ def main(
     - AWS_SECRET_ACCESS_KEY
     """
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
-
     source_dataset = Dataset.open(source)
 
-    with get_executor_for_args(args=executor_args) as executor:
+    with make_executor(distribution_strategy, jobs, job_resources) as executor:
         source_dataset.copy_dataset(
             target,
             chunk_shape=chunk_shape,

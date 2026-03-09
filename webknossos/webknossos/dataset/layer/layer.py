@@ -53,7 +53,6 @@ from webknossos.utils import (
     copytree,
     dump_path,
     enrich_path,
-    get_executor_for_args,
     is_fs_path,
     movetree,
     named_partial,
@@ -1140,30 +1139,27 @@ class Layer(AbstractLayer):
         )
 
         # perform downsampling
-        with get_executor_for_args(None, executor) as executor:
-            if buffer_shape is None:
-                buffer_shape = determine_downsample_buffer_shape(target_view.info)
-            func = named_partial(
-                downsample_cube_job,
-                mag_factors=mag_factors,
-                interpolation_mode=parsed_interpolation_mode,
-                buffer_shape=buffer_shape,
-            )
-            # The downsampling computation is chunked using buffer_shape anyways.
-            # The target_chunk_shape determines how many jobs are spawned. Increase it
-            # to avoid job computation overhead.
-            target_chunk_shape = DEFAULT_SHARD_SHAPE.pairmax(
-                target_view.info.shard_shape
-            )
-            source_view.for_zipped_chunks(
-                # this view is restricted to the bounding box specified in the properties
-                func,
-                target_view=target_view,
-                executor=executor,
-                source_chunk_shape=target_chunk_shape * target_mag.to_np(),
-                target_chunk_shape=target_chunk_shape * target_mag.to_np(),
-                progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",
-            )
+        if buffer_shape is None:
+            buffer_shape = determine_downsample_buffer_shape(target_view.info)
+        func = named_partial(
+            downsample_cube_job,
+            mag_factors=mag_factors,
+            interpolation_mode=parsed_interpolation_mode,
+            buffer_shape=buffer_shape,
+        )
+        # The downsampling computation is chunked using buffer_shape anyways.
+        # The target_chunk_shape determines how many jobs are spawned. Increase it
+        # to avoid job computation overhead.
+        target_chunk_shape = DEFAULT_SHARD_SHAPE.pairmax(target_view.info.shard_shape)
+        source_view.for_zipped_chunks(
+            # this view is restricted to the bounding box specified in the properties
+            func,
+            target_view=target_view,
+            executor=executor,
+            source_chunk_shape=target_chunk_shape * target_mag.to_np(),
+            target_chunk_shape=target_chunk_shape * target_mag.to_np(),
+            progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",
+        )
 
     def redownsample(
         self,
@@ -1354,25 +1350,24 @@ class Layer(AbstractLayer):
             target_view = target_mag_view.get_view(absolute_bounding_box=bbox_mag1)
 
             # perform upsampling
-            with get_executor_for_args(None, executor) as actual_executor:
-                if buffer_shape is None:
-                    buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
-                else:
-                    buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
-                func = named_partial(
-                    upsample_cube_job,
-                    mag_factors=mag_factors,
-                    buffer_shape=buffer_shape,
-                )
-                prev_mag_view.get_view(
-                    absolute_bounding_box=bbox_mag1, read_only=True
-                ).for_zipped_chunks(
-                    # this view is restricted to the bounding box specified in the properties
-                    func,
-                    target_view=target_view,
-                    executor=actual_executor,
-                    progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
-                )
+            if buffer_shape is None:
+                buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
+            else:
+                buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
+            func = named_partial(
+                upsample_cube_job,
+                mag_factors=mag_factors,
+                buffer_shape=buffer_shape,
+            )
+            prev_mag_view.get_view(
+                absolute_bounding_box=bbox_mag1, read_only=True
+            ).for_zipped_chunks(
+                # this view is restricted to the bounding box specified in the properties
+                func,
+                target_view=target_view,
+                executor=executor,
+                progress_desc=f"Upsampling from Mag {prev_mag} to Mag {target_mag}",
+            )
             # Restoring the original layer bbox
             self.bounding_box = old_layer_bbox
 

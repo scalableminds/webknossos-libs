@@ -9,15 +9,6 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.utils import (
-    get_executor_for_args,
-    is_fs_path,
-    rmtree,
-    strip_trailing_slash,
-    wait_and_ensure_success,
-    warn_deprecated,
-)
-
 from ....dataset_properties import DataFormat, MagViewProperties
 from ....geometry import (
     Mag,
@@ -25,6 +16,14 @@ from ....geometry import (
     NormalizedBoundingBox,
     Vec3Int,
     Vec3IntLike,
+)
+from ....utils import (
+    get_default_executor,
+    is_fs_path,
+    rmtree,
+    strip_trailing_slash,
+    wait_and_ensure_success,
+    warn_deprecated,
 )
 from ._array import (
     ArrayInfo,
@@ -481,7 +480,7 @@ class MagView(View, Generic[LayerTypeT]):
                 if not view.read_only:
                     view.write(processed_data)
 
-            with get_executor_for_args(None) as executor:
+            with get_default_executor() as executor:
                 executor.map(process_chunk, mag1.get_views_on_disk())
             ```
 
@@ -651,7 +650,7 @@ class MagView(View, Generic[LayerTypeT]):
                     ):
                         yield bbox
 
-        with get_executor_for_args(None, executor) as executor:
+        with executor or get_default_executor() as executor:
             try:
                 bbox_iterator = self._array.list_bounding_boxes()
             except NotImplementedError:

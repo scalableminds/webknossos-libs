@@ -20,7 +20,7 @@ from ....geometry import (
 from ....geometry.vec_int import VecIntLike
 from ....utils import (
     count_defined_values,
-    get_executor_for_args,
+    get_default_executor,
     get_rich_progress,
     wait_and_ensure_success,
 )
@@ -1168,7 +1168,7 @@ class View:
             job_args.append(chunk_view)
 
         # execute the work for each chunk
-        with get_executor_for_args(None, executor) as executor:
+        with executor or get_default_executor() as executor:
             results = wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, job_args),
                 executor=executor,
@@ -1373,22 +1373,21 @@ class View:
         """
         if self.bounding_box.size != other.bounding_box.size:
             return False
-        with get_executor_for_args(None, executor) as executor:
-            # read-only views are required for more flexible chunk shapes
-            # otherwise, shard-aligned chunk shapes would be required
-            read_only_self = self.get_view(read_only=True)
-            read_only_other = other.get_view(read_only=True)
-            try:
-                read_only_self.for_zipped_chunks(
-                    _assert_check_equality,
-                    read_only_other,
-                    executor=executor,
-                    progress_desc=progress_desc or "Comparing contents",
-                    source_chunk_shape=chunk_shape,
-                    target_chunk_shape=chunk_shape,
-                )
-            except AssertionError:
-                return False
+        # read-only views are required for more flexible chunk shapes
+        # otherwise, shard-aligned chunk shapes would be required
+        read_only_self = self.get_view(read_only=True)
+        read_only_other = other.get_view(read_only=True)
+        try:
+            read_only_self.for_zipped_chunks(
+                _assert_check_equality,
+                read_only_other,
+                executor=executor,
+                progress_desc=progress_desc or "Comparing contents",
+                source_chunk_shape=chunk_shape,
+                target_chunk_shape=chunk_shape,
+            )
+        except AssertionError:
+            return False
         return True
 
     def _is_compressed(self) -> bool:

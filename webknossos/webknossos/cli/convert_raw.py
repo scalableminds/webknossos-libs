@@ -1,13 +1,13 @@
 """This module converts a RAW dataset to a WEBKNOSSOS dataset."""
 
 import logging
-from argparse import Namespace
 from functools import partial
 from multiprocessing import cpu_count
 from typing import Annotated, Any, Literal
 
 import numpy as np
 import typer
+from cluster_tools import Executor
 from upath import UPath
 
 from ..dataset import Dataset, MagView, SamplingModes
@@ -20,7 +20,6 @@ from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import (
-    get_executor_for_args,
     is_fs_path,
     rmtree,
     time_start,
@@ -33,6 +32,7 @@ from ._utils import (
     RescaleValues,
     SamplingMode,
     VoxelSizeTuple,
+    make_executor,
     parse_mag,
     parse_path,
     parse_rescale_values,
@@ -108,7 +108,7 @@ def convert_raw(
     flip_axes: tuple[int, ...] | None = None,
     compress: bool = True,
     rescale_min_max: RescaleValues | None = None,
-    executor_args: Namespace | None = None,
+    executor: Executor,
 ) -> MagView:
     """Performs the conversion step from RAW file to WEBKNOSSOS"""
     time_start(f"Conversion of {source_raw_path}")
@@ -132,7 +132,7 @@ def convert_raw(
     )
 
     # Parallel chunk conversion
-    with get_executor_for_args(args=executor_args) as executor:
+    with executor as executor:
         wait_and_ensure_success(
             executor.map_to_futures(
                 partial(
@@ -352,11 +352,7 @@ def main(
         logger.error("source_path is not a file")
         return
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
+    executor = make_executor(distribution_strategy, jobs, job_resources)
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     if overwrite_existing and target.exists():
@@ -377,16 +373,15 @@ def main(
         flip_axes=flip_axes.to_tuple() if flip_axes else None,
         compress=compress,
         rescale_min_max=rescale_min_max,
-        executor_args=executor_args,
+        executor=executor,
     )
 
     if downsample:
-        with get_executor_for_args(executor_args) as executor:
-            mag_view.layer.downsample(
-                from_mag=mag_view.mag,
-                coarsest_mag=max_mag,
-                interpolation_mode=interpolation_mode,
-                compress=compress,
-                sampling_mode=mode,
-                executor=executor,
-            )
+        mag_view.layer.downsample(
+            from_mag=mag_view.mag,
+            coarsest_mag=max_mag,
+            interpolation_mode=interpolation_mode,
+            compress=compress,
+            sampling_mode=mode,
+            executor=executor,
+        )

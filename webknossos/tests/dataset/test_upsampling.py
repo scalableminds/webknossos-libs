@@ -15,7 +15,7 @@ from webknossos import (
 )
 from webknossos.dataset.layer._upsampling_utils import upsample_cube, upsample_cube_job
 from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.utils import get_executor_for_args
+from webknossos.utils import get_default_executor
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)
@@ -189,7 +189,7 @@ def test_upsample_nd_dataset(tmp_upath: UPath) -> None:
     )
 
     source_mag = source_layer.get_mag("2")
-    with get_executor_for_args(None) as executor:
+    with get_default_executor() as executor:
         target_layer.add_mag_as_copy(source_mag, executor=executor)
         target_layer.upsample(
             from_mag=Mag(2),

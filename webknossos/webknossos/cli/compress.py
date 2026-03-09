@@ -1,6 +1,5 @@
 """This module takes care of compressing WEBKNOSSOS datasets."""
 
-from argparse import Namespace
 from multiprocessing import cpu_count
 from typing import Annotated, Any
 
@@ -8,8 +7,7 @@ import typer
 
 from ..dataset import Dataset
 from ..geometry.mag import Mag
-from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, parse_mag, parse_path
+from ._utils import DistributionStrategy, make_executor, parse_mag, parse_path
 
 
 def main(
@@ -63,19 +61,13 @@ def main(
 ) -> None:
     """Compress a given WEBKNOSSOS dataset."""
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
-
     ds = Dataset.open(target)
     if layer_name is None:
         layers = list(ds.layers.values())
     else:
         layers = [ds.get_layer(layer_name)]
 
-    with get_executor_for_args(args=executor_args) as executor:
+    with make_executor(distribution_strategy, jobs, job_resources) as executor:
         for layer in layers:
             if mag is None:
                 mags = list(layer.mags.values())

@@ -1,14 +1,12 @@
 """This module merges a volume annotation layer with its fallback layer."""
 
-from argparse import Namespace
 from multiprocessing import cpu_count
 from typing import Annotated, Any
 
 import typer
 
 from ..annotation import Annotation
-from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, parse_path
+from ._utils import DistributionStrategy, make_executor, parse_path
 
 
 def main(
@@ -66,13 +64,7 @@ def main(
 ) -> None:
     """Merges a given WEBKNOSSOS annotation with a volume annotation of a fallback layer."""
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
-
-    with get_executor_for_args(args=executor_args) as executor:
+    with make_executor(distribution_strategy, jobs, job_resources) as executor:
         Annotation.load(source_annotation).merge_fallback_layer(
             target=target,
             dataset_directory=dataset_directory,

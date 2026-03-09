@@ -1,7 +1,6 @@
 """This module converts an image stack to a WEBKNOSSOS dataset."""
 
 import tempfile
-from argparse import Namespace
 from multiprocessing import cpu_count
 from typing import Annotated, Any
 
@@ -15,12 +14,13 @@ from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import Mag, Vec3Int
-from ..utils import get_executor_for_args, rmtree
+from ..utils import rmtree
 from ._utils import (
     DistributionStrategy,
     LayerCategory,
     SamplingMode,
     VoxelSizeTuple,
+    make_executor,
     parse_mag,
     parse_path,
     parse_vec3int,
@@ -236,16 +236,12 @@ def main(
         chunks_per_shard=chunks_per_shard,
     )
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
     mode = SamplingModes.parse(sampling_mode.value)
 
     def _convert_and_downsample(target_path: UPath) -> Dataset:
-        with get_executor_for_args(args=executor_args) as executor:
+        executor = make_executor(distribution_strategy, jobs, job_resources)
+        with executor as executor:
             dataset = Dataset.from_images(
                 source,
                 target_path,
@@ -261,7 +257,7 @@ def main(
                 layer_category=category.value if category else None,
             )
         if downsample:
-            with get_executor_for_args(args=executor_args) as executor:
+            with executor as executor:
                 dataset.downsample(
                     coarsest_mag=max_mag,
                     interpolation_mode=interpolation_mode,

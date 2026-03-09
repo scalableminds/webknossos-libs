@@ -80,7 +80,7 @@ from ..dataset_properties import (
 from ..geometry import NDBoundingBox, Vec3Int
 from ..proofreading.agglomerate_graph import AgglomerateGraph
 from ..skeleton import Skeleton
-from ..utils import get_executor_for_args, is_fs_path, time_since_epoch_in_ms
+from ..utils import is_fs_path, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 from .volume_layer import SegmentInformation, VolumeLayer
 
@@ -803,10 +803,9 @@ class Annotation:
 
             if volume_layer.zip is None:
                 logger.info("No volume annotation found. Copy fallback layer.")
-                with get_executor_for_args(args=None, executor=executor) as executor:
-                    output_dataset.add_layer_as_copy(
-                        fallback_layer, compress=True, executor=executor
-                    )
+                output_dataset.add_layer_as_copy(
+                    fallback_layer, compress=True, executor=executor
+                )
 
             else:
                 tmp_annotation_layer_name = f"{self.name}-TMP"
@@ -836,20 +835,19 @@ class Annotation:
                     fallback_layer, fallback_layer.name
                 )
 
-                with get_executor_for_args(args=None, executor=executor) as executor:
-                    logger.info(
-                        "Copy Mag %s from %s to %s",
-                        fallback_mag.mag,
-                        fallback_layer.path,
-                        output_layer.path,
-                    )
-                    output_mag = output_layer.add_mag_as_copy(
-                        fallback_mag,
-                        compress=True,
-                        executor=executor,
-                    )
+                logger.info(
+                    "Copy Mag %s from %s to %s",
+                    fallback_mag.mag,
+                    fallback_layer.path,
+                    output_layer.path,
+                )
+                output_mag = output_layer.add_mag_as_copy(
+                    fallback_mag,
+                    compress=True,
+                    executor=executor,
+                )
 
-                    output_mag.merge_with_view(input_annotation_mag, executor)
+                output_mag.merge_with_view(input_annotation_mag, executor)
 
                 logger.info("Delete temporary annotation layer")
                 output_dataset.delete_layer(tmp_annotation_layer_name)

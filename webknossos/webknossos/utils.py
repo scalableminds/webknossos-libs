@@ -106,6 +106,11 @@ def time_stop(identifier: str) -> None:
     logger.debug(f"{identifier} took {time.time() - _time:.8f}s")
 
 
+def get_default_executor() -> Executor:
+    logger.info(f"Using pool of {cpu_count()} workers.")
+    return get_executor("multiprocessing", max_workers=cpu_count())
+
+
 def get_executor_for_args(
     args: argparse.Namespace | None,
     executor: Executor | None = None,

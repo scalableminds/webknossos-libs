@@ -1,15 +1,14 @@
 """This module checks equality of two different WEBKNOSSOS datasets."""
 
 import logging
-from argparse import Namespace
 from multiprocessing import cpu_count
 from typing import Annotated, Any
 
 import typer
+from cluster_tools import Executor
 
 from ..dataset import Dataset, Layer
-from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, parse_path
+from ._utils import DistributionStrategy, make_executor, parse_path
 
 logger = logging.getLogger(__name__)
 
@@ -63,18 +62,14 @@ def main(
 ) -> None:
     """Check equality of two WEBKNOSSOS datasets."""
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
-
     source_dataset = Dataset.open(source)
     target_dataset = Dataset.open(target)
     source_layer_names = set(source_dataset.layers.keys())
     target_layer_names = set(target_dataset.layers.keys())
 
     layer_names = list(source_layer_names)
+
+    executor = make_executor(distribution_strategy, jobs, job_resources)
 
     try:
         if layer_name is not None:
@@ -94,9 +89,7 @@ def main(
 
         for name in layer_names:
             compare_layers(
-                source_dataset.get_layer(name),
-                target_dataset.get_layer(name),
-                executor_args,
+                source_dataset.get_layer(name), target_dataset.get_layer(name), executor
             )
 
         print(
@@ -111,7 +104,7 @@ def main(
 def compare_layers(
     source_layer: Layer,
     target_layer: Layer,
-    executor_args: Namespace,
+    executor: Executor,
 ) -> None:
     """Compares one layer with another layer"""
 
@@ -138,7 +131,7 @@ are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
         target_mag = target_layer.mags[mag]
 
         logger.info("Start verification of %s in mag %s", layer_name, mag)
-        with get_executor_for_args(args=executor_args) as executor:
+        with executor as executor:
             if not source_mag.content_is_equal(
                 target_mag,
                 executor=executor,

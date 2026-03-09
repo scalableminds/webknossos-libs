@@ -1,6 +1,5 @@
 """This module takes care of downsampling WEBKNOSSOS datasets."""
 
-from argparse import Namespace
 from multiprocessing import cpu_count
 from typing import Annotated
 
@@ -10,10 +9,10 @@ from upath import UPath
 from ..dataset import RemoteDataset, SamplingModes, TransferMode
 from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import Mag
-from ..utils import get_executor_for_args
 from ._utils import (
     DistributionStrategy,
     SamplingMode,
+    make_executor,
     open_dataset,
     parse_mag,
 )
@@ -95,11 +94,6 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
 ) -> None:
     """Downsample your WEBKNOSSOS dataset."""
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     sampling_mode_parsed = SamplingModes.parse(sampling_mode.value)
 
     if access_mode is None:
@@ -111,7 +105,7 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
     with open_dataset(
         UPath(target), annotation_ok=False, token=token, access_mode=access_mode
     ) as dataset:
-        with get_executor_for_args(args=executor_args) as executor:
+        with make_executor(distribution_strategy, jobs, job_resources) as executor:
             if isinstance(dataset, RemoteDataset):
                 if transfer_mode is None:
                     raise typer.BadParameter(

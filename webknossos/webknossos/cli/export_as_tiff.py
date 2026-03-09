@@ -1,7 +1,6 @@
 """This module takes care of exporting tiff images."""
 
 import logging
-from argparse import Namespace
 from functools import partial
 from math import ceil
 from multiprocessing import cpu_count
@@ -16,10 +15,11 @@ from upath import UPath
 from ..dataset import MagView, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, wait_and_ensure_success
+from ..utils import wait_and_ensure_success
 from ._utils import (
     DistributionStrategy,
     Vec2Int,
+    make_executor,
     open_dataset,
     parse_bbox,
     parse_mag,
@@ -138,11 +138,13 @@ def export_tiff_stack(
     tiling_slice_size: None | tuple[int, int],
     batch_size: int,
     downsample: int,
-    args: Namespace,
+    jobs: int,
+    distribution_strategy: DistributionStrategy,
+    job_resources: str | None,
 ) -> None:
     destination_path.mkdir(parents=True, exist_ok=True)
 
-    with get_executor_for_args(args) as executor:
+    with make_executor(distribution_strategy, jobs, job_resources) as executor:
         view = mag_view.get_view(
             absolute_offset=bbox.topleft, size=bbox.size, read_only=True
         )
@@ -285,11 +287,6 @@ def main(
     bbox = bbox.align_with_mag(mag_view.mag)
 
     logger.info("Starting tiff export for bounding box: %s", bbox)
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     used_tile_size = None
     if tiles_per_dimension is not None:
         tile_size = tiles_per_dimension
@@ -315,5 +312,7 @@ def main(
         tiling_slice_size=used_tile_size,
         batch_size=batch_size,
         downsample=downsample,
-        args=executor_args,
+        jobs=jobs,
+        distribution_strategy=distribution_strategy,
+        job_resources=job_resources,
     )
