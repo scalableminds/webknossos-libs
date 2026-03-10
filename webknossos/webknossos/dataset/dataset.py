@@ -33,11 +33,8 @@ from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._utils import pims_images
 from .abstract_dataset import DEFAULT_VERSION, AbstractDataset, _dtype_maybe
 from .defaults import (
-    DEFAULT_CHUNK_SHAPE,
     DEFAULT_DATA_FORMAT,
     DEFAULT_DTYPE,
-    DEFAULT_SHARD_SHAPE,
-    DEFAULT_SHARD_SHAPE_FROM_IMAGES,
     PROPERTIES_FILE_NAME,
     ZARR_JSON_FILE_NAME,
     ZGROUP_FILE_NAME,
@@ -54,7 +51,7 @@ from .layer.abstract_layer import (
     _UNALLOWED_LAYER_NAME_CHARS,
     _validate_layer_name,
 )
-from .layer.layer import _get_shard_shape
+from .layer.layer import _get_shard_and_chunk_shapes
 from .ome_metadata import write_ome_metadata
 from .remote_dataset import RemoteAccessMode, RemoteDataset
 from .remote_folder import RemoteFolder
@@ -1512,45 +1509,24 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 DataFormat.Zarr,
                 DataFormat.Zarr3,
             ):
-                chunk_shape = (
-                    DEFAULT_CHUNK_SHAPE.with_z(1)
-                    if chunk_shape is None
-                    else Vec3Int.from_vec_or_int(chunk_shape)
-                )
-                shard_shape = _get_shard_shape(
+                chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
+                    data_format=layer.data_format,
+                    layer_bounding_box=expected_bbox,
                     chunk_shape=chunk_shape,
                     chunks_per_shard=chunks_per_shard,
                     shard_shape=shard_shape,
                 )
-                if shard_shape is None:
-                    if layer.data_format == DataFormat.Zarr3:
-                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES.with_z(
-                            chunk_shape.z
-                        )
-                    else:
-                        shard_shape = DEFAULT_CHUNK_SHAPE.with_z(chunk_shape.z)
-                else:
-                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
+                if layer.data_format == DataFormat.Zarr3:
+                    chunk_shape = chunk_shape.with_z(1)
+                    shard_shape = shard_shape.with_z(1)
             else:
-                chunk_shape = (
-                    DEFAULT_CHUNK_SHAPE
-                    if chunk_shape is None
-                    else Vec3Int.from_vec_or_int(chunk_shape)
-                )
-                shard_shape = _get_shard_shape(
+                chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
+                    data_format=layer.data_format,
+                    layer_bounding_box=expected_bbox,
                     chunk_shape=chunk_shape,
                     chunks_per_shard=chunks_per_shard,
                     shard_shape=shard_shape,
                 )
-                if shard_shape is None:
-                    if layer.data_format == DataFormat.Zarr3:
-                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES
-                    elif layer.data_format == DataFormat.Zarr:
-                        shard_shape = DEFAULT_CHUNK_SHAPE
-                    else:
-                        shard_shape = DEFAULT_SHARD_SHAPE
-                else:
-                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
 
             mag = Mag(mag)
 
