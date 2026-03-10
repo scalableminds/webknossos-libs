@@ -33,6 +33,7 @@ from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._utils import pims_images
 from .abstract_dataset import DEFAULT_VERSION, AbstractDataset, _dtype_maybe
 from .defaults import (
+    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_DATA_FORMAT,
     DEFAULT_DTYPE,
     PROPERTIES_FILE_NAME,
@@ -1504,13 +1505,23 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
             expected_bbox = pims_image_sequence.expected_bbox
 
+            _shard_shape_user_specified = (
+                shard_shape is not None or chunks_per_shard is not None
+            )
             chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
                 data_format=layer.data_format,
-                layer_bounding_box=expected_bbox,
+                layer_bounding_box=None,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 shard_shape=shard_shape,
             )
+            # For Zarr3 image imports, default to z-aligned shards for efficient
+            # slice-by-slice writing, regardless of total z size.
+            if (
+                not _shard_shape_user_specified
+                and layer.data_format == DataFormat.Zarr3
+            ):
+                shard_shape = chunk_shape * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
             # When the expected bbox is 2D the chunk_shape is set to 2D too.
             if (
                 expected_bbox.get_shape("z") == 1
