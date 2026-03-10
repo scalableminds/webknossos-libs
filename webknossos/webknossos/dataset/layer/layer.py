@@ -82,6 +82,15 @@ def _get_shard_and_chunk_shapes(
     chunks_per_shard: Vec3IntLike | int | None = None,
     shard_shape: Vec3IntLike | int | None = None,
 ) -> tuple[Vec3Int, Vec3Int]:
+    """This function is used to determine the chunk and shard shapes for a layer.
+
+    - If chunk_shape, shard_shape or chunks_per_shard are specified, they are used as is.
+    - If the data_format is Zarr3, we can use arbitrary shard shapes. So, for flat data (few sections in z),
+      we use more chunks per shard in x and y and just a single chunk in z.
+    - If the data_format is Zarr, we cannot use sharding and use a single chunk in x,y,z.
+    - The default is 32x32x32 chunks per shard for Zarr3 and WKW.
+    """
+
     if shard_shape is not None and chunks_per_shard is not None:
         raise ValueError(
             "shard_shape and chunks_per_shard must not be specified at the same time."
@@ -93,6 +102,10 @@ def _get_shard_and_chunk_shapes(
         chunk_shape = DEFAULT_CHUNK_SHAPE
     if shard_shape is not None:
         shard_shape = Vec3Int.from_vec_or_int(shard_shape)
+        if shard_shape % chunk_shape != Vec3Int.zeros():
+            raise ValueError(
+                f"The chunk_shape {chunk_shape} must be a multiple of the shard_shape {shard_shape}."
+            )
     elif chunks_per_shard is not None:
         warn_deprecated("chunks_per_shard", "shard_shape")
         shard_shape = Vec3Int.from_vec_or_int(chunks_per_shard) * chunk_shape
@@ -320,13 +333,11 @@ class Layer(AbstractLayer):
         # normalize the name of the mag
         mag = Mag(mag)
 
-        chunk_shape = (
-            DEFAULT_CHUNK_SHAPE
-            if chunk_shape is None
-            else Vec3Int.from_vec_or_int(chunk_shape)
-        )
         chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
             data_format=self.data_format,
+            # If this is the first mag, the bounding box is probably not yet set,
+            # so we don't use it for computing chunk and shard shapes
+            layer_bounding_box=(None if len(self.mags) == 0 else self.bounding_box),
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             shard_shape=shard_shape,
@@ -509,6 +520,8 @@ class Layer(AbstractLayer):
         else:
             chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
                 data_format=self.data_format,
+                # same reasoning as in add_mag
+                layer_bounding_box=(None if len(self.mags) == 0 else self.bounding_box),
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 shard_shape=shard_shape,
@@ -1108,8 +1121,8 @@ class Layer(AbstractLayer):
             interpolation_mode: Method for interpolation ("median", "mode", "nearest", "bilinear", "bicubic")
             compress: Whether to compress target data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape: Shape of processing buffer
-            chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
-            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
+            chunk_shape: Shape of chunks for storage.
+            shard_shape: Shape of shards for storage.
             allow_overwrite: Whether to allow overwriting existing mag
             only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
             from_mag_view: Source magnification view, pass only if the source data should be from another layer or dataset.
@@ -1216,8 +1229,8 @@ class Layer(AbstractLayer):
             interpolation_mode: Method for interpolation
             compress: Whether to compress recomputed data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape: Shape of processing buffer
-            chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
-            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
+            chunk_shape: Shape of chunks for storage.
+            shard_shape: Shape of shards for storage.
             executor: Executor for parallel processing
         """
 
@@ -1264,8 +1277,8 @@ class Layer(AbstractLayer):
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
             compress (bool | Zarr3Config): Whether to compress outputs. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape (Vec3IntLike | int | None): Shape of processing buffer.
-            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
-            shard_shape (Vec3IntLike | int | None): Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage.
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage.
             allow_overwrite (bool): Whether to allow overwriting mags. Defaults to False.
             only_setup_mags (bool): Only create mag structures without data. Defaults to False.
             executor (Executor | None): Executor for parallel processing.
@@ -1334,8 +1347,8 @@ class Layer(AbstractLayer):
                 - 'constant_z': Only upsamples x/y dimensions. z remains unchanged.
             align_with_other_layers: Whether to align mags with others. Defaults to True.
             buffer_shape (Vec3IntLike | int | None): Shape of processing buffer.
-            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
-            shard_shape (Vec3IntLike | int | None): Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage.
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage.
             executor (Executor | None): Executor for parallel processing.
 
         Raises:
