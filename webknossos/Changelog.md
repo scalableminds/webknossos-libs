@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `chunk_shape` and `shard_shape` arguments to `Layer.downsample`, `Layer.downsample_mag`, `Layer.redownsample`, `Layer.downsample_mag_list`, `Layer.upsample` and `RemoteLayer.downsample`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
 
 ### Changed
-- The default shard shape for downsampled mags is now `(1024, 1024, 1024)` (default) or `(4096, 4096, 32)` (zarr3 and less than 32 sections) or `(32, 32, 32)` (zarr2) and the chunk shape is now `(32, 32, 32)`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
+- The default shard shape for downsampled mags is now `(1024, 1024, 1024)` (default) or `(4096, 4096, 32)` (zarr3 and 32 sections or less) or `(32, 32, 32)` (zarr2) and the chunk shape is now `(32, 32, 32)`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
 
 ### Fixed
 

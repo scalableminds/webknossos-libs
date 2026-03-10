@@ -483,7 +483,7 @@ class Layer(AbstractLayer):
                 and mag_view.info.chunk_shape != chunk_shape_parsed
             ):
                 raise ValueError(
-                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk shapes do not match. Expected {mag_view.info.chunk_shape}, got {chunk_shape}."
+                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk shapes do not match. Expected {mag_view.info.chunk_shape}, got {chunk_shape_parsed}."
                 )
 
             if (
@@ -491,7 +491,7 @@ class Layer(AbstractLayer):
                 and mag_view.info.shard_shape != shard_shape_parsed
             ):
                 raise ValueError(
-                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the shard shapes do not match. Expected {mag_view.info.shard_shape}, got {shard_shape}."
+                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the shard shapes do not match. Expected {mag_view.info.shard_shape}, got {shard_shape_parsed}."
                 )
 
             if (
