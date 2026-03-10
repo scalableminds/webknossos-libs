@@ -1504,29 +1504,20 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
             expected_bbox = pims_image_sequence.expected_bbox
 
+            chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
+                data_format=layer.data_format,
+                layer_bounding_box=expected_bbox,
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
+            )
             # When the expected bbox is 2D the chunk_shape is set to 2D too.
-            if expected_bbox.get_shape("z") == 1 and layer.data_format in (
-                DataFormat.Zarr,
-                DataFormat.Zarr3,
+            if (
+                expected_bbox.get_shape("z") == 1
+                and layer.data_format == DataFormat.Zarr3
             ):
-                chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
-                    data_format=layer.data_format,
-                    layer_bounding_box=expected_bbox,
-                    chunk_shape=chunk_shape,
-                    chunks_per_shard=chunks_per_shard,
-                    shard_shape=shard_shape,
-                )
-                if layer.data_format == DataFormat.Zarr3:
-                    chunk_shape = chunk_shape.with_z(1)
-                    shard_shape = shard_shape.with_z(1)
-            else:
-                chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
-                    data_format=layer.data_format,
-                    layer_bounding_box=expected_bbox,
-                    chunk_shape=chunk_shape,
-                    chunks_per_shard=chunks_per_shard,
-                    shard_shape=shard_shape,
-                )
+                chunk_shape = chunk_shape.with_z(1)
+                shard_shape = shard_shape.with_z(1)
 
             mag = Mag(mag)
 

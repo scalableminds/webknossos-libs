@@ -1199,7 +1199,16 @@ class Layer(AbstractLayer):
             # The downsampling computation is chunked using buffer_shape anyways.
             # The target_chunk_shape determines how many jobs are spawned. Increase it
             # to avoid job computation overhead.
+            _MIN_TARGET_VOXELS = 1024**3
             target_chunk_shape = target_view.info.shard_shape
+            while target_chunk_shape.prod() < _MIN_TARGET_VOXELS:
+                axes = [
+                    target_chunk_shape.x,
+                    target_chunk_shape.y,
+                    target_chunk_shape.z,
+                ]
+                axes[axes.index(min(axes))] *= 2
+                target_chunk_shape = Vec3Int(*axes)
             source_view.for_zipped_chunks(
                 # this view is restricted to the bounding box specified in the properties
                 func,
@@ -1410,12 +1419,8 @@ class Layer(AbstractLayer):
                 target_mag,
                 prev_mag_view,
                 compress=compress,
-                chunk_shape=Vec3Int.from_vec_or_int(chunk_shape)
-                if chunk_shape is not None
-                else None,
-                shard_shape=Vec3Int.from_vec_or_int(shard_shape)
-                if shard_shape is not None
-                else None,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
             )
 
             # We need to make sure the layer's bounding box is aligned
