@@ -9,8 +9,7 @@ from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset_properties import LayerProperties, MagViewProperties
 
 from ...client.api_client.models import ApiReserveMagUploadToPathParameters
-from ...geometry import Vec3Int
-from ...geometry.mag import Mag, MagLike
+from ...geometry import Mag, MagLike, Vec3IntLike
 from ...utils import enrich_path
 from ..transfer_mode import TransferMode
 from .abstract_layer import AbstractLayer, _validate_layer_name
@@ -122,7 +121,9 @@ class RemoteLayer(AbstractLayer):
         compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: bool = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         force_sampling_scheme: bool = False,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_path_prefix: str | None = None,
@@ -145,7 +146,9 @@ class RemoteLayer(AbstractLayer):
             sampling_mode (str | SamplingModes): How dimensions should be downsampled.
                 Defaults to ANISOTROPIC.
             align_with_other_layers (bool): Whether to align the mag selection with the dataset’s other layers. True by default.
-            buffer_shape (Vec3Int | None): Shape of processing buffer. Defaults to None.
+            buffer_shape (Vec3IntLike | int | None): Shape of processing buffer. Defaults to None.
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
             transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to COPY
             common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
@@ -191,6 +194,8 @@ class RemoteLayer(AbstractLayer):
                 sampling_mode=sampling_mode,
                 align_with_other_layers=align_with_other_layers_dataset,
                 buffer_shape=buffer_shape,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
                 force_sampling_scheme=force_sampling_scheme,
                 executor=executor,
             )

@@ -941,7 +941,9 @@ class Layer(AbstractLayer):
         compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset", "RemoteDataset"] = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         force_sampling_scheme: bool = False,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
@@ -962,7 +964,9 @@ class Layer(AbstractLayer):
             sampling_mode (str | SamplingModes): How dimensions should be downsampled.
                 Defaults to ANISOTROPIC.
             align_with_other_layers (bool | Dataset | RemoteDataset): Whether to align with other layers. True by default.
-            buffer_shape (Vec3Int | None): Shape of processing buffer. Defaults to None.
+            buffer_shape (Vec3IntLike | int | None): Shape of processing buffer. Defaults to None.
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
             allow_overwrite (bool): Whether existing mags can be overwritten. False by default.
             only_setup_mags (bool): Only create mags without data. False by default.
@@ -1060,6 +1064,8 @@ class Layer(AbstractLayer):
                 interpolation_mode=interpolation_mode,
                 compress=compress,
                 buffer_shape=buffer_shape,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
                 from_mag_view=prev_mag_view,
@@ -1073,7 +1079,9 @@ class Layer(AbstractLayer):
         *,
         interpolation_mode: str = "default",
         compress: bool | Zarr3Config = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
         from_mag_view: MagView | None = None,
@@ -1087,6 +1095,8 @@ class Layer(AbstractLayer):
             interpolation_mode: Method for interpolation ("median", "mode", "nearest", "bilinear", "bicubic")
             compress: Whether to compress target data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape: Shape of processing buffer
+            chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
             allow_overwrite: Whether to allow overwriting existing mag
             only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
             from_mag_view: Source magnification view, pass only if the source data should be from another layer or dataset.
@@ -1116,6 +1126,15 @@ class Layer(AbstractLayer):
 
         mag_factors = target_mag.to_vec3_int() // from_mag.to_vec3_int()
 
+        if chunk_shape is not None:
+            chunk_shape = Vec3Int.from_vec_or_int(chunk_shape)
+        else:
+            chunk_shape = DEFAULT_CHUNK_SHAPE
+        if shard_shape is not None:
+            shard_shape = Vec3Int.from_vec_or_int(shard_shape)
+        else:
+            shard_shape = DEFAULT_SHARD_SHAPE
+
         if target_mag in self.mags.keys() and allow_overwrite:
             target_mag_view = self.get_mag(target_mag)
         else:
@@ -1124,6 +1143,8 @@ class Layer(AbstractLayer):
                 target_mag,
                 from_mag_view,
                 compress=compress,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
             )
 
         if only_setup_mag:
@@ -1143,6 +1164,8 @@ class Layer(AbstractLayer):
         with get_executor_for_args(None, executor) as executor:
             if buffer_shape is None:
                 buffer_shape = determine_downsample_buffer_shape(target_view.info)
+            else:
+                buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
             func = named_partial(
                 downsample_cube_job,
                 mag_factors=mag_factors,
@@ -1152,9 +1175,7 @@ class Layer(AbstractLayer):
             # The downsampling computation is chunked using buffer_shape anyways.
             # The target_chunk_shape determines how many jobs are spawned. Increase it
             # to avoid job computation overhead.
-            target_chunk_shape = DEFAULT_SHARD_SHAPE.pairmax(
-                target_view.info.shard_shape
-            )
+            target_chunk_shape = target_view.info.shard_shape
             source_view.for_zipped_chunks(
                 # this view is restricted to the bounding box specified in the properties
                 func,
@@ -1170,7 +1191,9 @@ class Layer(AbstractLayer):
         *,
         interpolation_mode: str = "default",
         compress: bool | Zarr3Config = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Recompute all downsampled magnifications from base mag.
@@ -1182,6 +1205,8 @@ class Layer(AbstractLayer):
             interpolation_mode: Method for interpolation
             compress: Whether to compress recomputed data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape: Shape of processing buffer
+            chunk_shape: Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape: Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
             executor: Executor for parallel processing
         """
 
@@ -1197,6 +1222,8 @@ class Layer(AbstractLayer):
             interpolation_mode=interpolation_mode,
             compress=compress,
             buffer_shape=buffer_shape,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
             allow_overwrite=True,
             executor=executor,
         )
@@ -1208,7 +1235,9 @@ class Layer(AbstractLayer):
         *,
         interpolation_mode: str = "default",
         compress: bool | Zarr3Config = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
         executor: Executor | None = None,
@@ -1223,7 +1252,9 @@ class Layer(AbstractLayer):
             target_mags (List[Mag]): Ordered list of target magnifications
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
             compress (bool | Zarr3Config): Whether to compress outputs. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
-            buffer_shape (Vec3Int | None): Shape of processing buffer.
+            buffer_shape (Vec3IntLike | int | None): Shape of processing buffer.
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
             allow_overwrite (bool): Whether to allow overwriting mags. Defaults to False.
             only_setup_mags (bool): Only create mag structures without data. Defaults to False.
             executor (Executor | None): Executor for parallel processing.
@@ -1256,6 +1287,8 @@ class Layer(AbstractLayer):
                 interpolation_mode=interpolation_mode,
                 compress=compress,
                 buffer_shape=buffer_shape,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
                 executor=executor,
@@ -1270,7 +1303,9 @@ class Layer(AbstractLayer):
         compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
-        buffer_shape: Vec3IntLike | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Upsample data to finer magnifications.
@@ -1287,7 +1322,9 @@ class Layer(AbstractLayer):
                 - 'isotropic': Equal upsampling in all dimensions
                 - 'constant_z': Only upsamples x/y dimensions. z remains unchanged.
             align_with_other_layers: Whether to align mags with others. Defaults to True.
-            buffer_shape (Vec3IntLike | None): Shape of processing buffer.
+            buffer_shape (Vec3IntLike | int | None): Shape of processing buffer.
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
             executor (Executor | None): Executor for parallel processing.
 
         Raises:
@@ -1342,6 +1379,12 @@ class Layer(AbstractLayer):
                 target_mag,
                 prev_mag_view,
                 compress=compress,
+                chunk_shape=Vec3Int.from_vec_or_int(chunk_shape)
+                if chunk_shape is not None
+                else None,
+                shard_shape=Vec3Int.from_vec_or_int(shard_shape)
+                if shard_shape is not None
+                else None,
             )
 
             # We need to make sure the layer's bounding box is aligned
@@ -1381,6 +1424,8 @@ class Layer(AbstractLayer):
         new_mag_name: str | Mag,
         other_mag: MagView,
         compress: bool | Zarr3Config,
+        chunk_shape: Vec3Int | None = None,
+        shard_shape: Vec3Int | None = None,
     ) -> MagView["Layer"]:
         """Creates a new magnification based on settings from existing mag.
 
@@ -1394,8 +1439,8 @@ class Layer(AbstractLayer):
         """
         return self.add_mag(
             new_mag_name,
-            chunk_shape=other_mag.info.chunk_shape,
-            shard_shape=other_mag.info.shard_shape,
+            chunk_shape=chunk_shape or other_mag.info.chunk_shape,
+            shard_shape=shard_shape or other_mag.info.shard_shape,
             compress=compress,
         )
 
