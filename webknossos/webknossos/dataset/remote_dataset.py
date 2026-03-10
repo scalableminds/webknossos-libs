@@ -61,6 +61,7 @@ _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 if TYPE_CHECKING:
     from webknossos.administration.user import Team
     from webknossos.dataset import Dataset
+    from webknossos.dataset.layer import Layer
 
 
 class RemoteAccessMode(Enum):
@@ -793,6 +794,112 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             token,
             sharing_token,
         )
+
+    def add_layer_as_copy(
+        self,
+        foreign_layer: Union[str, PathLike, UPath, "Layer", RemoteLayer],
+        new_layer_name: str | None = None,
+        *,
+        data_format: str | DataFormat | None = None,
+        exists_ok: bool = False,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
+        with_attachments: bool = True,
+    ) -> RemoteLayer:
+        """Copy a layer from another dataset to this remote dataset.
+
+        Creates a new layer in this dataset by copying data and metadata from
+        a layer in another dataset.
+
+        Args:
+            foreign_layer: Layer to copy (path or Layer/RemoteLayer object)
+            new_layer_name: Optional name for the new layer, uses original name if None
+            data_format: Optional format to store copied data ('zarr', 'zarr3', etc.)
+            exists_ok: Whether to overwrite existing layers
+            transfer_mode: How data is transferred to remote storage. Defaults to COPY.
+            common_storage_path_prefix: Optional path prefix to select one of the
+                available WEBKNOSSOS storages.
+            overwrite_pending: If there are already pending/unfinished committed mags
+                on the server, overwrite them. Defaults to True.
+            with_attachments: Whether to copy attachments from segmentation layers.
+                Defaults to True.
+
+        Returns:
+            RemoteLayer: The newly created copy of the layer
+
+        Raises:
+            IndexError: If target layer name already exists and exists_ok is False
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            Copy layer keeping same name:
+            ```
+            other_ds = Dataset.open("other/dataset")
+            copied = remote_ds.add_layer_as_copy(other_ds.get_layer("color"))
+            ```
+
+            Copy with new name:
+            ```
+            copied = remote_ds.add_layer_as_copy(
+                other_ds.get_layer("color"),
+                new_layer_name="color_copy",
+            )
+            ```
+        """
+        from .layer import Layer
+        from .layer.segmentation_layer import SegmentationLayer
+
+        self._ensure_writable()
+        foreign_layer = Layer._ensure_layer(foreign_layer)
+
+        if new_layer_name is None:
+            new_layer_name = foreign_layer.name
+        else:
+            _validate_layer_name(new_layer_name)
+
+        if exists_ok:
+            layer = self.get_or_add_layer(
+                new_layer_name,
+                category=foreign_layer.category,
+                dtype=foreign_layer.dtype,
+                num_channels=foreign_layer.num_channels,
+                data_format=data_format or foreign_layer.data_format,
+                largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
+                bounding_box=foreign_layer.bounding_box,
+            )
+        else:
+            if new_layer_name in self.layers.keys():
+                raise IndexError(
+                    f"Cannot copy {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+                )
+            layer = self.add_layer(
+                new_layer_name,
+                category=foreign_layer.category,
+                dtype=foreign_layer.dtype,
+                num_channels=foreign_layer.num_channels,
+                data_format=data_format or foreign_layer.data_format,
+                largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
+                bounding_box=foreign_layer.bounding_box,
+            )
+
+        for mag_view in foreign_layer.mags.values():
+            layer.add_mag_as_copy(
+                mag_view,
+                transfer_mode=transfer_mode,
+                common_storage_path_prefix=common_storage_path_prefix,
+                overwrite_pending=overwrite_pending,
+            )
+
+        if (
+            with_attachments
+            and isinstance(layer, RemoteSegmentationLayer)
+            and isinstance(foreign_layer, SegmentationLayer | RemoteSegmentationLayer)
+        ):
+            for attachment in foreign_layer.attachments:
+                layer.attachments.add_attachment_as_copy(attachment)
+
+        return layer
 
     def delete_layer(self, layer_name: str) -> None:
         self._ensure_writable()

@@ -22,7 +22,7 @@ VOXEL_TYPES: dict[int, np.dtype] = {
 }
 VOXEL_TYPE_KEYS: dict[np.dtype, int] = {v: k for k, v in VOXEL_TYPES.items()}
 
-ALL_SEL = (slice(None),)
+ALL_SELECTOR = (slice(None),)
 
 
 class ChunkType(IntEnum):
@@ -44,8 +44,16 @@ def _morton_encode(chunk: Vec3Int) -> int:
     return result
 
 
+def _read_uint64le(buffer: bytes, offset: int = 0) -> int:
+    return struct.unpack_from("<Q", buffer, offset)[0]
+
+
+def _encode_uint64le(value: int) -> bytes:
+    return struct.pack("<Q", value)
+
+
 @dataclass(frozen=True)
-class WkwHeader:
+class TinyWkwHeader:
     chunk_shape: Vec3Int
     shard_shape: Vec3Int
     chunk_type: ChunkType
@@ -54,16 +62,16 @@ class WkwHeader:
     data_offset: int | None = None
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "WkwHeader":
-        assert data[0:3] == b"WKW"
-        assert data[3] == 1
+    def from_bytes(cls, data: bytes) -> "TinyWkwHeader":
+        assert data[0:3] == b"WKW", f"Invalid magic bytes, got: {data[0:3]!r}"
+        assert data[3] == 1, f"Invalid version, got: {data[3]!r}"
         per_dim_log2 = data[4]
         chunk_shape = Vec3Int.full(1 << (per_dim_log2 & 0x0F))
         shard_shape = Vec3Int.full(1 << ((per_dim_log2 >> 4) & 0x0F)) * chunk_shape
         chunk_type = ChunkType(data[5])
         voxel_type = VOXEL_TYPES[data[6]]
         voxel_size = data[7]
-        data_offset = struct.unpack_from("<Q", data, 8)[0]
+        data_offset = _read_uint64le(data, 8)
         num_channels = voxel_size // voxel_type.itemsize
         return cls(
             chunk_shape=chunk_shape,
@@ -94,7 +102,7 @@ class WkwHeader:
                     voxel_size,
                 ]
             )
-            + struct.pack("<Q", data_offset)
+            + _encode_uint64le(data_offset)
         )
 
     # ------------------------------------------------------------------
@@ -114,32 +122,42 @@ class WkwHeader:
         return self.chunk_type.value
 
 
-class WkwDataset:
-    """WKW dataset reader/writer using UPath for remote-compatible I/O."""
+class TinyWkwArray:
+    """WKW dataset reader/writer using UPath for remote-compatible I/O.
 
-    def __init__(self, path: UPath, header: WkwHeader) -> None:
+    For local arrays, the `Dataset` class from the `wkw` module is recommended because of better performance:
+    ```
+    from wkw import Dataset
+
+    ds = Dataset.open("path/to/dataset")
+    ```
+    """
+
+    def __init__(self, path: UPath, header: TinyWkwHeader) -> None:
         self._path = path
         self._header = header
 
     @property
-    def header(self) -> WkwHeader:
+    def header(self) -> TinyWkwHeader:
         return self._header
 
     @classmethod
-    def open(cls, path: UPath) -> "WkwDataset":
+    def open(cls, path: UPath) -> "TinyWkwArray":
         """Open a WKW dataset at `path` (must contain `header.wkw`)."""
-        header = WkwHeader.from_bytes((path / "header.wkw").read_bytes())
+        header = TinyWkwHeader.from_bytes((path / "header.wkw").read_bytes())
         return cls(path, header)
 
     @classmethod
-    def create(cls, path: UPath, header: WkwHeader) -> "WkwDataset":
+    def create(cls, path: UPath, header: TinyWkwHeader) -> "TinyWkwArray":
         """Create a new WKW dataset at `path`, writing `header.wkw` with data_offset=0."""
         path.mkdir(parents=True, exist_ok=True)
         (path / "header.wkw").write_bytes(header.to_bytes(data_offset=0))
         return cls(path, header)
 
     def close(self) -> None:
-        """Close the dataset."""
+        """Close the dataset.
+        Kept for compatibility with the `wkw` module.
+        """
         pass
 
     def _shard_path(self, shard_address: Vec3Int) -> UPath:
@@ -212,22 +230,24 @@ class WkwDataset:
         shard_bbox = bbox.intersected_with(full_shard_bbox)
 
         # if full shard is requested, pre-load the whole file
-        f_ctx = (
+        file_context = (
             io.BytesIO(file_path.read_bytes())
             if shard_bbox == full_shard_bbox
             else file_path.open("rb")
         )
 
-        with f_ctx as f:
+        with file_context as file_handle:
             # Each shard file stores its own data_offset; header.wkw may have 0.
-            f.seek(8)
-            shard_data_offset = struct.unpack("<Q", f.read(8))[0]
+            file_handle.seek(8)
+            shard_data_offset = _read_uint64le(file_handle.read(8))
 
             jump_table = None
             if header.chunk_type in (ChunkType.LZ4, ChunkType.LZ4HC):
                 num_chunks = header.file_len**3
-                f.seek(16)
-                jump_table = np.frombuffer(f.read(num_chunks * 8), dtype="<u8")
+                file_handle.seek(16)
+                jump_table = np.frombuffer(
+                    file_handle.read(num_chunks * 8), dtype="<u8"
+                )
 
             chunk_bboxes = sorted(
                 shard_bbox.chunk(
@@ -244,8 +264,8 @@ class WkwDataset:
                     morton_index = _morton_encode(
                         chunk_bbox.offset(-shard_topleft).topleft // header.chunk_shape
                     )
-                    f.seek(shard_data_offset + morton_index * num_chunk_bytes)
-                    raw_chunks.append(f.read(num_chunk_bytes))
+                    file_handle.seek(shard_data_offset + morton_index * num_chunk_bytes)
+                    raw_chunks.append(file_handle.read(num_chunk_bytes))
             else:
                 assert jump_table is not None
                 # Phase 1: gather compressed bytes (sequential I/O)
@@ -260,8 +280,10 @@ class WkwDataset:
                         else shard_data_offset
                     )
                     compressed_end = int(jump_table[morton_index])
-                    f.seek(compressed_start)
-                    compressed_bufs.append(f.read(compressed_end - compressed_start))
+                    file_handle.seek(compressed_start)
+                    compressed_bufs.append(
+                        file_handle.read(compressed_end - compressed_start)
+                    )
                 # Phase 2: decompress in parallel
                 with ThreadPoolExecutor() as executor:
                     raw_chunks = list(
@@ -282,9 +304,11 @@ class WkwDataset:
             chunk_origin = (
                 chunk_bbox.topleft // header.chunk_shape
             ) * header.chunk_shape
-            chunk_sel = ALL_SEL + chunk_bbox.offset(-chunk_origin).to_slices()
-            output_sel = ALL_SEL + chunk_bbox.offset(-bbox.topleft).to_slices()
-            output[output_sel] = chunk_data[chunk_sel]
+            chunk_selector = ALL_SELECTOR + chunk_bbox.offset(-chunk_origin).to_slices()
+            output_selector = (
+                ALL_SELECTOR + chunk_bbox.offset(-bbox.topleft).to_slices()
+            )
+            output[output_selector] = chunk_data[chunk_selector]
 
     # ------------------------------------------------------------------
     # Write
@@ -295,6 +319,12 @@ class WkwDataset:
 
         `data` must have shape (num_channels, x, y, z) in Fortran order.
         """
+        assert len(data.shape) == 4, (
+            f"data must have (c, x, y, z) axes, got {len(data.shape)} axes."
+        )
+        assert data.shape[0] == self.header.num_channels, (
+            f"data must have shape (num_channels, x, y, z), got {data.shape[0]} channels."
+        )
         size = Vec3Int(*data.shape[1:])
         self.write_bbox(
             BoundingBox(topleft, size).normalize_axes(self.header.num_channels),
@@ -307,6 +337,9 @@ class WkwDataset:
         `data` must have shape (num_channels, x, y, z) in Fortran order.
         """
         assert bbox.axes == ("c", "x", "y", "z")
+        assert data.shape[0] == self.header.num_channels, (
+            f"data must have shape (num_channels, x, y, z), got {data.shape[0]} channels."
+        )
         bbox_xyz = bbox.denormalize()
         assert isinstance(bbox_xyz, BoundingBox)
         header = self._header
@@ -330,8 +363,8 @@ class WkwDataset:
 
         if shard_bbox == full_shard_bbox:
             # Fast path: the entire shard is being written
-            data_sel = ALL_SEL + shard_bbox.offset(-bbox.topleft).to_slices()
-            shard_buffer = data[data_sel]
+            data_selector = ALL_SELECTOR + shard_bbox.offset(-bbox.topleft).to_slices()
+            shard_buffer = data[data_selector]
             self._write_shard(shard_address, shard_buffer)
             return
 
@@ -345,9 +378,9 @@ class WkwDataset:
             self._read_shard_into(shard_address, full_shard_bbox, shard_buffer)
 
         # Merge new data into shard buffer
-        shard_sel = ALL_SEL + shard_bbox.offset(-shard_topleft).to_slices()
-        data_sel = ALL_SEL + shard_bbox.offset(-bbox.topleft).to_slices()
-        shard_buffer[shard_sel] = data[data_sel]
+        shard_selector = ALL_SELECTOR + shard_bbox.offset(-shard_topleft).to_slices()
+        data_selector = ALL_SELECTOR + shard_bbox.offset(-bbox.topleft).to_slices()
+        shard_buffer[shard_selector] = data[data_selector]
 
         self._write_shard(shard_address, shard_buffer)
 
@@ -373,8 +406,10 @@ class WkwDataset:
                 chunk_bbox.offset(-full_shard_bbox.topleft).topleft
                 // header.chunk_shape
             )
-            chunk_sel = ALL_SEL + chunk_bbox.offset(-shard_topleft).to_slices()
-            raw_chunks[morton_index] = shard_buffer[chunk_sel].tobytes(order="F")
+            chunk_selector = (
+                ALL_SELECTOR + chunk_bbox.offset(-shard_topleft).to_slices()
+            )
+            raw_chunks[morton_index] = shard_buffer[chunk_selector].tobytes(order="F")
 
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -404,8 +439,8 @@ class WkwDataset:
             for i, c in enumerate(compressed_chunks):
                 offset += len(c)
                 jump_table[i] = offset
-            with file_path.open("wb") as f:
-                f.write(header.to_bytes())
-                f.write(jump_table.tobytes())
+            with file_path.open("wb") as file_handle:
+                file_handle.write(header.to_bytes())
+                file_handle.write(jump_table.tobytes())
                 for c in compressed_chunks:
-                    f.write(c)
+                    file_handle.write(c)
