@@ -78,7 +78,7 @@ from ..dataset_properties import (
     VoxelSize,
 )
 from ..geometry import NDBoundingBox, Vec3Int
-from ..proofreading.agglomerate_graph import AgglomerateGraph
+from ..proofreading.agglomerate_graph import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import get_executor_for_args, is_fs_path, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
@@ -1533,7 +1533,7 @@ class RemoteAnnotation(Annotation):
                 f.write(chunk)
         return file_path
 
-    def get_agglomerate_graph(self, agglomerate_id: int) -> AgglomerateGraph:
+    def get_agglomerate_graph(self, agglomerate_id: int) -> AgglomerateGraphData:
         """
         Get the agglomerate graph for the specified agglomerate id.
         This works only for proofreading annotations that have only a single volume layer.
@@ -1542,7 +1542,7 @@ class RemoteAnnotation(Annotation):
             agglomerate_id (int): The id of the agglomerate to get the graph for.
 
         Returns:
-            AgglomerateGraph: The agglomerate graph for the specified agglomerate id.
+            AgglomerateGraphData: The agglomerate graph for the specified agglomerate id.
             The agglomerate graph has a vertex for all segments that belong to the agglomerate.
             Adjacent segments are connected by an edge.
 

@@ -5,7 +5,7 @@ from webknossos.client.api_client.models import (
     ApiPrecomputedMeshInfo,
 )
 
-from ...proofreading.agglomerate_graph import AgglomerateGraph
+from ...proofreading.agglomerate_graph import AgglomerateGraphData
 from ...proofreading.generated import agglomerate_graph_pb2
 from ._abstract_api_client import AbstractApiClient, Query
 
@@ -46,10 +46,10 @@ class TracingStoreApiClient(AbstractApiClient):
 
     def get_agglomerate_graph(
         self, tracing_id: str, agglomerate_id: int
-    ) -> AgglomerateGraph:
+    ) -> AgglomerateGraphData:
         route = f"/mapping/{tracing_id}/agglomerateGraph/{agglomerate_id}"
         agglomerate_graph_proto = self._get_parsed_protobuf(
             route, agglomerate_graph_pb2.AgglomerateGraph
         )
-        agglomerate_graph = AgglomerateGraph.from_proto(agglomerate_graph_proto)
+        agglomerate_graph = AgglomerateGraphData.from_proto(agglomerate_graph_proto)
         return agglomerate_graph

@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import json
 from os import PathLike
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import networkx as nx
 import numpy as np
 from upath import UPath
+
+if TYPE_CHECKING:
+    from webknossos.proofreading.agglomerate_graph import AgglomerateGraphData
 
 from webknossos.dataset_properties import AttachmentDataFormat
 from webknossos.geometry import Vec3Int
@@ -25,6 +30,39 @@ class AgglomerateGraph(nx.Graph):
     def add_affinity_edge(self, u: int, v: int, affinity: float) -> None:
         """Add an undirected edge between two segment IDs with an affinity score."""
         self.add_edge(u, v, affinity=affinity)
+
+    def to_agglomerate_graph_data(self) -> "AgglomerateGraphData":
+        """Convert to an AgglomerateGraphData (flat numpy-array representation).
+
+        Returns an AgglomerateGraphData with:
+        - segments: segment IDs, dtype uint64
+        - positions: [x, y, z] per segment, dtype int64
+        - edges: [source, target] segment ID pairs, dtype uint64
+        - affinities: affinity per edge, dtype float32
+        """
+        from webknossos.proofreading.agglomerate_graph import AgglomerateGraphData
+
+        node_list = list(self.nodes)
+        segments = np.array(node_list, dtype=np.uint64)
+        positions = np.array(
+            [list(self.nodes[s]["position"]) for s in node_list], dtype=np.int64
+        ).reshape(-1, 3)
+        edge_list = list(self.edges)
+        edges = (
+            np.array(edge_list, dtype=np.uint64).reshape(-1, 2)
+            if edge_list
+            else np.empty((0, 2), dtype=np.uint64)
+        )
+        affinities = np.array(
+            [float(self.edges[u, v].get("affinity", 0.0)) for u, v in edge_list],
+            dtype=np.float32,
+        )
+        return AgglomerateGraphData(
+            segments=segments,
+            edges=edges,
+            positions=positions,
+            affinities=affinities,
+        )
 
 
 class AgglomerateAttachment(Attachment):

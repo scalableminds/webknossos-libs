@@ -1,16 +1,25 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from webknossos.proofreading.generated import agglomerate_graph_pb2
 
+if TYPE_CHECKING:
+    from webknossos.dataset.layer.segmentation_layer.attachments.agglomerate_attachment import (
+        AgglomerateGraph,
+    )
 
-class AgglomerateGraph:
-    """Represents an agglomerate graph.
+
+class AgglomerateGraphData:
+    """Flat numpy-array representation of an agglomerate graph, as returned by the proofreading API.
 
     Attributes:
-        segments (np.ndarray): A numpy array of segment ids.
-        edges (np.ndarray): A numpy array of edges.
-        positions (np.ndarray): A numpy array of positions.
-        affinities (np.ndarray): A numpy array of affinities.
+        segments (np.ndarray): Segment IDs, shape (N,), dtype uint64.
+        edges (np.ndarray): Edge pairs [source, target] as segment IDs, shape (E, 2), dtype uint64.
+        positions (np.ndarray): Positions [x, y, z] for each segment, shape (N, 3), dtype int64.
+        affinities (np.ndarray): Affinity score for each edge, shape (E,), dtype float32.
     """
 
     def __init__(
@@ -28,14 +37,11 @@ class AgglomerateGraph:
     @classmethod
     def from_proto(
         cls, agglomerate_graph_proto: agglomerate_graph_pb2.AgglomerateGraph
-    ) -> "AgglomerateGraph":
-        """Create an AgglomerateGraph from a protobuf binary.
-
-        Args:
-            protobuf_binary (bytes): The protobuf binary to create the AgglomerateGraph from.
+    ) -> "AgglomerateGraphData":
+        """Create an AgglomerateGraphData from a protobuf message.
 
         Returns:
-            AgglomerateGraph
+            AgglomerateGraphData
         """
 
         return cls(
@@ -50,3 +56,26 @@ class AgglomerateGraph:
             ),
             affinities=np.array(agglomerate_graph_proto.affinities, dtype=np.float32),
         )
+
+    def to_agglomerate_graph(self) -> "AgglomerateGraph":
+        """Convert to a networkx-based AgglomerateGraph.
+
+        Returns an AgglomerateGraph (nx.Graph subclass) with:
+        - Integer node labels (segment IDs)
+        - 'position' node attribute: Vec3Int (x, y, z)
+        - 'affinity' edge attribute: float
+        """
+        from webknossos.dataset.layer.segmentation_layer.attachments.agglomerate_attachment import (
+            AgglomerateGraph,
+        )
+        from webknossos.geometry import Vec3Int
+
+        graph: AgglomerateGraph = AgglomerateGraph()
+        for i, seg_id in enumerate(self.segments):
+            pos = self.positions[i]
+            graph.add_segment(
+                int(seg_id), Vec3Int(int(pos[0]), int(pos[1]), int(pos[2]))
+            )
+        for i, (src, tgt) in enumerate(self.edges):
+            graph.add_affinity_edge(int(src), int(tgt), float(self.affinities[i]))
+        return graph
