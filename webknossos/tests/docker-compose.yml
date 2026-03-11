@@ -22,14 +22,14 @@ services:
     user: ${USER_UID:-1000}:${USER_GID:-1000}
 
   postgres:
-    image: postgres:10-alpine
+    image: postgres:18-trixie
     environment:
       POSTGRES_DB: webknossos
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
 
   fossildb:
-    image: scalableminds/fossildb:0.1.37
+    image: scalableminds/fossildb:master__527
     command:
       - fossildb
       - -c
@@ -37,6 +37,6 @@ services:
     user: ${USER_UID:-1000}:${USER_GID:-1000}
 
   redis:
-    image: redis:5.0
+    image: redis:7
     command:
       - redis-server
