@@ -5,7 +5,7 @@ from webknossos.client.api_client.models import (
     ApiPrecomputedMeshInfo,
 )
 
-from ...proofreading.agglomerate_graph import AgglomerateGraphData
+from ...proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ...proofreading.generated import agglomerate_graph_pb2
 from ._abstract_api_client import AbstractApiClient, Query
 

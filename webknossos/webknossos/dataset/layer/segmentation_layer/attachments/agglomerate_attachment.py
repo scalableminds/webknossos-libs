@@ -8,14 +8,15 @@ import networkx as nx
 import numpy as np
 from upath import UPath
 
-if TYPE_CHECKING:
-    from webknossos.proofreading.agglomerate_graph import AgglomerateGraphData
-
 from webknossos.dataset_properties import AttachmentDataFormat
 from webknossos.geometry import Vec3Int
 
 from ._utils import read_zarr3_array, write_zarr3_array
 from .attachment import Attachment
+
+if TYPE_CHECKING:
+    from webknossos.dataset import SegmentationLayer
+    from webknossos.proofreading.agglomerate_graph_data import AgglomerateGraphData
 
 
 class AgglomerateGraph(nx.Graph):
@@ -40,7 +41,7 @@ class AgglomerateGraph(nx.Graph):
         - edges: [source, target] segment ID pairs, dtype uint64
         - affinities: affinity per edge, dtype float32
         """
-        from webknossos.proofreading.agglomerate_graph import AgglomerateGraphData
+        from webknossos.proofreading.agglomerate_graph_data import AgglomerateGraphData
 
         node_list = list(self.nodes)
         segments = np.array(node_list, dtype=np.uint64)
@@ -71,10 +72,36 @@ class AgglomerateAttachment(Attachment):
     type_name = "agglomerate"
 
     @classmethod
+    def create_and_add_to(
+        cls, layer: "SegmentationLayer", name: str, graph: AgglomerateGraph
+    ) -> "AgglomerateAttachment":
+        """Create a Zarr v3 agglomerate attachment from a networkx graph and add it to a segmentation layer.
+
+        `name` is the attachment name.
+
+        The `graph` must have:
+        - Integer node labels (segment IDs, 1-based)
+        - 'position' node attribute: Vec3Int (x, y, z)
+        - 'affinity' edge attribute: float
+
+        Connected components become agglomerates.
+
+        Returns the added AgglomerateAttachment.
+        """
+        attachment_path = layer.resolved_path / cls.container_name / name
+        if attachment_path.exists():
+            raise FileExistsError(
+                f"Agglomerate attachment at path {attachment_path} already exists."
+            )
+        attachment = cls.create(attachment_path, graph)
+        layer.attachments._add_attachment(attachment)
+        return attachment
+
+    @classmethod
     def create(
         cls,
         path: str | PathLike | UPath,
-        graph: nx.Graph,
+        graph: AgglomerateGraph,
     ) -> "AgglomerateAttachment":
         """Create and write a Zarr v3 agglomerate attachment from a networkx graph.
 

@@ -78,7 +78,7 @@ from ..dataset_properties import (
     VoxelSize,
 )
 from ..geometry import NDBoundingBox, Vec3Int
-from ..proofreading.agglomerate_graph import AgglomerateGraphData
+from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import get_executor_for_args, is_fs_path, time_since_epoch_in_ms
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
