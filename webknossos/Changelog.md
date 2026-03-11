@@ -13,9 +13,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...HEAD)
 
 ### Breaking Changes
+- Renamed the existing `webknossos.proofreading.agglomerate_graph.AgglomerateGraph` to `webknossos.proofreading.agglomerate_graph_data.AgglomerateGraphData`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 
 ### Added
 - Added a pure-Python implementation of WKW to support datasets on remote storage. Although, it is strongly recommended to use Zarr3 datasets on remote storage, for performance, interoperability and future-proofing reasons. [#1432](https://github.com/scalableminds/webknossos-libs/pull/1432)
+- Added `AgglomerateAttachment.create` and `AgglomerateAttachment.create_and_add_to methods`. They take a new networkx-based `AgglomerateGraph` as input. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 
 ### Changed
 
