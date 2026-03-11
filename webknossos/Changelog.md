@@ -18,6 +18,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a pure-Python implementation of WKW to support datasets on remote storage. Although, it is strongly recommended to use Zarr3 datasets on remote storage, for performance, interoperability and future-proofing reasons. [#1432](https://github.com/scalableminds/webknossos-libs/pull/1432)
 
 ### Changed
+- The `webknossos convert` command now accepts a `--upload` flag, to upload the converted dataset to WEBKNOSSOS. In that case, the target path is not required anymore. [#1433](https://github.com/scalableminds/webknossos-libs/pull/1433)
+- The `webknossos downsample` and `webknossos upsample` commands now work with remote datasets on WEBKNOSSOS. [#1433](https://github.com/scalableminds/webknossos-libs/pull/1433)
 
 ### Fixed
 

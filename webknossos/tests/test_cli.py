@@ -483,11 +483,70 @@ def test_downsample_and_upsample() -> None:
         assert (wkw_path / "color" / "1" / "z0" / "y0" / "x0.wkw").exists()
 
 
+@pytest.mark.use_proxay
 def test_upload() -> None:
     """Tests the functionality of upload subcommand."""
 
     result_without_args = runner.invoke(app, ["upload"])
     assert result_without_args.exit_code == 2
+
+    result = runner.invoke(
+        app,
+        [
+            "upload",
+            "--dataset-name",
+            "test_upload_cli",
+            str(TESTDATA_DIR / "simple_wkw_dataset"),
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+
+
+@pytest.mark.skip(
+    reason="TransferMode.COPY requires absolute paths, which are different on multiple machines. Skipping, for now."
+)
+@pytest.mark.use_proxay
+def test_convert_upload_downsample() -> None:
+    """Tests the functionality of convert --upload and downsample subcommand."""
+
+    result_without_args = runner.invoke(app, ["convert", "--upload"])
+    assert result_without_args.exit_code == 2
+
+    with tmp_cwd():
+        result = runner.invoke(
+            app,
+            [
+                "convert",
+                "--upload",
+                "--voxel-size",
+                "11.24,11.24,25",
+                "--no-downsample",
+                "--name",
+                "test_remote_convert",
+                "--transfer-mode",
+                "copy",
+                str(TESTDATA_DIR / "tiff"),
+            ],
+        )
+        assert result.exit_code == 0, result.stdout
+
+    result_without_args = runner.invoke(app, ["downsample"])
+    assert result_without_args.exit_code == 2
+
+    result = runner.invoke(
+        app,
+        [
+            "downsample",
+            "--jobs",
+            "2",
+            "--coarsest-mag",
+            "2-2-1",
+            "--transfer-mode",
+            "copy",
+            "http://localhost:9000/datasets/Organization_X/test_remote_convert",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
 
 
 def test_export_tiff_stack(tmp_upath: UPath) -> None:
