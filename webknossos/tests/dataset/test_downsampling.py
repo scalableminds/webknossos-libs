@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 import pytest
+from cluster_tools import get_executor
 from upath import UPath
 
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
@@ -486,3 +487,72 @@ def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
     target_data = target_layer.get_mag("2").read()
 
     assert np.all(source_data == target_data)
+
+
+def test_downsample_default_shard_shapes(tmp_upath: UPath) -> None:
+    """Downsampled mags should use the correct default shard shapes per format."""
+    from webknossos.dataset_properties import DataFormat
+
+    # Zarr3 volumetric: default shard shape is (1024, 1024, 1024)
+    ds = Dataset(tmp_upath / "zarr3_volumetric", voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
+    mag1 = layer.add_mag(1, chunk_shape=32, shard_shape=1024)
+    mag1.write(
+        data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8), allow_resize=True
+    )
+    with get_executor("sequential") as executor:
+        layer.downsample(from_mag=Mag(1), coarsest_mag=Mag(2), executor=executor)
+    assert layer.get_mag(2).info.chunk_shape.xyz == Vec3Int.full(32)
+    assert layer.get_mag(2).info.shard_shape.xyz == Vec3Int.full(1024)
+
+    # Zarr3 flat (z <= 32): default shard shape is (4096, 4096, 32)
+    ds_flat = Dataset(tmp_upath / "zarr3_flat", voxel_size=(1, 1, 1))
+    layer_flat = ds_flat.add_layer(
+        "color", COLOR_CATEGORY, data_format=DataFormat.Zarr3
+    )
+    mag1_flat = layer_flat.add_mag(1, chunk_shape=32, shard_shape=1024)
+    mag1_flat.write(
+        data=(np.random.rand(64, 64, 10) * 255).astype(np.uint8), allow_resize=True
+    )
+    with get_executor("sequential") as executor:
+        layer_flat.downsample(from_mag=Mag(1), coarsest_mag=Mag(2), executor=executor)
+    assert layer_flat.get_mag(2).info.chunk_shape.xyz == Vec3Int.full(32)
+    assert layer_flat.get_mag(2).info.shard_shape.xyz == Vec3Int(4096, 4096, 32)
+
+    # Zarr: no sharding, shard shape equals chunk shape (32, 32, 32)
+    ds_zarr = Dataset(tmp_upath / "zarr", voxel_size=(1, 1, 1))
+    layer_zarr = ds_zarr.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
+    mag1_zarr = layer_zarr.add_mag(1)
+    mag1_zarr.write(
+        data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8), allow_resize=True
+    )
+    with get_executor("sequential") as executor:
+        layer_zarr.downsample(from_mag=Mag(1), coarsest_mag=Mag(2), executor=executor)
+    assert layer_zarr.get_mag(2).info.chunk_shape.xyz == Vec3Int.full(32)
+    assert layer_zarr.get_mag(2).info.shard_shape.xyz == Vec3Int.full(32)
+
+
+def test_downsample_custom_chunk_and_shard_shapes(tmp_upath: UPath) -> None:
+    """Custom chunk_shape and shard_shape are forwarded to downsampled mags."""
+    from webknossos.dataset_properties import DataFormat
+
+    ds = Dataset(tmp_upath / "custom_shapes", voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
+    mag1 = layer.add_mag(1, chunk_shape=32, shard_shape=1024)
+    mag1.write(
+        data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8), allow_resize=True
+    )
+
+    with get_executor("sequential") as executor:
+        layer.downsample(
+            from_mag=Mag(1),
+            coarsest_mag=Mag(4),
+            chunk_shape=64,
+            shard_shape=512,
+            executor=executor,
+        )
+
+    assert layer.get_mag(2).info.chunk_shape.xyz == Vec3Int.full(64)
+    assert layer.get_mag(2).info.shard_shape.xyz == Vec3Int.full(512)
+    assert layer.get_mag(4).info.chunk_shape.xyz == Vec3Int.full(64)
+    assert layer.get_mag(4).info.shard_shape.xyz == Vec3Int.full(512)
