@@ -69,6 +69,11 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
             org_binary_data_dir,
         )
 
+    # Prepare test database
+    subprocess.check_call(
+        ["docker", "compose", "run", "--rm", "prepare-test-db"], cwd=wk_docker_dir
+    )
+
     # Start the webknossos server
     subprocess.check_call(
         ["docker", "compose", "up", "-d", "--no-build", "webknossos"],
@@ -83,20 +88,6 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     # Wait for booting
     while not is_wk_healthy():
         sleep(1)
-
-    # Prepare the test database
-    subprocess.check_call(
-        [
-            "docker",
-            "compose",
-            "exec",
-            "-T",
-            "webknossos",
-            "tools/postgres/dbtool.js",
-            "prepare-test-db",
-        ],
-        cwd=wk_docker_dir,
-    )
 
 
 def is_wk_healthy():

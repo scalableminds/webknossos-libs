@@ -1,6 +1,5 @@
 services:
   webknossos:
-    build: .
     image: scalableminds/webknossos:${DOCKER_TAG:-master}
     ports:
       - "9000:9000"
@@ -27,6 +26,20 @@ services:
       POSTGRES_DB: webknossos
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+
+  prepare-test-db:
+    image: scalableminds/webknossos:${DOCKER_TAG:-25.11.0}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint:
+      - node
+    command:
+      - tools/postgres/dbtool.js
+      - prepare-test-db
+    environment:
+      - POSTGRES_URL=jdbc:postgresql://postgres/webknossos
+      - PGPASSWORD=postgres
 
   fossildb:
     image: scalableminds/fossildb:master__527
