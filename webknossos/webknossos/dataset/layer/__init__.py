@@ -10,14 +10,10 @@ from .segmentation_layer import (
     ConnectomeAttachment,
     CumsumAttachment,
     MeshAttachment,
-    MeshfileMetadata,
-    MeshFragment,
-    MeshLod,
     RemoteAttachments,
     RemoteSegmentationLayer,
     SegmentationLayer,
     SegmentIndexAttachment,
-    SegmentMesh,
 )
 from .view import (
     ArrayException,

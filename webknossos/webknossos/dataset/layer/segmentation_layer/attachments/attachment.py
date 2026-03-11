@@ -98,6 +98,12 @@ class Attachment:
         return f"{self.__class__.__name__}(path={repr(self.path)}, name={self.name}, data_format={self.data_format})"
 
 
+class MeshAttachment(Attachment):
+    data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
+    container_name = "meshes"
+    type_name = "mesh"
+
+
 class SegmentIndexAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
     container_name = "segment_index"

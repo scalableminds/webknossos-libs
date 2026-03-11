@@ -4,13 +4,7 @@ from .attachment import (
     Attachment,
     ConnectomeAttachment,
     CumsumAttachment,
+    MeshAttachment,
     SegmentIndexAttachment,
 )
 from .attachments import AbstractAttachments, Attachments, RemoteAttachments
-from .mesh_attachment import (
-    MeshAttachment,
-    MeshfileMetadata,
-    MeshFragment,
-    MeshLod,
-    SegmentMesh,
-)

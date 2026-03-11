@@ -32,7 +32,7 @@ class AgglomerateGraph(nx.Graph):
         """Add an undirected edge between two segment IDs with an affinity score."""
         self.add_edge(u, v, affinity=affinity)
 
-    def to_agglomerate_graph_data(self) -> "AgglomerateGraphData":
+    def to_agglomerate_graph_data(self) -> AgglomerateGraphData:
         """Convert to an AgglomerateGraphData (flat numpy-array representation).
 
         Returns an AgglomerateGraphData with:
@@ -73,8 +73,8 @@ class AgglomerateAttachment(Attachment):
 
     @classmethod
     def create_and_add_to(
-        cls, layer: "SegmentationLayer", name: str, graph: AgglomerateGraph
-    ) -> "AgglomerateAttachment":
+        cls, layer: SegmentationLayer, name: str, graph: AgglomerateGraph
+    ) -> AgglomerateAttachment:
         """Create a Zarr v3 agglomerate attachment from a networkx graph and add it to a segmentation layer.
 
         `name` is the attachment name.
@@ -102,7 +102,7 @@ class AgglomerateAttachment(Attachment):
         cls,
         path: str | PathLike | UPath,
         graph: AgglomerateGraph,
-    ) -> "AgglomerateAttachment":
+    ) -> AgglomerateAttachment:
         """Create and write a Zarr v3 agglomerate attachment from a networkx graph.
 
         The graph must have:
@@ -284,7 +284,7 @@ class AgglomerateAttachment(Attachment):
             data_format=AttachmentDataFormat.Zarr3,
         )
 
-    def to_graph(self) -> "AgglomerateGraph":
+    def to_graph(self) -> AgglomerateGraph:
         """Read the agglomerate attachment from disk and reconstruct an AgglomerateGraph.
 
         Returns an AgglomerateGraph with:

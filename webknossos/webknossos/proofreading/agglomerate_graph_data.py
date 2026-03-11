@@ -37,7 +37,7 @@ class AgglomerateGraphData:
     @classmethod
     def from_proto(
         cls, agglomerate_graph_proto: agglomerate_graph_pb2.AgglomerateGraph
-    ) -> "AgglomerateGraphData":
+    ) -> AgglomerateGraphData:
         """Create an AgglomerateGraphData from a protobuf message.
 
         Returns:
@@ -57,7 +57,7 @@ class AgglomerateGraphData:
             affinities=np.array(agglomerate_graph_proto.affinities, dtype=np.float32),
         )
 
-    def to_agglomerate_graph(self) -> "AgglomerateGraph":
+    def to_agglomerate_graph(self) -> AgglomerateGraph:
         """Convert to a networkx-based AgglomerateGraph.
 
         Returns an AgglomerateGraph (nx.Graph subclass) with:
