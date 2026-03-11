@@ -22,13 +22,18 @@ services:
 
   postgres:
     image: postgres:18-trixie
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1 -p 5432"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
     environment:
       POSTGRES_DB: webknossos
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
 
   prepare-test-db:
-    image: scalableminds/webknossos:${DOCKER_TAG:-25.11.0}
+    image: scalableminds/webknossos:${DOCKER_TAG:-master}
     depends_on:
       postgres:
         condition: service_healthy
