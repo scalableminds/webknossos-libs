@@ -1,6 +1,7 @@
 # datasource-properties.json Specification
 
-This document specifies the format of `datasource-properties.json`, the metadata file that describes a WEBKNOSSOS dataset. It is located at the root of each dataset directory.
+This document specifies the format of `datasource-properties.json`, the metadata file that describes a WEBKNOSSOS dataset.
+It is located at the root of each dataset directory.
 
 ## Top-Level Object: `DatasetProperties`
 
@@ -51,7 +52,8 @@ Additional supported values: `"yoctometer"`, `"zeptometer"`, `"attometer"`, `"fe
 
 ## LayerProperties
 
-Each entry in `dataLayers` describes one layer. The schema varies slightly based on `category`.
+Each entry in `dataLayers` describes one layer.
+The schema varies slightly based on `category`.
 
 ### Common Fields (all layers)
 
@@ -69,7 +71,8 @@ Each entry in `dataLayers` describes one layer. The schema varies slightly based
 
 All layers use `mags` (array of [MagViewProperties](#magviewproperties)) to describe their magnification levels.
 
-Deprecated: WKW layers may also use `wkwResolutions` (array of [WkwMagViewProperties](#wkwmagviewproperties-deprecated)). This is a legacy format; prefer `mags` for all data formats.
+Deprecated: WKW layers may also use `wkwResolutions` (array of [WkwMagViewProperties](#wkwmagviewproperties-deprecated)).
+This is a legacy format; prefer `mags` for all data formats.
 
 ### Segmentation Layer Fields
 
@@ -126,7 +129,8 @@ Describes a single magnification level for non-WKW formats.
 
 Deprecated: Use [MagViewProperties](#magviewproperties) with `mags` instead for all data formats.
 
-Legacy format used within `wkwResolutions` for WKW layers. Uses `resolution` instead of `mag`.
+Legacy format used within `wkwResolutions` for WKW layers.
+Uses `resolution` instead of `mag`.
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -137,7 +141,8 @@ Legacy format used within `wkwResolutions` for WKW layers. Uses `resolution` ins
 
 ## ElementClass
 
-A string indicating the data type of voxel values. Not all element classes are valid for every layer category.
+A string indicating the data type of voxel values.
+Not all element classes are valid for every layer category.
 
 | Value | Description | Color Layers | Segmentation Layers |
 |---|---|---|---|
@@ -190,7 +195,8 @@ Optional defaults for how the dataset is displayed in WEBKNOSSOS.
 | `position` | `[integer, integer, integer]` | No | `null` | Initial camera position as `[x, y, z]`. |
 | `rotation` | `[integer, integer, integer]` | No | `null` | Initial camera rotation. |
 
-All fields are optional. Only non-null values are serialized.
+All fields are optional.
+Only non-null values are serialized.
 
 ---
 
@@ -210,7 +216,8 @@ Optional defaults for how a single layer is displayed in WEBKNOSSOS.
 | `isInEditMode` | `boolean` | No | `false` | Enable histogram edit mode. |
 | `mapping` | `object` | No | | Enable an ID mapping for a segmentation layer. Expected format: `{"name": "<mapping_name>", "type": "HDF5"}`. |
 
-All fields are optional. Default values do not need to be serialized, the field can be omitted.
+All fields are optional.
+Default values do not need to be serialized, the field can be omitted.
 
 ---
 

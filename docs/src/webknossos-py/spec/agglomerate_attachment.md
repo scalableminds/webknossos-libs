@@ -2,7 +2,9 @@
 
 **Current version: 4**
 
-An `AgglomerateAttachment` stores the agglomeration graph for a segmentation layer. It maps every segment to an agglomerate and stores, for each agglomerate, its constituent segments, the edges between them, the affinity scores of those edges, and a representative voxel position per segment. Usually, there are multiple agglomerate attachments with varying degrees of agglomeration.
+An `AgglomerateAttachment` stores the agglomeration graph for a segmentation layer.
+It maps every segment to an agglomerate and stores, for each agglomerate, its constituent segments, the edges between them, the affinity scores of those edges, and a representative voxel position per segment.
+Usually, there are multiple agglomerate attachments with varying degrees of agglomeration.
 
 ## File Format
 
@@ -11,7 +13,7 @@ The artifact is stored as a [Zarr v3](https://zarr-specs.readthedocs.io/en/lates
 ## Directory Structure
 
 ```
-{attachment_name}/                     # usually, `agglomerate_view_{mapping_id}`
+{attachment_name}/
   zarr.json                            # group metadata (version, class)
   segment_to_agglomerate/              # array
   agglomerate_to_segments_offsets/     # array
@@ -22,7 +24,9 @@ The artifact is stored as a [Zarr v3](https://zarr-specs.readthedocs.io/en/lates
   agglomerate_to_positions/            # array
 ```
 
-The `mapping_id` is either an integer (commonly a percentile of the agglomeration score) or a string identifier. The directory is referenced from the layer's `datasource-properties.json` via [`AttachmentsProperties.agglomerates`](datasource_properties.md#attachmentsproperties).
+The attachment name is arbitrary.
+When computed with Voxelytics it is usually `agglomerate_view_{mapping_id}`, where `mapping_id` is either an integer (commonly a percentile of the agglomeration score) or a string identifier.
+The directory is referenced from the layer's `datasource-properties.json` via [`AttachmentsProperties.agglomerates`](datasource_properties.md#attachmentsproperties).
 
 ---
 
@@ -62,7 +66,7 @@ Let:
 - `n_agglomerates` = number of real agglomerates (agglomerate 0 is reserved and always empty)
 - `n_edges` = total number of edges across all agglomerates
 
-The `segmentation_dtype` is `uint32` or `uint64` and must match the dtype of the corresponding segmentation layer.
+The `segmentation_dtype` must be `uint32` or `uint64` and must match the dtype of the corresponding segmentation layer.
 
 ---
 
@@ -75,7 +79,8 @@ The `segmentation_dtype` is `uint32` or `uint64` and must match the dtype of the
 | Shape | `(n_segments + 1,)` |
 | Dtype | `uint64` |
 
-Maps each segment ID to its agglomerate ID. Index 0 is the background segment and maps to agglomerate 0.
+Maps each segment ID to its agglomerate ID.
+Index 0 is the background segment and maps to agglomerate 0.
 
 **Example:** `[0, 1, 1, 1, 1, 2, 2, 1]` — segments 1–4 and 7 belong to agglomerate 1, segments 5–6 belong to agglomerate 2.
 
@@ -88,9 +93,11 @@ Maps each segment ID to its agglomerate ID. Index 0 is the background segment an
 | Shape | `(n_agglomerates + 2,)` |
 | Dtype | `uint64` |
 
-CSR-style offset array into `agglomerate_to_segments`. The segments belonging to agglomerate `i` are at indices `[offsets[i], offsets[i+1])` in `agglomerate_to_segments`.
+CSR-style offset array into `agglomerate_to_segments`.
+The segments belonging to agglomerate `i` are at indices `[offsets[i], offsets[i+1])` in `agglomerate_to_segments`.
 
-Agglomerate 0 is always empty: `offsets[0] == offsets[1] == 0`. The last entry equals `n_segments`.
+Agglomerate 0 is always empty: `offsets[0] == offsets[1] == 0`.
+The last entry equals `n_segments`.
 
 **Example:** `[0, 0, 5, 7]` — agglomerate 0 is empty, agglomerate 1 has 5 segments (indices 0–4), agglomerate 2 has 2 segments (indices 5–6).
 
@@ -103,7 +110,8 @@ Agglomerate 0 is always empty: `offsets[0] == offsets[1] == 0`. The last entry e
 | Shape | `(n_segments,)` |
 | Dtype | `segmentation_dtype` |
 
-All segment IDs, grouped by agglomerate. The segments for agglomerate `i` occupy `agglomerate_to_segments[offsets[i]:offsets[i+1]]` and are **sorted in ascending order** within each agglomerate.
+All segment IDs, grouped by agglomerate.
+The segments for agglomerate `i` occupy `agglomerate_to_segments[offsets[i]:offsets[i+1]]` and are **sorted in ascending order** within each agglomerate.
 
 **Example:** `[1, 2, 3, 4, 7, 5, 6]` — agglomerate 1 contains segments {1, 2, 3, 4, 7} and agglomerate 2 contains {5, 6}.
 
@@ -116,7 +124,9 @@ All segment IDs, grouped by agglomerate. The segments for agglomerate `i` occupy
 | Shape | `(n_agglomerates + 2,)` |
 | Dtype | `uint64` |
 
-CSR-style offset array into `agglomerate_to_edges` and `agglomerate_to_affinities`. The edges for agglomerate `i` are at indices `[offsets[i], offsets[i+1])`. The last entry equals `n_edges`.
+CSR-style offset array into `agglomerate_to_edges` and `agglomerate_to_affinities`.
+The edges for agglomerate `i` are at indices `[offsets[i], offsets[i+1])`.
+The last entry equals `n_edges`.
 
 Agglomerate 0 is always empty: `offsets[0] == offsets[1] == 0`.
 
@@ -131,7 +141,8 @@ Agglomerate 0 is always empty: `offsets[0] == offsets[1] == 0`.
 | Shape | `(n_edges, 2)` |
 | Dtype | `segmentation_dtype` |
 
-All edges, grouped by agglomerate. Values are **zero-based local node indices** within each agglomerate (i.e. positions within the agglomerate's slice of `agglomerate_to_segments`).
+All edges, grouped by agglomerate.
+Values are **zero-based local node indices** within each agglomerate (i.e. positions within the agglomerate's slice of `agglomerate_to_segments`).
 
 For each edge `(n1, n2)`:
 - `n1 < n2`
@@ -150,7 +161,8 @@ To convert local indices to global segment IDs, index into `agglomerate_to_segme
 | Shape | `(n_edges,)` |
 | Dtype | `float32` |
 
-Affinity score for each edge, co-indexed with `agglomerate_to_edges`. Higher values indicate stronger evidence for merging.
+Affinity score for each edge, co-indexed with `agglomerate_to_edges`.
+Higher values indicate stronger evidence for merging.
 
 **Example:** `[124.0, 65.5, 0.0, 250.5, 80.0]`
 
@@ -163,13 +175,15 @@ Affinity score for each edge, co-indexed with `agglomerate_to_edges`. Higher val
 | Shape | `(n_segments, 3)` |
 | Dtype | `int32` |
 
-Representative voxel position `(x, y, z)` for each segment, co-indexed with `agglomerate_to_segments`. The positions for agglomerate `i` occupy `agglomerate_to_positions[offsets[i]:offsets[i+1]]` where `offsets` is `agglomerate_to_segments_offsets`.
+Representative voxel position `(x, y, z)` for each segment, co-indexed with `agglomerate_to_segments`.
+The positions for agglomerate `i` occupy `agglomerate_to_positions[offsets[i]:offsets[i+1]]` where `offsets` is `agglomerate_to_segments_offsets`.
 
 ---
 
 ## Recommended Chunking and Sharding
 
-All arrays are written with Zarr v3 sharding (`sharding_indexed` codec). The recommendended chunk and shard sizes are derived from the array's shape and dtype to approximate the targets below.
+All arrays are written with Zarr v3 sharding (`sharding_indexed` codec).
+The recommendended chunk and shard sizes are derived from the array's shape and dtype to approximate the targets below.
 
 | Array | Target chunk size | Target shard size |
 |---|---|---|
@@ -181,7 +195,8 @@ All arrays are written with Zarr v3 sharding (`sharding_indexed` codec). The rec
 | `agglomerate_to_affinities` | 256 KB | 1 GB |
 | `agglomerate_to_positions` | 256 KB | 1 GB |
 
-The first axis is used as the "row" axis for size calculations; all remaining axes are kept whole in every chunk and shard. The shard shape is always rounded up to the nearest multiple of the chunk shape.
+The first axis is used as the "row" axis for size calculations; all remaining axes are kept whole in every chunk and shard.
+The shard shape is always rounded up to the nearest multiple of the chunk shape.
 
 **Codec stack (inner chunks):** `bytes` (little-endian) → `zstd` (level 5, checksum enabled)
 
