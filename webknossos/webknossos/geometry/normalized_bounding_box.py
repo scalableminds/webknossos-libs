@@ -6,6 +6,7 @@ from .nd_bounding_box import NDBoundingBox
 from .vec_int import VecInt
 
 _DEFAULT_AXIS_ORDER = {"c": 0, "x": 1, "y": 2, "z": 3}
+_DEFAULT_AXIS_ORDER_MISSING_C = {"x": 1, "y": 2, "z": 3}
 
 
 @attr.frozen
@@ -137,7 +138,11 @@ class NormalizedBoundingBox(NDBoundingBox):
         if (
             bbox.get("channelIndex", 0) == 0
             and ("additionalAxes" not in bbox or bbox["additionalAxes"] == [])
-            and ("axisOrder" not in bbox or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER)
+            and (
+                "axisOrder" not in bbox
+                or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER
+                or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER_MISSING_C
+            )
         ):
             # Delegate to BoundingBox.from_wkw_dict, if only 3d
             from .bounding_box import BoundingBox
