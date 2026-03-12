@@ -2,16 +2,16 @@
 
 **Current version: 4**
 
-An `AgglomerateAttachment` stores the agglomeration graph for a segmentation layer. It maps every segment to an agglomerate and stores, for each agglomerate, its constituent segments, the edges between them, the affinity scores of those edges, and a representative voxel position per segment. There is one attachment directory per mapping (e.g. one per agglomeration threshold).
+An `AgglomerateAttachment` stores the agglomeration graph for a segmentation layer. It maps every segment to an agglomerate and stores, for each agglomerate, its constituent segments, the edges between them, the affinity scores of those edges, and a representative voxel position per segment. Usually, there are multiple agglomerate attachments with varying degrees of agglomeration.
 
 ## File Format
 
-The artifact is stored as a [Zarr v3](https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html) group on disk.
+The artifact is stored as a [Zarr v3](https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html) hierarchy on disk.
 
 ## Directory Structure
 
 ```
-agglomerate_view_{mapping_id}/
+{attachment_name}/                     # usually, `agglomerate_view_{mapping_id}`
   zarr.json                            # group metadata (version, class)
   segment_to_agglomerate/              # array
   agglomerate_to_segments_offsets/     # array
@@ -167,9 +167,9 @@ Representative voxel position `(x, y, z)` for each segment, co-indexed with `agg
 
 ---
 
-## Chunking and Sharding
+## Recommended Chunking and Sharding
 
-All arrays are written with Zarr v3 sharding (`sharding_indexed` codec). Chunk and shard sizes are derived from the array's shape and dtype to approximate the targets below.
+All arrays are written with Zarr v3 sharding (`sharding_indexed` codec). The recommendended chunk and shard sizes are derived from the array's shape and dtype to approximate the targets below.
 
 | Array | Target chunk size | Target shard size |
 |---|---|---|
@@ -202,39 +202,35 @@ The first axis is used as the "row" axis for size calculations; all remaining ax
 
 ---
 
-## Worked Example
+## Example
 
-```
-segments:      1, 2, 3, 4, 5, 6, 7
-edges:         (1,2), (2,3), (3,4), (5,6), (1,7)
+Consider the following segments and edges:
 
-Agglomerate 1: {1, 2, 3, 4, 7}   (connected via all but the 5–6 edge)
-Agglomerate 2: {5, 6}
+|  |  |
+| --- | --- |
+| Segments | 1, 2, 3, 4, 5, 6, 7 |
+| Edges    | (1,2), (2,3), (3,4), (5,6), (1,7) |
 
-n_agglomerates = 2
-n_segments     = 7
-n_edges        = 5
+This results in two agglomerates:
+|  |  |
+| --- | --- |
+| Agglomerate 1 | 1, 2, 3, 4, 7 |
+| Agglomerate 2 | 5, 6 |
 
-segment_to_agglomerate:          [0, 1, 1, 1, 1, 2, 2, 1]   shape (8,)
+We have the following properties:
+|  |  |
+| --- | --- |
+| `n_agglomerates` | 2 |
+| `n_segments`     | 7 |
+| `n_edges`        | 5 |
 
-agglomerate_to_segments_offsets: [0, 0, 5, 7]                shape (4,)
-agglomerate_to_segments:         [1, 2, 3, 4, 7, 5, 6]       shape (7,)
-
-agglomerate_to_edges_offsets:    [0, 0, 4, 5]                shape (4,)
-agglomerate_to_edges:            [[0,1],[0,4],[1,2],[2,3],    shape (5,2)
-                                   [0,1]]
-agglomerate_to_affinities:       [124.0, 65.5, 0.0, 250.5,   shape (5,)
-                                   80.0]
-agglomerate_to_positions:        [[x1,y1,z1], ..., [x7,y7,z7]] shape (7,3)
-```
-
-Local edge indices for agglomerate 1 (segments sorted as [1, 2, 3, 4, 7]):
-
-| Global edge | Local (n1, n2) | Sorted? |
-|---|---|---|
-| 1–2 | (0, 1) | ✓ |
-| 1–7 | (0, 4) | ✓ |
-| 2–3 | (1, 2) | ✓ |
-| 3–4 | (2, 3) | ✓ |
-
-Agglomerate 2 (segments [5, 6]): edge 5–6 → local (0, 1).
+This would be the content of the arrays:
+| Array | Content | Shape |
+| --- | --- | --- |
+| `segment_to_agglomerate` | `[0, 1, 1, 1, 1, 2, 2, 1]` | (8,) |
+| `agglomerate_to_segments_offsets` | `[0, 0, 5, 7]` | (4,) |
+| `agglomerate_to_segments` | `[1, 2, 3, 4, 7, 5, 6]` | (7,) |
+| `agglomerate_to_edges_offsets` | `[0, 0, 4, 5]` | (4,) |
+| `agglomerate_to_edges` | `[[0,1], [0,4], [1,2], [2,3], [0,1]]` | (5,2) |
+| `agglomerate_to_affinities` | `[124.0, 65.5, 0.0, 250.5, 80.0]` | (5,) |
+| `agglomerate_to_positions` | `[[x1,y1,z1], ..., [x7,y7,z7]]` | (7,3) |
