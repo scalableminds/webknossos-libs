@@ -169,7 +169,7 @@ def test_to_wkw_dict_with_additional_axes() -> None:
         "height": 10,
         "depth": 10,
         "additionalAxes": [{"name": "t", "bounds": [2, 7], "index": 4}],
-        "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3, "t": 4},
+        "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3},
         "numChannels": 1,
     }
 
@@ -226,7 +226,7 @@ def test_round_trip_with_additional_axes() -> None:
         "height": 10,
         "depth": 10,
         "additionalAxes": [{"name": "t", "bounds": [0, 5], "index": 4}],
-        "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3, "t": 4},
+        "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3},
         "numChannels": 1,
     }
     bbox = NormalizedBoundingBox.from_wkw_dict(d).normalize_axes(1)

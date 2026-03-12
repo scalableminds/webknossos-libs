@@ -266,8 +266,8 @@ class NormalizedBoundingBox(NDBoundingBox):
             minimal_axis_order = {
                 axis: index
                 for axis, index in axis_order.items()
-                if axis not in _DEFAULT_AXIS_ORDER
-                or (ndim - len(_DEFAULT_AXIS_ORDER) - _DEFAULT_AXIS_ORDER[axis])
+                if axis in _DEFAULT_AXIS_ORDER
+                and (ndim - len(_DEFAULT_AXIS_ORDER) - _DEFAULT_AXIS_ORDER[axis])
                 != index
             }
             return minimal_axis_order
