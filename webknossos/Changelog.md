@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The default shard shape for downsampled mags is now `(1024, 1024, 1024)` (default) or `(4096, 4096, 32)` (zarr3 and 32 sections or less) or `(32, 32, 32)` (zarr2) and the chunk shape is now `(32, 32, 32)`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
 
 ### Fixed
+- Fixed a bug in the bounding box parsing, when "c" is not present in the axisOrder. [#1436](https://github.com/scalableminds/webknossos-libs/pull/1436)
 
 
 ## [3.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.2) - 2026-03-04
