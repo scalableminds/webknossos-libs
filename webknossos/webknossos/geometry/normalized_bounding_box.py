@@ -140,8 +140,8 @@ class NormalizedBoundingBox(NDBoundingBox):
             and ("additionalAxes" not in bbox or bbox["additionalAxes"] == [])
             and (
                 "axisOrder" not in bbox
-                or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER
-                or bbox["axisOrder"] == _DEFAULT_AXIS_ORDER_MISSING_C
+                or bbox["axisOrder"]
+                in (_DEFAULT_AXIS_ORDER, _DEFAULT_AXIS_ORDER_MISSING_C)
             )
         ):
             # Delegate to BoundingBox.from_wkw_dict, if only 3d
@@ -185,7 +185,8 @@ class NormalizedBoundingBox(NDBoundingBox):
         axes = [
             axis
             for axis in axes
-            if axis.name in bbox.get("axisOrder", {}).keys()  # in axisOrder
+            if axis.name
+            in bbox.get("axisOrder", _DEFAULT_AXIS_ORDER).keys()  # in axisOrder
             or any(
                 a["name"] == axis.name for a in bbox.get("additionalAxes", [])
             )  # or in additionalAxes
@@ -212,13 +213,16 @@ class NormalizedBoundingBox(NDBoundingBox):
             dict: A json dictionary representing the bounding box.
         """
         if self.axes == ("c", "x", "y", "z"):
-            return {
+            out = {
                 "topLeft": self.topleft_xyz.to_list(),
                 "width": self.size.x,
                 "height": self.size.y,
                 "depth": self.size.z,
                 "numChannels": self.size.c,
             }
+            if self.topleft.c != 0:
+                out["channelIndex"] = self.topleft.c
+            return out
 
         topleft = [None, None, None]
         width, height, depth = None, None, None
