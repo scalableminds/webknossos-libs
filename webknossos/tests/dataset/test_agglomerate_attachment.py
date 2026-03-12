@@ -19,14 +19,16 @@ from webknossos.geometry import BoundingBox, Vec3Int
 
 
 def build_example_graph() -> AgglomerateGraph:
-    """Build the graph from the agglomerate.md example.
+    """Build the graph from the example in the spec.
 
     edges = [[1,2], [2,3], [3,4], [5,6], [1,7]]
     segments 1-4,7 → agglomerate 1; segments 5,6 → agglomerate 2
 
-    Affinities assigned to match expected edge order after sorting:
-      agg1 sorted edges (local): (0,1)=1-2, (0,4)=1-7, (1,2)=2-3, (2,3)=3-4
-      → affinities: 124.0, 65.5, 0.0, 250.5
+    # Affinities assigned to match expected edge order after sorting:
+    #   agg1 sorted edges (local): (0,1)=1-2, (0,4)=1-7, (1,2)=2-3, (2,3)=3-4
+    #   → affinities: 124.0, 65.5, 0.0, 250.5
+    #   agg2 sorted edges (local): (0,1)=5-6
+    #   → affinities: 80.0
     """
     G = AgglomerateGraph()
     # Positions: (seg_id * 10, seg_id * 20, seg_id * 30) for uniqueness
@@ -64,49 +66,78 @@ def test_create_example(tmp_upath: UPath) -> None:
 
     # --- segment_to_agglomerate ---
     # [0, 1, 1, 1, 1, 2, 2, 1]  shape (8,)
-    s2a = read_zarr3_array(mapping_path / "segment_to_agglomerate")
-    expected_s2a = np.array([0, 1, 1, 1, 1, 2, 2, 1], dtype=np.uint64)
-    np.testing.assert_array_equal(s2a, expected_s2a)
+    segment_to_agglomerate = read_zarr3_array(mapping_path / "segment_to_agglomerate")
+    np.testing.assert_array_equal(
+        segment_to_agglomerate,
+        np.array([0, 1, 1, 1, 1, 2, 2, 1], dtype=np.uint64),
+        strict=True,
+    )
 
     # --- agglomerate_to_segments_offsets ---
     # [0, 0, 5, 7]  shape (4,)
-    off = read_zarr3_array(mapping_path / "agglomerate_to_segments_offsets")
-    expected_off = np.array([0, 0, 5, 7], dtype=np.uint64)
-    np.testing.assert_array_equal(off, expected_off)
+    agglomerate_to_segments_offsets = read_zarr3_array(
+        mapping_path / "agglomerate_to_segments_offsets"
+    )
+    np.testing.assert_array_equal(
+        agglomerate_to_segments_offsets,
+        np.array([0, 0, 5, 7], dtype=np.uint64),
+        strict=True,
+    )
 
     # --- agglomerate_to_segments ---
     # [1, 2, 3, 4, 7, 5, 6]  shape (7,)
-    segs = read_zarr3_array(mapping_path / "agglomerate_to_segments")
-    expected_segs = np.array([1, 2, 3, 4, 7, 5, 6], dtype=np.uint32)
-    np.testing.assert_array_equal(segs, expected_segs)
+    agglomerate_to_segments = read_zarr3_array(mapping_path / "agglomerate_to_segments")
+    np.testing.assert_array_equal(
+        agglomerate_to_segments,
+        np.array([1, 2, 3, 4, 7, 5, 6], dtype=np.uint32),
+        strict=True,
+    )
 
     # --- agglomerate_to_edges_offsets ---
     # [0, 0, 4, 5]  shape (4,)
-    eoff = read_zarr3_array(mapping_path / "agglomerate_to_edges_offsets")
-    expected_eoff = np.array([0, 0, 4, 5], dtype=np.uint64)
-    np.testing.assert_array_equal(eoff, expected_eoff)
+    agglomerate_to_edges_offsets = read_zarr3_array(
+        mapping_path / "agglomerate_to_edges_offsets"
+    )
+    np.testing.assert_array_equal(
+        agglomerate_to_edges_offsets,
+        np.array([0, 0, 4, 5], dtype=np.uint64),
+        strict=True,
+    )
 
     # --- agglomerate_to_edges ---
     # [[0,1],[0,4],[1,2],[2,3],[0,1]]  shape (5,2)
-    edges = read_zarr3_array(mapping_path / "agglomerate_to_edges")
-    expected_edges = np.array([[0, 1], [0, 4], [1, 2], [2, 3], [0, 1]], dtype=np.uint32)
-    np.testing.assert_array_equal(edges, expected_edges)
+    agglomerate_to_edges = read_zarr3_array(mapping_path / "agglomerate_to_edges")
+    np.testing.assert_array_equal(
+        agglomerate_to_edges,
+        np.array([[0, 1], [0, 4], [1, 2], [2, 3], [0, 1]], dtype=np.uint32),
+        strict=True,
+    )
 
     # --- agglomerate_to_affinities ---
     # [124.0, 65.5, 0.0, 250.5, 80.0]  shape (5,)
-    affs = read_zarr3_array(mapping_path / "agglomerate_to_affinities")
-    expected_affs = np.array([124.0, 65.5, 0.0, 250.5, 80.0], dtype=np.float32)
-    np.testing.assert_array_almost_equal(affs, expected_affs)
+    agglomerate_to_affinities = read_zarr3_array(
+        mapping_path / "agglomerate_to_affinities"
+    )
+    np.testing.assert_array_almost_equal(
+        agglomerate_to_affinities,
+        np.array([124.0, 65.5, 0.0, 250.5, 80.0], dtype=np.float32),
+    )
+    assert agglomerate_to_affinities.dtype == np.float32
 
     # --- agglomerate_to_positions ---
     # Co-indexed with agglomerate_to_segments: [1,2,3,4,7,5,6]
-    positions = read_zarr3_array(mapping_path / "agglomerate_to_positions")
-    assert positions.shape == (7, 3)
-    assert positions.dtype == np.int32
+    agglomerate_to_positions = read_zarr3_array(
+        mapping_path / "agglomerate_to_positions"
+    )
+    assert agglomerate_to_positions.shape == (7, 3)
+    assert agglomerate_to_positions.dtype == np.int32
     seg_order = [1, 2, 3, 4, 7, 5, 6]
     for local_idx, seg_id in enumerate(seg_order):
-        expected_pos = np.array([seg_id * 10, seg_id * 20, seg_id * 30], dtype=np.int32)
-        np.testing.assert_array_equal(positions[local_idx], expected_pos)
+        np.testing.assert_array_equal(
+            agglomerate_to_positions[local_idx],
+            np.array([seg_id * 10, seg_id * 20, seg_id * 30], dtype=np.int32),
+            strict=True,
+        )
 
 
 def test_create_single_node_no_edges(tmp_upath: UPath) -> None:
@@ -116,23 +147,51 @@ def test_create_single_node_no_edges(tmp_upath: UPath) -> None:
     attachment = AgglomerateAttachment.create(tmp_upath / "agg_view_1", G)
     assert attachment.name == "agg_view_1"
 
-    s2a = read_zarr3_array(tmp_upath / "agg_view_1" / "segment_to_agglomerate")
-    np.testing.assert_array_equal(s2a, [0, 1])
+    segment_to_agglomerate = read_zarr3_array(
+        tmp_upath / "agg_view_1" / "segment_to_agglomerate"
+    )
+    np.testing.assert_array_equal(segment_to_agglomerate, [0, 1])
 
-    off = read_zarr3_array(tmp_upath / "agg_view_1" / "agglomerate_to_segments_offsets")
-    np.testing.assert_array_equal(off, [0, 0, 1])
+    agglomerate_to_segments_offsets = read_zarr3_array(
+        tmp_upath / "agg_view_1" / "agglomerate_to_segments_offsets"
+    )
+    np.testing.assert_array_equal(agglomerate_to_segments_offsets, [0, 0, 1])
 
-    segs = read_zarr3_array(tmp_upath / "agg_view_1" / "agglomerate_to_segments")
-    np.testing.assert_array_equal(segs, [1])
+    agglomerate_to_segments = read_zarr3_array(
+        tmp_upath / "agg_view_1" / "agglomerate_to_segments"
+    )
+    np.testing.assert_array_equal(agglomerate_to_segments, [1])
 
-    eoff = read_zarr3_array(tmp_upath / "agg_view_1" / "agglomerate_to_edges_offsets")
-    np.testing.assert_array_equal(eoff, [0, 0, 0])
+    agglomerate_to_edges_offsets = read_zarr3_array(
+        tmp_upath / "agg_view_1" / "agglomerate_to_edges_offsets"
+    )
+    np.testing.assert_array_equal(agglomerate_to_edges_offsets, [0, 0, 0])
 
-    edges = read_zarr3_array(tmp_upath / "agg_view_1" / "agglomerate_to_edges")
-    assert edges.shape == (0, 2)
+    agglomerate_to_edges = read_zarr3_array(
+        tmp_upath / "agg_view_1" / "agglomerate_to_edges"
+    )
+    assert agglomerate_to_edges.shape == (0, 2)
 
-    affs = read_zarr3_array(tmp_upath / "agg_view_1" / "agglomerate_to_affinities")
-    assert affs.shape == (0,)
+    agglomerate_to_affinities = read_zarr3_array(
+        tmp_upath / "agg_view_1" / "agglomerate_to_affinities"
+    )
+    assert agglomerate_to_affinities.shape == (0,)
+
+
+@pytest.mark.parametrize("seg_dtype", [np.uint32, np.uint64])
+def test_create_agglomerate_attachment_with_segmentation_dtype(
+    tmp_upath: UPath, seg_dtype: np.dtype
+) -> None:
+    """Test both segmentation dtypes."""
+    mapping_path = tmp_upath / "agglomerate_view_75"
+    G = build_example_graph()
+    AgglomerateAttachment.create(mapping_path, G, segmentation_dtype=seg_dtype)
+
+    agglomerate_to_segments = read_zarr3_array(mapping_path / "agglomerate_to_segments")
+    assert agglomerate_to_segments.dtype == seg_dtype
+
+    agglomerate_to_edges = read_zarr3_array(mapping_path / "agglomerate_to_edges")
+    assert agglomerate_to_edges.dtype == seg_dtype
 
 
 def test_create_invalid_segment_id(tmp_upath: UPath) -> None:
@@ -201,7 +260,10 @@ def test_roundtrip_single_node(tmp_upath: UPath) -> None:
     assert_graphs_equal(G, G2)
 
 
-def test_create_and_add_to(tmp_upath: UPath) -> None:
+@pytest.mark.parametrize("seg_dtype", [np.uint32, np.uint64])
+def test_roundtrip_with_segmentation_dtype(
+    tmp_upath: UPath, seg_dtype: np.dtype
+) -> None:
     """create_and_add_to() writes data, registers the attachment on the layer, and raises on duplicate name."""
     dataset = Dataset(
         UPath(tmp_upath / "ds"),
@@ -210,6 +272,7 @@ def test_create_and_add_to(tmp_upath: UPath) -> None:
     seg_layer = dataset.add_layer(
         "seg",
         SEGMENTATION_CATEGORY,
+        dtype=seg_dtype,
         data_format="zarr3",
         bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
     ).as_segmentation_layer()
@@ -238,8 +301,19 @@ def test_create_and_add_to(tmp_upath: UPath) -> None:
     assert agglomerates[0]["name"] == "agglomerate_view_75"
 
     # Data on disk is correct (spot-check segment_to_agglomerate)
-    s2a = read_zarr3_array(attachment.path / "segment_to_agglomerate")
-    np.testing.assert_array_equal(s2a, [0, 1, 1, 1, 1, 2, 2, 1])
+    segment_to_agglomerate = read_zarr3_array(
+        attachment.path / "segment_to_agglomerate"
+    )
+    np.testing.assert_array_equal(segment_to_agglomerate, [0, 1, 1, 1, 1, 2, 2, 1])
+
+    # Verify dtypes
+    agglomerate_to_segments = read_zarr3_array(
+        attachment.path / "agglomerate_to_segments"
+    )
+    assert agglomerate_to_segments.dtype == seg_dtype
+
+    agglomerate_to_edges = read_zarr3_array(attachment.path / "agglomerate_to_edges")
+    assert agglomerate_to_edges.dtype == seg_dtype
 
     # Roundtrip via to_graph()
     G2 = attachment.to_graph()
@@ -247,6 +321,24 @@ def test_create_and_add_to(tmp_upath: UPath) -> None:
 
     # Duplicate name raises FileExistsError
     with pytest.raises(FileExistsError):
+        AgglomerateAttachment.create_and_add_to(seg_layer, "agglomerate_view_75", G)
+
+
+def test_create_and_add_to_with_invalid_segmentation_dtype(tmp_upath: UPath) -> None:
+    dataset = Dataset(
+        UPath(tmp_upath / "ds"),
+        voxel_size=(10, 10, 10),
+    )
+    seg_layer = dataset.add_layer(
+        "seg",
+        SEGMENTATION_CATEGORY,
+        dtype="uint8",
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
+    ).as_segmentation_layer()
+
+    G = build_example_graph()
+    with pytest.raises(AssertionError):
         AgglomerateAttachment.create_and_add_to(seg_layer, "agglomerate_view_75", G)
 
 

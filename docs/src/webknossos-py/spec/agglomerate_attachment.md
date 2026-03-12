@@ -62,7 +62,7 @@ Let:
 - `n_agglomerates` = number of real agglomerates (agglomerate 0 is reserved and always empty)
 - `n_edges` = total number of edges across all agglomerates
 
-The `segmentation_dtype` is `uint32` when `n_segments < 2^32`, otherwise `uint64`.
+The `segmentation_dtype` is `uint32` or `uint64` and must match the dtype of the corresponding segmentation layer.
 
 ---
 
@@ -204,25 +204,38 @@ The first axis is used as the "row" axis for size calculations; all remaining ax
 
 ## Example
 
-Consider the following segments and edges:
+Consider the following 7 segments and 5 edges:
 
 |  |  |
 | --- | --- |
 | Segments | 1, 2, 3, 4, 5, 6, 7 |
-| Edges    | (1,2), (2,3), (3,4), (5,6), (1,7) |
+| Edges    | (1, 2), (2, 3), (3, 4), (5, 6), (1, 7) |
 
-This results in two agglomerates:
+These result in two agglomerates:
 |  |  |
 | --- | --- |
 | Agglomerate 1 | 1, 2, 3, 4, 7 |
 | Agglomerate 2 | 5, 6 |
 
-We have the following properties:
-|  |  |
-| --- | --- |
-| `n_agglomerates` | 2 |
-| `n_segments`     | 7 |
-| `n_edges`        | 5 |
+Now, let's rewrite the segment IDs to local indices:
+| Segment | Agglomerate | Localized Segment |
+| --- | --- | --- |
+| 1 | 1 | 0 |
+| 2 | 1 | 1 |
+| 3 | 1 | 2 |
+| 4 | 1 | 3 |
+| 5 | 2 | 0 |
+| 6 | 2 | 1 |
+| 7 | 1 | 4 |
+
+With this, we can rewrite and sort the edges:
+| Edge | Agglomerate | Localized Edge |
+| --- | --- | --- |
+| (1, 2) | 1 | (0, 1) |
+| (1, 7) | 1 | (0, 4) |
+| (2, 3) | 1 | (1, 2) |
+| (3, 4) | 1 | (2, 3) |
+| (5, 6) | 2 | (0, 1) |
 
 This would be the content of the arrays:
 | Array | Content | Shape |
@@ -231,6 +244,6 @@ This would be the content of the arrays:
 | `agglomerate_to_segments_offsets` | `[0, 0, 5, 7]` | (4,) |
 | `agglomerate_to_segments` | `[1, 2, 3, 4, 7, 5, 6]` | (7,) |
 | `agglomerate_to_edges_offsets` | `[0, 0, 4, 5]` | (4,) |
-| `agglomerate_to_edges` | `[[0,1], [0,4], [1,2], [2,3], [0,1]]` | (5,2) |
+| `agglomerate_to_edges` | `[[0, 1], [0, 4], [1, 2], [2, 3], [0, 1]]` | (5, 2) |
 | `agglomerate_to_affinities` | `[124.0, 65.5, 0.0, 250.5, 80.0]` | (5,) |
-| `agglomerate_to_positions` | `[[x1,y1,z1], ..., [x7,y7,z7]]` | (7,3) |
+| `agglomerate_to_positions` | `[[x1, y1, z1], ..., [x7, y7, z7]]` | (7, 3) |

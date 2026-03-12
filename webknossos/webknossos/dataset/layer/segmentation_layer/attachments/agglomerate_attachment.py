@@ -88,12 +88,16 @@ class AgglomerateAttachment(Attachment):
 
         Returns the added AgglomerateAttachment.
         """
+        assert layer.dtype in (np.uint32, np.uint64), (
+            f"Cannot create agglomerate attachment for segmentation layer with dtype {layer.dtype}. "
+            + "Please use a segmentation layer with dtype uint32 or uint64."
+        )
         attachment_path = layer.resolved_path / cls.container_name / name
         if attachment_path.exists():
             raise FileExistsError(
                 f"Agglomerate attachment at path {attachment_path} already exists."
             )
-        attachment = cls.create(attachment_path, graph)
+        attachment = cls.create(attachment_path, graph, segmentation_dtype=layer.dtype)
         layer.attachments._add_attachment(attachment)
         return attachment
 
@@ -102,6 +106,8 @@ class AgglomerateAttachment(Attachment):
         cls,
         path: str | PathLike | UPath,
         graph: AgglomerateGraph,
+        *,
+        segmentation_dtype: np.typing.DTypeLike = "uint32",
     ) -> AgglomerateAttachment:
         """Create and write a Zarr v3 agglomerate attachment from a networkx graph.
 
@@ -115,9 +121,13 @@ class AgglomerateAttachment(Attachment):
         `path` is the mapping group directory (e.g. `…/agglomerate_view_75`).
         The directory name is used as the attachment name.
 
+        `segmentation_dtype` must match the dtype of the corresponding segmentation layer.
+
         Returns an AgglomerateAttachment usable directly with
         `seg_layer.attachments.add_attachment_as_copy(attachment)`.
         """
+        segmentation_dtype = np.dtype(segmentation_dtype)
+
         path = UPath(path)
         path.mkdir(parents=True, exist_ok=True)
 
@@ -138,8 +148,9 @@ class AgglomerateAttachment(Attachment):
                 f"Segment IDs must be dense (1..{n_segments}) with no gaps, "
                 f"missing: {missing}"
             )
-        segmentation_dtype = np.uint32 if n_segments < 2**32 else np.uint64
-        seg_dtype_str = "uint32" if n_segments < 2**32 else "uint64"
+
+        if segmentation_dtype not in (np.uint32, np.uint64):
+            raise ValueError("Segmentation dtype must be uint32 or uint64.")
 
         # --- Identify connected components → agglomerates ---
         components = list(nx.connected_components(graph))
@@ -245,7 +256,7 @@ class AgglomerateAttachment(Attachment):
         write_zarr3_array(
             path / "agglomerate_to_segments",
             agglomerate_to_segments,
-            dtype=seg_dtype_str,
+            dtype=segmentation_dtype,
             target_chunk_size_bytes=DATA_CHUNK,
             target_shard_size_bytes=DATA_SHARD,
         )
@@ -259,7 +270,7 @@ class AgglomerateAttachment(Attachment):
         write_zarr3_array(
             path / "agglomerate_to_edges",
             agglomerate_to_edges,
-            dtype=seg_dtype_str,
+            dtype=segmentation_dtype,
             target_chunk_size_bytes=DATA_CHUNK,
             target_shard_size_bytes=DATA_SHARD,
         )
