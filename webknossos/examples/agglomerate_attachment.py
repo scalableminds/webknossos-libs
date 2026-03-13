@@ -26,7 +26,7 @@ def main() -> None:
         category="segmentation",
         dtype="uint32",
         largest_segment_id=7,
-    )
+    ).as_segmentation_layer()
     mag1 = seg_layer.add_mag("1")
 
     # Paint segment IDs 1‥7 into a small volume so WEBKNOSSOS can look them up.
@@ -46,17 +46,17 @@ def main() -> None:
     graph = AgglomerateGraph()
 
     # Segment positions (representative voxels)
-    graph.add_segment(1, Vec3Int(10, 20, 30))
-    graph.add_segment(2, Vec3Int(15, 25, 35))
-    graph.add_segment(3, Vec3Int(50, 60, 70))
-    graph.add_segment(4, Vec3Int(55, 65, 75))
-    graph.add_segment(5, Vec3Int(100, 110, 120))
-    graph.add_segment(6, Vec3Int(105, 115, 125))
-    graph.add_segment(7, Vec3Int(200, 210, 220))
+    graph.add_segment(1, position=Vec3Int(10, 20, 30))
+    graph.add_segment(2, position=Vec3Int(15, 25, 35))
+    graph.add_segment(3, position=Vec3Int(50, 60, 70))
+    graph.add_segment(4, position=Vec3Int(55, 65, 75))
+    graph.add_segment(5, position=Vec3Int(100, 110, 120))
+    graph.add_segment(6, position=Vec3Int(105, 115, 125))
+    graph.add_segment(7, position=Vec3Int(200, 210, 220))
 
     # Edges and their affinity scores.
     # Segments connected by edges (directly or transitively) form one agglomerate.
-    # Here we create three agglomerates:
+    # Here we create two agglomerates:
     #   • agglomerate A: segments {1, 2, 3, 4, 7}  (all connected)
     #   • agglomerate B: segments {5, 6}
     graph.add_affinity_edge(1, 2, affinity=0.92)
@@ -68,38 +68,26 @@ def main() -> None:
     # -------------------------------------------------------------------------
     # 3. Write the attachment to disk and register it on the layer
     #
-    # create() writes a Zarr v3 directory at the given path and returns an
-    # AgglomerateAttachment object.  The directory name becomes the attachment
-    # name that WEBKNOSSOS displays in the UI.
-    #
-    # add_attachment_as_copy() copies the written directory into the dataset's
-    # own folder structure and records it in the dataset properties.
+    # create_and_add_to() creates an AgglomerateAttachment object and adds it to
+    # the segmentation layer. The attachment name becomes the attachment name
+    # that WEBKNOSSOS displays in the UI.
     # -------------------------------------------------------------------------
-    import tempfile
-    from pathlib import Path
+    attachment = AgglomerateAttachment.create_and_add_to(
+        seg_layer, "agglomerate_view_75", graph
+    )
 
-    with tempfile.TemporaryDirectory() as tmp:
-        attachment = AgglomerateAttachment.create(
-            Path(tmp) / "agglomerate_view_75",
-            graph,
-        )
-        seg_layer.attachments.add_attachment_as_copy(attachment)
-
-    print("Agglomerate attachment added:")
-    for att in seg_layer.attachments.agglomerates:
-        print(f"  name={att.name!r}  format={att.data_format}  path={att.path}")
+    print(f"Created agglomerate attachment: {attachment}")
 
     # -------------------------------------------------------------------------
     # 4. Round-trip: read the attachment back as a graph
     # -------------------------------------------------------------------------
-    registered = seg_layer.attachments.agglomerates[0]
-    recovered = registered.to_graph()
+    recovered_graph = attachment.to_graph()
 
     print(
-        f"\nRecovered graph: {recovered.number_of_nodes()} nodes, "
-        f"{recovered.number_of_edges()} edges"
+        f"\nRecovered graph: {recovered_graph.number_of_nodes()} nodes, "
+        f"{recovered_graph.number_of_edges()} edges"
     )
-    for node, data in sorted(recovered.nodes(data=True)):
+    for node, data in sorted(recovered_graph.nodes(data=True)):
         print(f"  segment {node}: position={data['position']}")
 
 

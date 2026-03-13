@@ -73,9 +73,9 @@ class AgglomerateGraphData:
         graph: AgglomerateGraph = AgglomerateGraph()
         for i, seg_id in enumerate(self.segments):
             pos = self.positions[i]
-            graph.add_segment(
-                int(seg_id), Vec3Int(int(pos[0]), int(pos[1]), int(pos[2]))
-            )
+            graph.add_segment(int(seg_id), position=Vec3Int(pos))
         for i, (src, tgt) in enumerate(self.edges):
-            graph.add_affinity_edge(int(src), int(tgt), float(self.affinities[i]))
+            graph.add_affinity_edge(
+                int(src), int(tgt), affinity=float(self.affinities[i])
+            )
         return graph

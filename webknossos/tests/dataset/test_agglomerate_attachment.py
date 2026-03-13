@@ -178,6 +178,48 @@ def test_create_single_node_no_edges(tmp_upath: UPath) -> None:
     assert agglomerate_to_affinities.shape == (0,)
 
 
+def test_create_empty_graph(tmp_upath: UPath) -> None:
+    """Empty graph (0 segments) should produce valid all-empty arrays."""
+    G = AgglomerateGraph()
+    attachment = AgglomerateAttachment.create(tmp_upath / "agg_empty", G)
+    assert attachment.name == "agg_empty"
+
+    segment_to_agglomerate = read_zarr3_array(
+        tmp_upath / "agg_empty" / "segment_to_agglomerate"
+    )
+    np.testing.assert_array_equal(segment_to_agglomerate, [0])
+
+    agglomerate_to_segments_offsets = read_zarr3_array(
+        tmp_upath / "agg_empty" / "agglomerate_to_segments_offsets"
+    )
+    np.testing.assert_array_equal(agglomerate_to_segments_offsets, [0, 0])
+
+    agglomerate_to_segments = read_zarr3_array(
+        tmp_upath / "agg_empty" / "agglomerate_to_segments"
+    )
+    assert agglomerate_to_segments.shape == (0,)
+
+    agglomerate_to_edges_offsets = read_zarr3_array(
+        tmp_upath / "agg_empty" / "agglomerate_to_edges_offsets"
+    )
+    np.testing.assert_array_equal(agglomerate_to_edges_offsets, [0, 0])
+
+    agglomerate_to_edges = read_zarr3_array(
+        tmp_upath / "agg_empty" / "agglomerate_to_edges"
+    )
+    assert agglomerate_to_edges.shape == (0, 2)
+
+    agglomerate_to_affinities = read_zarr3_array(
+        tmp_upath / "agg_empty" / "agglomerate_to_affinities"
+    )
+    assert agglomerate_to_affinities.shape == (0,)
+
+    agglomerate_to_positions = read_zarr3_array(
+        tmp_upath / "agg_empty" / "agglomerate_to_positions"
+    )
+    assert agglomerate_to_positions.shape == (0, 3)
+
+
 @pytest.mark.parametrize("seg_dtype", [np.uint32, np.uint64])
 def test_create_agglomerate_attachment_with_segmentation_dtype(
     tmp_upath: UPath, seg_dtype: np.dtype

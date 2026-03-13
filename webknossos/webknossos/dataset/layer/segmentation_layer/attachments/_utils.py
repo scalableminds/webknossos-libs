@@ -26,7 +26,6 @@ def write_zarr3_array(
     path: UPath,
     data: np.ndarray,  # type: ignore[type-arg]
     *,
-    dtype: np.typing.DTypeLike,
     target_chunk_size_bytes: int,
     target_shard_size_bytes: int,
 ) -> None:
@@ -42,7 +41,7 @@ def write_zarr3_array(
 
     from webknossos.dataset.layer.view._array import TS_CONTEXT
 
-    np_dtype = np.dtype(dtype)
+    np_dtype = data.dtype
     # bytes consumed by one step along axis 0
     row_bytes = (
         np_dtype.itemsize * math.prod(data.shape[1:])
