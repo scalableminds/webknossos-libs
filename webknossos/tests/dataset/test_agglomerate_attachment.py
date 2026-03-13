@@ -12,7 +12,7 @@ from webknossos import (
     AgglomerateGraph,
     Dataset,
 )
-from webknossos._utils.tensorstore_helpers import (
+from webknossos.dataset._utils.tensorstore_helpers import (
     read_zarr3_array,
 )
 from webknossos.geometry import BoundingBox, Vec3Int
