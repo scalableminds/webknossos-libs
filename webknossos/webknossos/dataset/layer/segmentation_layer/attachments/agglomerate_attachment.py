@@ -8,10 +8,13 @@ import networkx as nx
 import numpy as np
 from upath import UPath
 
+from webknossos.dataset._utils.tensorstore_helpers import (
+    read_zarr3_array,
+    write_zarr3_array,
+)
 from webknossos.dataset_properties import AttachmentDataFormat
 from webknossos.geometry import Vec3Int
 
-from ._utils import read_zarr3_array, write_zarr3_array
 from .attachment import Attachment
 
 if TYPE_CHECKING:

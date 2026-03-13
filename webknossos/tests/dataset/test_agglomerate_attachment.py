@@ -12,7 +12,7 @@ from webknossos import (
     AgglomerateGraph,
     Dataset,
 )
-from webknossos.dataset.layer.segmentation_layer.attachments._utils import (
+from webknossos._utils.tensorstore_helpers import (
     read_zarr3_array,
 )
 from webknossos.geometry import BoundingBox, Vec3Int
@@ -33,7 +33,7 @@ def build_example_graph() -> AgglomerateGraph:
     G = AgglomerateGraph()
     # Positions: (seg_id * 10, seg_id * 20, seg_id * 30) for uniqueness
     for i in range(1, 8):
-        G.add_segment(i, Vec3Int(i * 10, i * 20, i * 30))
+        G.add_segment(i, position=Vec3Int(i * 10, i * 20, i * 30))
     G.add_affinity_edge(1, 2, affinity=124.0)
     G.add_affinity_edge(2, 3, affinity=0.0)
     G.add_affinity_edge(3, 4, affinity=250.5)
@@ -143,7 +143,7 @@ def test_create_example(tmp_upath: UPath) -> None:
 def test_create_single_node_no_edges(tmp_upath: UPath) -> None:
     """Single segment, no edges — produces one agglomerate with one segment and zero edges."""
     G = AgglomerateGraph()
-    G.add_segment(1, Vec3Int(5, 10, 15))
+    G.add_segment(1, position=Vec3Int(5, 10, 15))
     attachment = AgglomerateAttachment.create(tmp_upath / "agg_view_1", G)
     assert attachment.name == "agg_view_1"
 
@@ -245,16 +245,16 @@ def test_create_invalid_segment_id(tmp_upath: UPath) -> None:
 
 def test_create_sparse_segment_ids_rejected(tmp_upath: UPath) -> None:
     G = AgglomerateGraph()
-    G.add_segment(1, Vec3Int(1, 2, 3))
-    G.add_segment(3, Vec3Int(4, 5, 6))  # gap: segment 2 is missing
+    G.add_segment(1, position=Vec3Int(1, 2, 3))
+    G.add_segment(3, position=Vec3Int(4, 5, 6))  # gap: segment 2 is missing
     with pytest.raises(ValueError, match="dense"):
         AgglomerateAttachment.create(tmp_upath / "agg_sparse", G)
 
 
 def test_agglomerate_graph_api() -> None:
     G = AgglomerateGraph()
-    G.add_segment(1, Vec3Int(10, 20, 30))
-    G.add_segment(2, Vec3Int(15, 25, 35))
+    G.add_segment(1, position=Vec3Int(10, 20, 30))
+    G.add_segment(2, position=Vec3Int(15, 25, 35))
     G.add_affinity_edge(1, 2, affinity=0.9)
     assert G.number_of_nodes() == 2
     assert G.number_of_edges() == 1
@@ -296,7 +296,7 @@ def test_roundtrip_example(tmp_upath: UPath) -> None:
 def test_roundtrip_single_node(tmp_upath: UPath) -> None:
     """Roundtrip with a single isolated node (no edges)."""
     G = AgglomerateGraph()
-    G.add_segment(1, Vec3Int(100, 200, 300))
+    G.add_segment(1, position=Vec3Int(100, 200, 300))
     attachment = AgglomerateAttachment.create(tmp_upath / "agg_view_single", G)
     G2 = attachment.to_graph()
     assert_graphs_equal(G, G2)
@@ -388,16 +388,16 @@ def test_roundtrip_multiple_components(tmp_upath: UPath) -> None:
     """Roundtrip with several disconnected components (dense IDs required)."""
     G = AgglomerateGraph()
     # Component A: 1-2-3
-    G.add_segment(1, Vec3Int(1, 2, 3))
-    G.add_segment(2, Vec3Int(4, 5, 6))
-    G.add_segment(3, Vec3Int(7, 8, 9))
+    G.add_segment(1, position=Vec3Int(1, 2, 3))
+    G.add_segment(2, position=Vec3Int(4, 5, 6))
+    G.add_segment(3, position=Vec3Int(7, 8, 9))
     G.add_affinity_edge(1, 2, affinity=0.75)
     G.add_affinity_edge(2, 3, affinity=0.5)
     # Component B: isolated node (dense: 4 follows 3)
-    G.add_segment(4, Vec3Int(50, 60, 70))
+    G.add_segment(4, position=Vec3Int(50, 60, 70))
     # Component C: 5-6
-    G.add_segment(5, Vec3Int(10, 20, 30))
-    G.add_segment(6, Vec3Int(40, 50, 60))
+    G.add_segment(5, position=Vec3Int(10, 20, 30))
+    G.add_segment(6, position=Vec3Int(40, 50, 60))
     G.add_affinity_edge(5, 6, affinity=1.0)
     attachment = AgglomerateAttachment.create(tmp_upath / "agg_view_multi", G)
     G2 = attachment.to_graph()

@@ -2,14 +2,14 @@ import math
 from typing import Any
 
 import numpy as np
+import tensorstore as ts
 from upath import UPath
+
+TS_CONTEXT = ts.Context()
 
 
 def read_zarr3_array(path: UPath) -> np.ndarray:  # type: ignore[type-arg]
     """Read a Zarr v3 array from disk into a numpy array."""
-    import tensorstore as ts
-
-    from webknossos.dataset.layer.view._array import TS_CONTEXT
 
     arr = ts.open(
         {
@@ -37,10 +37,6 @@ def write_zarr3_array(
     "row" axis; remaining axes are kept whole in every chunk/shard.
     The shard shape is always a multiple of the chunk shape.
     """
-    import tensorstore as ts
-
-    from webknossos.dataset.layer.view._array import TS_CONTEXT
-
     np_dtype = data.dtype
     # bytes consumed by one step along axis 0
     row_bytes = (
