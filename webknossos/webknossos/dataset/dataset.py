@@ -33,11 +33,9 @@ from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._utils import pims_images
 from .abstract_dataset import DEFAULT_VERSION, AbstractDataset, _dtype_maybe
 from .defaults import (
-    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_DATA_FORMAT,
     DEFAULT_DTYPE,
-    DEFAULT_SHARD_SHAPE,
-    DEFAULT_SHARD_SHAPE_FROM_IMAGES,
     PROPERTIES_FILE_NAME,
     ZARR_JSON_FILE_NAME,
     ZGROUP_FILE_NAME,
@@ -54,7 +52,7 @@ from .layer.abstract_layer import (
     _UNALLOWED_LAYER_NAME_CHARS,
     _validate_layer_name,
 )
-from .layer.layer import _get_shard_shape
+from .layer.layer import _get_shard_and_chunk_shapes
 from .ome_metadata import write_ome_metadata
 from .remote_dataset import RemoteAccessMode, RemoteDataset
 from .remote_folder import RemoteFolder
@@ -1507,50 +1505,30 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
             expected_bbox = pims_image_sequence.expected_bbox
 
-            # When the expected bbox is 2D the chunk_shape is set to 2D too.
-            if expected_bbox.get_shape("z") == 1 and layer.data_format in (
-                DataFormat.Zarr,
-                DataFormat.Zarr3,
+            _shard_shape_user_specified = (
+                shard_shape is not None or chunks_per_shard is not None
+            )
+            chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
+                data_format=layer.data_format,
+                layer_bounding_box=None,
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
+            )
+            # For Zarr3 image imports, default to z-aligned shards for efficient
+            # slice-by-slice writing, regardless of total z size.
+            if (
+                not _shard_shape_user_specified
+                and layer.data_format == DataFormat.Zarr3
             ):
-                chunk_shape = (
-                    DEFAULT_CHUNK_SHAPE.with_z(1)
-                    if chunk_shape is None
-                    else Vec3Int.from_vec_or_int(chunk_shape)
-                )
-                shard_shape = _get_shard_shape(
-                    chunk_shape=chunk_shape,
-                    chunks_per_shard=chunks_per_shard,
-                    shard_shape=shard_shape,
-                )
-                if shard_shape is None:
-                    if layer.data_format == DataFormat.Zarr3:
-                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES.with_z(
-                            chunk_shape.z
-                        )
-                    else:
-                        shard_shape = DEFAULT_CHUNK_SHAPE.with_z(chunk_shape.z)
-                else:
-                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
-            else:
-                chunk_shape = (
-                    DEFAULT_CHUNK_SHAPE
-                    if chunk_shape is None
-                    else Vec3Int.from_vec_or_int(chunk_shape)
-                )
-                shard_shape = _get_shard_shape(
-                    chunk_shape=chunk_shape,
-                    chunks_per_shard=chunks_per_shard,
-                    shard_shape=shard_shape,
-                )
-                if shard_shape is None:
-                    if layer.data_format == DataFormat.Zarr3:
-                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES
-                    elif layer.data_format == DataFormat.Zarr:
-                        shard_shape = DEFAULT_CHUNK_SHAPE
-                    else:
-                        shard_shape = DEFAULT_SHARD_SHAPE
-                else:
-                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
+                shard_shape = chunk_shape * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
+            # When the expected bbox is 2D the chunk_shape is set to 2D too.
+            if (
+                expected_bbox.get_shape("z") == 1
+                and layer.data_format == DataFormat.Zarr3
+            ):
+                chunk_shape = chunk_shape.with_z(1)
+                shard_shape = shard_shape.with_z(1)
 
             mag = Mag(mag)
 

@@ -124,6 +124,7 @@ Describes a single magnification level for non-WKW formats.
 | `mag` | `[integer, integer, integer]` | Yes | | Downsampling factor as `[x, y, z]` (e.g. `[2, 2, 2]` for 2x downsampling). |
 | `path` | `string` | No | `null` | Relative path to the mag data directory (e.g. `"./color/1"`). |
 | `axisOrder` | `object` | Conditional | `null` | Maps axis names to dimension indices in the underlying array (e.g. `{"c": 0, "x": 4, "y": 3, "z": 2}`). Required when the `c` (optional), `x`, `y`, `z` axes are not the last axes in that order. Replicated on every mag but must be identical across all mags. |
+| `channelIndex` | `integer` | No | `0` | Index of the first channel in this mag within the underlying array's channel dimension. Used when multiple layers share a single multi-channel array (e.g. `channelIndex: 3` to start at the 4th channel). |
 
 ## WkwMagViewProperties (Deprecated)
 

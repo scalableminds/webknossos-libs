@@ -18,11 +18,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added a pure-Python implementation of WKW to support datasets on remote storage. Although, it is strongly recommended to use Zarr3 datasets on remote storage, for performance, interoperability and future-proofing reasons. [#1432](https://github.com/scalableminds/webknossos-libs/pull/1432)
+- Added `chunk_shape` and `shard_shape` arguments to `Layer.downsample`, `Layer.downsample_mag`, `Layer.redownsample`, `Layer.downsample_mag_list`, `Layer.upsample` and `RemoteLayer.downsample`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
 - Added `AgglomerateAttachment.create` and `AgglomerateAttachment.create_and_add_to methods`. They take a new networkx-based `AgglomerateGraph` as input. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 
 ### Changed
+- The default shard shape for downsampled mags is now `(1024, 1024, 1024)` (default) or `(4096, 4096, 32)` (zarr3 and 32 sections or less) or `(32, 32, 32)` (zarr2) and the chunk shape is now `(32, 32, 32)`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
 
 ### Fixed
+- Fixed a bug in the bounding box parsing, when "c" is not present in the axisOrder. [#1436](https://github.com/scalableminds/webknossos-libs/pull/1436)
 
 
 ## [3.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.2) - 2026-03-04
