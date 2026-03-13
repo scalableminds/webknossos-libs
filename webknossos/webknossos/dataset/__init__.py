@@ -9,6 +9,7 @@ from .defaults import (
 )
 from .layer import (
     AgglomerateAttachment,
+    AgglomerateGraph,
     Attachment,
     Attachments,
     ConnectomeAttachment,
