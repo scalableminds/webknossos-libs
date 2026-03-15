@@ -1139,7 +1139,7 @@ class Layer(AbstractLayer):
             interpolation_mode, self.category
         )
 
-        if from_mag > target_mag:
+        if not (from_mag <= target_mag):  # note, not the same as from_mag > target_mag
             raise ValueError(
                 f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) is greater than the target_mag ({target_mag.to_layer_name()})."
             )
