@@ -1000,7 +1000,7 @@ class Layer(AbstractLayer):
             executor (Executor | None): Executor for parallel processing. None by default.
 
         Raises:
-            AssertionError: If from_mag does not exist
+            KeyError: If from_mag doesn't exist is invalid.
             RuntimeError: If sampling scheme produces invalid magnifications
             AttributeError: If sampling_mode is invalid
 
@@ -1027,8 +1027,8 @@ class Layer(AbstractLayer):
             )
             from_mag = max(self.mags.keys())
 
-        if from_mag_view is None:
-            assert from_mag in self.mags.keys(), (
+        if from_mag_view is None and from_mag not in self.mags.keys():
+            raise KeyError(
                 f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
             )
 
@@ -1129,25 +1129,34 @@ class Layer(AbstractLayer):
             executor: Executor for parallel processing
 
         Raises:
-            AssertionError: If from_mag doesn't exist or target exists without overwrite"""
+            KeyError: If from_mag doesn't exist is invalid.
+            AssertionError: If target exists without overwrite
+            ValueError: If from_mag is greater than target_mag
+        """
         self._dataset._ensure_writable()
 
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.category
         )
 
-        assert from_mag <= target_mag
-        assert allow_overwrite or target_mag not in self.mags, (
-            "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
-        )
+        if from_mag > target_mag:
+            raise ValueError(
+                f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) is greater than the target_mag ({target_mag.to_layer_name()})."
+            )
+        if not allow_overwrite and target_mag in self.mags:
+            raise ValueError(
+                "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
+            )
         if from_mag_view is not None:
-            assert from_mag_view.mag == from_mag, (
-                f"from_mag_view {from_mag_view.mag} was supplied to downsample, but does not match from_mag {from_mag}."
-            )
+            if from_mag_view.mag != from_mag:
+                raise ValueError(
+                    f"from_mag_view {from_mag_view.mag} was supplied to downsample, but does not match from_mag {from_mag}."
+                )
         else:
-            assert from_mag in self.mags.keys(), (
-                f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-            )
+            if from_mag not in self.mags.keys():
+                raise KeyError(
+                    f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+                )
             from_mag_view = self.mags[from_mag]
 
         mag_factors = target_mag.to_vec3_int() // from_mag.to_vec3_int()
@@ -1293,13 +1302,15 @@ class Layer(AbstractLayer):
             executor (Executor | None): Executor for parallel processing.
 
         Raises:
-            AssertionError: If from_mag doesn't exist or target mags not in ascending order
+            KeyError: If from_mag doesn't exist is invalid.
+            AssertionError: If target mags not in ascending order
 
         See downsample_mag() for more details on parameters.
         """
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
-        )
+        if from_mag not in self.mags.keys():
+            raise KeyError(
+                f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+            )
 
         # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
         target_mags = sorted(target_mags, key=lambda m: m.to_list())
@@ -1332,6 +1343,7 @@ class Layer(AbstractLayer):
         self,
         from_mag: Mag,
         *,
+        from_mag_view: MagView | None = None,
         finest_mag: Mag = Mag(1),
         compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
@@ -1348,6 +1360,7 @@ class Layer(AbstractLayer):
 
         Args:
             from_mag (Mag): Source coarse magnification
+            from_mag_view (MagView | None): Source coarse magnification view, pass only if the source data should be from another layer or dataset.
             finest_mag (Mag): Target finest magnification (default Mag(1))
             compress (bool | Zarr3Config): Whether to compress upsampled data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             sampling_mode (str | SamplingModes): How dimensions should be upsampled:
@@ -1361,15 +1374,24 @@ class Layer(AbstractLayer):
             executor (Executor | None): Executor for parallel processing.
 
         Raises:
-            AssertionError: If from_mag doesn't exist or finest_mag invalid
+            KeyError: If from_mag doesn't exist is invalid.
+            AssertionError: If finest_mag is invalid.
             AttributeError: If sampling_mode is invalid
         """
 
         self._dataset._ensure_writable()
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        if from_mag_view is not None:
+            if from_mag_view.mag != from_mag:
+                raise ValueError(
+                    f"from_mag_view {from_mag_view.mag} was supplied to upsample, but does not match from_mag {from_mag}."
+                )
+        else:
+            if from_mag not in self.mags.keys():
+                raise KeyError(
+                    f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+                )
+            from_mag_view = self.mags[from_mag]
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -1408,7 +1430,9 @@ class Layer(AbstractLayer):
             assert prev_mag > target_mag
             assert target_mag not in self.mags
 
-            prev_mag_view = self.mags[prev_mag]
+            prev_mag_view = (
+                from_mag_view if prev_mag == from_mag else self.mags[prev_mag]
+            )
 
             mag_factors = [
                 t / s for (t, s) in zip(target_mag.to_list(), prev_mag.to_list())

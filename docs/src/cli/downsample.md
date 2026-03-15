@@ -1,6 +1,7 @@
 # `downsample`
 
-The `downsample` command reduces the resolution of a WEBKNOSSOS dataset. It works with both local datasets and datasets hosted on a WEBKNOSSOS server.
+The `downsample` command creates reduced resolutions of a WEBKNOSSOS dataset. 
+It works with both local datasets and datasets hosted on a WEBKNOSSOS server.
 
 ## Usage
 

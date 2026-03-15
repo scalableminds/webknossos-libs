@@ -170,9 +170,10 @@ class RemoteLayer(AbstractLayer):
             )
             from_mag = max(self.mags.keys())
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist. Existing mags: {self.mags.keys()}."
-        )
+        if from_mag not in self.mags.keys():
+            raise KeyError(
+                f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist. Existing mags: {self.mags.keys()}."
+            )
         from_mag_view = self.get_mag(from_mag)
 
         align_with_other_layers_dataset: bool | RemoteDataset = False
@@ -216,7 +217,7 @@ class RemoteLayer(AbstractLayer):
         compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: bool = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | None = None,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
@@ -234,22 +235,26 @@ class RemoteLayer(AbstractLayer):
             compress (bool | Zarr3Config): Whether to compress upsampled data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             sampling_mode (str | SamplingModes): How dimensions should be upsampled. Defaults to ANISOTROPIC.
             align_with_other_layers (bool): Whether to align mags with the dataset's other layers. Defaults to True.
-            buffer_shape (Vec3Int | None): Shape of processing buffer. Defaults to None.
+            buffer_shape (Vec3IntLike | None): Shape of processing buffer. Defaults to None.
             transfer_mode (TransferMode): How new mags are transferred to the remote storage. Defaults to COPY.
             common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is COPY or MOVE_AND_SYMLINK.
             overwrite_pending (bool): If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True.
             executor (Executor | None): Executor for parallel processing. Defaults to None.
 
         Raises:
-            AssertionError: If from_mag doesn't exist or finest_mag is invalid.
+            KeyError: If from_mag doesn't exist is invalid.
+            AssertionError: If finest_mag is invalid.
             AttributeError: If sampling_mode is invalid.
         """
 
         from ..dataset import Dataset
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        if from_mag not in self.mags.keys():
+            raise KeyError(
+                f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+            )
+
+        from_mag_view = self.get_mag(from_mag)
 
         with TemporaryDirectory() as tmpdir:
             tmp_dataset = Dataset(
@@ -258,6 +263,7 @@ class RemoteLayer(AbstractLayer):
             )
             tmp_layer = tmp_dataset.add_layer_like(self, self.name)
             tmp_layer.upsample(
+                from_mag_view=from_mag_view,
                 from_mag=from_mag,
                 finest_mag=finest_mag,
                 compress=compress,
