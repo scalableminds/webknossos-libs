@@ -167,6 +167,16 @@ class AbstractAttachments:
             yield self.cumsum
         yield from (self.connectomes or [])
 
+    def _get_attachment(
+        self, attachment_type: type[Attachment], name: str
+    ) -> Attachment:
+        for attachment in self:
+            if isinstance(attachment, attachment_type) and attachment.name == name:
+                return attachment
+        raise KeyError(
+            f"Attachment {attachment_type}/{name} not found in {self._layer.name}."
+        )
+
     def _add_attachment(
         self,
         attachment: Attachment,
@@ -216,6 +226,22 @@ class RemoteAttachments(AbstractAttachments):
     def delete_attachment(self, attachment: Attachment) -> None:
         raise NotImplementedError()
 
+    def rename_attachment(self, attachment: Attachment, *, new_name: str) -> Attachment:
+        self._ensure_writable()
+
+        old_name = attachment.name
+        _validate_name(new_name)
+
+        from ....abstract_dataset import AttachmentRenaming
+
+        self._layer._save_layer_properties(
+            renamings=[AttachmentRenaming(self._layer.name, old_name, new_name)]
+        )
+        # TODO: maybe redundant?
+        self._apply_server_properties()
+
+        return self._get_attachment(type(attachment), new_name)
+
     def add_attachment_as_ref(
         self,
         attachment: Attachment,
@@ -252,17 +278,7 @@ class RemoteAttachments(AbstractAttachments):
         )
         self._apply_server_properties()
 
-        for new_attachment in self:
-            if (
-                new_attachment.name == new_name
-                and new_attachment.type_name == attachment.type_name
-            ):
-                return new_attachment
-
-        raise RuntimeError(
-            f"Failed to add attachment {attachment} to {self._layer.name}. "
-            + f"The attachment was not added. The new attachment is {new_name}."
-        )
+        return self._get_attachment(type(attachment), new_name)
 
     def add_attachment_as_copy(
         self,
