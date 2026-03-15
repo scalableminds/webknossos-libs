@@ -24,15 +24,14 @@ from .attachment import (
     CumsumAttachment,
     MeshAttachment,
     SegmentIndexAttachment,
+    _validate_name,
 )
 
 if TYPE_CHECKING:
-    from .. import (
+    from ... import (
+        AbstractSegmentationLayer,
         RemoteSegmentationLayer,
         SegmentationLayer,
-    )
-    from ..abstract_segmentation_layer import (
-        AbstractSegmentationLayer,
     )
 
 
@@ -217,8 +216,53 @@ class RemoteAttachments(AbstractAttachments):
     def delete_attachment(self, attachment: Attachment) -> None:
         raise NotImplementedError()
 
-    def add_attachment_as_ref(self, attachment: Attachment) -> Attachment:
-        raise NotImplementedError()
+    def add_attachment_as_ref(
+        self,
+        attachment: Attachment,
+        *,
+        foreign_layer: "RemoteSegmentationLayer",
+        new_name: str | None,
+    ) -> Attachment:
+        self._ensure_writable()
+        from webknossos.client.api_client.models import ApiDatasetComposeAttachment
+        from webknossos.client.context import _get_api_client
+
+        if new_name is None:
+            new_name = attachment.name
+        else:
+            _validate_name(new_name)
+
+        if self._layer.dataset._context._url != foreign_layer.dataset._context._url:
+            raise ValueError(
+                "Cannot add an attachment from a different WEBKNOSSOS instance. "
+                + f"Got {foreign_layer.dataset._context._url}, expected {self._layer.dataset._context._url}."
+            )
+
+        client = _get_api_client()
+        client.dataset_add_attachment(
+            dataset_id=self._layer.dataset.dataset_id,
+            compose_attachment=ApiDatasetComposeAttachment(
+                dataset_id=self._layer.dataset.dataset_id,
+                source_layer_name=foreign_layer.name,
+                target_layer_name=self._layer.name,
+                attachment_type=attachment.type_name,
+                source_attachment_name=attachment.name,
+                target_attachment_name=new_name,
+            ),
+        )
+        self._apply_server_properties()
+
+        for new_attachment in self:
+            if (
+                new_attachment.name == new_name
+                and new_attachment.type_name == attachment.type_name
+            ):
+                return new_attachment
+
+        raise RuntimeError(
+            f"Failed to add attachment {attachment} to {self._layer.name}. "
+            + f"The attachment was not added. The new attachment is {new_name}."
+        )
 
     def add_attachment_as_copy(
         self,

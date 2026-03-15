@@ -4,7 +4,8 @@ import logging
 import re
 import warnings
 from abc import abstractmethod
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Generic, Literal, TypeVar, cast
 
 import numpy as np
@@ -55,6 +56,19 @@ LayerType = TypeVar("LayerType", bound=AbstractLayer)
 SegmentationLayerType = TypeVar(
     "SegmentationLayerType", bound=AbstractSegmentationLayer[Any]
 )
+
+
+@dataclass(frozen=True)
+class LayerRenaming:
+    old_name: str
+    new_name: str
+
+
+@dataclass(frozen=True)
+class AttachmentRenaming:
+    layer_name: str
+    old_name: str
+    new_name: str
 
 
 def _dtype_maybe(
@@ -143,7 +157,7 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
 
     @abstractmethod
     def _save_dataset_properties_impl(
-        self, *, layer_renaming: tuple[str, str] | None = None
+        self, *, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None
     ) -> None:
         pass
 
@@ -151,7 +165,7 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
         self,
         *,
         check_existing_properties: bool = True,
-        layer_renaming: tuple[str, str] | None = None,
+        renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None,
     ) -> None:
         self._ensure_writable()
         if check_existing_properties:
@@ -170,7 +184,7 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
                     "[WARNING] Properties changed in a way that they are not comparable anymore. Most likely "
                     + "the bounding box naming or axis order changed."
                 )
-        self._save_dataset_properties_impl(layer_renaming=layer_renaming)
+        self._save_dataset_properties_impl(renamings=renamings)
         self._last_read_properties = copy.deepcopy(self._properties)
 
     @property

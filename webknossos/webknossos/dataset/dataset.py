@@ -31,7 +31,13 @@ from ..geometry import (
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._utils import pims_images
-from .abstract_dataset import DEFAULT_VERSION, AbstractDataset, _dtype_maybe
+from .abstract_dataset import (
+    DEFAULT_VERSION,
+    AbstractDataset,
+    AttachmentRenaming,
+    LayerRenaming,
+    _dtype_maybe,
+)
 from .defaults import (
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_DATA_FORMAT,
@@ -466,13 +472,13 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         return self._load_dataset_properties_from_path(self.path)
 
     def _save_dataset_properties_impl(
-        self, *, layer_renaming: tuple[str, str] | None = None
+        self, *, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None
     ) -> None:
         """
         Exports the current dataset properties to json on disk.
         And writes out Zarr and OME-Ngff metadata if there is a Zarr layer.
         """
-        del layer_renaming  # only used in remote case
+        del renamings  # only used in remote case
         (self.path / PROPERTIES_FILE_NAME).write_text(
             json.dumps(
                 get_dataset_converter().unstructure(self._properties),
@@ -2074,7 +2080,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     ) -> Layer:
         """Add a layer from another dataset by reference.
 
-        Creates a layer that references data from a remote dataset. The image data
+        Creates a layer that references data from another dataset. The image data
         will be streamed on-demand when accessed.
 
         Args:
@@ -2082,7 +2088,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             new_layer_name: Optional name for the new layer, uses original name if None
 
         Returns:
-            Layer: The newly created remote layer referencing the foreign data
+            Layer: The newly created layer referencing the foreign data
 
         Raises:
             IndexError: If target layer name already exists
@@ -2092,9 +2098,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Examples:
             ```
             ds = Dataset.open("other/dataset")
-            remote_ds = RemoteDataset.open("my_dataset", "my_org_id")
+            foreign_ds = Dataset.open("my_dataset")
             new_layer = ds.add_layer_as_ref(
-                remote_ds.get_layer("color")
+                foreign_ds.get_layer("color")
             )
             ```
 
