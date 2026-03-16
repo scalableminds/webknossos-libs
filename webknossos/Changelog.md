@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - The default shard shape for downsampled mags is now `(1024, 1024, 1024)` (default) or `(4096, 4096, 32)` (zarr3 and 32 sections or less) or `(32, 32, 32)` (zarr2) and the chunk shape is now `(32, 32, 32)`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
+- The `axisOrder` field of the `MagViewProperties` is now always persisted in the `datasource-properties.json` file to avoid misinterpretation of the implicit axis ordering. [#1437](https://github.com/scalableminds/webknossos-libs/pull/1437)
 
 ### Fixed
 - Fixed a bug in the bounding box parsing, when "c" is not present in the axisOrder. [#1436](https://github.com/scalableminds/webknossos-libs/pull/1436)
