@@ -219,6 +219,7 @@ class NormalizedBoundingBox(NDBoundingBox):
                 "height": self.size.y,
                 "depth": self.size.z,
                 "numChannels": self.size.c,
+                "axisOrder": _DEFAULT_AXIS_ORDER,
             }
             if self.topleft.c != 0:
                 out["channelIndex"] = self.topleft.c
@@ -258,7 +259,7 @@ class NormalizedBoundingBox(NDBoundingBox):
             out["additionalAxes"] = additional_axes
 
         axis_order = {
-            axis: index[i]
+            axis: self.index[i]
             for i, axis in enumerate(self.axes)
             if axis in _DEFAULT_AXIS_ORDER
         }
