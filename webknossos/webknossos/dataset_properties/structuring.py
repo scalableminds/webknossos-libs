@@ -82,10 +82,13 @@ def layer_properties_post_unstructure(
             d["additionalAxes"] = d["boundingBox"]["additionalAxes"]
             del d["boundingBox"]["additionalAxes"]
 
-        if "axisOrder" in d["boundingBox"]:
-            del d["boundingBox"]["axisOrder"]
-        if "channelIndex" in d["boundingBox"]:
-            del d["boundingBox"]["channelIndex"]
+        # axisOrder and channelIndex are mag properties and should be removed from the bounding box
+        # we only keep them, if there is no mag
+        if len(d["mags"]) > 0:
+            if "axisOrder" in d["boundingBox"]:
+                del d["boundingBox"]["axisOrder"]
+            if "channelIndex" in d["boundingBox"]:
+                del d["boundingBox"]["channelIndex"]
 
         if "attachments" in d:
             if all(p is None or len(p) == 0 for p in d["attachments"].values()):
