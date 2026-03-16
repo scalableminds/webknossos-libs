@@ -82,6 +82,11 @@ def layer_properties_post_unstructure(
             d["additionalAxes"] = d["boundingBox"]["additionalAxes"]
             del d["boundingBox"]["additionalAxes"]
 
+        if "axisOrder" in d["boundingBox"]:
+            del d["boundingBox"]["axisOrder"]
+        if "channelIndex" in d["boundingBox"]:
+            del d["boundingBox"]["channelIndex"]
+
         if "attachments" in d:
             if all(p is None or len(p) == 0 for p in d["attachments"].values()):
                 del d["attachments"]

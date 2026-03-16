@@ -1246,9 +1246,13 @@ def test_properties_with_segmentation() -> None:
 
     output_data = json.loads((ds_path / PROPERTIES_FILE_NAME).read_text())
     for layer in output_data["dataLayers"]:
-        # remove the num_channels because they are not part of the original json
-        if "numChannels" in layer:
-            del layer["numChannels"]
+        # check that numChannels and axisOrder are present
+        # but remove them for the full check because they were not part of the original json
+        assert layer["numChannels"] == 1
+        layer.pop("numChannels", None)
+        for mag in layer["mags"]:
+            assert mag["axisOrder"] == {"c": 0, "x": 1, "y": 2, "z": 3}
+            mag.pop("axisOrder", None)
 
     assert input_data == output_data
 
