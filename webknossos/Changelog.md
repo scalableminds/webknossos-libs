@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.3...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.3) - 2026-03-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...v3.2.3)
 
 ### Added
 - Added a pure-Python implementation of WKW to support datasets on remote storage. Although, it is strongly recommended to use Zarr3 datasets on remote storage, for performance, interoperability and future-proofing reasons. [#1432](https://github.com/scalableminds/webknossos-libs/pull/1432)
@@ -24,6 +34,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed a bug in the bounding box parsing, when "c" is not present in the axisOrder. [#1436](https://github.com/scalableminds/webknossos-libs/pull/1436)
+
 
 
 ## [3.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.2) - 2026-03-04
