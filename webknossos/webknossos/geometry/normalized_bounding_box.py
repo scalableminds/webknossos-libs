@@ -257,22 +257,12 @@ class NormalizedBoundingBox(NDBoundingBox):
         if additional_axes:
             out["additionalAxes"] = additional_axes
 
-        def _axis_order_field(axes: tuple[str, ...], index: VecInt) -> dict[str, int]:
-            axis_order = {axis: index[i] for i, axis in enumerate(axes)}
-            ndim = len(axes)
-            # Include only axes that are default axes (c, x, y, z) and not in the
-            # default axis order. The default axis order is c, x, y, z from the
-            # back (z is the last, c is the 4th last).
-            minimal_axis_order = {
-                axis: index
-                for axis, index in axis_order.items()
-                if axis in _DEFAULT_AXIS_ORDER
-                and (ndim - len(_DEFAULT_AXIS_ORDER) - _DEFAULT_AXIS_ORDER[axis])
-                != index
-            }
-            return minimal_axis_order
+        axis_order = {
+            axis: index[i]
+            for i, axis in enumerate(self.axes)
+            if axis in _DEFAULT_AXIS_ORDER
+        }
 
-        axis_order = _axis_order_field(self.axes, self.index)
         if len(axis_order) > 0:
             out["axisOrder"] = axis_order
 
