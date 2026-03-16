@@ -152,9 +152,9 @@ class RemoteLayer(AbstractLayer):
             client.dataset_add_mag(
                 dataset_id=self._dataset.dataset_id,
                 compose_mag=ApiDatasetComposeMag(
-                    dataset_id=foreign_layer.dataset.dataset_id,
+                    source_dataset_id=foreign_layer.dataset.dataset_id,
                     source_layer_name=foreign_layer.name,
-                    new_layer_name=self.name,
+                    target_layer_name=self.name,
                     source_mag=foreign_mag_view.mag.to_tuple(),
                     target_mag=mag.to_tuple(),
                 ),
@@ -341,8 +341,8 @@ class RemoteLayer(AbstractLayer):
         self._ensure_writable()
         mag = Mag(mag)
         if mag not in self.mags.keys():
-            raise IndexError(
-                f"Deleting mag {mag} failed. There is no mag with this name"
+            raise KeyError(
+                f"Deleting mag {mag} failed. There is no mag with this name."
             )
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) != mag

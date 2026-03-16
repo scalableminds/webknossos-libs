@@ -325,6 +325,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self._properties = self._load_dataset_properties()
         self._last_read_properties = copy.deepcopy(self._properties)
 
+        for layer in self.layers.values():
+            layer_properties = next(
+                layer_properties
+                for layer_properties in self._properties.data_layers
+                if layer_properties.name == layer.name
+            )
+            layer._apply_properties(layer_properties, layer.read_only)
+
     def _save_dataset_properties_impl(
         self, *, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None
     ) -> None:

@@ -207,6 +207,24 @@ class AbstractAttachments:
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         pass
 
+    def delete_attachment(self, attachment: Attachment) -> None:
+        self._ensure_writable()
+        container_name = attachment.container_name
+        if isinstance(attachment, CumsumAttachment) or isinstance(
+            attachment, SegmentIndexAttachment
+        ):
+            if getattr(self, container_name) != attachment:
+                raise KeyError(
+                    f"Attachment {attachment} is not part of {container_name}."
+                )
+            setattr(self._properties, container_name, None)
+        else:
+            properties_container = getattr(self._properties, container_name)
+            properties_container.remove(attachment._properties)
+            if len(properties_container) == 0:
+                setattr(self._properties, container_name, None)
+        self._save_properties()
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({list(self)})"
 
@@ -223,9 +241,6 @@ class RemoteAttachments(AbstractAttachments):
     def _get_optional_dataset_path(self) -> UPath | None:
         return self._layer.dataset.zarr_streaming_path
 
-    def delete_attachment(self, attachment: Attachment) -> None:
-        raise NotImplementedError()
-
     def rename_attachment(self, attachment: Attachment, *, new_name: str) -> Attachment:
         self._ensure_writable()
 
@@ -237,9 +252,6 @@ class RemoteAttachments(AbstractAttachments):
         self._layer._save_layer_properties(
             renamings=[AttachmentRenaming(self._layer.name, old_name, new_name)]
         )
-        # TODO: maybe redundant?
-        self._apply_server_properties()
-
         return self._get_attachment(type(attachment), new_name)
 
     def add_attachment_as_ref(
@@ -442,24 +454,6 @@ class Attachments(AbstractAttachments):
         )
         self._add_attachment(attachment)
         return attachment
-
-    def delete_attachment(self, attachment: Attachment) -> None:
-        self._ensure_writable()
-        container_name = attachment.container_name
-        if isinstance(attachment, CumsumAttachment) or isinstance(
-            attachment, SegmentIndexAttachment
-        ):
-            if getattr(self, container_name) != attachment:
-                raise KeyError(
-                    f"Attachment {attachment} is not part of {container_name}."
-                )
-            setattr(self._properties, container_name, None)
-        else:
-            properties_container = getattr(self._properties, container_name)
-            properties_container.remove(attachment._properties)
-            if len(properties_container) == 0:
-                setattr(self._properties, container_name, None)
-        self._save_properties()
 
     def add_attachments(self, *other: Attachment) -> list[Attachment]:
         warn_deprecated("add_attachments", "add_attachment_as_ref")

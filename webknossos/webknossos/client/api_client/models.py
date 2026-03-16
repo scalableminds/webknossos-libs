@@ -175,13 +175,14 @@ class ApiDatasetComposeLayer:
     dataset_id: str
     source_layer_name: str
     target_layer_name: str
+    transformations: list = attr.field(factory=list)
 
 
 @attr.s(auto_attribs=True)
 class ApiDatasetComposeMag:
-    dataset_id: str
+    source_dataset_id: str
     source_layer_name: str
-    new_layer_name: str
+    target_layer_name: str
     source_mag: tuple[int, int, int]
     target_mag: tuple[int, int, int]
 

@@ -138,14 +138,14 @@ class WkApiClient(AbstractApiClient):
     def dataset_add_mag(
         self, *, dataset_id: str, compose_mag: ApiDatasetComposeMag
     ) -> None:
-        route = f"/datasets/{dataset_id}/compose/addLayer"
-        self._patch_json(route, compose_mag)
+        route = f"/datasets/{dataset_id}/compose/addMag"
+        self._post_json(route, compose_mag)
 
     def dataset_add_attachment(
         self, *, dataset_id: str, compose_attachment: ApiDatasetComposeAttachment
     ) -> None:
         route = f"/datasets/{dataset_id}/compose/addAttachment"
-        self._patch_json(route, compose_attachment)
+        self._post_json(route, compose_attachment)
 
     def dataset_sharing_token(self, *, dataset_id: str) -> ApiSharingToken:
         route = f"/datasets/{dataset_id}/sharingToken"
