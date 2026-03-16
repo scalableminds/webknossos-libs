@@ -116,7 +116,7 @@ class AbstractLayer:
         )
 
     def _save_layer_properties(
-        self, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None
+        self, renamings: "Sequence[LayerRenaming | AttachmentRenaming] | None" = None
     ) -> None:
         self.dataset._save_dataset_properties(renamings=renamings)
 
