@@ -6,6 +6,7 @@ from webknossos.geometry import (
     NormalizedBoundingBox,
     VecInt,
 )
+from webknossos.geometry.normalized_bounding_box import _DEFAULT_AXIS_ORDER
 
 
 def test_from_wkw_dict_simple() -> None:
@@ -26,7 +27,7 @@ def test_from_wkw_dict_with_axis_order() -> None:
             "width": 4,
             "height": 5,
             "depth": 6,
-            "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3},
+            "axisOrder": _DEFAULT_AXIS_ORDER,
         }
     )
     assert isinstance(result, NormalizedBoundingBox)
@@ -77,7 +78,7 @@ def test_from_wkw_dict_with_channel_index() -> None:
             "depth": 10,
             "channelIndex": 2,
             "numChannels": 1,
-            "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3},
+            "axisOrder": _DEFAULT_AXIS_ORDER,
         }
     )
     assert isinstance(result, NormalizedBoundingBox)
@@ -124,6 +125,7 @@ def test_to_wkw_dict_simple() -> None:
         "height": 5,
         "depth": 6,
         "numChannels": 1,
+        "axisOrder": _DEFAULT_AXIS_ORDER,
     }
 
 
@@ -136,6 +138,7 @@ def test_to_wkw_dict_with_num_channels() -> None:
         "height": 20,
         "depth": 30,
         "numChannels": 3,
+        "axisOrder": _DEFAULT_AXIS_ORDER,
     }
 
 
@@ -169,7 +172,7 @@ def test_to_wkw_dict_with_additional_axes() -> None:
         "height": 10,
         "depth": 10,
         "additionalAxes": [{"name": "t", "bounds": [2, 7], "index": 4}],
-        "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3},
+        "axisOrder": _DEFAULT_AXIS_ORDER,
         "numChannels": 1,
     }
 
@@ -191,7 +194,11 @@ def test_round_trip_simple() -> None:
     d = {"topLeft": [1, 2, 3], "width": 4, "height": 5, "depth": 6}
     bbox = NormalizedBoundingBox.from_wkw_dict(d).normalize_axes(1)
     result = bbox.to_wkw_dict()
-    assert result == {**d, "numChannels": 1}
+    assert result == {
+        **d,
+        "numChannels": 1,
+        "axisOrder": _DEFAULT_AXIS_ORDER,
+    }
 
 
 def test_round_trip_with_num_channels() -> None:
@@ -203,7 +210,7 @@ def test_round_trip_with_num_channels() -> None:
         "numChannels": 3,
     }
     bbox = NormalizedBoundingBox.from_wkw_dict(d).normalize_axes(3)
-    assert bbox.to_wkw_dict() == d
+    assert bbox.to_wkw_dict() == {**d, "axisOrder": _DEFAULT_AXIS_ORDER}
 
 
 def test_round_trip_with_channel_index() -> None:
@@ -216,7 +223,7 @@ def test_round_trip_with_channel_index() -> None:
         "channelIndex": 2,
     }
     bbox = NormalizedBoundingBox.from_wkw_dict(d).normalize_axes(3)
-    assert bbox.to_wkw_dict() == d
+    assert bbox.to_wkw_dict() == {**d, "axisOrder": _DEFAULT_AXIS_ORDER}
 
 
 def test_round_trip_with_additional_axes() -> None:
@@ -226,7 +233,7 @@ def test_round_trip_with_additional_axes() -> None:
         "height": 10,
         "depth": 10,
         "additionalAxes": [{"name": "t", "bounds": [0, 5], "index": 4}],
-        "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3},
+        "axisOrder": _DEFAULT_AXIS_ORDER,
         "numChannels": 1,
     }
     bbox = NormalizedBoundingBox.from_wkw_dict(d).normalize_axes(1)
