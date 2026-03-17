@@ -172,10 +172,9 @@ class ApiLinkedLayerIdentifierLegacy:
 
 @attr.s(auto_attribs=True)
 class ApiDatasetComposeLayer:
-    dataset_id: str
+    source_dataset_id: str
     source_layer_name: str
     target_layer_name: str
-    transformations: list = attr.field(factory=list)
 
 
 @attr.s(auto_attribs=True)
@@ -189,7 +188,7 @@ class ApiDatasetComposeMag:
 
 @attr.s(auto_attribs=True)
 class ApiDatasetComposeAttachment:
-    dataset_id: str
+    source_dataset_id: str
     source_layer_name: str
     target_layer_name: str
     attachment_type: str

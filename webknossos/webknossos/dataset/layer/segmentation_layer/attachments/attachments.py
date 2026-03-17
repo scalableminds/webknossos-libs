@@ -280,7 +280,7 @@ class RemoteAttachments(AbstractAttachments):
         client.dataset_add_attachment(
             dataset_id=self._layer.dataset.dataset_id,
             compose_attachment=ApiDatasetComposeAttachment(
-                dataset_id=self._layer.dataset.dataset_id,
+                source_dataset_id=self._layer.dataset.dataset_id,
                 source_layer_name=foreign_layer.name,
                 target_layer_name=self._layer.name,
                 attachment_type=attachment.type_name,

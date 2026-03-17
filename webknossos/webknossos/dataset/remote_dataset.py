@@ -325,6 +325,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self._properties = self._load_dataset_properties()
         self._last_read_properties = copy.deepcopy(self._properties)
 
+        # update existing layers
         for layer in self.layers.values():
             layer_properties = next(
                 layer_properties
@@ -332,6 +333,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 if layer_properties.name == layer.name
             )
             layer._apply_properties(layer_properties, layer.read_only)
+
+        # add new layers
+        for layer_properties in self._properties.data_layers:
+            if layer_properties.name not in self.layers:
+                layer = self._initialize_layer_from_properties(
+                    layer_properties, self._use_zarr_streaming
+                )
+                self._layers[layer_properties.name] = layer
 
     def _save_dataset_properties_impl(
         self, *, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None
@@ -1003,7 +1012,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             client.dataset_add_layer(
                 dataset_id=self.dataset_id,
                 compose_layer=ApiDatasetComposeLayer(
-                    dataset_id=foreign_layer.dataset.dataset_id,
+                    source_dataset_id=foreign_layer.dataset.dataset_id,
                     source_layer_name=foreign_layer.name,
                     target_layer_name=new_layer_name,
                 ),

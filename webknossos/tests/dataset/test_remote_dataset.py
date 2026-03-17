@@ -513,7 +513,7 @@ def test_remote_dataset_add_layer_as_ref_rejects_different_instance() -> None:
     mock_foreign_layer = MagicMock(spec=RemoteLayer)
     mock_foreign_layer.name = "color"
     mock_foreign_layer.dataset._context._url = "http://instance-b:9000"
-    mock_foreign_layer.dataset.__eq__ = lambda self, other: False  # different dataset
+    mock_foreign_layer.dataset.__eq__ = lambda _self, _other: False  # different dataset
 
     with pytest.raises(ValueError, match="different WEBKNOSSOS instance"):
         RemoteDataset.add_layer_as_ref(mock_ds, mock_foreign_layer)
@@ -552,7 +552,7 @@ def test_remote_layer_add_mag_as_ref_rejects_different_instance() -> None:
     mock_foreign_mag.layer = mock_foreign_layer
 
     with patch.object(
-        MagView, "_ensure_mag_view", staticmethod(lambda x: mock_foreign_mag)
+        MagView, "_ensure_mag_view", staticmethod(lambda _x: mock_foreign_mag)
     ):
         with pytest.raises(ValueError, match="different WEBKNOSSOS instance"):
             RemoteLayer.add_mag_as_ref(mock_remote_layer, mock_foreign_mag)
@@ -597,6 +597,12 @@ def test_remote_dataset_add_layer_and_mag_as_ref(tmp_upath: UPath) -> None:
     target_local = get_sample_dataset(tmp_upath / "target", layers=["color"])
     target_remote = target_local.upload(new_dataset_name="test_add_layer_as_ref_tgt")
 
+    def reopen_target() -> RemoteDataset:
+        return RemoteDataset.open(
+            dataset_id=target_remote.dataset_id,
+            access_mode=RemoteAccessMode.DIRECT_PATH,
+        )
+
     # # add_layer_as_ref
     source_color = source_remote.get_layer("color")
     new_layer = target_remote.add_layer_as_ref(source_color, new_layer_name="color_ref")
@@ -606,12 +612,12 @@ def test_remote_dataset_add_layer_and_mag_as_ref(tmp_upath: UPath) -> None:
     assert str(new_layer.get_mag(Mag(1)).path) == str(source_color.get_mag(Mag(1)).path)
     assert set(new_layer.mags.keys()) == {
         Mag(1),
-        Mag(2, 2, 1),
-        Mag(4, 4, 1),
-        Mag(8, 8, 2),
-        Mag(16, 16, 4),
+        Mag((2, 2, 1)),
+        Mag((4, 4, 1)),
+        Mag((8, 8, 2)),
+        Mag((16, 16, 4)),
     }
-    assert "color_ref" in RemoteDataset.open(dataset_id=target_remote.dataset_id).layers
+    assert "color_ref" in reopen_target().layers
 
     # delete_mag
     new_layer.delete_mag(Mag((2, 2, 1)))
@@ -619,37 +625,27 @@ def test_remote_dataset_add_layer_and_mag_as_ref(tmp_upath: UPath) -> None:
     new_layer.delete_mag(Mag((8, 8, 2)))
     new_layer.delete_mag(Mag((16, 16, 4)))
     assert set(new_layer.mags.keys()) == {Mag(1)}
-    assert set(
-        RemoteDataset.open(dataset_id=target_remote.dataset_id)
-        .get_layer("color_ref")
-        .mags
-    ) == set(new_layer.mags.keys())
+    assert set(reopen_target().get_layer("color_ref").mags) == set(
+        new_layer.mags.keys()
+    )
 
     # add_mag_as_ref
     new_layer.add_mag_as_ref(source_color.get_mag(Mag((2, 2, 1))))
     assert set(new_layer.mags.keys()) == {Mag(1), Mag((2, 2, 1))}
-    assert set(
-        RemoteDataset.open(dataset_id=target_remote.dataset_id)
-        .get_layer("color_ref")
-        .mags
-    ) == set(new_layer.mags.keys())
+    assert set(reopen_target().get_layer("color_ref").mags) == set(
+        new_layer.mags.keys()
+    )
 
     # rename layer
     new_layer.name = "color_ref_renamed"
     assert new_layer.name == "color_ref_renamed"
     assert "color_ref_renamed" in target_remote.layers.keys()
-    assert (
-        "color_ref_renamed"
-        in RemoteDataset.open(dataset_id=target_remote.dataset_id).layers
-    )
+    assert "color_ref_renamed" in reopen_target().layers
 
     # delete layer
     target_remote.delete_layer("color_ref_renamed")
     assert "color_ref_renamed" not in target_remote.layers.keys()
-    assert (
-        "color_ref_renamed"
-        not in RemoteDataset.open(dataset_id=target_remote.dataset_id).layers
-    )
+    assert "color_ref_renamed" not in reopen_target().layers
 
 
 def test_remote_attachments_add_attachment_as_ref(tmp_upath: UPath) -> None:
