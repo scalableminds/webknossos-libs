@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a bug in ZCYX tiff conversion where each page stores only YX data. [#1439](https://github.com/scalableminds/webknossos-libs/pull/1439)
 
 
 ## [3.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.3) - 2026-03-16
