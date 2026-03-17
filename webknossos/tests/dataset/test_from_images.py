@@ -6,12 +6,12 @@ from shutil import copytree
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor
-from tifffile import TiffFile
+from tifffile import TiffFile, imwrite
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset
-from webknossos.geometry import VecInt
+from webknossos.geometry import Vec3Int, VecInt
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -47,14 +47,15 @@ def test_compare_tifffile(tmp_upath: UPath) -> None:
 
 
 def test_ZCYX(tmp_upath: UPath) -> None:
-    import numpy as np
-    from tifffile import imwrite
-
     # Y > X is required to expose the bug: with Y <= X the wrong indexing silently
     # broadcasts channel-0 data into all channels instead of raising an error.
     data = np.random.randint(0, 1000, (5, 4, 7, 6), dtype="uint16")
     tif_path = tmp_upath / "test_ZCYX.tif"
     imwrite(str(tif_path), data, imagej=True)
+    assert TiffFile(str(tif_path)).series[0].axes == "ZCYX"
+    assert TiffFile(str(tif_path)).series[0].shape == (5, 4, 7, 6)
+    assert len(TiffFile(str(tif_path)).pages) == 5 * 4  # Z*C
+    assert TiffFile(str(tif_path)).pages[0].axes == "YX"
 
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
@@ -65,6 +66,7 @@ def test_ZCYX(tmp_upath: UPath) -> None:
             executor=executor,
         )
     assert len(ds.layers) == 4
+    assert ds.get_color_layers()[0].bounding_box.size == Vec3Int(x=6, y=7, z=5)
 
 
 def test_multiple_multitiffs(tmp_upath: UPath) -> None:
