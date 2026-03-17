@@ -124,7 +124,6 @@ class PimsImages:
         self._use_bioformats = use_bioformats
 
         ## attributes that will be set in __init__()
-        # _bundle_axes
         self._iter_axes: list[str] = []
         self._iter_loop_size = None
         self._possible_layers = {}

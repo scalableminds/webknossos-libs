@@ -156,6 +156,8 @@ class PimsTiffReader(FramesSequenceND):
             self._page_mode = len(_tiff.pages) == expected_page_count
 
     def get_frame_2D(self, **ind: int) -> np.ndarray:
+        from itertools import product
+
         with self.path.open("rb") as f:
             _tiff = tifffile.TiffFile(f).series[0]
 
@@ -182,37 +184,62 @@ class PimsTiffReader(FramesSequenceND):
             out_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)
             out = np.zeros(out_shape, dtype=self._dtype)
 
-            # Axes that need to be broadcasted from page to output
+            # Axes within a single page (not requiring page selection)
             broadcast_axes = tuple(
                 axis
                 for axis in self._tiff_axes
                 if axis in self.bundle_axes and axis not in self._other_axes
             )
 
-            # Prepare selection of the data to read for this frame
-            selection: tuple[slice | int, ...] = tuple(
-                slice(None) if axis in broadcast_axes else ind[axis]
+            # Axes that are in bundle_axes AND require page selection (_other_axes).
+            # These must be iterated so every page is written to the correct output slot.
+            bundled_page_axes = [
+                axis
                 for axis in self._tiff_axes
+                if axis in self.bundle_axes and axis in self._other_axes
+            ]
+
+            page_combos = (
+                product(*[range(self.sizes[axis]) for axis in bundled_page_axes])
+                if bundled_page_axes
+                else [()]
             )
 
-            for chunk_projection in _chunk_indexing(
-                selection, array_shape, chunk_shape
-            ):
-                try:
-                    # read data from zarr store
-                    chunk_data = (
-                        zarr_store[".".join(map(str, chunk_projection.chunk_coords))]
-                        .ravel()
-                        .reshape(chunk_shape)
-                    )
-                    # write in output array
-                    out[chunk_projection.out_selection] = chunk_data[
-                        chunk_projection.chunk_selection
-                    ]
-                except KeyError:
-                    # chunk not present in zarr_store, leave black.
-                    # ruff: noqa: PERF203 try-catch is still faster than in for the ZarrStore
-                    pass
+            for combo in page_combos:
+                page_coords = dict(zip(bundled_page_axes, combo))
+                current_ind = {**ind, **page_coords}
+
+                # Prepare selection of the data to read for this frame
+                selection: tuple[slice | int, ...] = tuple(
+                    slice(None) if axis in broadcast_axes else current_ind[axis]
+                    for axis in self._tiff_axes
+                )
+
+                for chunk_projection in _chunk_indexing(
+                    selection, array_shape, chunk_shape
+                ):
+                    try:
+                        # read data from zarr store
+                        chunk_data = (
+                            zarr_store[
+                                ".".join(map(str, chunk_projection.chunk_coords))
+                            ]
+                            .ravel()
+                            .reshape(chunk_shape)
+                        )
+                        # Build the full output selection:
+                        # - page axes use the specific index from page_coords
+                        # - broadcast axes use slices from chunk_projection.out_selection
+                        bc_iter = iter(chunk_projection.out_selection)
+                        full_out_sel = tuple(
+                            page_coords[axis] if axis in page_coords else next(bc_iter)
+                            for axis in self.bundle_axes
+                        )
+                        out[full_out_sel] = chunk_data[chunk_projection.chunk_selection]
+                    except KeyError:
+                        # chunk not present in zarr_store, leave black.
+                        # ruff: noqa: PERF203 try-catch is still faster than in for the ZarrStore
+                        pass
 
             return out
 

@@ -46,6 +46,18 @@ def test_compare_tifffile(tmp_upath: UPath) -> None:
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
+def test_ZCYX(tmp_upath: UPath) -> None:
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            TESTDATA_DIR / "test_ZCYX.tif",
+            tmp_upath,
+            (1, 1, 1),
+            data_format="zarr3",
+            executor=executor,
+        )
+    assert len(ds.layers) == 4
+
+
 def test_multiple_multitiffs(tmp_upath: UPath) -> None:
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
