@@ -38,7 +38,7 @@ SAMPLE_BBOX = BoundingBox((3164, 3212, 1017), (10, 10, 10))
 def sample_downloaded_dataset(tmp_upath: UPath) -> Iterator[Dataset]:
     yield RemoteDataset.open("l4_sample").download(
         path=tmp_upath / "l4_sample",
-        bbox=BoundingBox((3457, 3323, 1204), (10, 10, 10)),
+        bounding_box=BoundingBox((3457, 3323, 1204), (10, 10, 10)),
     )
 
 
@@ -47,7 +47,7 @@ def get_sample_dataset(
 ) -> Dataset:
     url = "http://localhost:9000/datasets/Organization_X/l4_sample"
     return RemoteDataset.open(url).download(
-        path=UPath(tmpdir) / "sample_ds", bbox=bbox, layers=layers
+        path=UPath(tmpdir) / "sample_ds", bounding_box=bbox, layers=layers
     )
 
 
@@ -320,7 +320,7 @@ def test_get_remote_datasets() -> None:
 def test_url_download(url: str, tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
     ds = RemoteDataset.open(url).download(
-        path=tmp_upath / "ds", mags=[Mag(1)], bbox=SAMPLE_BBOX
+        path=tmp_upath / "ds", mags=[Mag(1)], bounding_box=SAMPLE_BBOX
     )
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = ds.get_color_layers()[0].get_finest_mag().read()

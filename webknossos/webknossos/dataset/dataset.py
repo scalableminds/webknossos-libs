@@ -547,7 +547,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
         return remote_dataset.download(
             sharing_token=sharing_token,
-            bbox=bbox,
+            bounding_box=bbox,
             layers=layers,
             mags=mags,
             path=path,
