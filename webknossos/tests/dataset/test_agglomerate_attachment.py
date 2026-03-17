@@ -45,14 +45,13 @@ def test_create_example(tmp_upath: UPath) -> None:
     G = build_example_graph()
     attachment = AgglomerateAttachment.create(mapping_path, G)
 
-    # --- Check returned attachment ---
+    # Check returned attachment
     assert attachment.name == "agglomerate_view_75"
     from webknossos.dataset_properties import AttachmentDataFormat
 
     assert attachment.data_format == AttachmentDataFormat.Zarr3
 
-    # --- Check zarr.json ---
-    import json
+    # Check zarr.json
 
     meta = json.loads((mapping_path / "zarr.json").read_text())
     assert meta["zarr_format"] == 3
@@ -62,8 +61,7 @@ def test_create_example(tmp_upath: UPath) -> None:
         meta["attributes"]["voxelytics"]["artifact_class"] == "AgglomerateViewArtifact"
     )
 
-    # --- segment_to_agglomerate ---
-    # [0, 1, 1, 1, 1, 2, 2, 1]  shape (8,)
+    # segment_to_agglomerate
     segment_to_agglomerate = read_zarr3_array(mapping_path / "segment_to_agglomerate")
     np.testing.assert_array_equal(
         segment_to_agglomerate,
@@ -71,8 +69,7 @@ def test_create_example(tmp_upath: UPath) -> None:
         strict=True,
     )
 
-    # --- agglomerate_to_segments_offsets ---
-    # [0, 0, 5, 7]  shape (4,)
+    # agglomerate_to_segments_offsets
     agglomerate_to_segments_offsets = read_zarr3_array(
         mapping_path / "agglomerate_to_segments_offsets"
     )
@@ -82,8 +79,7 @@ def test_create_example(tmp_upath: UPath) -> None:
         strict=True,
     )
 
-    # --- agglomerate_to_segments ---
-    # [1, 2, 3, 4, 7, 5, 6]  shape (7,)
+    # agglomerate_to_segments
     agglomerate_to_segments = read_zarr3_array(mapping_path / "agglomerate_to_segments")
     np.testing.assert_array_equal(
         agglomerate_to_segments,
@@ -91,8 +87,7 @@ def test_create_example(tmp_upath: UPath) -> None:
         strict=True,
     )
 
-    # --- agglomerate_to_edges_offsets ---
-    # [0, 0, 4, 5]  shape (4,)
+    # agglomerate_to_edges_offsets
     agglomerate_to_edges_offsets = read_zarr3_array(
         mapping_path / "agglomerate_to_edges_offsets"
     )
@@ -102,8 +97,7 @@ def test_create_example(tmp_upath: UPath) -> None:
         strict=True,
     )
 
-    # --- agglomerate_to_edges ---
-    # [[0,1],[0,4],[1,2],[2,3],[0,1]]  shape (5,2)
+    # agglomerate_to_edges
     agglomerate_to_edges = read_zarr3_array(mapping_path / "agglomerate_to_edges")
     np.testing.assert_array_equal(
         agglomerate_to_edges,
@@ -111,8 +105,7 @@ def test_create_example(tmp_upath: UPath) -> None:
         strict=True,
     )
 
-    # --- agglomerate_to_affinities ---
-    # [124.0, 65.5, 0.0, 250.5, 80.0]  shape (5,)
+    # agglomerate_to_affinities
     agglomerate_to_affinities = read_zarr3_array(
         mapping_path / "agglomerate_to_affinities"
     )
@@ -122,8 +115,7 @@ def test_create_example(tmp_upath: UPath) -> None:
     )
     assert agglomerate_to_affinities.dtype == np.float32
 
-    # --- agglomerate_to_positions ---
-    # Co-indexed with agglomerate_to_segments: [1,2,3,4,7,5,6]
+    # agglomerate_to_positions
     agglomerate_to_positions = read_zarr3_array(
         mapping_path / "agglomerate_to_positions"
     )

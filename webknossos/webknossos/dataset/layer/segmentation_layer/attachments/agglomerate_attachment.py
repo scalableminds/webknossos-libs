@@ -22,6 +22,24 @@ if TYPE_CHECKING:
     from webknossos.proofreading.agglomerate_graph_data import AgglomerateGraphData
 
 
+def _validate_segment_ids(graph: AgglomerateGraph) -> tuple[int, list[int]]:
+    segment_ids: list[int] = list(graph.nodes)
+    for sid in segment_ids:
+        if not isinstance(sid, int) or sid < 1:
+            raise ValueError(
+                f"All node labels must be positive integers (1-based), got {sid!r}"
+            )
+
+    n_segments = max(segment_ids) if len(segment_ids) > 0 else 0
+    if set(segment_ids) != set(range(1, n_segments + 1)):
+        missing = sorted(set(range(1, n_segments + 1)) - set(segment_ids))
+        raise ValueError(
+            f"Segment IDs must be dense (1..{n_segments}) with no gaps, "
+            f"missing: {missing}"
+        )
+    return n_segments, segment_ids
+
+
 class AgglomerateGraph(nx.Graph):
     """Typed networkx Graph for agglomerate data.
     Node labels are segment IDs (integers, 1-based).
@@ -139,26 +157,12 @@ class AgglomerateAttachment(Attachment):
         path = UPath(path)
         path.mkdir(parents=True, exist_ok=True)
 
-        # --- Validate and collect segment IDs ---
-        segment_ids: list[int] = list(graph.nodes)
-        for sid in segment_ids:
-            if not isinstance(sid, int) or sid < 1:
-                raise ValueError(
-                    f"All node labels must be positive integers (1-based), got {sid!r}"
-                )
-
-        n_segments = max(segment_ids) if len(segment_ids) > 0 else 0
-        if set(segment_ids) != set(range(1, n_segments + 1)):
-            missing = sorted(set(range(1, n_segments + 1)) - set(segment_ids))
-            raise ValueError(
-                f"Segment IDs must be dense (1..{n_segments}) with no gaps, "
-                f"missing: {missing}"
-            )
+        n_segments, _ = _validate_segment_ids(graph)
 
         if segmentation_dtype not in (np.uint32, np.uint64):
             raise ValueError("Segmentation dtype must be uint32 or uint64.")
 
-        # --- Identify connected components → agglomerates ---
+        # Identify connected components → agglomerates
         agglomerates: list[set[int]] = list(nx.connected_components(graph))
         # Sort by minimum segment ID in each component
         agglomerates.sort(key=lambda c: min(c))
@@ -228,7 +232,7 @@ class AgglomerateAttachment(Attachment):
                 agglomerate_to_affinities[i] = affinity
                 i += 1
 
-        # --- Write group zarr.json ---
+        # Write group zarr.json
         group_meta = {
             "zarr_format": 3,
             "node_type": "group",
