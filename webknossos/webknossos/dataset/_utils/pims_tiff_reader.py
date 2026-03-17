@@ -79,7 +79,7 @@ class PimsTiffReader(FramesSequenceND):
             for bundled_page_coords in (
                 product(*[range(self.sizes[axis]) for axis in bundled_page_axes])
                 if bundled_page_axes
-                else [()]
+                else product()
             ):
                 page_coords = dict(zip(bundled_page_axes, bundled_page_coords))
                 current_ind = {**ind, **page_coords}
