@@ -10,9 +10,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.4...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.4) - 2026-03-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.3...v3.2.4)
+
+### Fixed
+- Fixed a bug in ZCYX tiff conversion where each page stores only YX data. [#1439](https://github.com/scalableminds/webknossos-libs/pull/1439)
+
+
+
+## [3.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.3) - 2026-03-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...v3.2.3)
 
 ### Added
 - Added a pure-Python implementation of WKW to support datasets on remote storage. Although, it is strongly recommended to use Zarr3 datasets on remote storage, for performance, interoperability and future-proofing reasons. [#1432](https://github.com/scalableminds/webknossos-libs/pull/1432)
@@ -22,9 +40,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The `webknossos convert` command now accepts a `--upload` flag, to upload the converted dataset to WEBKNOSSOS. In that case, the target path is not required anymore. [#1433](https://github.com/scalableminds/webknossos-libs/pull/1433)
 - The `webknossos downsample` and `webknossos upsample` commands now work with remote datasets on WEBKNOSSOS. [#1433](https://github.com/scalableminds/webknossos-libs/pull/1433)
 - The default shard shape for downsampled mags is now `(1024, 1024, 1024)` (default) or `(4096, 4096, 32)` (zarr3 and 32 sections or less) or `(32, 32, 32)` (zarr2) and the chunk shape is now `(32, 32, 32)`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
+- The `axisOrder` field of the `MagViewProperties` is now always persisted in the `datasource-properties.json` file to avoid misinterpretation of the implicit axis ordering. [#1437](https://github.com/scalableminds/webknossos-libs/pull/1437)
 
 ### Fixed
 - Fixed a bug in the bounding box parsing, when "c" is not present in the axisOrder. [#1436](https://github.com/scalableminds/webknossos-libs/pull/1436)
+
 
 
 ## [3.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.2) - 2026-03-04
