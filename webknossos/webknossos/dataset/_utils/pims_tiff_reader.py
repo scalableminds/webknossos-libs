@@ -1,5 +1,6 @@
 import json
 from collections.abc import Iterator
+from itertools import product
 from typing import NamedTuple
 
 import numpy as np
@@ -156,7 +157,6 @@ class PimsTiffReader(FramesSequenceND):
             self._page_mode = len(_tiff.pages) == expected_page_count
 
     def get_frame_2D(self, **ind: int) -> np.ndarray:
-        from itertools import product
 
         with self.path.open("rb") as f:
             _tiff = tifffile.TiffFile(f).series[0]
@@ -199,14 +199,14 @@ class PimsTiffReader(FramesSequenceND):
                 if axis in self.bundle_axes and axis in self._other_axes
             ]
 
-            page_combos = (
+            page_combinations: product[tuple[int, ...]] = (
                 product(*[range(self.sizes[axis]) for axis in bundled_page_axes])
                 if bundled_page_axes
-                else [()]
+                else product()
             )
 
-            for combo in page_combos:
-                page_coords = dict(zip(bundled_page_axes, combo))
+            for page_combination in page_combinations:
+                page_coords = dict(zip(bundled_page_axes, page_combination))
                 current_ind = {**ind, **page_coords}
 
                 # Prepare selection of the data to read for this frame
@@ -230,9 +230,11 @@ class PimsTiffReader(FramesSequenceND):
                         # Build the full output selection:
                         # - page axes use the specific index from page_coords
                         # - broadcast axes use slices from chunk_projection.out_selection
-                        bc_iter = iter(chunk_projection.out_selection)
+                        broadcast_iter = iter(chunk_projection.out_selection)
                         full_out_sel = tuple(
-                            page_coords[axis] if axis in page_coords else next(bc_iter)
+                            page_coords[axis]
+                            if axis in page_coords
+                            else next(broadcast_iter)
                             for axis in self.bundle_axes
                         )
                         out[full_out_sel] = chunk_data[chunk_projection.chunk_selection]
