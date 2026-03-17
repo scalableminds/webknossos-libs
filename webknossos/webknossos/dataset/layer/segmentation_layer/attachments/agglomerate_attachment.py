@@ -71,6 +71,9 @@ class AgglomerateGraph(nx.Graph):
             affinities=affinities,
         )
 
+    def __repr__(self) -> str:
+        return f"AgglomerateGraph({len(self.nodes)} nodes, {len(self.edges)} edges)"
+
 
 class AgglomerateAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]

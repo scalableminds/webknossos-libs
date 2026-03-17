@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 - Renamed the existing `webknossos.proofreading.agglomerate_graph.AgglomerateGraph` to `webknossos.proofreading.agglomerate_graph_data.AgglomerateGraphData`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 - Renamed the  `Annotation.get_agglomerate_graph` to `Annotation.get_agglomerate_graph_data`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
+- Renamed `RemoteDataset.download` argument `bbox` to `bounding_box`. `bbox` is still available, but deprecated.  [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 
 ### Added
 

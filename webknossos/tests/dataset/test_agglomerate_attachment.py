@@ -1,5 +1,3 @@
-"""Tests for AgglomerateAttachment.create() — covers the worked example from agglomerate.md."""
-
 import json
 
 import numpy as np
