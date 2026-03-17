@@ -47,10 +47,19 @@ def test_compare_tifffile(tmp_upath: UPath) -> None:
 
 
 def test_ZCYX(tmp_upath: UPath) -> None:
+    import numpy as np
+    from tifffile import imwrite
+
+    # Y > X is required to expose the bug: with Y <= X the wrong indexing silently
+    # broadcasts channel-0 data into all channels instead of raising an error.
+    data = np.random.randint(0, 1000, (5, 4, 7, 6), dtype="uint16")
+    tif_path = tmp_upath / "test_ZCYX.tif"
+    imwrite(str(tif_path), data, imagej=True)
+
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
-            TESTDATA_DIR / "test_ZCYX.tif",
-            tmp_upath,
+            tif_path,
+            tmp_upath / "ds",
             (1, 1, 1),
             data_format="zarr3",
             executor=executor,
