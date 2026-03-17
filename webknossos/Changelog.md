@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.4...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [3.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.4) - 2026-03-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.3...v3.2.4)
+
+### Fixed
 - Fixed a bug in ZCYX tiff conversion where each page stores only YX data. [#1439](https://github.com/scalableminds/webknossos-libs/pull/1439)
+
 
 
 ## [3.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.3) - 2026-03-16
