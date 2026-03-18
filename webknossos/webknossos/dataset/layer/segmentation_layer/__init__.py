@@ -2,6 +2,7 @@
 from .abstract_segmentation_layer import AbstractSegmentationLayer
 from .attachments import (
     AgglomerateAttachment,
+    AgglomerateGraph,
     Attachment,
     Attachments,
     ConnectomeAttachment,

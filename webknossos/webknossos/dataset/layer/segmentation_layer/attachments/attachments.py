@@ -17,8 +17,8 @@ from .....utils import (
     warn_deprecated,
 )
 from ....transfer_mode import TransferMode
+from .agglomerate_attachment import AgglomerateAttachment
 from .attachment import (
-    AgglomerateAttachment,
     Attachment,
     ConnectomeAttachment,
     CumsumAttachment,

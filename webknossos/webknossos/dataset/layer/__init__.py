@@ -6,6 +6,7 @@ from .remote_layer import RemoteLayer
 from .segmentation_layer import (
     AbstractSegmentationLayer,
     AgglomerateAttachment,
+    AgglomerateGraph,
     Attachment,
     Attachments,
     ConnectomeAttachment,

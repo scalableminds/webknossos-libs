@@ -13,6 +13,7 @@ from webknossos import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     AgglomerateAttachment,
+    AgglomerateGraph,
     AttachmentDataFormat,
     BoundingBox,
     DataFormat,
@@ -24,6 +25,7 @@ from webknossos import (
     RemoteFolder,
     Team,
     TransferMode,
+    Vec3Int,
 )
 from webknossos.dataset.layer.remote_layer import RemoteLayer
 from webknossos.dataset.layer.segmentation_layer.attachments.attachments import (
@@ -43,7 +45,16 @@ SAMPLE_BBOX = BoundingBox((3164, 3212, 1017), (10, 10, 10))
 def sample_downloaded_dataset(tmp_upath: UPath) -> Iterator[Dataset]:
     yield RemoteDataset.open("l4_sample").download(
         path=tmp_upath / "l4_sample",
-        bbox=BoundingBox((3457, 3323, 1204), (10, 10, 10)),
+        bounding_box=BoundingBox((3457, 3323, 1204), (10, 10, 10)),
+    )
+
+
+def get_sample_dataset(
+    tmpdir: UPath, *, layers: list[str] | None = None, bbox: BoundingBox = SAMPLE_BBOX
+) -> Dataset:
+    url = "http://localhost:9000/datasets/Organization_X/l4_sample"
+    return RemoteDataset.open(url).download(
+        path=UPath(tmpdir) / "sample_ds", bounding_box=bbox, layers=layers
     )
 
 
@@ -258,13 +269,6 @@ def test_changing_properties_on_read_only_remote_dataset() -> None:
     assert remote_dataset.description == description_before_change_attempt
 
 
-def get_sample_dataset(tmpdir: UPath, layers: list[str] | None = None) -> Dataset:
-    url = "http://localhost:9000/datasets/Organization_X/l4_sample"
-    return RemoteDataset.open(url).download(
-        path=UPath(tmpdir) / "sample_ds", bbox=SAMPLE_BBOX, layers=layers
-    )
-
-
 def test_get_remote_datasets() -> None:
     datasets = RemoteDataset.list()
     assert any(ds.name == "l4_sample" for ds in datasets.values())
@@ -294,7 +298,7 @@ def test_get_remote_datasets() -> None:
 def test_url_download(url: str, tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
     ds = RemoteDataset.open(url).download(
-        path=tmp_upath / "ds", mags=[Mag(1)], bbox=SAMPLE_BBOX
+        path=tmp_upath / "ds", mags=[Mag(1)], bounding_box=SAMPLE_BBOX
     )
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = ds.get_color_layers()[0].get_finest_mag().read()
@@ -776,3 +780,39 @@ def test_remote_attachments_delete_attachment(tmp_upath: UPath) -> None:
     remote_seg.attachments.delete_attachment(attachment)
 
     assert len(remote_seg.attachments.agglomerates) == 0
+
+
+@pytest.mark.skip(
+    reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
+)
+def test_add_attachment(tmp_upath: UPath) -> None:
+    ds_original = get_sample_dataset(
+        tmp_upath,
+        layers=["segmentation"],
+        bbox=SAMPLE_BBOX.with_size(Vec3Int(32, 32, 32)),
+    )
+
+    seg_layer = ds_original.get_layer("segmentation").as_segmentation_layer()
+    seg_data = seg_layer.get_finest_mag().read()
+    seg_ids = np.unique(seg_data)
+
+    # Remap segment ids to be dense
+    remapped_seg_ids = {seg_id: i + 1 for i, seg_id in enumerate(seg_ids)}
+    for old_id, new_id in remapped_seg_ids.items():
+        seg_data[seg_data == old_id] = new_id
+    seg_layer.get_finest_mag().write(seg_data)
+
+    # Construct agglomerate graph and attachment
+    seg_ids = np.unique(seg_data)
+    graph = AgglomerateGraph()
+    for seg_id in seg_ids:
+        seg_position = seg_layer.bounding_box.topleft_xyz + Vec3Int(
+            np.argwhere(seg_data == seg_id)[0][1:]
+        )
+        graph.add_segment(int(seg_id), position=seg_position)
+    for seg_id in seg_ids[1:]:
+        graph.add_affinity_edge(int(seg_id), int(seg_ids[0]), affinity=0.5)
+    AgglomerateAttachment.create_and_add_to(seg_layer, "map_all", graph)
+
+    # Upload dataset
+    ds_original.upload(new_dataset_name="test_agglomerate_attachment")

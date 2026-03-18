@@ -764,6 +764,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self,
         *,
         sharing_token: str | None = None,
+        bounding_box: BoundingBox | None = None,
         bbox: BoundingBox | None = None,
         layers: list[str] | str | None = None,
         mags: list[Mag] | None = None,
@@ -773,7 +774,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     ) -> "Dataset":
         """Downloads a dataset and returns the Dataset instance.
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
-        * `bbox`, `layers`, and `mags` specify which parts of the dataset to download.
+        * `bounding_box`, `layers`, and `mags` specify which parts of the dataset to download.
           If nothing is specified the whole image, all layers, and all mags are downloaded respectively.
         * `path` and `exist_ok` specify where to save the downloaded dataset and whether to overwrite
           if the `path` exists.
@@ -781,12 +782,20 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         """
         from ..client._download_dataset import download_dataset
 
+        if bbox is not None:
+            if bounding_box is not None:
+                raise ValueError(
+                    "Both bbox and bounding_box were provided. Only one is allowed."
+                )
+            warn_deprecated("bbox", "bounding_box")
+            bounding_box = bbox
+
         if isinstance(layers, str):
             layers = [layers]
         return download_dataset(
             dataset_id=self.dataset_id,
             sharing_token=sharing_token,
-            bbox=bbox,
+            bbox=bounding_box,
             layers=layers,
             mags=mags,
             data_format=data_format,
