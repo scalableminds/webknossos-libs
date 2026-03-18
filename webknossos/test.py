@@ -149,76 +149,6 @@ Please ensure that the test-db is prepared by running this in the webknossos rep
             subprocess.check_call(["docker", "compose", "down"], cwd=wk_docker_dir)
 
 
-@contextmanager
-def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
-    # Ensure that proxay is installed, otherwise it will lead to hard-to-debug errors
-    try:
-        subprocess.check_output(
-            ["npx", "-y", f"proxay@{PROXAY_VERSION}"],
-            text=True,
-            stderr=subprocess.STDOUT,
-            shell=IS_WINDOWS,
-        )
-    except subprocess.CalledProcessError as e:
-        # Checking that proxay is installed properly
-        if "Please specify a valid mode (record or replay)" not in e.output:
-            raise
-
-    cmd = ["npx", f"proxay@{PROXAY_VERSION}"]
-    if mode == "record":
-        cmd += [
-            "--mode",
-            "record",
-            "--host",
-            WK_URL,
-            "--tapes-dir",
-            "tests/cassettes",
-        ]
-    elif mode == "replay":
-        cmd += ["--mode", "replay", "--tapes-dir", "tests/cassettes"]
-    else:
-        raise ValueError(f"Invalid mode: {mode}")
-
-    proxay_process = None
-    try:
-        print(f"Starting proxay with command: {cmd} {quiet=}", flush=True)
-        if quiet:
-            proxay_process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                shell=IS_WINDOWS,
-            )
-        else:
-            proxay_process = subprocess.Popen(
-                cmd, shell=IS_WINDOWS, start_new_session=(not IS_WINDOWS)
-            )
-        os.environ["USE_PROXAY"] = "True"
-        sleep(1)
-        yield
-    finally:
-        os.environ.pop("USE_PROXAY", None)
-        if proxay_process is not None:
-            if IS_WINDOWS:
-                print("Terminating proxay...")
-                proxay_process.terminate()
-            else:
-                print(
-                    "Terminating proxay and its subprocesses with killpg (SIGTERM)...",
-                    flush=True,
-                )
-                pgid = os.getpgid(proxay_process.pid)
-                try:
-                    os.killpg(pgid, signal.SIGTERM)
-                    proxay_process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    print(
-                        "Terminating proxay and its subprocesses with killpg (SIGKILL)...",
-                        flush=True,
-                    )
-                    os.killpg(pgid, signal.SIGKILL)
-
-
 def run_pytest(args: list[str]) -> None:
     process = subprocess.Popen(args)
     try:
@@ -235,7 +165,7 @@ def run_pytest(args: list[str]) -> None:
         raise ValueError("pytest failed")
 
 
-def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) -> None:
+def main(args: list[str]) -> None:
     python_version = os.environ.get("PYTHON_VERSION", "3.13")
 
     # Using forkserver instead of spawn is faster. Fork should never be used due to potential deadlock problems.
@@ -263,31 +193,15 @@ def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) ->
         "-vv",
     ]
 
-    if snapshot_command == "refresh":
-        rmtree("tests/cassettes", ignore_errors=True)
-
-        with proxay("record", quiet=False), local_test_wk():
-            run_pytest(pytest_cmd + ["-m", "use_proxay"] + args)
-    elif snapshot_command == "add":
-        with proxay("record", quiet=False), local_test_wk():
-            run_pytest(pytest_cmd + ["-m", "use_proxay"] + args)
-    elif snapshot_command == "no":
+    if IS_WINDOWS:
+        run_pytest(pytest_cmd + args)
+    else:
         with local_test_wk():
             run_pytest(pytest_cmd + args)
-    else:
-        with proxay("replay", quiet=False):
-            run_pytest(pytest_cmd + ["--timeout=360"] + args)
 
 
 if __name__ == "__main__":
     snapshot_command = None
     args = sys.argv[1:]
-    if len(args) > 0 and args[0] in [
-        "--refresh-snapshots",
-        "--add-snapshots",
-        "--no-snapshots",
-    ]:
-        snapshot_command = args[0][2:-10]
-        args = args[1:]
 
-    main(snapshot_command, args)
+    main(args)
