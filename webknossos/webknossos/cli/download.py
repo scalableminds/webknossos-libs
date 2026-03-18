@@ -94,7 +94,7 @@ def main(
         ):
             RemoteDataset.open(url).download(
                 path=target,
-                bbox=bbox,
+                bounding_box=bbox,
                 layers=layers,
                 mags=mags,
                 data_format=data_format,

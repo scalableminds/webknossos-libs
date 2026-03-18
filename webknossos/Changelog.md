@@ -13,6 +13,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.4...HEAD)
 
 ### Breaking Changes
+- Renamed the existing `webknossos.proofreading.agglomerate_graph.AgglomerateGraph` to `webknossos.proofreading.agglomerate_graph_data.AgglomerateGraphData`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
+- Renamed the  `Annotation.get_agglomerate_graph` to `Annotation.get_agglomerate_graph_data`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
+- Renamed `RemoteDataset.download` argument `bbox` to `bounding_box`. `bbox` is still available, but deprecated.  [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 
 ### Added
 
@@ -35,6 +38,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - Added a pure-Python implementation of WKW to support datasets on remote storage. Although, it is strongly recommended to use Zarr3 datasets on remote storage, for performance, interoperability and future-proofing reasons. [#1432](https://github.com/scalableminds/webknossos-libs/pull/1432)
 - Added `chunk_shape` and `shard_shape` arguments to `Layer.downsample`, `Layer.downsample_mag`, `Layer.redownsample`, `Layer.downsample_mag_list`, `Layer.upsample` and `RemoteLayer.downsample`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
+- Added `AgglomerateAttachment.create` and `AgglomerateAttachment.create_and_add_to methods`. They take a new networkx-based `AgglomerateGraph` as input. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 
 ### Changed
 - The `webknossos convert` command now accepts a `--upload` flag, to upload the converted dataset to WEBKNOSSOS. In that case, the target path is not required anymore. [#1433](https://github.com/scalableminds/webknossos-libs/pull/1433)

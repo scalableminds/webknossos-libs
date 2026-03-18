@@ -110,12 +110,6 @@ class SegmentIndexAttachment(Attachment):
     type_name = "segmentIndex"
 
 
-class AgglomerateAttachment(Attachment):
-    data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
-    container_name = "agglomerates"
-    type_name = "agglomerate"
-
-
 class CumsumAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.JSON]
     container_name = "cumsum"
