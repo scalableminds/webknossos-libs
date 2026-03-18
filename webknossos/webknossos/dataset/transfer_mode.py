@@ -47,7 +47,7 @@ class TransferMode(str, Enum):
         copytree(
             src_path,
             dst_path,
-            progress_desc=f"Copying {progress_desc_label}{src_path.path} to {dst_path.path}",
+            progress_desc=f"Copying {progress_desc_label}",
         )
 
     def transfer(

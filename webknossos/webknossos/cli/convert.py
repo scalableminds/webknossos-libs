@@ -278,11 +278,12 @@ def main(
                 folder_obj: None | RemoteFolder = None
                 if folder is not None:
                     folder_obj = RemoteFolder.get_by_path(folder)
-                dataset.upload(
+                remote_dataset = dataset.upload(
                     new_dataset_name=name,
                     folder=folder_obj,
                     transfer_mode=transfer_mode,
                 )
+                print(f"Uploaded to: {remote_dataset.url}")
     else:
         if overwrite_existing and target.exists():
             rmtree(target)
