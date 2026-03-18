@@ -44,6 +44,11 @@ jobs:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
         run: uv run test.py
 
+      - name: Python tests, using the no snapshots
+        env:
+          WK_TOKEN: ${{ secrets.WK_TOKEN }}
+        run: uv run test.py --no-snapshots
+
       - uses: slackapi/slack-github-action@v2.1.1
         if: failure() || cancelled()
         with:
