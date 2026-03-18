@@ -31,20 +31,10 @@ jobs:
           git diff --no-ext-diff --quiet --exit-code
           [[ -z $(git status -s) ]]
 
-      - name: Python tests, refreshing the network snapshots
-        env:
-          WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        run: uv run test.py --refresh-snapshots
-
-      - name: Python tests, using the new snapshots
+      - name: Python tests
         env:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
         run: uv run test.py
-
-      - name: Python tests, using the no snapshots
-        env:
-          WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        run: uv run test.py --no-snapshots
 
       - uses: slackapi/slack-github-action@v2.1.1
         if: failure() || cancelled()
