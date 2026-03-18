@@ -32,7 +32,7 @@ def main(
         list[Mag] | None,
         typer.Option(
             help="Mags that should be compressed. "
-            "Should be number or minus separated string (e.g. 2 or 2-2-2). "
+            "Should be number or hyphen-separated string (e.g. 2 or 2-2-2). "
             "For multiple mags type: --mag 1 --mag 2",
             parser=parse_mag,
             metavar="MAG",

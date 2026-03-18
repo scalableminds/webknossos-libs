@@ -170,9 +170,10 @@ class RemoteLayer(AbstractLayer):
             )
             from_mag = max(self.mags.keys())
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist. Existing mags: {self.mags.keys()}."
-        )
+        if from_mag not in self.mags.keys():
+            raise KeyError(
+                f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist. Existing mags: {self.mags.keys()}."
+            )
         from_mag_view = self.get_mag(from_mag)
 
         align_with_other_layers_dataset: bool | RemoteDataset = False
@@ -197,6 +198,78 @@ class RemoteLayer(AbstractLayer):
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 force_sampling_scheme=force_sampling_scheme,
+                executor=executor,
+            )
+
+            for mag in tmp_layer.mags.keys():
+                self.add_mag_as_copy(
+                    tmp_layer.mags[mag],
+                    transfer_mode=transfer_mode,
+                    common_storage_path_prefix=common_storage_path_prefix,
+                    overwrite_pending=overwrite_pending,
+                )
+
+    def upsample(
+        self,
+        from_mag: Mag,
+        *,
+        finest_mag: Mag = Mag(1),
+        compress: bool | Zarr3Config = True,
+        sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
+        align_with_other_layers: bool = True,
+        buffer_shape: Vec3IntLike | None = None,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
+        executor: Executor | None = None,
+    ) -> None:
+        """Upsample data to finer magnifications.
+
+        Upsamples from a coarser magnification to a sequence of finer magnifications,
+        stopping at finest_mag. The data is written temporarily on the local disk and
+        uploaded afterwards, so some local disk space is required.
+
+        Args:
+            from_mag (Mag): Source coarse magnification.
+            finest_mag (Mag): Target finest magnification. Defaults to Mag(1).
+            compress (bool | Zarr3Config): Whether to compress upsampled data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
+            sampling_mode (str | SamplingModes): How dimensions should be upsampled. Defaults to ANISOTROPIC.
+            align_with_other_layers (bool): Whether to align mags with the dataset's other layers. Defaults to True.
+            buffer_shape (Vec3IntLike | None): Shape of processing buffer. Defaults to None.
+            transfer_mode (TransferMode): How new mags are transferred to the remote storage. Defaults to COPY.
+            common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is COPY or MOVE_AND_SYMLINK.
+            overwrite_pending (bool): If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True.
+            executor (Executor | None): Executor for parallel processing. Defaults to None.
+
+        Raises:
+            KeyError: If from_mag doesn't exist is invalid.
+            AssertionError: If finest_mag is invalid.
+            AttributeError: If sampling_mode is invalid.
+        """
+
+        from ..dataset import Dataset
+
+        if from_mag not in self.mags.keys():
+            raise KeyError(
+                f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+            )
+
+        from_mag_view = self.get_mag(from_mag)
+
+        with TemporaryDirectory() as tmpdir:
+            tmp_dataset = Dataset(
+                dataset_path=tmpdir,
+                voxel_size_with_unit=self.dataset.voxel_size_with_unit,
+            )
+            tmp_layer = tmp_dataset.add_layer_like(self, self.name)
+            tmp_layer.upsample(
+                from_mag_view=from_mag_view,
+                from_mag=from_mag,
+                finest_mag=finest_mag,
+                compress=compress,
+                sampling_mode=sampling_mode,
+                align_with_other_layers=align_with_other_layers,
+                buffer_shape=buffer_shape,
                 executor=executor,
             )
 

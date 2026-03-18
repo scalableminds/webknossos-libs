@@ -3,8 +3,7 @@ import json
 import os
 import re
 import uuid
-from argparse import Namespace
-from collections.abc import Generator, Sequence
+from collections.abc import Generator, Iterator, Sequence
 from contextlib import contextmanager
 from enum import Enum
 from shutil import copyfileobj
@@ -29,7 +28,6 @@ from webknossos.dataset_properties import (
     get_dataset_converter,
 )
 
-from ..cli._utils import DistributionStrategy
 from ..dataset import (
     Dataset,
     Layer,
@@ -38,7 +36,7 @@ from ..dataset import (
 from ..dataset.defaults import PROPERTIES_FILE_NAME
 from ..dataset.layer import Zarr3Config
 from ..geometry import Vec3Int
-from ..utils import get_executor_for_args, is_fs_path
+from ..utils import is_fs_path
 
 Vector3 = tuple[float, float, float]
 Vector4 = tuple[float, float, float, float]
@@ -168,7 +166,7 @@ class VolumeLayer:
 
         def _edit(
             dataset_path: UPath, executor: Executor | None = None
-        ) -> Generator[Layer, None, None]:
+        ) -> Iterator[Layer]:
             dataset = Dataset(dataset_path, voxel_size=self.voxel_size)
             assert self.zip is not None and self.zip.exists()
 
@@ -204,13 +202,11 @@ class VolumeLayer:
                     )
                 self._write_dir_to_zip(rechunked_dir)
 
-        fallback_executor_args = Namespace(
-            distribution_strategy=DistributionStrategy.SEQUENTIAL.value,
-        )
-        with get_executor_for_args(fallback_executor_args, executor) as executor:
+        with executor or SequentialExecutor() as executor:
             if edit_mode == VolumeLayerEditMode.TEMPORARY_DIRECTORY:
                 with TemporaryDirectory() as tmp_dir:
-                    return _edit(UPath(tmp_dir), executor)
+                    # yield from is required, because this is a contextmanager
+                    yield from _edit(UPath(tmp_dir), executor)
             elif edit_mode == VolumeLayerEditMode.MEMORY:
                 if not isinstance(executor, SequentialExecutor):
                     raise ValueError(
@@ -221,7 +217,8 @@ class VolumeLayer:
                     f"edit_{self.id}_{self.name}_{uuid.uuid4()}.zip", protocol="memory"
                 )
                 try:
-                    return _edit(path, executor)
+                    # yield from is required, because this is a contextmanager
+                    yield from _edit(path, executor)
                 finally:
                     if path.exists():
                         path.rmdir(recursive=True)
