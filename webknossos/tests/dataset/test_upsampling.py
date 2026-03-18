@@ -171,6 +171,58 @@ def test_upsampling_non_aligned(tmp_upath: UPath) -> None:
     )
 
 
+def test_upsample_from_mag_view(tmp_upath: UPath) -> None:
+    """upsample with from_mag_view reads source data from another layer."""
+    source_data = (np.random.rand(1, 32, 32, 8) * 255).astype(np.uint8)
+
+    source_ds = Dataset(tmp_upath / "source", voxel_size=(1, 1, 1))
+    source_layer = source_ds.add_layer("color", COLOR_CATEGORY)
+    source_mag = source_layer.add_mag(Mag(2))
+    source_mag.write(source_data, allow_resize=True)
+
+    target_ds = Dataset(tmp_upath / "target", voxel_size=(1, 1, 1))
+    target_layer = target_ds.add_layer(
+        "color", COLOR_CATEGORY, bounding_box=source_layer.bounding_box
+    )
+
+    target_layer.upsample(
+        from_mag=Mag(2),
+        from_mag_view=source_mag,
+        finest_mag=Mag(1),
+        compress=False,
+        sampling_mode=SamplingModes.ISOTROPIC,
+        align_with_other_layers=False,
+        shard_shape=Vec3Int(64, 64, 32),
+    )
+
+    assert Mag(1) in target_layer.mags
+    result = target_layer.get_mag(1).read()
+    assert result.shape == (1, 64, 64, 16)
+    assert result.mean() == pytest.approx(source_data.mean(), abs=1)
+
+
+def test_upsample_from_mag_view_mag_mismatch(tmp_upath: UPath) -> None:
+    """upsample raises ValueError when from_mag_view.mag != from_mag."""
+    source_ds = Dataset(tmp_upath / "source", voxel_size=(1, 1, 1))
+    source_layer = source_ds.add_layer("color", COLOR_CATEGORY)
+    source_mag = source_layer.add_mag(Mag(4))
+    source_mag.write(
+        (np.random.rand(1, 8, 8, 8) * 255).astype(np.uint8), allow_resize=True
+    )
+
+    target_ds = Dataset(tmp_upath / "target", voxel_size=(1, 1, 1))
+    target_layer = target_ds.add_layer(
+        "color", COLOR_CATEGORY, bounding_box=source_layer.bounding_box
+    )
+
+    with pytest.raises(ValueError, match="does not match from_mag"):
+        target_layer.upsample(
+            from_mag=Mag(2),
+            from_mag_view=source_mag,  # mag=4, but from_mag=2
+            finest_mag=Mag(1),
+        )
+
+
 def test_upsample_nd_dataset(tmp_upath: UPath) -> None:
     source_path = (
         UPath(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"

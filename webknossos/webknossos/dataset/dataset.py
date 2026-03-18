@@ -547,7 +547,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
         return remote_dataset.download(
             sharing_token=sharing_token,
-            bbox=bbox,
+            bounding_box=bbox,
             layers=layers,
             mags=mags,
             path=path,
@@ -695,11 +695,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     "common_storage_path_prefix is not None, but uploading via HTTP."
                     " Ignoring common_storage_path_prefix."
                 )
-            for layer in self.get_segmentation_layers():
-                if not layer.attachments.is_empty:
-                    raise NotImplementedError(
-                        f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attachments."
-                    )
 
             from ..client._upload_dataset import upload_dataset
 
@@ -816,7 +811,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         *,
         map_filepath_to_layer_name: ConversionLayerMapping
         | Callable[[UPath], str] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
-        z_slices_sort_key: Callable[[UPath], Any] = natsort_keygen(),
+        z_slices_sort_key: Callable[[UPath], Any] | None = None,
         voxel_size_with_unit: VoxelSize | None = None,
         layer_name: str | None = None,
         layer_category: LayerCategoryType | None = None,
@@ -894,6 +889,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         valid_suffixes = pims_images.get_valid_pims_suffixes()
         if use_bioformats is not False:
             valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
+
+        if z_slices_sort_key is None:
+            z_slices_sort_key = natsort_keygen()
 
         if input_upath.is_file():
             if input_upath.suffix.lstrip(".").lower() in valid_suffixes:

@@ -6,7 +6,7 @@ from upath import UPath
 from webknossos.utils import copytree, is_fs_path
 
 
-class TransferMode(Enum):
+class TransferMode(str, Enum):
     """
     The transfer mode determines how mags or attachments are transferred to the remote or local storage.
     """
@@ -47,7 +47,7 @@ class TransferMode(Enum):
         copytree(
             src_path,
             dst_path,
-            progress_desc=f"Copying {progress_desc_label}{src_path.path} to {dst_path.path}",
+            progress_desc=f"Copying {progress_desc_label}",
         )
 
     def transfer(

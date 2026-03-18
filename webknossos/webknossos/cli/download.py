@@ -65,7 +65,7 @@ def main(
         typer.Option(
             rich_help_panel="Partial download",
             help="Mags that should be downloaded. "
-            "Should be number or minus separated string (e.g. 2 or 2-2-2). "
+            "Should be number or hyphen-separated string (e.g. 2 or 2-2-2). "
             "For multiple mags type: --mag 1 --mag 2",
             parser=parse_mag,
             metavar="MAG",
@@ -94,7 +94,7 @@ def main(
         ):
             RemoteDataset.open(url).download(
                 path=target,
-                bbox=bbox,
+                bounding_box=bbox,
                 layers=layers,
                 mags=mags,
                 data_format=data_format,
