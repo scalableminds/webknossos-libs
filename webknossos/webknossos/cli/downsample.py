@@ -2,24 +2,30 @@
 
 from argparse import Namespace
 from multiprocessing import cpu_count
-from typing import Annotated, Any
+from typing import Annotated
 
 import typer
+from upath import UPath
 
-from ..dataset import Dataset, SamplingModes
+from ..dataset import RemoteDataset, SamplingModes, TransferMode
+from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import Mag
 from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, SamplingMode, parse_mag, parse_path
+from ._utils import (
+    DistributionStrategy,
+    SamplingMode,
+    open_dataset,
+    parse_mag,
+)
 
 
 def main(
     *,
     target: Annotated[
-        Any,
+        str,
         typer.Argument(
-            help="Path to your WEBKNOSSOS dataset.",
+            help="Path to your WEBKNOSSOS dataset, or URL to a dataset on a WEBKNOSSOS server.",
             show_default=False,
-            parser=parse_path,
         ),
     ],
     sampling_mode: Annotated[
@@ -35,8 +41,17 @@ def main(
         Mag | None,
         typer.Option(
             help="Mag to stop downsampling at. \
-Should be number or minus separated string (e.g. 2 or 2-2-2).",
+Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
+        ),
+    ] = None,
+    token: Annotated[
+        str | None,
+        typer.Option(
+            help="Authentication token for WEBKNOSSOS instance "
+            "(https://webknossos.org/auth/token).",
+            rich_help_panel="WEBKNOSSOS context",
+            envvar="WK_TOKEN",
         ),
     ] = None,
     jobs: Annotated[
@@ -61,6 +76,22 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
             rich_help_panel="Executor options",
         ),
     ] = None,
+    transfer_mode: Annotated[
+        TransferMode | None,
+        typer.Option(
+            help="The transfer mode to use. Required for remote datasets. "
+            "Options: 'copy', 'move+symlink', 'symlink', 'http'.",
+            rich_help_panel="WEBKNOSSOS context",
+        ),
+    ] = None,
+    access_mode: Annotated[
+        RemoteAccessMode | None,
+        typer.Option(
+            help="How to access the remote dataset's data. "
+            "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'proxy_path'.",
+            rich_help_panel="WEBKNOSSOS context",
+        ),
+    ] = None,
 ) -> None:
     """Downsample your WEBKNOSSOS dataset."""
 
@@ -69,19 +100,38 @@ Should be number or minus separated string (e.g. 2 or 2-2-2).",
         distribution_strategy=distribution_strategy.value,
         job_resources=job_resources,
     )
+    sampling_mode_parsed = SamplingModes.parse(sampling_mode.value)
 
-    dataset = Dataset.open(target)
-    with get_executor_for_args(args=executor_args) as executor:
-        if layer_name is None:
-            dataset.downsample(
-                coarsest_mag=coarsest_mag,
-                sampling_mode=SamplingModes.parse(sampling_mode.value),
-                executor=executor,
-            )
+    if access_mode is None:
+        if transfer_mode is not None and transfer_mode != TransferMode.HTTP:
+            access_mode = RemoteAccessMode.DIRECT_PATH
         else:
-            layer = dataset.get_layer(layer_name)
-            layer.downsample(
-                coarsest_mag=coarsest_mag,
-                sampling_mode=SamplingModes.parse(sampling_mode.value),
-                executor=executor,
-            )
+            access_mode = RemoteAccessMode.PROXY_PATH
+
+    with open_dataset(
+        UPath(target), annotation_ok=False, token=token, access_mode=access_mode
+    ) as dataset:
+        with get_executor_for_args(args=executor_args) as executor:
+            if isinstance(dataset, RemoteDataset):
+                if transfer_mode is None:
+                    raise typer.BadParameter(
+                        "--transfer-mode is required for remote datasets.",
+                        param_hint="--transfer-mode",
+                    )
+                extra_kwargs: dict = {"transfer_mode": transfer_mode}
+            else:
+                extra_kwargs = {}
+            if layer_name is None:
+                dataset.downsample(
+                    coarsest_mag=coarsest_mag,
+                    sampling_mode=sampling_mode_parsed,
+                    executor=executor,
+                    **extra_kwargs,
+                )
+            else:
+                dataset.get_layer(layer_name).downsample(
+                    coarsest_mag=coarsest_mag,
+                    sampling_mode=sampling_mode_parsed,
+                    executor=executor,
+                    **extra_kwargs,
+                )

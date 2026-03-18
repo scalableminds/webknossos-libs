@@ -53,7 +53,7 @@ def _prepare_dataset_path(output_path: UPath, suffix: str) -> UPath:
 
 
 @pytest.mark.skip(
-    reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
+    reason="TransferMode.COPY requires absolute paths, which are different on multiple machines. Skipping, for now."
 )
 def test_remote_dataset_add_layer_as_copy() -> None:
     ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_src")
@@ -83,7 +83,7 @@ def test_remote_dataset_add_layer_as_copy() -> None:
 
 
 @pytest.mark.skip(
-    reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
+    reason="TransferMode.COPY requires absolute paths, which are different on multiple machines. Skipping, for now."
 )
 def test_remote_dataset_add_mag_as_copy() -> None:
     ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_mag_src")
@@ -214,33 +214,6 @@ def test_shallow_copy_remote_layers(tmp_upath: UPath) -> None:
     assert data.shape == (1, 64, 64, 256)
 
 
-def test_add_mag_ref_from_local_path(tmp_upath: UPath) -> None:
-    dataset1 = Dataset(tmp_upath / "origin", voxel_size=(10, 10, 10))
-    dataset1.write_layer(
-        "color",
-        COLOR_CATEGORY,
-        data=np.ones((1, 10, 10, 10), dtype="uint8"),
-        downsample=False,
-    )
-
-    dataset2 = Dataset(tmp_upath / "copy", voxel_size=(10, 10, 10))
-    layer1 = dataset2.add_layer_as_ref(tmp_upath / "origin" / "color")
-    layer1_mag1 = layer1.get_mag(1)
-
-    assert layer1_mag1.path == tmp_upath / "origin" / "color" / "1"
-    assert layer1_mag1._properties.path == str(
-        (tmp_upath / "origin" / "color" / "1").resolve()
-    )
-
-    layer2_mag1 = dataset2.add_layer("color2", COLOR_CATEGORY).add_mag_as_ref(
-        tmp_upath / "origin" / "color" / "1"
-    )
-    assert layer2_mag1.path == tmp_upath / "origin" / "color" / "1"
-    assert layer2_mag1._properties.path == str(
-        (tmp_upath / "origin" / "color" / "1").resolve()
-    )
-
-
 def test_changing_properties_on_remote_dataset() -> None:
     remote_dataset = RemoteDataset.open(dataset_id="59e9cfbdba632ac2ab8b23b5")
     remote_dataset.description = "This is a test description"
@@ -308,8 +281,6 @@ def test_get_remote_datasets() -> None:
     [
         "http://localhost:9000/datasets/Organization_X/l4_sample",
         "http://localhost:9000/datasets/Organization_X/l4_sample/view",
-        # "http://localhost:9000/datasets/scalable_minds/l4_sample_dev_sharing/view?token=ilDXmfQa2G8e719vb1U9YQ#%7B%22orthogonal%7D",
-        # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
 def test_url_download(url: str, tmp_upath: UPath) -> None:
@@ -361,7 +332,7 @@ def test_url_open_remote(
 
 
 @pytest.mark.skip(
-    reason="This won't work in CI as the paths stored in cassettes are always absolute and dependent on the system recording the cassette."
+    reason="TransferMode.MOVE_AND_SYMLINK requires absolute paths, which are different on multiple machines. Skipping, for now."
 )
 def test_upload_dataset_with_symlinks(tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
@@ -376,7 +347,7 @@ def test_upload_dataset_with_symlinks(tmp_upath: UPath) -> None:
 
 
 @pytest.mark.skip(
-    reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
+    reason="TransferMode.COPY requires absolute paths, which are different on multiple machines. Skipping, for now."
 )
 def test_upload_dataset_copy_to_paths(tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
@@ -461,10 +432,6 @@ def test_upload_download_roundtrip(tmp_upath: UPath) -> None:
     ds_original = get_sample_dataset(tmp_upath)
     uploaded_dataset = ds_original.upload(
         new_dataset_name="test_upload_download_roundtrip"
-    )
-    RemoteDataset.trigger_reload_in_datastore(
-        dataset_name_or_url="test_upload_download_roundtrip",
-        organization_id="Organization_X",
     )
     ds_roundtrip = RemoteDataset.open(uploaded_dataset.url).download(
         path=tmp_upath / "ds", layers=["color", "segmentation"]

@@ -1,14 +1,25 @@
 """Utilities to work with the CLI of webknossos."""
 
+import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from enum import Enum
 from os import environ
 from typing import NamedTuple
+from urllib.parse import urlparse
 
 import numpy as np
 from upath import UPath
 
+from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
+from ..client import webknossos_context
+from ..client._resolve_short_link import resolve_short_link
+from ..dataset import Dataset, RemoteDataset
+from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import BoundingBox, Mag, Vec3Int
+from ..utils import is_fs_path
 
 
 class VoxelSizeTuple(NamedTuple):
@@ -275,3 +286,33 @@ def prepare_shard_shape(
                 f"The shard_shape {shard_shape} must be cleanly divisible by the chunk_shape {chunk_shape}."
             )
         return shard_shape
+
+
+@contextmanager
+def open_dataset(
+    source: UPath,
+    annotation_ok: bool,
+    token: str | None = None,
+    access_mode: RemoteAccessMode | None = None,
+) -> Iterator[Dataset | RemoteDataset]:
+    if not is_fs_path(source):
+        url = resolve_short_link(str(source))
+        parsed = urlparse(url)
+        domain = f"{parsed.scheme}://{parsed.netloc}"
+        with webknossos_context(url=domain, token=token):
+            if re.match(_DATASET_URL_REGEX, url) or re.match(
+                _DATASET_DEPRECATED_URL_REGEX, url
+            ):
+                yield RemoteDataset.open(url, access_mode=access_mode)
+            elif re.match(_ANNOTATION_URL_REGEX, url):
+                if not annotation_ok:
+                    raise ValueError(
+                        "The provided URL leads to an annotation, not a dataset."
+                    )
+                yield Annotation.open_as_remote_dataset(annotation_id_or_url=url)
+            else:
+                raise ValueError(
+                    "The provided URL does not lead to a WEBKNOSSOS dataset or annotation."
+                )
+    else:
+        yield Dataset.open(source)
