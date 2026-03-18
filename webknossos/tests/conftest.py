@@ -129,7 +129,7 @@ def error_on_warnings() -> Generator:
 @pytest.fixture(autouse=True, scope="function")
 def use_replay_proxay(request: Any) -> Generator:
     testname = f"{request.node.parent.name.removesuffix('.py')}/{request.node.name.replace('/', '__')}"
-    if "use_proxay" in request.keywords:
+    if "use_proxay" in request.keywords and "USE_PROXAY" in os.environ:
         os.environ["HTTP_PROXY"] = "http://localhost:3000"
         os.environ["http_proxy"] = (
             "http://localhost:3000"  # for tensorstore. env var names are case-sensitive on Linux

@@ -193,9 +193,11 @@ def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
             proxay_process = subprocess.Popen(
                 cmd, shell=IS_WINDOWS, start_new_session=(not IS_WINDOWS)
             )
+        os.environ["USE_PROXAY"] = "True"
         sleep(1)
         yield
     finally:
+        os.environ.pop("USE_PROXAY", None)
         if proxay_process is not None:
             if IS_WINDOWS:
                 print("Terminating proxay...")
@@ -269,6 +271,9 @@ def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) ->
     elif snapshot_command == "add":
         with proxay("record", quiet=False), local_test_wk():
             run_pytest(pytest_cmd + ["-m", "use_proxay"] + args)
+    elif snapshot_command == "no":
+        with local_test_wk():
+            run_pytest(pytest_cmd + args)
     else:
         with proxay("replay", quiet=False):
             run_pytest(pytest_cmd + ["--timeout=360"] + args)
@@ -277,7 +282,11 @@ def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) ->
 if __name__ == "__main__":
     snapshot_command = None
     args = sys.argv[1:]
-    if len(args) > 0 and args[0] in ["--refresh-snapshots", "--add-snapshots"]:
+    if len(args) > 0 and args[0] in [
+        "--refresh-snapshots",
+        "--add-snapshots",
+        "--no-snapshots",
+    ]:
         snapshot_command = args[0][2:-10]
         args = args[1:]
 
