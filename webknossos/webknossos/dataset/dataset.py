@@ -695,11 +695,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     "common_storage_path_prefix is not None, but uploading via HTTP."
                     " Ignoring common_storage_path_prefix."
                 )
-            for layer in self.get_segmentation_layers():
-                if not layer.attachments.is_empty:
-                    raise NotImplementedError(
-                        f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attachments."
-                    )
 
             from ..client._upload_dataset import upload_dataset
 

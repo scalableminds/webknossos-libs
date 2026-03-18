@@ -125,7 +125,7 @@ class AgglomerateAttachment(Attachment):
                 f"Agglomerate attachment at path {attachment_path} already exists."
             )
         attachment = cls.create(attachment_path, graph, segmentation_dtype=layer.dtype)
-        layer.attachments._add_attachment(attachment)
+        layer.attachments.add_attachment_as_ref(attachment)
         return attachment
 
     @classmethod

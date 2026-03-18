@@ -468,7 +468,7 @@ def test_add_attachment(tmp_upath: UPath) -> None:
         bbox=SAMPLE_BBOX.with_size(Vec3Int(32, 32, 32)),
     )
 
-    seg_layer = ds_original.get_layer("segmentation")
+    seg_layer = ds_original.get_layer("segmentation").as_segmentation_layer()
     seg_data = seg_layer.get_finest_mag().read()
     seg_ids = np.unique(seg_data)
 
@@ -477,9 +477,6 @@ def test_add_attachment(tmp_upath: UPath) -> None:
     for old_id, new_id in remapped_seg_ids.items():
         seg_data[seg_data == old_id] = new_id
     seg_layer.get_finest_mag().write(seg_data)
-
-    # Upload dataset with segmentation
-    remote_ds = ds_original.upload(new_dataset_name="test_agglomerate_attachment")
 
     # Construct agglomerate graph and attachment
     seg_ids = np.unique(seg_data)
@@ -491,11 +488,7 @@ def test_add_attachment(tmp_upath: UPath) -> None:
         graph.add_segment(int(seg_id), position=seg_position)
     for seg_id in seg_ids[1:]:
         graph.add_affinity_edge(int(seg_id), int(seg_ids[0]), affinity=0.5)
-    attachment = AgglomerateAttachment.create(tmp_upath / "map_all", graph)
+    AgglomerateAttachment.create_and_add_to(seg_layer, "map_all", graph)
 
-    # Upload attachment
-    RemoteDataset.open(
-        dataset_id=remote_ds.dataset_id, access_mode=RemoteAccessMode.DIRECT_PATH
-    ).get_segmentation_layer("segmentation").attachments.add_attachment_as_copy(
-        attachment, transfer_mode=TransferMode.COPY
-    )
+    # Upload dataset
+    ds_original.upload(new_dataset_name="test_agglomerate_attachment")
