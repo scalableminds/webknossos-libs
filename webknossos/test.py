@@ -16,7 +16,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from shutil import copyfileobj, rmtree, unpack_archive
 from time import sleep
-from typing import Literal
 
 import requests
 

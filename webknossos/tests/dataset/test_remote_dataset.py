@@ -1,6 +1,5 @@
 import itertools
 import pickle
-import sys
 from collections.abc import Iterable, Iterator
 
 import numpy as np

@@ -1,5 +1,4 @@
 import gc
-import os
 import sys
 import warnings
 from collections.abc import Generator, Iterator
@@ -7,8 +6,6 @@ from pathlib import Path
 from shutil import unpack_archive
 from typing import Any
 
-import fsspec.implementations.http as http
-import httpx
 import pytest
 from hypothesis import strategies as st
 from upath import UPath
