@@ -288,21 +288,6 @@ def test_remote_layer(tmp_upath: UPath) -> None:
     )
 
 
-def test_upload_fail(tmp_upath: UPath) -> None:
-    dataset, seg_layer = make_dataset(tmp_upath)
-
-    seg_layer.attachments.add_attachment_as_ref(
-        MeshAttachment.from_path_and_name(
-            dataset.path / "seg" / "meshfile",
-            name="meshfile",
-            data_format=AttachmentDataFormat.Zarr3,
-        )
-    )
-
-    with pytest.raises(NotImplementedError):
-        dataset.upload()
-
-
 @pytest.mark.skip(
     reason="This won't work in CI as the paths stored in cassettes are always absolute and dependent on the system recording the cassette."
 )

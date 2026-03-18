@@ -1,6 +1,7 @@
 # ruff: noqa: F401 imported but unused
 from .attachments import (
     AgglomerateAttachment,
+    AgglomerateGraph,
     Attachment,
     Attachments,
     ConnectomeAttachment,

@@ -18,14 +18,13 @@ import wkw
 from typing_extensions import NotRequired, Self
 from upath import UPath
 
+from webknossos.dataset._utils.tensorstore_helpers import TS_CONTEXT
 from webknossos.dataset._utils.tinywkw import TinyWkwArray
 from webknossos.dataset_properties import DataFormat
 from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
 from webknossos.utils import call_with_retries, is_fs_path
 
 logger = getLogger(__name__)
-
-TS_CONTEXT = tensorstore.Context()
 
 
 def _is_power_of_two(num: int) -> bool:
