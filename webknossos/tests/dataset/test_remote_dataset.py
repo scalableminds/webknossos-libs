@@ -1,6 +1,5 @@
 import itertools
 import pickle
-import sys
 from collections.abc import Iterable, Iterator
 from unittest.mock import MagicMock
 
@@ -33,10 +32,7 @@ from webknossos.dataset.layer.segmentation_layer.attachments.attachments import 
 )
 from webknossos.utils import is_remote_path, rmtree
 
-pytestmark = [
-    pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows"),
-    pytest.mark.use_proxay,
-]
+pytestmark = [pytest.mark.skip_on_windows]
 
 SAMPLE_BBOX = BoundingBox((3164, 3212, 1017), (10, 10, 10))
 

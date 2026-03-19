@@ -7,7 +7,7 @@ on:
 
 jobs:
   webknossos_nightly:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-8
     strategy:
       max-parallel: 4
       matrix:
@@ -23,9 +23,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
 
-      - name: Install proxay
-        run: npm install -g proxay
-
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
@@ -34,12 +31,7 @@ jobs:
           git diff --no-ext-diff --quiet --exit-code
           [[ -z $(git status -s) ]]
 
-      - name: Python tests, refreshing the network snapshots
-        env:
-          WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        run: uv run test.py --refresh-snapshots
-
-      - name: Python tests, using the new snapshots
+      - name: Python tests
         env:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
         run: uv run test.py

@@ -421,7 +421,7 @@ def test_convert_zarr(zarr_format: Literal["zarr", "zarr3"]) -> None:
         )
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 @pytest.mark.parametrize(
     "url",
     [
@@ -483,7 +483,7 @@ def test_downsample_and_upsample() -> None:
         assert (wkw_path / "color" / "1" / "z0" / "y0" / "x0.wkw").exists()
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 def test_upload() -> None:
     """Tests the functionality of upload subcommand."""
 
@@ -505,7 +505,7 @@ def test_upload() -> None:
 @pytest.mark.skip(
     reason="TransferMode.COPY requires absolute paths, which are different on multiple machines. Skipping, for now."
 )
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 def test_convert_upload_downsample() -> None:
     """Tests the functionality of convert --upload and downsample subcommand."""
 

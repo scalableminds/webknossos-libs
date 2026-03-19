@@ -1180,7 +1180,7 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
     assure_exported_properties(ds)
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 def test_explore_and_add_remote() -> None:
     remote_ds = RemoteDataset.explore_and_add_remote(
         "http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/",
@@ -3614,7 +3614,7 @@ def test_copy_dataset_exists_ok() -> None:
     wkw_ds.copy_dataset(ds_path, data_format=DataFormat.Zarr3, exists_ok=True)
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 def test_remote_dataset_access_metadata() -> None:
     ds = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     assert len(ds.metadata) == 2  # has 2 by default
@@ -3635,7 +3635,7 @@ def test_remote_dataset_access_metadata() -> None:
     assert len(ds.folder.metadata) == 2
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 def test_remote_dataset_urls() -> None:
     ds = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     dataset_id = ds._dataset_id
