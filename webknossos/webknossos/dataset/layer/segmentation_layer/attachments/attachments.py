@@ -17,7 +17,6 @@ from .....utils import (
     snake_to_camel_case,
     warn_deprecated,
 )
-from ....remote_dataset import _assert_same_webknossos_instance
 from ....transfer_mode import TransferMode
 from .agglomerate_attachment import AgglomerateAttachment
 from .attachment import (
@@ -288,6 +287,8 @@ class RemoteAttachments(AbstractAttachments):
         foreign_layer: "RemoteSegmentationLayer",
         new_name: str | None,
     ) -> Attachment:
+        from ....remote_dataset import _assert_same_webknossos_instance
+
         self._ensure_writable()
         from webknossos.client.api_client.models import ApiDatasetComposeAttachment
         from webknossos.client.context import _get_api_client

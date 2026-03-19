@@ -14,7 +14,6 @@ from ...client.api_client.models import (
 )
 from ...geometry import Mag, MagLike, Vec3IntLike
 from ...utils import enrich_path
-from ..remote_dataset import _assert_same_webknossos_instance
 from ..transfer_mode import TransferMode
 from .abstract_layer import AbstractLayer, _validate_layer_name
 from .view import MagView, Zarr3Config
@@ -143,6 +142,8 @@ class RemoteLayer(AbstractLayer):
         Raises:
             ValueError: If the foreign mag belongs to a local layer or a different WEBKNOSSOS instance
         """
+        from ..remote_dataset import _assert_same_webknossos_instance
+
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
         if not isinstance(foreign_mag_view.layer, RemoteLayer):
