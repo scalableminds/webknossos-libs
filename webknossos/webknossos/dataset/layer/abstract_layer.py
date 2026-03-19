@@ -1,7 +1,7 @@
 import logging
 import re
 from abc import abstractmethod
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -24,7 +24,7 @@ from ...utils import warn_deprecated
 from .view import ArrayException, MagView
 
 if TYPE_CHECKING:
-    from ..abstract_dataset import AbstractDataset
+    from ..abstract_dataset import AbstractDataset, AttachmentRenaming, LayerRenaming
     from .segmentation_layer.abstract_segmentation_layer import (
         AbstractSegmentationLayer,
     )
@@ -116,9 +116,9 @@ class AbstractLayer:
         )
 
     def _save_layer_properties(
-        self, layer_renaming: tuple[str, str] | None = None
+        self, renamings: "Sequence[LayerRenaming | AttachmentRenaming] | None" = None
     ) -> None:
-        self.dataset._save_dataset_properties(layer_renaming=layer_renaming)
+        self.dataset._save_dataset_properties(renamings=renamings)
 
     def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
         """Initialize a magnification level when opening the Dataset.

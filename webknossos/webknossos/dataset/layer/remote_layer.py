@@ -8,7 +8,10 @@ from upath import UPath
 from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset_properties import LayerProperties, MagViewProperties
 
-from ...client.api_client.models import ApiReserveMagUploadToPathParameters
+from ...client.api_client.models import (
+    ApiDatasetComposeMag,
+    ApiReserveMagUploadToPathParameters,
+)
 from ...geometry import Mag, MagLike, Vec3IntLike
 from ...utils import enrich_path
 from ..transfer_mode import TransferMode
@@ -65,6 +68,7 @@ class RemoteLayer(AbstractLayer):
         self,
         foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
+        extend_layer_bounding_box: bool = True,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
@@ -110,7 +114,74 @@ class RemoteLayer(AbstractLayer):
                 self._dataset.dataset_id, reserve_parameters
             )
         self._apply_server_layer_properties()
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
         return self.get_mag(foreign_mag_view.mag)
+
+    def add_mag_as_ref(
+        self,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
+        *,
+        mag: MagLike | None = None,
+        extend_layer_bounding_box: bool = True,
+    ) -> MagView["RemoteLayer"]:
+        """Add a mag from another remote dataset by reference.
+
+        Creates a mag that references data from a foreign remote layer without copying it.
+
+        Args:
+            foreign_mag_view_or_path: Foreign mag to add (path or MagView object)
+            mag: Target mag level; uses the foreign mag level if None
+            extend_layer_bounding_box: If True, extends this layer's bounding box to include the foreign layer's bounding box
+
+        Returns:
+            MagView: The newly created mag view referencing the foreign data
+
+        Raises:
+            ValueError: If the foreign mag belongs to a local layer or a different WEBKNOSSOS instance
+        """
+        from ..remote_dataset import _assert_same_webknossos_instance
+
+        self._ensure_writable()
+        foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
+        if not isinstance(foreign_mag_view.layer, RemoteLayer):
+            raise ValueError(
+                f"Cannot add a local mag to a remote layer. Got {foreign_mag_view}."
+            )
+        foreign_layer = foreign_mag_view.layer
+        _assert_same_webknossos_instance(
+            self.dataset, foreign_layer.dataset, "add a mag"
+        )
+
+        if mag is None:
+            mag = foreign_mag_view.mag
+        else:
+            mag = Mag(mag)
+
+        from ...client.context import _get_api_client
+
+        with self._dataset._context:
+            client = _get_api_client()
+            client.dataset_add_mag(
+                dataset_id=self._dataset.dataset_id,
+                compose_mag=ApiDatasetComposeMag(
+                    source_dataset_id=foreign_layer.dataset.dataset_id,
+                    source_layer_name=foreign_layer.name,
+                    target_layer_name=self.name,
+                    source_mag=foreign_mag_view.mag.to_tuple(),
+                    target_mag=mag.to_tuple(),
+                ),
+            )
+        self._apply_server_layer_properties()
+
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
+
+        return self.get_mag(mag)
 
     def downsample(
         self,
@@ -285,8 +356,8 @@ class RemoteLayer(AbstractLayer):
         self._ensure_writable()
         mag = Mag(mag)
         if mag not in self.mags.keys():
-            raise IndexError(
-                f"Deleting mag {mag} failed. There is no mag with this name"
+            raise KeyError(
+                f"Deleting mag {mag} failed. There is no mag with this name."
             )
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) != mag
@@ -307,6 +378,8 @@ class RemoteLayer(AbstractLayer):
         CAUTION: existing annotations that use this layer as fallback segmentation layer will break.
         """
 
+        from ..abstract_dataset import LayerRenaming
+
         if layer_name == self.name:
             return
         self._ensure_metadata_writable()
@@ -322,7 +395,9 @@ class RemoteLayer(AbstractLayer):
         self.dataset._layers[layer_name] = self
         self._properties.name = layer_name
         self._name: str = layer_name
-        self._save_layer_properties(layer_renaming=(old_name, layer_name))
+        self._save_layer_properties(
+            renamings=[LayerRenaming(old_name=old_name, new_name=layer_name)]
+        )
 
     def _ensure_writable(self) -> None:
         if self.read_only:

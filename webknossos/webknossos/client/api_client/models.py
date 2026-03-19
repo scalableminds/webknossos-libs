@@ -171,6 +171,32 @@ class ApiLinkedLayerIdentifierLegacy:
 
 
 @attr.s(auto_attribs=True)
+class ApiDatasetComposeLayer:
+    source_dataset_id: str
+    source_layer_name: str
+    target_layer_name: str
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetComposeMag:
+    source_dataset_id: str
+    source_layer_name: str
+    target_layer_name: str
+    source_mag: tuple[int, int, int]
+    target_mag: tuple[int, int, int]
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetComposeAttachment:
+    source_dataset_id: str
+    source_layer_name: str
+    target_layer_name: str
+    attachment_type: str
+    source_attachment_name: str
+    target_attachment_name: str
+
+
+@attr.s(auto_attribs=True)
 class ApiReserveDatasetUploadInformation:
     upload_id: str
     name: str
@@ -476,6 +502,14 @@ class ApiReserveMagUploadToPathParameters:
 
 @attr.s(auto_attribs=True)
 class ApiLayerRenaming:
+    old_name: str
+    new_name: str
+
+
+@attr.s(auto_attribs=True)
+class ApiAttachmentRenaming:
+    layer_name: str
+    attachment_type: str
     old_name: str
     new_name: str
 

@@ -17,7 +17,9 @@ from upath import UPath
 
 from webknossos.client import webknossos_context
 from webknossos.client.api_client.models import (
+    ApiAttachmentRenaming,
     ApiDataset,
+    ApiDatasetComposeLayer,
     ApiDatasetExploreAndAddRemote,
     ApiLayerRenaming,
     ApiMetadata,
@@ -28,6 +30,8 @@ from webknossos.dataset.abstract_dataset import (
     _DATASET_DEPRECATED_URL_REGEX,
     _DATASET_URL_REGEX,
     AbstractDataset,
+    AttachmentRenaming,
+    LayerRenaming,
     _dtype_maybe,
 )
 from webknossos.dataset.layer import RemoteLayer, RemoteSegmentationLayer, Zarr3Config
@@ -64,6 +68,18 @@ if TYPE_CHECKING:
     from webknossos.administration.user import Team
     from webknossos.dataset import Dataset
     from webknossos.dataset.layer import Layer
+
+
+def _assert_same_webknossos_instance(
+    dataset1: "RemoteDataset",
+    dataset2: "RemoteDataset",
+    action: str,
+) -> None:
+    if dataset1._context._url != dataset2._context._url:
+        raise ValueError(
+            f"Cannot {action} from a different WEBKNOSSOS instance. "
+            + f"Got {dataset2._context._url}, expected {dataset1._context._url}."
+        )
 
 
 class RemoteAccessMode(Enum):
@@ -321,8 +337,25 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self._properties = self._load_dataset_properties()
         self._last_read_properties = copy.deepcopy(self._properties)
 
+        # update existing layers
+        for layer in self.layers.values():
+            layer_properties = next(
+                layer_properties
+                for layer_properties in self._properties.data_layers
+                if layer_properties.name == layer.name
+            )
+            layer._apply_properties(layer_properties, layer.read_only)
+
+        # add new layers
+        for layer_properties in self._properties.data_layers:
+            if layer_properties.name not in self.layers:
+                layer = self._initialize_layer_from_properties(
+                    layer_properties, self._use_zarr_streaming
+                )
+                self._layers[layer_properties.name] = layer
+
     def _save_dataset_properties_impl(
-        self, *, layer_renaming: tuple[str, str] | None = None
+        self, *, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None
     ) -> None:
         """
         Exports the current dataset properties to the server.
@@ -338,10 +371,28 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             raise RuntimeError("zarr streaming does not support updating this property")
 
         layer_renamings = []
-        if layer_renaming is not None:
-            layer_renamings.append(
-                ApiLayerRenaming(old_name=layer_renaming[0], new_name=layer_renaming[1])
-            )
+        attachment_renamings = []
+        if renamings is not None:
+            for renaming in renamings:
+                if isinstance(renaming, LayerRenaming):
+                    layer_renamings.append(
+                        ApiLayerRenaming(
+                            old_name=renaming.old_name, new_name=renaming.new_name
+                        )
+                    )
+                elif isinstance(renaming, AttachmentRenaming):
+                    attachment_renamings.append(
+                        ApiAttachmentRenaming(
+                            layer_name=renaming.layer_name,
+                            attachment_type=renaming.attachment_type,
+                            old_name=renaming.old_name,
+                            new_name=renaming.new_name,
+                        )
+                    )
+                else:
+                    raise ValueError(
+                        f"Renaming must be of type LayerRenaming or AttachmentRenaming, got {type(renaming)}"
+                    )
 
         with self._context:
             client = _get_api_client()
@@ -350,6 +401,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 dataset_updates={
                     "dataSource": self._properties,
                     "layerRenamings": layer_renamings,
+                    "attachmentRenamings": attachment_renamings,
                 },
             )
             self._apply_server_dataset_properties()
@@ -911,6 +963,80 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 layer.attachments.add_attachment_as_copy(attachment)
 
         return layer
+
+    def add_layer_as_ref(
+        self,
+        foreign_layer: Union[str, PathLike, UPath, "Layer", RemoteLayer],
+        *,
+        new_layer_name: str | None = None,
+    ) -> RemoteLayer:
+        """Add a layer from another dataset by reference.
+
+        Creates a layer that references data from a remote dataset.
+
+        Args:
+            foreign_layer: Foreign layer to add (path or Layer object)
+            new_layer_name: Optional name for the new layer, uses original name if None
+
+        Returns:
+            Layer: The newly created remote layer referencing the foreign data
+
+        Raises:
+            IndexError: If target layer name already exists
+            AssertionError: If trying to add non-remote layer or same origin dataset
+            RuntimeError: If dataset is read-only
+
+        Examples:
+            ```
+            remote_ds = RemoteDataset.open("https://webknossos.org/datasets/...")
+            other_ds = RemoteDataset.open("https://webknossos.org/datasets/...")
+            new_layer = remote_ds.add_layer_as_ref(other_ds.get_layer("color"))
+            ```
+
+        Note:
+            Changes to the original layer's properties afterwards won't affect this dataset.
+            Data is only referenced, not copied.
+        """
+        from .layer import Layer
+
+        self._ensure_writable()
+        foreign_layer = Layer._ensure_layer(foreign_layer)
+
+        if not isinstance(foreign_layer, RemoteLayer):
+            raise ValueError(
+                f"Cannot add a local layer to a remote dataset. Got {foreign_layer}."
+            )
+
+        if new_layer_name is None:
+            new_layer_name = foreign_layer.name
+        else:
+            _validate_layer_name(new_layer_name)
+
+        if new_layer_name in self.layers.keys():
+            raise IndexError(
+                f"Cannot add foreign layer {foreign_layer}. This dataset already has a layer called {new_layer_name}."
+            )
+        if foreign_layer.dataset == self:
+            raise ValueError(
+                "Cannot add layer with the same origin dataset as foreign layer."
+            )
+        _assert_same_webknossos_instance(self, foreign_layer.dataset, "add a layer")
+
+        from ..client.context import _get_api_client
+
+        with self._context:
+            client = _get_api_client()
+            client.dataset_add_layer(
+                dataset_id=self.dataset_id,
+                compose_layer=ApiDatasetComposeLayer(
+                    source_dataset_id=foreign_layer.dataset.dataset_id,
+                    source_layer_name=foreign_layer.name,
+                    target_layer_name=new_layer_name,
+                ),
+            )
+        self._apply_server_dataset_properties()
+
+        return self.get_layer(new_layer_name)
 
     def delete_layer(self, layer_name: str) -> None:
         self._ensure_writable()
