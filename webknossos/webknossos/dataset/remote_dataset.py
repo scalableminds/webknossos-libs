@@ -70,6 +70,18 @@ if TYPE_CHECKING:
     from webknossos.dataset.layer import Layer
 
 
+def _assert_same_webknossos_instance(
+    dataset1: "RemoteDataset",
+    dataset2: "RemoteDataset",
+    action: str,
+) -> None:
+    if dataset1._context._url != dataset2._context._url:
+        raise ValueError(
+            f"Cannot {action} from a different WEBKNOSSOS instance. "
+            + f"Got {dataset2._context._url}, expected {dataset1._context._url}."
+        )
+
+
 class RemoteAccessMode(Enum):
     """Determines how data of a remote dataset is accessed. Note that DIRECT_PATH can only be used if the client has access to the underlying storage."""
 
@@ -955,6 +967,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def add_layer_as_ref(
         self,
         foreign_layer: Union[str, PathLike, UPath, "Layer", RemoteLayer],
+        *,
         new_layer_name: str | None = None,
     ) -> RemoteLayer:
         """Add a layer from another dataset by reference.
@@ -975,11 +988,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         Examples:
             ```
-            ds = RemoteDataset.open("my_dataset", "my_org_id")
-            remote_ds = RemoteDataset.open("other_dataset", "my_org_id")
-            new_layer = ds.add_layer_as_ref(
-                remote_ds.get_layer("color")
-            )
+            remote_ds = RemoteDataset.open("https://webknossos.org/datasets/...")
+            other_ds = RemoteDataset.open("https://webknossos.org/datasets/...")
+            new_layer = remote_ds.add_layer_as_ref(other_ds.get_layer("color"))
             ```
 
         Note:
@@ -1009,11 +1020,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             raise ValueError(
                 "Cannot add layer with the same origin dataset as foreign layer."
             )
-        if self._context._url != foreign_layer.dataset._context._url:
-            raise ValueError(
-                "Cannot add a layer from a different WEBKNOSSOS instance. "
-                + f"Got {foreign_layer.dataset._context._url}, expected {self._context._url}."
-            )
+        _assert_same_webknossos_instance(self, foreign_layer.dataset, "add a layer")
 
         from ..client.context import _get_api_client
 

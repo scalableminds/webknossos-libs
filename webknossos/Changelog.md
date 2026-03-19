@@ -18,6 +18,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Renamed `RemoteDataset.download` argument `bbox` to `bounding_box`. `bbox` is still available, but deprecated.  [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 
 ### Added
+- Added `RemoteDataset.add_layer_as_ref`, `RemoteLayer.add_mag_as_ref`, `RemoteAttachments.add_attachment_as_ref`, `RemoteAttachments.delete_attachment`, `RemoteAttachment.rename_attachment`, `Attachments.rename_attachments`. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
+- Added `extend_layer_bounding_box` kwarg with default `True` to `RemoteLayer.add_mag_as_copy`. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
 
 ### Changed
 - Removed the proxay request recording/replaying functionality. All requests in the tests are now sent directly to the local WEBKNOSSOS instance. [#1441](https://github.com/scalableminds/webknossos-libs/pull/1441)

@@ -3,7 +3,7 @@ from abc import abstractmethod
 from collections.abc import Iterator
 from os import PathLike
 from os.path import relpath
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeGuard
 
 import attr
 from upath import UPath
@@ -17,6 +17,7 @@ from .....utils import (
     snake_to_camel_case,
     warn_deprecated,
 )
+from ....remote_dataset import _assert_same_webknossos_instance
 from ....transfer_mode import TransferMode
 from .agglomerate_attachment import AgglomerateAttachment
 from .attachment import (
@@ -47,6 +48,14 @@ def _assert_absolute_path(path: str | PathLike | UPath) -> UPath:
     if not path.is_absolute():
         raise ValueError("Attachment paths must be absolute.")
     return path
+
+
+def _is_singleton_attachment(
+    attachment: Attachment,
+) -> TypeGuard[CumsumAttachment | SegmentIndexAttachment]:
+    return isinstance(attachment, CumsumAttachment) or isinstance(
+        attachment, SegmentIndexAttachment
+    )
 
 
 def _deprecated_add_method(
@@ -184,9 +193,7 @@ class AbstractAttachments:
     ) -> None:
         self._ensure_writable()
         container_name = attachment.container_name
-        if isinstance(attachment, CumsumAttachment) or isinstance(
-            attachment, SegmentIndexAttachment
-        ):
+        if _is_singleton_attachment(attachment):
             setattr(self._properties, container_name, attachment._properties)
         else:
             if any(a.name == attachment.name for a in getattr(self, container_name)):
@@ -216,9 +223,7 @@ class AbstractAttachments:
         new_attachment_properties = attr.evolve(attachment._properties, name=new_name)
 
         container_name = attachment.container_name
-        if isinstance(attachment, CumsumAttachment) or isinstance(
-            attachment, SegmentIndexAttachment
-        ):
+        if _is_singleton_attachment(attachment):
             if getattr(self, container_name) != attachment:
                 raise KeyError(
                     f"Attachment {attachment} is not part of {container_name}."
@@ -247,9 +252,7 @@ class AbstractAttachments:
     def delete_attachment(self, attachment: Attachment) -> None:
         self._ensure_writable()
         container_name = attachment.container_name
-        if isinstance(attachment, CumsumAttachment) or isinstance(
-            attachment, SegmentIndexAttachment
-        ):
+        if _is_singleton_attachment(attachment):
             if getattr(self, container_name) != attachment:
                 raise KeyError(
                     f"Attachment {attachment} is not part of {container_name}."
@@ -294,24 +297,23 @@ class RemoteAttachments(AbstractAttachments):
         else:
             _validate_name(new_name)
 
-        if self._layer.dataset._context._url != foreign_layer.dataset._context._url:
-            raise ValueError(
-                "Cannot add an attachment from a different WEBKNOSSOS instance. "
-                + f"Got {foreign_layer.dataset._context._url}, expected {self._layer.dataset._context._url}."
-            )
-
-        client = _get_api_client()
-        client.dataset_add_attachment(
-            dataset_id=self._layer.dataset.dataset_id,
-            compose_attachment=ApiDatasetComposeAttachment(
-                source_dataset_id=foreign_layer.dataset.dataset_id,
-                source_layer_name=foreign_layer.name,
-                target_layer_name=self._layer.name,
-                attachment_type=attachment.type_name,
-                source_attachment_name=attachment.name,
-                target_attachment_name=new_name,
-            ),
+        _assert_same_webknossos_instance(
+            self._layer.dataset, foreign_layer.dataset, "add an attachment"
         )
+
+        with self._layer.dataset._context:
+            client = _get_api_client()
+            client.dataset_add_attachment(
+                dataset_id=self._layer.dataset.dataset_id,
+                compose_attachment=ApiDatasetComposeAttachment(
+                    source_dataset_id=foreign_layer.dataset.dataset_id,
+                    source_layer_name=foreign_layer.name,
+                    target_layer_name=self._layer.name,
+                    attachment_type=attachment.type_name,
+                    source_attachment_name=attachment.name,
+                    target_attachment_name=new_name,
+                ),
+            )
         self._apply_server_properties()
 
         return self._get_attachment(type(attachment), new_name)

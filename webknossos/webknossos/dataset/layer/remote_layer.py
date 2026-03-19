@@ -14,6 +14,7 @@ from ...client.api_client.models import (
 )
 from ...geometry import Mag, MagLike, Vec3IntLike
 from ...utils import enrich_path
+from ..remote_dataset import _assert_same_webknossos_instance
 from ..transfer_mode import TransferMode
 from .abstract_layer import AbstractLayer, _validate_layer_name
 from .view import MagView, Zarr3Config
@@ -127,10 +128,20 @@ class RemoteLayer(AbstractLayer):
         mag: MagLike | None = None,
         extend_layer_bounding_box: bool = True,
     ) -> MagView["RemoteLayer"]:
-        """
-        Copies the data at `foreign_mag_view_or_path` which can belong to another remote dataset
-        to the current remote dataset. Additionally, the relevant information from the
-        `datasource-properties.json` of the other dataset are copied, too.
+        """Add a mag from another remote dataset by reference.
+
+        Creates a mag that references data from a foreign remote layer without copying it.
+
+        Args:
+            foreign_mag_view_or_path: Foreign mag to add (path or MagView object)
+            mag: Target mag level; uses the foreign mag level if None
+            extend_layer_bounding_box: If True, extends this layer's bounding box to include the foreign layer's bounding box
+
+        Returns:
+            MagView: The newly created mag view referencing the foreign data
+
+        Raises:
+            ValueError: If the foreign mag belongs to a local layer or a different WEBKNOSSOS instance
         """
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
@@ -139,11 +150,9 @@ class RemoteLayer(AbstractLayer):
                 f"Cannot add a local mag to a remote layer. Got {foreign_mag_view}."
             )
         foreign_layer = foreign_mag_view.layer
-        if self.dataset._context._url != foreign_layer.dataset._context._url:
-            raise ValueError(
-                "Cannot add a mag from a different WEBKNOSSOS instance. "
-                + f"Got {foreign_layer.dataset._context._url}, expected {self.dataset._context._url}."
-            )
+        _assert_same_webknossos_instance(
+            self.dataset, foreign_layer.dataset, "add a mag"
+        )
 
         if mag is None:
             mag = foreign_mag_view.mag
