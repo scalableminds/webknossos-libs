@@ -111,7 +111,7 @@ def local_test_wk() -> Iterator[None]:
     # wk_docker_tag = f"master__{wk_version}"
     wk_docker_tag = "remote_dataset_more_crud"
     os.environ["DOCKER_TAG"] = wk_docker_tag
-    os.environ["BINARY_DATA_DIR"] = str(Path("data") / "binaryData")
+    os.environ["BINARY_DATA_DIR"] = (Path("data") / "binaryData").resolve().as_posix()
     wk_docker_dir = Path("tests")
     tear_down_wk = False
 
