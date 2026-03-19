@@ -58,15 +58,16 @@ SegmentationLayerType = TypeVar(
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class LayerRenaming:
     old_name: str
     new_name: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class AttachmentRenaming:
     layer_name: str
+    attachment_type: str
     old_name: str
     new_name: str
 

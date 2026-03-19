@@ -372,6 +372,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     attachment_renamings.append(
                         ApiAttachmentRenaming(
                             layer_name=renaming.layer_name,
+                            attachment_type=renaming.attachment_type,
                             old_name=renaming.old_name,
                             new_name=renaming.new_name,
                         )

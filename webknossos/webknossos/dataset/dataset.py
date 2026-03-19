@@ -712,10 +712,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 folder_id=folder,
             )
 
-        # TODO: remove direct path access mode
-        return RemoteDataset.open(
-            dataset_id=new_dataset_id, access_mode=RemoteAccessMode.DIRECT_PATH
-        )
+        return RemoteDataset.open(dataset_id=new_dataset_id)
 
     def _transfer_dataset_items(
         self, data_source: DatasetProperties, transfer_mode: TransferMode

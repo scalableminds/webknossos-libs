@@ -509,6 +509,7 @@ class ApiLayerRenaming:
 @attr.s(auto_attribs=True)
 class ApiAttachmentRenaming:
     layer_name: str
+    attachment_type: str
     old_name: str
     new_name: str
 

@@ -68,6 +68,7 @@ class RemoteLayer(AbstractLayer):
         self,
         foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
+        extend_layer_bounding_box: bool = True,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
@@ -113,6 +114,10 @@ class RemoteLayer(AbstractLayer):
                 self._dataset.dataset_id, reserve_parameters
             )
         self._apply_server_layer_properties()
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
         return self.get_mag(foreign_mag_view.mag)
 
     def add_mag_as_ref(
@@ -380,7 +385,9 @@ class RemoteLayer(AbstractLayer):
         self.dataset._layers[layer_name] = self
         self._properties.name = layer_name
         self._name: str = layer_name
-        self._save_layer_properties(renamings=[LayerRenaming(old_name, layer_name)])
+        self._save_layer_properties(
+            renamings=[LayerRenaming(old_name=old_name, new_name=layer_name)]
+        )
 
     def _ensure_writable(self) -> None:
         if self.read_only:

@@ -5,6 +5,7 @@ from os import PathLike
 from os.path import relpath
 from typing import TYPE_CHECKING
 
+import attr
 from upath import UPath
 
 from .....dataset_properties import AttachmentDataFormat, AttachmentsProperties
@@ -207,6 +208,42 @@ class AbstractAttachments:
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         pass
 
+    def rename_attachment(self, attachment: Attachment, *, new_name: str) -> Attachment:
+        self._ensure_writable()
+
+        old_name = attachment.name
+        _validate_name(new_name)
+        new_attachment_properties = attr.evolve(attachment._properties, name=new_name)
+
+        container_name = attachment.container_name
+        if isinstance(attachment, CumsumAttachment) or isinstance(
+            attachment, SegmentIndexAttachment
+        ):
+            if getattr(self, container_name) != attachment:
+                raise KeyError(
+                    f"Attachment {attachment} is not part of {container_name}."
+                )
+            setattr(self._properties, container_name, new_attachment_properties)
+        else:
+            properties_container = getattr(self._properties, container_name)
+            properties_container[properties_container.index(attachment._properties)] = (
+                new_attachment_properties
+            )
+
+        from ....abstract_dataset import AttachmentRenaming
+
+        self._layer._save_layer_properties(
+            renamings=[
+                AttachmentRenaming(
+                    layer_name=self._layer.name,
+                    attachment_type=attachment.type_name,
+                    old_name=old_name,
+                    new_name=new_name,
+                )
+            ]
+        )
+        return self._get_attachment(type(attachment), new_name)
+
     def delete_attachment(self, attachment: Attachment) -> None:
         self._ensure_writable()
         container_name = attachment.container_name
@@ -241,19 +278,6 @@ class RemoteAttachments(AbstractAttachments):
     def _get_optional_dataset_path(self) -> UPath | None:
         return self._layer.dataset.zarr_streaming_path
 
-    def rename_attachment(self, attachment: Attachment, *, new_name: str) -> Attachment:
-        self._ensure_writable()
-
-        old_name = attachment.name
-        _validate_name(new_name)
-
-        from ....abstract_dataset import AttachmentRenaming
-
-        self._layer._save_layer_properties(
-            renamings=[AttachmentRenaming(self._layer.name, old_name, new_name)]
-        )
-        return self._get_attachment(type(attachment), new_name)
-
     def add_attachment_as_ref(
         self,
         attachment: Attachment,
@@ -280,7 +304,7 @@ class RemoteAttachments(AbstractAttachments):
         client.dataset_add_attachment(
             dataset_id=self._layer.dataset.dataset_id,
             compose_attachment=ApiDatasetComposeAttachment(
-                source_dataset_id=self._layer.dataset.dataset_id,
+                source_dataset_id=foreign_layer.dataset.dataset_id,
                 source_layer_name=foreign_layer.name,
                 target_layer_name=self._layer.name,
                 attachment_type=attachment.type_name,
@@ -459,10 +483,12 @@ class Attachments(AbstractAttachments):
         warn_deprecated("add_attachments", "add_attachment_as_ref")
         return [self.add_attachment_as_ref(attachment) for attachment in other]
 
-    def add_attachment_as_ref(self, attachment: Attachment) -> Attachment:
+    def add_attachment_as_ref(
+        self, attachment: Attachment, *, new_name: str | None = None
+    ) -> Attachment:
         new_attachment = type(attachment).from_path_and_name(
             cheap_resolve(attachment.path),
-            attachment.name,
+            new_name if new_name is not None else attachment.name,
             data_format=attachment.data_format,
             dataset_path=self._get_optional_dataset_path(),
         )
