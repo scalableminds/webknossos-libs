@@ -194,7 +194,7 @@ indent-style = "space"
 line-ending = "auto"
 
 [tool.pytest.ini_options]
-markers = ["use_proxay: Runs with a proxay instance recording/replaying http responses", "serial"]
+markers = ["skip_on_windows: Skip this test on Windows"]
 testpaths = ["tests"]
 
 [build-system]
