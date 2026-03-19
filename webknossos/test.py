@@ -105,10 +105,11 @@ def local_test_wk() -> Iterator[None]:
     check_and_clean_datasets_folder()
 
     # Fetch current version of webknossos.org this can be replaced with a fixed version for testing
-    wk_version = requests.get(
-        f"https://webknossos.org/api/v{WK_API_VERSION}/buildinfo"
-    ).json()["webknossos"]["version"]
-    wk_docker_tag = f"master__{wk_version}"
+    # wk_version = requests.get(
+    #     f"https://webknossos.org/api/v{WK_API_VERSION}/buildinfo"
+    # ).json()["webknossos"]["version"]
+    # wk_docker_tag = f"master__{wk_version}"
+    wk_docker_tag = "remote_dataset_more_crud"
     os.environ["DOCKER_TAG"] = wk_docker_tag
     wk_docker_dir = Path("tests")
     tear_down_wk = False
