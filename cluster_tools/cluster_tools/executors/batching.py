@@ -1,4 +1,3 @@
-import threading
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, as_completed
 from functools import partial
@@ -70,21 +69,13 @@ class BatchingExecutor:
         for batch_future, batch in zip(batch_futures, batches):
             item_futures: list[Future[_T]] = [Future() for _ in batch]
             all_item_futures.extend(item_futures)
-
-            def resolve(
-                bf: Future[list[_T]], ifs: list[Future[_T]] = item_futures
-            ) -> None:
-                try:
-                    results = bf.result()
-                    for f, r in zip(ifs, results):
-                        f.set_result(r)
-                except Exception as e:
-                    for f in ifs:
-                        if not f.done():
-                            f.set_exception(e)
-
-            t = threading.Thread(target=resolve, args=(batch_future,), daemon=True)
-            t.start()
+            try:
+                results = batch_future.result()
+                for f, r in zip(item_futures, results):
+                    f.set_result(r)
+            except Exception as e:
+                for f in item_futures:
+                    f.set_exception(e)
 
         return all_item_futures
 
