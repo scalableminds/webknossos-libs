@@ -89,4 +89,6 @@ def test_map_to_futures_empty() -> None:
 def test_map_to_futures_output_pickle_path_getter_raises() -> None:
     with BatchingExecutor(SequentialExecutor(), batch_size=3) as executor:
         with pytest.raises(NotImplementedError):
-            executor.map_to_futures(double, [1], output_pickle_path_getter=lambda _: Path("/tmp/x"))
+            executor.map_to_futures(
+                double, [1], output_pickle_path_getter=lambda _: Path("/tmp/x")
+            )
