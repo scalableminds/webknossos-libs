@@ -2,6 +2,7 @@ from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, as_completed
 from functools import partial
 from os import PathLike
+from types import TracebackType
 from typing import TypeVar
 
 from typing_extensions import ParamSpec
@@ -31,8 +32,13 @@ class BatchingExecutor:
         self._executor.__enter__()
         return self
 
-    def __exit__(self, *args: object) -> None:
-        self._executor.__exit__(*args)
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self._executor.__exit__(exc_type, exc_val, exc_tb)
 
     @classmethod
     def as_completed(cls, futures: list[Future[_T]]) -> Iterator[Future[_T]]:

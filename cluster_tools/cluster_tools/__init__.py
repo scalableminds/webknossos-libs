@@ -1,7 +1,7 @@
 from typing import Any, Literal, overload
 
 from cluster_tools.executor_protocol import Executor
-from cluster_tools.executors.batching import BatchingExecutor
+from cluster_tools.executors.batching import BatchingExecutor as BatchingExecutor
 from cluster_tools.executors.dask import DaskExecutor
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 from cluster_tools.executors.multiprocessing_pickle import MultiprocessingPickleExecutor
