@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -10,14 +11,6 @@ from cluster_tools.executors.sequential import SequentialExecutor
 
 def double(x: int) -> int:
     return x * 2
-
-
-def record_and_double(args: tuple[list[int], list[int]]) -> list[int]:
-    """Worker function that records batch sizes and returns doubled values.
-    Used for multiprocessing tests where closures cannot be pickled."""
-    batch, seen = args
-    seen += [len(batch)]
-    return [x * 2 for x in batch]
 
 
 @pytest.fixture(params=["sequential", "multiprocessing"])
@@ -52,25 +45,22 @@ def test_map_empty() -> None:
 
 
 def test_map_calls_inner_with_batches() -> None:
-    """Verify the inner executor receives lists of batch_size, not individual items."""
-    batch_sizes_seen: list[int] = []
+    """Verify the inner executor receives batches, not individual items."""
+    inner = SequentialExecutor()
+    received_batches: list[list[int]] = []
+    original_map = inner.map
 
-    def record_batch(batch: list[int]) -> list[int]:
-        batch_sizes_seen.append(len(batch))
-        return [x * 2 for x in batch]
+    def spy(fn, iterables, **kwargs):  # type: ignore[no-untyped-def]
+        batches = list(iterables)
+        received_batches.extend(batches)
+        return original_map(fn, iter(batches), **kwargs)
 
-    with BatchingExecutor(SequentialExecutor(), batch_size=3) as executor:
-        results = list(executor.map(double, range(7)))
+    with patch.object(inner, "map", side_effect=spy):
+        with BatchingExecutor(inner, batch_size=3) as executor:
+            results = list(executor.map(double, range(7)))
 
     assert results == [0, 2, 4, 6, 8, 10, 12]
-
-    # Verify batching independently
-    batch_sizes_seen.clear()
-    items = list(range(7))
-    batches = [items[i : i + 3] for i in range(0, len(items), 3)]
-    with SequentialExecutor() as seq:
-        list(seq.map(record_batch, batches))
-    assert batch_sizes_seen == [3, 3, 1]
+    assert received_batches == [[0, 1, 2], [3, 4, 5], [6]]
 
 
 def test_map_to_futures(inner_executor: cluster_tools.Executor) -> None:
@@ -84,6 +74,12 @@ def test_map_to_futures_empty() -> None:
     with BatchingExecutor(SequentialExecutor(), batch_size=3) as executor:
         futures = executor.map_to_futures(double, [])
     assert futures == []
+
+
+def test_map_chunksize_raises() -> None:
+    with BatchingExecutor(SequentialExecutor(), batch_size=3) as executor:
+        with pytest.raises(ValueError):
+            list(executor.map(double, [1, 2, 3], chunksize=2))
 
 
 def test_map_to_futures_output_pickle_path_getter_raises() -> None:

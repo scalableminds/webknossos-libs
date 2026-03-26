@@ -2,6 +2,7 @@ import threading
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, as_completed
 from functools import partial
+from itertools import islice
 from os import PathLike
 from types import TracebackType
 from typing import TypeVar
@@ -17,6 +18,12 @@ _P = ParamSpec("_P")
 
 def _apply_fn_to_batch(fn: Callable, batch: list) -> list:
     return [fn(item) for item in batch]
+
+
+def _iter_batches(iterable: Iterable[_S], batch_size: int) -> Iterator[list[_S]]:
+    it = iter(iterable)
+    while batch := list(islice(it, batch_size)):
+        yield batch
 
 
 class BatchingExecutor:
@@ -65,17 +72,15 @@ class BatchingExecutor:
                 "BatchingExecutor does not support output_pickle_path_getter"
             )
 
-        items = list(args)
-        batches = [
-            items[i : i + self.batch_size]
-            for i in range(0, len(items), self.batch_size)
-        ]
+        batches = list(_iter_batches(args, self.batch_size))
 
         batch_futures = self._executor.map_to_futures(
             partial(_apply_fn_to_batch, fn), batches
         )
 
-        all_item_futures: list[Future[_T]] = [Future() for _ in items]
+        all_item_futures: list[Future[_T]] = [
+            Future() for batch in batches for _ in batch
+        ]
 
         def resolve_all() -> None:
             offset = 0
@@ -100,18 +105,16 @@ class BatchingExecutor:
         timeout: float | None = None,
         chunksize: int | None = None,
     ) -> Iterator[_T]:
-        items = list(iterables)
-        batches = [
-            items[i : i + self.batch_size]
-            for i in range(0, len(items), self.batch_size)
-        ]
+        if chunksize is not None:
+            raise ValueError(
+                "BatchingExecutor does not support chunksize. Use batch_size instead."
+            )
 
         def result_generator() -> Iterator[_T]:
             for batch_results in self._executor.map(
                 partial(_apply_fn_to_batch, fn),
-                batches,
+                _iter_batches(iterables, self.batch_size),
                 timeout=timeout,
-                chunksize=chunksize,
             ):
                 yield from batch_results
 
