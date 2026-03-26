@@ -1,6 +1,7 @@
 from typing import Any, Literal, overload
 
 from cluster_tools.executor_protocol import Executor
+from cluster_tools.executors.batching import BatchingExecutor
 from cluster_tools.executors.dask import DaskExecutor
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 from cluster_tools.executors.multiprocessing_pickle import MultiprocessingPickleExecutor
@@ -88,6 +89,12 @@ def get_executor(
 
 @overload
 def get_executor(
+    environment: Literal["batching"], **kwargs: Any
+) -> BatchingExecutor: ...
+
+
+@overload
+def get_executor(
     environment: Literal["sequential_with_pickling"], **kwargs: Any
 ) -> SequentialPickleExecutor: ...
 
@@ -113,6 +120,22 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
         return MultiprocessingExecutor(**kwargs)
     elif environment == "sequential":
         return SequentialExecutor(**kwargs)
+    elif environment == "batching":
+        executor_config = kwargs.get("executor")
+        if not isinstance(executor_config, dict):
+            raise ValueError(
+                "The 'batching' executor requires a nested 'executor' config."
+            )
+
+        inner_executor_config = executor_config.copy()
+        name = inner_executor_config.pop("name", None)
+        if name is None:
+            raise ValueError(
+                "The 'batching' executor's nested 'executor' config requires a 'name' key."
+            )
+
+        inner_executor = get_executor(name, **inner_executor_config)
+        return BatchingExecutor(inner_executor, batch_size=kwargs.get("batch_size", 1))
     elif environment == "sequential_with_pickling":
         return SequentialPickleExecutor(**kwargs)
     elif environment == "multiprocessing_with_pickling":
