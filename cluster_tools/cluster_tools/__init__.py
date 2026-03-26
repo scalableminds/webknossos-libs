@@ -121,7 +121,16 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
     elif environment == "sequential":
         return SequentialExecutor(**kwargs)
     elif environment == "batching":
-        inner_executor = get_executor(kwargs["executor"]["name"], **kwargs["executor"])
+        executor_config = kwargs.get("executor")
+        if not isinstance(executor_config, dict):
+            raise ValueError("The 'batching' executor requires a nested 'executor' config.")
+
+        inner_executor_config = executor_config.copy()
+        name = inner_executor_config.pop("name", None)
+        if name is None:
+            raise ValueError("The 'batching' executor's nested 'executor' config requires a 'name' key.")
+
+        inner_executor = get_executor(name, **inner_executor_config)
         return BatchingExecutor(inner_executor, batch_size=kwargs.get("batch_size", 1))
     elif environment == "sequential_with_pickling":
         return SequentialPickleExecutor(**kwargs)
