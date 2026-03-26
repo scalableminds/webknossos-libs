@@ -72,21 +72,22 @@ class BatchingExecutor:
                 "BatchingExecutor does not support output_pickle_path_getter"
             )
 
-        batches = list(_iter_batches(args, self.batch_size))
+        all_item_futures: list[Future[_T]] = []
+        batch_jobs: list[tuple[Future[list[_T]], int]] = []
 
-        batch_futures = self._executor.map_to_futures(
-            partial(_apply_fn_to_batch, fn), batches
-        )
-
-        all_item_futures: list[Future[_T]] = [
-            Future() for batch in batches for _ in batch
-        ]
+        for batch in _iter_batches(args, self.batch_size):
+            (batch_future,) = self._executor.map_to_futures(
+                partial(_apply_fn_to_batch, fn), [batch]
+            )
+            item_futures: list[Future[_T]] = [Future() for _ in batch]
+            all_item_futures.extend(item_futures)
+            batch_jobs.append((batch_future, len(batch)))
 
         def resolve_all() -> None:
             offset = 0
-            for batch_future, batch in zip(batch_futures, batches):
-                item_futures = all_item_futures[offset : offset + len(batch)]
-                offset += len(batch)
+            for batch_future, size in batch_jobs:
+                item_futures = all_item_futures[offset : offset + size]
+                offset += size
                 try:
                     results = batch_future.result()
                     for f, r in zip(item_futures, results):
