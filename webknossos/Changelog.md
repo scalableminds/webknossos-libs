@@ -20,9 +20,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- Rewritten the chunking of the tiff conversion. A non-user facing change. [#1440](https://github.com/scalableminds/webknossos-libs/pull/1440)
 - Removed the proxay request recording/replaying functionality. All requests in the tests are now sent directly to the local WEBKNOSSOS instance. [#1441](https://github.com/scalableminds/webknossos-libs/pull/1441)
 
 ### Fixed
+
 
 
 ## [3.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.4) - 2026-03-17

@@ -2,6 +2,7 @@ import json
 import warnings
 from collections.abc import Iterator
 from shutil import copytree
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -12,6 +13,7 @@ from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset, RemoteDataset
+from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
 from webknossos.geometry import Vec3Int, VecInt
 
 
@@ -47,7 +49,7 @@ def test_compare_tifffile(tmp_upath: UPath) -> None:
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
-def test_ZCYX(tmp_upath: UPath) -> None:
+def test_ZCYX_tiff(tmp_upath: UPath) -> None:
     # Y > X is required to expose the bug: with Y <= X the wrong indexing silently
     # broadcasts channel-0 data into all channels instead of raising an error.
     data = np.random.randint(0, 1000, (5, 4, 7, 6), dtype="uint16")
@@ -68,6 +70,45 @@ def test_ZCYX(tmp_upath: UPath) -> None:
         )
     assert len(ds.layers) == 4
     assert ds.get_color_layers()[0].bounding_box.size == Vec3Int(x=6, y=7, z=5)
+
+
+def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
+    import tifffile as tifffile_module
+
+    C, Z, Y, X = 3, 2, 32, 32
+    tile = (16, 16)
+    data = np.arange(C * Z * Y * X, dtype="uint16").reshape(C, Z, Y, X)
+    tif_path = tmp_upath / "test_tiled_CZYX.tif"
+    imwrite(str(tif_path), data, tile=tile, metadata={"axes": "CZYX"})
+
+    assert TiffFile(str(tif_path)).series[0].axes == "CZYX"
+    first_page = TiffFile(str(tif_path)).pages[0]
+    assert isinstance(first_page, tifffile_module.TiffPage)
+    assert first_page.is_tiled
+    assert first_page.chunks == tile
+
+    # Verify that reading z=0 only accesses the C pages for z=0, not pages from other z-slices.
+    # With CZYX ordering (C=3, Z=2) pages are laid out as: c=0→[pg0,pg1], c=1→[pg2,pg3], c=2→[pg4,pg5]
+    # so z=0 corresponds to pages 0, 2, 4 and z=1 to pages 1, 3, 5.
+    reader = PimsTiffReader(tif_path)
+    reader.bundle_axes = ["c", "y", "x"]
+    reader.iter_axes = ["z"]
+
+    pages_read: list[int] = []
+    original_asarray = tifffile_module.TiffPage.asarray
+
+    def tracking_asarray(self: tifffile_module.TiffPage, **kwargs: Any) -> np.ndarray:
+        pages_read.append(self.index)
+        return original_asarray(self, **kwargs)
+
+    with patch.object(tifffile_module.TiffPage, "asarray", tracking_asarray):
+        frame_z0 = np.array(reader[0])
+
+    assert pages_read == [0, 2, 4], (
+        f"Expected pages [0, 2, 4] for z=0, got {pages_read}"
+    )
+    assert frame_z0.shape == (C, Y, X)
+    np.testing.assert_array_equal(frame_z0, data[:, 0, :, :])
 
 
 def test_multiple_multitiffs(tmp_upath: UPath) -> None:
