@@ -6,7 +6,7 @@ from webknossos.client.context import (
     webknossos_context,
 )
 
-pytestmark = [pytest.mark.use_proxay]
+pytestmark = [pytest.mark.skip_on_windows]
 
 
 @pytest.fixture

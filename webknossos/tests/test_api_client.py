@@ -5,7 +5,7 @@ from webknossos.client.api_client.models import ApiDataStore
 from webknossos.client.context import _get_api_client
 from webknossos.dataset_properties import DatasetProperties
 
-pytestmark = [pytest.mark.use_proxay]
+pytestmark = [pytest.mark.skip_on_windows]
 
 DATASTORE_URL = "http://localhost:9000"
 
