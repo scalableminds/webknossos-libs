@@ -98,7 +98,7 @@ all = [
 [dependency-groups]
 dev = [
     "coverage>=7.8.0",
-    "fsspec ~=2024.6.0",
+    "fsspec >=2024.6.0",
     "hypothesis ~=6.35.0",
     "icecream ~=2.1.1",
     "inducoapi ~=2.0.2",
