@@ -16,11 +16,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Renamed the existing `webknossos.proofreading.agglomerate_graph.AgglomerateGraph` to `webknossos.proofreading.agglomerate_graph_data.AgglomerateGraphData`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 - Renamed the  `Annotation.get_agglomerate_graph` to `Annotation.get_agglomerate_graph_data`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 - Renamed `RemoteDataset.download` argument `bbox` to `bounding_box`. `bbox` is still available, but deprecated.  [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
+- Moved the `s3fs` dependency to an optional extra. Install with `webknossos[s3]` or `webknossos[all]`. [#1443](https://github.com/scalableminds/webknossos-libs/pull/1443)
 
 ### Added
 
 ### Changed
 - Removed the proxay request recording/replaying functionality. All requests in the tests are now sent directly to the local WEBKNOSSOS instance. [#1441](https://github.com/scalableminds/webknossos-libs/pull/1441)
+- Set more comfortable retries for s3 connections. [#1443](https://github.com/scalableminds/webknossos-libs/pull/1443)
 
 ### Fixed
 

@@ -524,6 +524,44 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
     return False
 
 
+@functools.lru_cache(maxsize=1)
+def _set_s3fs_retry_settings() -> None:
+    import s3fs
+    from botocore.exceptions import ClientError, ConnectionClosedError
+
+    s3fs_logger = logging.getLogger("s3fs")
+    s3fs.S3FileSystem.read_timeout = 60
+    s3fs.S3FileSystem.connect_timeout = 30
+    s3fs.S3FileSystem.retries = 10
+
+    def custom_s3fs_error_handler(exception: Exception) -> bool:
+        if isinstance(exception, ClientError):
+            # don't retry 404 errors
+            if "Not Found" in str(exception):
+                return False
+
+            # otherwise retry all other ClientErrors
+            s3fs_logger.warning(
+                f"Retrying unexpected ClientError: {exception}",
+                exc_info=exception,
+                stack_info=True,
+            )
+            return True
+
+        if isinstance(exception, OSError):
+            s3fs_logger.warning(
+                f"Retrying unexpected OSError: {exception}",
+                exc_info=exception,
+                stack_info=True,
+            )
+            return True
+
+        return False
+
+    s3fs.add_retryable_error(ConnectionClosedError)
+    s3fs.set_custom_error_handler(custom_s3fs_error_handler)
+
+
 def enrich_path(
     path: str | PathLike | UPath, dataset_path: UPath | None = None
 ) -> UPath:
@@ -542,6 +580,8 @@ def enrich_path(
         )
 
     elif upath.protocol == "s3":
+        _set_s3fs_retry_settings()
+
         if upath.storage_options.get("endpoint_url") is not None:
             return upath
         parsed_url = urlparse(str(upath))
