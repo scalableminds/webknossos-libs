@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Renamed `RemoteDataset.download` argument `bbox` to `bounding_box`. `bbox` is still available, but deprecated.  [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 
 ### Added
+- Added `isVisible` attribute to `Skeleton.Tree` [#1442](https://github.com/scalableminds/webknossos-libs/pull/1442)
 
 ### Changed
 - Removed the proxay request recording/replaying functionality. All requests in the tests are now sent directly to the local WEBKNOSSOS instance. [#1441](https://github.com/scalableminds/webknossos-libs/pull/1441)
