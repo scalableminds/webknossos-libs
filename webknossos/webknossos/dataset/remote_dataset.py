@@ -309,6 +309,22 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
                 )
 
+    def reopen(self, *, access_mode: RemoteAccessMode) -> "RemoteDataset":
+        """Reopens the dataset in the specified access mode.
+
+        Args:
+            access_mode: The access mode to reopen the dataset in.
+
+        Returns:
+            The reopened dataset.
+        """
+        with self._context:
+            return RemoteDataset.open(
+                dataset_id=self.dataset_id,
+                annotation_id_or_url=self.annotation_id,
+                access_mode=access_mode,
+            )
+
     def _initialize_layer_from_properties(
         self, properties: "LayerProperties", read_only: bool
     ) -> RemoteLayer:

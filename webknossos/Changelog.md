@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - Added `RemoteDataset.add_layer_as_ref`, `RemoteLayer.add_mag_as_ref`, `RemoteAttachments.add_attachment_as_ref`, `RemoteAttachments.delete_attachment`, `RemoteAttachment.rename_attachment`, `Attachments.rename_attachments`. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
 - Added `extend_layer_bounding_box` kwarg with default `True` to `RemoteLayer.add_mag_as_copy`. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
+- Added `RemoteDataset.reopen` method to allow reopening with a different access mode. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
 - Added `isVisible` attribute to `Skeleton.Tree` [#1442](https://github.com/scalableminds/webknossos-libs/pull/1442)
 
 ### Changed

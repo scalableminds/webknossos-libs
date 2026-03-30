@@ -77,10 +77,7 @@ def attach_agglomerate(seg_layer: SegmentationLayer) -> None:
 
 
 def reopen_dataset(dataset: RemoteDataset) -> RemoteDataset:
-    return RemoteDataset.open(
-        dataset_id=dataset.dataset_id,
-        access_mode=RemoteAccessMode.DIRECT_PATH,
-    )
+    return dataset.reopen(access_mode=RemoteAccessMode.DIRECT_PATH)
 
 
 @pytest.fixture(scope="module")
