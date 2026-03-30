@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Moved the `s3fs` dependency to an optional extra. Install with `webknossos[s3]` or `webknossos[all]`. [#1443](https://github.com/scalableminds/webknossos-libs/pull/1443)
 
 ### Added
+- Added `isVisible` attribute to `Skeleton.Tree` [#1442](https://github.com/scalableminds/webknossos-libs/pull/1442)
 
 ### Changed
 - Removed the proxay request recording/replaying functionality. All requests in the tests are now sent directly to the local WEBKNOSSOS instance. [#1441](https://github.com/scalableminds/webknossos-libs/pull/1441)
