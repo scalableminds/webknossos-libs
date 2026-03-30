@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Removed the proxay request recording/replaying functionality. All requests in the tests are now sent directly to the local WEBKNOSSOS instance. [#1441](https://github.com/scalableminds/webknossos-libs/pull/1441)
+- Swapped out `pims` for our fork `scm-pims`, which fixes issues with skimage. A non-user facing change. [#1445](https://github.com/scalableminds/webknossos-libs/pull/1445)
 
 ### Fixed
 
