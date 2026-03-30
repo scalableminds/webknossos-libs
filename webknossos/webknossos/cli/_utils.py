@@ -4,6 +4,7 @@ import re
 from collections.abc import Iterator
 from contextlib import contextmanager
 from enum import Enum
+from functools import lru_cache
 from os import environ
 from typing import NamedTuple
 from urllib.parse import urlparse
@@ -19,7 +20,7 @@ from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_U
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import is_fs_path
+from ..utils import is_fs_path, set_s3fs_retry_settings
 
 
 class VoxelSizeTuple(NamedTuple):
@@ -79,6 +80,11 @@ class Order(str, Enum):
 
     C = "C"
     F = "F"
+
+
+@lru_cache(maxsize=1)
+def _set_s3fs_retry_settings() -> None:
+    set_s3fs_retry_settings()
 
 
 def parse_mag(mag_str: str) -> Mag:
@@ -201,11 +207,14 @@ def parse_path(value: str) -> UPath:
             value,
             auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
         )
-    if value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
-        return UPath(
-            value,
-            endpoint_url=environ["S3_ENDPOINT_URL"],
-        )
+    if value.startswith("s3://"):
+        _set_s3fs_retry_settings()
+
+        if "S3_ENDPOINT_URL" in environ:
+            return UPath(
+                value,
+                endpoint_url=environ["S3_ENDPOINT_URL"],
+            )
 
     return UPath(value)
 
