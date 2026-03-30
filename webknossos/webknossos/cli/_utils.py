@@ -4,6 +4,7 @@ import re
 from collections.abc import Iterator
 from contextlib import contextmanager
 from enum import Enum
+from functools import lru_cache
 from os import environ
 from typing import NamedTuple
 from urllib.parse import urlparse
@@ -79,6 +80,11 @@ class Order(str, Enum):
 
     C = "C"
     F = "F"
+
+
+@lru_cache(maxsize=1)
+def _set_s3fs_retry_settings() -> None:
+    set_s3fs_retry_settings()
 
 
 def parse_mag(mag_str: str) -> Mag:
@@ -202,7 +208,7 @@ def parse_path(value: str) -> UPath:
             auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
         )
     if value.startswith("s3://"):
-        set_s3fs_retry_settings()
+        _set_s3fs_retry_settings()
 
         if "S3_ENDPOINT_URL" in environ:
             return UPath(

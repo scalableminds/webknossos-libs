@@ -524,15 +524,16 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
     return False
 
 
-@functools.lru_cache(maxsize=1)
-def set_s3fs_retry_settings() -> None:
+def set_s3fs_retry_settings(
+    *, read_timeout: int = 60, connect_timeout: int = 30, retries: int = 10
+) -> None:
     import s3fs
     from botocore.exceptions import ClientError, ConnectionClosedError
 
     s3fs_logger = logging.getLogger("s3fs")
-    s3fs.S3FileSystem.read_timeout = 60
-    s3fs.S3FileSystem.connect_timeout = 30
-    s3fs.S3FileSystem.retries = 10
+    s3fs.S3FileSystem.read_timeout = read_timeout
+    s3fs.S3FileSystem.connect_timeout = connect_timeout
+    s3fs.S3FileSystem.retries = retries
 
     def custom_s3fs_error_handler(exception: Exception) -> bool:
         if isinstance(exception, ClientError):
