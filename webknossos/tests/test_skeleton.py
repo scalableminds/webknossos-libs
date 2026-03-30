@@ -281,17 +281,17 @@ def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
     <experiment name="ds_name" />
     <scale unit="nanometer" x="0.5" y="0.5" z="0.5" />
   </parameters>
-  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="3" name="my_other_tree">
+  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="3" isVisible="true" name="my_other_tree">
     <nodes />
     <edges />
     <metadata />
   </thing>
-  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" id="4" name="top_level_tree">
+  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" id="4" isVisible="true" name="top_level_tree">
     <nodes />
     <edges />
     <metadata />
   </thing>
-  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="9" name="my_tree">
+  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="9" isVisible="true" name="my_tree">
     <nodes>
       <node id="2" x="2.0" y="4.0" z="6.0" />
     </nodes>
@@ -459,6 +459,47 @@ def test_add_tree_with_group() -> None:
     skeleton_a = create_dummy_skeleton()
 
     skeleton_a.add_tree(tree)
+
+
+def test_is_visible(tmp_upath: UPath) -> None:
+    skeleton = wk.Skeleton(dataset_name="test", voxel_size=(1, 1, 1))
+
+    # Default is visible
+    tree_visible = skeleton.add_tree("visible_tree")
+    assert tree_visible.is_visible
+
+    # Explicit False
+    tree_hidden = skeleton.add_tree("hidden_tree", is_visible=False)
+    assert not tree_hidden.is_visible
+
+    # Trees with different is_visible are not equal
+    assert tree_visible != tree_hidden
+
+    # NML round-trip preserves is_visible=False
+    nml_path = tmp_upath / "is_visible_test.nml"
+    skeleton.add_tree("visible_tree_2", is_visible=True)
+    skeleton.save(nml_path)
+    loaded = wk.Skeleton.load(nml_path)
+
+    loaded_trees = {t.name: t for t in loaded.flattened_trees()}
+    assert loaded_trees["visible_tree"].is_visible
+    assert not loaded_trees["hidden_tree"].is_visible
+    assert loaded_trees["visible_tree_2"].is_visible
+
+    # Loading NML without isVisible attribute defaults to True
+    nml_without_is_visible = tmp_upath / "no_is_visible.nml"
+    nml_without_is_visible.write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        "<things>\n"
+        '  <parameters><experiment name="test" /><scale x="1.0" y="1.0" z="1.0" /></parameters>\n'
+        '  <thing color.a="1.0" color.b="0.0" color.g="0.0" color.r="1.0" id="1" name="legacy_tree">\n'
+        "    <nodes /><edges /><metadata />\n"
+        "  </thing>\n"
+        "  <branchpoints /><comments /><groups />\n"
+        "</things>\n"
+    )
+    loaded_legacy = wk.Skeleton.load(nml_without_is_visible)
+    assert loaded_legacy.get_tree_by_id(1).is_visible
 
 
 def test_behave_like_nx_graph() -> None:
