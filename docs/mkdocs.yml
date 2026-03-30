@@ -197,6 +197,7 @@ nav:
         - Concepts: webknossos/tasks_projects/concepts.md
         - Tasks: webknossos/tasks_projects/tasks.md
         - Projects: webknossos/tasks_projects/projects.md
+        - Scripts: webknossos/tasks_projects/scripts.md
       - Collaboration and sharing:
         - webknossos/sharing/index.md
         - Annotation Sharing: webknossos/sharing/annotation_sharing.md
