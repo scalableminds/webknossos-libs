@@ -525,7 +525,7 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
 
 
 @functools.lru_cache(maxsize=1)
-def _set_s3fs_retry_settings() -> None:
+def set_s3fs_retry_settings() -> None:
     import s3fs
     from botocore.exceptions import ClientError, ConnectionClosedError
 
@@ -580,8 +580,6 @@ def enrich_path(
         )
 
     elif upath.protocol == "s3":
-        _set_s3fs_retry_settings()
-
         if upath.storage_options.get("endpoint_url") is not None:
             return upath
         parsed_url = urlparse(str(upath))

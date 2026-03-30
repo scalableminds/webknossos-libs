@@ -19,7 +19,7 @@ from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_U
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import is_fs_path
+from ..utils import is_fs_path, set_s3fs_retry_settings
 
 
 class VoxelSizeTuple(NamedTuple):
@@ -201,11 +201,14 @@ def parse_path(value: str) -> UPath:
             value,
             auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
         )
-    if value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
-        return UPath(
-            value,
-            endpoint_url=environ["S3_ENDPOINT_URL"],
-        )
+    if value.startswith("s3://"):
+        set_s3fs_retry_settings()
+
+        if "S3_ENDPOINT_URL" in environ:
+            return UPath(
+                value,
+                endpoint_url=environ["S3_ENDPOINT_URL"],
+            )
 
     return UPath(value)
 
