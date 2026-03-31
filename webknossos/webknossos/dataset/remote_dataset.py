@@ -1355,7 +1355,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        use_bioformats: bool | None = None,
+        use_bioformats: bool = False,
         max_layers: int = 20,
         batch_size: int | None = None,
         executor: Executor | None = None,
@@ -1387,7 +1387,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             flip_x: Whether to flip the x axis
             flip_y: Whether to flip the y axis
             flip_z: Whether to flip the z axis
-            use_bioformats: Whether to use bioformats for reading
+            use_bioformats: Whether to use bioformats for reading, defaults to False
             max_layers: Maximum number of layers to create
             batch_size: Size of batches for processing
             executor: Optional executor for parallelization

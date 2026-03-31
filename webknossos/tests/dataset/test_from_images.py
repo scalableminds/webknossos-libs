@@ -179,6 +179,7 @@ def test_from_dicom_images(tmp_upath: UPath) -> None:
         TESTDATA_DIR / "dicoms",
         tmp_upath,
         (1, 1, 1),
+        use_bioformats=True,
     )
     assert len(ds.layers) == 1
     assert "dicoms" in ds.layers
