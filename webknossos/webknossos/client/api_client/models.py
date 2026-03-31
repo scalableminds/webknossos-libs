@@ -3,7 +3,6 @@ from typing import Any, Literal
 import attr
 
 from webknossos.dataset_properties import DatasetProperties
-from webknossos.geometry import Vec3Int
 
 # Request and response bodies for wk/datastore routes
 # Should contain only the fields that are actually used by the python libs
@@ -57,7 +56,7 @@ class ApiTeamAdd:
 
 @attr.s(auto_attribs=True)
 class ApiBoundingBox:
-    top_left: Vec3Int
+    top_left: tuple[int, int, int]
     width: int
     height: int
     depth: int
@@ -76,7 +75,7 @@ class ApiDataLayer:
     category: str
     element_class: str
     bounding_box: ApiBoundingBox
-    resolutions: list[Vec3Int]
+    resolutions: list[tuple[int, int, int]]
     additional_axes: list[ApiAdditionalAxis] | None = None
     largest_segment_id: int | None = None
     default_view_configuration: dict[str, Any] | None = None
@@ -183,8 +182,8 @@ class ApiDatasetComposeMag:
     source_dataset_id: str
     source_layer_name: str
     target_layer_name: str
-    source_mag: Vec3Int
-    target_mag: Vec3Int
+    source_mag: tuple[int, int, int]
+    target_mag: tuple[int, int, int]
 
 
 @attr.s(auto_attribs=True)
@@ -259,7 +258,7 @@ class ApiTask:
     type: ApiTaskType
     needed_experience: ApiExperience
     bounding_box: ApiBoundingBox | None
-    edit_position: Vec3Int
+    edit_position: tuple[int, int, int]
     edit_rotation: tuple[float, float, float]
     script: ApiScript | None = None
 
@@ -283,7 +282,7 @@ class ApiTaskParameters:
     script_id: str | None
     bounding_box: ApiBoundingBox | None
     dataset_id: str
-    edit_position: Vec3Int
+    edit_position: tuple[int, int, int]
     edit_rotation: tuple[float, float, float]
 
 
@@ -450,8 +449,8 @@ class ApiAdHocMeshInfo:
     segment_id: int  # if mapping name is set, this is an agglomerate id
     mapping_name: str | None
     mapping_type: Literal["json", "agglomerate"] | None
-    mag: Vec3Int
-    seed_position: Vec3Int
+    mag: tuple[int, int, int]
+    seed_position: tuple[int, int, int]
 
 
 @attr.s(auto_attribs=True)

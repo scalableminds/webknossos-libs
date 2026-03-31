@@ -164,7 +164,7 @@ class RemoteLayer(AbstractLayer):
 
         with self._dataset._context:
             client = _get_api_client()
-            client.dataset_add_mag(
+            client.dataset_add_mag_as_ref(
                 dataset_id=self._dataset.dataset_id,
                 compose_mag=ApiDatasetComposeMag(
                     source_dataset_id=foreign_layer.dataset.dataset_id,

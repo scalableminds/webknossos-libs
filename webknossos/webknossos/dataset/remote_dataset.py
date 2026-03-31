@@ -371,7 +371,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 self._layers[layer_properties.name] = layer
         # remove deleted layers
         for layer_name in list(self.layers.keys()):
-            if layer_name not in self._properties.data_layers:
+            if not any(
+                layer_name == layer_properties.name
+                for layer_properties in self._properties.data_layers
+            ):
                 del self._layers[layer_name]
 
     def _save_dataset_properties_impl(
@@ -1046,7 +1049,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         with self._context:
             client = _get_api_client()
-            client.dataset_add_layer(
+            client.dataset_add_layer_as_ref(
                 dataset_id=self.dataset_id,
                 compose_layer=ApiDatasetComposeLayer(
                     source_dataset_id=foreign_layer.dataset.dataset_id,

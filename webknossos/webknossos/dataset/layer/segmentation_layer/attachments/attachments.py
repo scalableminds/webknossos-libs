@@ -304,7 +304,7 @@ class RemoteAttachments(AbstractAttachments):
 
         with self._layer.dataset._context:
             client = _get_api_client()
-            client.dataset_add_attachment(
+            client.dataset_add_attachment_as_ref(
                 dataset_id=self._layer.dataset.dataset_id,
                 compose_attachment=ApiDatasetComposeAttachment(
                     source_dataset_id=foreign_layer.dataset.dataset_id,
