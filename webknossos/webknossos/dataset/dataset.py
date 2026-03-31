@@ -236,7 +236,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             self,
             input_path: UPath,
             input_files: Sequence[UPath],
-            use_bioformats: bool | None,
+            use_bioformats: bool,
         ) -> Callable[[UPath], str]:
             ConversionLayerMapping = Dataset.ConversionLayerMapping
 
@@ -830,7 +830,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        use_bioformats: bool | None = None,
+        use_bioformats: bool = False,
         max_layers: int = 20,
         batch_size: int | None = None,
         executor: Executor | None = None,
@@ -870,7 +870,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             flip_x: Whether to flip the x axis
             flip_y: Whether to flip the y axis
             flip_z: Whether to flip the z axis
-            use_bioformats: Whether to use bioformats for reading
+            use_bioformats: Whether to use bioformats for reading, defaults to False
             max_layers: Maximum number of layers to create
             batch_size: Size of batches for processing
             executor: Optional executor for parallelization
@@ -1332,7 +1332,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         flip_y: bool = False,
         flip_z: bool = False,
         dtype: DTypeLike | None = None,
-        use_bioformats: bool | None = None,
+        use_bioformats: bool = False,
         channel: int | None = None,
         timepoint: int | None = None,
         czi_channel: int | None = None,
@@ -1367,7 +1367,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
         * `use_bioformats`: set to `True` to only use the
           [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html) directly, needs a JVM,
-          set to `False` to forbid using the bioformats adapter, by default it is tried as a last option
+          set to `False` to forbid using the bioformats adapter. Defaults to `False`.
         * `channel`: may be used to select a single channel, if multiple are available
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
