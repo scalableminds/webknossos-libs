@@ -524,6 +524,45 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
     return False
 
 
+def set_s3fs_retry_settings(
+    *, read_timeout: int = 60, connect_timeout: int = 30, retries: int = 10
+) -> None:
+    import s3fs
+    from botocore.exceptions import ClientError, ConnectionClosedError
+
+    s3fs_logger = logging.getLogger("s3fs")
+    s3fs.S3FileSystem.read_timeout = read_timeout
+    s3fs.S3FileSystem.connect_timeout = connect_timeout
+    s3fs.S3FileSystem.retries = retries
+
+    def custom_s3fs_error_handler(exception: Exception) -> bool:
+        if isinstance(exception, ClientError):
+            # don't retry 404 errors
+            if "Not Found" in str(exception):
+                return False
+
+            # otherwise retry all other ClientErrors
+            s3fs_logger.warning(
+                f"Retrying unexpected ClientError: {exception}",
+                exc_info=exception,
+                stack_info=True,
+            )
+            return True
+
+        if isinstance(exception, OSError):
+            s3fs_logger.warning(
+                f"Retrying unexpected OSError: {exception}",
+                exc_info=exception,
+                stack_info=True,
+            )
+            return True
+
+        return False
+
+    s3fs.add_retryable_error(ConnectionClosedError)
+    s3fs.set_custom_error_handler(custom_s3fs_error_handler)
+
+
 def enrich_path(
     path: str | PathLike | UPath, dataset_path: UPath | None = None
 ) -> UPath:
