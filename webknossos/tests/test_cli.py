@@ -502,9 +502,6 @@ def test_upload() -> None:
     assert result.exit_code == 0, result.stdout
 
 
-@pytest.mark.skip(
-    reason="TransferMode.COPY requires absolute paths, which are different on multiple machines. Skipping, for now."
-)
 @pytest.mark.skip_on_windows
 def test_convert_upload_downsample() -> None:
     """Tests the functionality of convert --upload and downsample subcommand."""

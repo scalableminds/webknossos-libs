@@ -77,7 +77,7 @@ from ..dataset_properties import (
     DataFormat,
     VoxelSize,
 )
-from ..geometry import NDBoundingBox, Vec3Int
+from ..geometry import NDBoundingBox, Vec3Int, Vec3IntLike
 from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import (
@@ -1496,7 +1496,7 @@ class RemoteAnnotation(Annotation):
         mapping_name: str | None = None,
         mapping_type: Literal["agglomerate", "json"] | None = None,
         mag: MagLike | None = None,
-        seed_position: Vec3Int | None = None,
+        seed_position: Vec3IntLike | None = None,
         token: str | None = None,
     ) -> UPath:
         from ..client.context import _get_context
@@ -1516,6 +1516,7 @@ class RemoteAnnotation(Annotation):
             assert seed_position is not None, (
                 "seed_position is required for downloading ad-hoc mesh"
             )
+            seed_position = Vec3Int(seed_position)
             mesh_info = ApiAdHocMeshInfo(
                 lod=lod,
                 segment_id=segment_id,

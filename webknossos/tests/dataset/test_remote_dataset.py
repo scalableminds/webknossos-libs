@@ -1,6 +1,7 @@
 import itertools
 import pickle
 from collections.abc import Iterable, Iterator
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -19,9 +20,14 @@ from webknossos import (
     RemoteAccessMode,
     RemoteDataset,
     RemoteFolder,
+    SegmentationLayer,
     Team,
     TransferMode,
     Vec3Int,
+)
+from webknossos.dataset.layer.remote_layer import RemoteLayer
+from webknossos.dataset.layer.segmentation_layer.attachments.attachments import (
+    RemoteAttachments,
 )
 from webknossos.utils import is_remote_path, rmtree
 
@@ -47,6 +53,33 @@ def get_sample_dataset(
     )
 
 
+def attach_agglomerate(seg_layer: SegmentationLayer) -> None:
+    seg_data = seg_layer.get_finest_mag().read()
+    seg_ids = np.unique(seg_data)
+
+    # Remap segment ids to be dense
+    remapped_seg_ids = {seg_id: i + 1 for i, seg_id in enumerate(seg_ids)}
+    for old_id, new_id in remapped_seg_ids.items():
+        seg_data[seg_data == old_id] = new_id
+    seg_layer.get_finest_mag().write(seg_data)
+
+    # Construct agglomerate graph and attachment
+    seg_ids = np.unique(seg_data)
+    graph = AgglomerateGraph()
+    for seg_id in seg_ids:
+        seg_position = seg_layer.bounding_box.topleft_xyz + Vec3Int(
+            np.argwhere(seg_data == seg_id)[0][1:]
+        )
+        graph.add_segment(int(seg_id), position=seg_position)
+    for seg_id in seg_ids[1:]:
+        graph.add_affinity_edge(int(seg_id), int(seg_ids[0]), affinity=0.5)
+    AgglomerateAttachment.create_and_add_to(seg_layer, "map_all", graph)
+
+
+def reopen_dataset(dataset: RemoteDataset) -> RemoteDataset:
+    return dataset.reopen(access_mode=RemoteAccessMode.DIRECT_PATH)
+
+
 @pytest.fixture(scope="module")
 def sample_layer_and_mag_name() -> list[tuple[str, str]]:
     layer_names = ["color", "segmentation"]
@@ -60,10 +93,10 @@ def _prepare_dataset_path(output_path: UPath, suffix: str) -> UPath:
     return new_dataset_path
 
 
-@pytest.mark.skip(
-    reason="TransferMode.COPY requires absolute paths, which are different on multiple machines. Skipping, for now."
+@pytest.mark.parametrize(
+    "transfer_mode", [TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK]
 )
-def test_remote_dataset_add_layer_as_copy() -> None:
+def test_remote_dataset_add_layer_as_copy(transfer_mode: TransferMode) -> None:
     ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_src")
     source_ds = Dataset(ds_path, voxel_size=(2, 2, 1))
     source_layer = source_ds.add_layer(
@@ -78,11 +111,9 @@ def test_remote_dataset_add_layer_as_copy() -> None:
     remote_ds = source_ds.upload(
         new_dataset_name="test_remote_dataset_add_layer_as_copy"
     )
-    remote_ds = RemoteDataset.open(
-        dataset_id=remote_ds.dataset_id, access_mode=RemoteAccessMode.DIRECT_PATH
-    )
+    remote_ds = reopen_dataset(remote_ds)
     layer2 = remote_ds.add_layer_as_copy(
-        source_layer, new_layer_name="color2", transfer_mode=TransferMode.COPY
+        source_layer, new_layer_name="color2", transfer_mode=transfer_mode
     )
     assert len(remote_ds.layers) == 2
     np.testing.assert_array_equal(
@@ -90,10 +121,10 @@ def test_remote_dataset_add_layer_as_copy() -> None:
     )
 
 
-@pytest.mark.skip(
-    reason="TransferMode.COPY requires absolute paths, which are different on multiple machines. Skipping, for now."
+@pytest.mark.parametrize(
+    "transfer_mode", [TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK]
 )
-def test_remote_dataset_add_mag_as_copy() -> None:
+def test_remote_dataset_add_mag_as_copy(transfer_mode: TransferMode) -> None:
     ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_mag_src")
     source_ds = Dataset(ds_path, voxel_size=(2, 2, 1))
     source_layer = source_ds.add_layer(
@@ -107,14 +138,12 @@ def test_remote_dataset_add_mag_as_copy() -> None:
     )
 
     remote_ds = source_ds.upload(new_dataset_name="test_remote_dataset_add_mag_as_copy")
-    remote_ds = RemoteDataset.open(
-        dataset_id=remote_ds.dataset_id, access_mode=RemoteAccessMode.DIRECT_PATH
-    )
+    remote_ds = reopen_dataset(remote_ds)
     remote_layer = remote_ds.add_layer(
         "color2", COLOR_CATEGORY, data_format=DataFormat.Zarr3
     )
     copied_mag = remote_layer.add_mag_as_copy(
-        source_mag, transfer_mode=TransferMode.COPY
+        source_mag, transfer_mode=transfer_mode, extend_layer_bounding_box=True
     )
     assert Mag(1) in remote_layer.mags
     np.testing.assert_array_equal(copied_mag.read(), source_mag.read())
@@ -332,28 +361,14 @@ def test_url_open_remote(
     }, "Dataset instances should be picklable."
 
 
-@pytest.mark.skip(
-    reason="TransferMode.MOVE_AND_SYMLINK requires absolute paths, which are different on multiple machines. Skipping, for now."
+@pytest.mark.parametrize(
+    "transfer_mode", [TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK]
 )
-def test_upload_dataset_with_symlinks(tmp_upath: UPath) -> None:
+def test_upload_dataset(tmp_upath: UPath, transfer_mode: TransferMode) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
     remote_ds = sample_dataset.upload(
         new_dataset_name="test_remote_symlink",
-        transfer_mode=TransferMode.MOVE_AND_SYMLINK,
-    )
-    assert np.array_equal(
-        remote_ds.get_color_layers()[0].get_finest_mag().read(),
-        sample_dataset.get_color_layers()[0].get_finest_mag().read(),
-    )
-
-
-@pytest.mark.skip(
-    reason="TransferMode.COPY requires absolute paths, which are different on multiple machines. Skipping, for now."
-)
-def test_upload_dataset_copy_to_paths(tmp_upath: UPath) -> None:
-    sample_dataset = get_sample_dataset(tmp_upath)
-    remote_ds = sample_dataset.upload(
-        new_dataset_name="test_remote_copy", transfer_mode=TransferMode.COPY
+        transfer_mode=transfer_mode,
     )
     assert np.array_equal(
         remote_ds.get_color_layers()[0].get_finest_mag().read(),
@@ -454,37 +469,277 @@ def test_upload_twice(tmp_upath: UPath) -> None:
     assert remote1.name == remote2.name
 
 
-@pytest.mark.skip(
-    reason="This could work in CI with a local minio instance. Configuring webknossos is a bit more involved and, therefore, future work."
-)
-def test_add_attachment(tmp_upath: UPath) -> None:
-    ds_original = get_sample_dataset(
-        tmp_upath,
-        layers=["segmentation"],
-        bbox=SAMPLE_BBOX.with_size(Vec3Int(32, 32, 32)),
+def test_remote_dataset_add_layer_as_ref_rejects_local_layer(
+    tmp_upath: UPath,
+) -> None:
+    """add_layer_as_ref raises ValueError when given a local (non-remote) layer."""
+    local_ds = Dataset(tmp_upath / "local", voxel_size=(1, 1, 1))
+    local_layer = local_ds.add_layer("color", COLOR_CATEGORY)
+
+    mock_ds = MagicMock()
+    mock_ds.layers = {}
+
+    with pytest.raises(ValueError, match="local layer"):
+        RemoteDataset.add_layer_as_ref(mock_ds, local_layer)
+
+
+def test_remote_dataset_add_layer_as_ref_rejects_existing_layer_name() -> None:
+    """add_layer_as_ref raises IndexError when the target already has a layer with that name."""
+    mock_foreign_layer = MagicMock(spec=RemoteLayer)
+    mock_foreign_layer.name = "color"
+    mock_foreign_layer.dataset = MagicMock()  # a different dataset
+
+    mock_ds = MagicMock()
+    mock_ds.layers = {"color": MagicMock()}  # "color" already present
+
+    with pytest.raises(IndexError, match="already has a layer"):
+        RemoteDataset.add_layer_as_ref(mock_ds, mock_foreign_layer)
+
+
+def test_remote_dataset_add_layer_as_ref_rejects_same_dataset() -> None:
+    """add_layer_as_ref raises ValueError when the foreign layer belongs to the same dataset."""
+    mock_ds = MagicMock()
+    mock_ds.layers = {}
+
+    mock_foreign_layer = MagicMock(spec=RemoteLayer)
+    mock_foreign_layer.name = "color"
+    mock_foreign_layer.dataset = mock_ds  # same object → equality check fires
+
+    with pytest.raises(ValueError, match="same origin dataset"):
+        RemoteDataset.add_layer_as_ref(mock_ds, mock_foreign_layer)
+
+
+def test_remote_dataset_add_layer_as_ref_rejects_different_instance() -> None:
+    """add_layer_as_ref raises ValueError when the foreign layer is from a different WK instance."""
+    mock_ds = MagicMock()
+    mock_ds.layers = {}
+    mock_ds._context._url = "http://instance-a:9000"
+
+    mock_foreign_layer = MagicMock(spec=RemoteLayer)
+    mock_foreign_layer.name = "color"
+    mock_foreign_layer.dataset._context._url = "http://instance-b:9000"
+    mock_foreign_layer.dataset.__eq__ = lambda _self, _other: False  # different dataset
+
+    with pytest.raises(ValueError, match="different WEBKNOSSOS instance"):
+        RemoteDataset.add_layer_as_ref(mock_ds, mock_foreign_layer)
+
+
+def test_remote_layer_add_mag_as_ref_rejects_local_mag(tmp_upath: UPath) -> None:
+    """add_mag_as_ref raises ValueError when given a local (non-remote) MagView."""
+    local_mag = (
+        Dataset(tmp_upath / "local", voxel_size=(1, 1, 1))
+        .add_layer("color", COLOR_CATEGORY)
+        .add_mag(Mag(1))
     )
 
-    seg_layer = ds_original.get_layer("segmentation").as_segmentation_layer()
-    seg_data = seg_layer.get_finest_mag().read()
-    seg_ids = np.unique(seg_data)
+    mock_remote_layer = MagicMock(spec=RemoteLayer)
 
-    # Remap segment ids to be dense
-    remapped_seg_ids = {seg_id: i + 1 for i, seg_id in enumerate(seg_ids)}
-    for old_id, new_id in remapped_seg_ids.items():
-        seg_data[seg_data == old_id] = new_id
-    seg_layer.get_finest_mag().write(seg_data)
+    with pytest.raises(ValueError, match="local mag"):
+        RemoteLayer.add_mag_as_ref(mock_remote_layer, local_mag)
 
-    # Construct agglomerate graph and attachment
-    seg_ids = np.unique(seg_data)
-    graph = AgglomerateGraph()
-    for seg_id in seg_ids:
-        seg_position = seg_layer.bounding_box.topleft_xyz + Vec3Int(
-            np.argwhere(seg_data == seg_id)[0][1:]
+
+def test_remote_layer_add_mag_as_ref_rejects_different_instance() -> None:
+    """add_mag_as_ref raises ValueError when the foreign mag is from a different WK instance."""
+    from unittest.mock import patch
+
+    from webknossos.dataset.layer.view.mag_view import MagView
+
+    mock_remote_layer = MagicMock(spec=RemoteLayer)
+    mock_remote_layer.dataset._context._url = "http://instance-a:9000"
+
+    mock_foreign_layer = MagicMock(spec=RemoteLayer)
+    mock_foreign_layer.dataset._context._url = "http://instance-b:9000"
+
+    mock_foreign_mag = MagicMock(spec=MagView)
+    mock_foreign_mag.layer = mock_foreign_layer
+
+    with patch.object(
+        MagView, "_ensure_mag_view", staticmethod(lambda _x: mock_foreign_mag)
+    ):
+        with pytest.raises(ValueError, match="different WEBKNOSSOS instance"):
+            RemoteLayer.add_mag_as_ref(mock_remote_layer, mock_foreign_mag)
+
+
+def test_remote_attachments_add_attachment_as_ref_rejects_different_instance() -> None:
+    """add_attachment_as_ref raises ValueError when foreign_layer is from a different WK instance."""
+    from webknossos.dataset.layer.segmentation_layer import RemoteSegmentationLayer
+
+    mock_layer = MagicMock()
+    mock_layer.dataset._context._url = "http://instance-a:9000"
+
+    mock_foreign_layer = MagicMock(spec=RemoteSegmentationLayer)
+    mock_foreign_layer.dataset._context._url = "http://instance-b:9000"
+
+    mock_attachments = MagicMock(spec=RemoteAttachments)
+    mock_attachments._layer = mock_layer
+
+    attachment = MagicMock(spec=AgglomerateAttachment)
+    attachment.name = "identity"
+
+    with pytest.raises(ValueError, match="different WEBKNOSSOS instance"):
+        RemoteAttachments.add_attachment_as_ref(
+            mock_attachments,
+            attachment,
+            foreign_layer=mock_foreign_layer,
+            new_name=None,
         )
-        graph.add_segment(int(seg_id), position=seg_position)
-    for seg_id in seg_ids[1:]:
-        graph.add_affinity_edge(int(seg_id), int(seg_ids[0]), affinity=0.5)
-    AgglomerateAttachment.create_and_add_to(seg_layer, "map_all", graph)
 
-    # Upload dataset
-    ds_original.upload(new_dataset_name="test_agglomerate_attachment")
+
+def test_remote_attachments_rename_attachment_rejects_invalid_name() -> None:
+    """rename_attachment raises ValueError for names with invalid characters."""
+    mock_layer = MagicMock()
+    mock_layer._ensure_writable.return_value = None
+
+    mock_attachments = MagicMock(spec=RemoteAttachments)
+    mock_attachments._layer = mock_layer
+
+    attachment = MagicMock(spec=AgglomerateAttachment)
+    attachment.name = "agglomerate_view_75"
+
+    with pytest.raises(ValueError, match="not allowed"):
+        RemoteAttachments.rename_attachment(
+            mock_attachments,
+            attachment,
+            new_name="invalid/name",
+        )
+
+
+# --- Happy-path tests against server ---
+
+
+def test_remote_dataset_add_layer_and_mag_as_ref(tmp_upath: UPath) -> None:
+    """add_layer_as_ref creates a reference to a layer from another remote dataset."""
+    source_local = get_sample_dataset(tmp_upath / "source", layers=["color"])
+    source_remote = source_local.upload(new_dataset_name="test_add_layer_as_ref_src")
+
+    source_remote = reopen_dataset(source_remote)
+
+    target_local = get_sample_dataset(tmp_upath / "target", layers=["color"])
+    target_remote = target_local.upload(new_dataset_name="test_add_layer_as_ref_tgt")
+
+    target_remote = reopen_dataset(target_remote)
+
+    # add_layer_as_ref
+    source_color = source_remote.get_layer("color")
+    new_layer = target_remote.add_layer_as_ref(source_color, new_layer_name="color_ref")
+
+    assert "color_ref" in target_remote.layers
+    assert new_layer.name == "color_ref"
+    assert str(new_layer.get_mag(Mag(1)).path) == str(source_color.get_mag(Mag(1)).path)
+    assert set(new_layer.mags.keys()) == {
+        Mag(1),
+        Mag((2, 2, 1)),
+        Mag((4, 4, 1)),
+        Mag((8, 8, 2)),
+        Mag((16, 16, 4)),
+    }
+    assert "color_ref" in reopen_dataset(target_remote).layers
+
+    # delete_mag
+    new_layer.delete_mag(Mag((2, 2, 1)))
+    new_layer.delete_mag(Mag((4, 4, 1)))
+    new_layer.delete_mag(Mag((8, 8, 2)))
+    new_layer.delete_mag(Mag((16, 16, 4)))
+    assert set(new_layer.mags.keys()) == {Mag(1)}
+    assert set(reopen_dataset(target_remote).get_layer("color_ref").mags) == set(
+        new_layer.mags.keys()
+    )
+
+    # add_mag_as_ref
+    new_layer.add_mag_as_ref(source_color.get_mag(Mag((2, 2, 1))))
+    assert set(new_layer.mags.keys()) == {Mag(1), Mag((2, 2, 1))}
+    assert set(reopen_dataset(target_remote).get_layer("color_ref").mags) == set(
+        new_layer.mags.keys()
+    )
+
+    # rename layer
+    new_layer.name = "color_ref_renamed"
+    assert new_layer.name == "color_ref_renamed"
+    assert "color_ref_renamed" in target_remote.layers.keys()
+    assert "color_ref_renamed" in reopen_dataset(target_remote).layers
+
+    # delete layer
+    target_remote.delete_layer("color_ref_renamed")
+    assert "color_ref_renamed" not in target_remote.layers.keys()
+    assert "color_ref_renamed" not in reopen_dataset(target_remote).layers
+
+
+@pytest.mark.parametrize(
+    "transfer_mode",
+    [TransferMode.HTTP, TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK],
+)
+def test_remote_attachments_add_attachment_as_ref(
+    tmp_upath: UPath, transfer_mode: TransferMode
+) -> None:
+    """add_attachment_as_ref references an attachment from another remote segmentation layer."""
+    source_local = get_sample_dataset(
+        tmp_upath / "source",
+        layers=["segmentation"],
+        bbox=SAMPLE_BBOX.with_size_xyz(Vec3Int(32, 32, 32)),
+    )
+    attach_agglomerate(source_local.get_segmentation_layer("segmentation"))
+    source_remote = source_local.upload(new_dataset_name="test_add_layer_as_ref_src")
+    source_remote = reopen_dataset(source_remote)
+
+    target_local = get_sample_dataset(tmp_upath / "target", layers=["color"])
+    target_remote = target_local.upload(
+        new_dataset_name="test_add_layer_as_ref_tgt", transfer_mode=transfer_mode
+    )
+    target_remote = reopen_dataset(target_remote)
+
+    # Add layer including attachments
+    new_layer = target_remote.add_layer_as_ref(
+        source_remote.get_layer("segmentation")
+    ).as_segmentation_layer()
+    assert "segmentation" in target_remote.layers.keys()
+    assert len(new_layer.attachments.agglomerates) == 1
+    assert (
+        len(
+            reopen_dataset(target_remote)
+            .get_segmentation_layer("segmentation")
+            .attachments.agglomerates
+        )
+        == 1
+    )
+
+    # Rename attachment
+    new_layer.attachments.rename_attachment(
+        new_layer.attachments.agglomerates[0],
+        new_name="renamed_agglomerate",
+    )
+    assert new_layer.attachments.agglomerates[0].name == "renamed_agglomerate"
+    assert (
+        reopen_dataset(target_remote)
+        .get_segmentation_layer("segmentation")
+        .attachments.agglomerates[0]
+        .name
+        == "renamed_agglomerate"
+    )
+
+    # Delete attachment
+    new_layer.attachments.delete_attachment(new_layer.attachments.agglomerates[0])
+    assert len(new_layer.attachments.agglomerates) == 0
+    assert (
+        len(
+            reopen_dataset(target_remote)
+            .get_segmentation_layer("segmentation")
+            .attachments.agglomerates
+        )
+        == 0
+    )
+
+    # Add attachment
+    new_layer.attachments.add_attachment_as_ref(
+        source_remote.get_layer("segmentation").attachments.agglomerates[0],
+        foreign_layer=source_remote.get_layer("segmentation"),
+        new_name="new_agglomerate",
+    )
+    assert len(new_layer.attachments.agglomerates) == 1
+    assert new_layer.attachments.agglomerates[0].name == "new_agglomerate"
+    assert (
+        reopen_dataset(target_remote)
+        .get_segmentation_layer("segmentation")
+        .attachments.agglomerates[0]
+        .name
+        == "new_agglomerate"
+    )

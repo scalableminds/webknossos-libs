@@ -8,6 +8,9 @@ from webknossos.client.api_client.models import (
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
+    ApiDatasetComposeAttachment,
+    ApiDatasetComposeLayer,
+    ApiDatasetComposeMag,
     ApiDatasetExploreAndAddRemote,
     ApiDatasetId,
     ApiDatasetIsValidNewNameResponse,
@@ -125,6 +128,24 @@ class WkApiClient(AbstractApiClient):
         # So we need to craft the updates dict manually, depending on what fields should be updated.
         route = f"/datasets/{dataset_id}/updatePartial"
         self._patch_json(route, dataset_updates)
+
+    def dataset_add_layer_as_ref(
+        self, *, dataset_id: str, compose_layer: ApiDatasetComposeLayer
+    ) -> None:
+        route = f"/datasets/{dataset_id}/compose/addLayer"
+        self._post_json(route, compose_layer)
+
+    def dataset_add_mag_as_ref(
+        self, *, dataset_id: str, compose_mag: ApiDatasetComposeMag
+    ) -> None:
+        route = f"/datasets/{dataset_id}/compose/addMag"
+        self._post_json(route, compose_mag)
+
+    def dataset_add_attachment_as_ref(
+        self, *, dataset_id: str, compose_attachment: ApiDatasetComposeAttachment
+    ) -> None:
+        route = f"/datasets/{dataset_id}/compose/addAttachment"
+        self._post_json(route, compose_attachment)
 
     def dataset_sharing_token(self, *, dataset_id: str) -> ApiSharingToken:
         route = f"/datasets/{dataset_id}/sharingToken"
