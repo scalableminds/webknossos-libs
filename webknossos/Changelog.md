@@ -23,11 +23,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `isVisible` attribute to `Skeleton.Tree` [#1442](https://github.com/scalableminds/webknossos-libs/pull/1442)
 
 ### Changed
+- Rewrote the chunking of the tiff conversion. A non-user facing change. [#1440](https://github.com/scalableminds/webknossos-libs/pull/1440)
 - Removed the proxay request recording/replaying functionality. All requests in the tests are now sent directly to the local WEBKNOSSOS instance. [#1441](https://github.com/scalableminds/webknossos-libs/pull/1441)
 - Set more comfortable retries for s3 connections in the CLI commands. Call `webknossos.utils.set_s3fs_retry_settings()` for library use. [#1443](https://github.com/scalableminds/webknossos-libs/pull/1443)
 - Swapped out `pims` for our fork `scm-pims`, which fixes issues with skimage. A non-user facing change. [#1445](https://github.com/scalableminds/webknossos-libs/pull/1445)
 
 ### Fixed
+
 
 
 ## [3.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.4) - 2026-03-17
