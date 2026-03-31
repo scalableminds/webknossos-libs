@@ -45,6 +45,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
                 _enforced_id=nml_tree.id,
                 color=nml_tree.color,
                 metadata={i.key: i.value for i in nml_tree.metadata},
+                is_visible=nml_tree.is_visible,
             )
         else:
             new_tree = groups_by_id[nml_tree.groupId].add_tree(
@@ -52,6 +53,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
                 _enforced_id=nml_tree.id,
                 color=nml_tree.color,
                 metadata={i.key: i.value for i in nml_tree.metadata},
+                is_visible=nml_tree.is_visible,
             )
         _nml_tree_to_wk_tree(new_tree, nml_tree)
 
@@ -196,6 +198,7 @@ def annotation_to_nml(
                 groupId=tree.group.id if tree.group != annotation.skeleton else None,
                 color=color,
                 metadata=metadata,
+                is_visible=tree.is_visible,
             )
         )
 

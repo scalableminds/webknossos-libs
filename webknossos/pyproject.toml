@@ -46,14 +46,13 @@ dependencies = [
     "networkx ~=3.2.1",
     "numba ~=0.61",
     "numpy >=2.0.0,<3.0.0",
-    "pims ~=0.7.0",
+    "scm-pims ~=0.7.1",
     "protobuf<7,>=3.12.0",
     "google-api-python-client >= 2.0.0",
     "psutil ~=6.0.0",
     "python-dateutil >=2.9.0",
     "python-dotenv ~=1.0.1",
     "rich ~=13.8.0",
-    "s3fs>=2024.6.1",
     "scipy >=1.13",
     "tensorstore ==0.1.76; sys_platform == 'win32'", # tensorstore crashes on windows with >0.1.76
     "tensorstore ~=0.1.78; sys_platform != 'win32'",
@@ -78,11 +77,11 @@ tifffile = ["tifffile >=2024.8.24, <2025.5.21"]
 imagecodecs = ["imagecodecs >=2021.11.20"]
 bioformats = ["JPype1 ~=1.5.0"]
 czi = ["pylibCZIrw ==5.1.1"]
+s3 = ["s3fs >=2026.2.0"]
 examples = [
     "fastremap ~=1.15.0",
     "pandas ~=2.2.0",
     "pooch ~=1.5.2",
-    "s3fs >=2023.9.0",
     "tabulate >=0.9.0",
     "scikit-learn ~=1.5.1",
     "scikit-image ~=0.25.0"
@@ -92,13 +91,14 @@ all = [
     "webknossos[imagecodecs]",
     "webknossos[bioformats]",
     "webknossos[czi]",
+    "webknossos[s3]",
     "webknossos[examples]",
 ]
 
 [dependency-groups]
 dev = [
     "coverage>=7.8.0",
-    "fsspec ~=2024.6.0",
+    "fsspec >=2024.6.0",
     "hypothesis ~=6.35.0",
     "icecream ~=2.1.1",
     "inducoapi ~=2.0.2",

@@ -114,6 +114,7 @@ class Group:
         color: Vector4 | Vector3 | None = None,
         _enforced_id: int | None = None,
         metadata: dict[str, str | int | float | Sequence[str]] = {},
+        is_visible: bool = True,
     ) -> Tree:
         """Adds a new tree or copies an existing tree to this group.
 
@@ -126,6 +127,8 @@ class Group:
             color: Optional RGBA color tuple (r, g, b, a) or RGB tuple (r, g, b).
                   If an RGB tuple is provided, alpha will be set to 1.0.
             _enforced_id: Optional specific ID for the tree (internal use).
+            metadata: Optional key-value metadata for the tree.
+            is_visible: Whether the tree is visible in WEBKNOSSOS. Defaults to True.
 
         Returns:
             Tree: The newly created or copied tree.
@@ -156,6 +159,7 @@ class Group:
                 skeleton=self._skeleton,
                 enforced_id=_enforced_id,
                 metadata=metadata,
+                is_visible=is_visible,
             )
             self._child_trees.add(new_tree)
 

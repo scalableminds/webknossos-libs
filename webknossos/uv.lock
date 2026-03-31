@@ -680,11 +680,11 @@ wheels = [
 
 [[package]]
 name = "fsspec"
-version = "2024.6.1"
+version = "2026.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/90/b6/eba5024a9889fcfff396db543a34bef0ab9d002278f163129f9f01005960/fsspec-2024.6.1.tar.gz", hash = "sha256:fad7d7e209dd4c1208e3bbfda706620e0da5142bebbd9c384afb95b07e798e49", size = 284584, upload-time = "2024-06-27T14:35:45.467Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/51/7c/f60c259dcbf4f0c47cc4ddb8f7720d2dcdc8888c8e5ad84c73ea4531cc5b/fsspec-2026.2.0.tar.gz", hash = "sha256:6544e34b16869f5aacd5b90bdf1a71acb37792ea3ddf6125ee69a22a53fb8bff", size = 313441, upload-time = "2026-02-05T21:50:53.743Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5e/44/73bea497ac69bafde2ee4269292fa3b41f1198f4bb7bbaaabde30ad29d4a/fsspec-2024.6.1-py3-none-any.whl", hash = "sha256:3cb443f8bcd2efb31295a5b9fdb02aee81d8452c80d28f97a6d0959e6cee101e", size = 177561, upload-time = "2024-06-27T14:35:42.023Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/ab/fb21f4c939bb440104cc2b396d3be1d9b7a9fd3c6c2a53d98c45b3d7c954/fsspec-2026.2.0-py3-none-any.whl", hash = "sha256:98de475b5cb3bd66bedd5c4679e87b4fdfe1a3bf4d707b151b3c07e58c9a2437", size = 202505, upload-time = "2026-02-05T21:50:51.819Z" },
 ]
 
 [[package]]
@@ -1717,20 +1717,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pims"
-version = "0.7"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "imageio" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "packaging" },
-    { name = "slicerator" },
-    { name = "tifffile" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b8/02/5bf3639f5b77e9b183011c08541c5039ba3d04f5316c70312b48a8e003a9/pims-0.7.tar.gz", hash = "sha256:55907a4c301256086d2aa4e34a5361b9109f24e375c2071e1117b9491e82946b", size = 87779, upload-time = "2024-06-10T19:20:42.842Z" }
-
-[[package]]
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2235,16 +2221,16 @@ wheels = [
 
 [[package]]
 name = "s3fs"
-version = "2024.6.1"
+version = "2026.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiobotocore" },
     { name = "aiohttp" },
     { name = "fsspec" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/69/4e/9e32f7e5c37f42ff1b14b40eae260303a20f5bb4b518ec1bc9787bc6aa23/s3fs-2024.6.1.tar.gz", hash = "sha256:6c2106d6c34fbfbb88e3d20c6f3572896d5ee3d3512896696301c21a3c541bea", size = 74958, upload-time = "2024-06-27T14:45:45.118Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fa/be/392c8c5e0da9bfa139e41084690dd49a5e3e931099f78f52d3f6070105c6/s3fs-2026.2.0.tar.gz", hash = "sha256:91cb2a9f76e35643b76eeac3f47a6165172bb3def671f76b9111c8dd5779a2ac", size = 84152, upload-time = "2026-02-05T21:57:57.968Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d6/00/f933f6e3d669d4532bc88ada9508e5b873d8768cb54e16563b13f4e968a7/s3fs-2024.6.1-py3-none-any.whl", hash = "sha256:ecd20863437409eec1cbfff0b7df5e9772cf7c1926008efab2e17e46f6d52c63", size = 29460, upload-time = "2024-06-27T14:45:42.713Z" },
+    { url = "https://files.pythonhosted.org/packages/57/e1/64c264db50b68de8a438b60ceeb921b2f22da3ebb7ad6255150225d0beac/s3fs-2026.2.0-py3-none-any.whl", hash = "sha256:65198835b86b1d5771112b0085d1da52a6ede36508b1aaa6cae2aedc765dfe10", size = 31328, upload-time = "2026-02-05T21:57:56.532Z" },
 ]
 
 [[package]]
@@ -2441,6 +2427,23 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ab/f2/b31d75cb9b5fa4dd39a0a931ee9b33e7f6f36f23be5ef560bf72e0f92f32/scipy-1.16.3-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:e7efa2681ea410b10dde31a52b18b0154d66f2485328830e45fdf183af5aefc6", size = 38796678, upload-time = "2025-10-28T17:35:26.354Z" },
     { url = "https://files.pythonhosted.org/packages/b4/1e/b3723d8ff64ab548c38d87055483714fefe6ee20e0189b62352b5e015bb1/scipy-1.16.3-cp313-cp313t-win_amd64.whl", hash = "sha256:2d1ae2cf0c350e7705168ff2429962a89ad90c2d49d1dd300686d8b2a5af22fc", size = 38640178, upload-time = "2025-10-28T17:35:35.304Z" },
     { url = "https://files.pythonhosted.org/packages/8e/f3/d854ff38789aca9b0cc23008d607ced9de4f7ab14fa1ca4329f86b3758ca/scipy-1.16.3-cp313-cp313t-win_arm64.whl", hash = "sha256:0c623a54f7b79dd88ef56da19bc2873afec9673a48f3b85b18e4d402bdd29a5a", size = 25803246, upload-time = "2025-10-28T17:35:42.155Z" },
+]
+
+[[package]]
+name = "scm-pims"
+version = "0.7.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "imageio" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "packaging" },
+    { name = "slicerator" },
+    { name = "tifffile" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f0/58/621282b94f6c04a28f042921f71cfe15dedcc431b63f16294a3c2d61af3f/scm_pims-0.7.1.tar.gz", hash = "sha256:8bd26c9ec78aba770569314b2480077a74ef79267a4c04505b69615314c3f684", size = 89827, upload-time = "2026-03-30T16:27:53.426Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1e/43/9c5d6df0f420928a70ee29b934872bd023bf738a4ab9dbdab8ff61f27eac/scm_pims-0.7.1-py3-none-any.whl", hash = "sha256:f4f25d7768bfa2d3939de8df832623db5bffa4a14bd6b78376c7ba7e7f65f116", size = 84785, upload-time = "2026-03-30T16:27:52.155Z" },
 ]
 
 [[package]]
@@ -2747,15 +2750,14 @@ dependencies = [
     { name = "numba" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "pims" },
     { name = "protobuf" },
     { name = "psutil" },
     { name = "python-dateutil" },
     { name = "python-dotenv" },
     { name = "rich" },
-    { name = "s3fs" },
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.16.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "scm-pims" },
     { name = "tensorstore", version = "0.1.76", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'win32'" },
     { name = "tensorstore", version = "0.1.78", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' and sys_platform != 'win32'" },
     { name = "tensorstore", version = "0.1.79", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' and sys_platform != 'win32'" },
@@ -2791,7 +2793,6 @@ examples = [
     { name = "fastremap" },
     { name = "pandas" },
     { name = "pooch" },
-    { name = "s3fs" },
     { name = "scikit-image" },
     { name = "scikit-learn" },
     { name = "tabulate" },
@@ -2799,6 +2800,9 @@ examples = [
 imagecodecs = [
     { name = "imagecodecs", version = "2025.3.30", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "imagecodecs", version = "2025.11.11", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+]
+s3 = [
+    { name = "s3fs" },
 ]
 tifffile = [
     { name = "tifffile" },
@@ -2845,7 +2849,6 @@ requires-dist = [
     { name = "numba", specifier = "~=0.61" },
     { name = "numpy", specifier = ">=2.0.0,<3.0.0" },
     { name = "pandas", marker = "extra == 'examples'", specifier = "~=2.2.0" },
-    { name = "pims", specifier = "~=0.7.0" },
     { name = "pooch", marker = "extra == 'examples'", specifier = "~=1.5.2" },
     { name = "protobuf", specifier = ">=3.12.0,<7" },
     { name = "psutil", specifier = "~=6.0.0" },
@@ -2853,11 +2856,11 @@ requires-dist = [
     { name = "python-dateutil", specifier = ">=2.9.0" },
     { name = "python-dotenv", specifier = "~=1.0.1" },
     { name = "rich", specifier = "~=13.8.0" },
-    { name = "s3fs", specifier = ">=2024.6.1" },
-    { name = "s3fs", marker = "extra == 'examples'", specifier = ">=2023.9.0" },
+    { name = "s3fs", marker = "extra == 's3'", specifier = ">=2026.2.0" },
     { name = "scikit-image", marker = "extra == 'examples'", specifier = "~=0.25.0" },
     { name = "scikit-learn", marker = "extra == 'examples'", specifier = "~=1.5.1" },
     { name = "scipy", specifier = ">=1.13" },
+    { name = "scm-pims", specifier = "~=0.7.1" },
     { name = "tabulate", marker = "extra == 'examples'", specifier = ">=0.9.0" },
     { name = "tensorstore", marker = "sys_platform != 'win32'", specifier = "~=0.1.78" },
     { name = "tensorstore", marker = "sys_platform == 'win32'", specifier = "==0.1.76" },
@@ -2869,16 +2872,17 @@ requires-dist = [
     { name = "webknossos", extras = ["czi"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["examples"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["imagecodecs"], marker = "extra == 'all'" },
+    { name = "webknossos", extras = ["s3"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["tifffile"], marker = "extra == 'all'" },
     { name = "wkw", specifier = "==1.1.24" },
     { name = "zipp", specifier = ">=3.5.0,<4.0.0" },
 ]
-provides-extras = ["tifffile", "imagecodecs", "bioformats", "czi", "examples", "all"]
+provides-extras = ["tifffile", "imagecodecs", "bioformats", "czi", "s3", "examples", "all"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.8.0" },
-    { name = "fsspec", specifier = "~=2024.6.0" },
+    { name = "fsspec", specifier = ">=2024.6.0" },
     { name = "hypothesis", specifier = "~=6.35.0" },
     { name = "icecream", specifier = "~=2.1.1" },
     { name = "inducoapi", specifier = "~=2.0.2" },
