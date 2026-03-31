@@ -88,3 +88,16 @@ def test_map_to_futures_output_pickle_path_getter_raises() -> None:
             executor.map_to_futures(
                 double, [1], output_pickle_path_getter=lambda _: Path("/tmp/x")
             )
+
+
+def test_get_executor() -> None:
+    executor = cluster_tools.get_executor(
+        "batching",
+        executor={
+            "name": "multiprocessing",
+            "max_workers": 3,
+        },
+    )
+    assert isinstance(executor, BatchingExecutor)
+    assert isinstance(executor._executor, MultiprocessingExecutor)
+    assert executor._executor._max_workers == 3  # type: ignore[attr-defined]
