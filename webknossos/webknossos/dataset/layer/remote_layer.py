@@ -356,7 +356,7 @@ class RemoteLayer(AbstractLayer):
         self._ensure_writable()
         mag = Mag(mag)
         if mag not in self.mags.keys():
-            raise KeyError(
+            raise IndexError(
                 f"Deleting mag {mag} failed. There is no mag with this name."
             )
         self._properties.mags = [

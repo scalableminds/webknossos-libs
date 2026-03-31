@@ -369,6 +369,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     layer_properties, self._use_zarr_streaming
                 )
                 self._layers[layer_properties.name] = layer
+        # remove deleted layers
+        for layer_name in list(self.layers.keys()):
+            if layer_name not in self._properties.data_layers:
+                del self._layers[layer_name]
 
     def _save_dataset_properties_impl(
         self, *, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None

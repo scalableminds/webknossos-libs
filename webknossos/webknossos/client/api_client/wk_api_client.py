@@ -129,19 +129,19 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/{dataset_id}/updatePartial"
         self._patch_json(route, dataset_updates)
 
-    def dataset_add_layer(
+    def dataset_add_layer_as_ref(
         self, *, dataset_id: str, compose_layer: ApiDatasetComposeLayer
     ) -> None:
         route = f"/datasets/{dataset_id}/compose/addLayer"
         self._post_json(route, compose_layer)
 
-    def dataset_add_mag(
+    def dataset_add_mag_as_ref(
         self, *, dataset_id: str, compose_mag: ApiDatasetComposeMag
     ) -> None:
         route = f"/datasets/{dataset_id}/compose/addMag"
         self._post_json(route, compose_mag)
 
-    def dataset_add_attachment(
+    def dataset_add_attachment_as_ref(
         self, *, dataset_id: str, compose_attachment: ApiDatasetComposeAttachment
     ) -> None:
         route = f"/datasets/{dataset_id}/compose/addAttachment"
