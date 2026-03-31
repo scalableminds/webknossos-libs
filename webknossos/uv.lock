@@ -1717,21 +1717,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pims"
-version = "0.7"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "imageio" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "packaging" },
-    { name = "slicerator" },
-    { name = "tifffile", version = "2025.5.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "tifffile", version = "2026.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b8/02/5bf3639f5b77e9b183011c08541c5039ba3d04f5316c70312b48a8e003a9/pims-0.7.tar.gz", hash = "sha256:55907a4c301256086d2aa4e34a5361b9109f24e375c2071e1117b9491e82946b", size = 87779, upload-time = "2024-06-10T19:20:42.842Z" }
-
-[[package]]
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2446,6 +2431,23 @@ wheels = [
 ]
 
 [[package]]
+name = "scm-pims"
+version = "0.7.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "imageio" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "packaging" },
+    { name = "slicerator" },
+    { name = "tifffile" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f0/58/621282b94f6c04a28f042921f71cfe15dedcc431b63f16294a3c2d61af3f/scm_pims-0.7.1.tar.gz", hash = "sha256:8bd26c9ec78aba770569314b2480077a74ef79267a4c04505b69615314c3f684", size = 89827, upload-time = "2026-03-30T16:27:53.426Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1e/43/9c5d6df0f420928a70ee29b934872bd023bf738a4ab9dbdab8ff61f27eac/scm_pims-0.7.1-py3-none-any.whl", hash = "sha256:f4f25d7768bfa2d3939de8df832623db5bffa4a14bd6b78376c7ba7e7f65f116", size = 84785, upload-time = "2026-03-30T16:27:52.155Z" },
+]
+
+[[package]]
 name = "shellingham"
 version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -2772,7 +2774,6 @@ dependencies = [
     { name = "numba" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "pims" },
     { name = "protobuf" },
     { name = "psutil" },
     { name = "python-dateutil" },
@@ -2780,6 +2781,7 @@ dependencies = [
     { name = "rich" },
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.16.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "scm-pims" },
     { name = "tensorstore", version = "0.1.76", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'win32'" },
     { name = "tensorstore", version = "0.1.78", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' and sys_platform != 'win32'" },
     { name = "tensorstore", version = "0.1.79", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' and sys_platform != 'win32'" },
@@ -2873,7 +2875,6 @@ requires-dist = [
     { name = "numba", specifier = "~=0.61" },
     { name = "numpy", specifier = ">=2.0.0,<3.0.0" },
     { name = "pandas", marker = "extra == 'examples'", specifier = "~=2.2.0" },
-    { name = "pims", specifier = "~=0.7.0" },
     { name = "pooch", marker = "extra == 'examples'", specifier = "~=1.5.2" },
     { name = "protobuf", specifier = ">=3.12.0,<7" },
     { name = "psutil", specifier = "~=6.0.0" },
@@ -2885,6 +2886,7 @@ requires-dist = [
     { name = "scikit-image", marker = "extra == 'examples'", specifier = "~=0.25.0" },
     { name = "scikit-learn", marker = "extra == 'examples'", specifier = "~=1.5.1" },
     { name = "scipy", specifier = ">=1.13" },
+    { name = "scm-pims", specifier = "~=0.7.1" },
     { name = "tabulate", marker = "extra == 'examples'", specifier = ">=0.9.0" },
     { name = "tensorstore", marker = "sys_platform != 'win32'", specifier = "~=0.1.78" },
     { name = "tensorstore", marker = "sys_platform == 'win32'", specifier = "==0.1.76" },
