@@ -31,7 +31,13 @@ from ..geometry import (
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._utils import pims_images
-from .abstract_dataset import DEFAULT_VERSION, AbstractDataset, _dtype_maybe
+from .abstract_dataset import (
+    DEFAULT_VERSION,
+    AbstractDataset,
+    AttachmentRenaming,
+    LayerRenaming,
+    _dtype_maybe,
+)
 from .defaults import (
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_DATA_FORMAT,
@@ -230,7 +236,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             self,
             input_path: UPath,
             input_files: Sequence[UPath],
-            use_bioformats: bool | None,
+            use_bioformats: bool,
         ) -> Callable[[UPath], str]:
             ConversionLayerMapping = Dataset.ConversionLayerMapping
 
@@ -466,13 +472,13 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         return self._load_dataset_properties_from_path(self.path)
 
     def _save_dataset_properties_impl(
-        self, *, layer_renaming: tuple[str, str] | None = None
+        self, *, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None
     ) -> None:
         """
         Exports the current dataset properties to json on disk.
         And writes out Zarr and OME-Ngff metadata if there is a Zarr layer.
         """
-        del layer_renaming  # only used in remote case
+        del renamings  # only used in remote case
         (self.path / PROPERTIES_FILE_NAME).write_text(
             json.dumps(
                 get_dataset_converter().unstructure(self._properties),
@@ -824,7 +830,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        use_bioformats: bool | None = None,
+        use_bioformats: bool = False,
         max_layers: int = 20,
         batch_size: int | None = None,
         executor: Executor | None = None,
@@ -864,7 +870,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             flip_x: Whether to flip the x axis
             flip_y: Whether to flip the y axis
             flip_z: Whether to flip the z axis
-            use_bioformats: Whether to use bioformats for reading
+            use_bioformats: Whether to use bioformats for reading, defaults to False
             max_layers: Maximum number of layers to create
             batch_size: Size of batches for processing
             executor: Optional executor for parallelization
@@ -1326,7 +1332,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         flip_y: bool = False,
         flip_z: bool = False,
         dtype: DTypeLike | None = None,
-        use_bioformats: bool | None = None,
+        use_bioformats: bool = False,
         channel: int | None = None,
         timepoint: int | None = None,
         czi_channel: int | None = None,
@@ -1361,7 +1367,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
         * `use_bioformats`: set to `True` to only use the
           [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html) directly, needs a JVM,
-          set to `False` to forbid using the bioformats adapter, by default it is tried as a last option
+          set to `False` to forbid using the bioformats adapter. Defaults to `False`.
         * `channel`: may be used to select a single channel, if multiple are available
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
@@ -2069,7 +2075,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     ) -> Layer:
         """Add a layer from another dataset by reference.
 
-        Creates a layer that references data from a remote dataset. The image data
+        Creates a layer that references data from another dataset. The image data
         will be streamed on-demand when accessed.
 
         Args:
@@ -2077,7 +2083,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             new_layer_name: Optional name for the new layer, uses original name if None
 
         Returns:
-            Layer: The newly created remote layer referencing the foreign data
+            Layer: The newly created layer referencing the foreign data
 
         Raises:
             IndexError: If target layer name already exists
@@ -2087,9 +2093,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Examples:
             ```
             ds = Dataset.open("other/dataset")
-            remote_ds = RemoteDataset.open("my_dataset", "my_org_id")
+            foreign_ds = Dataset.open("my_dataset")
             new_layer = ds.add_layer_as_ref(
-                remote_ds.get_layer("color")
+                foreign_ds.get_layer("color")
             )
             ```
 

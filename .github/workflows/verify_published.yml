@@ -18,7 +18,7 @@ jobs:
         extras: ["", "[all]"]
     steps:
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -41,7 +41,7 @@ jobs:
             python -c "import tifffile; import imagecodecs; import pandas;"
           fi
 
-      - uses: slackapi/slack-github-action@v2.1.1
+      - uses: slackapi/slack-github-action@v3.0.1
         if: failure() || cancelled()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}

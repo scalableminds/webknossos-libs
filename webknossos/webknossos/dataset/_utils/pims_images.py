@@ -83,7 +83,7 @@ class PimsImages:
         flip_x: bool,
         flip_y: bool,
         flip_z: bool,
-        use_bioformats: bool | None,
+        use_bioformats: bool,
         is_segmentation: bool,
     ) -> None:
         """
@@ -750,7 +750,7 @@ def get_valid_bioformats_suffixes() -> set[str]:
 
 def has_image_z_dimension(
     filepath: UPath,
-    use_bioformats: bool | None,
+    use_bioformats: bool,
     is_segmentation: bool,
 ) -> bool:
     pims_images = PimsImages(

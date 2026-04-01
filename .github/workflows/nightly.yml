@@ -18,10 +18,10 @@ jobs:
         working-directory: webknossos
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8.0.0
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -36,7 +36,7 @@ jobs:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
         run: uv run test.py
 
-      - uses: slackapi/slack-github-action@v2.1.1
+      - uses: slackapi/slack-github-action@v3.0.1
         if: failure() || cancelled()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}

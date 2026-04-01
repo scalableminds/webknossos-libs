@@ -79,6 +79,7 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
         cwd=wk_docker_dir,
         env={
             **os.environ,
+            "BINARY_DATA_DIR": binary_data_dir.resolve().as_posix(),
             "USER_UID": str(os.getuid()),
             "USER_GID": str(os.getgid()),
         },
@@ -109,6 +110,7 @@ def local_test_wk() -> Iterator[None]:
         f"https://webknossos.org/api/v{WK_API_VERSION}/buildinfo"
     ).json()["webknossos"]["version"]
     wk_docker_tag = f"master__{wk_version}"
+
     os.environ["DOCKER_TAG"] = wk_docker_tag
     wk_docker_dir = Path("tests")
     tear_down_wk = False

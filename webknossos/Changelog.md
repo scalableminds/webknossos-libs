@@ -10,23 +10,38 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.4...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.3.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.3.0) - 2026-03-31
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.4...v3.3.0)
 
 ### Breaking Changes
 - Renamed the existing `webknossos.proofreading.agglomerate_graph.AgglomerateGraph` to `webknossos.proofreading.agglomerate_graph_data.AgglomerateGraphData`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 - Renamed the  `Annotation.get_agglomerate_graph` to `Annotation.get_agglomerate_graph_data`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 - Renamed `RemoteDataset.download` argument `bbox` to `bounding_box`. `bbox` is still available, but deprecated.  [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
 - Moved the `s3fs` dependency to an optional extra. Install with `webknossos[s3]` or `webknossos[all]`. [#1443](https://github.com/scalableminds/webknossos-libs/pull/1443)
+- The `use_bioformats` argument of `Dataset.add_layer_from_images`, `Dataset.from_images` and `RemoteDataset.from_images` is now `False` by default. `None` is not allowed anymore. [#1446](https://github.com/scalableminds/webknossos-libs/pull/1446)
 
 ### Added
+- Added `RemoteDataset.add_layer_as_ref`, `RemoteLayer.add_mag_as_ref`, `RemoteAttachments.add_attachment_as_ref`, `RemoteAttachments.delete_attachment`, `RemoteAttachment.rename_attachment`, `Attachments.rename_attachments`. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
+- Added `extend_layer_bounding_box` kwarg with default `True` to `RemoteLayer.add_mag_as_copy`. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
+- Added `RemoteDataset.reopen` method to allow reopening with a different access mode. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
 - Added `isVisible` attribute to `Skeleton.Tree` [#1442](https://github.com/scalableminds/webknossos-libs/pull/1442)
 
 ### Changed
+- Rewrote the chunking of the tiff conversion. A non-user facing change. [#1440](https://github.com/scalableminds/webknossos-libs/pull/1440)
 - Removed the proxay request recording/replaying functionality. All requests in the tests are now sent directly to the local WEBKNOSSOS instance. [#1441](https://github.com/scalableminds/webknossos-libs/pull/1441)
 - Set more comfortable retries for s3 connections in the CLI commands. Call `webknossos.utils.set_s3fs_retry_settings()` for library use. [#1443](https://github.com/scalableminds/webknossos-libs/pull/1443)
 - Swapped out `pims` for our fork `scm-pims`, which fixes issues with skimage. A non-user facing change. [#1445](https://github.com/scalableminds/webknossos-libs/pull/1445)
-
-### Fixed
 
 
 ## [3.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.4) - 2026-03-17
