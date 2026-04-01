@@ -1,4 +1,3 @@
-import threading
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, as_completed
 from functools import partial
@@ -32,7 +31,12 @@ class BatchingExecutor:
     Each call to the underlying executor processes batch_size items at once.
     """
 
+    batch_size: int
+    _executor: Executor
+
     def __init__(self, executor: Executor, *, batch_size: int) -> None:
+        if batch_size <= 0:
+            raise ValueError("batch_size must be greater than 0")
         self._executor = executor
         self.batch_size = batch_size
 
@@ -73,7 +77,6 @@ class BatchingExecutor:
             )
 
         all_item_futures: list[Future[_T]] = []
-        batch_jobs: list[tuple[Future[list[_T]], int]] = []
 
         for batch in _iter_batches(args, self.batch_size):
             (batch_future,) = self._executor.map_to_futures(
@@ -81,22 +84,20 @@ class BatchingExecutor:
             )
             item_futures: list[Future[_T]] = [Future() for _ in batch]
             all_item_futures.extend(item_futures)
-            batch_jobs.append((batch_future, len(batch)))
 
-        def resolve_all() -> None:
-            offset = 0
-            for batch_future, size in batch_jobs:
-                item_futures = all_item_futures[offset : offset + size]
-                offset += size
+            def on_batch_done(
+                bf: Future[list[_T]], ifs: list[Future[_T]] = item_futures
+            ) -> None:
                 try:
-                    results = batch_future.result()
-                    for f, r in zip(item_futures, results):
+                    results = bf.result()
+                    for f, r in zip(ifs, results):
                         f.set_result(r)
                 except Exception as e:
-                    for f in item_futures:
+                    for f in ifs:
                         f.set_exception(e)
 
-        threading.Thread(target=resolve_all, daemon=True).start()
+            batch_future.add_done_callback(on_batch_done)
+
         return all_item_futures
 
     def map(
