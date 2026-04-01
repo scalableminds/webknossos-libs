@@ -90,6 +90,57 @@ def test_map_to_futures_output_pickle_path_getter_raises() -> None:
             )
 
 
+def test_init_requires_one_of_batch_size_or_target_job_count() -> None:
+    with pytest.raises(ValueError, match="Either batch_size or target_job_count"):
+        BatchingExecutor(SequentialExecutor())
+
+
+def test_init_rejects_both() -> None:
+    with pytest.raises(ValueError, match="not both"):
+        BatchingExecutor(SequentialExecutor(), batch_size=3, target_job_count=2)
+
+
+def test_init_rejects_zero_batch_size() -> None:
+    with pytest.raises(ValueError, match="batch_size must be greater than 0"):
+        BatchingExecutor(SequentialExecutor(), batch_size=0)
+
+
+def test_init_rejects_zero_target_job_count() -> None:
+    with pytest.raises(ValueError, match="target_job_count must be greater than 0"):
+        BatchingExecutor(SequentialExecutor(), target_job_count=0)
+
+
+def test_target_job_count_map() -> None:
+    """With target_job_count=2 and 7 items, batch_size=ceil(7/2)=4 → 2 jobs."""
+    inner = SequentialExecutor()
+    received_batches: list[list[int]] = []
+    original_map = inner.map
+
+    def spy(fn, iterables, **kwargs):  # type: ignore[no-untyped-def]
+        batches = list(iterables)
+        received_batches.extend(batches)
+        return original_map(fn, iter(batches), **kwargs)
+
+    with patch.object(inner, "map", side_effect=spy):
+        with BatchingExecutor(inner, target_job_count=2) as executor:
+            results = list(executor.map(double, range(7)))
+
+    assert results == [0, 2, 4, 6, 8, 10, 12]
+    assert received_batches == [[0, 1, 2, 3], [4, 5, 6]]
+
+
+def test_target_job_count_map_to_futures() -> None:
+    with BatchingExecutor(SequentialExecutor(), target_job_count=2) as executor:
+        futures = executor.map_to_futures(double, [1, 2, 3, 4, 5])
+    assert [f.result() for f in futures] == [2, 4, 6, 8, 10]
+
+
+def test_target_job_count_empty() -> None:
+    with BatchingExecutor(SequentialExecutor(), target_job_count=3) as executor:
+        results = list(executor.map(double, []))
+    assert results == []
+
+
 def test_get_executor() -> None:
     executor = cluster_tools.get_executor(
         "batching",

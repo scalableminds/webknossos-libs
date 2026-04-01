@@ -1,3 +1,4 @@
+import math
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, as_completed
 from functools import partial
@@ -28,17 +29,51 @@ def _iter_batches(iterable: Iterable[_S], batch_size: int) -> Iterator[list[_S]]
 class BatchingExecutor:
     """
     Wraps another executor and groups items into batches before submission.
-    Each call to the underlying executor processes batch_size items at once.
+
+    Specify exactly one of:
+    - batch_size: fixed number of items per job (must be > 0)
+    - target_job_count: desired number of jobs; batch size is computed as
+      ceil(n_items / target_job_count) for each map call (must be > 0)
     """
 
-    batch_size: int
     _executor: Executor
+    _batch_size: int | None
+    _target_job_count: int | None
 
-    def __init__(self, executor: Executor, *, batch_size: int) -> None:
-        if batch_size <= 0:
+    def __init__(
+        self,
+        executor: Executor,
+        *,
+        batch_size: int | None = None,
+        target_job_count: int | None = None,
+    ) -> None:
+        if batch_size is not None and target_job_count is not None:
+            raise ValueError("Specify either batch_size or target_job_count, not both")
+        if batch_size is None and target_job_count is None:
+            raise ValueError("Either batch_size or target_job_count must be specified")
+        if batch_size is not None and batch_size <= 0:
             raise ValueError("batch_size must be greater than 0")
+        if target_job_count is not None and target_job_count <= 0:
+            raise ValueError("target_job_count must be greater than 0")
         self._executor = executor
-        self.batch_size = batch_size
+        self._batch_size = batch_size
+        self._target_job_count = target_job_count
+
+    @property
+    def batch_size(self) -> int | None:
+        return self._batch_size
+
+    @property
+    def target_job_count(self) -> int | None:
+        return self._target_job_count
+
+    def _resolve_batch_size(self, n_items: int) -> int:
+        if self._batch_size is not None:
+            return self._batch_size
+        assert self._target_job_count is not None
+        if n_items == 0:
+            return 1
+        return math.ceil(n_items / self._target_job_count)
 
     def __enter__(self) -> "BatchingExecutor":
         self._executor.__enter__()
@@ -76,9 +111,11 @@ class BatchingExecutor:
                 "BatchingExecutor does not support output_pickle_path_getter"
             )
 
+        items = list(args)
+        batch_size = self._resolve_batch_size(len(items))
         all_item_futures: list[Future[_T]] = []
 
-        for batch in _iter_batches(args, self.batch_size):
+        for batch in _iter_batches(items, batch_size):
             (batch_future,) = self._executor.map_to_futures(
                 partial(_apply_fn_to_batch, fn), [batch]
             )
@@ -112,10 +149,13 @@ class BatchingExecutor:
                 "BatchingExecutor does not support chunksize. Use batch_size instead."
             )
 
+        items = list(iterables)
+        batch_size = self._resolve_batch_size(len(items))
+
         def result_generator() -> Iterator[_T]:
             for batch_results in self._executor.map(
                 partial(_apply_fn_to_batch, fn),
-                _iter_batches(iterables, self.batch_size),
+                _iter_batches(items, batch_size),
                 timeout=timeout,
             ):
                 yield from batch_results

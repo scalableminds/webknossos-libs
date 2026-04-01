@@ -135,7 +135,15 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
             )
 
         inner_executor = get_executor(name, **inner_executor_config)
-        return BatchingExecutor(inner_executor, batch_size=kwargs.get("batch_size", 1))
+        batch_size = kwargs.get("batch_size")
+        target_job_count = kwargs.get("target_job_count")
+        if batch_size is None and target_job_count is None:
+            raise ValueError(
+                "The 'batching' executor's nested 'executor' config requires either a 'batch_size' or 'target_job_count' key."
+            )
+        return BatchingExecutor(
+            inner_executor, batch_size=batch_size, target_job_count=target_job_count
+        )
     elif environment == "sequential_with_pickling":
         return SequentialPickleExecutor(**kwargs)
     elif environment == "multiprocessing_with_pickling":
