@@ -1,3 +1,4 @@
+from concurrent.futures import CancelledError, Future
 from pathlib import Path
 from unittest.mock import patch
 
@@ -11,6 +12,10 @@ from cluster_tools.executors.sequential import SequentialExecutor
 
 def double(x: int) -> int:
     return x * 2
+
+
+def raise_runtime_error(_: int) -> int:
+    raise RuntimeError("failure")
 
 
 @pytest.fixture(params=["sequential", "multiprocessing"])
@@ -90,6 +95,27 @@ def test_map_to_futures_output_pickle_path_getter_raises() -> None:
             )
 
 
+def test_map_to_futures_exception_propagates_to_all_item_futures() -> None:
+    # SequentialExecutor raises synchronously, so use MultiprocessingExecutor
+    # to exercise the on_batch_done exception path (failure arrives via future).
+    with BatchingExecutor(
+        MultiprocessingExecutor(max_workers=1), batch_size=3
+    ) as executor:
+        futures = executor.map_to_futures(raise_runtime_error, [1, 2, 3])
+
+    assert len(futures) == 3
+    for fut in futures:
+        with pytest.raises(RuntimeError, match="failure"):
+            fut.result()
+
+
+def test_submit_warns() -> None:
+    with BatchingExecutor(SequentialExecutor(), batch_size=3) as executor:
+        with pytest.warns(UserWarning, match="bypasses batching"):
+            fut = executor.submit(double, 5)
+    assert fut.result() == 10
+
+
 def test_init_requires_one_of_batch_size_or_target_job_count() -> None:
     with pytest.raises(ValueError, match="Either batch_size or target_job_count"):
         BatchingExecutor(SequentialExecutor())
@@ -148,7 +174,27 @@ def test_get_executor() -> None:
             "name": "multiprocessing",
             "max_workers": 3,
         },
+        batch_size=10,
     )
     assert isinstance(executor, BatchingExecutor)
     assert isinstance(executor._executor, MultiprocessingExecutor)
     assert executor._executor._max_workers == 3  # type: ignore[attr-defined]
+    assert executor.batch_size == 10
+
+
+def test_get_executor_target_job_count() -> None:
+    executor = cluster_tools.get_executor(
+        "batching",
+        executor={"name": "sequential"},
+        target_job_count=4,
+    )
+    assert isinstance(executor, BatchingExecutor)
+    assert executor.target_job_count == 4
+
+
+def test_get_executor_missing_sizing_raises() -> None:
+    with pytest.raises(ValueError, match="batch_size.*target_job_count"):
+        cluster_tools.get_executor(
+            "batching",
+            executor={"name": "sequential"},
+        )

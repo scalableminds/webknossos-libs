@@ -1,4 +1,5 @@
 import math
+import warnings
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Future, as_completed
 from functools import partial
@@ -98,6 +99,10 @@ class BatchingExecutor:
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
+        warnings.warn(
+            "BatchingExecutor.submit() bypasses batching and submits a single job directly.",
+            stacklevel=2,
+        )
         return self._executor.submit(__fn, *args, **kwargs)
 
     def map_to_futures(

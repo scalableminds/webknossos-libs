@@ -139,7 +139,7 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
         target_job_count = kwargs.get("target_job_count")
         if batch_size is None and target_job_count is None:
             raise ValueError(
-                "The 'batching' executor's nested 'executor' config requires either a 'batch_size' or 'target_job_count' key."
+                "The 'batching' executor requires either a 'batch_size' or 'target_job_count' key."
             )
         return BatchingExecutor(
             inner_executor, batch_size=batch_size, target_job_count=target_job_count
