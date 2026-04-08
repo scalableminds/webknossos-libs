@@ -55,7 +55,7 @@ class DatastoreApiClient(AbstractApiClient):
         )
 
     def attachment_reserve_upload(
-        self, *attachment_upload_info: ApiAttachmentUploadInfo, retry_count: int
+        self, *, attachment_upload_info: ApiAttachmentUploadInfo, retry_count: int
     ) -> None:
         self._post_json(
             "/datasets/upload/attachment/reserveUpload",

@@ -10,11 +10,13 @@ import httpx
 from upath import UPath
 
 from .. import LayerToLink
-from ..dataset import Dataset, MagView
+from ..dataset import Attachment, Dataset, MagView
 from ..datastore import Datastore
 from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .api_client.models import (
+    ApiAttachmentProperties,
+    ApiAttachmentUploadInfo,
     ApiDatasetUploadInfo,
     ApiMagProperties,
     ApiMagUploadInfo,
@@ -74,7 +76,6 @@ def upload_mag(
             mag=ApiMagProperties(
                 mag=mag.mag.to_tuple(),
                 channel_index=None,
-                path="hi",  # TODO remove
             ),
             overwritePending=True,  # TODO
         ),
@@ -103,6 +104,71 @@ def upload_mag(
                     lambda chunk: progress.advance(progress_task, chunk.size)
                 )
     datastore_api_client.mag_finish_upload(
+        upload_id=upload_id,
+        retry_count=MAXIMUM_RETRY_COUNT,
+    )
+
+
+def upload_attachment(
+    dataset_id: str,
+    layer_name: str,
+    attachment: Attachment,
+    datastore_url: str | None = None,
+    jobs: int | None = None,
+) -> None:
+    context = _get_context()
+    file_infos = list(_walk(attachment.path))
+    total_file_size = sum(size for _, _, size in file_infos)
+    upload_id = _generate_upload_id()
+    datastore_url = datastore_url or _cached_get_upload_datastore(context)
+    datastore_api_client = context.get_datastore_api_client(datastore_url)
+    simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
+    if "PYTEST_CURRENT_TEST" in os.environ:
+        simultaneous_uploads = 1
+    datastore_api_client.attachment_reserve_upload(
+        attachment_upload_info=ApiAttachmentUploadInfo(
+            resumable_upload_info=ApiResumableUploadInfo(
+                upload_id=upload_id,
+                total_file_count=len(file_infos),
+                total_file_size_in_bytes=total_file_size,
+            ),
+            dataset_id=dataset_id,
+            layer_name=layer_name,
+            attachment_type=attachment.type_name,
+            attachment=ApiAttachmentProperties(
+                name=attachment.name,
+                path="dummy_path",
+                dataFormat=str(attachment.data_format),
+            ),
+            overwritePending=True,  # TODO
+        ),
+        retry_count=MAXIMUM_RETRY_COUNT,
+    )
+    with get_rich_progress() as progress:
+        with Resumable(
+            f"{datastore_url}/data/datasets/upload/attachment",
+            simultaneous_uploads=simultaneous_uploads,
+            query={
+                "totalFileCount": len(file_infos),
+            },
+            headers={"X-Auth-Token": context.token},
+            chunk_size=100 * 1024 * 1024,  # 100 MiB
+            generate_unique_identifier=lambda _, relative_path: (
+                f"{upload_id}/{relative_path.as_posix()}"
+            ),
+            test_chunks=False,
+            permanent_errors=RESUMABLE_PERMANENT_ERROR_CODES,
+            client=httpx.Client(timeout=None),
+        ) as session:
+            progress_task = progress.add_task(
+                "Attachment Upload", total=total_file_size
+            )
+            for file_path, relative_path, _ in file_infos:
+                resumable_file = session.add_file(file_path, relative_path)
+                resumable_file.chunk_completed.register(
+                    lambda chunk: progress.advance(progress_task, chunk.size)
+                )
+    datastore_api_client.attachment_finish_upload(
         upload_id=upload_id,
         retry_count=MAXIMUM_RETRY_COUNT,
     )

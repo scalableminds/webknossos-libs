@@ -91,6 +91,7 @@ class RemoteLayer(AbstractLayer):
             if transfer_mode == TransferMode.HTTP:
                 from ...client._upload_dataset import upload_mag
 
+                # TODO pass in axis_order
                 upload_mag(self.dataset.dataset_id, self.name, foreign_mag_view)
             else:
                 reserve_parameters = ApiReserveMagUploadToPathParameters(

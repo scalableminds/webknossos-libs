@@ -214,7 +214,6 @@ class ApiDatasetUploadInfo:
 class ApiMagProperties:
     mag: tuple[int, int, int]
     channel_index: int | None
-    path: str  # TODO remove
 
 
 @attr.s(auto_attribs=True)
@@ -226,12 +225,22 @@ class ApiMagUploadInfo:
     overwritePending: bool
 
 
+# TODO use existing AttachmentProperties (?)
+@attr.s(auto_attribs=True)
+class ApiAttachmentProperties:
+    name: str
+    path: str
+    dataFormat: str
+
+
 @attr.s(auto_attribs=True)
 class ApiAttachmentUploadInfo:
     resumable_upload_info: ApiResumableUploadInfo
     dataset_id: str
     layer_name: str
-    # TODO rest
+    attachment_type: str
+    attachment: ApiAttachmentProperties
+    overwritePending: bool
 
 
 @attr.s(auto_attribs=True)
