@@ -15,8 +15,8 @@ from ..datastore import Datastore
 from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .api_client.models import (
-    ApiDatasetUploadInformation,
-    ApiReserveDatasetUploadInformation,
+    ApiDatasetUploadInfo,
+    ApiResumableUploadInfo,
 )
 from .context import _get_context, _WebknossosContext, webknossos_context
 
@@ -95,27 +95,27 @@ def upload_dataset(
         )
 
     datastore_api_client.dataset_reserve_upload(
-        reserve_upload_information=ApiReserveDatasetUploadInformation(
-            upload_id,
-            new_dataset_name,
-            context.organization_id,
-            total_file_count=len(file_infos),
-            total_file_size_in_bytes=total_file_size,
+        reserve_upload_information=ApiDatasetUploadInfo(
+            resumable_upload_info=ApiResumableUploadInfo(
+                upload_id=upload_id,
+                total_file_count=len(file_infos),
+                total_file_size_in_bytes=total_file_size,
+            ),
+            dataset_name=new_dataset_name,
+            organization_id=context.organization_id,
             layers_to_link=[
                 layer._as_api_linked_layer_identifier() for layer in layers_to_link
             ],
             folder_id=folder_id,
-            initial_teams=[],
+            initial_team_ids=[],
         ),
         retry_count=MAXIMUM_RETRY_COUNT,
     )
     with get_rich_progress() as progress:
         with Resumable(
-            f"{datastore_url}/data/datasets",
+            f"{datastore_url}/data/datasets/upload/dataset",
             simultaneous_uploads=simultaneous_uploads,
             query={
-                "owningOrganization": context.organization_id,
-                "name": new_dataset_name,
                 "totalFileCount": len(file_infos),
             },
             headers={"X-Auth-Token": context.token},
@@ -135,7 +135,7 @@ def upload_dataset(
                 )
 
     dataset_id = datastore_api_client.dataset_finish_upload(
-        upload_information=ApiDatasetUploadInformation(upload_id),
+        upload_id=upload_id,
         retry_count=MAXIMUM_RETRY_COUNT,
     )
 

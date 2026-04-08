@@ -146,13 +146,8 @@ class ApiSharingToken:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetUploadInformation:
-    upload_id: str
-
-
-@attr.s(auto_attribs=True)
 class ApiDatasetUploadSuccess:
-    new_dataset_id: str
+    dataset_id: str
 
 
 @attr.s(auto_attribs=True)
@@ -197,13 +192,18 @@ class ApiDatasetComposeAttachment:
 
 
 @attr.s(auto_attribs=True)
-class ApiReserveDatasetUploadInformation:
+class ApiResumableUploadInfo:
     upload_id: str
-    name: str
-    organization: str
     total_file_count: int
     total_file_size_in_bytes: int
-    initial_teams: list[str]
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetUploadInfo:
+    resumable_upload_info: ApiResumableUploadInfo
+    dataset_name: str
+    organization_id: str
+    initial_team_ids: list[str]
     layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
     folder_id: str | None = None
 

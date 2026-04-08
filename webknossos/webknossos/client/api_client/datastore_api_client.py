@@ -2,10 +2,9 @@ from collections.abc import Iterator
 
 from webknossos.client.api_client.models import (
     ApiAdHocMeshInfo,
-    ApiDatasetUploadInformation,
+    ApiDatasetUploadInfo,
     ApiDatasetUploadSuccess,
     ApiPrecomputedMeshInfo,
-    ApiReserveDatasetUploadInformation,
 )
 
 from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
@@ -34,26 +33,26 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_finish_upload(
         self,
         *,
-        upload_information: ApiDatasetUploadInformation,
+        upload_id: str,
         retry_count: int,
     ) -> str:
-        route = "/datasets/finishUpload"
-        json = self._post_json_with_json_response(
+        route = "/datasets/upload/dataset/finishUpload"
+        json = self._post_with_json_response(
             route,
-            upload_information,
+            query={"datasetId": upload_id},
             retry_count=retry_count,
             timeout_seconds=LONG_TIMEOUT_SECONDS,
             response_type=ApiDatasetUploadSuccess,
         )
-        return json.new_dataset_id
+        return json.dataset_id
 
     def dataset_reserve_upload(
         self,
         *,
-        reserve_upload_information: ApiReserveDatasetUploadInformation,
+        reserve_upload_information: ApiDatasetUploadInfo,
         retry_count: int,
     ) -> None:
-        route = "/datasets/reserveUpload"
+        route = "/datasets/upload/dataset/reserveUpload"
         self._post_json(
             route,
             reserve_upload_information,
