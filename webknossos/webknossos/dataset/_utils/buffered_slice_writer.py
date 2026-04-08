@@ -162,10 +162,14 @@ class BufferedSliceWriter:
             )
             buffer_depth = min(self._buffer_size, len(self._slices_to_write))
 
+            # downsample bbox to the mag of the view,
+            # so that the topleft is in the mags coordinate system
+            mag = self._view._mag
+            downsampled_bbox = self._bbox.align_with_mag(mag).in_mag(mag)
             bbox = (
-                self._bbox.with_bounds(
+                downsampled_bbox.with_bounds(
                     self.dimension,
-                    new_topleft=self._bbox.topleft.get(self.dimension)
+                    new_topleft=downsampled_bbox.topleft.get(self.dimension)
                     + self._buffer_start_slice,
                     new_size=buffer_depth,
                 )
@@ -235,7 +239,7 @@ class BufferedSliceWriter:
 
                 self._view.write(
                     data,
-                    absolute_bounding_box=chunk_bbox.from_mag_to_mag1(self._view._mag),
+                    absolute_bounding_box=chunk_bbox.from_mag_to_mag1(mag),
                     allow_unaligned=self._allow_unaligned,
                 )
                 del data
