@@ -164,7 +164,7 @@ class BufferedSliceWriter:
 
             # downsample bbox to the mag of the view,
             # so that the topleft is in the mags coordinate system
-            mag = self._view._mag
+            mag = self._view.mag
             downsampled_bbox = self._bbox.align_with_mag(mag).in_mag(mag)
             bbox = (
                 downsampled_bbox.with_bounds(
