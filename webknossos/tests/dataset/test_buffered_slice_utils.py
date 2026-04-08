@@ -379,13 +379,11 @@ def test_buffered_slice_writer_resize_error(tmp_upath: UPath) -> None:
 
 
 def test_buffered_slice_writer_mag2_absolute_bbox(tmp_upath: UPath) -> None:
-    target_mag = Mag(
-        "2-2-1"
-    )  # write to a non mag1 mag using an absolute bbox with offset
+    # write to a non mag1 mag using an absolute bbox with offset
+    target_mag = Mag("2-2-1")
 
-    mag1_bbox = BoundingBox(
-        (128, 128, 0), (32, 32, 8)
-    )  # intentionally start at some offset
+    # intentionally start at some odd offset
+    mag1_bbox = BoundingBox((128, 128, 0), (32, 32, 8))
     mag2_bbox = mag1_bbox.align_with_mag(target_mag).in_mag(target_mag)
 
     # Allocate some data
@@ -399,6 +397,7 @@ def test_buffered_slice_writer_mag2_absolute_bbox(tmp_upath: UPath) -> None:
         dtype="uint8",
         num_channels=1,
         bounding_box=mag1_bbox,
+        chunk_shape=mag1_bbox.size,
     )
     mag2 = layer.add_mag("2-2-1")
 
@@ -409,5 +408,4 @@ def test_buffered_slice_writer_mag2_absolute_bbox(tmp_upath: UPath) -> None:
             writer.send(section)
 
     written_data = mag2.read(absolute_bounding_box=mag1_bbox)
-
-    assert np.all(data == written_data)
+    np.testing.assert_array_equal(data, written_data.squeeze())
