@@ -389,7 +389,7 @@ def test_buffered_slice_writer_mag2_absolute_bbox(tmp_upath: UPath) -> None:
     mag2_bbox = mag1_bbox.align_with_mag(target_mag).in_mag(target_mag)
 
     # Allocate some data
-    data = np.random.randint(0, 255, mag2_bbox.size, dtype=np.uint8)
+    data = np.random.randint(0, 255, tuple(mag2_bbox.size), dtype=np.uint8)
 
     # Create DS
     dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
