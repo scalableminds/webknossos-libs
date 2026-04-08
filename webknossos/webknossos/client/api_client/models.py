@@ -208,6 +208,32 @@ class ApiDatasetUploadInfo:
     folder_id: str | None = None
 
 
+# TODO use existing MagProperties (?)
+# TODO axisOrder?
+@attr.s(auto_attribs=True)
+class ApiMagProperties:
+    mag: tuple[int, int, int]
+    channel_index: int | None
+    path: str  # TODO remove
+
+
+@attr.s(auto_attribs=True)
+class ApiMagUploadInfo:
+    resumable_upload_info: ApiResumableUploadInfo
+    dataset_id: str
+    layer_name: str
+    mag: ApiMagProperties
+    overwritePending: bool
+
+
+@attr.s(auto_attribs=True)
+class ApiAttachmentUploadInfo:
+    resumable_upload_info: ApiResumableUploadInfo
+    dataset_id: str
+    layer_name: str
+    # TODO rest
+
+
 @attr.s(auto_attribs=True)
 class ApiTaskStatus:
     pending: int

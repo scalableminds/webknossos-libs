@@ -10,18 +10,21 @@ import httpx
 from upath import UPath
 
 from .. import LayerToLink
-from ..dataset import Dataset
+from ..dataset import Dataset, MagView
 from ..datastore import Datastore
 from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .api_client.models import (
     ApiDatasetUploadInfo,
+    ApiMagProperties,
+    ApiMagUploadInfo,
     ApiResumableUploadInfo,
 )
 from .context import _get_context, _WebknossosContext, webknossos_context
 
 DEFAULT_SIMULTANEOUS_UPLOADS = 5
 MAXIMUM_RETRY_COUNT = 4
+RESUMABLE_PERMANENT_ERROR_CODES = [400, 403, 404, 409, 415, 500, 501]
 
 
 @cache
@@ -41,6 +44,73 @@ def _walk(
             yield from _walk(p, base_path)
     else:
         yield (path.resolve(), path.relative_to(base_path), path.stat().st_size)
+
+
+def upload_mag(
+    dataset_id: str,
+    layer_name: str,
+    mag: MagView,
+    datastore_url: str | None = None,
+    jobs: int | None = None,
+) -> None:
+    context = _get_context()
+    file_infos = list(_walk(mag.path))
+    total_file_size = sum(size for _, _, size in file_infos)
+    upload_id = _generate_upload_id()
+    datastore_url = datastore_url or _cached_get_upload_datastore(context)
+    datastore_api_client = context.get_datastore_api_client(datastore_url)
+    simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
+    if "PYTEST_CURRENT_TEST" in os.environ:
+        simultaneous_uploads = 1
+    datastore_api_client.mag_reserve_upload(
+        mag_upload_info=ApiMagUploadInfo(
+            resumable_upload_info=ApiResumableUploadInfo(
+                upload_id=upload_id,
+                total_file_count=len(file_infos),
+                total_file_size_in_bytes=total_file_size,
+            ),
+            dataset_id=dataset_id,
+            layer_name=layer_name,
+            mag=ApiMagProperties(
+                mag=mag.mag.to_tuple(),
+                channel_index=None,
+                path="hi",  # TODO remove
+            ),
+            overwritePending=True,  # TODO
+        ),
+        retry_count=MAXIMUM_RETRY_COUNT,
+    )
+    with get_rich_progress() as progress:
+        with Resumable(
+            f"{datastore_url}/data/datasets/upload/mag",
+            simultaneous_uploads=simultaneous_uploads,
+            query={
+                "totalFileCount": len(file_infos),
+            },
+            headers={"X-Auth-Token": context.token},
+            chunk_size=100 * 1024 * 1024,  # 100 MiB
+            generate_unique_identifier=lambda _, relative_path: (
+                f"{upload_id}/{relative_path.as_posix()}"
+            ),
+            test_chunks=False,
+            permanent_errors=RESUMABLE_PERMANENT_ERROR_CODES,
+            client=httpx.Client(timeout=None),
+        ) as session:
+            progress_task = progress.add_task("Mag Upload", total=total_file_size)
+            for file_path, relative_path, _ in file_infos:
+                resumable_file = session.add_file(file_path, relative_path)
+                resumable_file.chunk_completed.register(
+                    lambda chunk: progress.advance(progress_task, chunk.size)
+                )
+    datastore_api_client.mag_finish_upload(
+        upload_id=upload_id,
+        retry_count=MAXIMUM_RETRY_COUNT,
+    )
+
+
+def _generate_upload_id() -> str:
+    time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
+    return f"{time_str}__{uuid4()}"
 
 
 def upload_dataset(
@@ -76,8 +146,7 @@ def upload_dataset(
     file_infos = list(_walk(dataset.path))
     total_file_size = sum(size for _, _, size in file_infos)
     # replicates https://github.com/scalableminds/webknossos/blob/master/frontend/javascripts/admin/dataset/dataset_upload_view.js
-    time_str = strftime("%Y-%m-%dT%H-%M-%S", gmtime())
-    upload_id = f"{time_str}__{uuid4()}"
+    upload_id = _generate_upload_id()
     datastore_url = datastore_url or _cached_get_upload_datastore(context)
     datastore_api_client = context.get_datastore_api_client(datastore_url)
     simultaneous_uploads = jobs if jobs is not None else DEFAULT_SIMULTANEOUS_UPLOADS
@@ -95,7 +164,7 @@ def upload_dataset(
         )
 
     datastore_api_client.dataset_reserve_upload(
-        reserve_upload_information=ApiDatasetUploadInfo(
+        dataset_upload_info=ApiDatasetUploadInfo(
             resumable_upload_info=ApiResumableUploadInfo(
                 upload_id=upload_id,
                 total_file_count=len(file_infos),
@@ -124,7 +193,7 @@ def upload_dataset(
                 f"{upload_id}/{relative_path.as_posix()}"
             ),
             test_chunks=False,
-            permanent_errors=[400, 403, 404, 409, 415, 500, 501],
+            permanent_errors=RESUMABLE_PERMANENT_ERROR_CODES,
             client=httpx.Client(timeout=None),
         ) as session:
             progress_task = progress.add_task("Dataset Upload", total=total_file_size)
