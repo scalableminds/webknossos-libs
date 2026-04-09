@@ -288,7 +288,7 @@ nav:
         - DataFormat: api/webknossos/dataset_properties/data_format.md
         - LengthUnit: api/webknossos/dataset_properties/length_unit.md
         - LayerToLink: api/webknossos/dataset/layer/layer_to_link.md
-      - Annotations:
+      - Annotation:
         - Annotation: api/webknossos/annotation/annotation.md
         - AnnotationInfo: api/webknossos/annotation/annotation_info.md
       - Skeleton:
