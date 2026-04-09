@@ -46,7 +46,7 @@ class DatastoreApiClient(AbstractApiClient):
         *,
         upload_id: str,
         retry_count: int,
-    ):
+    ) -> None:
         self._post(
             "/datasets/upload/mag/finishUpload",
             query={"uploadId": upload_id},
@@ -68,7 +68,7 @@ class DatastoreApiClient(AbstractApiClient):
         *,
         upload_id: str,
         retry_count: int,
-    ):
+    ) -> None:
         self._post(
             "/datasets/upload/attachment/finishUpload",
             query={"uploadId": upload_id},

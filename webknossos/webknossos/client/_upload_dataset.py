@@ -83,7 +83,7 @@ def upload_mag(
     )
     with get_rich_progress() as progress:
         with Resumable(
-            f"{datastore_url}/data/datasets/upload/mag",
+            f"{datastore_api_client.url_prefix}/datasets/upload/mag",
             simultaneous_uploads=simultaneous_uploads,
             query={
                 "totalFileCount": len(file_infos),
@@ -146,7 +146,7 @@ def upload_attachment(
     )
     with get_rich_progress() as progress:
         with Resumable(
-            f"{datastore_url}/data/datasets/upload/attachment",
+            f"{datastore_api_client.url_prefix}/datasets/upload/attachment",
             simultaneous_uploads=simultaneous_uploads,
             query={
                 "totalFileCount": len(file_infos),
@@ -248,7 +248,7 @@ def upload_dataset(
     )
     with get_rich_progress() as progress:
         with Resumable(
-            f"{datastore_url}/data/datasets/upload/dataset",
+            f"{datastore_api_client.url_prefix}/datasets/upload/dataset",
             simultaneous_uploads=simultaneous_uploads,
             query={
                 "totalFileCount": len(file_infos),
