@@ -274,7 +274,7 @@ jobs:
   docs:
     needs:
       - cluster_tools_slurm
-      - cluster_tools_multiprocessing
+      - cluster_tools_other
       - webknossos_linux
       - webknossos_windows
     runs-on: ubuntu-latest
@@ -329,7 +329,7 @@ jobs:
   pypi_and_gh_release:
     needs:
       - cluster_tools_slurm
-      - cluster_tools_multiprocessing
+      - cluster_tools_other
       - webknossos_linux
       - webknossos_windows
     if: |
