@@ -87,7 +87,7 @@ jobs:
             -e PYTEST_EXECUTORS=slurm \
             slurmctld bash -c "uv run --frozen python -m pytest -sv test_slurm.py -m 'requires_modified_slurm_config'"
 
-  cluster_tools_multiprocessing:
+  cluster_tools_other:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
@@ -123,6 +123,10 @@ jobs:
           cd tests
           PYTEST_EXECUTORS=multiprocessing,sequential,multiprocessing_with_pickling,sequential_with_pickling \
             uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
+      - name: Run batching tests
+        run: |
+          cd tests
+          uv run --frozen python -m pytest -sv test_batching.py
 
   webknossos_linux:
     needs: changes
@@ -359,7 +363,7 @@ jobs:
 
   complete:
     needs:
-      - cluster_tools_multiprocessing
+      - cluster_tools_other
       - cluster_tools_slurm
       - webknossos_linux
       - webknossos_windows
