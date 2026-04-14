@@ -382,9 +382,9 @@ def test_buffered_slice_writer_mag2_absolute_bbox(tmp_upath: UPath) -> None:
     # write to a non mag1 mag using an absolute bbox with offset
     target_mag = Mag("2-2-1")
 
-    # intentionally start at some odd offset
+    # intentionally start at some offset
     mag1_bbox = BoundingBox((128, 128, 0), (32, 32, 8))
-    mag2_bbox = mag1_bbox.align_with_mag(target_mag).in_mag(target_mag)
+    mag2_bbox = mag1_bbox.in_mag(target_mag)
 
     # Allocate some data
     data = np.random.randint(0, 255, tuple(mag2_bbox.size), dtype=np.uint8)
