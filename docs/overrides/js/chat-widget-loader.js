@@ -38,7 +38,7 @@
       return;
     }
     // Adjust selector to match the root element injected by chat-widget.js
-    var widget = document.querySelector('#n8n-chat, .n8n-chat-widget-wrapper');
+    var widget = document.querySelector('.n8n-chat-widget');
     if (widget) {
       widget.style.display = shouldShow ? '' : 'none';
     }
