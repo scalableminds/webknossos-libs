@@ -9,7 +9,7 @@
     widgetLoaded = true;
     window.ChatWidgetConfig = {
       webhook: {
-        url: 'https://docs.webknossos.org/webknossos/ask',
+        url: 'https://docs.webknossos.org/webhooks/webknossos/ask',
         route: 'general'
       },
       branding: {
