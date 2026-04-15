@@ -88,7 +88,7 @@
       loadWidget();
       return;
     }
-    var widget = document.querySelector('.n8n-chat-ui-parent-container');
+    var widget = document.querySelector('n8nchatui-popup');
     if (widget) {
       widget.style.display = shouldShow ? '' : 'none';
     }
