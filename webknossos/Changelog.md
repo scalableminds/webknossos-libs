@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed a bug in the `BufferedSliceWriter`, where Mag-1 bounding boxes were upscaled when writing to a non-Mag-1 view. [#1451](https://github.com/scalableminds/webknossos-libs/pull/1451)
 
 
 ## [3.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.3.0) - 2026-03-31
