@@ -83,6 +83,9 @@ class BufferedSliceWriter:
             absolute_bounding_box,
         )
 
+        # assert that self.bbox is aligned with the mag of the view
+        self._bbox.in_mag(self._view.mag)  # will throw error if not aligned
+
         view_shard_depth = self._view.info.chunk_shape.get(self.dimension)
         if (
             self._bbox is not None
@@ -162,10 +165,15 @@ class BufferedSliceWriter:
             )
             buffer_depth = min(self._buffer_size, len(self._slices_to_write))
 
+            # downsample bbox to the mag of the view,
+            # so that the topleft is in the mags coordinate system
+            mag = self._view.mag
+            # this will throw if the bbox is not already mag aligned
+            downsampled_bbox = self._bbox.in_mag(mag)
             bbox = (
-                self._bbox.with_bounds(
+                downsampled_bbox.with_bounds(
                     self.dimension,
-                    new_topleft=self._bbox.topleft.get(self.dimension)
+                    new_topleft=downsampled_bbox.topleft.get(self.dimension)
                     + self._buffer_start_slice,
                     new_size=buffer_depth,
                 )
@@ -235,7 +243,7 @@ class BufferedSliceWriter:
 
                 self._view.write(
                     data,
-                    absolute_bounding_box=chunk_bbox.from_mag_to_mag1(self._view._mag),
+                    absolute_bounding_box=chunk_bbox.from_mag_to_mag1(mag),
                     allow_unaligned=self._allow_unaligned,
                 )
                 del data
