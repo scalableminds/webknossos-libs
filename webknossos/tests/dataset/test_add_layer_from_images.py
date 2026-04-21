@@ -323,7 +323,7 @@ def _test_bioformats(
     unzip_path = tmp_upath / "unzip"
     download_and_unpack(url, unzip_path, filename)
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
-    with wk.utils.get_executor_for_args(None) as executor:
+    with wk.utils.wrap_executor() as executor:
         layer = ds.add_layer_from_images(
             str(unzip_path / filename),
             layer_name="color",
@@ -472,7 +472,7 @@ def _test_test_images(
         layer_name = filename
         path = unzip_path / filename
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
-    with wk.utils.get_executor_for_args(None) as executor:
+    with wk.utils.wrap_executor() as executor:
         l_bio: wk.Layer | None
         try:
             l_bio = ds.add_layer_from_images(

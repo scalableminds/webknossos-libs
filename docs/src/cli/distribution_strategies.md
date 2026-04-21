@@ -25,6 +25,22 @@ Below is a list of the allowed resources and a brief explanation of each. For fu
 - **reservation**: Indicates a reservation name if specific reserved resources need to be used.
 - **time**: Sets the time limit for the job execution, as defined by SLURM.
 
+## SLURM+BATCHING
+
+The `slurm+batching` strategy is a variant of the SLURM strategy that groups individual tasks into larger batches before submitting them to the cluster. This reduces scheduling overhead and is especially useful when the dataset produces a large number of small work items that would otherwise flood the job queue.
+
+Like the `slurm` strategy, `--job-resources` is required. In addition, you must specify either `target_job_count` (the desired total number of SLURM jobs) or `batch_size` (the number of work items per job) — but not both:
+
+```bash
+# Limit the total number of submitted jobs
+--job-resources '{"target_job_count": 100, "mem": "32G"}'
+
+# Or set an explicit batch size
+--job-resources '{"batch_size": 50, "mem": "32G"}'
+```
+
+All other SLURM resource keys (e.g. `mem`, `time`, `partition`) are supported just as with the plain `slurm` strategy.
+
 ## KUBERNETES
 
 The `kubernetes` strategy allows tasks to execute within a Kubernetes cluster. It is ideal for containerized workflows and scalable orchestration. This strategy handles job creation and resource allocation automatically based on your Kubernetes configuration.

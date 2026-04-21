@@ -1,38 +1,43 @@
 """This module converts a RAW dataset to a WEBKNOSSOS dataset."""
 
 import logging
-from argparse import Namespace
 from functools import partial
-from multiprocessing import cpu_count
 from typing import Annotated, Any, Literal
 
 import numpy as np
 import typer
+from cluster_tools import Executor
 from upath import UPath
 
 from ..dataset import Dataset, MagView, SamplingModes
-from ..dataset.defaults import (
-    DEFAULT_CHUNK_SHAPE,
-    DEFAULT_DATA_FORMAT,
-    DEFAULT_SHARD_SHAPE,
-)
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
 from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import (
-    get_executor_for_args,
     is_fs_path,
     rmtree,
     time_start,
     time_stop,
     wait_and_ensure_success,
+    wrap_executor,
 )
 from ._utils import (
+    DEFAULT_DATA_FORMAT_STR,
+    DEFAULT_JOBS,
+    ChunkShapeOption,
+    ChunksPerShardOption,
+    DataFormatOption,
     DistributionStrategy,
+    DistributionStrategyOption,
+    JobResourcesOption,
+    JobsOption,
     Order,
     RescaleValues,
     SamplingMode,
+    ShardShapeOption,
     VoxelSizeTuple,
+    get_executor_for_args,
     parse_mag,
     parse_path,
     parse_rescale_values,
@@ -108,7 +113,7 @@ def convert_raw(
     flip_axes: tuple[int, ...] | None = None,
     compress: bool = True,
     rescale_min_max: RescaleValues | None = None,
-    executor_args: Namespace | None = None,
+    executor: Executor | None = None,
 ) -> MagView:
     """Performs the conversion step from RAW file to WEBKNOSSOS"""
     time_start(f"Conversion of {source_raw_path}")
@@ -132,7 +137,7 @@ def convert_raw(
     )
 
     # Parallel chunk conversion
-    with get_executor_for_args(args=executor_args) as executor:
+    with wrap_executor(executor) as executor:
         wait_and_ensure_success(
             executor.map_to_futures(
                 partial(
@@ -232,39 +237,10 @@ def main(
             show_default=False,
         ),
     ] = None,
-    data_format: Annotated[
-        DataFormat,
-        typer.Option(
-            help="Data format to store the target dataset in.",
-        ),
-    ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
-    chunk_shape: Annotated[
-        Vec3Int,
-        typer.Option(
-            help="Number of voxels to be stored as a chunk in the output format "
-            "(e.g. `32` or `32,32,32`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = DEFAULT_CHUNK_SHAPE,
-    shard_shape: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="Number of voxels to be stored as a shard in the output format "
-            "(e.g. `1024` or `1024,1024,1024`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
-    chunks_per_shard: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
-            "(e.g. `32` or `32,32,32`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
+    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # type: ignore
+    chunk_shape: ChunkShapeOption = DEFAULT_CHUNK_SHAPE,
+    shard_shape: ShardShapeOption = None,
+    chunks_per_shard: ChunksPerShardOption = None,
     flip_axes: Annotated[
         Vec3Int | None,
         typer.Option(
@@ -307,28 +283,9 @@ def main(
             show_default=False,
         ),
     ] = False,
-    jobs: Annotated[
-        int,
-        typer.Option(
-            help="Number of processes to be spawned.",
-            rich_help_panel="Executor options",
-        ),
-    ] = cpu_count(),
-    distribution_strategy: Annotated[
-        DistributionStrategy,
-        typer.Option(
-            help="Strategy to distribute the task across CPUs or nodes.",
-            rich_help_panel="Executor options",
-        ),
-    ] = DistributionStrategy.MULTIPROCESSING,
-    job_resources: Annotated[
-        str | None,
-        typer.Option(
-            help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-(e.g., --job-resources=\'{"mem": "10M"}\')\'',
-            rich_help_panel="Executor options",
-        ),
-    ] = None,
+    jobs: JobsOption = DEFAULT_JOBS,
+    distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
+    job_resources: JobResourcesOption = None,
 ) -> None:
     """Converts a RAW file into a WEBKNOSSOS dataset."""
 
@@ -352,36 +309,35 @@ def main(
         logger.error("source_path is not a file")
         return
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     if overwrite_existing and target.exists():
         rmtree(target)
 
-    mag_view = convert_raw(
-        source_raw_path=source,
-        target_path=target,
-        layer_name=layer_name,
-        source_dtype=np.dtype(source_dtype),
-        target_dtype=np.dtype(dtype),
-        shape=shape,
-        data_format=data_format,
-        chunk_shape=chunk_shape,
-        shard_shape=shard_shape or DEFAULT_SHARD_SHAPE,
-        order=order.value,
-        voxel_size_with_unit=voxel_size_with_unit,
-        flip_axes=flip_axes.to_tuple() if flip_axes else None,
-        compress=compress,
-        rescale_min_max=rescale_min_max,
-        executor_args=executor_args,
-    )
+    with get_executor_for_args(
+        jobs=jobs,
+        distribution_strategy=distribution_strategy,
+        job_resources=job_resources,
+    ) as executor:
+        mag_view = convert_raw(
+            source_raw_path=source,
+            target_path=target,
+            layer_name=layer_name,
+            source_dtype=np.dtype(source_dtype),
+            target_dtype=np.dtype(dtype),
+            shape=shape,
+            data_format=data_format,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape or DEFAULT_SHARD_SHAPE,
+            order=order.value,
+            voxel_size_with_unit=voxel_size_with_unit,
+            flip_axes=flip_axes.to_tuple() if flip_axes else None,
+            compress=compress,
+            rescale_min_max=rescale_min_max,
+            executor=executor,
+        )
 
-    if downsample:
-        with get_executor_for_args(executor_args) as executor:
+        if downsample:
             mag_view.layer.downsample(
                 from_mag=mag_view.mag,
                 coarsest_mag=max_mag,

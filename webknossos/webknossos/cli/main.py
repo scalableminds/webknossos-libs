@@ -2,6 +2,7 @@
 
 import typer
 
+from ..utils import set_s3fs_retry_settings
 from . import (
     check_equality,
     compress,
@@ -26,6 +27,8 @@ def version_callback(value: bool) -> None:
         typer.echo(__version__)
         raise typer.Exit()
 
+
+set_s3fs_retry_settings()
 
 app = typer.Typer(no_args_is_help=True, pretty_exceptions_short=False)
 

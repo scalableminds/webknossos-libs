@@ -2,35 +2,39 @@
 
 import logging
 import re
-from argparse import Namespace
 from collections import namedtuple
 from collections.abc import Generator, Iterator
 from functools import partial
-from multiprocessing import cpu_count
 from os import PathLike, sep
 from types import TracebackType
 from typing import Annotated, Any, cast
 
 import numpy as np
 import typer
+from cluster_tools import Executor
 from upath import UPath
 
 from ..dataset import Dataset, View
-from ..dataset.defaults import (
-    DEFAULT_CHUNK_SHAPE,
-    DEFAULT_DATA_FORMAT,
-    DEFAULT_SHARD_SHAPE,
-)
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
 from ..dataset_properties import COLOR_CATEGORY, DataFormat, LengthUnit, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, time_start, time_stop
+from ..utils import time_start, time_stop, wrap_executor
 from ._utils import (
+    DEFAULT_DATA_FORMAT_STR,
+    DEFAULT_JOBS,
+    ChunkShapeOption,
+    ChunksPerShardOption,
+    DataFormatOption,
     DistributionStrategy,
+    DistributionStrategyOption,
+    JobResourcesOption,
+    JobsOption,
+    ShardShapeOption,
     VoxelSizeTuple,
+    get_executor_for_args,
     parse_mag,
     parse_path,
-    parse_vec3int,
     parse_voxel_size,
     prepare_shard_shape,
 )
@@ -185,7 +189,7 @@ def convert_knossos(
     chunk_shape: Vec3Int,  # in target-mag
     shard_shape: Vec3Int,
     mag: Mag = Mag(1),
-    args: Namespace | None = None,
+    executor: Executor | None = None,
 ) -> None:
     """Performs the conversion of a KNOSSOS dataset to a WEBKNOSSOS dataset."""
 
@@ -220,7 +224,7 @@ def convert_knossos(
         mag, chunk_shape=chunk_shape, shard_shape=shard_shape
     )
 
-    with get_executor_for_args(args) as executor:
+    with wrap_executor(executor) as executor:
         target_mag.for_each_chunk(
             partial(convert_cube_job, source_knossos_info),
             chunk_shape=shard_shape * mag,
@@ -270,39 +274,10 @@ def main(
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. uint8, uint16, uint32)")
     ] = "uint8",
-    data_format: Annotated[
-        DataFormat,
-        typer.Option(
-            help="Data format to store the target dataset in.",
-        ),
-    ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
-    chunk_shape: Annotated[
-        Vec3Int,
-        typer.Option(
-            help="Number of voxels to be stored as a chunk in the output format "
-            "(e.g. `32` or `32,32,32`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = DEFAULT_CHUNK_SHAPE,
-    shard_shape: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="Number of voxels to be stored as a shard in the output format "
-            "(e.g. `1024` or `1024,1024,1024`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
-    chunks_per_shard: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
-            "(e.g. `32` or `32,32,32`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
+    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # type: ignore
+    chunk_shape: ChunkShapeOption = DEFAULT_CHUNK_SHAPE,
+    shard_shape: ShardShapeOption = None,
+    chunks_per_shard: ChunksPerShardOption = None,
     mag: Annotated[
         Mag,
         typer.Option(
@@ -312,28 +287,9 @@ def main(
             metavar="MAG",
         ),
     ] = 1,  # type: ignore
-    jobs: Annotated[
-        int,
-        typer.Option(
-            help="Number of processes to be spawned.",
-            rich_help_panel="Executor options",
-        ),
-    ] = cpu_count(),
-    distribution_strategy: Annotated[
-        DistributionStrategy,
-        typer.Option(
-            help="Strategy to distribute the task across CPUs or nodes.",
-            rich_help_panel="Executor options",
-        ),
-    ] = DistributionStrategy.MULTIPROCESSING,
-    job_resources: Annotated[
-        str | None,
-        typer.Option(
-            help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-            '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
-            rich_help_panel="Executor options",
-        ),
-    ] = None,
+    jobs: JobsOption = DEFAULT_JOBS,
+    distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
+    job_resources: JobResourcesOption = None,
 ) -> None:
     """Convert your KNOSSOS dataset to a WEBKNOSOOS dataset."""
 
@@ -343,22 +299,22 @@ def main(
         chunks_per_shard=chunks_per_shard,
     )
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
-    convert_knossos(
-        source,
-        target,
-        layer_name,
-        dtype,
-        voxel_size_with_unit,
-        data_format,
-        chunk_shape,
-        shard_shape or DEFAULT_SHARD_SHAPE,
-        mag,
-        executor_args,
-    )
+    with get_executor_for_args(
+        jobs=jobs,
+        distribution_strategy=distribution_strategy,
+        job_resources=job_resources,
+    ) as executor:
+        convert_knossos(
+            source,
+            target,
+            layer_name,
+            dtype,
+            voxel_size_with_unit,
+            data_format,
+            chunk_shape,
+            shard_shape or DEFAULT_SHARD_SHAPE,
+            mag,
+            executor,
+        )

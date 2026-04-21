@@ -93,13 +93,13 @@ from ..utils import (
     count_defined_values,
     dump_path,
     enrich_path,
-    get_executor_for_args,
     is_fs_path,
     named_partial,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
     warn_deprecated,
+    wrap_executor,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from ._utils.segmentation_recognition import (
@@ -976,7 +976,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 filepaths_per_layer = {
                     f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
                 }
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
             with warnings.catch_warnings():
                 warnings.filterwarnings(
                     "ignore",
@@ -1620,7 +1620,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     category=UserWarning,
                     module="webknossos",
                 )
-                with get_executor_for_args(None, executor) as executor:
+                with wrap_executor(executor) as executor:
                     shapes_and_max_ids = wait_and_ensure_success(
                         executor.map_to_futures(func_per_chunk, args),
                         executor=executor,
@@ -2281,7 +2281,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
         new_dataset.default_view_configuration = self.default_view_configuration
 
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
             for layer in self.layers.values():
                 if layers_to_ignore is not None and layer.name in layers_to_ignore:
                     continue

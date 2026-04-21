@@ -1,15 +1,20 @@
 """Utilities to work with the CLI of webknossos."""
 
+import json
+import logging
 import re
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from enum import Enum
 from functools import lru_cache
+from multiprocessing import cpu_count
 from os import environ
-from typing import NamedTuple
+from typing import Annotated, NamedTuple
 from urllib.parse import urlparse
 
 import numpy as np
+import typer
+from cluster_tools import BatchingExecutor, Executor, get_executor
 from upath import UPath
 
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
@@ -17,10 +22,13 @@ from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
 from ..dataset import Dataset, RemoteDataset
 from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
-from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset.remote_dataset import RemoteAccessMode
+from ..dataset_properties import DataFormat
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import is_fs_path, set_s3fs_retry_settings
+
+logger = logging.getLogger(__name__)
 
 
 class VoxelSizeTuple(NamedTuple):
@@ -40,28 +48,121 @@ class Vec2Int(NamedTuple):
 
 
 class DistributionStrategy(str, Enum):
-    """Enum of available distribution strategies.
-
-    TODO
-    - As soon as supported by typer this enum should be
-    replaced with typing.Literal in type hint.
-    https://github.com/tiangolo/typer/pull/669
-    """
+    """Enum of available distribution strategies."""
 
     SLURM = "slurm"
+    SLURM_BATCHING = "slurm+batching"
     KUBERNETES = "kubernetes"
     MULTIPROCESSING = "multiprocessing"
     SEQUENTIAL = "sequential"
 
 
-class LayerCategory(str, Enum):
-    """Enum of available layer categories.
+DEFAULT_JOBS: int = cpu_count()
 
-    TODO
-    - As soon as supported by typer this enum should be
-    replaced with typing.Literal in type hint.
-    https://github.com/tiangolo/typer/pull/669
-    """
+JobsOption = Annotated[
+    int,
+    typer.Option(
+        help="Number of processes to be spawned.",
+        rich_help_panel="Executor options",
+    ),
+]
+
+DistributionStrategyOption = Annotated[
+    DistributionStrategy,
+    typer.Option(
+        help="Strategy to distribute the task across CPUs or nodes.",
+        rich_help_panel="Executor options",
+    ),
+]
+
+JobResourcesOption = Annotated[
+    str | None,
+    typer.Option(
+        help="Necessary when using slurm as distribution strategy. Should be a JSON string "
+        '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
+        rich_help_panel="Executor options",
+    ),
+]
+
+
+def get_executor_for_args(
+    *,
+    jobs: int,
+    distribution_strategy: DistributionStrategy,
+    job_resources: str | None,
+) -> AbstractContextManager[Executor]:
+    if distribution_strategy == DistributionStrategy.MULTIPROCESSING:
+        logger.info(f"Using pool of {jobs} workers.")
+        return get_executor("multiprocessing", max_workers=jobs)
+    if distribution_strategy in (
+        DistributionStrategy.SLURM,
+        DistributionStrategy.SLURM_BATCHING,
+        DistributionStrategy.KUBERNETES,
+    ):
+        if job_resources is None:
+            resources_example = (
+                '{"mem": "32G"}'
+                if distribution_strategy != DistributionStrategy.KUBERNETES
+                else '{"memory": "32G"}'
+            )
+            raise typer.BadParameter(
+                f"Job resources has to be provided when using {distribution_strategy.value} as distribution strategy. "
+                f"Example: --job-resources='{resources_example}'",
+                param_hint="--job-resources",
+            )
+        job_resources_parsed = json.loads(job_resources)
+
+        if distribution_strategy == DistributionStrategy.SLURM_BATCHING:
+            target_job_count = job_resources_parsed.get("target_job_count")
+            batch_size = job_resources_parsed.get("batch_size")
+            if target_job_count is None and batch_size is None:
+                resources_example = '{"target_job_count": 100, "mem": "32G"}'
+                raise typer.BadParameter(
+                    f"target_job_count or batch_size have to be provided when using {distribution_strategy.value} as distribution strategy. "
+                    f"Example: --job-resources='{resources_example}'",
+                    param_hint="--job-resources",
+                )
+            if target_job_count is not None and batch_size is not None:
+                raise typer.BadParameter(
+                    f"target_job_count and batch_size can not be provided at the same time when using {distribution_strategy.value} as distribution strategy.",
+                    param_hint="--job-resources",
+                )
+            distribution_strategy = DistributionStrategy.SLURM
+            logger.info(f"Using {distribution_strategy.value} cluster with batching.")
+            return BatchingExecutor(
+                get_executor(
+                    distribution_strategy.value,
+                    debug=True,
+                    keep_logs=True,
+                    job_resources=job_resources_parsed,
+                ),
+                target_job_count=target_job_count,
+                batch_size=batch_size,
+            )
+
+        logger.info(f"Using {distribution_strategy.value} cluster.")
+        return get_executor(
+            distribution_strategy.value,
+            debug=True,
+            keep_logs=True,
+            job_resources=job_resources_parsed,
+        )
+
+    if distribution_strategy == DistributionStrategy.SEQUENTIAL:
+        return get_executor(
+            distribution_strategy.value,
+            debug=True,
+            keep_logs=True,
+        )
+
+    raise typer.BadParameter(
+        f"Unknown distribution strategy: {distribution_strategy.value}",
+        param_hint="--distribution-strategy",
+    )
+
+
+class LayerCategory(str, Enum):
+    """Enum of available layer categories."""
 
     COLOR = "color"
     SEGMENTATION = "segmentation"
@@ -143,6 +244,49 @@ def parse_vec3int(vec3int_like: str | Vec3Int) -> Vec3Int:
             "The value could not be parsed to VoxelSize. "
             "Please format the voxel size like 1,1,2 ."
         ) from err
+
+
+DEFAULT_DATA_FORMAT_STR: str = str(DEFAULT_DATA_FORMAT)
+
+DataFormatOption = Annotated[
+    DataFormat,
+    typer.Option(help="Data format to store the target dataset in."),
+]
+
+ChunkShapeOption = Annotated[
+    Vec3Int,
+    typer.Option(
+        help="Number of voxels to be stored as a chunk in the output format "
+        "(e.g. `32` or `32,32,32`).",
+        parser=parse_vec3int,
+        metavar="Vec3Int",
+    ),
+]
+
+ShardShapeOption = Annotated[
+    Vec3Int | None,
+    typer.Option(
+        help="Number of voxels to be stored as a shard in the output format "
+        "(e.g. `1024` or `1024,1024,1024`).",
+        parser=parse_vec3int,
+        metavar="Vec3Int",
+    ),
+]
+
+ChunksPerShardOption = Annotated[
+    Vec3Int | None,
+    typer.Option(
+        help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
+        "(e.g. `32` or `32,32,32`).",
+        parser=parse_vec3int,
+        metavar="Vec3Int",
+    ),
+]
+
+ExistsOkOption = Annotated[
+    bool,
+    typer.Option(help="Whether it should overwrite an existing dataset."),
+]
 
 
 def parse_vec2int(vec2int_str: str) -> Vec2Int:

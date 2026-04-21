@@ -55,12 +55,12 @@ from webknossos.utils import (
     copytree,
     dump_path,
     enrich_path,
-    get_executor_for_args,
     is_fs_path,
     movetree,
     named_partial,
     rmtree,
     warn_deprecated,
+    wrap_executor,
 )
 
 logger = logging.getLogger(__name__)
@@ -1194,7 +1194,7 @@ class Layer(AbstractLayer):
         )
 
         # perform downsampling
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
             if buffer_shape is None:
                 buffer_shape = determine_downsample_buffer_shape(target_view.info)
             else:
@@ -1457,7 +1457,7 @@ class Layer(AbstractLayer):
             target_view = target_mag_view.get_view(absolute_bounding_box=bbox_mag1)
 
             # perform upsampling
-            with get_executor_for_args(None, executor) as actual_executor:
+            with wrap_executor(executor) as actual_executor:
                 if buffer_shape is None:
                     buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
                 else:

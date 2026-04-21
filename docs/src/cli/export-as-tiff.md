@@ -59,7 +59,7 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`. 
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`. 
     Default: `multiprocessing`.
 
 - `--job-resources`  

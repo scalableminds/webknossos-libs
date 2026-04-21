@@ -106,10 +106,17 @@ def time_stop(identifier: str) -> None:
     logger.debug(f"{identifier} took {time.time() - _time:.8f}s")
 
 
+def wrap_executor(executor: Executor | None = None) -> AbstractContextManager[Executor]:
+    if executor is not None:
+        return nullcontext(enter_result=executor)
+    return get_executor("multiprocessing", max_workers=cpu_count())
+
+
 def get_executor_for_args(
     args: argparse.Namespace | None,
     executor: Executor | None = None,
 ) -> AbstractContextManager[Executor]:
+    warn_deprecated("get_executor_for_args", "cluster_tools.get_executor")
     if executor is not None:
         return nullcontext(enter_result=executor)
 

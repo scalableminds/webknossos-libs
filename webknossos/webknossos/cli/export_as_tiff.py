@@ -1,14 +1,13 @@
 """This module takes care of exporting tiff images."""
 
 import logging
-from argparse import Namespace
 from functools import partial
 from math import ceil
-from multiprocessing import cpu_count
 from typing import Annotated, Any
 
 import numpy as np
 import typer
+from cluster_tools import Executor
 from PIL import Image
 from scipy.ndimage import zoom
 from upath import UPath
@@ -16,10 +15,15 @@ from upath import UPath
 from ..dataset import MagView, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, wait_and_ensure_success
+from ..utils import wait_and_ensure_success
 from ._utils import (
+    DEFAULT_JOBS,
     DistributionStrategy,
+    DistributionStrategyOption,
+    JobResourcesOption,
+    JobsOption,
     Vec2Int,
+    get_executor_for_args,
     open_dataset,
     parse_bbox,
     parse_mag,
@@ -138,39 +142,38 @@ def export_tiff_stack(
     tiling_slice_size: None | tuple[int, int],
     batch_size: int,
     downsample: int,
-    args: Namespace,
+    executor: Executor,
 ) -> None:
     destination_path.mkdir(parents=True, exist_ok=True)
 
-    with get_executor_for_args(args) as executor:
-        view = mag_view.get_view(
-            absolute_offset=bbox.topleft, size=bbox.size, read_only=True
+    view = mag_view.get_view(
+        absolute_offset=bbox.topleft, size=bbox.size, read_only=True
+    )
+
+    view_chunks = [
+        view.get_view(
+            relative_offset=(0, 0, z),
+            size=(bbox.size.x, bbox.size.y, min(batch_size, bbox.size.z - z)),
+            read_only=True,
         )
+        for z in range(0, bbox.size.z, batch_size)
+    ]
 
-        view_chunks = [
-            view.get_view(
-                relative_offset=(0, 0, z),
-                size=(bbox.size.x, bbox.size.y, min(batch_size, bbox.size.z - z)),
-                read_only=True,
-            )
-            for z in range(0, bbox.size.z, batch_size)
-        ]
-
-        wait_and_ensure_success(
-            executor.map_to_futures(
-                partial(
-                    export_tiff_slice_batch,
-                    destination_path,
-                    name,
-                    tiling_slice_size,
-                    downsample,
-                    bbox.topleft.z,
-                ),
-                view_chunks,
+    wait_and_ensure_success(
+        executor.map_to_futures(
+            partial(
+                export_tiff_slice_batch,
+                destination_path,
+                name,
+                tiling_slice_size,
+                downsample,
+                bbox.topleft.z,
             ),
-            executor=executor,
-            progress_desc="Exporting tiff files",
-        )
+            view_chunks,
+        ),
+        executor=executor,
+        progress_desc="Exporting tiff files",
+    )
 
 
 def main(
@@ -237,28 +240,9 @@ def main(
     batch_size: Annotated[
         int, typer.Option(help="Number of sections to buffer per job.")
     ] = DEFAULT_CHUNK_SHAPE.z,
-    jobs: Annotated[
-        int,
-        typer.Option(
-            help="Number of processes to be spawned.",
-            rich_help_panel="Executor options",
-        ),
-    ] = cpu_count(),
-    distribution_strategy: Annotated[
-        DistributionStrategy,
-        typer.Option(
-            help="Strategy to distribute the task across CPUs or nodes.",
-            rich_help_panel="Executor options",
-        ),
-    ] = DistributionStrategy.MULTIPROCESSING,
-    job_resources: Annotated[
-        str | None,
-        typer.Option(
-            help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-            '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
-            rich_help_panel="Executor options",
-        ),
-    ] = None,
+    jobs: JobsOption = DEFAULT_JOBS,
+    distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
+    job_resources: JobResourcesOption = None,
     token: Annotated[
         str | None,
         typer.Option(
@@ -285,11 +269,6 @@ def main(
     bbox = bbox.align_with_mag(mag_view.mag)
 
     logger.info("Starting tiff export for bounding box: %s", bbox)
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     used_tile_size = None
     if tiles_per_dimension is not None:
         tile_size = tiles_per_dimension
@@ -307,13 +286,18 @@ def main(
         logger.info("Using tiling with the size of %d,%d.", tile_size[0], tile_size[1])
         used_tile_size = tile_size
 
-    export_tiff_stack(
-        mag_view=mag_view,
-        bbox=bbox,
-        destination_path=target,
-        name=name,
-        tiling_slice_size=used_tile_size,
-        batch_size=batch_size,
-        downsample=downsample,
-        args=executor_args,
-    )
+    with get_executor_for_args(
+        jobs=jobs,
+        distribution_strategy=distribution_strategy,
+        job_resources=job_resources,
+    ) as executor:
+        export_tiff_stack(
+            mag_view=mag_view,
+            bbox=bbox,
+            destination_path=target,
+            name=name,
+            tiling_slice_size=used_tile_size,
+            batch_size=batch_size,
+            downsample=downsample,
+            executor=executor,
+        )

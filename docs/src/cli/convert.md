@@ -113,7 +113,7 @@ webknossos convert [OPTIONS] SOURCE [TARGET]
 
 - `--distribution-strategy`
     Strategy to distribute the task across CPUs or nodes.
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`.
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`.
     Default: `multiprocessing`.
 
 - `--job-resources`
@@ -291,7 +291,7 @@ webknossos convert-raw [OPTIONS] SOURCE TARGET
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`. 
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`. 
     Default: `multiprocessing`.
 
 ### Example Commands
@@ -367,7 +367,7 @@ webknossos convert-knossos [OPTIONS] SOURCE TARGET
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`. 
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`. 
     Default: `multiprocessing`.
 
 ### Example Commands
@@ -475,7 +475,7 @@ webknossos convert-zarr [OPTIONS] SOURCE TARGET
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`. 
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`. 
     Default: `multiprocessing`.
 
 ### Example Commands

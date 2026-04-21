@@ -57,7 +57,7 @@ webknossos upsample [OPTIONS] SOURCE
 
 - `--distribution-strategy`
     Strategy to distribute the task across CPUs or nodes.
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`.
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`.
     Default: `multiprocessing`.
 
 - `--job-resources`
