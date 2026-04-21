@@ -83,6 +83,9 @@ class BufferedSliceWriter:
             absolute_bounding_box,
         )
 
+        # assert that self.bbox is aligned with the mag of the view
+        self._bbox.in_mag(self._view.mag)  # will throw error if not aligned
+
         view_shard_depth = self._view.info.chunk_shape.get(self.dimension)
         if (
             self._bbox is not None
