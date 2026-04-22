@@ -64,13 +64,15 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> np.ndarray:
             mode="nearest",
             prefilter=True,
         )
+    if data_slice.ndim == 3:
+        return np.moveaxis(data_slice, 0, -1)
     return data_slice
 
 
 def _apply_mapping(data: np.ndarray, mapping: np.ndarray) -> np.ndarray:
-    clipped = np.clip(data.astype(np.int64), 0, len(mapping) - 1)
-    result = mapping[clipped]
-    result[data.astype(np.int64) >= len(mapping)] = 0
+    mask = data < len(mapping)
+    result = np.zeros_like(data, dtype=mapping.dtype)
+    result[mask] = mapping[data[mask]]
     return result
 
 
