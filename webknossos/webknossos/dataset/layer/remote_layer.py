@@ -6,7 +6,11 @@ from cluster_tools import Executor
 from upath import UPath
 
 from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.dataset_properties import LayerProperties, MagViewProperties
+from webknossos.dataset_properties import (
+    LayerProperties,
+    LayerViewConfiguration,
+    MagViewProperties,
+)
 
 from ...client.api_client.models import (
     ApiDatasetComposeMag,
@@ -413,6 +417,43 @@ class RemoteLayer(AbstractLayer):
             if layer_properties.name == self.name
         )
         self._apply_properties(layer_properties, self.read_only)
+
+    @property
+    def view_configuration(self) -> LayerViewConfiguration | None:
+        """The current view configuration for this layer as stored on the WEBKNOSSOS server.
+
+        This reflects the user-saved view settings (color, opacity, intensity range, etc.)
+        and is distinct from `default_view_configuration`, which is default for all users accessing the dataset
+        properties. The value is fetched from the server on every access.
+
+        Returns:
+            LayerViewConfiguration | None: The saved view configuration, or None if none is set.
+
+        Examples:
+            ```
+            cfg = layer.view_configuration
+            if cfg is not None:
+                print(cfg.color, cfg.alpha)
+            ```
+        """
+        from ...client.context import _get_api_client
+
+        with self._dataset._context:
+            client = _get_api_client()
+            config = client.dataset_configuration(
+                dataset_id=self._dataset.dataset_id,
+                volume_tracing_ids=[],
+            )
+            if config.layers is None:
+                return None
+            return config.layers.get(self.name)
+
+    @view_configuration.setter
+    def view_configuration(self, _value: LayerViewConfiguration) -> None:
+        raise AttributeError(
+            "view_configuration is read-only. "
+            "Use the WEBKNOSSOS web interface to change the view configuration."
+        )
 
     def __repr__(self) -> str:
         return f"RemoteLayer({repr(self.name)}, dtype={self.dtype}, num_channels={self.num_channels})"

@@ -25,22 +25,6 @@ def float_tpl(voxel_size: list | tuple) -> Iterable:
 
 
 @attr.define
-class DatasetViewConfiguration:
-    """
-    Stores information on how the dataset is shown in webknossos by default.
-    """
-
-    four_bit: bool | None = None
-    interpolation: bool | None = None
-    render_missing_data_black: bool | None = None
-    loading_strategy: str | None = None
-    segmentation_pattern_opacity: int | None = None
-    zoom: float | None = None
-    position: tuple[int, int, int] | None = None
-    rotation: tuple[int, int, int] | None = None
-
-
-@attr.define
 class LayerViewConfiguration:
     """
     Stores information on how the dataset is shown in webknossos by default.
@@ -76,6 +60,26 @@ class LayerViewConfiguration:
 
     mapping: dict[str, str] | None = None
     """Enables ID mapping for a segmentation layer and applies the selected mapping by default. The default WK behavior is to disable ID mapping. Expected values is a Dict with {"name": my_mapping_name, "type": "HDF5"}."""
+
+
+@attr.define
+class DatasetViewConfiguration:
+    """
+    Stores information on how the dataset is shown in WEBKNOSSOS by default.
+    """
+
+    four_bit: bool | None = None
+    interpolation: bool | None = None
+    render_missing_data_black: bool | None = None
+    loading_strategy: str | None = None
+    segmentation_pattern_opacity: int | None = None
+    zoom: float | None = None
+    position: tuple[int, int, int] | None = None
+    rotation: tuple[int, int, int] | None = None
+    layers: dict[str, LayerViewConfiguration] | None = None
+    color_layer_order: list[str] | None = None
+    blend_mode: str | None = None
+    natively_rendered_layer_name: str | None = None
 
 
 @attr.define
@@ -157,7 +161,7 @@ class DatasetProperties:
     id: dict[str, str]
     """
     id is a legacy field that is not used anymore. Its keys are name (dataset directory name) and team (organization id)
-    However, webknossos will take both from the dataset path and not from what is here in the datasource-properties.json.
+    However, WEBKNOSSOS will take both from the dataset path and not from what is here in the datasource-properties.json.
     """
     scale: VoxelSize
     data_layers: list[SegmentationLayerProperties | LayerProperties]
