@@ -283,7 +283,7 @@ def test_remote_layer_view_configuration() -> None:
     config = layer.view_configuration
 
     assert isinstance(config, LayerViewConfiguration)
-    assert config.alpha == 1.0
+    assert config.alpha == 100.0
     assert config.is_inverted == False
 
     # config values are readyonly
