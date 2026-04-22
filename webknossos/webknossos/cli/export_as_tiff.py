@@ -8,12 +8,13 @@ from typing import Annotated, Any
 import numpy as np
 import typer
 from cluster_tools import Executor
-from PIL import Image
 from scipy.ndimage import zoom
+from tifffile import imwrite
 from upath import UPath
 
 from ..dataset import MagView, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..dataset_properties import SEGMENTATION_CATEGORY
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import wait_and_ensure_success
 from ._utils import (
@@ -41,7 +42,7 @@ def _make_tiff_name(name: str, slice_index: int) -> str:
         return f"{name}_{slice_index:06d}.tiff"
 
 
-def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
+def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> np.ndarray:
     if data_slice.shape[0] == 1:
         # discard greyscale dimension
         data_slice = data_slice.squeeze(axis=0)
@@ -62,7 +63,7 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
             mode="nearest",
             prefilter=True,
         )
-    return Image.fromarray(data_slice)
+    return data_slice
 
 
 def export_tiff_slice_batch(
@@ -71,10 +72,12 @@ def export_tiff_slice_batch(
     tiling_size: None | tuple[int, int],
     downsample: int,
     start_slice_z_mag1: int,
+    compress: bool,
     view: View,
 ) -> None:
     tiff_bbox_mag1 = view.bounding_box
     tiff_bbox = tiff_bbox_mag1.in_mag(view.mag)
+    compression_arg = "zlib" if compress else None
 
     if tiling_size is None:
         tiff_data = view.read()
@@ -103,7 +106,7 @@ def export_tiff_slice_batch(
 
             image = _slice_to_image(tiff_data[:, :, :, slice_index], downsample)
             with tiff_file_path.open("wb") as f:
-                image.save(f)
+                imwrite(f, data=image, compression=compression_arg)
             logger.debug("Saved slice %s", slice_name_number)
 
         else:
@@ -127,7 +130,7 @@ def export_tiff_slice_batch(
                     )
 
                     with (tile_tiff_path / tile_tiff_filename).open("wb") as f:
-                        tile_image.save(f)
+                        imwrite(f, data=tile_image, compression=compression_arg)
 
             logger.debug("Saved tiles for slice %s", slice_name_number)
 
@@ -168,6 +171,7 @@ def export_tiff_stack(
                 tiling_slice_size,
                 downsample,
                 bbox.topleft.z,
+                mag_view.layer.category == SEGMENTATION_CATEGORY,
             ),
             view_chunks,
         ),
