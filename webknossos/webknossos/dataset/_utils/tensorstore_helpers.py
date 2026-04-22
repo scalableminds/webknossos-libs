@@ -8,7 +8,7 @@ import numpy as np
 import tensorstore as ts
 from upath import UPath
 
-from ..utils import is_fs_path
+from ...utils import is_fs_path
 
 TS_CONTEXT = ts.Context()
 
