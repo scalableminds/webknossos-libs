@@ -136,6 +136,7 @@ def get_executor_for_args(
         resolved_jobs = jobs if jobs is not None else cpu_count()
         logger.info(f"Using pool of {resolved_jobs} workers.")
         return get_executor("multiprocessing", max_workers=resolved_jobs)
+
     if distribution_strategy in (
         DistributionStrategy.SLURM,
         DistributionStrategy.SLURM_BATCHING,
