@@ -18,6 +18,7 @@ from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import get_executor_for_args, wait_and_ensure_success
 from ._utils import (
+    AccessModeOption,
     DistributionStrategy,
     Vec2Int,
     open_dataset,
@@ -268,12 +269,13 @@ def main(
             envvar="WK_TOKEN",
         ),
     ] = None,
+    access_mode: AccessModeOption = None,
 ) -> None:
     """Export your WEBKNOSSOS dataset to TIFF image data."""
 
     mag_view: MagView | None = None
     source_path = UPath(source)
-    with open_dataset(source_path, annotation_ok=True, token=token) as dataset:
+    with open_dataset(source_path, annotation_ok=True, token=token, access_mode=access_mode) as dataset:
         mag_view = dataset.get_layer(layer_name).get_mag(mag)
 
     if mag_view is None:

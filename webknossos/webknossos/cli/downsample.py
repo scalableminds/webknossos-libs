@@ -12,6 +12,7 @@ from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import Mag
 from ..utils import get_executor_for_args
 from ._utils import (
+    AccessModeOption,
     DistributionStrategy,
     SamplingMode,
     open_dataset,
@@ -84,14 +85,7 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             rich_help_panel="WEBKNOSSOS context",
         ),
     ] = None,
-    access_mode: Annotated[
-        RemoteAccessMode | None,
-        typer.Option(
-            help="How to access the remote dataset's data. "
-            "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'proxy_path'.",
-            rich_help_panel="WEBKNOSSOS context",
-        ),
-    ] = None,
+    access_mode: AccessModeOption = None,
 ) -> None:
     """Downsample your WEBKNOSSOS dataset."""
 

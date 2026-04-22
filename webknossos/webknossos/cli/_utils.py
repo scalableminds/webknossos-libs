@@ -6,10 +6,11 @@ from contextlib import contextmanager
 from enum import Enum
 from functools import lru_cache
 from os import environ
-from typing import NamedTuple
+from typing import Annotated, NamedTuple
 from urllib.parse import urlparse
 
 import numpy as np
+import typer
 from upath import UPath
 
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
@@ -80,6 +81,16 @@ class Order(str, Enum):
 
     C = "C"
     F = "F"
+
+
+AccessModeOption = Annotated[
+    RemoteAccessMode | None,
+    typer.Option(
+        help="How to access the remote dataset's data. "
+        "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'proxy_path'.",
+        rich_help_panel="WEBKNOSSOS context",
+    ),
+]
 
 
 @lru_cache(maxsize=1)
