@@ -64,7 +64,7 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
 
 - `--job-resources`  
     Resources specification for jobs when using the SLURM strategy.  
-    Example: `--job-resources '{"mem": "10M"}'`.
+    Example: `--job-resources mem=10M`.
 
 ## Example Commands
 
@@ -86,7 +86,7 @@ webknossos export-as-tiff --bbox 0,0,0,512,512,100 --tiles-per-dimension 4,4 /pa
 
 ### Export using parallel processing with SLURM:
 ```bash
-webknossos export-as-tiff --jobs 8 --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/source/dataset /path/to/target/tiff_folder
+webknossos export-as-tiff --jobs 8 --distribution-strategy slurm --job-resources mem=10M /path/to/source/dataset /path/to/target/tiff_folder
 ```
 
 ## Notes

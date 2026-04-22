@@ -9,7 +9,6 @@ from ..dataset import Dataset
 from ..dataset_properties import DataFormat
 from ..geometry import Vec3Int
 from ._utils import (
-    DEFAULT_JOBS,
     DistributionStrategy,
     DistributionStrategyOption,
     ExistsOkOption,
@@ -59,7 +58,7 @@ def main(
     ] = None,
     shard_shape: ShardShapeOption = None,
     exists_ok: ExistsOkOption = False,
-    jobs: JobsOption = DEFAULT_JOBS,
+    jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
 ) -> None:

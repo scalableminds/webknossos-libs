@@ -7,7 +7,6 @@ import typer
 from ..dataset import Dataset
 from ..geometry.mag import Mag
 from ._utils import (
-    DEFAULT_JOBS,
     DistributionStrategy,
     DistributionStrategyOption,
     JobResourcesOption,
@@ -44,7 +43,7 @@ def main(
             metavar="MAG",
         ),
     ] = None,
-    jobs: JobsOption = DEFAULT_JOBS,
+    jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
 ) -> None:

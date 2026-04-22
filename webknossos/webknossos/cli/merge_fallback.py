@@ -6,7 +6,6 @@ import typer
 
 from ..annotation import Annotation
 from ._utils import (
-    DEFAULT_JOBS,
     DistributionStrategy,
     DistributionStrategyOption,
     JobResourcesOption,
@@ -46,7 +45,7 @@ def main(
         str | None,
         typer.Option(help="Name of the volume layer to merge with fallback layer."),
     ] = None,
-    jobs: JobsOption = DEFAULT_JOBS,
+    jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
 ) -> None:

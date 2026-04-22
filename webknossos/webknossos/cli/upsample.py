@@ -9,7 +9,6 @@ from ..dataset import RemoteDataset, SamplingModes, TransferMode
 from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import Mag
 from ._utils import (
-    DEFAULT_JOBS,
     DistributionStrategy,
     DistributionStrategyOption,
     JobResourcesOption,
@@ -56,7 +55,7 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             envvar="WK_TOKEN",
         ),
     ] = None,
-    jobs: JobsOption = DEFAULT_JOBS,
+    jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
     transfer_mode: Annotated[

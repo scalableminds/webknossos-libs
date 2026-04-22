@@ -16,7 +16,6 @@ from ..geometry import Mag
 from ..utils import rmtree
 from ._utils import (
     DEFAULT_DATA_FORMAT_STR,
-    DEFAULT_JOBS,
     ChunkShapeOption,
     ChunksPerShardOption,
     DataFormatOption,
@@ -178,7 +177,7 @@ def main(
             rich_help_panel="WEBKNOSSOS context",
         ),
     ] = TransferMode.HTTP,
-    jobs: JobsOption = DEFAULT_JOBS,
+    jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
 ) -> None:

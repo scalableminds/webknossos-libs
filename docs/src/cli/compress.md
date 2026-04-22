@@ -36,7 +36,7 @@ webknossos compress [OPTIONS] TARGET
 
 - `--job-resources`  
     Specify resources for jobs when using the SLURM distribution strategy.  
-    Example: `--job-resources '{"mem": "10M"}'`.
+    Example: `--job-resources mem=10M`.
 
 ## Example Commands
 
@@ -60,7 +60,7 @@ This command compresses the `1` and `2` magnifications in all layers of the data
 
 ### Compress using SLURM with custom job resources:
 ```bash
-compress --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/dataset
+compress --distribution-strategy slurm --job-resources mem=10M /path/to/dataset
 ```
 This command uses the SLURM distribution strategy with custom memory allocation for each job.
 

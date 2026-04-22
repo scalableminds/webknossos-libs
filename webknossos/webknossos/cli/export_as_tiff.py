@@ -17,7 +17,6 @@ from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import wait_and_ensure_success
 from ._utils import (
-    DEFAULT_JOBS,
     DistributionStrategy,
     DistributionStrategyOption,
     JobResourcesOption,
@@ -240,7 +239,7 @@ def main(
     batch_size: Annotated[
         int, typer.Option(help="Number of sections to buffer per job.")
     ] = DEFAULT_CHUNK_SHAPE.z,
-    jobs: JobsOption = DEFAULT_JOBS,
+    jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
     token: Annotated[

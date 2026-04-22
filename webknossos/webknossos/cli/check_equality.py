@@ -8,7 +8,6 @@ from cluster_tools import Executor
 
 from ..dataset import Dataset, Layer
 from ._utils import (
-    DEFAULT_JOBS,
     DistributionStrategy,
     DistributionStrategyOption,
     JobResourcesOption,
@@ -44,7 +43,7 @@ def main(
             help="Name of the layer to compare (if not provided, all layers are compared)."
         ),
     ] = None,
-    jobs: JobsOption = DEFAULT_JOBS,
+    jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
 ) -> None:

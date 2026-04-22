@@ -68,7 +68,7 @@ webknossos downsample [OPTIONS] TARGET
 
 - `--job-resources`
     JSON string to specify resources for jobs when using the SLURM distribution strategy.
-    Example: `--job-resources '{"mem": "10M"}'`
+    Example: `--job-resources mem=10M`
 
 ## Example Commands
 
@@ -89,7 +89,7 @@ webknossos downsample --coarsest-mag 2 /path/to/dataset
 
 ### Downsample with parallel execution and custom job settings:
 ```bash
-webknossos downsample --jobs 4 --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/dataset
+webknossos downsample --jobs 4 --distribution-strategy slurm --job-resources mem=10M /path/to/dataset
 ```
 
 ### Downsample a dataset on a WEBKNOSSOS server:

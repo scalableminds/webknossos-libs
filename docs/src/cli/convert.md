@@ -118,7 +118,7 @@ webknossos convert [OPTIONS] SOURCE [TARGET]
 
 - `--job-resources`
     JSON string to specify resources for jobs when using the SLURM distribution strategy.
-    Example: `--job-resources '{"mem": "10M"}'`.
+    Example: `--job-resources mem=10M`.
 
 #### WEBKNOSSOS context
 
@@ -495,7 +495,7 @@ webknossos convert-zarr --jobs 4 /path/to/source/zarr /path/to/target/dataset
 Convert a Zarr dataset using SLURM with custom job resources:
 
 ```bash
-webknossos convert-zarr --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/source/zarr /path/to/target/dataset
+webknossos convert-zarr --distribution-strategy slurm --job-resources mem=10M /path/to/source/zarr /path/to/target/dataset
 ```
 
 ---

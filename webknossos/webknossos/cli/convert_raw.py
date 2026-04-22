@@ -24,7 +24,6 @@ from ..utils import (
 )
 from ._utils import (
     DEFAULT_DATA_FORMAT_STR,
-    DEFAULT_JOBS,
     ChunkShapeOption,
     ChunksPerShardOption,
     DataFormatOption,
@@ -283,7 +282,7 @@ def main(
             show_default=False,
         ),
     ] = False,
-    jobs: JobsOption = DEFAULT_JOBS,
+    jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
 ) -> None:

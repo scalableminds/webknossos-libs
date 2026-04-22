@@ -22,7 +22,6 @@ from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import time_start, time_stop, wrap_executor
 from ._utils import (
     DEFAULT_DATA_FORMAT_STR,
-    DEFAULT_JOBS,
     ChunkShapeOption,
     ChunksPerShardOption,
     DataFormatOption,
@@ -287,7 +286,7 @@ def main(
             metavar="MAG",
         ),
     ] = 1,  # type: ignore
-    jobs: JobsOption = DEFAULT_JOBS,
+    jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
 ) -> None:

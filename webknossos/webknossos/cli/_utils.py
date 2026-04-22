@@ -57,12 +57,10 @@ class DistributionStrategy(str, Enum):
     SEQUENTIAL = "sequential"
 
 
-DEFAULT_JOBS: int = cpu_count()
-
 JobsOption = Annotated[
-    int,
+    int | None,
     typer.Option(
-        help="Number of processes to be spawned.",
+        help="Number of processes to be spawned. By default the number of CPUs is used.",
         rich_help_panel="Executor options",
     ),
 ]
@@ -75,25 +73,70 @@ DistributionStrategyOption = Annotated[
     ),
 ]
 
+
+def _try_parse_number(value: str) -> str | int | float:
+    try:
+        return int(value)
+    except ValueError:
+        pass
+    try:
+        return float(value)
+    except ValueError:
+        pass
+    return value
+
+
+def parse_job_resources(value: str) -> dict:
+    """Parses --job-resources in 'key=value,key=value' or JSON format.
+
+    key=value format: dashes in keys are converted to underscores (e.g. cpus-per-task=4).
+    JSON format: keys are used as-is and must already use underscores (e.g. {"cpus_per_task": 4}).
+    """
+    value = value.strip()
+    if value.startswith("{"):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON for --job-resources: {e}") from e
+    try:
+        result = {}
+        for pair in value.split(","):
+            key, val = pair.split("=", 1)
+            result[key.strip().replace("-", "_")] = _try_parse_number(val.strip())
+        return result
+    except ValueError as e:
+        raise ValueError(
+            f"Invalid --job-resources format. Expected 'key=value,key=value' or JSON. Got: {value!r}"
+        ) from e
+
+
 JobResourcesOption = Annotated[
-    str | None,
+    dict | None,
     typer.Option(
-        help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-        '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
+        help="Resources for cluster jobs (slurm, slurm+batching, kubernetes). "
+        "Format: key=value pairs separated by commas (e.g. mem=32G,time=02:00:00).",
         rich_help_panel="Executor options",
+        parser=parse_job_resources,
+        metavar="KEY=VALUE,...",
     ),
 ]
 
 
 def get_executor_for_args(
     *,
-    jobs: int,
+    jobs: int | None,
     distribution_strategy: DistributionStrategy,
-    job_resources: str | None,
+    job_resources: dict | None,
 ) -> AbstractContextManager[Executor]:
     if distribution_strategy == DistributionStrategy.MULTIPROCESSING:
-        logger.info(f"Using pool of {jobs} workers.")
-        return get_executor("multiprocessing", max_workers=jobs)
+        if job_resources is not None:
+            raise typer.BadParameter(
+                "Job resources are not supported for multiprocessing execution.",
+                param_hint="--job-resources",
+            )
+        resolved_jobs = jobs if jobs is not None else cpu_count()
+        logger.info(f"Using pool of {resolved_jobs} workers.")
+        return get_executor("multiprocessing", max_workers=resolved_jobs)
     if distribution_strategy in (
         DistributionStrategy.SLURM,
         DistributionStrategy.SLURM_BATCHING,
@@ -101,31 +144,28 @@ def get_executor_for_args(
     ):
         if job_resources is None:
             resources_example = (
-                '{"mem": "32G"}'
+                "mem=32G"
                 if distribution_strategy != DistributionStrategy.KUBERNETES
-                else '{"memory": "32G"}'
+                else "memory=32G"
             )
             raise typer.BadParameter(
                 f"Job resources has to be provided when using {distribution_strategy.value} as distribution strategy. "
-                f"Example: --job-resources='{resources_example}'",
+                f"Example: --job-resources={resources_example}",
                 param_hint="--job-resources",
             )
-        job_resources_parsed = json.loads(job_resources)
+        job_resources_parsed = dict(job_resources)
 
         if distribution_strategy == DistributionStrategy.SLURM_BATCHING:
-            target_job_count = job_resources_parsed.get("target_job_count")
-            batch_size = job_resources_parsed.get("batch_size")
-            if target_job_count is None and batch_size is None:
-                resources_example = '{"target_job_count": 100, "mem": "32G"}'
+            batch_size = job_resources_parsed.pop("batch_size", None)
+            if batch_size is not None and jobs is not None:
                 raise typer.BadParameter(
-                    f"target_job_count or batch_size have to be provided when using {distribution_strategy.value} as distribution strategy. "
-                    f"Example: --job-resources='{resources_example}'",
-                    param_hint="--job-resources",
+                    "--jobs and batch-size in --job-resources are mutually exclusive for slurm+batching.",
+                    param_hint="--jobs",
                 )
-            if target_job_count is not None and batch_size is not None:
+            if batch_size is None and jobs is None:
                 raise typer.BadParameter(
-                    f"target_job_count and batch_size can not be provided at the same time when using {distribution_strategy.value} as distribution strategy.",
-                    param_hint="--job-resources",
+                    "--jobs is required for slurm+batching when batch-size is not set in --job-resources.",
+                    param_hint="--jobs",
                 )
             distribution_strategy = DistributionStrategy.SLURM
             logger.info(f"Using {distribution_strategy.value} cluster with batching.")
@@ -136,7 +176,7 @@ def get_executor_for_args(
                     keep_logs=True,
                     job_resources=job_resources_parsed,
                 ),
-                target_job_count=target_job_count,
+                target_job_count=jobs,
                 batch_size=batch_size,
             )
 
@@ -149,6 +189,16 @@ def get_executor_for_args(
         )
 
     if distribution_strategy == DistributionStrategy.SEQUENTIAL:
+        if job_resources is not None:
+            raise typer.BadParameter(
+                "Job resources are not supported for sequential execution.",
+                param_hint="--job-resources",
+            )
+        if jobs is not None:
+            raise typer.BadParameter(
+                "Number of jobs is not supported for sequential execution.",
+                param_hint="--jobs",
+            )
         return get_executor(
             distribution_strategy.value,
             debug=True,
