@@ -376,3 +376,36 @@ def test_buffered_slice_writer_resize_error(tmp_upath: UPath) -> None:
             for z in range(0, shape[2]):
                 section = data[:, :, z]
                 writer.send(section)
+
+
+def test_buffered_slice_writer_mag2_absolute_bbox(tmp_upath: UPath) -> None:
+    # write to a non mag1 mag using an absolute bbox with offset
+    target_mag = Mag("2-2-1")
+
+    # intentionally start at some offset
+    mag1_bbox = BoundingBox((128, 128, 0), (32, 32, 8))
+    mag2_bbox = mag1_bbox.in_mag(target_mag)
+
+    # Allocate some data
+    data = np.random.randint(0, 255, tuple(mag2_bbox.size), dtype=np.uint8)
+
+    # Create DS
+    dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color",
+        category="color",
+        dtype="uint8",
+        num_channels=1,
+        bounding_box=mag1_bbox,
+        chunk_shape=mag1_bbox.size,
+    )
+    mag2 = layer.add_mag("2-2-1")
+
+    # Write some slices
+    with mag2.get_buffered_slice_writer(absolute_bounding_box=mag1_bbox) as writer:
+        for z in range(0, mag2_bbox.size[2]):
+            section = data[:, :, z]
+            writer.send(section)
+
+    written_data = mag2.read(absolute_bounding_box=mag1_bbox)
+    np.testing.assert_array_equal(data, written_data.squeeze())
