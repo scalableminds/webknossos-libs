@@ -6,7 +6,6 @@ import re
 from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 from enum import Enum
-from functools import lru_cache
 from multiprocessing import cpu_count
 from os import environ
 from typing import Annotated, NamedTuple
@@ -26,7 +25,7 @@ from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset.remote_dataset import RemoteAccessMode
 from ..dataset_properties import DataFormat
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import is_fs_path, set_s3fs_retry_settings
+from ..utils import is_fs_path
 
 logger = logging.getLogger(__name__)
 
@@ -243,11 +242,6 @@ AccessModeOption = Annotated[
 ]
 
 
-@lru_cache(maxsize=1)
-def _set_s3fs_retry_settings() -> None:
-    set_s3fs_retry_settings()
-
-
 def parse_mag(mag_str: str) -> Mag:
     """Parses str input to Mag"""
 
@@ -412,8 +406,6 @@ def parse_path(value: str) -> UPath:
             auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
         )
     if value.startswith("s3://"):
-        _set_s3fs_retry_settings()
-
         if "S3_ENDPOINT_URL" in environ:
             return UPath(
                 value,
