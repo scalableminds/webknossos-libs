@@ -41,6 +41,12 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
     Downsample factor for each TIFF image.  
     Default: `1`.
 
+- `--apply-mapping`  
+    Name of an agglomerate attachment on the segmentation layer. When provided,
+    segment IDs are replaced with their agglomerate IDs before writing each TIFF.
+    Requires `--layer-name` to point to a segmentation layer that has a Zarr3-format
+    agglomerate attachment with the given name.
+
 - `--tiles-per-dimension`  
     Define tiling by specifying the number of tiles per dimension in the form `x,y`.  
     When set, each slice is exported as multiple tiled images.

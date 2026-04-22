@@ -13,8 +13,9 @@ from tifffile import imwrite
 from upath import UPath
 
 from ..dataset import MagView, View
+from ..dataset._utils.tensorstore_helpers import read_zarr3_array
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
-from ..dataset_properties import SEGMENTATION_CATEGORY
+from ..dataset_properties import SEGMENTATION_CATEGORY, AttachmentDataFormat
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import wait_and_ensure_success
 from ._utils import (
@@ -66,6 +67,13 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> np.ndarray:
     return data_slice
 
 
+def _apply_mapping(data: np.ndarray, mapping: np.ndarray) -> np.ndarray:
+    clipped = np.clip(data.astype(np.int64), 0, len(mapping) - 1)
+    result = mapping[clipped]
+    result[data.astype(np.int64) >= len(mapping)] = 0
+    return result
+
+
 def export_tiff_slice_batch(
     dest_path: UPath,
     name: str,
@@ -73,14 +81,18 @@ def export_tiff_slice_batch(
     downsample: int,
     start_slice_z_mag1: int,
     compress: bool,
+    mapping_path: UPath | None,
     view: View,
 ) -> None:
     tiff_bbox_mag1 = view.bounding_box
     tiff_bbox = tiff_bbox_mag1.in_mag(view.mag)
     compression_arg = "zlib" if compress else None
+    mapping = read_zarr3_array(mapping_path) if mapping_path is not None else None
 
     if tiling_size is None:
         tiff_data = view.read()
+        if mapping is not None:
+            tiff_data = _apply_mapping(tiff_data, mapping)
     else:
         padded_tiff_bbox_size = Vec3Int(
             tiling_size[0] * ceil(tiff_bbox.size.x / tiling_size[0]),
@@ -88,6 +100,8 @@ def export_tiff_slice_batch(
             tiff_bbox.size.z,
         )
         tiff_data = view.read()
+        if mapping is not None:
+            tiff_data = _apply_mapping(tiff_data, mapping)
         padded_tiff_data = np.zeros(
             (tiff_data.shape[0],) + padded_tiff_bbox_size.to_tuple(),
             dtype=tiff_data.dtype,
@@ -146,6 +160,7 @@ def export_tiff_stack(
     batch_size: int,
     downsample: int,
     executor: Executor,
+    mapping_path: UPath | None = None,
 ) -> None:
     destination_path.mkdir(parents=True, exist_ok=True)
 
@@ -172,6 +187,7 @@ def export_tiff_stack(
                 downsample,
                 bbox.topleft.z,
                 mag_view.layer.category == SEGMENTATION_CATEGORY,
+                mapping_path,
             ),
             view_chunks,
         ),
@@ -221,6 +237,14 @@ def main(
     ] = 1,  # type: ignore
     name: Annotated[str, typer.Option(help="Name of the tiffs.")] = "",
     downsample: Annotated[int, typer.Option(help="Downsample each tiff image.")] = 1,
+    apply_mapping: Annotated[
+        str | None,
+        typer.Option(
+            help="Name of an agglomerate attachment. Segment IDs are replaced with "
+            "agglomerate IDs before export. Requires a segmentation layer with "
+            "a Zarr3-format agglomerate attachment of that name.",
+        ),
+    ] = None,
     tiles_per_dimension: Annotated[
         Vec2Int | None,
         typer.Option(
@@ -261,11 +285,41 @@ def main(
     """Export your WEBKNOSSOS dataset to TIFF image data."""
 
     mag_view: MagView | None = None
+    mapping_path: UPath | None = None
     source_path = UPath(source)
     with open_dataset(
         source_path, annotation_ok=True, token=token, access_mode=access_mode
     ) as dataset:
-        mag_view = dataset.get_layer(layer_name).get_mag(mag)
+        layer = dataset.get_layer(layer_name)
+        mag_view = layer.get_mag(mag)
+
+        if apply_mapping is not None:
+            if layer.category != SEGMENTATION_CATEGORY:
+                raise ValueError(
+                    f"--apply-mapping requires a segmentation layer, "
+                    f"but '{layer_name}' is a '{layer.category}' layer."
+                )
+            seg_layer = layer.as_segmentation_layer()
+            named = next(
+                (
+                    a
+                    for a in seg_layer.attachments.agglomerates
+                    if a.name == apply_mapping
+                ),
+                None,
+            )
+            if named is None:
+                available = [a.name for a in seg_layer.attachments.agglomerates]
+                raise ValueError(
+                    f"No agglomerate attachment named '{apply_mapping}'. "
+                    f"Available: {available}"
+                )
+            if named.data_format != AttachmentDataFormat.Zarr3:
+                raise ValueError(
+                    f"Agglomerate attachment '{apply_mapping}' is not in Zarr3 format. "
+                    "Only Zarr3 format is supported."
+                )
+            mapping_path = named.path / "segment_to_agglomerate"
 
     if mag_view is None:
         raise ValueError(
@@ -307,4 +361,5 @@ def main(
             batch_size=batch_size,
             downsample=downsample,
             executor=executor,
+            mapping_path=mapping_path,
         )
