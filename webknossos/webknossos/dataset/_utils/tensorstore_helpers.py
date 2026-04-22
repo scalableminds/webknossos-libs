@@ -110,7 +110,7 @@ def _make_kvstore(path: UPath) -> str | dict[str, str | list[str]]:
         }
 
 
-def read_zarr3_array(path: UPath) -> np.ndarray:  # type: ignore[type-arg]
+def read_zarr3_array(path: UPath) -> np.ndarray:
     """Read a Zarr v3 array from disk into a numpy array."""
 
     arr = ts.open(
@@ -121,12 +121,12 @@ def read_zarr3_array(path: UPath) -> np.ndarray:  # type: ignore[type-arg]
         open=True,
         context=TS_CONTEXT,
     ).result()
-    return arr[:].read().result()  # type: ignore[no-any-return]
+    return arr[:].read().result()
 
 
 def write_zarr3_array(
     path: UPath,
-    data: np.ndarray,  # type: ignore[type-arg]
+    data: np.ndarray,
     *,
     target_chunk_size_bytes: int,
     target_shard_size_bytes: int,
