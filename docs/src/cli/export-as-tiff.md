@@ -66,6 +66,16 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
     Resources specification for jobs when using the SLURM strategy.  
     Example: `--job-resources mem=10M`.
 
+#### WEBKNOSSOS context
+
+- `--token`  
+    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/auth/token).  
+    Can also be provided via the `WK_TOKEN` environment variable.  
+    Required when SOURCE is a WEBKNOSSOS server URL pointing to a non-public dataset.
+
+- `--access-mode`  
+    How to access the remote dataset's data. Available options are `direct_path`, `zarr_streaming`, `proxy_path`.
+
 ## Example Commands
 
 ### Export a dataset to TIFF images locally:

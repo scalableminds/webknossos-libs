@@ -233,6 +233,16 @@ class Order(str, Enum):
     F = "F"
 
 
+AccessModeOption = Annotated[
+    RemoteAccessMode | None,
+    typer.Option(
+        help="How to access the remote dataset's data. "
+        "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'proxy_path'.",
+        rich_help_panel="WEBKNOSSOS context",
+    ),
+]
+
+
 @lru_cache(maxsize=1)
 def _set_s3fs_retry_settings() -> None:
     set_s3fs_retry_settings()
