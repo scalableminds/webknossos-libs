@@ -29,14 +29,14 @@ Below is a list of the allowed resources and a brief explanation of each. For fu
 
 The `slurm+batching` strategy is a variant of the SLURM strategy that groups individual tasks into larger batches before submitting them to the cluster. This reduces scheduling overhead and is especially useful when the dataset produces a large number of small work items that would otherwise flood the job queue.
 
-Like the `slurm` strategy, `--job-resources` is required. The number of SLURM jobs to submit is controlled by `--jobs`. Alternatively, you can specify `batch_size` in `--job-resources` to fix the number of work items per job instead — in that case `--jobs` must not be set:
+Like the `slurm` strategy, `--job-resources` is required. The number of SLURM jobs to submit is controlled by `--jobs`. Alternatively, you can specify `batch-size` in `--job-resources` to fix the number of work items per job instead — in that case `--jobs` must not be set:
 
 ```bash
 # Use --jobs to control the total number of submitted SLURM jobs
 --jobs 100 --job-resources mem=32G
 
 # Or fix the number of work items per job via batch_size
---job-resources batch_size=50,mem=32G
+--job-resources batch-size=50,mem=32G
 ```
 
 All other SLURM resource keys (e.g. `mem`, `time`, `partition`) are supported just as with the plain `slurm` strategy.

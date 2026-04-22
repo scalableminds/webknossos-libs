@@ -18,7 +18,8 @@ from webknossos.cli._utils import (
 
 
 def test_parse_job_resources_key_value_format() -> None:
-    assert parse_job_resources("mem=32G,time=02:00:00") == {
+    assert parse_job_resources("batch-size=10,mem=32G,time=02:00:00") == {
+        "batch_size": 10,
         "mem": "32G",
         "time": "02:00:00",
     }
@@ -200,6 +201,7 @@ def test_slurm_batching_uses_jobs_as_target_job_count() -> None:
             job_resources={"mem": "1G"},
         )
     assert isinstance(result, BatchingExecutor)
+    assert result.target_job_count == 10
     mock_get.assert_called_once_with(
         "slurm",
         debug=True,
@@ -219,6 +221,7 @@ def test_slurm_batching_with_batch_size() -> None:
             job_resources={"batch_size": 5, "mem": "1G"},
         )
     assert isinstance(result, BatchingExecutor)
+    assert result.batch_size == 5
     # batch_size is popped before passing resources to get_executor
     mock_get.assert_called_once_with(
         "slurm",
