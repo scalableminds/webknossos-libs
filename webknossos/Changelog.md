@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `RemoteLayer.view_configuration` property to access the layer view configuration (alpha, inverted, min/max histogram, etc). [#1456](https://github.com/scalableminds/webknossos-libs/pull/1456)
 
 ### Changed
 
