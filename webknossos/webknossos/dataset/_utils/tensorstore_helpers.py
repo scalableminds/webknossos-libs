@@ -120,7 +120,7 @@ def open_zarr3_array(path: UPath, context: ts.Context = TS_CONTEXT) -> "ts.Tenso
         },
         open=True,
         context=context,
-    )
+    ).result()
 
 
 def read_zarr3_array(path: UPath) -> np.ndarray:
