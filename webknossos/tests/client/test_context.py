@@ -25,17 +25,13 @@ def test_trailing_slash_in_url(env_context: _WebknossosContext) -> None:
 
 
 def test_login(env_context: _WebknossosContext) -> None:
-    original_url = env_context.url
-    original_token = env_context.token
+    # Use webknossos_context to isolate changes to the global context
+    with webknossos_context():
+        login(url="https://example.com", token="test_token")
+        assert _get_context().url == "https://example.com"
+        assert _get_context().token == "test_token"
 
-    login(url="https://example.com", token="test_token")
-    assert _get_context().url == "https://example.com"
-    assert _get_context().token == "test_token"
-
-    # Nested webknossos_context overrides login, then restores it on exit
-    with webknossos_context(token="nested_token"):
-        assert _get_context().token == "nested_token"
-    assert _get_context().token == "test_token"
-
-    # Restore original context
-    login(url=original_url, token=original_token)
+        # Nested webknossos_context overrides login, then restores it on exit
+        with webknossos_context(token="nested_token"):
+            assert _get_context().token == "nested_token"
+        assert _get_context().token == "test_token"
