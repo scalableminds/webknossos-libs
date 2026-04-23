@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `wk.login(token="...")` as the preferred way to authenticate with the WEBKNOSSOS server. It modifies the global context for the remaining runtime of the process, but is much easier to use than the env variables or context manager. [#1457](https://github.com/scalableminds/webknossos-libs/pull/1457)
 
 ### Changed
 
