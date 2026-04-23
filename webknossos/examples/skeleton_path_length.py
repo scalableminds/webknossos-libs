@@ -3,13 +3,12 @@ import numpy as np
 import webknossos as wk
 
 
-def calculate_path_length(annotation_url: str, auth_token: str) -> None:
-    with wk.webknossos_context(token=auth_token):
-        # Download a annotation directly from the WEBKNOSSOS server
-        annotation = wk.Annotation.download(annotation_url, skip_volume_data=True)
+def calculate_path_length(annotation_url: str) -> None:
+    # Download a annotation directly from the WEBKNOSSOS server
+    annotation = wk.Annotation.download(annotation_url, skip_volume_data=True)
 
-        skeleton = annotation.skeleton
-        voxel_size = annotation.voxel_size
+    skeleton = annotation.skeleton
+    voxel_size = annotation.voxel_size
 
     # Iterate over all the tree in a skeleton and calculate their path length
     for tree in skeleton.flattened_trees():
@@ -43,9 +42,9 @@ def calculate_path_length_for_tree(
 if __name__ == "__main__":
     # Authentication and API token for your account
     # Get it at https://webknossos.org/auth/token
-    TOKEN = "YOUR-token"
+    wk.login(token="YOUR-token")
 
     # A WEBKNOSOS URL containing the skeleton annotation
     ANNOTATION_URL = "https://webknossos.org/annotations/12345678"
 
-    calculate_path_length(ANNOTATION_URL, TOKEN)
+    calculate_path_length(ANNOTATION_URL)
