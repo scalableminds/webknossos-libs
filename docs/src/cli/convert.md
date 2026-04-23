@@ -113,12 +113,12 @@ webknossos convert [OPTIONS] SOURCE [TARGET]
 
 - `--distribution-strategy`
     Strategy to distribute the task across CPUs or nodes.
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`.
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`.
     Default: `multiprocessing`.
 
 - `--job-resources`
     JSON string to specify resources for jobs when using the SLURM distribution strategy.
-    Example: `--job-resources '{"mem": "10M"}'`.
+    Example: `--job-resources mem=10M`.
 
 #### WEBKNOSSOS context
 
@@ -291,7 +291,7 @@ webknossos convert-raw [OPTIONS] SOURCE TARGET
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`. 
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`. 
     Default: `multiprocessing`.
 
 ### Example Commands
@@ -367,7 +367,7 @@ webknossos convert-knossos [OPTIONS] SOURCE TARGET
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`. 
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`. 
     Default: `multiprocessing`.
 
 ### Example Commands
@@ -475,7 +475,7 @@ webknossos convert-zarr [OPTIONS] SOURCE TARGET
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`. 
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`. 
     Default: `multiprocessing`.
 
 ### Example Commands
@@ -495,7 +495,7 @@ webknossos convert-zarr --jobs 4 /path/to/source/zarr /path/to/target/dataset
 Convert a Zarr dataset using SLURM with custom job resources:
 
 ```bash
-webknossos convert-zarr --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/source/zarr /path/to/target/dataset
+webknossos convert-zarr --distribution-strategy slurm --job-resources mem=10M /path/to/source/zarr /path/to/target/dataset
 ```
 
 ---

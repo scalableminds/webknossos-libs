@@ -410,7 +410,7 @@ def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode, executor: str) -
             assert len(seg_layer.mags) == 1
             mag = seg_layer.get_mag(1)
             read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-            assert np.array_equal(data, read_data)
+            np.testing.assert_array_equal(data, read_data)
 
 
 def test_edited_volume_annotation_format() -> None:
@@ -463,7 +463,7 @@ def test_edited_volume_annotation_format() -> None:
         codec["name"] for codec in metadata["codecs"]
     ]
     data_read = ts.read().result()[0, :10, :10, :10]
-    assert np.array_equal(data, data_read)
+    np.testing.assert_array_equal(data, data_read)
 
 
 @pytest.mark.parametrize(
@@ -493,7 +493,7 @@ def test_edited_volume_annotation_save_load(edit_mode: VolumeLayerEditMode) -> N
         assert len(seg_layer.mags) == 1
         mag = seg_layer.get_mag(1)
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-        assert np.array_equal(data, read_data)
+        np.testing.assert_array_equal(data, read_data)
 
 
 @pytest.mark.skip_on_windows
@@ -529,4 +529,4 @@ def test_edited_volume_annotation_upload_download() -> None:
         assert len(seg_layer.mags) == 1
         mag = seg_layer.get_mag(1)
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-        assert np.array_equal(data, read_data)
+        np.testing.assert_array_equal(data, read_data)

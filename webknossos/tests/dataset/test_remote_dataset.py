@@ -335,7 +335,7 @@ def test_url_download(url: str, tmp_upath: UPath) -> None:
     assert set(ds.layers.keys()) == {"color", "segmentation"}
     data = ds.get_color_layers()[0].get_finest_mag().read()
     assert data.sum() == 120697
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         data,
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
     )
@@ -365,7 +365,7 @@ def test_url_open_remote(
         .read(absolute_bounding_box=SAMPLE_BBOX)
     )
     assert data.sum() == 120697
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         data,
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
     )
@@ -384,7 +384,7 @@ def test_upload_dataset(tmp_upath: UPath, transfer_mode: TransferMode) -> None:
         new_dataset_name="test_remote_symlink",
         transfer_mode=transfer_mode,
     )
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         remote_ds.get_color_layers()[0].get_finest_mag().read(),
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
     )
@@ -393,7 +393,7 @@ def test_upload_dataset(tmp_upath: UPath, transfer_mode: TransferMode) -> None:
 def test_remote_dataset(tmp_upath: UPath) -> None:
     sample_dataset = get_sample_dataset(tmp_upath)
     remote_ds = sample_dataset.upload(new_dataset_name="test_remote_metadata")
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         remote_ds.get_color_layers()[0].get_finest_mag().read(),
         sample_dataset.get_color_layers()[0].get_finest_mag().read(),
     )
@@ -472,7 +472,7 @@ def test_upload_download_roundtrip(tmp_upath: UPath) -> None:
 
     data_original = ds_original.get_segmentation_layers()[0].get_finest_mag().read()
     data_roundtrip = ds_roundtrip.get_segmentation_layers()[0].get_finest_mag().read()
-    assert np.array_equal(data_original, data_roundtrip)
+    np.testing.assert_array_equal(data_original, data_roundtrip)
 
 
 def test_upload_twice(tmp_upath: UPath) -> None:
