@@ -1,15 +1,20 @@
 """This module checks equality of two different WEBKNOSSOS datasets."""
 
 import logging
-from argparse import Namespace
-from multiprocessing import cpu_count
 from typing import Annotated, Any
 
 import typer
+from cluster_tools import Executor
 
 from ..dataset import Dataset, Layer
-from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, parse_path
+from ._utils import (
+    DistributionStrategy,
+    DistributionStrategyOption,
+    JobResourcesOption,
+    JobsOption,
+    get_executor_for_args,
+    parse_path,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,36 +43,11 @@ def main(
             help="Name of the layer to compare (if not provided, all layers are compared)."
         ),
     ] = None,
-    jobs: Annotated[
-        int,
-        typer.Option(
-            help="Number of processes to be spawned.",
-            rich_help_panel="Executor options",
-        ),
-    ] = cpu_count(),
-    distribution_strategy: Annotated[
-        DistributionStrategy,
-        typer.Option(
-            help="Strategy to distribute the task across CPUs or nodes.",
-            rich_help_panel="Executor options",
-        ),
-    ] = DistributionStrategy.MULTIPROCESSING,
-    job_resources: Annotated[
-        str | None,
-        typer.Option(
-            help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-            '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
-            rich_help_panel="Executor options",
-        ),
-    ] = None,
+    jobs: JobsOption = None,
+    distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
+    job_resources: JobResourcesOption = None,
 ) -> None:
     """Check equality of two WEBKNOSSOS datasets."""
-
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
 
     source_dataset = Dataset.open(source)
     target_dataset = Dataset.open(target)
@@ -76,42 +56,47 @@ def main(
 
     layer_names = list(source_layer_names)
 
-    try:
-        if layer_name is not None:
-            assert layer_name in source_layer_names, (
-                f"Provided layer {layer_name} does not exist in source dataset."
-            )
-            assert layer_name in target_layer_names, (
-                f"Provided layer {layer_name} does not exist in target dataset."
-            )
-            layer_names = [layer_name]
+    with get_executor_for_args(
+        jobs=jobs,
+        distribution_strategy=distribution_strategy,
+        job_resources=job_resources,
+    ) as executor:
+        try:
+            if layer_name is not None:
+                assert layer_name in source_layer_names, (
+                    f"Provided layer {layer_name} does not exist in source dataset."
+                )
+                assert layer_name in target_layer_names, (
+                    f"Provided layer {layer_name} does not exist in target dataset."
+                )
+                layer_names = [layer_name]
 
-        else:
-            assert source_layer_names == target_layer_names, (
-                f"The provided input datasets have different \
+            else:
+                assert source_layer_names == target_layer_names, (
+                    f"The provided input datasets have different \
     layers: {source_layer_names} != {target_layer_names}"
-            )
+                )
 
-        for name in layer_names:
-            compare_layers(
-                source_dataset.get_layer(name),
-                target_dataset.get_layer(name),
-                executor_args,
-            )
+            for name in layer_names:
+                compare_layers(
+                    source_dataset.get_layer(name),
+                    target_dataset.get_layer(name),
+                    executor,
+                )
 
-        print(
-            f"The datasets {source} and {target} are equal \
+            print(
+                f"The datasets {source} and {target} are equal \
     (with regard to the layers: {layer_names})"
-        )
-    except RuntimeError as err:
-        print(f"The datasets are not equal: {err}")
-        exit(1)
+            )
+        except RuntimeError as err:
+            print(f"The datasets are not equal: {err}")
+            exit(1)
 
 
 def compare_layers(
     source_layer: Layer,
     target_layer: Layer,
-    executor_args: Namespace,
+    executor: Executor,
 ) -> None:
     """Compares one layer with another layer"""
 
@@ -138,12 +123,9 @@ are not equal: {source_layer.bounding_box} != {target_layer.bounding_box}"
         target_mag = target_layer.mags[mag]
 
         logger.info("Start verification of %s in mag %s", layer_name, mag)
-        with get_executor_for_args(args=executor_args) as executor:
-            if not source_mag.content_is_equal(
-                target_mag,
-                executor=executor,
-                progress_desc=f"Comparing {layer_name}/{mag}",
-            ):
-                raise RuntimeError(
-                    f"The contents of {source_mag} and {target_mag} differ."
-                )
+        if not source_mag.content_is_equal(
+            target_mag,
+            executor=executor,
+            progress_desc=f"Comparing {layer_name}/{mag}",
+        ):
+            raise RuntimeError(f"The contents of {source_mag} and {target_mag} differ.")

@@ -1,7 +1,5 @@
 """This module takes care of downsampling WEBKNOSSOS datasets."""
 
-from argparse import Namespace
-from multiprocessing import cpu_count
 from typing import Annotated
 
 import typer
@@ -10,10 +8,14 @@ from upath import UPath
 from ..dataset import RemoteDataset, SamplingModes, TransferMode
 from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import Mag
-from ..utils import get_executor_for_args
 from ._utils import (
+    AccessModeOption,
     DistributionStrategy,
+    DistributionStrategyOption,
+    JobResourcesOption,
+    JobsOption,
     SamplingMode,
+    get_executor_for_args,
     open_dataset,
     parse_mag,
 )
@@ -54,28 +56,9 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             envvar="WK_TOKEN",
         ),
     ] = None,
-    jobs: Annotated[
-        int,
-        typer.Option(
-            help="Number of processes to be spawned.",
-            rich_help_panel="Executor options",
-        ),
-    ] = cpu_count(),
-    distribution_strategy: Annotated[
-        DistributionStrategy,
-        typer.Option(
-            help="Strategy to distribute the task across CPUs or nodes.",
-            rich_help_panel="Executor options",
-        ),
-    ] = DistributionStrategy.MULTIPROCESSING,
-    job_resources: Annotated[
-        str | None,
-        typer.Option(
-            help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-            '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
-            rich_help_panel="Executor options",
-        ),
-    ] = None,
+    jobs: JobsOption = None,
+    distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
+    job_resources: JobResourcesOption = None,
     transfer_mode: Annotated[
         TransferMode | None,
         typer.Option(
@@ -84,22 +67,10 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             rich_help_panel="WEBKNOSSOS context",
         ),
     ] = None,
-    access_mode: Annotated[
-        RemoteAccessMode | None,
-        typer.Option(
-            help="How to access the remote dataset's data. "
-            "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'proxy_path'.",
-            rich_help_panel="WEBKNOSSOS context",
-        ),
-    ] = None,
+    access_mode: AccessModeOption = None,
 ) -> None:
     """Downsample your WEBKNOSSOS dataset."""
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     sampling_mode_parsed = SamplingModes.parse(sampling_mode.value)
 
     if access_mode is None:
@@ -111,7 +82,11 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
     with open_dataset(
         UPath(target), annotation_ok=False, token=token, access_mode=access_mode
     ) as dataset:
-        with get_executor_for_args(args=executor_args) as executor:
+        with get_executor_for_args(
+            jobs=jobs,
+            distribution_strategy=distribution_strategy,
+            job_resources=job_resources,
+        ) as executor:
             if isinstance(dataset, RemoteDataset):
                 if transfer_mode is None:
                     raise typer.BadParameter(

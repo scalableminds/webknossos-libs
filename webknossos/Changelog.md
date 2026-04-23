@@ -15,9 +15,17 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+<<<<<<< HEAD
 - Added `wk.login(token="...")` as the preferred way to authenticate with the WEBKNOSSOS server. It modifies the global context for the remaining runtime of the process, but is much easier to use than the env variables or context manager. [#1457](https://github.com/scalableminds/webknossos-libs/pull/1457)
+=======
+- Added `slurm+batching` distribution strategy for CLI commands. `--jobs` can be used to specify the target number of jobs and the `batch-size` key can be specified in the `--job-resources`. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- Added the `--apply-mapping` option to the `export-as-tiff` CLI command. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+>>>>>>> master
 
 ### Changed
+- The job resources for `slurm`, `slurm+batching` and `kubernetes` in the CLI commands are now specified as comma-separated key-value pairs instead of JSON, e.g. `--job-resources mem=10G,time=02:00:00`. The JSON syntax is still available for backwards compatibility. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- The `export-as-tiff` CLI command now compressed exported segmentation layers. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- S3 retry settings are eagerly applied for all CLI commands. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
 
 ### Fixed
 - Fixed a bug in the `BufferedSliceWriter`, where Mag-1 bounding boxes were upscaled when writing to a non-Mag-1 view. [#1451](https://github.com/scalableminds/webknossos-libs/pull/1451)

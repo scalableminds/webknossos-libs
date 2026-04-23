@@ -25,7 +25,7 @@ def test_export() -> None:
     assert Vec3Int(1, 2, 3)[0] == 1
     assert Vec3Int(1, 2, 3)[1] == 2
     assert Vec3Int(1, 2, 3)[2] == 3
-    assert np.array_equal(Vec3Int(1, 2, 3).to_np(), np.array([1, 2, 3]))
+    np.testing.assert_array_equal(Vec3Int(1, 2, 3).to_np(), np.array([1, 2, 3]))
     assert Vec3Int(1, 2, 3).to_list() == [1, 2, 3]
     assert Vec3Int(1, 2, 3).to_tuple() == (1, 2, 3)
 

@@ -1,25 +1,33 @@
 """This module takes care of exporting tiff images."""
 
 import logging
-from argparse import Namespace
 from functools import partial
 from math import ceil
-from multiprocessing import cpu_count
 from typing import Annotated, Any
 
+import fastremap
 import numpy as np
 import typer
-from PIL import Image
+from cluster_tools import Executor
 from scipy.ndimage import zoom
+from tensorstore import Context, TensorStore
+from tifffile import imwrite
 from upath import UPath
 
 from ..dataset import MagView, View
+from ..dataset._utils.tensorstore_helpers import open_zarr3_array
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..dataset_properties import SEGMENTATION_CATEGORY, AttachmentDataFormat
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, wait_and_ensure_success
+from ..utils import wait_and_ensure_success
 from ._utils import (
+    AccessModeOption,
     DistributionStrategy,
+    DistributionStrategyOption,
+    JobResourcesOption,
+    JobsOption,
     Vec2Int,
+    get_executor_for_args,
     open_dataset,
     parse_bbox,
     parse_mag,
@@ -37,7 +45,7 @@ def _make_tiff_name(name: str, slice_index: int) -> str:
         return f"{name}_{slice_index:06d}.tiff"
 
 
-def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
+def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> np.ndarray:
     if data_slice.shape[0] == 1:
         # discard greyscale dimension
         data_slice = data_slice.squeeze(axis=0)
@@ -58,7 +66,17 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> Image.Image:
             mode="nearest",
             prefilter=True,
         )
-    return Image.fromarray(data_slice)
+    return data_slice
+
+
+def _apply_mapping(data: np.ndarray, mapping_array: TensorStore) -> np.ndarray:
+    unique_ids = fastremap.unique(data)
+    in_bounds = [i for i in unique_ids if i < mapping_array.shape[0]]
+    out_of_bounds = [i for i in unique_ids if i >= mapping_array.shape[0]]
+    mapped_ids = mapping_array[in_bounds].read().result() if in_bounds else []
+    mapping = {**dict(zip(in_bounds, mapped_ids)), **{i: 0 for i in out_of_bounds}}
+    result = fastremap.remap(data, mapping, preserve_missing_labels=False)
+    return result.astype(mapping_array.dtype.numpy_dtype)
 
 
 def export_tiff_slice_batch(
@@ -67,13 +85,27 @@ def export_tiff_slice_batch(
     tiling_size: None | tuple[int, int],
     downsample: int,
     start_slice_z_mag1: int,
+    compress: bool,
+    mapping_path: UPath | None,
     view: View,
 ) -> None:
     tiff_bbox_mag1 = view.bounding_box
     tiff_bbox = tiff_bbox_mag1.in_mag(view.mag)
+    compression_arg = "zlib" if compress else None
+
+    mapping_array = None
+    if mapping_path is not None:
+        ts_context = Context(
+            {
+                "cache_pool": {"total_bytes_limit": 10 * 1024**2},  # 10 MB
+            }
+        )
+        mapping_array = open_zarr3_array(mapping_path, context=ts_context)
 
     if tiling_size is None:
         tiff_data = view.read()
+        if mapping_array is not None:
+            tiff_data = _apply_mapping(tiff_data, mapping_array)
     else:
         padded_tiff_bbox_size = Vec3Int(
             tiling_size[0] * ceil(tiff_bbox.size.x / tiling_size[0]),
@@ -81,6 +113,8 @@ def export_tiff_slice_batch(
             tiff_bbox.size.z,
         )
         tiff_data = view.read()
+        if mapping_array is not None:
+            tiff_data = _apply_mapping(tiff_data, mapping_array)
         padded_tiff_data = np.zeros(
             (tiff_data.shape[0],) + padded_tiff_bbox_size.to_tuple(),
             dtype=tiff_data.dtype,
@@ -99,7 +133,7 @@ def export_tiff_slice_batch(
 
             image = _slice_to_image(tiff_data[:, :, :, slice_index], downsample)
             with tiff_file_path.open("wb") as f:
-                image.save(f)
+                imwrite(f, data=image, compression=compression_arg)
             logger.debug("Saved slice %s", slice_name_number)
 
         else:
@@ -123,7 +157,7 @@ def export_tiff_slice_batch(
                     )
 
                     with (tile_tiff_path / tile_tiff_filename).open("wb") as f:
-                        tile_image.save(f)
+                        imwrite(f, data=tile_image, compression=compression_arg)
 
             logger.debug("Saved tiles for slice %s", slice_name_number)
 
@@ -138,39 +172,41 @@ def export_tiff_stack(
     tiling_slice_size: None | tuple[int, int],
     batch_size: int,
     downsample: int,
-    args: Namespace,
+    executor: Executor,
+    mapping_path: UPath | None = None,
 ) -> None:
     destination_path.mkdir(parents=True, exist_ok=True)
 
-    with get_executor_for_args(args) as executor:
-        view = mag_view.get_view(
-            absolute_offset=bbox.topleft, size=bbox.size, read_only=True
+    view = mag_view.get_view(
+        absolute_offset=bbox.topleft, size=bbox.size, read_only=True
+    )
+
+    view_chunks = [
+        view.get_view(
+            relative_offset=(0, 0, z),
+            size=(bbox.size.x, bbox.size.y, min(batch_size, bbox.size.z - z)),
+            read_only=True,
         )
+        for z in range(0, bbox.size.z, batch_size)
+    ]
 
-        view_chunks = [
-            view.get_view(
-                relative_offset=(0, 0, z),
-                size=(bbox.size.x, bbox.size.y, min(batch_size, bbox.size.z - z)),
-                read_only=True,
-            )
-            for z in range(0, bbox.size.z, batch_size)
-        ]
-
-        wait_and_ensure_success(
-            executor.map_to_futures(
-                partial(
-                    export_tiff_slice_batch,
-                    destination_path,
-                    name,
-                    tiling_slice_size,
-                    downsample,
-                    bbox.topleft.z,
-                ),
-                view_chunks,
+    wait_and_ensure_success(
+        executor.map_to_futures(
+            partial(
+                export_tiff_slice_batch,
+                destination_path,
+                name,
+                tiling_slice_size,
+                downsample,
+                bbox.topleft.z,
+                mag_view.layer.category == SEGMENTATION_CATEGORY,
+                mapping_path,
             ),
-            executor=executor,
-            progress_desc="Exporting tiff files",
-        )
+            view_chunks,
+        ),
+        executor=executor,
+        progress_desc="Exporting tiff files",
+    )
 
 
 def main(
@@ -214,6 +250,14 @@ def main(
     ] = 1,  # type: ignore
     name: Annotated[str, typer.Option(help="Name of the tiffs.")] = "",
     downsample: Annotated[int, typer.Option(help="Downsample each tiff image.")] = 1,
+    apply_mapping: Annotated[
+        str | None,
+        typer.Option(
+            help="Name of an agglomerate attachment. Segment IDs are replaced with "
+            "agglomerate IDs before export. Requires a segmentation layer with "
+            "a Zarr3-format agglomerate attachment of that name.",
+        ),
+    ] = None,
     tiles_per_dimension: Annotated[
         Vec2Int | None,
         typer.Option(
@@ -237,28 +281,9 @@ def main(
     batch_size: Annotated[
         int, typer.Option(help="Number of sections to buffer per job.")
     ] = DEFAULT_CHUNK_SHAPE.z,
-    jobs: Annotated[
-        int,
-        typer.Option(
-            help="Number of processes to be spawned.",
-            rich_help_panel="Executor options",
-        ),
-    ] = cpu_count(),
-    distribution_strategy: Annotated[
-        DistributionStrategy,
-        typer.Option(
-            help="Strategy to distribute the task across CPUs or nodes.",
-            rich_help_panel="Executor options",
-        ),
-    ] = DistributionStrategy.MULTIPROCESSING,
-    job_resources: Annotated[
-        str | None,
-        typer.Option(
-            help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-            '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
-            rich_help_panel="Executor options",
-        ),
-    ] = None,
+    jobs: JobsOption = None,
+    distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
+    job_resources: JobResourcesOption = None,
     token: Annotated[
         str | None,
         typer.Option(
@@ -268,13 +293,46 @@ def main(
             envvar="WK_TOKEN",
         ),
     ] = None,
+    access_mode: AccessModeOption = None,
 ) -> None:
     """Export your WEBKNOSSOS dataset to TIFF image data."""
 
     mag_view: MagView | None = None
+    mapping_path: UPath | None = None
     source_path = UPath(source)
-    with open_dataset(source_path, annotation_ok=True, token=token) as dataset:
-        mag_view = dataset.get_layer(layer_name).get_mag(mag)
+    with open_dataset(
+        source_path, annotation_ok=True, token=token, access_mode=access_mode
+    ) as dataset:
+        layer = dataset.get_layer(layer_name)
+        mag_view = layer.get_mag(mag)
+
+        if apply_mapping is not None:
+            if layer.category != SEGMENTATION_CATEGORY:
+                raise ValueError(
+                    f"--apply-mapping requires a segmentation layer, "
+                    f"but '{layer_name}' is a '{layer.category}' layer."
+                )
+            seg_layer = layer.as_segmentation_layer()
+            named = next(
+                (
+                    a
+                    for a in seg_layer.attachments.agglomerates
+                    if a.name == apply_mapping
+                ),
+                None,
+            )
+            if named is None:
+                available = [a.name for a in seg_layer.attachments.agglomerates]
+                raise ValueError(
+                    f"No agglomerate attachment named '{apply_mapping}'. "
+                    f"Available: {available}"
+                )
+            if named.data_format != AttachmentDataFormat.Zarr3:
+                raise ValueError(
+                    f"Agglomerate attachment '{apply_mapping}' is not in Zarr3 format. "
+                    "Only Zarr3 format is supported."
+                )
+            mapping_path = named.path / "segment_to_agglomerate"
 
     if mag_view is None:
         raise ValueError(
@@ -285,11 +343,6 @@ def main(
     bbox = bbox.align_with_mag(mag_view.mag)
 
     logger.info("Starting tiff export for bounding box: %s", bbox)
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     used_tile_size = None
     if tiles_per_dimension is not None:
         tile_size = tiles_per_dimension
@@ -307,13 +360,19 @@ def main(
         logger.info("Using tiling with the size of %d,%d.", tile_size[0], tile_size[1])
         used_tile_size = tile_size
 
-    export_tiff_stack(
-        mag_view=mag_view,
-        bbox=bbox,
-        destination_path=target,
-        name=name,
-        tiling_slice_size=used_tile_size,
-        batch_size=batch_size,
-        downsample=downsample,
-        args=executor_args,
-    )
+    with get_executor_for_args(
+        jobs=jobs,
+        distribution_strategy=distribution_strategy,
+        job_resources=job_resources,
+    ) as executor:
+        export_tiff_stack(
+            mag_view=mag_view,
+            bbox=bbox,
+            destination_path=target,
+            name=name,
+            tiling_slice_size=used_tile_size,
+            batch_size=batch_size,
+            downsample=downsample,
+            executor=executor,
+            mapping_path=mapping_path,
+        )

@@ -26,8 +26,12 @@ from tests.constants import (
     use_minio,
 )
 from webknossos import BoundingBox, DataFormat, Dataset, Mag
-from webknossos.cli.export_as_tiff import _make_tiff_name
+from webknossos.cli.export_as_tiff import _apply_mapping, _make_tiff_name
 from webknossos.cli.main import app
+from webknossos.dataset._utils.tensorstore_helpers import (
+    open_zarr3_array,
+    write_zarr3_array,
+)
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
 from webknossos.utils import copytree
@@ -546,6 +550,36 @@ def test_convert_upload_downsample() -> None:
     assert result.exit_code == 0, result.stdout
 
 
+def test_apply_mapping(tmp_path: UPath) -> None:
+    """Tests the segment-to-agglomerate mapping helper."""
+    # mapping[0] = 0 (background), mapping[1..4] → agglomerate IDs
+    mapping_data = np.array([0, 10, 10, 20, 20], dtype=np.uint32)
+    mapping_path = UPath(tmp_path) / "segment_to_agglomerate"
+    write_zarr3_array(
+        mapping_path,
+        mapping_data,
+        target_chunk_size_bytes=1024,
+        target_shard_size_bytes=1024 * 1024,
+    )
+    mapping_array = open_zarr3_array(mapping_path).result()
+
+    # normal segment IDs: 1→10, 2→10, 3→20, 4→20
+    data = np.array([[[[1, 2], [3, 4]]]], dtype=np.uint32)
+    result = _apply_mapping(data, mapping_array)
+    np.testing.assert_array_equal(result, [[[[10, 10], [20, 20]]]])
+    assert result.dtype == np.uint32
+
+    # background (0) stays 0
+    data_bg = np.array([[[[0, 1]]]], dtype=np.uint32)
+    result_bg = _apply_mapping(data_bg, mapping_array)
+    np.testing.assert_array_equal(result_bg, [[[[0, 10]]]])
+
+    # out-of-bounds segment IDs map to 0
+    data_oob = np.array([[[[5, 99]]]], dtype=np.uint32)
+    result_oob = _apply_mapping(data_oob, mapping_array)
+    np.testing.assert_array_equal(result_oob, [[[[0, 0]]]])
+
+
 def test_export_tiff_stack(tmp_upath: UPath) -> None:
     """Tests export of a tiff stack."""
 
@@ -591,9 +625,10 @@ def test_export_tiff_stack(tmp_upath: UPath) -> None:
         )
         correct_image = np.squeeze(correct_image)
 
-        assert np.array_equal(correct_image, test_image), (
-            f"The tiff file {tiff_path} that was written is not "
-            f"equal to the original wkw_file."
+        np.testing.assert_array_equal(
+            correct_image,
+            test_image,
+            f"The tiff file {tiff_path} that was written is not equal to the original wkw_file.",
         )
 
 
@@ -656,9 +691,11 @@ def test_export_tiff_stack_tile_size(tmp_upath: UPath) -> None:
 
                 correct_image = np.squeeze(correct_image)
 
-                assert np.array_equal(correct_image, test_image), (
+                np.testing.assert_array_equal(
+                    correct_image,
+                    test_image,
                     f"The tiff file {tiff_path} that was written "
-                    f"is not equal to the original wkw_file."
+                    f"is not equal to the original wkw_file.",
                 )
 
 
@@ -721,9 +758,10 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_upath: UPath) -> None:
 
                 correct_image = np.squeeze(correct_image)
 
-                assert np.array_equal(correct_image, test_image), (
-                    f"The tiff file {tiff_path} that was written "
-                    f"is not equal to the original wkw_file."
+                np.testing.assert_array_equal(
+                    correct_image,
+                    test_image,
+                    f"The tiff file {tiff_path} that was written is not equal to the original wkw_file.",
                 )
 
 
