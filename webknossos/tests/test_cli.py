@@ -561,7 +561,7 @@ def test_apply_mapping(tmp_path: UPath) -> None:
         target_chunk_size_bytes=1024,
         target_shard_size_bytes=1024 * 1024,
     )
-    mapping_array = open_zarr3_array(mapping_path).result()
+    mapping_array = open_zarr3_array(mapping_path)
 
     # normal segment IDs: 1→10, 2→10, 3→20, 4→20
     data = np.array([[[[1, 2], [3, 4]]]], dtype=np.uint32)
