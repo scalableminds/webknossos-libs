@@ -36,7 +36,7 @@ def main(
         str | None,
         typer.Option(
             help="Authentication token for WEBKNOSSOS instance "
-            "(https://webknossos.org/auth/token).",
+            "(https://webknossos.org/account/token).",
             rich_help_panel="WEBKNOSSOS context",
             envvar="WK_TOKEN",
         ),

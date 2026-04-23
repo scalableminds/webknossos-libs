@@ -7,7 +7,7 @@ To work with remote datasets or accessing resources on remote paths, the CLI loo
 When working with non-public webknossos datasets or an own webknossos instance, these variables can be used:
 
 - **WK_TOKEN**  
-    _This is the auth token to identify against webknossos. It can be generated [here](https://webknossos.org/auth/token)._
+    _This is the auth token to identify against webknossos. It can be generated [here](https://webknossos.org/account/token)._
 - **WK_URL**  
     _This is the base URL for webknossos APIs and datasets. If it is unset the default ***https://webknossos.org*** is used._
 

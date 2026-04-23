@@ -5,7 +5,7 @@ When interacting with a WEBKNOSSOS server, you might need to
 specify your user token to authenticate yourself.
 You can copy your token from
 
-[https://webknossos.org/auth/token](https://webknossos.org/auth/token)
+[https://webknossos.org/account/token](https://webknossos.org/account/token)
 
 Using the same methods, you can also specify the webknossos-server if you
 are not using the default [webknossos.org](https://webknossos.org) instance,
@@ -149,7 +149,7 @@ def login(
     Args:
         url: Base URL for the WEBKNOSSOS server. Defaults to the current context URL
             (https://webknossos.org if not previously set).
-        token: Authentication token from https://webknossos.org/auth/token.
+        token: Authentication token from https://webknossos.org/account/token.
             If not provided, you will be prompted interactively.
         timeout: Network request timeout in seconds. Defaults to the current context timeout.
 
@@ -166,7 +166,7 @@ def login(
     if token is None:
         token = input(
             f"Please enter your WEBKNOSSOS token for {resolved_url}\n"
-            f"(You can find it at {resolved_url}/auth/token): "
+            f"(You can find it at {resolved_url}/account/token): "
         )
     _webknossos_context_var.set(
         _WebknossosContext(resolved_url, token, resolved_timeout)
@@ -189,7 +189,7 @@ class webknossos_context(ContextDecorator):
         Args:
             url: Base URL for WEBKNOSSOS server, defaults to https://webknossos.org.
                 Taken from previous context if not specified.
-            token: Authentication token from https://webknossos.org/auth/token.
+            token: Authentication token from https://webknossos.org/account/token.
                 Must be specified explicitly.
             timeout: Network request timeout in seconds, defaults to 1800 (30 min).
                 Taken from previous context if not specified.

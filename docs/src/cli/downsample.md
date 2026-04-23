@@ -41,7 +41,7 @@ webknossos downsample [OPTIONS] TARGET
 #### WEBKNOSSOS context
 
 - `--token`
-    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/auth/token).
+    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/account/token).
     Can also be provided via the `WK_TOKEN` environment variable.
     Required when TARGET is a WEBKNOSSOS server URL pointing to a non-public dataset.
 

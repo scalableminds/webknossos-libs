@@ -41,7 +41,7 @@ def calculate_path_length_for_tree(
 
 if __name__ == "__main__":
     # Authentication and API token for your account
-    # Get it at https://webknossos.org/auth/token
+    # Get it at https://webknossos.org/account/token
     wk.login(token="YOUR-token")
 
     # A WEBKNOSOS URL containing the skeleton annotation
