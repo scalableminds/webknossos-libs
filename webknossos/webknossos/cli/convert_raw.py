@@ -11,7 +11,7 @@ from upath import UPath
 
 from ..dataset import Dataset, MagView, SamplingModes
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
-from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
+from ..dataset_properties import DataFormat, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import (
@@ -34,14 +34,15 @@ from ._utils import (
     Order,
     RescaleValues,
     SamplingMode,
+    SamplingModeOption,
     ShardShapeOption,
-    VoxelSizeTuple,
+    UnitOption,
+    VoxelSizeOption,
     get_executor_for_args,
     parse_mag,
     parse_path,
     parse_rescale_values,
     parse_vec3int,
-    parse_voxel_size,
     prepare_shard_shape,
 )
 
@@ -186,22 +187,8 @@ def main(
             metavar="Vec3Int",
         ),
     ],
-    voxel_size: Annotated[
-        VoxelSizeTuple,
-        typer.Option(
-            help="The size of one voxel in source data in nanometers. "
-            "Should be a comma-separated string (e.g. `11.0,11.0,20.0`).",
-            parser=parse_voxel_size,
-            metavar="VoxelSize",
-            show_default=False,
-        ),
-    ],
-    unit: Annotated[
-        LengthUnit,
-        typer.Option(
-            help="The unit of the voxel size.",
-        ),
-    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    voxel_size: VoxelSizeOption,
+    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. `uint8`, `uint16`, `uint32`)")
     ] = "uint8",
@@ -272,9 +259,7 @@ def main(
             "(median, mode, nearest, bilinear or bicubic)."
         ),
     ] = "default",
-    sampling_mode: Annotated[
-        SamplingMode, typer.Option(help="The sampling mode to use.")
-    ] = SamplingMode.ANISOTROPIC,
+    sampling_mode: SamplingModeOption = SamplingMode.ANISOTROPIC,
     overwrite_existing: Annotated[
         bool,
         typer.Option(

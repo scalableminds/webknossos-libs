@@ -3,7 +3,7 @@ import webknossos as wk
 
 def main() -> None:
     # Set the correct dataset name and organization where the dataset is saved on webknossos
-    # You can copy your organization id from https://webknossos.org/auth/token
+    # You can copy your organization id from https://webknossos.org/account/token
     name = "l4dense_motta_et_al_demo"
     organization_id = "scalable_minds"
 

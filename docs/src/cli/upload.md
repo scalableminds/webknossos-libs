@@ -21,7 +21,7 @@ webknossos upload [OPTIONS] SOURCE
     Can also be provided via the `WK_URL` environment variable. 
 
 - `--token`  
-    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/auth/token).  
+    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/account/token).  
     Can also be provided via the `WK_TOKEN` environment variable.
 
 - `--dataset-name`  

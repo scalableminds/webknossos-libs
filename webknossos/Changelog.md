@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `wk.login(token="...")` as the preferred way to authenticate with the WEBKNOSSOS server. It modifies the global context for the remaining runtime of the process, but is much easier to use than the env variables or context manager. [#1457](https://github.com/scalableminds/webknossos-libs/pull/1457)
 - Added `slurm+batching` distribution strategy for CLI commands. `--jobs` can be used to specify the target number of jobs and the `batch-size` key can be specified in the `--job-resources`. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
 - Added the `--apply-mapping` option to the `export-as-tiff` CLI command. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
 

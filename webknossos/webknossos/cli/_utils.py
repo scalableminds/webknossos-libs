@@ -23,7 +23,7 @@ from ..dataset import Dataset, RemoteDataset
 from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset.remote_dataset import RemoteAccessMode
-from ..dataset_properties import DataFormat
+from ..dataset_properties import DataFormat, LengthUnit
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import is_fs_path
 
@@ -341,6 +341,46 @@ ChunksPerShardOption = Annotated[
 ExistsOkOption = Annotated[
     bool,
     typer.Option(help="Whether it should overwrite an existing dataset."),
+]
+
+TokenOption = Annotated[
+    str | None,
+    typer.Option(
+        help="Authentication token for WEBKNOSSOS instance "
+        "(https://webknossos.org/account/token).",
+        rich_help_panel="WEBKNOSSOS context",
+        envvar="WK_TOKEN",
+    ),
+]
+
+WebknossosUrlOption = Annotated[
+    str,
+    typer.Option(
+        help="URL to WEBKNOSSOS instance.",
+        rich_help_panel="WEBKNOSSOS context",
+        envvar="WK_URL",
+    ),
+]
+
+SamplingModeOption = Annotated[
+    SamplingMode,
+    typer.Option(help="The sampling mode to use."),
+]
+
+VoxelSizeOption = Annotated[
+    VoxelSizeTuple,
+    typer.Option(
+        help="The size of one voxel in source data in nanometers. "
+        "Should be a comma-separated string (e.g. 11.0,11.0,20.0).",
+        parser=parse_voxel_size,
+        metavar="VoxelSize",
+        show_default=False,
+    ),
+]
+
+UnitOption = Annotated[
+    LengthUnit,
+    typer.Option(help="The unit of the voxel size."),
 ]
 
 
