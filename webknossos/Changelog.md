@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.3.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.0) - 2026-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.3.0...v3.4.0)
 
 ### Added
 - Added `wk.login(token="...")` as the preferred way to authenticate with the WEBKNOSSOS server. It modifies the global context for the remaining runtime of the process, but is much easier to use than the env variables or context manager. [#1457](https://github.com/scalableminds/webknossos-libs/pull/1457)
@@ -26,6 +36,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed a bug in the `BufferedSliceWriter`, where Mag-1 bounding boxes were upscaled when writing to a non-Mag-1 view. [#1451](https://github.com/scalableminds/webknossos-libs/pull/1451)
+
 
 
 ## [3.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.3.0) - 2026-03-31

@@ -7,16 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.3.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added BatchingExecutor. [#1442](https://github.com/scalableminds/webknossos-libs/pull/1442)
 
 ### Changed
 
 ### Fixed
+
+
+## [3.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.0) - 2026-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.3.0...v3.4.0)
+
+### Added
+- Added BatchingExecutor. [#1442](https://github.com/scalableminds/webknossos-libs/pull/1442)
 
 
 ## [3.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.3.0) - 2026-03-31
