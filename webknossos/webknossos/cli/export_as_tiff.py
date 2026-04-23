@@ -5,15 +5,17 @@ from functools import partial
 from math import ceil
 from typing import Annotated, Any
 
+import fastremap
 import numpy as np
 import typer
 from cluster_tools import Executor
 from scipy.ndimage import zoom
+from tensorstore import Context, TensorStore
 from tifffile import imwrite
 from upath import UPath
 
 from ..dataset import MagView, View
-from ..dataset._utils.tensorstore_helpers import read_zarr3_array
+from ..dataset._utils.tensorstore_helpers import open_zarr3_array
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..dataset_properties import SEGMENTATION_CATEGORY, AttachmentDataFormat
 from ..geometry import BoundingBox, Mag, Vec3Int
@@ -67,11 +69,14 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> np.ndarray:
     return data_slice
 
 
-def _apply_mapping(data: np.ndarray, mapping: np.ndarray) -> np.ndarray:
-    mask = data < len(mapping)
-    result = np.zeros_like(data, dtype=mapping.dtype)
-    result[mask] = mapping[data[mask]]
-    return result
+def _apply_mapping(data: np.ndarray, mapping_array: TensorStore) -> np.ndarray:
+    unique_ids = fastremap.unique(data)
+    in_bounds = [i for i in unique_ids if i < mapping_array.shape[0]]
+    out_of_bounds = [i for i in unique_ids if i >= mapping_array.shape[0]]
+    mapped_ids = mapping_array[in_bounds].read().result() if in_bounds else []
+    mapping = {**dict(zip(in_bounds, mapped_ids)), **{i: 0 for i in out_of_bounds}}
+    result = fastremap.remap(data, mapping, preserve_missing_labels=False)
+    return result.astype(mapping_array.dtype.numpy_dtype)
 
 
 def export_tiff_slice_batch(
@@ -87,12 +92,20 @@ def export_tiff_slice_batch(
     tiff_bbox_mag1 = view.bounding_box
     tiff_bbox = tiff_bbox_mag1.in_mag(view.mag)
     compression_arg = "zlib" if compress else None
-    mapping = read_zarr3_array(mapping_path) if mapping_path is not None else None
+
+    mapping_array = None
+    if mapping_path is not None:
+        ts_context = Context(
+            {
+                "cache_pool": {"total_bytes_limit": 10 * 1024**2},  # 10 MB
+            }
+        )
+        mapping_array = open_zarr3_array(mapping_path, context=ts_context)
 
     if tiling_size is None:
         tiff_data = view.read()
-        if mapping is not None:
-            tiff_data = _apply_mapping(tiff_data, mapping)
+        if mapping_array is not None:
+            tiff_data = _apply_mapping(tiff_data, mapping_array)
     else:
         padded_tiff_bbox_size = Vec3Int(
             tiling_size[0] * ceil(tiff_bbox.size.x / tiling_size[0]),
@@ -100,8 +113,8 @@ def export_tiff_slice_batch(
             tiff_bbox.size.z,
         )
         tiff_data = view.read()
-        if mapping is not None:
-            tiff_data = _apply_mapping(tiff_data, mapping)
+        if mapping_array is not None:
+            tiff_data = _apply_mapping(tiff_data, mapping_array)
         padded_tiff_data = np.zeros(
             (tiff_data.shape[0],) + padded_tiff_bbox_size.to_tuple(),
             dtype=tiff_data.dtype,

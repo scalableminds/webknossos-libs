@@ -110,6 +110,19 @@ def _make_kvstore(path: UPath) -> str | dict[str, str | list[str]]:
         }
 
 
+def open_zarr3_array(path: UPath, context: ts.Context = TS_CONTEXT) -> "ts.TensorStore":
+    """Open a Zarr v3 array from disk into a tensorstore array."""
+
+    return ts.open(
+        {
+            "driver": "zarr3",
+            "kvstore": _make_kvstore(path),
+        },
+        open=True,
+        context=context,
+    )
+
+
 def read_zarr3_array(path: UPath) -> np.ndarray:
     """Read a Zarr v3 array from disk into a numpy array."""
 
