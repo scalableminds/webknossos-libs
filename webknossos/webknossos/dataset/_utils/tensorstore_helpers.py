@@ -1,30 +1,145 @@
 import math
+from functools import lru_cache
+from tempfile import mkdtemp
 from typing import Any
+from urllib.parse import urlparse
 
 import numpy as np
 import tensorstore as ts
 from upath import UPath
 
+from ...utils import is_fs_path
+
 TS_CONTEXT = ts.Context()
 
 
-def read_zarr3_array(path: UPath) -> np.ndarray:  # type: ignore[type-arg]
+class AWSCredentialManager:
+    entries: dict[int, tuple[str, str]]
+    folder_path: UPath
+
+    def __init__(self, folder_path: UPath) -> None:
+        self.entries = {}
+        self.folder_path = folder_path
+
+        self.credentials_file_path.touch()
+        self.config_file_path.write_text("[default]\n")
+
+    @property
+    def credentials_file_path(self) -> UPath:
+        return self.folder_path / "credentials"
+
+    @property
+    def config_file_path(self) -> UPath:
+        return self.folder_path / "config"
+
+    def _dump_credentials(self) -> None:
+        self.credentials_file_path.write_text(
+            "\n".join(
+                [
+                    f"[profile-{key_hash}]\naws_access_key_id = {access_key_id}\naws_secret_access_key = {secret_access_key}\n"
+                    for key_hash, (
+                        access_key_id,
+                        secret_access_key,
+                    ) in self.entries.items()
+                ]
+            )
+        )
+
+    def add(self, access_key_id: str, secret_access_key: str) -> dict[str, str]:
+        key_tuple = (access_key_id, secret_access_key)
+        key_hash = hash(key_tuple)
+        self.entries[key_hash] = key_tuple
+        self._dump_credentials()
+        return {
+            "type": "profile",
+            "profile": f"profile-{key_hash}",
+            "config_file": str(self.config_file_path),
+            "credentials_file": str(self.credentials_file_path),
+        }
+
+
+@lru_cache
+def _aws_credential_folder() -> UPath:
+    return UPath(mkdtemp())
+
+
+_aws_credential_manager = AWSCredentialManager(_aws_credential_folder())
+
+
+def _make_kvstore(path: UPath) -> str | dict[str, str | list[str]]:
+    if is_fs_path(path):
+        return {"driver": "file", "path": str(path)}
+    elif path.protocol in ("http", "https"):
+        return {
+            "driver": "http",
+            "base_url": str(path),
+            "headers": [
+                f"{key}: {value}"
+                for key, value in path.storage_options.get("headers", {}).items()
+            ],
+        }
+    elif path.protocol in ("s3"):
+        parsed_url = urlparse(str(path))
+        kvstore_spec: dict[str, Any] = {
+            "driver": "s3",
+            "path": parsed_url.path.lstrip("/"),
+            "bucket": parsed_url.netloc,
+            "use_conditional_write": False,
+        }
+        if endpoint_url := path.storage_options.get("endpoint_url", None):
+            kvstore_spec["endpoint"] = endpoint_url
+        if "key" in path.storage_options and "secret" in path.storage_options:
+            kvstore_spec["aws_credentials"] = _aws_credential_manager.add(
+                path.storage_options["key"], path.storage_options["secret"]
+            )
+        else:
+            kvstore_spec["aws_credentials"] = {"type": "default"}
+        return kvstore_spec
+    elif path.protocol == "memory":
+        # use memory driver (in-memory file systems), e.g. useful for testing
+        # attention: this is not a persistent storage and it does not support
+        # multiprocessing since memory is not shared between processes
+        return {
+            "driver": "memory",
+            "path": path.path,
+        }
+    else:
+        return {
+            "driver": "file",
+            "path": str(path),
+        }
+
+
+def open_zarr3_array(path: UPath, context: ts.Context = TS_CONTEXT) -> "ts.TensorStore":
+    """Open a Zarr v3 array from disk into a tensorstore array."""
+
+    return ts.open(
+        {
+            "driver": "zarr3",
+            "kvstore": _make_kvstore(path),
+        },
+        open=True,
+        context=context,
+    )
+
+
+def read_zarr3_array(path: UPath) -> np.ndarray:
     """Read a Zarr v3 array from disk into a numpy array."""
 
     arr = ts.open(
         {
             "driver": "zarr3",
-            "kvstore": {"driver": "file", "path": str(path)},
+            "kvstore": _make_kvstore(path),
         },
         open=True,
         context=TS_CONTEXT,
     ).result()
-    return arr[:].read().result()  # type: ignore[no-any-return]
+    return arr[:].read().result()
 
 
 def write_zarr3_array(
     path: UPath,
-    data: np.ndarray,  # type: ignore[type-arg]
+    data: np.ndarray,
     *,
     target_chunk_size_bytes: int,
     target_shard_size_bytes: int,
@@ -88,7 +203,7 @@ def write_zarr3_array(
     arr = ts.open(
         {
             "driver": "zarr3",
-            "kvstore": {"driver": "file", "path": str(path)},
+            "kvstore": _make_kvstore(path),
             "metadata": metadata,
         },
         create=True,

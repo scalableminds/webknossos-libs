@@ -41,6 +41,12 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
     Downsample factor for each TIFF image.  
     Default: `1`.
 
+- `--apply-mapping`  
+    Name of an agglomerate attachment on the segmentation layer. When provided,
+    segment IDs are replaced with their agglomerate IDs before writing each TIFF.
+    Requires `--layer-name` to point to a segmentation layer that has a Zarr3-format
+    agglomerate attachment with the given name.
+
 - `--tiles-per-dimension`  
     Define tiling by specifying the number of tiles per dimension in the form `x,y`.  
     When set, each slice is exported as multiple tiled images.
@@ -59,12 +65,22 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`. 
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`. 
     Default: `multiprocessing`.
 
 - `--job-resources`  
     Resources specification for jobs when using the SLURM strategy.  
-    Example: `--job-resources '{"mem": "10M"}'`.
+    Example: `--job-resources mem=10M`.
+
+#### WEBKNOSSOS context
+
+- `--token`  
+    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/auth/token).  
+    Can also be provided via the `WK_TOKEN` environment variable.  
+    Required when SOURCE is a WEBKNOSSOS server URL pointing to a non-public dataset.
+
+- `--access-mode`  
+    How to access the remote dataset's data. Available options are `direct_path`, `zarr_streaming`, `proxy_path`.
 
 ## Example Commands
 
@@ -86,7 +102,7 @@ webknossos export-as-tiff --bbox 0,0,0,512,512,100 --tiles-per-dimension 4,4 /pa
 
 ### Export using parallel processing with SLURM:
 ```bash
-webknossos export-as-tiff --jobs 8 --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/source/dataset /path/to/target/tiff_folder
+webknossos export-as-tiff --jobs 8 --distribution-strategy slurm --job-resources mem=10M /path/to/source/dataset /path/to/target/tiff_folder
 ```
 
 ## Notes
