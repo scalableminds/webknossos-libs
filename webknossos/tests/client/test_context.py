@@ -24,7 +24,7 @@ def test_trailing_slash_in_url(env_context: _WebknossosContext) -> None:
         assert env_context.url == _get_context().url
 
 
-def test_login(env_context: _WebknossosContext) -> None:
+def test_login() -> None:
     # Use webknossos_context to isolate changes to the global context
     with webknossos_context():
         login(url="https://example.com", token="test_token")
