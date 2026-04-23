@@ -2,10 +2,11 @@ from collections.abc import Iterator
 
 from webknossos.client.api_client.models import (
     ApiAdHocMeshInfo,
-    ApiDatasetUploadInformation,
+    ApiAttachmentUploadInfo,
+    ApiDatasetUploadInfo,
     ApiDatasetUploadSuccess,
+    ApiMagUploadInfo,
     ApiPrecomputedMeshInfo,
-    ApiReserveDatasetUploadInformation,
 )
 
 from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
@@ -31,32 +32,76 @@ class DatastoreApiClient(AbstractApiClient):
     def url_prefix(self) -> str:
         return f"{self.datastore_base_url}/data/v{self.webknossos_api_version}"
 
+    def mag_reserve_upload(
+        self, *, mag_upload_info: ApiMagUploadInfo, retry_count: int
+    ) -> None:
+        self._post_json(
+            "/datasets/upload/mag/reserveUpload",
+            mag_upload_info,
+            retry_count=retry_count,
+        )
+
+    def mag_finish_upload(
+        self,
+        *,
+        upload_id: str,
+        retry_count: int,
+    ) -> None:
+        self._post(
+            "/datasets/upload/mag/finishUpload",
+            query={"uploadId": upload_id},
+            retry_count=retry_count,
+            timeout_seconds=LONG_TIMEOUT_SECONDS,
+        )
+
+    def attachment_reserve_upload(
+        self, *, attachment_upload_info: ApiAttachmentUploadInfo, retry_count: int
+    ) -> None:
+        self._post_json(
+            "/datasets/upload/attachment/reserveUpload",
+            attachment_upload_info,
+            retry_count=retry_count,
+        )
+
+    def attachment_finish_upload(
+        self,
+        *,
+        upload_id: str,
+        retry_count: int,
+    ) -> None:
+        self._post(
+            "/datasets/upload/attachment/finishUpload",
+            query={"uploadId": upload_id},
+            retry_count=retry_count,
+            timeout_seconds=LONG_TIMEOUT_SECONDS,
+        )
+
     def dataset_finish_upload(
         self,
         *,
-        upload_information: ApiDatasetUploadInformation,
+        upload_id: str,
         retry_count: int,
     ) -> str:
-        route = "/datasets/finishUpload"
-        json = self._post_json_with_json_response(
+        route = "/datasets/upload/dataset/finishUpload"
+        json = self._post_with_json_response(
             route,
-            upload_information,
+            query={"uploadId": upload_id},
             retry_count=retry_count,
             timeout_seconds=LONG_TIMEOUT_SECONDS,
             response_type=ApiDatasetUploadSuccess,
         )
-        return json.new_dataset_id
+        return json.dataset_id
 
     def dataset_reserve_upload(
         self,
         *,
-        reserve_upload_information: ApiReserveDatasetUploadInformation,
+        dataset_upload_info: ApiDatasetUploadInfo,
         retry_count: int,
     ) -> None:
-        route = "/datasets/reserveUpload"
+        route = "/datasets/upload/dataset/reserveUpload"
         self._post_json(
             route,
-            reserve_upload_information,
+            dataset_upload_info,
             retry_count=retry_count,
         )
 
