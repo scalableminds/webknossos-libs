@@ -64,8 +64,6 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> np.ndarray:
             mode="nearest",
             prefilter=True,
         )
-    if data_slice.ndim == 3:
-        return np.moveaxis(data_slice, 0, -1)
     return data_slice
 
 

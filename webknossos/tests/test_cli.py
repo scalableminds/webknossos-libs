@@ -591,9 +591,12 @@ def test_export_tiff_stack(tmp_upath: UPath) -> None:
         )
         correct_image = np.squeeze(correct_image)
 
-        assert np.array_equal(correct_image, test_image), (
-            f"The tiff file {tiff_path} that was written is not "
-            f"equal to the original wkw_file."
+        (
+            np.testing.assert_array_equal(correct_image, test_image),
+            (
+                f"The tiff file {tiff_path} that was written is not "
+                f"equal to the original wkw_file."
+            ),
         )
 
 
@@ -656,9 +659,12 @@ def test_export_tiff_stack_tile_size(tmp_upath: UPath) -> None:
 
                 correct_image = np.squeeze(correct_image)
 
-                assert np.array_equal(correct_image, test_image), (
-                    f"The tiff file {tiff_path} that was written "
-                    f"is not equal to the original wkw_file."
+                (
+                    np.testing.assert_array_equal(correct_image, test_image),
+                    (
+                        f"The tiff file {tiff_path} that was written "
+                        f"is not equal to the original wkw_file."
+                    ),
                 )
 
 
@@ -721,9 +727,12 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_upath: UPath) -> None:
 
                 correct_image = np.squeeze(correct_image)
 
-                assert np.array_equal(correct_image, test_image), (
-                    f"The tiff file {tiff_path} that was written "
-                    f"is not equal to the original wkw_file."
+                (
+                    np.testing.assert_array_equal(correct_image, test_image),
+                    (
+                        f"The tiff file {tiff_path} that was written "
+                        f"is not equal to the original wkw_file."
+                    ),
                 )
 
 
