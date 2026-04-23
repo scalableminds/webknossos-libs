@@ -26,6 +26,7 @@ from ._utils import (
     DistributionStrategyOption,
     JobResourcesOption,
     JobsOption,
+    TokenOption,
     Vec2Int,
     get_executor_for_args,
     open_dataset,
@@ -284,15 +285,7 @@ def main(
     jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
-    token: Annotated[
-        str | None,
-        typer.Option(
-            help="Authentication token for WEBKNOSSOS instance "
-            "(https://webknossos.org/account/token).",
-            rich_help_panel="WEBKNOSSOS context",
-            envvar="WK_TOKEN",
-        ),
-    ] = None,
+    token: TokenOption = None,
     access_mode: AccessModeOption = None,
 ) -> None:
     """Export your WEBKNOSSOS dataset to TIFF image data."""

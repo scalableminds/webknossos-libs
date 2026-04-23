@@ -15,6 +15,8 @@ from ._utils import (
     JobResourcesOption,
     JobsOption,
     SamplingMode,
+    SamplingModeOption,
+    TokenOption,
     get_executor_for_args,
     open_dataset,
     parse_mag,
@@ -30,9 +32,7 @@ def main(
             show_default=False,
         ),
     ],
-    sampling_mode: Annotated[
-        SamplingMode, typer.Option(help="The sampling mode to use.")
-    ] = SamplingMode.ANISOTROPIC,
+    sampling_mode: SamplingModeOption = SamplingMode.ANISOTROPIC,
     layer_name: Annotated[
         str | None,
         typer.Option(
@@ -47,15 +47,7 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),
     ] = None,
-    token: Annotated[
-        str | None,
-        typer.Option(
-            help="Authentication token for WEBKNOSSOS instance "
-            "(https://webknossos.org/account/token).",
-            rich_help_panel="WEBKNOSSOS context",
-            envvar="WK_TOKEN",
-        ),
-    ] = None,
+    token: TokenOption = None,
     jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,

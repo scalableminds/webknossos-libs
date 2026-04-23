@@ -8,7 +8,7 @@ from ..client import webknossos_context
 from ..client._defaults import DEFAULT_WEBKNOSSOS_URL
 from ..client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
 from ..dataset import Dataset, RemoteFolder, TransferMode
-from ._utils import parse_path
+from ._utils import TokenOption, WebknossosUrlOption, parse_path
 
 
 def main(
@@ -21,23 +21,8 @@ def main(
             parser=parse_path,
         ),
     ],
-    webknossos_url: Annotated[
-        str,
-        typer.Option(
-            help="URL to WEBKNOSSOS instance.",
-            rich_help_panel="WEBKNOSSOS context",
-            envvar="WK_URL",
-        ),
-    ] = DEFAULT_WEBKNOSSOS_URL,
-    token: Annotated[
-        str | None,
-        typer.Option(
-            help="Authentication token for WEBKNOSSOS instance "
-            "(https://webknossos.org/account/token).",
-            rich_help_panel="WEBKNOSSOS context",
-            envvar="WK_TOKEN",
-        ),
-    ] = None,
+    webknossos_url: WebknossosUrlOption = DEFAULT_WEBKNOSSOS_URL,
+    token: TokenOption = None,
     dataset_name: Annotated[
         str | None,
         typer.Option(
