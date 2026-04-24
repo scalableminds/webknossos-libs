@@ -277,6 +277,20 @@ def test_changing_properties_on_remote_dataset() -> None:
     )
 
 
+def test_remote_layer_view_configuration() -> None:
+    remote_dataset = RemoteDataset.open(dataset_id="59e9cfbdba632ac2ab8b23b5")
+    layer = remote_dataset.get_layer("color")
+    config = layer.view_configuration
+
+    assert isinstance(config, LayerViewConfiguration)
+    assert config.alpha == 100.0
+    assert config.is_inverted == False
+
+    # config values are readyonly
+    with pytest.raises(AttributeError):
+        layer.view_configuration = LayerViewConfiguration(alpha=50.0)
+
+
 def test_changing_properties_on_read_only_remote_dataset() -> None:
     remote_dataset = RemoteDataset.open(
         dataset_id="59e9cfbdba632ac2ab8b23b5", read_only=True
