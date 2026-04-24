@@ -10,6 +10,7 @@ from typing import TypeVar
 
 from typing_extensions import ParamSpec
 
+from cluster_tools._utils.reflection import get_function_name
 from cluster_tools.executor_protocol import Executor
 
 _T = TypeVar("_T")
@@ -122,7 +123,7 @@ class BatchingExecutor:
 
         for batch in _iter_batches(items, batch_size):
             batch_fn = partial(_apply_fn_to_batch, fn)
-            batch_fn.__name__ = f"batch_{fn.__name__}"  # type: ignore[attr-defined]
+            batch_fn.__name__ = f"batch_{get_function_name(fn)}"  # type: ignore[attr-defined]
             (batch_future,) = self._executor.map_to_futures(batch_fn, [batch])
             item_futures: list[Future[_T]] = [Future() for _ in batch]
             all_item_futures.extend(item_futures)
@@ -160,7 +161,7 @@ class BatchingExecutor:
 
         def result_generator() -> Iterator[_T]:
             batch_fn = partial(_apply_fn_to_batch, fn)
-            batch_fn.__name__ = f"batch_{fn.__name__}"  # type: ignore[attr-defined]
+            batch_fn.__name__ = f"batch_{get_function_name(fn)}"  # type: ignore[attr-defined]
             for batch_results in self._executor.map(
                 batch_fn,
                 _iter_batches(items, batch_size),
