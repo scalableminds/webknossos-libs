@@ -5,7 +5,7 @@ When interacting with a WEBKNOSSOS server, you might need to
 specify your user token to authenticate yourself.
 You can copy your token from
 
-[https://webknossos.org/auth/token](https://webknossos.org/auth/token)
+[https://webknossos.org/account/token](https://webknossos.org/account/token)
 
 Using the same methods, you can also specify the webknossos-server if you
 are not using the default [webknossos.org](https://webknossos.org) instance,
@@ -13,8 +13,16 @@ as well as a timeout for network requests (default is 30 minutes).
 
 There are the following four options to specify which server context to use:
 
-1. Specifying the context in code using the `webknossos_context`
-   contextmanager in a `with` statement:
+1. Calling `login` to set credentials for the whole session:
+
+    ```python
+    import webknossos as wk
+    wk.login(token="my_webknossos_token")
+    # all subsequent interactions use this token
+    ```
+
+2. Specifying the context in code using the `webknossos_context`
+   contextmanager in a `with` statement (useful for scoped overrides):
 
     ```python
     with webknossos_context(token="my_webknossos_token"):
@@ -24,12 +32,12 @@ There are the following four options to specify which server context to use:
     For more information about the `with` statement and contextmanagers,
     please see [this tutorial](https://realpython.com/python-with-statement).
 
-2. You may specify your settings as environment variables `WK_TOKEN` and `WK_URL`:
+3. You may specify your settings as environment variables `WK_TOKEN` and `WK_URL`:
 
     ```shell
     WK_TOKEN="my_webknossos_token" python my-script.py
     ```
-3. You can also specify those environment variables in a `.env` file
+4. You can also specify those environment variables in a `.env` file
    in your working directory.
    Environment variables set in the command line take precedence.
 
@@ -40,7 +48,7 @@ There are the following four options to specify which server context to use:
     WK_TIMEOUT="3600"  # in seconds
     ```
 
-4. If nothing else is specified and authentication is needed,
+5. If nothing else is specified and authentication is needed,
    you are asked interactively for a token, which is used for
    subsequent interactions in the same python run as well.
 """
@@ -127,6 +135,44 @@ def _get_context() -> _WebknossosContext:
     return _webknossos_context_var.get()
 
 
+def login(
+    *,
+    url: str | None = None,
+    token: str | None = None,
+    timeout: int | None = None,
+) -> None:
+    """Log into a WEBKNOSSOS server, changing the global context for the entire session.
+
+    Unlike `webknossos_context`, this is not scoped to a `with` block — the change
+    persists for the remainder of the Python session (or until `login` is called again).
+
+    Args:
+        url: Base URL for the WEBKNOSSOS server. Defaults to the current context URL
+            (https://webknossos.org if not previously set).
+        token: Authentication token from https://webknossos.org/account/token.
+            If not provided, you will be prompted interactively.
+        timeout: Network request timeout in seconds. Defaults to the current context timeout.
+
+    Example:
+        ```python
+        import webknossos as wk
+        wk.login(token="my_token")
+        ds = wk.RemoteDataset.open("my_dataset")
+        ```
+    """
+    current = _get_context()
+    resolved_url = current.url if url is None else url.rstrip("/")
+    resolved_timeout = current.timeout if timeout is None else timeout
+    if token is None:
+        token = input(
+            f"Please enter your WEBKNOSSOS token for {resolved_url}\n"
+            f"(You can find it at {resolved_url}/account/token): "
+        )
+    _webknossos_context_var.set(
+        _WebknossosContext(resolved_url, token, resolved_timeout)
+    )
+
+
 class webknossos_context(ContextDecorator):
     """"""
 
@@ -143,7 +189,7 @@ class webknossos_context(ContextDecorator):
         Args:
             url: Base URL for WEBKNOSSOS server, defaults to https://webknossos.org.
                 Taken from previous context if not specified.
-            token: Authentication token from https://webknossos.org/auth/token.
+            token: Authentication token from https://webknossos.org/account/token.
                 Must be specified explicitly.
             timeout: Network request timeout in seconds, defaults to 1800 (30 min).
                 Taken from previous context if not specified.

@@ -191,7 +191,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         Args:
             dataset_name_or_url: Either dataset name or full URL to dataset view, e.g.
                 https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view
-            organization_id: Optional organization ID if using dataset name. Can be found [here](https://webknossos.org/auth/token)
+            organization_id: Optional organization ID if using dataset name. Can be found [here](https://webknossos.org/account/token)
             sharing_token: Optional sharing token for dataset access
             webknossos_url: Optional custom webknossos URL, defaults to context URL, usually https://webknossos.org
             dataset_id: Optional unique ID of the dataset

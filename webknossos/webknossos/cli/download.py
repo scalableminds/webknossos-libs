@@ -13,7 +13,7 @@ from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_U
 from ..dataset.remote_dataset import RemoteDataset
 from ..dataset_properties import DataFormat
 from ..geometry import BoundingBox, Mag
-from ._utils import parse_bbox, parse_mag, parse_path
+from ._utils import TokenOption, parse_bbox, parse_mag, parse_path
 
 
 def main(
@@ -32,15 +32,7 @@ def main(
             help="URL of your dataset or your annotation.",
         ),
     ],
-    token: Annotated[
-        str | None,
-        typer.Option(
-            help="Authentication token for WEBKNOSSOS instance "
-            "(https://webknossos.org/auth/token).",
-            rich_help_panel="WEBKNOSSOS context",
-            envvar="WK_TOKEN",
-        ),
-    ] = None,
+    token: TokenOption = None,
     bbox: Annotated[
         BoundingBox | None,
         typer.Option(

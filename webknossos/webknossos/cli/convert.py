@@ -10,7 +10,7 @@ from ..client._defaults import DEFAULT_WEBKNOSSOS_URL
 from ..client.context import webknossos_context
 from ..dataset import Dataset, RemoteFolder, SamplingModes, TransferMode
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
-from ..dataset_properties import LengthUnit, VoxelSize
+from ..dataset_properties import VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import Mag
 from ..utils import rmtree
@@ -25,12 +25,15 @@ from ._utils import (
     JobsOption,
     LayerCategory,
     SamplingMode,
+    SamplingModeOption,
     ShardShapeOption,
-    VoxelSizeTuple,
+    TokenOption,
+    UnitOption,
+    VoxelSizeOption,
+    WebknossosUrlOption,
     get_executor_for_args,
     parse_mag,
     parse_path,
-    parse_voxel_size,
     prepare_shard_shape,
 )
 
@@ -53,22 +56,8 @@ def main(
             parser=parse_path,
         ),
     ] = None,
-    voxel_size: Annotated[
-        VoxelSizeTuple,
-        typer.Option(
-            help="The size of one voxel in source data in nanometers. "
-            "Should be a comma-separated string (e.g. 11.0,11.0,20.0).",
-            parser=parse_voxel_size,
-            metavar="VoxelSize",
-            show_default=False,
-        ),
-    ],
-    unit: Annotated[
-        LengthUnit,
-        typer.Option(
-            help="The unit of the voxel size.",
-        ),
-    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    voxel_size: VoxelSizeOption,
+    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     layer_name: Annotated[
         str | None,
         typer.Option(
@@ -115,9 +104,7 @@ def main(
             "(median, mode, nearest, bilinear or bicubic)."
         ),
     ] = "default",
-    sampling_mode: Annotated[
-        SamplingMode, typer.Option(help="The sampling mode to use.")
-    ] = SamplingMode.ANISOTROPIC,
+    sampling_mode: SamplingModeOption = SamplingMode.ANISOTROPIC,
     batch_size: Annotated[
         int | None,
         typer.Option(
@@ -142,23 +129,8 @@ def main(
             rich_help_panel="WEBKNOSSOS context",
         ),
     ] = False,
-    webknossos_url: Annotated[
-        str,
-        typer.Option(
-            help="URL to WEBKNOSSOS instance.",
-            rich_help_panel="WEBKNOSSOS context",
-            envvar="WK_URL",
-        ),
-    ] = DEFAULT_WEBKNOSSOS_URL,
-    token: Annotated[
-        str | None,
-        typer.Option(
-            help="Authentication token for WEBKNOSSOS instance "
-            "(https://webknossos.org/auth/token).",
-            rich_help_panel="WEBKNOSSOS context",
-            envvar="WK_TOKEN",
-        ),
-    ] = None,
+    webknossos_url: WebknossosUrlOption = DEFAULT_WEBKNOSSOS_URL,
+    token: TokenOption = None,
     folder: Annotated[
         str | None,
         typer.Option(

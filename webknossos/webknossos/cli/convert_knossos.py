@@ -16,7 +16,7 @@ from upath import UPath
 
 from ..dataset import Dataset, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
-from ..dataset_properties import COLOR_CATEGORY, DataFormat, LengthUnit, VoxelSize
+from ..dataset_properties import COLOR_CATEGORY, DataFormat, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import time_start, time_stop, wrap_executor
@@ -30,11 +30,11 @@ from ._utils import (
     JobResourcesOption,
     JobsOption,
     ShardShapeOption,
-    VoxelSizeTuple,
+    UnitOption,
+    VoxelSizeOption,
     get_executor_for_args,
     parse_mag,
     parse_path,
-    parse_voxel_size,
     prepare_shard_shape,
 )
 
@@ -254,22 +254,8 @@ def main(
         str,
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
-    voxel_size: Annotated[
-        VoxelSizeTuple,
-        typer.Option(
-            help="The size of one voxel in source data in nanometers. "
-            "Should be a comma separated string (e.g. 11.0,11.0,20.0).",
-            parser=parse_voxel_size,
-            metavar="VoxelSize",
-            show_default=False,
-        ),
-    ],
-    unit: Annotated[
-        LengthUnit,
-        typer.Option(
-            help="The unit of the voxel size.",
-        ),
-    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    voxel_size: VoxelSizeOption,
+    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. uint8, uint16, uint32)")
     ] = "uint8",

@@ -16,8 +16,10 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      webknossos: ${{ steps.filter.outputs.webknossos || github.ref == 'refs/heads/master' }}
-      cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref == 'refs/heads/master' }}
+      webknossos: ${{ steps.filter.outputs.webknossos || github.ref ==
+        'refs/heads/master' }}
+      cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref ==
+        'refs/heads/master' }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v4.0.1
@@ -36,7 +38,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
+        python-version: [ "3.13", "3.12", "3.11", "3.10" ]
     defaults:
       run:
         working-directory: cluster_tools
@@ -94,7 +96,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
+        python-version: [ "3.13", "3.12", "3.11", "3.10" ]
     defaults:
       run:
         working-directory: cluster_tools
@@ -133,11 +135,11 @@ jobs:
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-8
     strategy:
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
-        group: [1, 2, 3]
+        python-version: [ "3.13", "3.12", "3.11", "3.10" ]
+        group: [ 1, 2, 3 ]
       fail-fast: false
     defaults:
       run:
@@ -177,14 +179,16 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+          least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
         if: ${{ matrix.python-version != '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+          least_duration
 
       - name: Persist coverage reports
         if: ${{ matrix.python-version == '3.11' }}
@@ -207,8 +211,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
-        group: [1, 2, 3]
+        python-version: [ "3.12" ]
+        group: [ 1, 2, 3 ]
       fail-fast: false
     defaults:
       run:
@@ -224,7 +228,9 @@ jobs:
           cache-dependency-glob: "webknossos/uv.lock"
 
       - name: Install minio
-        run: Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile "minio.exe"
+        run: Invoke-WebRequest -Uri
+          "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
+          -OutFile "minio.exe"
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -234,10 +240,11 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           MULTIPROCESSING_DEFAULT_START_METHOD: spawn
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+          least_duration
 
   coverage_report:
-    needs: [webknossos_linux]
+    needs: [ webknossos_linux ]
     if: success()
     runs-on: ubuntu-latest
     defaults:
@@ -318,7 +325,8 @@ jobs:
 
       - name: Check links (on master)
         if: github.ref == 'refs/heads/master'
-        env: # Or as an environment variable
+        env:
+          # Or as an environment variable
           SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
         run: |
           cd docs
