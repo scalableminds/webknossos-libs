@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Fixed a bug where the name of the tasks in the BatchingExecutor was not set correctly.
 
 
 ## [3.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.0) - 2026-04-23
