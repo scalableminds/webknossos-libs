@@ -131,7 +131,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Removed `dtype_per_layer` arguments and properties as they have been deprecated for a long time. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
 - Deprecated `dtype_per_channel` argument in `Dataset.add_layer` and `Dataset.get_or_add_layer` and property in `Layer`. Use `dtype` instead. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
 - Deprecated `RemoteAttachements.upload_attachment`. Use `RemoteAttachements.add_attachment_as_copy` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
-- Deprecated `Attachments.{add_mesh,add_agglomerate,add_connectome,set_segment_index,set_cumsum}` methods. Use `*Attachment.from_path_and_name` and `Attachements.{add_attachment_as_copy,add_attachment_as_ref}` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Deprecated `Attachments.{add_mesh,add_agglomerate,add_connectome,set_segment_index,set_cumsum}` methods. Use `*Attachment.from_path_and_name` and `Attachments.{add_attachment_as_copy,add_attachment_as_ref}` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
 
 ### Added
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
