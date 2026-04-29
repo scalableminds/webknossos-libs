@@ -27,10 +27,15 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          N8N_TOKEN: ${{ secrets.N8N_USERNAME }}
+          N8N_USERNAME: ${{ secrets.N8N_TOKEN }}
         run: |
           CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
           NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+          set -e 
+
           uvx --from awscli aws s3 cp --recursive --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
+          curl --basic -u "${N8N_TOKEN}:${N8N_USERNAME}" https://docs.webknossos.org/webhooks/index-docs
 
       - name: Check links (on master)
         env:
