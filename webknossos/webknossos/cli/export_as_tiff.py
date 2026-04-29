@@ -5,7 +5,6 @@ from functools import partial
 from math import ceil
 from typing import Annotated, Any
 
-import fastremap
 import numpy as np
 import typer
 from cluster_tools import Executor
@@ -71,6 +70,8 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> np.ndarray:
 
 
 def _apply_mapping(data: np.ndarray, mapping_array: TensorStore) -> np.ndarray:
+    import fastremap
+
     unique_ids = fastremap.unique(data)
     in_bounds = [i for i in unique_ids if i < mapping_array.shape[0]]
     out_of_bounds = [i for i in unique_ids if i >= mapping_array.shape[0]]
@@ -96,11 +97,9 @@ def export_tiff_slice_batch(
 
     mapping_array = None
     if mapping_path is not None:
-        ts_context = Context(
-            {
-                "cache_pool": {"total_bytes_limit": 10 * 1024**2},  # 10 MB
-            }
-        )
+        ts_context = Context({
+            "cache_pool": {"total_bytes_limit": 10 * 1024**2},  # 10 MB
+        })
         mapping_array = open_zarr3_array(mapping_path, context=ts_context)
 
     if tiling_size is None:
@@ -300,6 +299,14 @@ def main(
         mag_view = layer.get_mag(mag)
 
         if apply_mapping is not None:
+            try:
+                import fastremap  # noqa: F401
+            except ImportError:
+                raise ImportError(
+                    "fastremap is required to use --apply-mapping. "
+                    "Please install with `pip install webknossos[fastremap]`."
+                )
+
             if layer.category != SEGMENTATION_CATEGORY:
                 raise ValueError(
                     f"--apply-mapping requires a segmentation layer, "

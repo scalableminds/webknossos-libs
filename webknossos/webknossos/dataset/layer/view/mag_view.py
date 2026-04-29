@@ -415,6 +415,84 @@ class MagView(View, Generic[LayerTypeT]):
             absolute_bounding_box=mag1_bbox,
         )
 
+    def write_cxyz(
+        self,
+        data: np.ndarray,
+        *,
+        allow_resize: bool = False,
+        allow_unaligned: bool = False,
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
+    ) -> None:
+        """Write data from a (c, x, y, z) ordered array to the magnification level.
+
+        Equivalent to :meth:`write` but always accepts data in ``(c, x, y, z)`` axis
+        order regardless of the underlying storage axis ordering.
+
+        Args:
+            data (np.ndarray): 4D array in ``(c, x, y, z)`` order.
+            allow_resize (bool, optional): If True, allows updating the layer's
+                bounding box if the write extends beyond it. Defaults to False.
+            allow_unaligned (bool, optional): If True, allows writing data without
+                being aligned to the shard shape. Defaults to False.
+            relative_offset (Vec3IntLike | None, optional): Offset relative to view's
+                position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box
+                relative to view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding
+                box in Mag(1) coordinates. Defaults to None.
+        """
+        assert len(data.shape) == 4, (
+            f"write_cxyz expects a 4D (c, x, y, z) array, got shape {data.shape}"
+        )
+        self_bbox = self.normalized_bounding_box
+        if self_bbox.axes == ("c", "x", "y", "z"):
+            # Fully standard: write() accepts (c, x, y, z) natively
+            self.write(
+                data,
+                allow_resize=allow_resize,
+                allow_unaligned=allow_unaligned,
+                relative_offset=relative_offset,
+                absolute_offset=absolute_offset,
+                relative_bounding_box=relative_bounding_box,
+                absolute_bounding_box=absolute_bounding_box,
+            )
+        elif self_bbox.axes == ("x", "y", "z"):
+            # No channel axis: squeeze c (must be size 1), write 3D data
+            data = View._reorder_cxyz_to_storage(data, self_bbox.axes)
+            self.write(
+                data,
+                allow_resize=allow_resize,
+                allow_unaligned=allow_unaligned,
+                relative_offset=relative_offset,
+                absolute_offset=absolute_offset,
+                relative_bounding_box=relative_bounding_box,
+                absolute_bounding_box=absolute_bounding_box,
+            )
+        else:
+            # Non-standard axis order: resolve bbox explicitly, then reorder
+            assert (relative_bounding_box is not None) or (
+                absolute_bounding_box is not None
+            ), (
+                "write_cxyz with non-standard axis ordering requires an explicit "
+                "relative_bounding_box or absolute_bounding_box"
+            )
+            mag1_bbox = self._get_mag1_bbox(
+                rel_mag1_bbox=relative_bounding_box,
+                abs_mag1_bbox=absolute_bounding_box,
+            )
+            data = View._reorder_cxyz_to_storage(data, mag1_bbox.axes)
+            self.write(
+                data,
+                allow_resize=allow_resize,
+                allow_unaligned=allow_unaligned,
+                absolute_bounding_box=mag1_bbox,
+            )
+
     def get_bounding_boxes_on_disk(
         self,
     ) -> Iterator[NDBoundingBox]:
