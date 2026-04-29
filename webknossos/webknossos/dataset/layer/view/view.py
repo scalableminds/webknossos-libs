@@ -430,6 +430,111 @@ class View:
         else:
             self._array.write(current_mag_bbox, data)
 
+    def write_cxyz(
+        self,
+        data: np.ndarray,
+        *,
+        allow_unaligned: bool = False,
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
+    ) -> None:
+        """Write data from a (c, x, y, z) ordered array to the view.
+
+        Accepts data always in ``(c, x, y, z)`` axis order regardless of the
+        underlying storage axis ordering, reordering axes internally as needed.
+
+        Args:
+            data (np.ndarray): 4D array in ``(c, x, y, z)`` order.
+            allow_unaligned (bool, optional): If True, allows writing data without
+                being aligned to the shard shape. Defaults to False.
+            relative_offset (Vec3IntLike | None, optional): Offset relative to view's
+                position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
+                to view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
+        """
+        assert len(data.shape) == 4, (
+            f"write_cxyz expects a 4D (c, x, y, z) array, got shape {data.shape}"
+        )
+        self_bbox = self.normalized_bounding_box
+        if self_bbox.axes == ("c", "x", "y", "z"):
+            # Fully standard: write() accepts (c, x, y, z) natively
+            self.write(
+                data,
+                allow_unaligned=allow_unaligned,
+                relative_offset=relative_offset,
+                absolute_offset=absolute_offset,
+                relative_bounding_box=relative_bounding_box,
+                absolute_bounding_box=absolute_bounding_box,
+            )
+        elif self_bbox.axes == ("x", "y", "z"):
+            # No channel axis: squeeze c (must be size 1), write 3D data with
+            # the same positioning args so write() can still derive the bbox
+            data = View._reorder_cxyz_to_storage(data, self_bbox.axes)
+            self.write(
+                data,
+                allow_unaligned=allow_unaligned,
+                relative_offset=relative_offset,
+                absolute_offset=absolute_offset,
+                relative_bounding_box=relative_bounding_box,
+                absolute_bounding_box=absolute_bounding_box,
+            )
+        else:
+            # Non-standard axis order: resolve bbox explicitly, then reorder
+            assert (relative_bounding_box is not None) or (
+                absolute_bounding_box is not None
+            ), (
+                "write_cxyz with non-standard axis ordering requires an explicit "
+                "relative_bounding_box or absolute_bounding_box"
+            )
+            mag1_bbox = self._get_mag1_bbox(
+                rel_mag1_bbox=relative_bounding_box,
+                abs_mag1_bbox=absolute_bounding_box,
+            )
+            data = View._reorder_cxyz_to_storage(data, mag1_bbox.axes)
+            self.write(
+                data,
+                allow_unaligned=allow_unaligned,
+                absolute_bounding_box=mag1_bbox,
+            )
+
+    @staticmethod
+    def _reorder_cxyz_to_storage(
+        data: np.ndarray, storage_axes: tuple[str, ...]
+    ) -> np.ndarray:
+        """Reorder a 4D ``(c, x, y, z)`` array to the given storage axis order.
+
+        Cxyz axes absent from ``storage_axes`` are squeezed (they must have size 1).
+        Extra non-cxyz axes in ``storage_axes`` are inserted as size-1 dimensions.
+        """
+        cxyz = ("c", "x", "y", "z")
+        # validate: cxyz axes absent from storage must be size 1 in input
+        for i, axis in enumerate(cxyz):
+            if axis not in storage_axes:
+                assert data.shape[i] == 1, (
+                    f"Cannot write '{axis}' axis (size {data.shape[i]}) "
+                    f"to a layer that has no '{axis}' axis"
+                )
+        # squeeze missing cxyz axes from the input
+        axes_to_squeeze = tuple(i for i, a in enumerate(cxyz) if a not in storage_axes)
+        if axes_to_squeeze:
+            data = data.squeeze(axis=axes_to_squeeze)
+        # remaining axes in data are the cxyz axes present in storage, in cxyz order
+        remaining = [a for a in cxyz if a in storage_axes]
+        # extra storage axes (non-cxyz) get new size-1 dimensions appended
+        extra = [a for a in storage_axes if a not in set(cxyz)]
+        for _ in extra:
+            data = np.expand_dims(data, axis=-1)
+        # reorder from [remaining..., extra...] to storage order
+        all_current = remaining + extra
+        src = [all_current.index(a) for a in storage_axes]
+        return np.moveaxis(data, src, list(range(len(storage_axes))))
+
     def _check_shard_alignment(self, bbox: NormalizedBoundingBox) -> None:
         """Check that the bounding box is aligned with the shard grid"""
         shard_shape = self.info.shard_shape
@@ -674,7 +779,144 @@ class View:
                 mag1_bbox.index_xyz.to_tuple(),
                 [1, 2, 3],
             )
-        # all additional axes have been moved to the end, so we can squeeze them
+        # all additional axes have been moved to the end; they must all be size 1
+        extra_axes = [a for a in mag1_bbox.axes if a not in ("c", "x", "y", "z")]
+        for i, axis in enumerate(extra_axes):
+            size = data.shape[4 + i]
+            if size != 1:
+                raise ValueError(
+                    f"Cannot read into (c, x, y, z) format: extra axis '{axis}' "
+                    f"has size {size} > 1. Use read() and handle the extra axis manually."
+                )
+        data = data.squeeze(axis=tuple(range(4, len(data.shape))))
+        return data
+
+    def read_cxyz(
+        self,
+        size: Vec3IntLike
+        | None = None,  # usually in mag1, in current mag if offset is given
+        *,
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
+    ) -> np.ndarray:
+        """Read data from the view and return it in ``(c, x, y, z)`` axis order.
+
+        Equivalent to :meth:`read` but always returns a 4-D array ordered as
+        ``(channels, x, y, z)`` regardless of the underlying storage axis ordering.
+        If the array does not have a channel axis, one of size 1 is added.
+
+        Args:
+            size (Vec3IntLike | None, optional): Size of region to read in Mag(1)
+                coordinates. Defaults to None.
+            relative_offset (Vec3IntLike | None, optional): Offset relative to the
+                view's position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box
+                relative to the view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding
+                box in Mag(1) coordinates. Defaults to None.
+
+        Returns:
+            np.ndarray: Data as a 4-D numpy array with shape ``(c, x, y, z)``.
+                Areas outside the dataset are zero-padded.
+
+        Examples:
+            ```python
+            # Read entire view's data in cxyz order
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            data = view.read_cxyz()  # Always returns (c, x, y, z) array
+
+            # Read with relative offset and size
+            data = view.read_cxyz(relative_offset=(10, 10, 0), size=(50, 50, 10))
+            ```
+        """
+        current_mag_size: Vec3IntLike | None
+        mag1_size: Vec3IntLike | None
+        if absolute_bounding_box is None and relative_bounding_box is None:
+            if size is None:
+                assert relative_offset is None and absolute_offset is None, (
+                    "You must supply size, when reading with an offset."
+                )
+                absolute_bounding_box = self.bounding_box
+                current_mag_size = None
+                mag1_size = None
+            else:
+                if relative_offset is None and absolute_offset is None:
+                    if type(self) is View:
+                        offset_param = "relative_offset"
+                    else:
+                        offset_param = "absolute_offset"
+                    warnings.warn(
+                        "[DEPRECATION] Using view.read_cxyz(size=my_vec) only with a size is deprecated. "
+                        + f"Please use view.read_cxyz({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
+                        DeprecationWarning,
+                    )
+                    current_mag_size = size
+                    mag1_size = None
+                else:
+                    current_mag_size = None
+                    mag1_size = size
+
+            if all(
+                i is None
+                for i in [
+                    absolute_offset,
+                    relative_offset,
+                    absolute_bounding_box,
+                ]
+            ):
+                relative_offset = Vec3Int.zeros()
+        else:
+            assert size is None, (
+                "Cannot supply a size when using bounding_box in view.read_cxyz()"
+            )
+            current_mag_size = None
+            mag1_size = None
+
+        mag1_bbox = self._get_mag1_bbox(
+            rel_mag1_offset=relative_offset,
+            abs_mag1_offset=absolute_offset,
+            rel_mag1_bbox=relative_bounding_box,
+            abs_mag1_bbox=absolute_bounding_box,
+            current_mag_size=current_mag_size,
+            mag1_size=mag1_size,
+        )
+        assert not mag1_bbox.is_empty(), (
+            f"The size ({mag1_bbox.size} in mag1) contains a zero. "
+            + "All dimensions must be strictly larger than '0'."
+        )
+        assert mag1_bbox.topleft.is_positive(), (
+            f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
+        )
+
+        data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
+        # reorder to (c, x, y, z), inserting a size-1 axis for each missing cxyz axis
+        storage_axes = mag1_bbox.axes
+        source_positions = []
+        next_appended = len(storage_axes)
+        for axis in ("c", "x", "y", "z"):
+            if axis in storage_axes:
+                source_positions.append(storage_axes.index(axis))
+            else:
+                data = np.expand_dims(data, axis=-1)
+                source_positions.append(next_appended)
+                next_appended += 1
+        data = np.moveaxis(data, source_positions, [0, 1, 2, 3])
+        # squeeze any extra non-cxyz axes that were moved to positions 4+;
+        # they must all be size 1 or the data can't be collapsed to (c, x, y, z)
+        extra_axes = [
+            a for a in storage_axes if a not in ("c", "x", "y", "z")
+        ]
+        for i, axis in enumerate(extra_axes):
+            size = data.shape[4 + i]
+            if size != 1:
+                raise ValueError(
+                    f"Cannot read into (c, x, y, z) format: extra axis '{axis}' "
+                    f"has size {size} > 1. Use read() and handle the extra axis manually."
+                )
         data = data.squeeze(axis=tuple(range(4, len(data.shape))))
         return data
 
