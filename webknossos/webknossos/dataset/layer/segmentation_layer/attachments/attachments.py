@@ -326,20 +326,35 @@ class RemoteAttachments(AbstractAttachments):
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_prefix: str | None = None,
     ) -> Attachment:
-        self._ensure_writable()
-        if transfer_mode not in (
-            TransferMode.COPY,
-            TransferMode.MOVE_AND_SYMLINK,
-            TransferMode.SYMLINK,
-        ):
-            raise ValueError(f"Transfer mode {transfer_mode} is not supported.")
-
         target_dataset_id = self._layer.dataset.dataset_id
         from webknossos.client.context import _get_api_client
 
         client = _get_api_client()
-        new_path = enrich_path(
-            client.reserve_attachment_upload_to_path(
+
+        self._ensure_writable()
+        if transfer_mode == TransferMode.HTTP:
+            from webknossos.client._upload_dataset import upload_attachment
+
+            upload_attachment(
+                self._layer.dataset.dataset_id, self._layer.name, attachment
+            )
+        else:
+            new_path = enrich_path(
+                client.reserve_attachment_upload_to_path(
+                    target_dataset_id,
+                    self._layer.name,
+                    attachment.name,
+                    attachment.type_name,
+                    str(attachment.data_format),
+                    common_storage_prefix,
+                )
+            )
+            # transfer to target dataset
+            transfer_mode.transfer(
+                attachment.path, new_path, progress_desc_label="attachment"
+            )
+
+            client.finish_attachment_upload_to_path(
                 target_dataset_id,
                 self._layer.name,
                 attachment.name,
@@ -347,29 +362,11 @@ class RemoteAttachments(AbstractAttachments):
                 str(attachment.data_format),
                 common_storage_prefix,
             )
-        )
-        # transfer to target dataset
-        transfer_mode.transfer(
-            attachment.path, new_path, progress_desc_label="attachment"
-        )
-
-        client.finish_attachment_upload_to_path(
-            target_dataset_id,
-            self._layer.name,
-            attachment.name,
-            attachment.type_name,
-            str(attachment.data_format),
-            common_storage_prefix,
-        )
 
         # sync to server state
         self._apply_server_properties()
 
-        new_attachment = type(attachment).from_path_and_name(
-            new_path,
-            attachment.name,
-            data_format=attachment.data_format,
-        )
+        new_attachment = self._get_attachment(type(attachment), attachment.name)
 
         return new_attachment
 

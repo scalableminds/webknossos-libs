@@ -91,32 +91,40 @@ class RemoteLayer(AbstractLayer):
             client = _get_api_client()
             foreign_layer = foreign_mag_view.layer
             foreign_layer_bbox = foreign_layer.normalized_bounding_box
-            reserve_parameters = ApiReserveMagUploadToPathParameters(
-                layer_name=self.name,
-                mag=foreign_mag_view.mag.to_list(),
-                axis_order={
-                    axis: index
-                    for axis, index in zip(
-                        foreign_layer_bbox.axes, foreign_layer_bbox.index
+
+            if transfer_mode == TransferMode.HTTP:
+                from ...client._upload_dataset import upload_mag
+
+                # TODO pass in axis_order
+                upload_mag(self.dataset.dataset_id, self.name, foreign_mag_view)
+            else:
+                reserve_parameters = ApiReserveMagUploadToPathParameters(
+                    layer_name=self.name,
+                    mag=foreign_mag_view.mag.to_list(),
+                    axis_order={
+                        axis: index
+                        for axis, index in zip(
+                            foreign_layer_bbox.axes, foreign_layer_bbox.index
+                        )
+                    },
+                    channel_index=None,
+                    path_prefix=common_storage_path_prefix,
+                    overwrite_pending=overwrite_pending,
+                )
+                path = enrich_path(
+                    client.reserve_mag_upload_to_paths(
+                        self._dataset.dataset_id, reserve_parameters
                     )
-                },
-                channel_index=None,
-                path_prefix=common_storage_path_prefix,
-                overwrite_pending=overwrite_pending,
-            )
-            path = enrich_path(
-                client.reserve_mag_upload_to_paths(
+                )
+                transfer_mode.transfer(
+                    foreign_mag_view.path,
+                    path,
+                    progress_desc_label=f"{self.name}/{foreign_mag_view.mag}",
+                )
+                client.finish_mag_upload_to_paths(
                     self._dataset.dataset_id, reserve_parameters
                 )
-            )
-            transfer_mode.transfer(
-                foreign_mag_view.path,
-                path,
-                progress_desc_label=f"{self.name}/{foreign_mag_view.mag}",
-            )
-            client.finish_mag_upload_to_paths(
-                self._dataset.dataset_id, reserve_parameters
-            )
+
         self._apply_server_layer_properties()
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
