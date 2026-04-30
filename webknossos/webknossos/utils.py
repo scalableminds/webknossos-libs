@@ -322,24 +322,7 @@ def strip_trailing_slash(path: UPath) -> UPath:
 
 
 def rmtree(path: UPath) -> None:
-    def _walk(path: UPath) -> Iterator[UPath]:
-        if path.exists():
-            if path.is_dir() and not path.is_symlink():
-                for p in path.iterdir():
-                    yield from _walk(p)
-            yield path
-
-    for sub_path in _walk(path):
-        try:
-            if sub_path.is_file() or sub_path.is_symlink():
-                sub_path.unlink()
-            elif sub_path.is_dir():
-                sub_path.rmdir()
-        except FileNotFoundError:  # noqa:  PERF203 `try`-`except` within a loop incurs performance overhead
-            # Some implementations `UPath` do not have explicit directory representations
-            # Therefore, directories only exist, if they have files. Consequently, when
-            # all files have been deleted, the directory does not exist anymore.
-            pass
+    path.fs.delete(path, recursive=True)
 
 
 def copytree(
@@ -562,6 +545,8 @@ def set_s3fs_retry_settings(
                 exc_info=exception,
                 stack_info=True,
             )
+            return True
+        if "connection was closed" in str(exception).lower():
             return True
 
         return False
