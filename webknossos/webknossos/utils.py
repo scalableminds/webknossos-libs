@@ -518,6 +518,7 @@ def set_s3fs_retry_settings(
     *, read_timeout: int = 60, connect_timeout: int = 30, retries: int = 10
 ) -> None:
     import s3fs
+    from aiohttp.http_exceptions import ClientPayloadError, TransferEncodingError
     from botocore.exceptions import ClientError, ConnectionClosedError
 
     s3fs_logger = logging.getLogger("s3fs")
@@ -546,12 +547,22 @@ def set_s3fs_retry_settings(
                 stack_info=True,
             )
             return True
-        if "connection was closed" in str(exception).lower():
+        if (
+            "connection was closed" in str(exception).lower()
+            or "not enough data for satisfy" in str(exception).lower()
+        ):
+            s3fs_logger.warning(
+                f"Retrying unexpected error: {exception}",
+                exc_info=exception,
+                stack_info=True,
+            )
             return True
 
         return False
 
     s3fs.add_retryable_error(ConnectionClosedError)
+    s3fs.add_retryable_error(TransferEncodingError)
+    s3fs.add_retryable_error(ClientPayloadError)
     s3fs.set_custom_error_handler(custom_s3fs_error_handler)
 
 
