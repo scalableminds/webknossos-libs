@@ -322,24 +322,13 @@ def strip_trailing_slash(path: UPath) -> UPath:
 
 
 def rmtree(path: UPath) -> None:
-    def _walk(path: UPath) -> Iterator[UPath]:
-        if path.exists():
-            if path.is_dir() and not path.is_symlink():
-                for p in path.iterdir():
-                    yield from _walk(p)
-            yield path
-
-    for sub_path in _walk(path):
-        try:
-            if sub_path.is_file() or sub_path.is_symlink():
-                sub_path.unlink()
-            elif sub_path.is_dir():
-                sub_path.rmdir()
-        except FileNotFoundError:  # noqa:  PERF203 `try`-`except` within a loop incurs performance overhead
-            # Some implementations `UPath` do not have explicit directory representations
-            # Therefore, directories only exist, if they have files. Consequently, when
-            # all files have been deleted, the directory does not exist anymore.
-            pass
+    try:
+        path.fs.delete(str(path), recursive=True)
+    except FileNotFoundError:
+        # Some implementations of `UPath` do not have explicit directory representations
+        # Therefore, directories only exist, if they have files. Consequently, when
+        # all files have been deleted, the directory does not exist anymore.
+        pass
 
 
 def copytree(
@@ -535,6 +524,8 @@ def set_s3fs_retry_settings(
     *, read_timeout: int = 60, connect_timeout: int = 30, retries: int = 10
 ) -> None:
     import s3fs
+    from aiohttp.client_exceptions import ClientPayloadError
+    from aiohttp.http_exceptions import TransferEncodingError
     from botocore.exceptions import ClientError, ConnectionClosedError
 
     s3fs_logger = logging.getLogger("s3fs")
@@ -563,10 +554,22 @@ def set_s3fs_retry_settings(
                 stack_info=True,
             )
             return True
+        if (
+            "connection was closed" in str(exception).lower()
+            or "not enough data for satisfy" in str(exception).lower()
+        ):
+            s3fs_logger.warning(
+                f"Retrying unexpected error: {exception}",
+                exc_info=exception,
+                stack_info=True,
+            )
+            return True
 
         return False
 
     s3fs.add_retryable_error(ConnectionClosedError)
+    s3fs.add_retryable_error(TransferEncodingError)
+    s3fs.add_retryable_error(ClientPayloadError)
     s3fs.set_custom_error_handler(custom_s3fs_error_handler)
 
 
