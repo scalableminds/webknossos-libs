@@ -322,7 +322,13 @@ def strip_trailing_slash(path: UPath) -> UPath:
 
 
 def rmtree(path: UPath) -> None:
-    path.fs.delete(path, recursive=True)
+    try:
+        path.fs.delete(str(path), recursive=True)
+    except FileNotFoundError:
+        # Some implementations of `UPath` do not have explicit directory representations
+        # Therefore, directories only exist, if they have files. Consequently, when
+        # all files have been deleted, the directory does not exist anymore.
+        pass
 
 
 def copytree(
@@ -518,7 +524,8 @@ def set_s3fs_retry_settings(
     *, read_timeout: int = 60, connect_timeout: int = 30, retries: int = 10
 ) -> None:
     import s3fs
-    from aiohttp.http_exceptions import ClientPayloadError, TransferEncodingError
+    from aiohttp.client_exceptions import ClientPayloadError
+    from aiohttp.http_exceptions import TransferEncodingError
     from botocore.exceptions import ClientError, ConnectionClosedError
 
     s3fs_logger = logging.getLogger("s3fs")
