@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [3.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.3) - 2026-05-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.2...v3.4.3)
+
+### Fixed
 - faster deletion of S3 directories by using the delete methods from the s3fs file system, retry more S3 errors observed when deleting directories [#4554](https://github.com/scalableminds/webknossos-libs/pull/4554)
+
 
 ## [3.4.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.2) - 2026-04-28
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.1...v3.4.2)
