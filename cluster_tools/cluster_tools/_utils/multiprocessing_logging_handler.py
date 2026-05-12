@@ -15,6 +15,10 @@ from typing import Any
 
 # Inspired by https://stackoverflow.com/a/894284
 
+# Since the root logger object is global, accessing it from multiple threads can be problematic
+# To be thread safe, we use a lock.
+ROOT_LOGGER_LOCK = threading.Lock()
+
 
 class _MultiprocessingLoggingHandler(logging.Handler):
     """This class wraps a logging handler and instantiates a multiprocessing queue.
@@ -87,14 +91,18 @@ class _MultiprocessingLoggingHandler(logging.Handler):
         self._usage_counter -= 1
         if self._usage_counter == 0:
             # unwrap inner handler:
-            root_logger = getLogger()
-            root_logger.removeHandler(self)
-            root_logger.addHandler(self.wrapped_handler)
+            with ROOT_LOGGER_LOCK:
+                root_logger = getLogger()
+                root_logger.removeHandler(self)
+                root_logger.addHandler(self.wrapped_handler)
 
             self._is_closed = True
             self._queue_thread.join(30)
             self._manager.shutdown()
-            self.wrapped_handler.close()
+            # Thread-owned handlers (e.g. task-specific file handlers) are closed by their
+            # owner (attach_logging_handler), not by the pool.
+            if not getattr(self.wrapped_handler, "_owner_thread_id", None):
+                self.wrapped_handler.close()
             super().close()
 
     def close(self) -> None:
@@ -115,35 +123,51 @@ def _setup_logging_multiprocessing(
     """
     warnings.filters = filters
 
-    root_logger = getLogger()
-    for handler in root_logger.handlers:
-        root_logger.removeHandler(handler)
+    with ROOT_LOGGER_LOCK:
+        root_logger = getLogger()
+        for handler in root_logger.handlers:
+            root_logger.removeHandler(handler)
 
-    root_logger.setLevel(min(levels) if len(levels) else logging.DEBUG)
-    for queue, level in zip(queues, levels):
-        handler = QueueHandler(queue)
-        handler.setLevel(level)
-        root_logger.addHandler(handler)
+        root_logger.setLevel(min(levels) if len(levels) else logging.DEBUG)
+        for queue, level in zip(queues, levels):
+            handler = QueueHandler(queue)
+            handler.setLevel(level)
+            root_logger.addHandler(handler)
 
 
 class _MultiprocessingLoggingHandlerPool:
     def __init__(self) -> None:
-        root_logger = getLogger()
+        with ROOT_LOGGER_LOCK:
+            root_logger = getLogger()
+            current_thread_id = threading.get_ident()
 
-        self.handlers = []
-        for i, handler in enumerate(list(root_logger.handlers)):
-            # Wrap logging handlers in _MultiprocessingLoggingHandlers to make them work in a multiprocessing setup
-            # when using start_methods other than fork, for example, spawn or forkserver
-            if not isinstance(handler, _MultiprocessingLoggingHandler):
-                mp_handler = _MultiprocessingLoggingHandler(
-                    f"multi-processing-handler-{i}", handler
+            self.handlers = []
+            for i, handler in enumerate(list(root_logger.handlers)):
+                # Resolve the underlying handler to check for thread ownership.
+                # An already-wrapped handler exposes its original via .wrapped_handler.
+                underlying = (
+                    handler.wrapped_handler
+                    if isinstance(handler, _MultiprocessingLoggingHandler)
+                    else handler
                 )
-                root_logger.removeHandler(handler)
-                root_logger.addHandler(mp_handler)
-                self.handlers.append(mp_handler)
-            else:
-                handler.increment_usage()
-                self.handlers.append(handler)
+                owner_thread = getattr(underlying, "_owner_thread_id", None)
+                # Skip handlers owned by a different thread: wrapping them would transfer
+                # lifecycle ownership, causing premature closure of another task's file handler.
+                if owner_thread is not None and owner_thread != current_thread_id:
+                    continue
+
+                # Wrap logging handlers in _MultiprocessingLoggingHandlers to make them work in a multiprocessing setup
+                # when using start_methods other than fork, for example, spawn or forkserver
+                if not isinstance(handler, _MultiprocessingLoggingHandler):
+                    mp_handler = _MultiprocessingLoggingHandler(
+                        f"multi-processing-handler-{i}", handler
+                    )
+                    root_logger.removeHandler(handler)
+                    root_logger.addHandler(mp_handler)
+                    self.handlers.append(mp_handler)
+                else:
+                    handler.increment_usage()
+                    self.handlers.append(handler)
 
     def get_multiprocessing_logging_setup_fn(self) -> Callable[[], None]:
         # Return a logging setup function that when called will setup QueueHandler loggers
