@@ -75,6 +75,9 @@ tifffile = ["tifffile >=2024.8.24"]
 imagecodecs = ["imagecodecs >=2021.11.20"]
 bioformats = ["JPype1 ~=1.5.0"]
 czi = ["pylibCZIrw ==5.1.1"]
+mrcfile = [
+    "mrcfile>=1.4.3",
+]
 s3 = ["s3fs >=2026.2.0"]
 examples = [
     "fastremap ~=1.15.0",
@@ -89,6 +92,7 @@ all = [
     "webknossos[imagecodecs]",
     "webknossos[bioformats]",
     "webknossos[czi]",
+    "webknossos[mrcfile]",
     "webknossos[s3]",
     "webknossos[examples]",
 ]
