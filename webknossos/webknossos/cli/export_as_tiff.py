@@ -97,9 +97,11 @@ def export_tiff_slice_batch(
 
     mapping_array = None
     if mapping_path is not None:
-        ts_context = Context({
-            "cache_pool": {"total_bytes_limit": 10 * 1024**2},  # 10 MB
-        })
+        ts_context = Context(
+            {
+                "cache_pool": {"total_bytes_limit": 10 * 1024**2},  # 10 MB
+            }
+        )
         mapping_array = open_zarr3_array(mapping_path, context=ts_context)
 
     if tiling_size is None:

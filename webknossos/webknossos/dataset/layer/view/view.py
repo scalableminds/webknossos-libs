@@ -22,6 +22,7 @@ from ....utils import (
     count_defined_values,
     get_rich_progress,
     wait_and_ensure_success,
+    warn_deprecated,
     wrap_executor,
 )
 from ._array import ArrayInfo, BaseArray
@@ -759,6 +760,7 @@ class View:
             - The returned array's axes are ordered differently from read()
             - All coordinates are in Mag(1)
         """
+        warn_deprecated("read_xyz", "read_cxyz")
         mag1_bbox = self._get_mag1_bbox(
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
@@ -907,9 +909,7 @@ class View:
         data = np.moveaxis(data, source_positions, [0, 1, 2, 3])
         # squeeze any extra non-cxyz axes that were moved to positions 4+;
         # they must all be size 1 or the data can't be collapsed to (c, x, y, z)
-        extra_axes = [
-            a for a in storage_axes if a not in ("c", "x", "y", "z")
-        ]
+        extra_axes = [a for a in storage_axes if a not in ("c", "x", "y", "z")]
         for i, axis in enumerate(extra_axes):
             size = data.shape[4 + i]
             if size != 1:
