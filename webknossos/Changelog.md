@@ -16,7 +16,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - `View.read_xyz` is deprecated in favor of `View.read_cxyz`. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
 
 ### Added
-- `View.read_cxyz` and `View.write_cxyz` to read and write arrays with guaranteed cxyz axis ordering. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
+- Added `View.read_cxyz` and `View.write_cxyz` to read and write arrays with guaranteed cxyz axis ordering. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
 
 ### Changed
 
