@@ -196,8 +196,6 @@ def test_mrc_reader_basic(tmp_upath: UPath) -> None:
 
 
 def test_mrc_reader_reopens_per_frame(tmp_upath: UPath) -> None:
-    import mrcfile as mrcfile_module
-
     Z, Y, X = 4, 8, 8
     data = np.zeros((Z, Y, X), dtype="uint16")
     mrc_path = tmp_upath / "test_reopen.mrc"
@@ -209,19 +207,19 @@ def test_mrc_reader_reopens_per_frame(tmp_upath: UPath) -> None:
     reader.iter_axes = ["z"]
 
     open_count = 0
-    original_mmap = mrcfile_module.mmap
+    original_memmap = np.memmap
 
-    def counting_mmap(*args: Any, **kwargs: Any) -> Any:
+    def counting_memmap(*args: Any, **kwargs: Any) -> Any:
         nonlocal open_count
         open_count += 1
-        return original_mmap(*args, **kwargs)
+        return original_memmap(*args, **kwargs)
 
-    with patch.object(mrcfile_module, "mmap", counting_mmap):
+    with patch("numpy.memmap", counting_memmap):
         for z in range(Z):
             np.array(reader[z])
 
     assert open_count == Z, (
-        f"Expected mrcfile.mmap to be called {Z} times (once per frame), got {open_count}"
+        f"Expected np.memmap to be called {Z} times (once per frame), got {open_count}"
     )
 
 

@@ -9,6 +9,16 @@ except ImportError as e:
         "Cannot import mrcfile, please install it e.g. using 'webknossos[mrcfile]'"
     ) from e
 
+# MRC data mode → numpy dtype
+# https://www.ccpem.ac.uk/mrc_format/mrc2014.php
+_MRC_MODE_TO_DTYPE: dict[int, np.dtype] = {
+    0: np.dtype("int8"),
+    1: np.dtype("int16"),
+    2: np.dtype("float32"),
+    6: np.dtype("uint16"),
+    12: np.dtype("float16"),
+}
+
 
 class PimsMrcReader(FramesSequenceND):
     @classmethod
@@ -24,20 +34,33 @@ class PimsMrcReader(FramesSequenceND):
         super().__init__()
         self.path = UPath(path)
 
-        # Open once to read metadata only, then close immediately.
+        # Use mrcfile only for header parsing — it handles endianness detection,
+        # extended-header size, and header validation robustly.
+        # We never touch mrc.data here: some files leave it None even though the
+        # data bytes are perfectly valid (e.g. certain IMOD-written files).
         with mrcfile.mmap(str(self.path), mode="r", permissive=True) as mrc:
-            self._dtype = mrc.data.dtype
-            self._data_shape: tuple[int, ...] = tuple(mrc.data.shape)
-            ndim = mrc.data.ndim
+            mode = int(mrc.header.mode)
+            if mode not in _MRC_MODE_TO_DTYPE:
+                raise ValueError(
+                    f"Unsupported MRC data mode {mode} in {self.path}. "
+                    f"Supported modes: {list(_MRC_MODE_TO_DTYPE)}"
+                )
+            self._dtype = _MRC_MODE_TO_DTYPE[mode]
+            nz = int(mrc.header.nz)
+            ny = int(mrc.header.ny)
+            nx = int(mrc.header.nx)
+            # Standard MRC header is 1024 bytes; nsymbt is the extended header size.
+            self._data_offset: int = 1024 + int(mrc.header.nsymbt)
+
+        self._data_shape: tuple[int, ...] = (nz, ny, nx) if nz > 1 else (ny, nx)
+        ndim = len(self._data_shape)
 
         if ndim == 3:
-            nz, ny, nx = self._data_shape
             self._init_axis("z", nz)
             self._init_axis("y", ny)
             self._init_axis("x", nx)
             self._register_get_frame(self.get_frame_2D, "yx")
         elif ndim == 2:
-            ny, nx = self._data_shape
             self._init_axis("y", ny)
             self._init_axis("x", nx)
             self._register_get_frame(self.get_frame_2D, "yx")
@@ -48,11 +71,18 @@ class PimsMrcReader(FramesSequenceND):
             )
 
     def get_frame_2D(self, **ind: int) -> np.ndarray:
-        # Reopen mmap for each call — memmap is not picklable across workers.
-        with mrcfile.mmap(str(self.path), mode="r", permissive=True) as mrc:
-            if mrc.data.ndim == 3:
-                return np.array(mrc.data[ind["z"]])
-            return np.array(mrc.data[:])
+        # numpy.memmap is lazy (OS-paged) and cheap to create.
+        # Recreated per call so no memmap crosses a multiprocessing boundary.
+        data = np.memmap(
+            str(self.path),
+            dtype=self._dtype,
+            mode="r",
+            offset=self._data_offset,
+            shape=self._data_shape,
+        )
+        if data.ndim == 3:
+            return np.array(data[ind["z"]])
+        return np.array(data[:])
 
     @property
     def pixel_type(self) -> np.dtype:
