@@ -44,6 +44,7 @@ class TransferMode(str, Enum):
         progress_desc_label = (
             progress_desc_label + " " if progress_desc_label is not None else ""
         )
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
         copytree(
             src_path,
             dst_path,
