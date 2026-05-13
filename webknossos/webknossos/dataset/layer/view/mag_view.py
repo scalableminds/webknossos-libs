@@ -449,49 +449,19 @@ class MagView(View, Generic[LayerTypeT]):
         assert len(data.shape) == 4, (
             f"write_cxyz expects a 4D (c, x, y, z) array, got shape {data.shape}"
         )
-        self_bbox = self.normalized_bounding_box
-        if self_bbox.axes == ("c", "x", "y", "z"):
-            # Fully standard: write() accepts (c, x, y, z) natively
-            self.write(
-                data,
-                allow_resize=allow_resize,
-                allow_unaligned=allow_unaligned,
-                relative_offset=relative_offset,
-                absolute_offset=absolute_offset,
-                relative_bounding_box=relative_bounding_box,
-                absolute_bounding_box=absolute_bounding_box,
-            )
-        elif self_bbox.axes == ("x", "y", "z"):
-            # No channel axis: squeeze c (must be size 1), write 3D data
-            data = View._reorder_cxyz_to_storage(data, self_bbox.axes)
-            self.write(
-                data,
-                allow_resize=allow_resize,
-                allow_unaligned=allow_unaligned,
-                relative_offset=relative_offset,
-                absolute_offset=absolute_offset,
-                relative_bounding_box=relative_bounding_box,
-                absolute_bounding_box=absolute_bounding_box,
-            )
-        else:
-            # Non-standard axis order: resolve bbox explicitly, then reorder
-            assert (relative_bounding_box is not None) or (
-                absolute_bounding_box is not None
-            ), (
-                "write_cxyz with non-standard axis ordering requires an explicit "
-                "relative_bounding_box or absolute_bounding_box"
-            )
-            mag1_bbox = self._get_mag1_bbox(
-                rel_mag1_bbox=relative_bounding_box,
-                abs_mag1_bbox=absolute_bounding_box,
-            )
-            data = View._reorder_cxyz_to_storage(data, mag1_bbox.axes)
-            self.write(
-                data,
-                allow_resize=allow_resize,
-                allow_unaligned=allow_unaligned,
-                absolute_bounding_box=mag1_bbox,
-            )
+        data, write_loc = self._resolve_cxyz_write(
+            data,
+            relative_offset,
+            absolute_offset,
+            relative_bounding_box,
+            absolute_bounding_box,
+        )
+        self.write(
+            data,
+            allow_resize=allow_resize,
+            allow_unaligned=allow_unaligned,
+            **write_loc,
+        )
 
     def get_bounding_boxes_on_disk(
         self,
