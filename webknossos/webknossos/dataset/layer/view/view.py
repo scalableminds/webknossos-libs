@@ -658,6 +658,25 @@ class View:
             - The view's magnification affects the actual data resolution
             - Data shape must match the target region size
         """
+        mag1_bbox = self._resolve_read_bbox(
+            size,
+            relative_offset,
+            absolute_offset,
+            relative_bounding_box,
+            absolute_bounding_box,
+            "read",
+        )
+        return self._read_without_checks(mag1_bbox.in_mag(self._mag))
+
+    def _resolve_read_bbox(
+        self,
+        size: Vec3IntLike | None,
+        relative_offset: Vec3IntLike | None,
+        absolute_offset: Vec3IntLike | None,
+        relative_bounding_box: NDBoundingBox | None,
+        absolute_bounding_box: NDBoundingBox | None,
+        method_name: str,
+    ) -> NormalizedBoundingBox:
         current_mag_size: Vec3IntLike | None
         mag1_size: Vec3IntLike | None
         if absolute_bounding_box is None and relative_bounding_box is None:
@@ -670,13 +689,12 @@ class View:
                 mag1_size = None
             else:
                 if relative_offset is None and absolute_offset is None:
-                    if type(self) is View:
-                        offset_param = "relative_offset"
-                    else:
-                        offset_param = "absolute_offset"
+                    offset_param = (
+                        "relative_offset" if type(self) is View else "absolute_offset"
+                    )
                     warnings.warn(
-                        "[DEPRECATION] Using view.read(size=my_vec) only with a size is deprecated. "
-                        + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
+                        f"[DEPRECATION] Using view.{method_name}(size=my_vec) only with a size is deprecated. "
+                        + f"Please use view.{method_name}({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
                         DeprecationWarning,
                     )
                     current_mag_size = size
@@ -687,16 +705,12 @@ class View:
 
             if all(
                 i is None
-                for i in [
-                    absolute_offset,
-                    relative_offset,
-                    absolute_bounding_box,
-                ]
+                for i in [absolute_offset, relative_offset, absolute_bounding_box]
             ):
                 relative_offset = Vec3Int.zeros()
         else:
             assert size is None, (
-                "Cannot supply a size when using bounding_box in view.read()"
+                f"Cannot supply a size when using bounding_box in view.{method_name}()"
             )
             current_mag_size = None
             mag1_size = None
@@ -716,8 +730,7 @@ class View:
         assert mag1_bbox.topleft.is_positive(), (
             f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
         )
-
-        return self._read_without_checks(mag1_bbox.in_mag(self._mag))
+        return mag1_bbox
 
     def read_xyz(
         self,
@@ -837,65 +850,14 @@ class View:
             data = view.read_cxyz(relative_offset=(10, 10, 0), size=(50, 50, 10))
             ```
         """
-        current_mag_size: Vec3IntLike | None
-        mag1_size: Vec3IntLike | None
-        if absolute_bounding_box is None and relative_bounding_box is None:
-            if size is None:
-                assert relative_offset is None and absolute_offset is None, (
-                    "You must supply size, when reading with an offset."
-                )
-                absolute_bounding_box = self.bounding_box
-                current_mag_size = None
-                mag1_size = None
-            else:
-                if relative_offset is None and absolute_offset is None:
-                    if type(self) is View:
-                        offset_param = "relative_offset"
-                    else:
-                        offset_param = "absolute_offset"
-                    warnings.warn(
-                        "[DEPRECATION] Using view.read_cxyz(size=my_vec) only with a size is deprecated. "
-                        + f"Please use view.read_cxyz({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
-                        DeprecationWarning,
-                    )
-                    current_mag_size = size
-                    mag1_size = None
-                else:
-                    current_mag_size = None
-                    mag1_size = size
-
-            if all(
-                i is None
-                for i in [
-                    absolute_offset,
-                    relative_offset,
-                    absolute_bounding_box,
-                ]
-            ):
-                relative_offset = Vec3Int.zeros()
-        else:
-            assert size is None, (
-                "Cannot supply a size when using bounding_box in view.read_cxyz()"
-            )
-            current_mag_size = None
-            mag1_size = None
-
-        mag1_bbox = self._get_mag1_bbox(
-            rel_mag1_offset=relative_offset,
-            abs_mag1_offset=absolute_offset,
-            rel_mag1_bbox=relative_bounding_box,
-            abs_mag1_bbox=absolute_bounding_box,
-            current_mag_size=current_mag_size,
-            mag1_size=mag1_size,
+        mag1_bbox = self._resolve_read_bbox(
+            size,
+            relative_offset,
+            absolute_offset,
+            relative_bounding_box,
+            absolute_bounding_box,
+            "read_cxyz",
         )
-        assert not mag1_bbox.is_empty(), (
-            f"The size ({mag1_bbox.size} in mag1) contains a zero. "
-            + "All dimensions must be strictly larger than '0'."
-        )
-        assert mag1_bbox.topleft.is_positive(), (
-            f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
-        )
-
         data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
         # reorder to (c, x, y, z), inserting a size-1 axis for each missing cxyz axis
         storage_axes = mag1_bbox.axes

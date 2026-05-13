@@ -654,7 +654,7 @@ def test_read_cxyz_adds_channel_axis(
     layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer(
         "segmentation",
         SEGMENTATION_CATEGORY,
-        bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)),
+        bounding_box=NDBoundingBox((0, 0, 0), (10, 10, 10), axes="xyz"),
         data_format=data_format,
         num_channels=1,
     )
@@ -663,83 +663,74 @@ def test_read_cxyz_adds_channel_axis(
     write_data = np.zeros((10, 10, 10), dtype=np.uint64)
     mag.write(write_data, absolute_offset=(0, 0, 0))
 
+    data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    assert data.shape == (10, 10, 10)
+
     data = mag.read_cxyz(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     assert data.shape == (1, 10, 10, 10)
 
 
-def test_read_write_cxyz_missing_z(tmp_path: UPath) -> None:
+@pytest.mark.parametrize(
+    "layer_bbox,write_bbox,write_data,expected_shape",
+    [
+        (
+            NDBoundingBox(topleft=(0, 0), size=(10, 20), axes=("x", "y"), index=(0, 1)),
+            NDBoundingBox(topleft=(0, 0), size=(10, 20), axes=("x", "y"), index=(0, 1)),
+            np.arange(200, dtype=np.uint8).reshape(1, 10, 20, 1),
+            (1, 10, 20, 1),
+        ),
+        (
+            NDBoundingBox(
+                topleft=(0, 0, 0, 0, 0),
+                size=(1, 4, 4, 4, 2),
+                axes=("c", "x", "y", "z", "t"),
+                index=(0, 1, 2, 3, 4),
+            ),
+            NDBoundingBox(
+                topleft=(0, 0, 0, 0, 0),
+                size=(1, 4, 4, 4, 1),
+                axes=("c", "x", "y", "z", "t"),
+                index=(0, 1, 2, 3, 4),
+            ),
+            np.zeros((1, 4, 4, 4), dtype=np.uint8),
+            (1, 4, 4, 4),
+        ),
+        (
+            NDBoundingBox(
+                topleft=(0, 0, 0),
+                size=(10, 20, 5),
+                axes=("x", "y", "z"),
+                index=(0, 1, 2),
+            ),
+            NDBoundingBox(
+                topleft=(0, 0, 0),
+                size=(10, 20, 5),
+                axes=("x", "y", "z"),
+                index=(0, 1, 2),
+            ),
+            (np.arange(1000, dtype=np.uint8)).reshape(1, 10, 20, 5),
+            (1, 10, 20, 5),
+        ),
+    ],
+)
+def test_read_write_cxyz_axes(
+    tmp_path: UPath,
+    layer_bbox: NDBoundingBox,
+    write_bbox: NDBoundingBox,
+    write_data: np.ndarray,
+    expected_shape: tuple[int, ...],
+) -> None:
     """read_cxyz/write_cxyz must work when the bounding box has no z axis."""
-    from webknossos.dataset.layer.view.view import View
-
     mag = (
         Dataset(tmp_path / "ds", voxel_size=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY)
+        .add_layer("color", COLOR_CATEGORY, bounding_box=layer_bbox)
         .add_mag("1")
     )
-    bbox_xy = NDBoundingBox(
-        topleft=(0, 0), size=(10, 20), axes=("x", "y"), index=(0, 1)
-    )
 
-    # read: patch _read_without_checks to return 2D (x, y) data;
-    # read_cxyz must insert c and z as size-1 dimensions
-    fake_data = np.arange(200, dtype=np.uint8).reshape(10, 20)
-    with mock.patch.object(mag, "_read_without_checks", return_value=fake_data):
-        data = mag.read_cxyz(absolute_bounding_box=bbox_xy)
-    assert data.shape == (1, 10, 20, 1), f"unexpected shape {data.shape}"
-    np.testing.assert_array_equal(data[0, :, :, 0], fake_data)
+    mag.write_cxyz(write_data, absolute_bounding_box=write_bbox)
 
-    # write: _reorder_cxyz_to_storage must squeeze c and z (both size 1)
-    # and produce the raw 2D (x, y) array that would be sent to storage
-    write_data = np.arange(200, dtype=np.uint8).reshape(1, 10, 20, 1)
-    reordered = View._reorder_cxyz_to_storage(write_data, bbox_xy.axes)
-    assert reordered.shape == (10, 20), f"unexpected reordered shape {reordered.shape}"
-    np.testing.assert_array_equal(reordered, write_data[0, :, :, 0])
-
-
-def test_read_cxyz_raises_for_large_extra_axis(tmp_path: UPath) -> None:
-    """read_cxyz must raise a clear ValueError when a non-cxyz axis has size > 1."""
-    mag = (
-        Dataset(tmp_path / "ds", voxel_size=(1, 1, 1))
-        .add_layer("color", COLOR_CATEGORY)
-        .add_mag("1")
-    )
-    # Pretend the underlying array returned 5D data with t=2
-    fake_data = np.zeros((1, 4, 4, 4, 2), dtype=np.uint8)
-    bbox_with_t = NDBoundingBox(
-        topleft=(0, 0, 0, 0, 0),
-        size=(1, 4, 4, 4, 2),
-        axes=("c", "x", "y", "z", "t"),
-        index=(0, 1, 2, 3, 4),
-    )
-    with mock.patch.object(mag, "_read_without_checks", return_value=fake_data):
-        with pytest.raises(ValueError, match="extra axis 't' has size 2"):
-            mag.read_cxyz(absolute_bounding_box=bbox_with_t)
-
-
-def test_read_write_cxyz_no_channel_axis(tmp_path: UPath) -> None:
-    """read_cxyz/write_cxyz must work for layers whose bounding box has no 'c' axis."""
-    bbox_3d = NDBoundingBox(
-        topleft=(0, 0, 0), size=(10, 20, 5), axes=("x", "y", "z"), index=(0, 1, 2)
-    )
-    layer = Dataset(tmp_path / "ds", voxel_size=(1, 1, 1)).add_layer(
-        "color",
-        COLOR_CATEGORY,
-        data_format=DataFormat.Zarr3,
-        bounding_box=bbox_3d,
-    )
-    mag = layer.add_mag("1")
-
-    # write_cxyz: input is (c=1, x=10, y=20, z=5); c must be squeezed before writing
-    write_data = (np.arange(1000, dtype=np.uint8)).reshape(1, 10, 20, 5)
-    mag.write_cxyz(
-        write_data,
-        allow_resize=True,
-        absolute_bounding_box=bbox_3d,
-    )
-
-    # read_cxyz: output must be (c=1, x=10, y=20, z=5) with c axis inserted
-    data = mag.read_cxyz(absolute_bounding_box=bbox_3d)
-    assert data.shape == (1, 10, 20, 5), f"unexpected shape {data.shape}"
+    data = mag.read_cxyz(absolute_bounding_box=write_bbox)
+    assert data.shape == expected_shape, f"unexpected shape {data.shape}"
     np.testing.assert_array_equal(data, write_data)
 
 
@@ -1593,7 +1584,11 @@ def test_changing_layer_bounding_box(
     assert original_data.shape == (3, 24, 24, 24)
 
     layer.bounding_box = layer.bounding_box.with_size(
-        [12, 12, 10]
+        [
+            12,
+            12,
+            10,
+        ]
     )  # decrease bounding box
 
     bbox_size = ds.get_layer("color").bounding_box.size
@@ -1603,7 +1598,11 @@ def test_changing_layer_bounding_box(
     np.testing.assert_array_equal(original_data[:, :12, :12, :10], less_data)
 
     layer.bounding_box = layer.bounding_box.with_size(
-        [36, 48, 60]
+        [
+            36,
+            48,
+            60,
+        ]
     )  # increase the bounding box
 
     bbox_size = ds.get_layer("color").bounding_box.size
