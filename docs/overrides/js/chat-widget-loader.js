@@ -70,7 +70,7 @@
               backgroundColor: "#ffffff",
               textColor: "#1e1e1f",
               sendButtonColor: "#5660ff",
-              maxChars: 50,
+              maxChars: 500,
               maxCharsWarningMessage: "You exceeded the characters limit. Please input less than 50 characters.",
               autoFocus: false,
               borderRadius: 6,
