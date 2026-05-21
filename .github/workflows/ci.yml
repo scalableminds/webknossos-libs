@@ -16,8 +16,10 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      webknossos: ${{ steps.filter.outputs.webknossos || github.ref == 'refs/heads/master' }}
-      cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref == 'refs/heads/master' }}
+      webknossos: ${{ steps.filter.outputs.webknossos || github.ref ==
+        'refs/heads/master' }}
+      cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref ==
+        'refs/heads/master' }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v4.0.1
@@ -36,7 +38,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
+        python-version: [ "3.13", "3.12", "3.11", "3.10" ]
     defaults:
       run:
         working-directory: cluster_tools
@@ -79,7 +81,7 @@ jobs:
       - name: Restart Slurm Cluster
         run: cd ./dockered-slurm && docker compose restart slurmctld c1 c2
 
-      - name: "Run Tests (test_all, test_slurm) with modified slurn.conf"
+      - name: "Run Tests (test_all, test_slurm) with modified slurm.conf"
         run: |
           # Run tests requiring a modified slurm config
           docker exec \
@@ -87,14 +89,14 @@ jobs:
             -e PYTEST_EXECUTORS=slurm \
             slurmctld bash -c "uv run --frozen python -m pytest -sv test_slurm.py -m 'requires_modified_slurm_config'"
 
-  cluster_tools_multiprocessing:
+  cluster_tools_other:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
+        python-version: [ "3.13", "3.12", "3.11", "3.10" ]
     defaults:
       run:
         working-directory: cluster_tools
@@ -123,17 +125,21 @@ jobs:
           cd tests
           PYTEST_EXECUTORS=multiprocessing,sequential,multiprocessing_with_pickling,sequential_with_pickling \
             uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
+      - name: Run batching tests
+        run: |
+          cd tests
+          uv run --frozen python -m pytest -sv test_batching.py
 
   webknossos_linux:
     needs: changes
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-8
     strategy:
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
-        group: [1, 2, 3]
+        python-version: [ "3.13", "3.12", "3.11", "3.10" ]
+        group: [ 1, 2, 3 ]
       fail-fast: false
     defaults:
       run:
@@ -173,14 +179,16 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+          least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
         if: ${{ matrix.python-version != '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+          least_duration
 
       - name: Persist coverage reports
         if: ${{ matrix.python-version == '3.11' }}
@@ -203,8 +211,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
-        group: [1, 2, 3]
+        python-version: [ "3.12" ]
+        group: [ 1, 2, 3 ]
       fail-fast: false
     defaults:
       run:
@@ -220,7 +228,9 @@ jobs:
           cache-dependency-glob: "webknossos/uv.lock"
 
       - name: Install minio
-        run: Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile "minio.exe"
+        run: Invoke-WebRequest -Uri
+          "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
+          -OutFile "minio.exe"
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -230,10 +240,11 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           MULTIPROCESSING_DEFAULT_START_METHOD: spawn
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+          least_duration
 
   coverage_report:
-    needs: [webknossos_linux]
+    needs: [ webknossos_linux ]
     if: success()
     runs-on: ubuntu-latest
     defaults:
@@ -270,7 +281,7 @@ jobs:
   docs:
     needs:
       - cluster_tools_slurm
-      - cluster_tools_multiprocessing
+      - cluster_tools_other
       - webknossos_linux
       - webknossos_windows
     runs-on: ubuntu-latest
@@ -308,13 +319,19 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          N8N_TOKEN: ${{ secrets.N8N_USERNAME }}
+          N8N_USERNAME: ${{ secrets.N8N_TOKEN }}
         run: |
           CI_TAG=$(git describe --tags)
+          set -e
+
           uvx --from awscli aws s3 cp --recursive --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${CI_TAG}
+          curl --basic -u "${N8N_TOKEN}:${N8N_USERNAME}" https://docs.webknossos.org/webhooks/index-docs
 
       - name: Check links (on master)
         if: github.ref == 'refs/heads/master'
-        env: # Or as an environment variable
+        env:
+          # Or as an environment variable
           SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
         run: |
           cd docs
@@ -325,7 +342,7 @@ jobs:
   pypi_and_gh_release:
     needs:
       - cluster_tools_slurm
-      - cluster_tools_multiprocessing
+      - cluster_tools_other
       - webknossos_linux
       - webknossos_windows
     if: |
@@ -359,7 +376,7 @@ jobs:
 
   complete:
     needs:
-      - cluster_tools_multiprocessing
+      - cluster_tools_other
       - cluster_tools_slurm
       - webknossos_linux
       - webknossos_windows

@@ -43,6 +43,7 @@ from webknossos.client.api_client.models import (
     ApiWkBuildInfo,
 )
 
+from ...dataset_properties import DatasetViewConfiguration
 from ...utils import time_since_epoch_in_ms
 from ._abstract_api_client import AbstractApiClient
 
@@ -156,6 +157,17 @@ class WkApiClient(AbstractApiClient):
     ) -> ApiDatasetIsValidNewNameResponse:
         route = f"/datasets/{dataset_name}/isValidNewName"
         return self._get_json(route, ApiDatasetIsValidNewNameResponse)
+
+    def dataset_configuration(
+        self,
+        *,
+        dataset_id: str,
+        volume_tracing_ids: list[str],
+    ) -> DatasetViewConfiguration:
+        route = f"/datasetConfigurations/{dataset_id}"
+        return self._post_json_with_json_response(
+            route, volume_tracing_ids, DatasetViewConfiguration
+        )
 
     def dataset_explore_and_add_remote(
         self, *, dataset: ApiDatasetExploreAndAddRemote

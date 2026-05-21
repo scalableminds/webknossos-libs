@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.3.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,40 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [3.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.3) - 2026-05-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.2...v3.4.3)
+
+### Fixed
+- faster deletion of S3 directories by using the delete methods from the s3fs file system, retry more S3 errors observed when deleting directories [#4554](https://github.com/scalableminds/webknossos-libs/pull/4554)
+
+
+## [3.4.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.2) - 2026-04-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.1...v3.4.2)
+
+
+## [3.4.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.1) - 2026-04-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.0...v3.4.1)
+
+
+## [3.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.0) - 2026-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.3.0...v3.4.0)
+
+### Added
+- Added `wk.login(token="...")` as the preferred way to authenticate with the WEBKNOSSOS server. It modifies the global context for the remaining runtime of the process, but is much easier to use than the env variables or context manager. [#1457](https://github.com/scalableminds/webknossos-libs/pull/1457)
+- Added `slurm+batching` distribution strategy for CLI commands. `--jobs` can be used to specify the target number of jobs and the `batch-size` key can be specified in the `--job-resources`. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- Added the `--apply-mapping` option to the `export-as-tiff` CLI command. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- Added `RemoteLayer.view_configuration` property to access the layer view configuration (alpha, inverted, min/max histogram, etc). [#1456](https://github.com/scalableminds/webknossos-libs/pull/1456)
+
+### Changed
+- The job resources for `slurm`, `slurm+batching` and `kubernetes` in the CLI commands are now specified as comma-separated key-value pairs instead of JSON, e.g. `--job-resources mem=10G,time=02:00:00`. The JSON syntax is still available for backwards compatibility. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- The `export-as-tiff` CLI command now compressed exported segmentation layers. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- S3 retry settings are eagerly applied for all CLI commands. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+
+### Fixed
+- Fixed a bug in the `BufferedSliceWriter`, where Mag-1 bounding boxes were upscaled when writing to a non-Mag-1 view. [#1451](https://github.com/scalableminds/webknossos-libs/pull/1451)
+
 
 
 ## [3.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.3.0) - 2026-03-31
@@ -107,8 +141,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Calling the `x`, `y`, `z` and `c` properties of `VecInt` or `Vec3Int` now raises a `KeyError` instead of a `ValueError` if the axis is missing. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
 - Removed `dtype_per_layer` arguments and properties as they have been deprecated for a long time. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
 - Deprecated `dtype_per_channel` argument in `Dataset.add_layer` and `Dataset.get_or_add_layer` and property in `Layer`. Use `dtype` instead. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
-- Deprecated `RemoteAttachements.upload_attachment`. Use `RemoteAttachements.add_attachment_as_copy` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
-- Deprecated `Attachments.{add_mesh,add_agglomerate,add_connectome,set_segment_index,set_cumsum}` methods. Use `*Attachment.from_path_and_name` and `Attachements.{add_attachment_as_copy,add_attachment_as_ref}` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Deprecated `RemoteAttachments.upload_attachment`. Use `RemoteAttachments.add_attachment_as_copy` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Deprecated `Attachments.{add_mesh,add_agglomerate,add_connectome,set_segment_index,set_cumsum}` methods. Use `*Attachment.from_path_and_name` and `Attachments.{add_attachment_as_copy,add_attachment_as_ref}` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
 
 ### Added
 - Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)

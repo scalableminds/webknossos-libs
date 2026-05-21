@@ -31,7 +31,9 @@ def test_export() -> None:
     assert VecInt(x=1, y=2, z=3, t=4)[0] == 1
     assert VecInt(x=1, y=2, z=3, t=4)[1] == 2
     assert VecInt(x=1, y=2, z=3, t=4)[2] == 3
-    assert np.array_equal(VecInt(x=1, y=2, z=3, t=4).to_np(), np.array([1, 2, 3, 4]))
+    np.testing.assert_array_equal(
+        VecInt(x=1, y=2, z=3, t=4).to_np(), np.array([1, 2, 3, 4])
+    )
     assert VecInt(x=1, y=2, z=3, t=4).to_list() == [1, 2, 3, 4]
     assert VecInt(x=1, y=2, z=3, t=4).to_tuple() == (1, 2, 3, 4)
 

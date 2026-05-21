@@ -21,7 +21,7 @@ webknossos download [OPTIONS] TARGET
     Example: `--url https://webknossos.org/dataset/12345`.
 
 - `--token`  
-    Authentication token for your WEBKNOSSOS instance (e.g., https://webknossos.org/auth/token).  
+    Authentication token for your WEBKNOSSOS instance (e.g., https://webknossos.org/account/token).  
     This option can be provided via the environment variable `WK_TOKEN`.
 
 - `--bbox`  

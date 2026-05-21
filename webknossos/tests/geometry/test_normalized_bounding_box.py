@@ -37,7 +37,7 @@ def test_from_wkw_dict_with_axis_order() -> None:
     assert result.size.c == 1
 
 
-def test_from_wkw_dict_with_axis_order_missing_c() -> None:
+def test_from_wkw_dict_with_axis_order_implicit_c() -> None:
     result = NormalizedBoundingBox.from_wkw_dict(
         {
             "topLeft": [1, 2, 3],
@@ -52,6 +52,24 @@ def test_from_wkw_dict_with_axis_order_missing_c() -> None:
     assert result.topleft_xyz.to_list() == [1, 2, 3]
     assert result.size_xyz.to_list() == [4, 5, 6]
     assert result.size.c == 1
+
+
+def test_from_wkw_dict_with_axis_order_missing_c() -> None:
+    result = NormalizedBoundingBox.from_wkw_dict(
+        {
+            "topLeft": [1, 2, 3],
+            "width": 4,
+            "height": 5,
+            "depth": 6,
+            "axisOrder": {"x": 2, "y": 1, "z": 0},
+        }
+    )
+    assert isinstance(result, NormalizedBoundingBox)
+    assert result.axes == ("z", "y", "x")
+    assert result.topleft_xyz.to_list() == [1, 2, 3]
+    assert result.size_xyz.to_list() == [4, 5, 6]
+    with pytest.raises(KeyError):
+        assert result.size.c == 0
 
 
 def test_from_wkw_dict_with_num_channels() -> None:

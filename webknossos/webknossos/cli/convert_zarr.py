@@ -2,34 +2,43 @@
 
 import logging
 import time
-from argparse import Namespace
 from functools import partial
-from multiprocessing import cpu_count
 from typing import Annotated, Any, cast
 
 import numpy as np
 import tensorstore
 import typer
+from cluster_tools import Executor
 from upath import UPath
 
 from ..dataset import Dataset, MagView, SegmentationLayer
-from ..dataset.defaults import (
-    DEFAULT_CHUNK_SHAPE,
-    DEFAULT_DATA_FORMAT,
-    DEFAULT_SHARD_SHAPE,
-)
-from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
+from ..dataset_properties import DataFormat, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import get_executor_for_args, rmtree, wait_and_ensure_success
+from ..utils import (
+    rmtree,
+    wait_and_ensure_success,
+    wrap_executor,
+)
 from ._utils import (
+    DEFAULT_DATA_FORMAT_STR,
+    ChunkShapeOption,
+    ChunksPerShardOption,
+    DataFormatOption,
     DistributionStrategy,
+    DistributionStrategyOption,
+    JobResourcesOption,
+    JobsOption,
     SamplingMode,
-    VoxelSizeTuple,
+    SamplingModeOption,
+    ShardShapeOption,
+    UnitOption,
+    VoxelSizeOption,
+    get_executor_for_args,
     parse_mag,
     parse_path,
     parse_vec3int,
-    parse_voxel_size,
     prepare_shard_shape,
 )
 
@@ -78,7 +87,7 @@ def convert_zarr(
     voxel_size_with_unit: VoxelSize = VoxelSize((1.0, 1.0, 1.0)),
     flip_axes: tuple[int, ...] | None = None,
     compress: bool = True,
-    executor_args: Namespace | None = None,
+    executor: Executor | None = None,
 ) -> MagView:
     """Performs the conversation of a Zarr dataset to a WEBKNOSSOS dataset."""
     ref_time = time.time()
@@ -107,7 +116,7 @@ def convert_zarr(
     )
 
     # Parallel chunk conversion
-    with get_executor_for_args(args=executor_args) as executor:
+    with wrap_executor(executor) as executor:
         largest_segment_id_per_chunk = wait_and_ensure_success(
             executor.map_to_futures(
                 partial(
@@ -149,22 +158,8 @@ def main(
             parser=parse_path,
         ),
     ],
-    voxel_size: Annotated[
-        VoxelSizeTuple,
-        typer.Option(
-            help="The size of one voxel in source data in nanometers. "
-            "Should be a comma-separated string (e.g. 11.0,11.0,20.0).",
-            parser=parse_voxel_size,
-            metavar="VoxelSize",
-            show_default=False,
-        ),
-    ],
-    unit: Annotated[
-        LengthUnit,
-        typer.Option(
-            help="The unit of the voxel size.",
-        ),
-    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    voxel_size: VoxelSizeOption,
+    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     layer_name: Annotated[
         str,
         typer.Option(help="Name of the output layer (color or segmentation)"),
@@ -176,39 +171,10 @@ def main(
 When converting a folder, this option is ignored."
         ),
     ] = False,
-    data_format: Annotated[
-        DataFormat,
-        typer.Option(
-            help="Data format to store the target dataset in.",
-        ),
-    ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
-    chunk_shape: Annotated[
-        Vec3Int,
-        typer.Option(
-            help="Number of voxels to be stored as a chunk in the output format "
-            "(e.g. `32` or `32,32,32`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = DEFAULT_CHUNK_SHAPE,
-    shard_shape: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="Number of voxels to be stored as a shard in the output format "
-            "(e.g. `1024` or `1024,1024,1024`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
-    chunks_per_shard: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
-            "(e.g. `32` or `32,32,32`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
+    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # type: ignore
+    chunk_shape: ChunkShapeOption = DEFAULT_CHUNK_SHAPE,
+    shard_shape: ShardShapeOption = None,
+    chunks_per_shard: ChunksPerShardOption = None,
     flip_axes: Annotated[
         Vec3Int | None,
         typer.Option(
@@ -241,9 +207,7 @@ When converting a folder, this option is ignored."
             "(median, mode, nearest, bilinear or bicubic)."
         ),
     ] = "default",
-    sampling_mode: Annotated[
-        SamplingMode, typer.Option(help="The sampling mode to use.")
-    ] = SamplingMode.ANISOTROPIC,
+    sampling_mode: SamplingModeOption = SamplingMode.ANISOTROPIC,
     overwrite_existing: Annotated[
         bool,
         typer.Option(
@@ -251,28 +215,9 @@ When converting a folder, this option is ignored."
             show_default=False,
         ),
     ] = False,
-    jobs: Annotated[
-        int,
-        typer.Option(
-            help="Number of processes to be spawned.",
-            rich_help_panel="Executor options",
-        ),
-    ] = cpu_count(),
-    distribution_strategy: Annotated[
-        DistributionStrategy,
-        typer.Option(
-            help="Strategy to distribute the task across CPUs or nodes.",
-            rich_help_panel="Executor options",
-        ),
-    ] = DistributionStrategy.MULTIPROCESSING,
-    job_resources: Annotated[
-        str | None,
-        typer.Option(
-            help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-(e.g., --job-resources=\'{"mem": "10M"}\')\'',
-            rich_help_panel="Executor options",
-        ),
-    ] = None,
+    jobs: JobsOption = None,
+    distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
+    job_resources: JobResourcesOption = None,
 ) -> None:
     """Converts a Zarr dataset to a WEBKNOSSOS dataset."""
 
@@ -286,32 +231,31 @@ When converting a folder, this option is ignored."
         chunks_per_shard=chunks_per_shard,
     )
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
 
     if overwrite_existing and target.exists():
         rmtree(target)
 
-    mag_view = convert_zarr(
-        source_zarr_path=source,
-        target_path=target,
-        layer_name=layer_name,
-        data_format=data_format,
-        chunk_shape=chunk_shape,
-        shard_shape=shard_shape or DEFAULT_SHARD_SHAPE,
-        is_segmentation_layer=is_segmentation_layer,
-        voxel_size_with_unit=voxel_size_with_unit,
-        flip_axes=flip_axes.to_tuple() if flip_axes else None,
-        compress=compress,
-        executor_args=executor_args,
-    )
+    with get_executor_for_args(
+        jobs=jobs,
+        distribution_strategy=distribution_strategy,
+        job_resources=job_resources,
+    ) as executor:
+        mag_view = convert_zarr(
+            source_zarr_path=source,
+            target_path=target,
+            layer_name=layer_name,
+            data_format=data_format,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape or DEFAULT_SHARD_SHAPE,
+            is_segmentation_layer=is_segmentation_layer,
+            voxel_size_with_unit=voxel_size_with_unit,
+            flip_axes=flip_axes.to_tuple() if flip_axes else None,
+            compress=compress,
+            executor=executor,
+        )
 
-    if downsample:
-        with get_executor_for_args(executor_args) as executor:
+        if downsample:
             mag_view.layer.downsample(
                 from_mag=mag_view.mag,
                 coarsest_mag=max_mag,

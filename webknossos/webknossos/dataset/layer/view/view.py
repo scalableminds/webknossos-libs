@@ -20,9 +20,9 @@ from ....geometry import (
 from ....geometry.vec_int import VecIntLike
 from ....utils import (
     count_defined_values,
-    get_executor_for_args,
     get_rich_progress,
     wait_and_ensure_success,
+    wrap_executor,
 )
 from ._array import ArrayInfo, BaseArray
 
@@ -1168,7 +1168,7 @@ class View:
             job_args.append(chunk_view)
 
         # execute the work for each chunk
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
             results = wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, job_args),
                 executor=executor,
@@ -1373,7 +1373,7 @@ class View:
         """
         if self.bounding_box.size != other.bounding_box.size:
             return False
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
             # read-only views are required for more flexible chunk shapes
             # otherwise, shard-aligned chunk shapes would be required
             read_only_self = self.get_view(read_only=True)

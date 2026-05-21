@@ -42,12 +42,12 @@ webknossos copy-dataset [OPTIONS] SOURCE TARGET
 
 - `--distribution-strategy`  
     Strategy to distribute the task across CPUs or nodes.  
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`.  
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`.  
     Default: `multiprocessing`.
 
 - `--job-resources`  
     Specify resources for jobs when using the SLURM distribution strategy.  
-    Example: `--job-resources '{"mem": "10M"}'`.
+    Example: `--job-resources mem=10M`.
 
 ### Environment Variables for Remote Paths
 
@@ -88,7 +88,7 @@ This command uses 4 parallel processes to speed up the dataset copying process.
 
 ### Copy a dataset using SLURM with custom job resources:
 ```bash
-webknossos copy-dataset --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/source/dataset /path/to/target/dataset
+webknossos copy-dataset --distribution-strategy slurm --job-resources mem=10M /path/to/source/dataset /path/to/target/dataset
 ```
 This command uses the SLURM distribution strategy with custom memory allocation for each job.
 

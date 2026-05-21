@@ -18,7 +18,7 @@ The core classes and can be created and saved as shown:
 Additionally, we provide the various geometrical primitives, e.g. `Vec3Int`, `BoundingBox` and `Mag`.
 
 The `User`, `Team`, `Project` and `Task` classes provide WEBKNOSSOS server interactions for administration purposes.
-Server interactions may require [authentication](webknossos/client/context.html) e.g. via `webknossos_context`.
+Server interactions may require [authentication](webknossos/client/context.html) e.g. via `login(token="...")`.
 """
 
 # The table above contains zero-width spaces in the code examples after each dot to enforce correct line-breaks.

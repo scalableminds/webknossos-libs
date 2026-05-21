@@ -2,15 +2,12 @@ import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field, replace
-from functools import lru_cache
 from logging import getLogger
-from tempfile import mkdtemp
 from typing import (
     Any,
     Literal,
     TypedDict,
 )
-from urllib.parse import urlparse
 
 import numpy as np
 import tensorstore
@@ -18,7 +15,7 @@ import wkw
 from typing_extensions import NotRequired, Self
 from upath import UPath
 
-from webknossos.dataset._utils.tensorstore_helpers import TS_CONTEXT
+from webknossos.dataset._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from webknossos.dataset._utils.tinywkw import TinyWkwArray
 from webknossos.dataset_properties import DataFormat
 from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
@@ -410,59 +407,6 @@ class WKWArray(BaseArray):
         self.__dict__ = d
 
 
-class AWSCredentialManager:
-    entries: dict[int, tuple[str, str]]
-    folder_path: UPath
-
-    def __init__(self, folder_path: UPath) -> None:
-        self.entries = {}
-        self.folder_path = folder_path
-
-        self.credentials_file_path.touch()
-        self.config_file_path.write_text("[default]\n")
-
-    @property
-    def credentials_file_path(self) -> UPath:
-        return self.folder_path / "credentials"
-
-    @property
-    def config_file_path(self) -> UPath:
-        return self.folder_path / "config"
-
-    def _dump_credentials(self) -> None:
-        self.credentials_file_path.write_text(
-            "\n".join(
-                [
-                    f"[profile-{key_hash}]\naws_access_key_id = {access_key_id}\naws_secret_access_key = {secret_access_key}\n"
-                    for key_hash, (
-                        access_key_id,
-                        secret_access_key,
-                    ) in self.entries.items()
-                ]
-            )
-        )
-
-    def add(self, access_key_id: str, secret_access_key: str) -> dict[str, str]:
-        key_tuple = (access_key_id, secret_access_key)
-        key_hash = hash(key_tuple)
-        self.entries[key_hash] = key_tuple
-        self._dump_credentials()
-        return {
-            "type": "profile",
-            "profile": f"profile-{key_hash}",
-            "config_file": str(self.config_file_path),
-            "credentials_file": str(self.credentials_file_path),
-        }
-
-
-@lru_cache
-def _aws_credential_folder() -> UPath:
-    return UPath(mkdtemp())
-
-
-_aws_credential_manager = AWSCredentialManager(_aws_credential_folder())
-
-
 class TensorStoreArray(BaseArray):
     _cached_array: tensorstore.TensorStore | None
     _tensorstore_data_format: str
@@ -555,50 +499,6 @@ class TensorStoreArray(BaseArray):
             ),
         )
 
-    @staticmethod
-    def _make_kvstore(path: UPath) -> str | dict[str, str | list[str]]:
-        if is_fs_path(path):
-            return {"driver": "file", "path": str(path)}
-        elif path.protocol in ("http", "https"):
-            return {
-                "driver": "http",
-                "base_url": str(path),
-                "headers": [
-                    f"{key}: {value}"
-                    for key, value in path.storage_options.get("headers", {}).items()
-                ],
-            }
-        elif path.protocol in ("s3"):
-            parsed_url = urlparse(str(path))
-            kvstore_spec: dict[str, Any] = {
-                "driver": "s3",
-                "path": parsed_url.path.lstrip("/"),
-                "bucket": parsed_url.netloc,
-                "use_conditional_write": False,
-            }
-            if endpoint_url := path.storage_options.get("endpoint_url", None):
-                kvstore_spec["endpoint"] = endpoint_url
-            if "key" in path.storage_options and "secret" in path.storage_options:
-                kvstore_spec["aws_credentials"] = _aws_credential_manager.add(
-                    path.storage_options["key"], path.storage_options["secret"]
-                )
-            else:
-                kvstore_spec["aws_credentials"] = {"type": "default"}
-            return kvstore_spec
-        elif path.protocol == "memory":
-            # use memory driver (in-memory file systems), e.g. useful for testing
-            # attention: this is not a persistent storage and it does not support
-            # multiprocessing since memory is not shared between processes
-            return {
-                "driver": "memory",
-                "path": path.path,
-            }
-        else:
-            return {
-                "driver": "file",
-                "path": str(path),
-            }
-
     @classmethod
     def open(cls, path: UPath) -> "TensorStoreArray":
         classes = (Zarr3Array, Zarr2Array)
@@ -614,7 +514,7 @@ class TensorStoreArray(BaseArray):
     def _open_spec(cls, path: UPath) -> dict[str, Any]:
         return {
             "driver": cls._tensorstore_data_format,
-            "kvstore": cls._make_kvstore(path),
+            "kvstore": _make_kvstore(path),
         }
 
     @classmethod
@@ -682,7 +582,7 @@ class TensorStoreArray(BaseArray):
                 lambda: tensorstore.open(
                     {
                         "driver": self._tensorstore_data_format,
-                        "kvstore": self._make_kvstore(self._path),
+                        "kvstore": _make_kvstore(self._path),
                     },
                     context=TS_CONTEXT,
                     recheck_cached="open",
@@ -789,7 +689,7 @@ class TensorStoreArray(BaseArray):
                     lambda: tensorstore.open(
                         {
                             "driver": self._tensorstore_data_format,
-                            "kvstore": self._make_kvstore(self._path),
+                            "kvstore": _make_kvstore(self._path),
                         },
                         context=TS_CONTEXT,
                         recheck_cached="open",
@@ -798,7 +698,7 @@ class TensorStoreArray(BaseArray):
                 )
             except Exception as e:
                 raise ArrayException(
-                    f"Exception while opening array for {self._make_kvstore(self._path)}"
+                    f"Exception while opening array for {_make_kvstore(self._path)}"
                 ) from e
         return self._cached_array
 
@@ -907,7 +807,7 @@ class Zarr3Array(TensorStoreArray):
         _array = tensorstore.open(
             {
                 "driver": str(cls.data_format),
-                "kvstore": cls._make_kvstore(path),
+                "kvstore": _make_kvstore(path),
                 "metadata": {
                     "data_type": str(array_info.voxel_type),
                     "shape": shape,
@@ -980,7 +880,7 @@ class Zarr2Array(TensorStoreArray):
         _array = tensorstore.open(
             {
                 "driver": "zarr",
-                "kvstore": cls._make_kvstore(path),
+                "kvstore": _make_kvstore(path),
                 "metadata": {
                     "shape": shape,
                     "chunks": chunk_shape,
@@ -1023,7 +923,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
     @classmethod
     def _open_spec(cls, path: UPath) -> dict[str, Any]:
         # need to open the parent dir, because that is the multiscale path
-        uri = cls._make_kvstore(path.parent)
+        uri = _make_kvstore(path.parent)
         return {
             "driver": cls._tensorstore_data_format,
             "kvstore": uri,

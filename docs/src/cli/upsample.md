@@ -36,7 +36,7 @@ webknossos upsample [OPTIONS] SOURCE
 #### WEBKNOSSOS context
 
 - `--token`
-    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/auth/token).
+    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/account/token).
     Can also be provided via the `WK_TOKEN` environment variable.
     Required when SOURCE is a WEBKNOSSOS server URL pointing to a non-public dataset.
 
@@ -57,13 +57,13 @@ webknossos upsample [OPTIONS] SOURCE
 
 - `--distribution-strategy`
     Strategy to distribute the task across CPUs or nodes.
-    Options: `multiprocessing`, `slurm`, `kubernetes`, `sequential`.
+    Options: `multiprocessing`, `slurm`, `slurm+batching`, `kubernetes`, `sequential`.
     Default: `multiprocessing`.
 
 - `--job-resources`
     Specify resources for jobs when using the SLURM distribution strategy.
     Should be a JSON string.
-    Example: `--job-resources '{"mem": "10M"}'`.
+    Example: `--job-resources mem=10M`.
 
 ## Example Commands
 
@@ -79,7 +79,7 @@ webknossos upsample --from-mag 2 --layer-name gray_matter /path/to/dataset
 
 ### Upsample with parallel execution using SLURM:
 ```bash
-webknossos upsample --from-mag 2 --distribution-strategy slurm --job-resources '{"mem": "10M"}' /path/to/dataset
+webknossos upsample --from-mag 2 --distribution-strategy slurm --job-resources mem=10M /path/to/dataset
 ```
 
 ### Upsample a dataset on a WEBKNOSSOS server:
