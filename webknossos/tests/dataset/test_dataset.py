@@ -650,6 +650,10 @@ def test_write_cxyz(data_format: DataFormat, output_path: UPath) -> None:
 def test_read_cxyz_adds_channel_axis(
     data_format: DataFormat, output_path: UPath
 ) -> None:
+    if data_format == DataFormat.WKW:
+        pytest.skip(
+            "WKW requires (c, x, y, z) axes and cannot store channel-free layers"
+        )
     ds_path = prepare_dataset_path(data_format, output_path)
     layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer(
         "segmentation",
