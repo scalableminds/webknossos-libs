@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added support for reading MRC files using the `mrcfile` package. [#1465](https://github.com/scalableminds/webknossos-libs/pull/1465)
 
 ### Changed
 
