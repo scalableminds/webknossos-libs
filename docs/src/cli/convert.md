@@ -18,8 +18,7 @@ The `convert` command automatically detects an image stack and converts it into 
 ### Supported input formats
 
 - Standard image formats, e.g. `tiff`, `jpg`, `png`, `bmp`
-- Proprietary image formats, e.g. `dm3`
-- Raw binary files
+- Proprietary image formats, e.g. `dm3`, `czi`, `mrc`
 
 ### Usage
 
