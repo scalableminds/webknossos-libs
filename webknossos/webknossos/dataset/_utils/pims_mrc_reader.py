@@ -25,6 +25,11 @@ class PimsMrcReader(FramesSequenceND):
         self.path = UPath(path)
 
         with mrcfile.mmap(str(self.path), mode="r", permissive=True) as mrc:
+            if mrc.data is None:
+                raise ValueError(
+                    f"Cannot open MRC file {self.path}. "
+                    + "The file is likely corrupted or not a valid MRC file."
+                )
             self._dtype: np.dtype = mrc.data.dtype
             self._data_shape: tuple[int, ...] = tuple(mrc.data.shape)
             ndim = mrc.data.ndim
