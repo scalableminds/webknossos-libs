@@ -523,7 +523,13 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
 def set_s3fs_retry_settings(
     *, read_timeout: int = 60, connect_timeout: int = 30, retries: int = 10
 ) -> None:
-    import s3fs
+    try:
+        # Only set retry settings if s3fs is installed
+        # If S3 paths are used, it will fail in later stages
+        import s3fs
+    except ImportError:
+        return
+
     from aiohttp.client_exceptions import ClientPayloadError
     from aiohttp.http_exceptions import TransferEncodingError
     from botocore.exceptions import ClientError, ConnectionClosedError
