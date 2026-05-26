@@ -15,8 +15,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- `RemoteDataset.add_layer_as_copy`, `RemoteLayer.add_mag_as_copy` and `RemoteAttachments.add_add_attachment_as_copy` now accept `transfer_mode=TransferMode.HTTP`. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
+- Added support for older API versions. The currently oldest supported API version is v13. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
 
 ### Changed
+- Updated the api version of the webknossos-api to 14. Version 13 is still supported. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450])
 
 ### Fixed
 
