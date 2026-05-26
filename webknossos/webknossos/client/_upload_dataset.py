@@ -53,6 +53,7 @@ def upload_mag(
     dataset_id: str,
     layer_name: str,
     mag: MagView,
+    axis_order: dict[str, int],
     datastore_url: str | None = None,
     jobs: int | None = None,
 ) -> None:
@@ -77,6 +78,7 @@ def upload_mag(
             mag=ApiMagProperties(
                 mag=mag.mag.to_tuple(),
                 channel_index=None,
+                axis_order=axis_order,
             ),
             overwritePending=True,  # TODO
         ),

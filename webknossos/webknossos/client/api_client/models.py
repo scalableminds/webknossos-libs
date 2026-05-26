@@ -237,12 +237,11 @@ class ApiReserveDatasetUploadInformationV13:
     folder_id: str | None = None
 
 
-# TODO use existing MagProperties (?)
-# TODO axisOrder?
 @attr.s(auto_attribs=True)
 class ApiMagProperties:
     mag: tuple[int, int, int]
     channel_index: int | None
+    axis_order: dict[str, int] | None
 
 
 @attr.s(auto_attribs=True)
@@ -254,7 +253,6 @@ class ApiMagUploadInfo:
     overwritePending: bool
 
 
-# TODO use existing AttachmentProperties (?)
 @attr.s(auto_attribs=True)
 class ApiAttachmentProperties:
     name: str

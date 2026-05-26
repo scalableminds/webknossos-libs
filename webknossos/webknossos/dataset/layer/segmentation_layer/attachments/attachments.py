@@ -336,7 +336,9 @@ class RemoteAttachments(AbstractAttachments):
             from webknossos.client._upload_dataset import upload_attachment
 
             upload_attachment(
-                self._layer.dataset.dataset_id, self._layer.name, attachment
+                dataset_id=self._layer.dataset.dataset_id,
+                layer_name=self._layer.name,
+                attachment=attachment,
             )
         else:
             new_path = enrich_path(

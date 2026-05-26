@@ -89,13 +89,30 @@ def _cached_detect_api_version(wk_url: str, timeout: int) -> int:
     return current
 
 
+@cache
+def _cached_api_client(
+    wk_url: str, token: str | None, timeout: int, api_version: int
+) -> WkApiClient:
+    cls = WkApiClientV13 if api_version == 13 else WkApiClient
+    return cls(
+        base_wk_url=wk_url,
+        headers={} if token is None else {"X-Auth-Token": token},
+        timeout_seconds=timeout,
+    )
+
+
+@cache
+def _cached_get_organization_id(api_client: WkApiClient) -> str:
+    return api_client.user_current().organization
+
+
 def _clear_all_context_caches() -> None:
     _cached_detect_api_version.cache_clear()
-    del _get_context().organization_id
-    del _get_context().api_client
+    _cached_api_client.cache_clear()
+    _cached_get_organization_id.cache_clear()
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, frozen=True)
 class _WebknossosContext:
     url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL).rstrip("/")
     token: str | None = os.environ.get("WK_TOKEN", default=None)
@@ -107,9 +124,7 @@ class _WebknossosContext:
 
     @property
     def api_version(self) -> int:
-        if self._api_version is None:
-            self._api_version = _cached_detect_api_version(self.url, self.timeout)
-        return self._api_version
+        return _cached_detect_api_version(self.url, self.timeout)
 
     @cached_property
     def organization_id(self) -> str:

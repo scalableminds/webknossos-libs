@@ -91,22 +91,27 @@ class RemoteLayer(AbstractLayer):
             client = _get_api_client()
             foreign_layer = foreign_mag_view.layer
             foreign_layer_bbox = foreign_layer.normalized_bounding_box
+            axis_order = {
+                axis: index
+                for axis, index in zip(
+                    foreign_layer_bbox.axes, foreign_layer_bbox.index
+                )
+            }
 
             if transfer_mode == TransferMode.HTTP:
                 from ...client._upload_dataset import upload_mag
 
-                # TODO pass in axis_order
-                upload_mag(self.dataset.dataset_id, self.name, foreign_mag_view)
+                upload_mag(
+                    dataset_id=self.dataset.dataset_id,
+                    layer_name=self.name,
+                    mag=foreign_mag_view,
+                    axis_order=axis_order,
+                )
             else:
                 reserve_parameters = ApiReserveMagUploadToPathParameters(
                     layer_name=self.name,
                     mag=foreign_mag_view.mag.to_list(),
-                    axis_order={
-                        axis: index
-                        for axis, index in zip(
-                            foreign_layer_bbox.axes, foreign_layer_bbox.index
-                        )
-                    },
+                    axis_order=axis_order,
                     channel_index=None,
                     path_prefix=common_storage_path_prefix,
                     overwrite_pending=overwrite_pending,
