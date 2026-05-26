@@ -42,7 +42,7 @@ from webknossos.dataset_properties import (
     SegmentationLayerProperties,
 )
 from webknossos.dataset_properties.structuring import get_dataset_converter
-from webknossos.geometry import BoundingBox, Mag, Vec3Int, VecIntLike
+from webknossos.geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, VecIntLike
 from webknossos.utils import (
     copytree,
     dump_path,
@@ -603,6 +603,163 @@ def test_view_write(data_format: DataFormat, output_path: UPath) -> None:
     wk_view.write(write_data, allow_unaligned=True)
 
     data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    np.testing.assert_array_equal(data, write_data)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_read_cxyz(data_format: DataFormat, output_path: UPath) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path)
+
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
+        wk_view = (
+            Dataset.open(ds_path)
+            .get_layer("color")
+            .get_mag("1")
+            .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        )
+
+    data_cxyz = wk_view.read_cxyz(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    assert data_cxyz.shape == (3, 10, 10, 10)
+
+    # read_cxyz must return the same data as read() for standard axis ordering
+    data = wk_view.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    np.testing.assert_array_equal(data_cxyz, data)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_write_cxyz(data_format: DataFormat, output_path: UPath) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path)
+    with pytest.warns(UserWarning, match=".*not aligned with the shard shape.*"):
+        wk_view = (
+            Dataset.open(ds_path)
+            .get_layer("color")
+            .get_mag("1")
+            .get_view(absolute_offset=(0, 0, 0), size=(16, 16, 16))
+        )
+
+    np.random.seed(1234)
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+
+    wk_view.write_cxyz(write_data, allow_unaligned=True)
+
+    data = wk_view.read_cxyz(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    np.testing.assert_array_equal(data, write_data)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_read_cxyz_adds_channel_axis(
+    data_format: DataFormat, output_path: UPath
+) -> None:
+    if data_format == DataFormat.WKW:
+        pytest.skip(
+            "WKW requires (c, x, y, z) axes and cannot store channel-free layers"
+        )
+    ds_path = prepare_dataset_path(data_format, output_path)
+    layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer(
+        "segmentation",
+        SEGMENTATION_CATEGORY,
+        bounding_box=NDBoundingBox((0, 0, 0), (10, 10, 10), axes="xyz"),
+        data_format=data_format,
+        num_channels=1,
+    )
+    mag = layer.add_mag("1")
+
+    write_data = np.zeros((10, 10, 10), dtype=np.uint64)
+    mag.write(write_data, absolute_offset=(0, 0, 0))
+
+    data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    assert data.shape == (10, 10, 10)
+
+    data = mag.read_cxyz(absolute_offset=(0, 0, 0), size=(10, 10, 10))
+    assert data.shape == (1, 10, 10, 10)
+
+
+@pytest.mark.parametrize(
+    "layer_bbox,write_bbox,write_data,expected_shape",
+    [
+        (
+            NDBoundingBox(topleft=(0, 0), size=(10, 20), axes=("x", "y"), index=(0, 1)),
+            NDBoundingBox(topleft=(0, 0), size=(10, 20), axes=("x", "y"), index=(0, 1)),
+            np.arange(200, dtype=np.uint8).reshape(1, 10, 20, 1),
+            (1, 10, 20, 1),
+        ),
+        (
+            NDBoundingBox(
+                topleft=(0, 0, 0, 0, 0),
+                size=(1, 4, 4, 4, 2),
+                axes=("c", "x", "y", "z", "t"),
+                index=(0, 1, 2, 3, 4),
+            ),
+            NDBoundingBox(
+                topleft=(0, 0, 0, 0, 0),
+                size=(1, 4, 4, 4, 1),
+                axes=("c", "x", "y", "z", "t"),
+                index=(0, 1, 2, 3, 4),
+            ),
+            np.zeros((1, 4, 4, 4), dtype=np.uint8),
+            (1, 4, 4, 4),
+        ),
+        (
+            NDBoundingBox(
+                topleft=(0, 0, 0),
+                size=(10, 20, 5),
+                axes=("x", "y", "z"),
+                index=(0, 1, 2),
+            ),
+            NDBoundingBox(
+                topleft=(0, 0, 0),
+                size=(10, 20, 5),
+                axes=("x", "y", "z"),
+                index=(0, 1, 2),
+            ),
+            (np.arange(1000, dtype=np.uint8)).reshape(1, 10, 20, 5),
+            (1, 10, 20, 5),
+        ),
+    ],
+)
+def test_read_write_cxyz_axes(
+    tmp_path: UPath,
+    layer_bbox: NDBoundingBox,
+    write_bbox: NDBoundingBox,
+    write_data: np.ndarray,
+    expected_shape: tuple[int, ...],
+) -> None:
+    """read_cxyz/write_cxyz must work when the bounding box has no z axis."""
+    mag = (
+        Dataset(tmp_path / "ds", voxel_size=(1, 1, 1))
+        .add_layer("color", COLOR_CATEGORY, bounding_box=layer_bbox)
+        .add_mag("1")
+    )
+
+    mag.write_cxyz(write_data, absolute_bounding_box=write_bbox)
+
+    data = mag.read_cxyz(absolute_bounding_box=write_bbox)
+    assert data.shape == expected_shape, f"unexpected shape {data.shape}"
+    np.testing.assert_array_equal(data, write_data)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_write_cxyz_mag_view(data_format: DataFormat, output_path: UPath) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path)
+    layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer(
+        "color", COLOR_CATEGORY, num_channels=3
+    )
+    mag = layer.add_mag("1")
+
+    np.random.seed(1234)
+    write_data = (np.random.rand(3, 10, 10, 10) * 255).astype(np.uint8)
+
+    # without allow_resize should fail
+    with pytest.raises(
+        ValueError, match=".*does not fit in the layer's bounding box.*"
+    ):
+        mag.write_cxyz(write_data, absolute_offset=(0, 0, 0))
+
+    # with allow_resize should succeed and update the bounding box
+    mag.write_cxyz(write_data, absolute_offset=(0, 0, 0), allow_resize=True)
+
+    assert layer.bounding_box == BoundingBox((0, 0, 0), (10, 10, 10))
+    data = mag.read_cxyz(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     np.testing.assert_array_equal(data, write_data)
 
 
@@ -1431,7 +1588,11 @@ def test_changing_layer_bounding_box(
     assert original_data.shape == (3, 24, 24, 24)
 
     layer.bounding_box = layer.bounding_box.with_size(
-        [12, 12, 10]
+        [
+            12,
+            12,
+            10,
+        ]
     )  # decrease bounding box
 
     bbox_size = ds.get_layer("color").bounding_box.size
@@ -1441,7 +1602,11 @@ def test_changing_layer_bounding_box(
     np.testing.assert_array_equal(original_data[:, :12, :12, :10], less_data)
 
     layer.bounding_box = layer.bounding_box.with_size(
-        [36, 48, 60]
+        [
+            36,
+            48,
+            60,
+        ]
     )  # increase the bounding box
 
     bbox_size = ds.get_layer("color").bounding_box.size

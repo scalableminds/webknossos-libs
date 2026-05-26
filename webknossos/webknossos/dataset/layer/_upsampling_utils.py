@@ -52,7 +52,7 @@ def upsample_cube_job(
         ):
             shape = chunk.in_mag(target_view.mag).size.to_tuple()
             file_buffer = np.zeros(shape, dtype=target_view.get_dtype())
-            cube_buffer_channels = source_view.read_xyz(
+            cube_buffer_channels = source_view.read_cxyz(
                 absolute_bounding_box=chunk,
             )
 

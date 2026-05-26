@@ -128,5 +128,5 @@ def download_dataset(
                 data = np.frombuffer(chunk_bytes, dtype=layer.dtype).reshape(
                     layer.num_channels, *chunk_in_mag.size, order="F"
                 )
-                mag_view.write(data, absolute_offset=chunk.topleft)
+                mag_view.write_cxyz(data, absolute_offset=chunk.topleft)
     return dataset
