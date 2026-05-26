@@ -49,6 +49,7 @@ def _walk(
 
 
 def upload_mag(
+    *,
     dataset_id: str,
     layer_name: str,
     mag: MagView,
@@ -110,6 +111,7 @@ def upload_mag(
 
 
 def upload_attachment(
+    *,
     dataset_id: str,
     layer_name: str,
     attachment: Attachment,
