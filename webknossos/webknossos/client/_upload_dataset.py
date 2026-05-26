@@ -248,11 +248,11 @@ def upload_dataset(
     )
     with get_rich_progress() as progress:
         with Resumable(
-            f"{datastore_api_client.url_prefix}/datasets/upload/dataset",
+            datastore_api_client.dataset_upload_resumable_url(),
             simultaneous_uploads=simultaneous_uploads,
-            query={
-                "totalFileCount": len(file_infos),
-            },
+            query=datastore_api_client.dataset_upload_resumable_query(
+                context.organization_id, new_dataset_name, len(file_infos)
+            ),
             headers={"X-Auth-Token": context.token},
             chunk_size=100 * 1024 * 1024,  # 100 MiB
             generate_unique_identifier=lambda _, relative_path: (

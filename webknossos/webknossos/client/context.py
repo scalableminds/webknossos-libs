@@ -56,62 +56,77 @@ There are the following four options to specify which server context to use:
 import os
 from contextlib import ContextDecorator
 from contextvars import ContextVar, Token
-from functools import cache
+from dataclasses import dataclass
+from functools import cache, cached_property
 from typing import Any
 
-import attr
+import httpx
 from dotenv import load_dotenv
 
+from ..ssl_context import SSL_CONTEXT
 from ._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
-from .api_client import DatastoreApiClient, TracingStoreApiClient, WkApiClient
+from .api_client import (
+    DatastoreApiClient,
+    DatastoreApiClientV13,
+    TracingStoreApiClient,
+    WkApiClient,
+    WkApiClientV13,
+)
 
 load_dotenv()
 
 
 @cache
-def _cached_get_org(context: "_WebknossosContext") -> str:
-    current_api_user = context.api_client.user_current()
-    return current_api_user.organization
-
-
-@cache
-def _cached__get_api_client(
-    webknossos_url: str,
-    token: str | None,
-    timeout: int,
-) -> WkApiClient:
-    """Generates a client which might contain an X-Auth-Token header."""
-    return WkApiClient(
-        base_wk_url=webknossos_url,
-        headers={} if token is None else {"X-Auth-Token": token},
-        timeout_seconds=timeout,
-    )
+def _cached_detect_api_version(wk_url: str, timeout: int) -> int:
+    """Queries /api/buildinfo to determine the server's current API version."""
+    response = httpx.get(f"{wk_url}/api/buildinfo", timeout=timeout, verify=SSL_CONTEXT)
+    data = response.json()
+    current = data.get("httpApiVersioning", {}).get("currentApiVersion")
+    if current is None or not isinstance(current, int):
+        raise RuntimeError("Could not determine current API version.")
+    if current not in (13, 14):
+        raise RuntimeError(f"Unsupported API version: {current}")
+    return current
 
 
 def _clear_all_context_caches() -> None:
-    _cached_get_org.cache_clear()
-    _cached__get_api_client.cache_clear()
+    _cached_detect_api_version.cache_clear()
+    del _get_context().organization_id
+    del _get_context().api_client
 
 
-@attr.frozen
+@dataclass(kw_only=True)
 class _WebknossosContext:
     url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL).rstrip("/")
     token: str | None = os.environ.get("WK_TOKEN", default=None)
     timeout: int = int(os.environ.get("WK_TIMEOUT", default=DEFAULT_HTTP_TIMEOUT))
+    _api_version: int | None = None
 
     # all properties are cached outside to allow re-usability
     # if same context is instantiated twice
 
     @property
-    def organization_id(self) -> str:
-        return _cached_get_org(self)
+    def api_version(self) -> int:
+        if self._api_version is None:
+            self._api_version = _cached_detect_api_version(self.url, self.timeout)
+        return self._api_version
 
-    @property
+    @cached_property
+    def organization_id(self) -> str:
+        return self.api_client.user_current().organization
+
+    @cached_property
     def api_client(self) -> WkApiClient:
-        return _cached__get_api_client(self.url, self.token, self.timeout)
+        cls = WkApiClientV13 if self.api_version == 13 else WkApiClient
+        return cls(
+            base_wk_url=self.url,
+            headers={} if self.token is None else {"X-Auth-Token": self.token},
+            timeout_seconds=self.timeout,
+        )
 
     def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
-        return DatastoreApiClient(
+        cls = DatastoreApiClientV13 if self.api_version == 13 else DatastoreApiClient
+        return cls(
             datastore_base_url=datastore_url,
             headers={} if self.token is None else {"X-Auth-Token": self.token},
             timeout_seconds=self.timeout,
@@ -140,6 +155,7 @@ def login(
     url: str | None = None,
     token: str | None = None,
     timeout: int | None = None,
+    api_version: int | None = None,
 ) -> None:
     """Log into a WEBKNOSSOS server, changing the global context for the entire session.
 
@@ -152,6 +168,8 @@ def login(
         token: Authentication token from https://webknossos.org/account/token.
             If not provided, you will be prompted interactively.
         timeout: Network request timeout in seconds. Defaults to the current context timeout.
+        api_version: WEBKNOSSOS API version to use (13 or 14). Defaults to the current
+            context version (14 if not previously set).
 
     Example:
         ```python
@@ -163,13 +181,19 @@ def login(
     current = _get_context()
     resolved_url = current.url if url is None else url.rstrip("/")
     resolved_timeout = current.timeout if timeout is None else timeout
+    resolved_api_version = current.api_version if api_version is None else api_version
     if token is None:
         token = input(
             f"Please enter your WEBKNOSSOS token for {resolved_url}\n"
             f"(You can find it at {resolved_url}/account/token): "
         )
     _webknossos_context_var.set(
-        _WebknossosContext(resolved_url, token, resolved_timeout)
+        _WebknossosContext(
+            url=resolved_url,
+            token=token,
+            timeout=resolved_timeout,
+            _api_version=resolved_api_version,
+        )
     )
 
 
@@ -181,6 +205,7 @@ class webknossos_context(ContextDecorator):
         url: str | None = None,
         token: str | None = None,
         timeout: int | None = None,
+        api_version: int | None = None,
     ) -> None:
         """Creates a new WEBKNOSSOS server context manager.
 
@@ -193,6 +218,8 @@ class webknossos_context(ContextDecorator):
                 Must be specified explicitly.
             timeout: Network request timeout in seconds, defaults to 1800 (30 min).
                 Taken from previous context if not specified.
+            api_version: WEBKNOSSOS API version to use (13 or 14). Defaults to the
+                previous context version (14 if not previously set).
 
         Examples:
             Using as context manager:
@@ -215,14 +242,21 @@ class webknossos_context(ContextDecorator):
             (e.g. environment variables) if not specified explicitly. The token
             parameter must always be set explicitly.
         """
-        self._url = _get_context().url if url is None else url.rstrip("/")
+        current = _get_context()
+        self._url = current.url if url is None else url.rstrip("/")
         self._token = token
-        self._timeout = _get_context().timeout if timeout is None else timeout
+        self._timeout = current.timeout if timeout is None else timeout
+        self._api_version = current.api_version if api_version is None else api_version
         self._context_var_token_stack: list[Token[_WebknossosContext]] = []
 
     def __enter__(self) -> None:
         context_var_token = _webknossos_context_var.set(
-            _WebknossosContext(self._url, self._token, self._timeout)
+            _WebknossosContext(
+                url=self._url,
+                token=self._token,
+                timeout=self._timeout,
+                _api_version=self._api_version,
+            )
         )
         self._context_var_token_stack.append(context_var_token)
 

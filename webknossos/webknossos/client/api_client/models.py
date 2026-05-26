@@ -18,10 +18,17 @@ class ApiWkBuildInfoWebknossos:
 
 
 @attr.s(auto_attribs=True)
+class ApiHttpApiVersioning:
+    current_api_version: int
+    oldest_supported_api_version: int
+
+
+@attr.s(auto_attribs=True)
 class ApiWkBuildInfo:
     webknossos: ApiWkBuildInfoWebknossos
     local_data_store_enabled: bool
     local_tracing_store_enabled: bool
+    http_api_versioning: ApiHttpApiVersioning | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -151,6 +158,16 @@ class ApiDatasetUploadSuccess:
 
 
 @attr.s(auto_attribs=True)
+class ApiDatasetUploadInformationV13:
+    upload_id: str
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetUploadSuccessV13:
+    new_dataset_id: str
+
+
+@attr.s(auto_attribs=True)
 class ApiLinkedLayerIdentifier:
     dataset_id: str
     layer_name: str
@@ -204,6 +221,18 @@ class ApiDatasetUploadInfo:
     dataset_name: str
     organization_id: str
     initial_team_ids: list[str]
+    layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
+    folder_id: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveDatasetUploadInformationV13:
+    upload_id: str
+    name: str
+    organization: str
+    total_file_count: int
+    total_file_size_in_bytes: int
+    initial_teams: list[str]
     layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
     folder_id: str | None = None
 

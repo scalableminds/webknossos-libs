@@ -49,7 +49,7 @@ from ._abstract_api_client import AbstractApiClient
 
 
 class WkApiClient(AbstractApiClient):
-    # Client to use the HTTP API of WEBKNOSSOS servers.
+    # Client to use the HTTP API of WEBKNOSSOS servers (API v14+).
     # When adding a method here, use the utility methods from AbstractApiClient
     # and add more as needed.
     # Methods here are prefixed with the domain, e.g. dataset_update_teams (not update_dataset_teams)
@@ -489,3 +489,19 @@ class WkApiClient(AbstractApiClient):
         route = f"/aiModels/{ai_model_id}"
         ai_model = self._get_json(route, ApiAiModel)
         return ai_model
+
+
+class WkApiClientV13(WkApiClient):
+    def __init__(
+        self,
+        *,
+        base_wk_url: str,
+        timeout_seconds: float,
+        headers: dict[str, str] | None = None,
+    ):
+        super().__init__(
+            base_wk_url=base_wk_url,
+            timeout_seconds=timeout_seconds,
+            headers=headers,
+        )
+        self.webknossos_api_version = 13
