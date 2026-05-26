@@ -5,7 +5,6 @@ from functools import partial
 from math import ceil
 from typing import Annotated, Any
 
-import fastremap
 import numpy as np
 import typer
 from cluster_tools import Executor
@@ -19,7 +18,7 @@ from ..dataset._utils.tensorstore_helpers import open_zarr3_array
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..dataset_properties import SEGMENTATION_CATEGORY, AttachmentDataFormat
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import wait_and_ensure_success
+from ..utils import WkImportError, wait_and_ensure_success
 from ._utils import (
     AccessModeOption,
     DistributionStrategy,
@@ -71,6 +70,9 @@ def _slice_to_image(data_slice: np.ndarray, downsample: int = 1) -> np.ndarray:
 
 
 def _apply_mapping(data: np.ndarray, mapping_array: TensorStore) -> np.ndarray:
+    # This function will only be called after fastremap has been confirmed to be installed
+    import fastremap
+
     unique_ids = fastremap.unique(data)
     in_bounds = [i for i in unique_ids if i < mapping_array.shape[0]]
     out_of_bounds = [i for i in unique_ids if i >= mapping_array.shape[0]]
@@ -300,6 +302,15 @@ def main(
         mag_view = layer.get_mag(mag)
 
         if apply_mapping is not None:
+            try:
+                import fastremap  # noqa: F401
+            except ImportError as e:
+                raise WkImportError(
+                    "fastremap",
+                    "fastremap",
+                    custom_message="fastremap is required to use --apply-mapping. ",
+                ) from e
+
             if layer.category != SEGMENTATION_CATEGORY:
                 raise ValueError(
                     f"--apply-mapping requires a segmentation layer, "

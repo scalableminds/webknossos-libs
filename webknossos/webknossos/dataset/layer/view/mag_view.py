@@ -415,6 +415,54 @@ class MagView(View, Generic[LayerTypeT]):
             absolute_bounding_box=mag1_bbox,
         )
 
+    def write_cxyz(
+        self,
+        data: np.ndarray,
+        *,
+        allow_resize: bool = False,
+        allow_unaligned: bool = False,
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
+    ) -> None:
+        """Write data from a (c, x, y, z) ordered array to the magnification level.
+
+        Equivalent to :meth:`write` but always accepts data in ``(c, x, y, z)`` axis
+        order regardless of the underlying storage axis ordering.
+
+        Args:
+            data (np.ndarray): 4D array in ``(c, x, y, z)`` order.
+            allow_resize (bool, optional): If True, allows updating the layer's
+                bounding box if the write extends beyond it. Defaults to False.
+            allow_unaligned (bool, optional): If True, allows writing data without
+                being aligned to the shard shape. Defaults to False.
+            relative_offset (Vec3IntLike | None, optional): Offset relative to view's
+                position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box
+                relative to view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding
+                box in Mag(1) coordinates. Defaults to None.
+        """
+        assert len(data.shape) == 4, (
+            f"write_cxyz expects a 4D (c, x, y, z) array, got shape {data.shape}"
+        )
+        data, write_loc = self._resolve_cxyz_write(
+            data,
+            relative_offset,
+            absolute_offset,
+            relative_bounding_box,
+            absolute_bounding_box,
+        )
+        self.write(
+            data,
+            allow_resize=allow_resize,
+            allow_unaligned=allow_unaligned,
+            **write_loc,
+        )
+
     def get_bounding_boxes_on_disk(
         self,
     ) -> Iterator[NDBoundingBox]:

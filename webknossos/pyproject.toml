@@ -71,13 +71,14 @@ Changelog = "https://github.com/scalableminds/webknossos-libs/blob/master/webkno
 
 # A list of all of the optional dependencies. They can be opted into by other apps.
 [project.optional-dependencies]
+fastremap = ["fastremap ~=1.15.0"]
 tifffile = ["tifffile >=2024.8.24"]
 imagecodecs = ["imagecodecs >=2021.11.20"]
 bioformats = ["JPype1 ~=1.5.0"]
 czi = ["pylibCZIrw ==5.1.1"]
 s3 = ["s3fs >=2026.2.0"]
 examples = [
-    "fastremap ~=1.15.0",
+    "webknossos[fastremap]",
     "pandas ~=2.2.0",
     "pooch ~=1.5.2",
     "tabulate >=0.9.0",
@@ -86,6 +87,7 @@ examples = [
 ]
 all = [
     "webknossos[tifffile]",
+    "webknossos[fastremap]",
     "webknossos[imagecodecs]",
     "webknossos[bioformats]",
     "webknossos[czi]",

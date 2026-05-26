@@ -887,7 +887,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         Note:
             This method needs extra packages like tifffile or pylibczirw.
-            Install with `pip install "webknossos[all]"` and `pip install --extra-index-url https://pypi.scm.io/simple/ "webknossos[czi]"`.
+            Install with `pip install "webknossos[all]"`.
         """
 
         input_upath = UPath(input_path)
@@ -1353,7 +1353,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Please see the [pims docs](http://soft-matter.github.io/pims/v0.6.1/opening_files.html) for more information.
 
         This method needs extra packages like tifffile or pylibczirw. Please install the respective extras,
-        e.g. using `python -m pip install "webknossos[all]"`.
+        e.g. using `pip install "webknossos[all]"`.
 
         Further Arguments:
 
