@@ -89,27 +89,8 @@ def _cached_detect_api_version(wk_url: str, timeout: int) -> int:
     return current
 
 
-@cache
-def _cached_api_client(
-    wk_url: str, token: str | None, timeout: int, api_version: int
-) -> WkApiClient:
-    cls = WkApiClientV13 if api_version == 13 else WkApiClient
-    return cls(
-        base_wk_url=wk_url,
-        headers={} if token is None else {"X-Auth-Token": token},
-        timeout_seconds=timeout,
-    )
-
-
-@cache
-def _cached_get_organization_id(api_client: WkApiClient) -> str:
-    return api_client.user_current().organization
-
-
 def _clear_all_context_caches() -> None:
     _cached_detect_api_version.cache_clear()
-    _cached_api_client.cache_clear()
-    _cached_get_organization_id.cache_clear()
 
 
 @dataclass(kw_only=True, frozen=True)
