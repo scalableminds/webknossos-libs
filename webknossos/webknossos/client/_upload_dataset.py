@@ -56,6 +56,7 @@ def upload_mag(
     axis_order: dict[str, int],
     datastore_url: str | None = None,
     jobs: int | None = None,
+    overwrite_pending: bool = True,
 ) -> None:
     context = _get_context()
     file_infos = list(_walk(mag.path))
@@ -80,7 +81,7 @@ def upload_mag(
                 channel_index=None,
                 axis_order=axis_order,
             ),
-            overwritePending=True,  # TODO
+            overwritePending=overwrite_pending,
         ),
         retry_count=MAXIMUM_RETRY_COUNT,
     )
@@ -119,6 +120,7 @@ def upload_attachment(
     attachment: Attachment,
     datastore_url: str | None = None,
     jobs: int | None = None,
+    overwrite_pending: bool = True,
 ) -> None:
     context = _get_context()
     file_infos = list(_walk(attachment.path))
@@ -144,7 +146,7 @@ def upload_attachment(
                 path="dummy_path",
                 dataFormat=str(attachment.data_format),
             ),
-            overwritePending=True,  # TODO
+            overwritePending=overwrite_pending,
         ),
         retry_count=MAXIMUM_RETRY_COUNT,
     )

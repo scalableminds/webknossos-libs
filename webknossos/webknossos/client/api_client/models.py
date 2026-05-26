@@ -516,7 +516,7 @@ class ApiAdHocMeshInfo:
 
 
 @attr.s(auto_attribs=True)
-class ApiReserveDatasetUplaodToPathsParameters:
+class ApiReserveDatasetUploadToPathsParameters:
     dataset_name: str
     initial_team_ids: list[str]
     folder_id: str | None
@@ -539,6 +539,7 @@ class ApiReserveAttachmentUploadToPathParameters:
     attachment_type: str
     attachment_dataformat: str
     path_prefix: str | None
+    overwrite_pending: bool | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -584,6 +585,7 @@ class ApiReserveAiModelUploadToPathParameters:
     comment: str | None
     category: str | None
     path_prefix: str | None
+    overwrite_pending: bool
 
 
 @attr.s(auto_attribs=True)

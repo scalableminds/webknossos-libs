@@ -17,8 +17,8 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ..client.api_client.models import (
-    ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
+    ApiReserveDatasetUploadToPathsParameters,
 )
 from ..geometry import (
     BoundingBox,
@@ -673,7 +673,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         ):
             client = _get_api_client()
             response = client.reserve_dataset_upload_to_paths(
-                ApiReserveDatasetUplaodToPathsParameters(
+                ApiReserveDatasetUploadToPathsParameters(
                     dataset_name=new_dataset_name,
                     initial_team_ids=initial_team_ids or [],
                     folder_id=folder,

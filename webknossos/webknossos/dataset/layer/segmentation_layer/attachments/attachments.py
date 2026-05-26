@@ -325,6 +325,7 @@ class RemoteAttachments(AbstractAttachments):
         *,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_prefix: str | None = None,
+        overwrite_pending: bool = True,
     ) -> Attachment:
         target_dataset_id = self._layer.dataset.dataset_id
         from webknossos.client.context import _get_api_client
@@ -339,6 +340,7 @@ class RemoteAttachments(AbstractAttachments):
                 dataset_id=self._layer.dataset.dataset_id,
                 layer_name=self._layer.name,
                 attachment=attachment,
+                overwrite_pending=overwrite_pending,
             )
         else:
             new_path = enrich_path(

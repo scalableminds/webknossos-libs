@@ -24,9 +24,9 @@ from webknossos.client.api_client.models import (
     ApiProjectCreate,
     ApiReserveAiModelUploadToPathParameters,
     ApiReserveAttachmentUploadToPathParameters,
-    ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryResponse,
+    ApiReserveDatasetUploadToPathsParameters,
     ApiReserveDatasetUploadToPathsResponse,
     ApiReserveMagUploadToPathParameters,
     ApiSharingToken,
@@ -391,7 +391,7 @@ class WkApiClient(AbstractApiClient):
 
     def reserve_dataset_upload_to_paths(
         self,
-        reserve_dataset_upload_to_path_parameters: ApiReserveDatasetUplaodToPathsParameters,
+        reserve_dataset_upload_to_path_parameters: ApiReserveDatasetUploadToPathsParameters,
     ) -> ApiReserveDatasetUploadToPathsResponse:
         route = "/datasets/reserveUploadToPaths"
         return self._post_json_with_json_response(
@@ -420,6 +420,7 @@ class WkApiClient(AbstractApiClient):
         attachment_type: str,
         attachment_dataformat: str,
         common_storage_prefix: str | None = None,
+        overwrite_pending: bool = True,
     ) -> str:
         route = f"/datasets/{dataset_id}/reserveAttachmentUploadToPath"
         return self._post_json_with_json_response(
@@ -430,6 +431,7 @@ class WkApiClient(AbstractApiClient):
                 attachment_type,
                 attachment_dataformat,
                 common_storage_prefix,
+                overwrite_pending=overwrite_pending,
             ),
             str,
         )

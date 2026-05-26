@@ -106,6 +106,7 @@ class RemoteLayer(AbstractLayer):
                     layer_name=self.name,
                     mag=foreign_mag_view,
                     axis_order=axis_order,
+                    overwrite_pending=overwrite_pending,
                 )
             else:
                 reserve_parameters = ApiReserveMagUploadToPathParameters(
