@@ -321,7 +321,7 @@ def downsample_cube_job(
 
             bbox = source_bbox.offset(source_offset).with_size_xyz(source_size)
 
-            cube_buffer_channels = source_view.read_xyz(
+            cube_buffer_channels = source_view.read_cxyz(
                 absolute_bounding_box=bbox,
             )
 

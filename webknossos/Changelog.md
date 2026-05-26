@@ -13,9 +13,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...HEAD)
 
 ### Breaking Changes
+- `View.read_xyz` is deprecated in favor of `View.read_cxyz`. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
 
 ### Added
 - Added support for reading MRC files using the `mrcfile` package. [#1465](https://github.com/scalableminds/webknossos-libs/pull/1465)
+- Added `View.read_cxyz` and `View.write_cxyz` to read and write arrays with guaranteed cxyz axis ordering. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
 
 ### Changed
 

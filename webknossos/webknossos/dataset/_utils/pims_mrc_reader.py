@@ -2,14 +2,12 @@ import numpy as np
 from pims import FramesSequenceND
 from upath import UPath
 
-from ...utils import is_remote_path
+from ...utils import WkImportError, is_remote_path
 
 try:
     import mrcfile
 except ImportError as e:
-    raise ImportError(
-        "Cannot import mrcfile, please install it e.g. using 'webknossos[mrcfile]'"
-    ) from e
+    raise WkImportError("mrcfile", "mrcfile") from e
 
 
 class PimsMrcReader(FramesSequenceND):

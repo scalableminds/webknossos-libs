@@ -269,8 +269,18 @@ class VecInt(Sequence[int]):
         return self.with_replaced(self._z_pos, new_z)
 
     def with_xyz(self: _T, new_xyz: "Vec3Int") -> _T:
-        """Returns a new ND Vector with the x, y and z components replaced by the given vector."""
-        return self.with_x(new_xyz.x).with_y(new_xyz.y).with_z(new_xyz.z)
+        """Returns a new ND Vector with the x, y and z components replaced by the given vector.
+
+        Components absent from this vector are silently skipped.
+        """
+        result: _T = self
+        if self._x_pos is not None:
+            result = result.with_x(new_xyz.x)
+        if self._y_pos is not None:
+            result = result.with_y(new_xyz.y)
+        if self._z_pos is not None:
+            result = result.with_z(new_xyz.z)
+        return result
 
     def to_np(self) -> np.ndarray:
         """

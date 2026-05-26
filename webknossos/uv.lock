@@ -2837,6 +2837,9 @@ examples = [
     { name = "scikit-learn" },
     { name = "tabulate" },
 ]
+fastremap = [
+    { name = "fastremap" },
+]
 imagecodecs = [
     { name = "imagecodecs", version = "2025.3.30", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "imagecodecs", version = "2025.11.11", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -2881,7 +2884,7 @@ requires-dist = [
     { name = "certifi", specifier = ">=2023" },
     { name = "click", specifier = "<8.2.0" },
     { name = "cluster-tools", editable = "../cluster_tools" },
-    { name = "fastremap", marker = "extra == 'examples'", specifier = "~=1.15.0" },
+    { name = "fastremap", marker = "extra == 'fastremap'", specifier = "~=1.15.0" },
     { name = "google-api-python-client", specifier = ">=2.0.0" },
     { name = "httpx", specifier = "~=0.27.0" },
     { name = "imagecodecs", marker = "extra == 'imagecodecs'", specifier = ">=2021.11.20" },
@@ -2916,6 +2919,8 @@ requires-dist = [
     { name = "webknossos", extras = ["bioformats"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["czi"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["examples"], marker = "extra == 'all'" },
+    { name = "webknossos", extras = ["fastremap"], marker = "extra == 'all'" },
+    { name = "webknossos", extras = ["fastremap"], marker = "extra == 'examples'" },
     { name = "webknossos", extras = ["imagecodecs"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["mrcfile"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["s3"], marker = "extra == 'all'" },
@@ -2923,7 +2928,7 @@ requires-dist = [
     { name = "wkw", specifier = "==1.1.24" },
     { name = "zipp", specifier = ">=3.5.0,<4.0.0" },
 ]
-provides-extras = ["tifffile", "imagecodecs", "bioformats", "czi", "mrcfile", "s3", "examples", "all"]
+provides-extras = ["fastremap", "tifffile", "imagecodecs", "bioformats", "czi", "mrcfile", "s3", "examples", "all"]
 
 [package.metadata.requires-dev]
 dev = [
