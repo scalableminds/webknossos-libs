@@ -2,6 +2,8 @@ import numpy as np
 from pims import FramesSequenceND
 from upath import UPath
 
+from ...utils import is_remote_path
+
 try:
     import mrcfile
 except ImportError as e:
@@ -23,6 +25,11 @@ class PimsMrcReader(FramesSequenceND):
     def __init__(self, path: UPath) -> None:
         super().__init__()
         self.path = UPath(path)
+
+        if is_remote_path(self.path):
+            raise ValueError(
+                f"Cannot open MRC file from {self.path}. The path must be a local file path."
+            )
 
         with mrcfile.mmap(str(self.path), mode="r", permissive=True) as mrc:
             if mrc.data is None:
