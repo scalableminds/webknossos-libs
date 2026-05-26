@@ -867,9 +867,11 @@ class Zarr2Array(TensorStoreArray):
         assert array_info.chunks_per_shard == Vec3Int.full(1), (
             "Zarr (version 2) doesn't support sharding, use Zarr3 instead."
         )
-        chunk_shape = (array_info.bounding_box.size.c,) + tuple(
-            getattr(array_info.chunk_shape, axis, 1)
-            for axis in array_info.bounding_box.axes[1:]
+        chunk_shape = tuple(
+            array_info.bounding_box.size.c
+            if axis == "c"
+            else getattr(array_info.chunk_shape, axis, 1)
+            for axis in array_info.bounding_box.axes
         )
         shape = tuple(
             shape_a - (shape_a % chunk_shape_a)

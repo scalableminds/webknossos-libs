@@ -369,23 +369,25 @@ class NDBoundingBox:
             raise KeyError(f"Axis {axis_name} doesn't exist in NDBoundingBox.") from err
 
     def _get_attr_xyz(self, attr_name: str) -> Vec3Int:
-        axes = ("x", "y", "z")
         attr_3d = []
 
-        for axis in axes:
-            index = self.axes.index(axis)
-            attr_3d.append(getattr(self, attr_name)[index])
+        for axis in ("x", "y", "z"):
+            if axis in self.axes:
+                index = self.axes.index(axis)
+                attr_3d.append(getattr(self, attr_name)[index])
+            else:
+                attr_3d.append(0)
 
         return Vec3Int(attr_3d)
 
     def _get_attr_with_replaced_xyz(self, attr_name: str, xyz: Vec3IntLike) -> VecInt:
         value = Vec3Int(xyz)
-        axes = ("x", "y", "z")
         modified_attr = getattr(self, attr_name).to_list()
 
-        for i, axis in enumerate(axes):
-            index = self.axes.index(axis)
-            modified_attr[index] = value[i]
+        for i, axis in enumerate(("x", "y", "z")):
+            if axis in self.axes:
+                index = self.axes.index(axis)
+                modified_attr[index] = value[i]
 
         return VecInt(modified_attr, axes=self.axes)
 
