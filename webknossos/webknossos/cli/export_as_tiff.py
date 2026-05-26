@@ -18,7 +18,7 @@ from ..dataset._utils.tensorstore_helpers import open_zarr3_array
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
 from ..dataset_properties import SEGMENTATION_CATEGORY, AttachmentDataFormat
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import wait_and_ensure_success
+from ..utils import WkImportError, wait_and_ensure_success
 from ._utils import (
     AccessModeOption,
     DistributionStrategy,
@@ -98,9 +98,11 @@ def export_tiff_slice_batch(
 
     mapping_array = None
     if mapping_path is not None:
-        ts_context = Context({
-            "cache_pool": {"total_bytes_limit": 10 * 1024**2},  # 10 MB
-        })
+        ts_context = Context(
+            {
+                "cache_pool": {"total_bytes_limit": 10 * 1024**2},  # 10 MB
+            }
+        )
         mapping_array = open_zarr3_array(mapping_path, context=ts_context)
 
     if tiling_size is None:
@@ -302,11 +304,12 @@ def main(
         if apply_mapping is not None:
             try:
                 import fastremap  # noqa: F401
-            except ImportError:
-                raise ImportError(
-                    "fastremap is required to use --apply-mapping. "
-                    "Please install with `pip install webknossos[fastremap]`."
-                )
+            except ImportError as e:
+                raise WkImportError(
+                    "fastremap",
+                    "fastremap",
+                    custom_message="fastremap is required to use --apply-mapping. ",
+                ) from e
 
             if layer.category != SEGMENTATION_CATEGORY:
                 raise ValueError(

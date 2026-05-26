@@ -5,12 +5,12 @@ import numpy as np
 from pims import FramesSequenceND
 from upath import UPath
 
+from ...utils import WkImportError
+
 try:
     from pylibCZIrw import czi as pyczi
 except ImportError as e:
-    raise ImportError(
-        "Cannot import pylibCZIrw, please install it e.g. using pip install webknossos[czi]"
-    ) from e
+    raise WkImportError("pylibCZIrw", "czi") from e
 
 PIXEL_TYPE_TO_DTYPE = {
     "Gray8": "<u1",

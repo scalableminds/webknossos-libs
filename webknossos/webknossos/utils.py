@@ -640,3 +640,18 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
         endpoint_url = path.storage_options["endpoint_url"]
         return f"s3://{urlparse(endpoint_url).netloc}/{path.path}"
     return path.as_posix()
+
+
+class WkImportError(ImportError):
+    """Exception raised when a dependency is missing."""
+
+    def __init__(
+        self,
+        missing_package: str,
+        extras: str = "all",
+        custom_message: str | None = None,
+    ) -> None:
+        msg = (
+            custom_message or f"Cannot import {missing_package}. "
+        ) + f"Please install it e.g. using `pip install webknossos[{extras}]`."
+        super().__init__(msg)
