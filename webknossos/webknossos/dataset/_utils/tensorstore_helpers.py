@@ -95,7 +95,7 @@ def _make_kvstore(path: UPath) -> str | dict[str, str | list[str]]:
         else:
             kvstore_spec["aws_credentials"] = {"type": "default"}
         return kvstore_spec
-    elif path.protocol == "gs":
+    elif path.protocol in ("gs", "gcs"):
         parsed_url = urlparse(str(path))
         return {
             "driver": "gcs",
