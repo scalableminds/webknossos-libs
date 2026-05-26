@@ -32,6 +32,6 @@ def test_login() -> None:
         assert _get_context().token == "test_token"
 
         # Nested webknossos_context overrides login, then restores it on exit
-        with webknossos_context(token="nested_token", api_version=14):
+        with webknossos_context(token="nested_token"):
             assert _get_context().token == "nested_token"
         assert _get_context().token == "test_token"

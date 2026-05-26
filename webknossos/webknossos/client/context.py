@@ -261,7 +261,7 @@ class webknossos_context(ContextDecorator):
         self._url = current.url if url is None else url.rstrip("/")
         self._token = token
         self._timeout = current.timeout if timeout is None else timeout
-        self._api_version = current.api_version if api_version is None else api_version
+        self._api_version = current._api_version if api_version is None else api_version
         self._context_var_token_stack: list[Token[_WebknossosContext]] = []
 
     def __enter__(self) -> None:
