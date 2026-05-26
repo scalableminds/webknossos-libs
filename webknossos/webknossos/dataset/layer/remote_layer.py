@@ -97,6 +97,7 @@ class RemoteLayer(AbstractLayer):
                     foreign_layer_bbox.axes, foreign_layer_bbox.index
                 )
             }
+            channel_index = foreign_layer_bbox.topleft.get("c", None)
 
             if transfer_mode == TransferMode.HTTP:
                 from ...client._upload_dataset import upload_mag
@@ -106,6 +107,7 @@ class RemoteLayer(AbstractLayer):
                     layer_name=self.name,
                     mag=foreign_mag_view,
                     axis_order=axis_order,
+                    channel_index=channel_index,
                     overwrite_pending=overwrite_pending,
                 )
             else:
@@ -113,7 +115,7 @@ class RemoteLayer(AbstractLayer):
                     layer_name=self.name,
                     mag=foreign_mag_view.mag.to_list(),
                     axis_order=axis_order,
-                    channel_index=None,
+                    channel_index=channel_index,
                     path_prefix=common_storage_path_prefix,
                     overwrite_pending=overwrite_pending,
                 )

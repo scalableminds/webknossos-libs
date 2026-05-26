@@ -54,6 +54,7 @@ def upload_mag(
     layer_name: str,
     mag: MagView,
     axis_order: dict[str, int],
+    channel_index: int | None,
     datastore_url: str | None = None,
     jobs: int | None = None,
     overwrite_pending: bool = True,
@@ -78,7 +79,7 @@ def upload_mag(
             layer_name=layer_name,
             mag=ApiMagProperties(
                 mag=mag.mag.to_tuple(),
-                channel_index=None,
+                channel_index=channel_index,
                 axis_order=axis_order,
             ),
             overwritePending=overwrite_pending,
