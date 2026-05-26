@@ -43,6 +43,11 @@ def _pims_imports() -> str | None:
     except ImportError as import_error:
         import_exceptions.append(f"PimsTiffReader: {import_error.msg}")
 
+    try:
+        from .pims_mrc_reader import PimsMrcReader  # noqa: F401 unused-import
+    except ImportError as import_error:
+        import_exceptions.append(f"PimsMrcReader: {import_error.msg}")
+
     if import_exceptions:
         import_exception_string = "".join(
             f"\t- {import_exception}\n" for import_exception in import_exceptions
