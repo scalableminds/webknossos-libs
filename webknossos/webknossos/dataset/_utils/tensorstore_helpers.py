@@ -95,6 +95,13 @@ def _make_kvstore(path: UPath) -> str | dict[str, str | list[str]]:
         else:
             kvstore_spec["aws_credentials"] = {"type": "default"}
         return kvstore_spec
+    elif path.protocol in ("gs", "gcs"):
+        parsed_url = urlparse(str(path))
+        return {
+            "driver": "gcs",
+            "path": parsed_url.path.lstrip("/"),
+            "bucket": parsed_url.netloc,
+        }
     elif path.protocol == "memory":
         # use memory driver (in-memory file systems), e.g. useful for testing
         # attention: this is not a persistent storage and it does not support
