@@ -75,6 +75,11 @@ plugins:
       is_video: False
       mark: "youtube-video"
   - glightbox
+  - llmstxt:
+      full_output: llms-full.txt
+      sections:
+        API Reference:
+          - api/**/*.md
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -302,6 +307,7 @@ nav:
         - Team: api/webknossos/administration/team.md
         - Project: api/webknossos/administration/project.md
         - Task: api/webknossos/administration/task.md
+      - LLMs.txt: https://docs.webknossos.org/llms.txt" target="_blank
     - CLI Reference:
       - Overview: cli/index.md
       - Install and Run: cli/install.md

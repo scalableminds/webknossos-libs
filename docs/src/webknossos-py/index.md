@@ -30,6 +30,11 @@ To get started, check out the [installation instructions](installation.md) and t
     - Up- & downloading annotations and datasets
     - Read datasets from the WEBKNOSSOS server in a streaming fashion 
 
+## LLM-Friendly Docs
+
+The API reference is available in [llms.txt](https://docs.webknossos.org/llms.txt) format for use with AI coding assistants and LLMs.
+A [llms-full.txt](https://docs.webknossos.org/llms-full.txt) version with the full content of each page is also available.
+
 ## Source Code
 
 The `webknossos` Python package is [open-source on GitHub](https://github.com/scalableminds/webknossos-libs). Feel free to report bugs there or open pull requests with your features and fixes.
