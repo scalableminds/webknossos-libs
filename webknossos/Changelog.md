@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `overwrite_pending` parameter (defaults to True) to `RemoteAttachments.add_add_attachment_as_copy`. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
 - Added support for reading MRC files using the `mrcfile` package. [#1465](https://github.com/scalableminds/webknossos-libs/pull/1465)
 - Added `View.read_cxyz` and `View.write_cxyz` to read and write arrays with guaranteed cxyz axis ordering. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
+- Added support for mag views on `gs://`. [#1466](https://github.com/scalableminds/webknossos-libs/pull/1466)
 
 ### Changed
 - Updated the api version of the webknossos-api to 14. Version 13 is still supported. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450])
