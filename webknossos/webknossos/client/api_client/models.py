@@ -18,17 +18,10 @@ class ApiWkBuildInfoWebknossos:
 
 
 @attr.s(auto_attribs=True)
-class ApiHttpApiVersioning:
-    current_api_version: int
-    oldest_supported_api_version: int
-
-
-@attr.s(auto_attribs=True)
 class ApiWkBuildInfo:
     webknossos: ApiWkBuildInfoWebknossos
     local_data_store_enabled: bool
     local_tracing_store_enabled: bool
-    http_api_versioning: ApiHttpApiVersioning | None = None
 
 
 @attr.s(auto_attribs=True)

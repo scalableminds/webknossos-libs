@@ -35,6 +35,29 @@ def _cached_get_upload_datastore(context: _WebknossosContext) -> str:
         return Datastore.get_upload_url()
 
 
+def _make_resumable(
+    target: str,
+    *,
+    simultaneous_uploads: int,
+    query: dict[str, str | int],
+    context: _WebknossosContext,
+    upload_id: str,
+) -> Resumable:
+    return Resumable(
+        target=target,
+        simultaneous_uploads=simultaneous_uploads,
+        query=query,
+        headers={"X-Auth-Token": context.token},
+        chunk_size=100 * 1024 * 1024,  # 100 MiB
+        generate_unique_identifier=lambda _, relative_path: (
+            f"{upload_id}/{relative_path.as_posix()}"
+        ),
+        test_chunks=False,
+        permanent_errors=RESUMABLE_PERMANENT_ERROR_CODES,
+        client=httpx.Client(timeout=None),
+    )
+
+
 def _walk(
     path: UPath,
     base_path: UPath | None = None,
@@ -87,20 +110,14 @@ def upload_mag(
         retry_count=MAXIMUM_RETRY_COUNT,
     )
     with get_rich_progress() as progress:
-        with Resumable(
+        with _make_resumable(
             f"{datastore_api_client.url_prefix}/datasets/upload/mag",
             simultaneous_uploads=simultaneous_uploads,
             query={
                 "totalFileCount": len(file_infos),
             },
-            headers={"X-Auth-Token": context.token},
-            chunk_size=100 * 1024 * 1024,  # 100 MiB
-            generate_unique_identifier=lambda _, relative_path: (
-                f"{upload_id}/{relative_path.as_posix()}"
-            ),
-            test_chunks=False,
-            permanent_errors=RESUMABLE_PERMANENT_ERROR_CODES,
-            client=httpx.Client(timeout=None),
+            context=context,
+            upload_id=upload_id,
         ) as session:
             progress_task = progress.add_task("Mag Upload", total=total_file_size)
             for file_path, relative_path, _ in file_infos:
@@ -152,20 +169,14 @@ def upload_attachment(
         retry_count=MAXIMUM_RETRY_COUNT,
     )
     with get_rich_progress() as progress:
-        with Resumable(
+        with _make_resumable(
             f"{datastore_api_client.url_prefix}/datasets/upload/attachment",
             simultaneous_uploads=simultaneous_uploads,
             query={
                 "totalFileCount": len(file_infos),
             },
-            headers={"X-Auth-Token": context.token},
-            chunk_size=100 * 1024 * 1024,  # 100 MiB
-            generate_unique_identifier=lambda _, relative_path: (
-                f"{upload_id}/{relative_path.as_posix()}"
-            ),
-            test_chunks=False,
-            permanent_errors=RESUMABLE_PERMANENT_ERROR_CODES,
-            client=httpx.Client(timeout=None),
+            context=context,
+            upload_id=upload_id,
         ) as session:
             progress_task = progress.add_task(
                 "Attachment Upload", total=total_file_size
@@ -254,20 +265,14 @@ def upload_dataset(
         retry_count=MAXIMUM_RETRY_COUNT,
     )
     with get_rich_progress() as progress:
-        with Resumable(
+        with _make_resumable(
             datastore_api_client.dataset_upload_resumable_url(),
             simultaneous_uploads=simultaneous_uploads,
             query=datastore_api_client.dataset_upload_resumable_query(
                 context.organization_id, new_dataset_name, len(file_infos)
             ),
-            headers={"X-Auth-Token": context.token},
-            chunk_size=100 * 1024 * 1024,  # 100 MiB
-            generate_unique_identifier=lambda _, relative_path: (
-                f"{upload_id}/{relative_path.as_posix()}"
-            ),
-            test_chunks=False,
-            permanent_errors=RESUMABLE_PERMANENT_ERROR_CODES,
-            client=httpx.Client(timeout=None),
+            context=context,
+            upload_id=upload_id,
         ) as session:
             progress_task = progress.add_task("Dataset Upload", total=total_file_size)
             for file_path, relative_path, _ in file_infos:

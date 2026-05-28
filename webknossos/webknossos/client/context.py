@@ -75,18 +75,43 @@ from .api_client import (
 
 load_dotenv()
 
+LIBRARY_SUPPORTED_API_VERSIONS = {13, 14}
+
 
 @cache
 def _cached_detect_api_version(wk_url: str, timeout: int) -> int:
     """Queries /api/buildinfo to determine the server's current API version."""
     response = httpx.get(f"{wk_url}/api/buildinfo", timeout=timeout, verify=SSL_CONTEXT)
     data = response.json()
-    current = data.get("httpApiVersioning", {}).get("currentApiVersion")
-    if current is None or not isinstance(current, int):
-        raise RuntimeError("Could not determine current API version.")
-    if current not in (13, 14):
-        raise RuntimeError(f"Unsupported API version: {current}")
-    return current
+    current_server_api_version = data.get("httpApiVersioning", {}).get(
+        "currentApiVersion"
+    )
+    oldest_server_api_version = data.get("httpApiVersioning", {}).get(
+        "oldestSupportedApiVersion"
+    )
+    if current_server_api_version is None or not isinstance(
+        current_server_api_version, int
+    ):
+        raise RuntimeError(
+            f"Could not determine current API version of the WEBKNOSSOS server at {wk_url}."
+        )
+    if oldest_server_api_version is None or not isinstance(
+        oldest_server_api_version, int
+    ):
+        raise RuntimeError(
+            f"Could not determine oldest supported API version of the WEBKNOSSOS server at {wk_url}."
+        )
+    server_api_versions = set(
+        range(oldest_server_api_version, current_server_api_version + 1)
+    )
+    overlap = server_api_versions.intersection(LIBRARY_SUPPORTED_API_VERSIONS)
+    if len(overlap) == 0:
+        raise RuntimeError(
+            f"The WEBKNOSSOS server at {wk_url} does not support any of the API versions that this version of the webknossos python library supports. "
+            + f"Server supports {min(server_api_versions)} to {max(server_api_versions)}, "
+            + f"client supports {min(LIBRARY_SUPPORTED_API_VERSIONS)} to {max(LIBRARY_SUPPORTED_API_VERSIONS)}."
+        )
+    return max(overlap)
 
 
 def _clear_all_context_caches() -> None:
@@ -105,7 +130,7 @@ class _WebknossosContext:
 
     @property
     def api_version(self) -> int:
-        return _cached_detect_api_version(self.url, self.timeout)
+        return self._api_version or _cached_detect_api_version(self.url, self.timeout)
 
     @cached_property
     def organization_id(self) -> str:
@@ -164,8 +189,7 @@ def login(
         token: Authentication token from https://webknossos.org/account/token.
             If not provided, you will be prompted interactively.
         timeout: Network request timeout in seconds. Defaults to the current context timeout.
-        api_version: WEBKNOSSOS API version to use (13 or 14). Defaults to the current
-            context version (14 if not previously set).
+        api_version: WEBKNOSSOS API version to use. Defaults to the current context version.
 
     Example:
         ```python
@@ -214,8 +238,7 @@ class webknossos_context(ContextDecorator):
                 Must be specified explicitly.
             timeout: Network request timeout in seconds, defaults to 1800 (30 min).
                 Taken from previous context if not specified.
-            api_version: WEBKNOSSOS API version to use (13 or 14). Defaults to the
-                previous context version (14 if not previously set).
+            api_version: WEBKNOSSOS API version to use. Defaults to the previous context version.
 
         Examples:
             Using as context manager:

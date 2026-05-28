@@ -16,7 +16,7 @@ from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
 
 
 class DatastoreApiClient(AbstractApiClient):
-    # Client to use the HTTP API of WEBKNOSSOS datastore servers (API v14+).
+    # Client to use the HTTP API of WEBKNOSSOS datastore servers.
     # When adding a method here, use the utility methods from AbstractApiClient
     # and add more as needed.
     # Methods here are prefixed with the domain, e.g. dataset_finish_upload (not finish_dataset_upload)

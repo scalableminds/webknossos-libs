@@ -49,7 +49,7 @@ from ._abstract_api_client import AbstractApiClient
 
 
 class WkApiClient(AbstractApiClient):
-    # Client to use the HTTP API of WEBKNOSSOS servers (API v14+).
+    # Client to use the HTTP API of WEBKNOSSOS servers.
     # When adding a method here, use the utility methods from AbstractApiClient
     # and add more as needed.
     # Methods here are prefixed with the domain, e.g. dataset_update_teams (not update_dataset_teams)
