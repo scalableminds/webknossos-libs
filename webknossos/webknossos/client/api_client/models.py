@@ -578,7 +578,6 @@ class ApiReserveAiModelUploadToPathParameters:
     comment: str | None
     category: str | None
     path_prefix: str | None
-    overwrite_pending: bool
 
 
 @attr.s(auto_attribs=True)

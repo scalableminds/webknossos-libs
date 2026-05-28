@@ -37,7 +37,6 @@ class RemoteAiModel:
         category: AiModelCategory | None,
         path_prefix: str | None,
         transfer_mode: TransferMode = TransferMode.COPY,
-        overwrite_pending: bool = True,
     ) -> "RemoteAiModel":
         if transfer_mode == TransferMode.HTTP:
             raise ValueError("HTTP transfer mode is not supported for this method")
@@ -52,7 +51,6 @@ class RemoteAiModel:
                 comment,
                 category.value if category is not None else None,
                 path_prefix,
-                overwrite_pending=overwrite_pending,
             )
         )
 

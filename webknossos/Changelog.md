@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - `RemoteDataset.add_layer_as_copy`, `RemoteLayer.add_mag_as_copy` and `RemoteAttachments.add_add_attachment_as_copy` now accept `transfer_mode=TransferMode.HTTP`. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
 - Added support for older WEBKNOSSOS server API versions. The oldest currently supported API version is v13. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
-- Added `overwrite_pending` parameter (defaults to True) to `RemoteAiModel.upload_from_path` and `RemoteAttachments.add_add_attachment_as_copy`. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
+- Added `overwrite_pending` parameter (defaults to True) to `RemoteAttachments.add_add_attachment_as_copy`. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
 - Added support for reading MRC files using the `mrcfile` package. [#1465](https://github.com/scalableminds/webknossos-libs/pull/1465)
 - Added `View.read_cxyz` and `View.write_cxyz` to read and write arrays with guaranteed cxyz axis ordering. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
 
