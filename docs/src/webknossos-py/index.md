@@ -32,8 +32,8 @@ To get started, check out the [installation instructions](installation.md) and t
 
 ## LLM-Friendly Docs
 
-The API reference is available in [llms.txt](https://docs.webknossos.org/llms.txt) format for use with AI coding assistants and LLMs.
-A [llms-full.txt](https://docs.webknossos.org/llms-full.txt) version with the full content of each page is also available.
+The API reference is available in [llms.txt](../llms.txt) format for use with AI coding assistants and LLMs.
+A [llms-full.txt](../llms-full.txt) version with the full content of each page is also available.
 
 ## Source Code
 
