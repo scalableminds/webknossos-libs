@@ -3,6 +3,7 @@ import calendar
 import functools
 import json
 import logging
+import mimetypes
 import os
 import time
 import warnings
@@ -359,10 +360,12 @@ def copytree(
 
     def _copy(args: tuple[UPath, UPath, tuple[str, ...]]) -> None:
         in_path, out_path, sub_path = args
-
+        dest = _append(out_path, sub_path)
+        content_type, _ = mimetypes.guess_type(dest.name)
+        write_kwargs = {"ContentType": content_type} if content_type is not None else {}
         with (
             _append(in_path, sub_path).open("rb") as in_file,
-            _append(out_path, sub_path).open("wb") as out_file,
+            dest.open("wb", **write_kwargs) as out_file,
         ):
             copyfileobj(in_file, out_file)
 
