@@ -362,7 +362,11 @@ def copytree(
         in_path, out_path, sub_path = args
         dest = _append(out_path, sub_path)
         content_type, _ = mimetypes.guess_type(dest.name)
-        write_kwargs = {"ContentType": content_type} if content_type is not None else {}
+        write_kwargs = (
+            {"ContentType": content_type}
+            if content_type is not None and dest.protocol == "s3"
+            else {}
+        )
         with (
             _append(in_path, sub_path).open("rb") as in_file,
             dest.open("wb", **write_kwargs) as out_file,
