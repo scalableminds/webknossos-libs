@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.0) - 2026-06-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...v3.5.0)
 
 ### Breaking Changes
 - `existing_id`, `data_store_name`, `name`, `comment`, `category`, `path_prefix` and `transfer_mode` in `RemoteAiModel.upload_from_path` are now keyword-only arguments. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
@@ -26,8 +38,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Updated the api version of the webknossos-api to 14. Version 13 is still supported. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450])
-
-### Fixed
 
 
 ## [3.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.3) - 2026-05-06
