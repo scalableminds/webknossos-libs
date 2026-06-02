@@ -362,7 +362,7 @@ def copytree(
         in_path, out_path, sub_path = args
         dest = _append(out_path, sub_path)
         content_type, _ = mimetypes.guess_type(dest.name)
-        write_kwargs = (
+        write_kwargs: dict[str, Any] = (
             {"ContentType": content_type}
             if content_type is not None and dest.protocol == "s3"
             else {}
