@@ -157,7 +157,7 @@ def test_annotation_from_file_with_multi_volume() -> None:
             pass
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 def test_dataset_access_via_annotation() -> None:
     # This is a regression test for a bug occurring when the dataset name was changed
     # while it was referenced in an annotation.
@@ -186,7 +186,7 @@ def test_dataset_access_via_annotation() -> None:
     remote_ds.name = "l4_sample"
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 def test_remote_annotation_list() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     annotation_from_file = wk.Annotation.load(path)
@@ -197,7 +197,7 @@ def test_remote_annotation_list() -> None:
     assert annotation_from_file.name in [a.name for a in annotations]
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 @pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows")
 def test_annotation_upload_download_roundtrip() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
@@ -275,7 +275,7 @@ def test_reading_bounding_boxes() -> None:
         check_properties(annotation_deserialized)
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 def test_bounding_box_roundtrip() -> None:
     ds = wk.RemoteDataset.open("l4_sample")
 
@@ -410,7 +410,7 @@ def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode, executor: str) -
             assert len(seg_layer.mags) == 1
             mag = seg_layer.get_mag(1)
             read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-            assert np.array_equal(data, read_data)
+            np.testing.assert_array_equal(data, read_data)
 
 
 def test_edited_volume_annotation_format() -> None:
@@ -463,7 +463,7 @@ def test_edited_volume_annotation_format() -> None:
         codec["name"] for codec in metadata["codecs"]
     ]
     data_read = ts.read().result()[0, :10, :10, :10]
-    assert np.array_equal(data, data_read)
+    np.testing.assert_array_equal(data, data_read)
 
 
 @pytest.mark.parametrize(
@@ -493,10 +493,10 @@ def test_edited_volume_annotation_save_load(edit_mode: VolumeLayerEditMode) -> N
         assert len(seg_layer.mags) == 1
         mag = seg_layer.get_mag(1)
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-        assert np.array_equal(data, read_data)
+        np.testing.assert_array_equal(data, read_data)
 
 
-@pytest.mark.use_proxay
+@pytest.mark.skip_on_windows
 def test_edited_volume_annotation_upload_download() -> None:
     data = np.ones((1, 10, 10, 10))
 
@@ -529,4 +529,4 @@ def test_edited_volume_annotation_upload_download() -> None:
         assert len(seg_layer.mags) == 1
         mag = seg_layer.get_mag(1)
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
-        assert np.array_equal(data, read_data)
+        np.testing.assert_array_equal(data, read_data)

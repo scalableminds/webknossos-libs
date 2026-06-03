@@ -14,29 +14,29 @@
         "height": 1024,
         "depth": 1024
       },
-      "wkwResolutions": [
+      "mags": [
         {
-          "resolution": [1, 1, 1],
+          "mag": [1, 1, 1],
           "cubeLength": 1024
         },
         {
-          "resolution": [16, 16, 16],
+          "mag": [16, 16, 16],
           "cubeLength": 64
         },
         {
-          "resolution": [2, 2, 2],
+          "mag": [2, 2, 2],
           "cubeLength": 512
         },
         {
-          "resolution": [32, 32, 32],
+          "mag": [32, 32, 32],
           "cubeLength": 32
         },
         {
-          "resolution": [4, 4, 4],
+          "mag": [4, 4, 4],
           "cubeLength": 256
         },
         {
-          "resolution": [8, 8, 8],
+          "mag": [8, 8, 8],
           "cubeLength": 128
         }
       ],
@@ -51,29 +51,29 @@
         "height": 1024,
         "depth": 1024
       },
-      "wkwResolutions": [
+      "mags": [
         {
-          "resolution": [1, 1, 1],
+          "mag": [1, 1, 1],
           "cubeLength": 1024
         },
         {
-          "resolution": [16, 16, 16],
+          "mag": [16, 16, 16],
           "cubeLength": 64
         },
         {
-          "resolution": [2, 2, 2],
+          "mag": [2, 2, 2],
           "cubeLength": 512
         },
         {
-          "resolution": [32, 32, 32],
+          "mag": [32, 32, 32],
           "cubeLength": 32
         },
         {
-          "resolution": [4, 4, 4],
+          "mag": [4, 4, 4],
           "cubeLength": 256
         },
         {
-          "resolution": [8, 8, 8],
+          "mag": [8, 8, 8],
           "cubeLength": 128
         }
       ],

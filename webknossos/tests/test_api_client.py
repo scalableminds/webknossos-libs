@@ -5,7 +5,7 @@ from webknossos.client.api_client.models import ApiDataStore
 from webknossos.client.context import _get_api_client
 from webknossos.dataset_properties import DatasetProperties
 
-pytestmark = [pytest.mark.use_proxay]
+pytestmark = [pytest.mark.skip_on_windows]
 
 DATASTORE_URL = "http://localhost:9000"
 
@@ -67,7 +67,7 @@ def test_dataset_info(client: WkApiClient) -> None:
     data_layers = data_source.data_layers
     assert data_layers is not None
     assert sorted(
-        (layer.name, layer.category, layer.element_class) for layer in data_layers
+        (layer.name, layer.category, layer.dtype) for layer in data_layers
     ) == [
         ("color", "color", "uint8"),
         ("segmentation", "segmentation", "uint32"),

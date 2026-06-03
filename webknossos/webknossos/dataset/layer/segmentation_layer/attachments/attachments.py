@@ -3,13 +3,13 @@ from abc import abstractmethod
 from collections.abc import Iterator
 from os import PathLike
 from os.path import relpath
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeGuard
 
+import attr
 from upath import UPath
 
-from webknossos.dataset.transfer_mode import TransferMode
-from webknossos.dataset_properties import AttachmentDataFormat, AttachmentsProperties
-from webknossos.utils import (
+from .....dataset_properties import AttachmentDataFormat, AttachmentsProperties
+from .....utils import (
     cheap_resolve,
     copytree,
     enrich_path,
@@ -17,23 +17,22 @@ from webknossos.utils import (
     snake_to_camel_case,
     warn_deprecated,
 )
-
+from ....transfer_mode import TransferMode
+from .agglomerate_attachment import AgglomerateAttachment
 from .attachment import (
-    AgglomerateAttachment,
     Attachment,
     ConnectomeAttachment,
     CumsumAttachment,
     MeshAttachment,
     SegmentIndexAttachment,
+    _validate_name,
 )
 
 if TYPE_CHECKING:
-    from webknossos.dataset.layer import (
+    from ... import (
+        AbstractSegmentationLayer,
         RemoteSegmentationLayer,
         SegmentationLayer,
-    )
-    from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer import (
-        AbstractSegmentationLayer,
     )
 
 
@@ -41,6 +40,36 @@ def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -
     if data_format == AttachmentDataFormat.Zarr3:
         return attachment_name
     return f"{attachment_name}.{data_format.value.lower()}"
+
+
+def _assert_absolute_path(path: str | PathLike | UPath) -> UPath:
+    path = UPath(path)
+    if not path.is_absolute():
+        raise ValueError("Attachment paths must be absolute.")
+    return path
+
+
+def _is_singleton_attachment(
+    attachment: Attachment,
+) -> TypeGuard[CumsumAttachment | SegmentIndexAttachment]:
+    return isinstance(attachment, CumsumAttachment) or isinstance(
+        attachment, SegmentIndexAttachment
+    )
+
+
+def _deprecated_add_method(
+    _self: "AbstractAttachments", method_name: str, class_name: str
+) -> None:
+    from inspect import getframeinfo, stack
+
+    caller = getframeinfo(stack()[2][0])
+    warnings.warn(
+        f"[DEPRECATION] `{method_name}` is deprecated, please use `{class_name}.from_path_and_name` "
+        f"and `{_self.__class__.__name__}.add_attachment_as_copy` or "
+        f"`{_self.__class__.__name__}.add_attachment_as_ref` instead (see {caller.filename}:{caller.lineno})",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
 
 class AbstractAttachments:
@@ -147,15 +176,23 @@ class AbstractAttachments:
             yield self.cumsum
         yield from (self.connectomes or [])
 
+    def _get_attachment(
+        self, attachment_type: type[Attachment], name: str
+    ) -> Attachment:
+        for attachment in self:
+            if isinstance(attachment, attachment_type) and attachment.name == name:
+                return attachment
+        raise KeyError(
+            f"Attachment {attachment_type}/{name} not found in {self._layer.name}."
+        )
+
     def _add_attachment(
         self,
         attachment: Attachment,
     ) -> None:
         self._ensure_writable()
         container_name = attachment.container_name
-        if isinstance(attachment, CumsumAttachment) or isinstance(
-            attachment, SegmentIndexAttachment
-        ):
+        if _is_singleton_attachment(attachment):
             setattr(self._properties, container_name, attachment._properties)
         else:
             if any(a.name == attachment.name for a in getattr(self, container_name)):
@@ -177,92 +214,44 @@ class AbstractAttachments:
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         pass
 
-
-class RemoteAttachments(AbstractAttachments):
-    _layer: "RemoteSegmentationLayer"
-
-    def __init__(self, layer: "RemoteSegmentationLayer"):
-        super().__init__(layer)
-
-    def _apply_server_properties(self) -> None:
-        self._layer._apply_server_layer_properties()
-
-    def _get_optional_dataset_path(self) -> UPath | None:
-        return None
-
-    def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
-        return self.upload_attachment(attachment, transfer_mode=TransferMode.COPY)
-
-    def upload_attachment(
-        self,
-        attachment: Attachment,
-        transfer_mode: TransferMode = TransferMode.COPY,
-        common_storage_prefix: str | None = None,
-    ) -> Attachment:
+    def rename_attachment(self, attachment: Attachment, *, new_name: str) -> Attachment:
         self._ensure_writable()
-        if transfer_mode not in (
-            TransferMode.COPY,
-            TransferMode.MOVE_AND_SYMLINK,
-            TransferMode.SYMLINK,
-        ):
-            raise ValueError(f"Transfer mode {transfer_mode} is not supported.")
 
-        target_dataset_id = self._layer.dataset.dataset_id
-        from webknossos.client.context import _get_api_client
+        old_name = attachment.name
+        _validate_name(new_name)
+        new_attachment_properties = attr.evolve(attachment._properties, name=new_name)
 
-        client = _get_api_client()
-        new_path = enrich_path(
-            client.reserve_attachment_upload_to_path(
-                target_dataset_id,
-                self._layer.name,
-                attachment.name,
-                attachment.type_name,
-                str(attachment.data_format),
-                common_storage_prefix,
+        container_name = attachment.container_name
+        if _is_singleton_attachment(attachment):
+            if getattr(self, container_name) != attachment:
+                raise KeyError(
+                    f"Attachment {attachment} is not part of {container_name}."
+                )
+            setattr(self._properties, container_name, new_attachment_properties)
+        else:
+            properties_container = getattr(self._properties, container_name)
+            properties_container[properties_container.index(attachment._properties)] = (
+                new_attachment_properties
             )
+
+        from ....abstract_dataset import AttachmentRenaming
+
+        self._layer._save_layer_properties(
+            renamings=[
+                AttachmentRenaming(
+                    layer_name=self._layer.name,
+                    attachment_type=attachment.type_name,
+                    old_name=old_name,
+                    new_name=new_name,
+                )
+            ]
         )
-        # transfer to target dataset
-        transfer_mode.transfer(attachment.path, new_path)
+        return self._get_attachment(type(attachment), new_name)
 
-        client.finish_attachment_upload_to_path(
-            target_dataset_id,
-            self._layer.name,
-            attachment.name,
-            attachment.type_name,
-            str(attachment.data_format),
-            common_storage_prefix,
-        )
-
-        # sync to server state
-        self._apply_server_properties()
-
-        new_attachment = type(attachment).from_path_and_name(
-            new_path,
-            attachment.name,
-            data_format=attachment.data_format,
-        )
-
-        return new_attachment
-
-
-class Attachments(AbstractAttachments):
-    _layer: "SegmentationLayer"
-
-    def __init__(self, layer: "SegmentationLayer"):
-        super().__init__(layer)
-
-    def _get_optional_dataset_path(self) -> UPath:
-        return self._layer.dataset.resolved_path
-
-    def _remove_attachment(
-        self,
-        attachment: Attachment,
-    ) -> None:
+    def delete_attachment(self, attachment: Attachment) -> None:
         self._ensure_writable()
         container_name = attachment.container_name
-        if isinstance(attachment, CumsumAttachment) or isinstance(
-            attachment, SegmentIndexAttachment
-        ):
+        if _is_singleton_attachment(attachment):
             if getattr(self, container_name) != attachment:
                 raise KeyError(
                     f"Attachment {attachment} is not part of {container_name}."
@@ -275,6 +264,140 @@ class Attachments(AbstractAttachments):
                 setattr(self._properties, container_name, None)
         self._save_properties()
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({list(self)})"
+
+
+class RemoteAttachments(AbstractAttachments):
+    _layer: "RemoteSegmentationLayer"
+
+    def __init__(self, layer: "RemoteSegmentationLayer"):
+        super().__init__(layer)
+
+    def _apply_server_properties(self) -> None:
+        self._layer._apply_server_layer_properties()
+
+    def _get_optional_dataset_path(self) -> UPath | None:
+        return self._layer.dataset.zarr_streaming_path
+
+    def add_attachment_as_ref(
+        self,
+        attachment: Attachment,
+        *,
+        foreign_layer: "RemoteSegmentationLayer",
+        new_name: str | None,
+    ) -> Attachment:
+        from ....remote_dataset import _assert_same_webknossos_instance
+
+        self._ensure_writable()
+        from webknossos.client.api_client.models import ApiDatasetComposeAttachment
+        from webknossos.client.context import _get_api_client
+
+        if new_name is None:
+            new_name = attachment.name
+        else:
+            _validate_name(new_name)
+
+        _assert_same_webknossos_instance(
+            self._layer.dataset, foreign_layer.dataset, "add an attachment"
+        )
+
+        with self._layer.dataset._context:
+            client = _get_api_client()
+            client.dataset_add_attachment_as_ref(
+                dataset_id=self._layer.dataset.dataset_id,
+                compose_attachment=ApiDatasetComposeAttachment(
+                    source_dataset_id=foreign_layer.dataset.dataset_id,
+                    source_layer_name=foreign_layer.name,
+                    target_layer_name=self._layer.name,
+                    attachment_type=attachment.type_name,
+                    source_attachment_name=attachment.name,
+                    target_attachment_name=new_name,
+                ),
+            )
+        self._apply_server_properties()
+
+        return self._get_attachment(type(attachment), new_name)
+
+    def add_attachment_as_copy(
+        self,
+        attachment: Attachment,
+        *,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_prefix: str | None = None,
+        overwrite_pending: bool = True,
+    ) -> Attachment:
+        target_dataset_id = self._layer.dataset.dataset_id
+        from webknossos.client.context import _get_api_client
+
+        client = _get_api_client()
+
+        self._ensure_writable()
+        if transfer_mode == TransferMode.HTTP:
+            from webknossos.client._upload_dataset import upload_attachment
+
+            upload_attachment(
+                dataset_id=self._layer.dataset.dataset_id,
+                layer_name=self._layer.name,
+                attachment=attachment,
+                overwrite_pending=overwrite_pending,
+            )
+        else:
+            new_path = enrich_path(
+                client.reserve_attachment_upload_to_path(
+                    target_dataset_id,
+                    self._layer.name,
+                    attachment.name,
+                    attachment.type_name,
+                    str(attachment.data_format),
+                    common_storage_prefix,
+                )
+            )
+            # transfer to target dataset
+            transfer_mode.transfer(
+                attachment.path, new_path, progress_desc_label="attachment"
+            )
+
+            client.finish_attachment_upload_to_path(
+                target_dataset_id,
+                self._layer.name,
+                attachment.name,
+                attachment.type_name,
+                str(attachment.data_format),
+                common_storage_prefix,
+            )
+
+        # sync to server state
+        self._apply_server_properties()
+
+        new_attachment = self._get_attachment(type(attachment), attachment.name)
+
+        return new_attachment
+
+    def upload_attachment(
+        self,
+        attachment: Attachment,
+        *,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_prefix: str | None = None,
+    ) -> Attachment:
+        warn_deprecated("upload_attachment", "add_attachment_as_copy")
+        return self.add_attachment_as_copy(
+            attachment,
+            transfer_mode=transfer_mode,
+            common_storage_prefix=common_storage_prefix,
+        )
+
+
+class Attachments(AbstractAttachments):
+    _layer: "SegmentationLayer"
+
+    def __init__(self, layer: "SegmentationLayer"):
+        super().__init__(layer)
+
+    def _get_optional_dataset_path(self) -> UPath:
+        return self._layer.dataset.resolved_path
+
     def add_mesh(
         self,
         path: str | PathLike | UPath,
@@ -282,6 +405,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> MeshAttachment:
+        _deprecated_add_method(self, "add_mesh", "MeshAttachment")
         attachment = MeshAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -298,6 +422,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> AgglomerateAttachment:
+        _deprecated_add_method(self, "add_agglomerate", "AgglomerateAttachment")
         attachment = AgglomerateAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -314,6 +439,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> ConnectomeAttachment:
+        _deprecated_add_method(self, "add_connectome", "ConnectomeAttachment")
         attachment = ConnectomeAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -330,6 +456,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> SegmentIndexAttachment:
+        _deprecated_add_method(self, "set_segment_index", "SegmentIndexAttachment")
         attachment = SegmentIndexAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -346,6 +473,7 @@ class Attachments(AbstractAttachments):
         name: str,
         data_format: AttachmentDataFormat,
     ) -> CumsumAttachment:
+        _deprecated_add_method(self, "set_cumsum", "CumsumAttachment")
         attachment = CumsumAttachment.from_path_and_name(
             UPath(path),
             name,
@@ -355,28 +483,16 @@ class Attachments(AbstractAttachments):
         self._add_attachment(attachment)
         return attachment
 
-    def delete_attachment(self, attachment: Attachment) -> None:
-        if isinstance(attachment, MeshAttachment):
-            self._remove_attachment(attachment)
-        elif isinstance(attachment, AgglomerateAttachment):
-            self._remove_attachment(attachment)
-        elif isinstance(attachment, ConnectomeAttachment):
-            self._remove_attachment(attachment)
-        elif isinstance(attachment, SegmentIndexAttachment):
-            self._remove_attachment(attachment)
-        elif isinstance(attachment, CumsumAttachment):
-            self._remove_attachment(attachment)
-        else:
-            raise TypeError(f"Cannot delete attachment of type {attachment.__class__}")
-
     def add_attachments(self, *other: Attachment) -> list[Attachment]:
         warn_deprecated("add_attachments", "add_attachment_as_ref")
         return [self.add_attachment_as_ref(attachment) for attachment in other]
 
-    def add_attachment_as_ref(self, attachment: Attachment) -> Attachment:
+    def add_attachment_as_ref(
+        self, attachment: Attachment, *, new_name: str | None = None
+    ) -> Attachment:
         new_attachment = type(attachment).from_path_and_name(
             cheap_resolve(attachment.path),
-            attachment.name,
+            new_name if new_name is not None else attachment.name,
             data_format=attachment.data_format,
             dataset_path=self._get_optional_dataset_path(),
         )
@@ -468,8 +584,11 @@ class Attachments(AbstractAttachments):
         _detect_hdf5(SegmentIndexAttachment)
 
         if (self._layer.resolved_path / "agglomerates" / "cumsum.json").exists():
-            self.set_cumsum(
-                self._layer.resolved_path / "agglomerates" / "cumsum.json",
-                name="cumsum",
-                data_format=AttachmentDataFormat.JSON,
+            self._add_attachment(
+                CumsumAttachment.from_path_and_name(
+                    self._layer.resolved_path / "agglomerates" / "cumsum.json",
+                    name="cumsum",
+                    data_format=AttachmentDataFormat.JSON,
+                    dataset_path=self._layer.dataset.resolved_path,
+                )
             )

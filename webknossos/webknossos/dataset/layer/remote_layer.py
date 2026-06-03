@@ -1,13 +1,26 @@
+from os import PathLike
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
+from cluster_tools import Executor
 from upath import UPath
 
-from webknossos.dataset_properties import LayerProperties, MagViewProperties
+from webknossos.dataset.sampling_modes import SamplingModes
+from webknossos.dataset_properties import (
+    LayerProperties,
+    LayerViewConfiguration,
+    MagViewProperties,
+)
 
-from ...geometry.mag import Mag, MagLike
+from ...client.api_client.models import (
+    ApiDatasetComposeMag,
+    ApiReserveMagUploadToPathParameters,
+)
+from ...geometry import Mag, MagLike, Vec3IntLike
 from ...utils import enrich_path
-from .abstract_layer import AbstractLayer
-from .view import MagView
+from ..transfer_mode import TransferMode
+from .abstract_layer import AbstractLayer, _validate_layer_name
+from .view import MagView, Zarr3Config
 
 if TYPE_CHECKING:
     from webknossos.dataset import RemoteDataset
@@ -55,6 +68,357 @@ class RemoteLayer(AbstractLayer):
     def get_finest_mag(self) -> MagView["RemoteLayer"]:
         return super().get_finest_mag()
 
+    def add_mag_as_copy(
+        self,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
+        *,
+        extend_layer_bounding_box: bool = True,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
+    ) -> MagView["RemoteLayer"]:
+        """
+        Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
+        to the current remote dataset. Additionally, the relevant information from the
+        `datasource-properties.json` of the other dataset are copied, too.
+        """
+        self._ensure_writable()
+        foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
+
+        from ...client.context import _get_api_client
+
+        with self._dataset._context:
+            client = _get_api_client()
+            foreign_layer = foreign_mag_view.layer
+            foreign_layer_bbox = foreign_layer.normalized_bounding_box
+            axis_order = {
+                axis: index
+                for axis, index in zip(
+                    foreign_layer_bbox.axes, foreign_layer_bbox.index
+                )
+            }
+            channel_index = foreign_layer_bbox.topleft.get("c", None)
+
+            if transfer_mode == TransferMode.HTTP:
+                from ...client._upload_dataset import upload_mag
+
+                upload_mag(
+                    dataset_id=self.dataset.dataset_id,
+                    layer_name=self.name,
+                    mag=foreign_mag_view,
+                    axis_order=axis_order,
+                    channel_index=channel_index,
+                    overwrite_pending=overwrite_pending,
+                )
+            else:
+                reserve_parameters = ApiReserveMagUploadToPathParameters(
+                    layer_name=self.name,
+                    mag=foreign_mag_view.mag.to_list(),
+                    axis_order=axis_order,
+                    channel_index=channel_index,
+                    path_prefix=common_storage_path_prefix,
+                    overwrite_pending=overwrite_pending,
+                )
+                path = enrich_path(
+                    client.reserve_mag_upload_to_paths(
+                        self._dataset.dataset_id, reserve_parameters
+                    )
+                )
+                transfer_mode.transfer(
+                    foreign_mag_view.path,
+                    path,
+                    progress_desc_label=f"{self.name}/{foreign_mag_view.mag}",
+                )
+                client.finish_mag_upload_to_paths(
+                    self._dataset.dataset_id, reserve_parameters
+                )
+
+        self._apply_server_layer_properties()
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
+        return self.get_mag(foreign_mag_view.mag)
+
+    def add_mag_as_ref(
+        self,
+        foreign_mag_view_or_path: PathLike | UPath | str | MagView,
+        *,
+        mag: MagLike | None = None,
+        extend_layer_bounding_box: bool = True,
+    ) -> MagView["RemoteLayer"]:
+        """Add a mag from another remote dataset by reference.
+
+        Creates a mag that references data from a foreign remote layer without copying it.
+
+        Args:
+            foreign_mag_view_or_path: Foreign mag to add (path or MagView object)
+            mag: Target mag level; uses the foreign mag level if None
+            extend_layer_bounding_box: If True, extends this layer's bounding box to include the foreign layer's bounding box
+
+        Returns:
+            MagView: The newly created mag view referencing the foreign data
+
+        Raises:
+            ValueError: If the foreign mag belongs to a local layer or a different WEBKNOSSOS instance
+        """
+        from ..remote_dataset import _assert_same_webknossos_instance
+
+        self._ensure_writable()
+        foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
+        if not isinstance(foreign_mag_view.layer, RemoteLayer):
+            raise ValueError(
+                f"Cannot add a local mag to a remote layer. Got {foreign_mag_view}."
+            )
+        foreign_layer = foreign_mag_view.layer
+        _assert_same_webknossos_instance(
+            self.dataset, foreign_layer.dataset, "add a mag"
+        )
+
+        if mag is None:
+            mag = foreign_mag_view.mag
+        else:
+            mag = Mag(mag)
+
+        from ...client.context import _get_api_client
+
+        with self._dataset._context:
+            client = _get_api_client()
+            client.dataset_add_mag_as_ref(
+                dataset_id=self._dataset.dataset_id,
+                compose_mag=ApiDatasetComposeMag(
+                    source_dataset_id=foreign_layer.dataset.dataset_id,
+                    source_layer_name=foreign_layer.name,
+                    target_layer_name=self.name,
+                    source_mag=foreign_mag_view.mag.to_tuple(),
+                    target_mag=mag.to_tuple(),
+                ),
+            )
+        self._apply_server_layer_properties()
+
+        if extend_layer_bounding_box:
+            self.bounding_box = self.bounding_box.extended_by(
+                foreign_mag_view.layer.bounding_box
+            )
+
+        return self.get_mag(mag)
+
+    def downsample(
+        self,
+        *,
+        from_mag: Mag | None = None,
+        coarsest_mag: Mag | None = None,
+        interpolation_mode: str = "default",
+        compress: bool | Zarr3Config = True,
+        sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
+        align_with_other_layers: bool = True,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
+        force_sampling_scheme: bool = False,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
+        executor: Executor | None = None,
+    ) -> None:
+        """Downsample data from a source magnification to coarser magnifications.
+
+        Downsamples the data starting from from_mag until a magnification is >= max(coarsest_mag).
+        Different sampling modes control how dimensions are downsampled.
+
+        Note that the data is written temporarily on the local disk and uploaded afterwards so some local disk space is required.
+
+        Args:
+            from_mag (Mag | None): Source magnification to downsample from. Defaults to highest existing mag.
+            coarsest_mag (Mag | None): Target magnification to stop at. Defaults to calculated value.
+            interpolation_mode (str): Interpolation method to use. Defaults to "default".
+                Supported modes: "median", "mode", "nearest", "bilinear", "bicubic"
+            compress (bool | Zarr3Config): Whether to compress the generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
+            sampling_mode (str | SamplingModes): How dimensions should be downsampled.
+                Defaults to ANISOTROPIC.
+            align_with_other_layers (bool): Whether to align the mag selection with the dataset’s other layers. True by default.
+            buffer_shape (Vec3IntLike | int | None): Shape of processing buffer. Defaults to None.
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage.
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage.
+            force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
+            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to COPY
+            common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
+                                        to select one of the available WEBKNOSSOS storages.
+            overwrite_pending (bool). If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
+            executor (Executor | None): Executor for parallel processing. None by default.
+
+        Raises:
+            AssertionError: If from_mag does not exist
+            RuntimeError: If sampling scheme produces invalid magnifications
+            AttributeError: If sampling_mode is invalid
+        """
+
+        from ..dataset import Dataset
+
+        if from_mag is None:
+            assert len(self.mags.keys()) > 0, (
+                "Failed to downsample data because no existing mag was found."
+            )
+            from_mag = max(self.mags.keys())
+
+        if from_mag not in self.mags.keys():
+            raise KeyError(
+                f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist. Existing mags: {self.mags.keys()}."
+            )
+        from_mag_view = self.get_mag(from_mag)
+
+        align_with_other_layers_dataset: bool | RemoteDataset = False
+        if align_with_other_layers:
+            align_with_other_layers_dataset = self.dataset
+
+        with TemporaryDirectory() as tmpdir:
+            tmp_dataset = Dataset(
+                dataset_path=tmpdir,
+                voxel_size_with_unit=self.dataset.voxel_size_with_unit,
+            )
+            tmp_layer = tmp_dataset.add_layer_like(self, self.name)
+            tmp_layer.downsample(
+                from_mag=from_mag,
+                from_mag_view=from_mag_view,
+                coarsest_mag=coarsest_mag,
+                interpolation_mode=interpolation_mode,
+                compress=compress,
+                sampling_mode=sampling_mode,
+                align_with_other_layers=align_with_other_layers_dataset,
+                buffer_shape=buffer_shape,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                force_sampling_scheme=force_sampling_scheme,
+                executor=executor,
+            )
+
+            for mag in tmp_layer.mags.keys():
+                self.add_mag_as_copy(
+                    tmp_layer.mags[mag],
+                    transfer_mode=transfer_mode,
+                    common_storage_path_prefix=common_storage_path_prefix,
+                    overwrite_pending=overwrite_pending,
+                )
+
+    def upsample(
+        self,
+        from_mag: Mag,
+        *,
+        finest_mag: Mag = Mag(1),
+        compress: bool | Zarr3Config = True,
+        sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
+        align_with_other_layers: bool = True,
+        buffer_shape: Vec3IntLike | None = None,
+        transfer_mode: TransferMode = TransferMode.COPY,
+        common_storage_path_prefix: str | None = None,
+        overwrite_pending: bool = True,
+        executor: Executor | None = None,
+    ) -> None:
+        """Upsample data to finer magnifications.
+
+        Upsamples from a coarser magnification to a sequence of finer magnifications,
+        stopping at finest_mag. The data is written temporarily on the local disk and
+        uploaded afterwards, so some local disk space is required.
+
+        Args:
+            from_mag (Mag): Source coarse magnification.
+            finest_mag (Mag): Target finest magnification. Defaults to Mag(1).
+            compress (bool | Zarr3Config): Whether to compress upsampled data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
+            sampling_mode (str | SamplingModes): How dimensions should be upsampled. Defaults to ANISOTROPIC.
+            align_with_other_layers (bool): Whether to align mags with the dataset's other layers. Defaults to True.
+            buffer_shape (Vec3IntLike | None): Shape of processing buffer. Defaults to None.
+            transfer_mode (TransferMode): How new mags are transferred to the remote storage. Defaults to COPY.
+            common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is COPY or MOVE_AND_SYMLINK.
+            overwrite_pending (bool): If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True.
+            executor (Executor | None): Executor for parallel processing. Defaults to None.
+
+        Raises:
+            KeyError: If from_mag doesn't exist is invalid.
+            AssertionError: If finest_mag is invalid.
+            AttributeError: If sampling_mode is invalid.
+        """
+
+        from ..dataset import Dataset
+
+        if from_mag not in self.mags.keys():
+            raise KeyError(
+                f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+            )
+
+        from_mag_view = self.get_mag(from_mag)
+
+        with TemporaryDirectory() as tmpdir:
+            tmp_dataset = Dataset(
+                dataset_path=tmpdir,
+                voxel_size_with_unit=self.dataset.voxel_size_with_unit,
+            )
+            tmp_layer = tmp_dataset.add_layer_like(self, self.name)
+            tmp_layer.upsample(
+                from_mag_view=from_mag_view,
+                from_mag=from_mag,
+                finest_mag=finest_mag,
+                compress=compress,
+                sampling_mode=sampling_mode,
+                align_with_other_layers=align_with_other_layers,
+                buffer_shape=buffer_shape,
+                executor=executor,
+            )
+
+            for mag in tmp_layer.mags.keys():
+                self.add_mag_as_copy(
+                    tmp_layer.mags[mag],
+                    transfer_mode=transfer_mode,
+                    common_storage_path_prefix=common_storage_path_prefix,
+                    overwrite_pending=overwrite_pending,
+                )
+
+    def delete_mag(self, mag: MagLike) -> None:
+        self._ensure_writable()
+        mag = Mag(mag)
+        if mag not in self.mags.keys():
+            raise IndexError(
+                f"Deleting mag {mag} failed. There is no mag with this name."
+            )
+        self._properties.mags = [
+            res for res in self._properties.mags if Mag(res.mag) != mag
+        ]
+        self._save_layer_properties()
+
+    @property
+    def name(self) -> str:
+        """
+        Returns the name of the layer.
+        """
+        return self._name
+
+    @name.setter
+    def name(self, layer_name: str) -> None:
+        """
+        Renames the layer to `layer_name`. This changes the layer name on the server.
+        CAUTION: existing annotations that use this layer as fallback segmentation layer will break.
+        """
+
+        from ..abstract_dataset import LayerRenaming
+
+        if layer_name == self.name:
+            return
+        self._ensure_metadata_writable()
+        if layer_name in self.dataset.layers.keys():
+            raise ValueError(
+                f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
+            )
+
+        _validate_layer_name(layer_name)
+
+        old_name = self.name
+        del self.dataset._layers[self.name]
+        self.dataset._layers[layer_name] = self
+        self._properties.name = layer_name
+        self._name: str = layer_name
+        self._save_layer_properties(
+            renamings=[LayerRenaming(old_name=old_name, new_name=layer_name)]
+        )
+
     def _ensure_writable(self) -> None:
         if self.read_only:
             raise RuntimeError(
@@ -63,3 +427,49 @@ class RemoteLayer(AbstractLayer):
 
     def _apply_server_layer_properties(self) -> None:
         self.dataset._apply_server_dataset_properties()
+        layer_properties = next(
+            layer_properties
+            for layer_properties in self._dataset._properties.data_layers
+            if layer_properties.name == self.name
+        )
+        self._apply_properties(layer_properties, self.read_only)
+
+    @property
+    def view_configuration(self) -> LayerViewConfiguration | None:
+        """The current view configuration for this layer as stored on the WEBKNOSSOS server.
+
+        This reflects the user-saved view settings (color, opacity, intensity range, etc.)
+        and is distinct from `default_view_configuration`, which is default for all users accessing the dataset
+        properties. The value is fetched from the server on every access.
+
+        Returns:
+            LayerViewConfiguration | None: The saved view configuration, or None if none is set.
+
+        Examples:
+            ```
+            cfg = layer.view_configuration
+            if cfg is not None:
+                print(cfg.color, cfg.alpha)
+            ```
+        """
+        from ...client.context import _get_api_client
+
+        with self._dataset._context:
+            client = _get_api_client()
+            config = client.dataset_configuration(
+                dataset_id=self._dataset.dataset_id,
+                volume_tracing_ids=[],
+            )
+            if config.layers is None:
+                return None
+            return config.layers.get(self.name)
+
+    @view_configuration.setter
+    def view_configuration(self, _value: LayerViewConfiguration) -> None:
+        raise AttributeError(
+            "view_configuration is read-only. "
+            "Use the WEBKNOSSOS web interface to change the view configuration."
+        )
+
+    def __repr__(self) -> str:
+        return f"RemoteLayer({repr(self.name)}, dtype={self.dtype}, num_channels={self.num_channels})"

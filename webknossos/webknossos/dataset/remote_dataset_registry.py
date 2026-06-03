@@ -18,6 +18,7 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
 
     def __init__(
         self,
+        *,
         name: str | None,
         organization_id: str | None,
         tags: str | Sequence[str] | None,

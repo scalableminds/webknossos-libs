@@ -10,17 +10,244 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
-- Updated pylibCZIrw package to 5.1.1, which does not require custom-built wheels anymore. [#1394](https://github.com/scalableminds/webknossos-libs/pull/1394)
 
 ### Fixed
+
+
+## [3.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.0) - 2026-06-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...v3.5.0)
+
+### Breaking Changes
+- `existing_id`, `data_store_name`, `name`, `comment`, `category`, `path_prefix` and `transfer_mode` in `RemoteAiModel.upload_from_path` are now keyword-only arguments. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
+- `View.read_xyz` is deprecated in favor of `View.read_cxyz`. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
+
+### Added
+- `RemoteDataset.add_layer_as_copy`, `RemoteLayer.add_mag_as_copy` and `RemoteAttachments.add_add_attachment_as_copy` now accept `transfer_mode=TransferMode.HTTP`. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
+- Added support for older WEBKNOSSOS server API versions. The oldest currently supported API version is v13. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
+- Added `overwrite_pending` parameter (defaults to True) to `RemoteAttachments.add_add_attachment_as_copy`. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
+- Added support for reading MRC files using the `mrcfile` package. [#1465](https://github.com/scalableminds/webknossos-libs/pull/1465)
+- Added `View.read_cxyz` and `View.write_cxyz` to read and write arrays with guaranteed cxyz axis ordering. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
+- Added support for mag views on `gs://`. [#1466](https://github.com/scalableminds/webknossos-libs/pull/1466)
+
+### Changed
+- Updated the api version of the webknossos-api to 14. Version 13 is still supported. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450])
+
+
+## [3.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.3) - 2026-05-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.2...v3.4.3)
+
+### Fixed
+- faster deletion of S3 directories by using the delete methods from the s3fs file system, retry more S3 errors observed when deleting directories [#4554](https://github.com/scalableminds/webknossos-libs/pull/4554)
+
+
+## [3.4.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.2) - 2026-04-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.1...v3.4.2)
+
+
+## [3.4.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.1) - 2026-04-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.0...v3.4.1)
+
+
+## [3.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.0) - 2026-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.3.0...v3.4.0)
+
+### Added
+- Added `wk.login(token="...")` as the preferred way to authenticate with the WEBKNOSSOS server. It modifies the global context for the remaining runtime of the process, but is much easier to use than the env variables or context manager. [#1457](https://github.com/scalableminds/webknossos-libs/pull/1457)
+- Added `slurm+batching` distribution strategy for CLI commands. `--jobs` can be used to specify the target number of jobs and the `batch-size` key can be specified in the `--job-resources`. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- Added the `--apply-mapping` option to the `export-as-tiff` CLI command. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- Added `RemoteLayer.view_configuration` property to access the layer view configuration (alpha, inverted, min/max histogram, etc). [#1456](https://github.com/scalableminds/webknossos-libs/pull/1456)
+
+### Changed
+- The job resources for `slurm`, `slurm+batching` and `kubernetes` in the CLI commands are now specified as comma-separated key-value pairs instead of JSON, e.g. `--job-resources mem=10G,time=02:00:00`. The JSON syntax is still available for backwards compatibility. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- The `export-as-tiff` CLI command now compressed exported segmentation layers. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+- S3 retry settings are eagerly applied for all CLI commands. [#1455](https://github.com/scalableminds/webknossos-libs/pull/1455)
+
+### Fixed
+- Fixed a bug in the `BufferedSliceWriter`, where Mag-1 bounding boxes were upscaled when writing to a non-Mag-1 view. [#1451](https://github.com/scalableminds/webknossos-libs/pull/1451)
+
+
+
+## [3.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.3.0) - 2026-03-31
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.4...v3.3.0)
+
+### Breaking Changes
+- Renamed the existing `webknossos.proofreading.agglomerate_graph.AgglomerateGraph` to `webknossos.proofreading.agglomerate_graph_data.AgglomerateGraphData`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
+- Renamed the  `Annotation.get_agglomerate_graph` to `Annotation.get_agglomerate_graph_data`. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
+- Renamed `RemoteDataset.download` argument `bbox` to `bounding_box`. `bbox` is still available, but deprecated.  [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
+- Moved the `s3fs` dependency to an optional extra. Install with `webknossos[s3]` or `webknossos[all]`. [#1443](https://github.com/scalableminds/webknossos-libs/pull/1443)
+- The `use_bioformats` argument of `Dataset.add_layer_from_images`, `Dataset.from_images` and `RemoteDataset.from_images` is now `False` by default. `None` is not allowed anymore. [#1446](https://github.com/scalableminds/webknossos-libs/pull/1446)
+
+### Added
+- Added `RemoteDataset.add_layer_as_ref`, `RemoteLayer.add_mag_as_ref`, `RemoteAttachments.add_attachment_as_ref`, `RemoteAttachments.delete_attachment`, `RemoteAttachment.rename_attachment`, `Attachments.rename_attachments`. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
+- Added `extend_layer_bounding_box` kwarg with default `True` to `RemoteLayer.add_mag_as_copy`. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
+- Added `RemoteDataset.reopen` method to allow reopening with a different access mode. [#1438](https://github.com/scalableminds/webknossos-libs/pull/1438)
+- Added `isVisible` attribute to `Skeleton.Tree` [#1442](https://github.com/scalableminds/webknossos-libs/pull/1442)
+
+### Changed
+- Rewrote the chunking of the tiff conversion. A non-user facing change. [#1440](https://github.com/scalableminds/webknossos-libs/pull/1440)
+- Removed the proxay request recording/replaying functionality. All requests in the tests are now sent directly to the local WEBKNOSSOS instance. [#1441](https://github.com/scalableminds/webknossos-libs/pull/1441)
+- Set more comfortable retries for s3 connections in the CLI commands. Call `webknossos.utils.set_s3fs_retry_settings()` for library use. [#1443](https://github.com/scalableminds/webknossos-libs/pull/1443)
+- Swapped out `pims` for our fork `scm-pims`, which fixes issues with skimage. A non-user facing change. [#1445](https://github.com/scalableminds/webknossos-libs/pull/1445)
+
+
+## [3.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.4) - 2026-03-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.3...v3.2.4)
+
+### Fixed
+- Fixed a bug in ZCYX tiff conversion where each page stores only YX data. [#1439](https://github.com/scalableminds/webknossos-libs/pull/1439)
+
+
+
+## [3.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.3) - 2026-03-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...v3.2.3)
+
+### Added
+- Added a pure-Python implementation of WKW to support datasets on remote storage. Although, it is strongly recommended to use Zarr3 datasets on remote storage, for performance, interoperability and future-proofing reasons. [#1432](https://github.com/scalableminds/webknossos-libs/pull/1432)
+- Added `chunk_shape` and `shard_shape` arguments to `Layer.downsample`, `Layer.downsample_mag`, `Layer.redownsample`, `Layer.downsample_mag_list`, `Layer.upsample` and `RemoteLayer.downsample`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
+- Added `AgglomerateAttachment.create` and `AgglomerateAttachment.create_and_add_to methods`. They take a new networkx-based `AgglomerateGraph` as input. [#1435](https://github.com/scalableminds/webknossos-libs/pull/1435)
+
+### Changed
+- The `webknossos convert` command now accepts a `--upload` flag, to upload the converted dataset to WEBKNOSSOS. In that case, the target path is not required anymore. [#1433](https://github.com/scalableminds/webknossos-libs/pull/1433)
+- The `webknossos downsample` and `webknossos upsample` commands now work with remote datasets on WEBKNOSSOS. [#1433](https://github.com/scalableminds/webknossos-libs/pull/1433)
+- The default shard shape for downsampled mags is now `(1024, 1024, 1024)` (default) or `(4096, 4096, 32)` (zarr3 and 32 sections or less) or `(32, 32, 32)` (zarr2) and the chunk shape is now `(32, 32, 32)`. [#1434](https://github.com/scalableminds/webknossos-libs/pull/1434)
+- The `axisOrder` field of the `MagViewProperties` is now always persisted in the `datasource-properties.json` file to avoid misinterpretation of the implicit axis ordering. [#1437](https://github.com/scalableminds/webknossos-libs/pull/1437)
+
+### Fixed
+- Fixed a bug in the bounding box parsing, when "c" is not present in the axisOrder. [#1436](https://github.com/scalableminds/webknossos-libs/pull/1436)
+
+
+
+## [3.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.2) - 2026-03-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.1...v3.2.2)
+
+### Changed
+- `Attachment.from_path_and_name` now accepts `str` for `path` and `dataset_path`. `dataset_path` is now fully optional, when missing the `path` is being resolved into an absolute path. [#1430](https://github.com/scalableminds/webknossos-libs/pull/1430)
+
+
+## [3.2.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.1) - 2026-03-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.0...v3.2.1)
+
+
+## [3.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.0) - 2026-02-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.5...v3.2.0)
+
+### Breaking Changes
+- Moved from positional argument to keyword-only argument [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418):
+  - `relative_bounding_box` and `absolute_bounding_box` in `View.read_xyz`
+  - `chunk_shape`, `executor` and `progress_desc` in `View.for_each_chunk`
+  - `chunk_shape`, `executor` and `progress_desc` in `View.map_chunk`
+  - `chunk_border_alignments` and `read_only` in `View.chunk`
+  - `source_chunk_shape`, `target_chunk_shape`, `executor` and `progress_desc` in `View.for_zipped_chunks`
+  - `chunk_shape`, `executor` and `progress_desc` in `View.content_is_equal`
+  - `organization_id`, `sharing_token`, `webknossos_url`, `dataset_id`, `annotation_id`, `access_mode`, `use_zarr_streaming` and `read_only` in `Dataset.open_remote`
+  - `path_prefix` and `transfer_mode` in `Dataset.publish_to_preliminary_dataset`
+  - `dataset_name_or_url`, `organization_id`, `webknossos_url`, `dataset_id`, `organization`, `datastore_url` and `token` in `Dataset.trigger_reload_in_datastore`
+  - `zarr_streaming_path`, `dataset_properties`, `dataset_id`, `annotation_id`, `context` and `read_only` in `RemoteDataset.__init__` (should not be used directly)
+  - `organization_id`, `sharing_token`, `webknossos_url`, `dataset_id`, `annotation_id_or_url`, `use_zarr_streaming`, `access_mode` and `read_only` in `RemoteDataset.open`
+  - `sharing_token`, `bbox`, `layers`, `mags`, `path` and `exist_ok` in `RemoteDataset.download`
+  - `layer_name`, `mesh_file_name`, `datastore_url`, `lod`, `mapping_name`, `mapping_type`, `mag`, `seed_position`, `token` and `sharing_token` in `RemoteDataset.download_mesh`
+  - `dataset_name_or_url`, `organization_id`, `webknossos_url`, `dataset_id`, `organization`, `datastore_url` and `token` in `RemoteDataset.trigger_reload_in_datastore`
+  - `folder_path` in `RemoteDataset.explore_and_add_remote`
+  - `name`, `organization_id`, `tags` and `folder_id` in `RemoteDatasetRegistry.__init__` (should not be used directly)
+- `VecInt` and `Vec3Int` don't inherit from tuple anymore. Instead, they have an internal attribute that holds the data. Instance checks for tuple don't work anymore. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
+- Calling the `x`, `y`, `z` and `c` properties of `VecInt` or `Vec3Int` now raises a `KeyError` instead of a `ValueError` if the axis is missing. [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419)
+- Removed `dtype_per_layer` arguments and properties as they have been deprecated for a long time. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
+- Deprecated `dtype_per_channel` argument in `Dataset.add_layer` and `Dataset.get_or_add_layer` and property in `Layer`. Use `dtype` instead. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
+- Deprecated `RemoteAttachments.upload_attachment`. Use `RemoteAttachments.add_attachment_as_copy` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Deprecated `Attachments.{add_mesh,add_agglomerate,add_connectome,set_segment_index,set_cumsum}` methods. Use `*Attachment.from_path_and_name` and `Attachments.{add_attachment_as_copy,add_attachment_as_ref}` instead. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+
+### Added
+- Added support for proxy paths when accessing RemoteDatasets. Use `RemoteDataset.open(..., access_mode=RemoteAccessMode.PROXY_PATH)`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Added `parent` property to `RemoteFolder`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Added `dtype` argument to `Dataset.add_layer`, `Dataset.get_or_add_layer`. Added `dtype` property to `Layer`. [#1426](https://github.com/scalableminds/webknossos-libs/pull/1426)
+- Added `RemoteDataset.add_layer_as_copy`. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Added `RemoteDataset.get_or_add_layer`. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Added `RemoteAttachments.add_attachment_as_copy`. [#1427](https://github.com/scalableminds/webknossos-libs/pull/1427)
+- Added `RemoteAiModel` class, allowing to access information about trained AI models registered in WEBKNOSSOS. [#1409](https://github.com/scalableminds/webknossos-libs/pull/1409)
+
+### Changed
+- The `RemoteDataset.open` method now accepts `access_mode` instead of `use_zarr_streaming`. `use_zarr_streaming` is still supported, but deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Renamed `folder_path` to `folder` in `RemoteDataset.explore_and_add_remote`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Renamed `folder_id` to `folder` in `Dataset.upload`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Renamed `folder_id` to `folder` in `RemoteDataset.list`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- The elementClass parsing is done in the structuring now. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- The restriction to have the channel axis as first axis is now removed. Arbitrary axes are allowed. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Within the library a new `NormalizedBoundingBox` class is used to represent bounding boxes with an explicit c-axis (channels). The `NormalizedBoundingBox` is used as the primary bounding box attribute throughout the library. It is also used for de/serialization of the dataset properties. The interface of the `BoundingBox` class is intentionally kept stable, but computed from the `NormalizedBoundingBox`. Likewise, the `num_channels` attribute is computed from the `NormalizedBoundingBox`. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- The `dimension` argument in `View.get_buffered_slice_writer`, `View.get_buffered_slice_reader`, `BufferedSliceWriter.__init__` and `BufferedSliceReader.__init__` now takes named axis (string) instead of integer index, e.g. `"z"` instead of `2`. Integers are deprecated. [#1418](https://github.com/scalableminds/webknossos-libs/pull/1418)
+- Annotation loading now throws a `FileNotFoundError` instead of `AssertionError` if the specified path does not exist. [#1425](https://github.com/scalableminds/webknossos-libs/pull/1425)
+
+
+## [3.1.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.5) - 2026-02-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.4...v3.1.5)
+
+### Added
+- Added `--data-format` option to `webknossos download` CLI command. [#1422](https://github.com/scalableminds/webknossos-libs/pull/1422)
+
+
+## [3.1.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.4) - 2026-01-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.3...v3.1.4)
+
+### Added
+- New functions for RemoteDataset `add_layer`, `downsample` and RemoteLayer `add_mag_as_copy`, `delete_mag`, `name` (setter), `downsample`
+
+### Changed
+- Improved downsampling performance of segmentation data by at least 4x and of other data by at least 2x. [#1406](https://github.com/scalableminds/webknossos-libs/pull/1406)
+
+
+## [3.1.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.3) - 2026-01-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.2...v3.1.3)
+
+### Added
+- Added `--transfer-mode` option to `webknossos upload` CLI command. [#1415](https://github.com/scalableminds/webknossos-libs/pull/1415)
+
+
+## [3.1.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.2) - 2026-01-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.1...v3.1.2)
+
+
+## [3.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.1) - 2026-01-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.0...v3.1.1)
+
+### Added
+- Added `chunk_shape` argument to `View.content_is_equal`. [#1410](https://github.com/scalableminds/webknossos-libs/pull/1410)
+
+### Changed
+- Bump `python-dateutil` dependency for py3.12 support without deprecation warning. [#1414](https://github.com/scalableminds/webknossos-libs/pull/1414)
+
+
+## [3.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.0) - 2025-12-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.4...v3.1.0)
+
+### Added
+- Added `--folder` option to `upload` CLI command. [#1408](https://github.com/scalableminds/webknossos-libs/pull/1408)
+
+### Changed
+- Relaxed layer name validation to match WEBKNOSSOS behavior. [#1402](https://github.com/scalableminds/webknossos-libs/pull/1402)
+- Better heuristic for detecting number of channels, when `numChannels` is missing. [#1402](https://github.com/scalableminds/webknossos-libs/pull/1402)
+
+### Fixed
+- Fix mag and attachment paths in Zarr annotation volume layer export. [#1401](https://github.com/scalableminds/webknossos-libs/pull/1401)
+
+
+
+## [3.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.4) - 2025-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...v3.0.4)
+
+### Changed
+- The interactive prompt asking for the WEBKNOSSOS user token was removed. Specify your token as parameter or environment variable to ensure authenticated requests to WEBKNOSSOS server. [#1391](https://github.com/scalableminds/webknossos-libs/pull/1391)
+- Updated pylibCZIrw package to 5.1.1, which does not require custom-built wheels anymore. [#1394](https://github.com/scalableminds/webknossos-libs/pull/1394)
+- In the methods `Dataset.trigger_dataset_import`, `Dataset.trigger_reload_in_datastore` and `RemoteDataset.trigger_reload_in_datastore` the parameter `token` was deprecated (use an authenticated webknossos context instead). In `RemoteDataset.download_mesh` and `RemoteSegmentationLayer.download_mesh` the parameter `token` was renamed to `sharing_token` to clarify that it is meant for a dataset sharing token. Otherwise, use an authenticated webknossos context instead. [#1400](https://github.com/scalableminds/webknossos-libs/pull/1400)
+
+### Fixed
+- Fixed bug in convert-zarr CLI command. [#1405](https://github.com/scalableminds/webknossos-libs/pull/1405)
+- Fixed a bug where user tokens would sometimes show up in the logging as a GET parameter. [#1400](https://github.com/scalableminds/webknossos-libs/pull/1400)
 
 
 ## [3.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.3) - 2025-11-11

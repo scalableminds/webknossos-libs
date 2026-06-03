@@ -16,11 +16,13 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      webknossos: ${{ steps.filter.outputs.webknossos || github.ref == 'refs/heads/master' }}
-      cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref == 'refs/heads/master' }}
+      webknossos: ${{ steps.filter.outputs.webknossos || github.ref ==
+        'refs/heads/master' }}
+      cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref ==
+        'refs/heads/master' }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: dorny/paths-filter@v2
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4.0.1
         id: filter
         with:
           filters: |
@@ -36,13 +38,13 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
+        python-version: [ "3.13", "3.12", "3.11", "3.10" ]
     defaults:
       run:
         working-directory: cluster_tools
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.0.0
         with:
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
@@ -79,7 +81,7 @@ jobs:
       - name: Restart Slurm Cluster
         run: cd ./dockered-slurm && docker compose restart slurmctld c1 c2
 
-      - name: "Run Tests (test_all, test_slurm) with modified slurn.conf"
+      - name: "Run Tests (test_all, test_slurm) with modified slurm.conf"
         run: |
           # Run tests requiring a modified slurm config
           docker exec \
@@ -87,21 +89,21 @@ jobs:
             -e PYTEST_EXECUTORS=slurm \
             slurmctld bash -c "uv run --frozen python -m pytest -sv test_slurm.py -m 'requires_modified_slurm_config'"
 
-  cluster_tools_multiprocessing:
+  cluster_tools_other:
     needs: changes
     if: ${{ needs.changes.outputs.cluster_tools == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
+        python-version: [ "3.13", "3.12", "3.11", "3.10" ]
     defaults:
       run:
         working-directory: cluster_tools
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v8.0.0
         with:
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
@@ -123,33 +125,34 @@ jobs:
           cd tests
           PYTEST_EXECUTORS=multiprocessing,sequential,multiprocessing_with_pickling,sequential_with_pickling \
             uv run --frozen python -m pytest -sv test_all.py test_multiprocessing.py
+      - name: Run batching tests
+        run: |
+          cd tests
+          uv run --frozen python -m pytest -sv test_batching.py
 
   webknossos_linux:
     needs: changes
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-8
     strategy:
       matrix:
-        python-version: ["3.13", "3.12", "3.11", "3.10"]
-        group: [1, 2, 3]
+        python-version: [ "3.13", "3.12", "3.11", "3.10" ]
+        group: [ 1, 2, 3 ]
       fail-fast: false
     defaults:
       run:
         working-directory: webknossos
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8.0.0
         with:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
-
-      - name: Install proxay
-        run: npm install -g proxay@1.9.0
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -168,26 +171,28 @@ jobs:
 
       - name: Patch Python standard library to assert that fork is not allowed
         run: |
-          sed -i '/def _launch/a\ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
-          cat /home/runner/.local/share/uv/python/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
+          sed -i '/def _launch/a\ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' ${UV_PYTHON_INSTALL_DIR}/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
+          cat ${UV_PYTHON_INSTALL_DIR}/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
 
       - name: Python tests (with coverage)
         if: ${{ matrix.python-version == '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration --cov=webknossos --cov-report=
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+          least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
         if: ${{ matrix.python-version != '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+          least_duration
 
       - name: Persist coverage reports
         if: ${{ matrix.python-version == '3.11' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report-${{ matrix.group }}
           path: "webknossos/.coverage"
@@ -206,27 +211,26 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
-        group: [1, 2, 3]
+        python-version: [ "3.12" ]
+        group: [ 1, 2, 3 ]
       fail-fast: false
     defaults:
       run:
         working-directory: webknossos
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8.0.0
         with:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
       - name: Install minio
-        run: Invoke-WebRequest -Uri "https://dl.min.io/server/minio/release/windows-amd64/minio.exe" -OutFile "minio.exe"
-
-      - name: Install proxay
-        run: npm install -g proxay@1.9.0
+        run: Invoke-WebRequest -Uri
+          "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
+          -OutFile "minio.exe"
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -236,23 +240,24 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           MULTIPROCESSING_DEFAULT_START_METHOD: spawn
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm least_duration
+        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+          least_duration
 
   coverage_report:
-    needs: [webknossos_linux]
+    needs: [ webknossos_linux ]
     if: success()
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: webknossos
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Install coverage.py
         run: pip install coverage
 
       - name: Download all coverage reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: ~/coverage-files
 
@@ -276,7 +281,7 @@ jobs:
   docs:
     needs:
       - cluster_tools_slurm
-      - cluster_tools_multiprocessing
+      - cluster_tools_other
       - webknossos_linux
       - webknossos_windows
     runs-on: ubuntu-latest
@@ -287,13 +292,13 @@ jobs:
       !github.event.pull_request.head.repo.fork
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           repository: scalableminds/webknossos
           path: docs/wk-repo
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8.0.0
       - name: Build Docs
         run: |
           cd docs
@@ -304,25 +309,29 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: "eu-west-1"
         run: |
           CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
           NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-          aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${NORMALIZED_CI_BRANCH}
+          uvx --from awscli aws s3 cp --recursive --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
 
       - name: Push docs (for tag)
         if: github.ref_type == 'tag'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: "eu-west-1"
+          N8N_TOKEN: ${{ secrets.N8N_USERNAME }}
+          N8N_USERNAME: ${{ secrets.N8N_TOKEN }}
         run: |
           CI_TAG=$(git describe --tags)
-          aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${CI_TAG}
+          set -e
+
+          uvx --from awscli aws s3 cp --recursive --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${CI_TAG}
+          curl --basic -u "${N8N_TOKEN}:${N8N_USERNAME}" https://docs.webknossos.org/webhooks/index-docs
 
       - name: Check links (on master)
         if: github.ref == 'refs/heads/master'
-        env: # Or as an environment variable
+        env:
+          # Or as an environment variable
           SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
         run: |
           cd docs
@@ -333,7 +342,7 @@ jobs:
   pypi_and_gh_release:
     needs:
       - cluster_tools_slurm
-      - cluster_tools_multiprocessing
+      - cluster_tools_other
       - webknossos_linux
       - webknossos_windows
     if: |
@@ -344,9 +353,9 @@ jobs:
       !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8.0.0
       - name: Publish python packages
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
@@ -357,19 +366,17 @@ jobs:
           _tooling/changelog_for_version.sh $VERSION > Changelog.md
       - name: Publish github release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          name: ${{ github.ref }}
           body_path: Changelog.md
           draft: false
           prerelease: false
 
   complete:
     needs:
-      - cluster_tools_multiprocessing
+      - cluster_tools_other
       - cluster_tools_slurm
       - webknossos_linux
       - webknossos_windows

@@ -4,24 +4,33 @@ import logging
 import re
 import warnings
 from abc import abstractmethod
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Generic, Literal, TypeVar, cast
 
+import numpy as np
+from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
+    DataFormat,
     DatasetProperties,
     DatasetViewConfiguration,
+    LayerCategoryType,
     LayerProperties,
     SegmentationLayerProperties,
     VoxelSize,
     get_dataset_converter,
 )
+from webknossos.dataset_properties.dtype_conversion import (
+    properties_floating_type_to_python_type,
+)
 from webknossos.geometry import BoundingBox, NDBoundingBox
+from webknossos.utils import warn_deprecated
 
-from .defaults import PROPERTIES_FILE_NAME
+from .defaults import DEFAULT_DATA_FORMAT, PROPERTIES_FILE_NAME
 from .layer.abstract_layer import AbstractLayer
 from .layer.segmentation_layer.abstract_segmentation_layer import (
     AbstractSegmentationLayer,
@@ -47,6 +56,39 @@ LayerType = TypeVar("LayerType", bound=AbstractLayer)
 SegmentationLayerType = TypeVar(
     "SegmentationLayerType", bound=AbstractSegmentationLayer[Any]
 )
+
+
+@dataclass(frozen=True, kw_only=True)
+class LayerRenaming:
+    old_name: str
+    new_name: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class AttachmentRenaming:
+    layer_name: str
+    attachment_type: str
+    old_name: str
+    new_name: str
+
+
+def _dtype_maybe(
+    dtype: DTypeLike | None, dtype_per_channel: DTypeLike | None
+) -> np.dtype | None:
+    if dtype is not None and dtype_per_channel is not None:
+        raise AttributeError(
+            "Cannot add layer. Specifying both 'dtype' and 'dtype_per_channel' is not allowed"
+        )
+    elif dtype_per_channel is not None:
+        warn_deprecated("dtype_per_channel", "dtype")
+        return np.dtype(
+            properties_floating_type_to_python_type.get(
+                dtype_per_channel, dtype_per_channel
+            )
+        )
+    elif dtype is not None:
+        return np.dtype(properties_floating_type_to_python_type.get(dtype, dtype))
+    return None
 
 
 class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
@@ -115,10 +157,17 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
         pass
 
     @abstractmethod
-    def _save_dataset_properties_impl(self) -> None:
+    def _save_dataset_properties_impl(
+        self, *, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None
+    ) -> None:
         pass
 
-    def _save_dataset_properties(self, check_existing_properties: bool = True) -> None:
+    def _save_dataset_properties(
+        self,
+        *,
+        check_existing_properties: bool = True,
+        renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None,
+    ) -> None:
         self._ensure_writable()
         if check_existing_properties:
             stored_properties = self._load_dataset_properties()
@@ -136,7 +185,7 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
                     "[WARNING] Properties changed in a way that they are not comparable anymore. Most likely "
                     + "the bounding box naming or axis order changed."
                 )
-        self._save_dataset_properties_impl()
+        self._save_dataset_properties_impl(renamings=renamings)
         self._last_read_properties = copy.deepcopy(self._properties)
 
     @property
@@ -280,6 +329,97 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
         if layer_name not in self.layers.keys():
             raise IndexError(f"The layer {layer_name} is not a layer of this dataset")
         return self.layers[layer_name]
+
+    @abstractmethod
+    def add_layer(
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        *,
+        dtype: DTypeLike | None = None,
+        dtype_per_channel: DTypeLike | None = None,
+        num_channels: int | None = None,
+        data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
+        **kwargs: Any,
+    ) -> LayerType: ...
+
+    def get_or_add_layer(
+        self,
+        layer_name: str,
+        category: LayerCategoryType,
+        *,
+        dtype: DTypeLike | None = None,
+        dtype_per_channel: DTypeLike | None = None,
+        num_channels: int | None = None,
+        data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
+        **kwargs: Any,
+    ) -> LayerType:
+        """Get an existing layer or create a new one.
+
+        Gets a layer with the given name if it exists, otherwise creates a new layer
+        with the specified parameters.
+
+        Args:
+            layer_name: Name of the layer to get or create
+            category: Layer category ('color' or 'segmentation')
+            dtype: Optional data type per channel
+            dtype_per_channel: Deprecated, use dtype.
+            num_channels: Optional number of channels
+            data_format: Format to store data ('wkw', 'zarr', etc.)
+            **kwargs: Additional arguments passed to add_layer()
+
+        Returns:
+            Layer: The existing or newly created layer
+
+        Raises:
+            AssertionError: If existing layer's properties don't match specified parameters
+            ValueError: If both dtype and dtype_per_channel specified
+            RuntimeError: If invalid category specified
+
+        Examples:
+            ```
+            layer = ds.get_or_add_layer(
+                "segmentation",
+                LayerCategoryType.SEGMENTATION_CATEGORY,
+                dtype=np.uint64,
+            )
+            ```
+
+        Note:
+            The dtype can be specified either per layer or per channel, but not both.
+            For existing layers, the parameters are validated against the layer properties.
+        """
+
+        dtype = _dtype_maybe(dtype, dtype_per_channel)
+        if layer_name in self.layers.keys():
+            layer = self.layers[layer_name]
+            assert num_channels is None or layer.num_channels == num_channels, (
+                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the number of channels do not match. "
+                + f"The number of channels of the existing layer are '{layer.num_channels}' "
+                + f"and the passed parameter is '{num_channels}'."
+            )
+            assert layer.category == category, (
+                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
+                + f"The category of the existing layer is '{layer.category}' "
+                + f"and the passed parameter is '{category}'."
+            )
+
+            if dtype is not None:
+                assert dtype is None or layer.dtype == dtype, (
+                    f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "
+                    + f"The dtype of the existing layer is '{layer.dtype}' "
+                    + f"and the passed parameter would result in a dtype of '{dtype}'."
+                )
+            return layer
+        else:
+            return self.add_layer(
+                layer_name,
+                category,
+                dtype=dtype,
+                num_channels=num_channels,
+                data_format=DataFormat(data_format),
+                **kwargs,
+            )
 
     def get_segmentation_layers(self) -> list[SegmentationLayerType]:
         """Get all segmentation layers in the dataset.

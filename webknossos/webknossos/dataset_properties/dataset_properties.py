@@ -1,8 +1,9 @@
 from collections.abc import Iterable, Iterator
 
 import attr
+import numpy as np
 
-from ..geometry import Mag, NDBoundingBox
+from ..geometry import Mag, NormalizedBoundingBox
 from .data_format import AttachmentDataFormat, DataFormat
 from .layer_categories import LayerCategoryType
 from .length_unit import _LENGTH_UNIT_TO_NANOMETER, LengthUnit
@@ -21,22 +22,6 @@ def float_tpl(voxel_size: list | tuple) -> Iterable:
             voxel_size[2],
         )
     )
-
-
-@attr.define
-class DatasetViewConfiguration:
-    """
-    Stores information on how the dataset is shown in webknossos by default.
-    """
-
-    four_bit: bool | None = None
-    interpolation: bool | None = None
-    render_missing_data_black: bool | None = None
-    loading_strategy: str | None = None
-    segmentation_pattern_opacity: int | None = None
-    zoom: float | None = None
-    position: tuple[int, int, int] | None = None
-    rotation: tuple[int, int, int] | None = None
 
 
 @attr.define
@@ -78,6 +63,26 @@ class LayerViewConfiguration:
 
 
 @attr.define
+class DatasetViewConfiguration:
+    """
+    Stores information on how the dataset is shown in WEBKNOSSOS by default.
+    """
+
+    four_bit: bool | None = None
+    interpolation: bool | None = None
+    render_missing_data_black: bool | None = None
+    loading_strategy: str | None = None
+    segmentation_pattern_opacity: int | None = None
+    zoom: float | None = None
+    position: tuple[int, int, int] | None = None
+    rotation: tuple[int, int, int] | None = None
+    layers: dict[str, LayerViewConfiguration] | None = None
+    color_layer_order: list[str] | None = None
+    blend_mode: str | None = None
+    natively_rendered_layer_name: str | None = None
+
+
+@attr.define
 class MagViewProperties:
     mag: Mag
     path: str | None = None
@@ -85,19 +90,21 @@ class MagViewProperties:
     Could be None for older datasource-proterties.json files.
     """
     cube_length: int | None = None
-    axis_order: dict[str, int] | None = None
 
 
 @attr.define
 class LayerProperties:
     name: str
     category: LayerCategoryType
-    bounding_box: NDBoundingBox
-    element_class: str
+    bounding_box: NormalizedBoundingBox
+    dtype: str
     data_format: DataFormat
     mags: list[MagViewProperties]
-    num_channels: int | None = None
     default_view_configuration: LayerViewConfiguration | None = None
+
+    @property
+    def dtype_np(self) -> np.dtype:
+        return np.dtype(self.dtype)
 
 
 @attr.define
@@ -154,7 +161,7 @@ class DatasetProperties:
     id: dict[str, str]
     """
     id is a legacy field that is not used anymore. Its keys are name (dataset directory name) and team (organization id)
-    However, webknossos will take both from the dataset path and not from what is here in the datasource-properties.json.
+    However, WEBKNOSSOS will take both from the dataset path and not from what is here in the datasource-properties.json.
     """
     scale: VoxelSize
     data_layers: list[SegmentationLayerProperties | LayerProperties]

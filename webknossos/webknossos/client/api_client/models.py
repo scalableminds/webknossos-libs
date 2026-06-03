@@ -130,7 +130,7 @@ class ApiDatasetId:
 class ApiDatasetExploreAndAddRemote:
     remote_uri: str
     dataset_name: str
-    folder_path: str | None = None
+    folder_id: str | None = None
     data_store_name: str | None = None
 
 
@@ -146,12 +146,17 @@ class ApiSharingToken:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetUploadInformation:
+class ApiDatasetUploadSuccess:
+    dataset_id: str
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetUploadInformationV13:
     upload_id: str
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetUploadSuccess:
+class ApiDatasetUploadSuccessV13:
     new_dataset_id: str
 
 
@@ -171,7 +176,50 @@ class ApiLinkedLayerIdentifierLegacy:
 
 
 @attr.s(auto_attribs=True)
-class ApiReserveDatasetUploadInformation:
+class ApiDatasetComposeLayer:
+    source_dataset_id: str
+    source_layer_name: str
+    target_layer_name: str
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetComposeMag:
+    source_dataset_id: str
+    source_layer_name: str
+    target_layer_name: str
+    source_mag: tuple[int, int, int]
+    target_mag: tuple[int, int, int]
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetComposeAttachment:
+    source_dataset_id: str
+    source_layer_name: str
+    target_layer_name: str
+    attachment_type: str
+    source_attachment_name: str
+    target_attachment_name: str
+
+
+@attr.s(auto_attribs=True)
+class ApiResumableUploadInfo:
+    upload_id: str
+    total_file_count: int
+    total_file_size_in_bytes: int
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetUploadInfo:
+    resumable_upload_info: ApiResumableUploadInfo
+    dataset_name: str
+    organization_id: str
+    initial_team_ids: list[str]
+    layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
+    folder_id: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveDatasetUploadInformationV13:
     upload_id: str
     name: str
     organization: str
@@ -180,6 +228,39 @@ class ApiReserveDatasetUploadInformation:
     initial_teams: list[str]
     layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
     folder_id: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiMagProperties:
+    mag: tuple[int, int, int]
+    channel_index: int | None
+    axis_order: dict[str, int] | None
+
+
+@attr.s(auto_attribs=True)
+class ApiMagUploadInfo:
+    resumable_upload_info: ApiResumableUploadInfo
+    dataset_id: str
+    layer_name: str
+    mag: ApiMagProperties
+    overwritePending: bool
+
+
+@attr.s(auto_attribs=True)
+class ApiAttachmentProperties:
+    name: str
+    path: str
+    dataFormat: str
+
+
+@attr.s(auto_attribs=True)
+class ApiAttachmentUploadInfo:
+    resumable_upload_info: ApiResumableUploadInfo
+    dataset_id: str
+    layer_name: str
+    attachment_type: str
+    attachment: ApiAttachmentProperties
+    overwritePending: bool
 
 
 @attr.s(auto_attribs=True)
@@ -428,7 +509,7 @@ class ApiAdHocMeshInfo:
 
 
 @attr.s(auto_attribs=True)
-class ApiReserveDatasetUplaodToPathsParameters:
+class ApiReserveDatasetUploadToPathsParameters:
     dataset_name: str
     initial_team_ids: list[str]
     folder_id: str | None
@@ -451,6 +532,7 @@ class ApiReserveAttachmentUploadToPathParameters:
     attachment_type: str
     attachment_dataformat: str
     path_prefix: str | None
+    overwrite_pending: bool | None = None
 
 
 @attr.s(auto_attribs=True)
@@ -462,3 +544,45 @@ class ApiReserveDatasetUploadToPathsForPreliminaryParameters:
 @attr.s(auto_attribs=True)
 class ApiReserveDatasetUploadToPathsForPreliminaryResponse:
     data_source: DatasetProperties
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveMagUploadToPathParameters:
+    layer_name: str
+    mag: list[int]
+    axis_order: dict[str, int] | None
+    channel_index: int | None
+    path_prefix: str | None
+    overwrite_pending: bool
+
+
+@attr.s(auto_attribs=True)
+class ApiLayerRenaming:
+    old_name: str
+    new_name: str
+
+
+@attr.s(auto_attribs=True)
+class ApiAttachmentRenaming:
+    layer_name: str
+    attachment_type: str
+    old_name: str
+    new_name: str
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveAiModelUploadToPathParameters:
+    existing_ai_model_id: str | None
+    data_store_name: str
+    name: str
+    comment: str | None
+    category: str | None
+    path_prefix: str | None
+
+
+@attr.s(auto_attribs=True)
+class ApiAiModel:
+    id: str
+    path: str
+    name: str
+    is_usable: bool

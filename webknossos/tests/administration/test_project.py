@@ -2,7 +2,7 @@ import pytest
 
 import webknossos as wk
 
-pytestmark = [pytest.mark.use_proxay]
+pytestmark = [pytest.mark.skip_on_windows]
 
 
 def test_get_project() -> None:

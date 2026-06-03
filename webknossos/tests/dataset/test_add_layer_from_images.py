@@ -9,6 +9,7 @@ from typing import Any
 from zipfile import BadZipFile, ZipFile
 
 import httpx
+import mrcfile
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor
@@ -28,21 +29,45 @@ def ignore_warnings() -> Iterator:
 
 def test_compare_tifffile(tmp_upath: UPath) -> None:
     ds = wk.Dataset(tmp_upath, (1, 1, 1))
-    layer = ds.add_layer_from_images(
-        "testdata/tiff/test.02*.tiff",
-        layer_name="compare_tifffile",
-        compress=True,
-        category="segmentation",
-        topleft=(100, 100, 55),
-        chunk_shape=(8, 8, 8),
-        shard_shape=(64, 64, 64),
-    )
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            "testdata/tiff/test.02*.tiff",
+            layer_name="compare_tifffile",
+            compress=True,
+            category="segmentation",
+            topleft=(100, 100, 55),
+            chunk_shape=(8, 8, 8),
+            shard_shape=(64, 64, 64),
+            executor=executor,
+        )
     assert layer.bounding_box.topleft == wk.Vec3Int(100, 100, 55)
     data = layer.get_finest_mag().read()[0, :, :]
     for z_index in range(0, data.shape[-1]):
         with TiffFile("testdata/tiff/test.0200.tiff") as tif_file:
             comparison_slice = tif_file.asarray().T
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
+
+
+def test_mrc_from_images(tmp_upath: UPath) -> None:
+    Z, Y, X = 6, 24, 32
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    mrc_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            mrc_path,
+            layer_name="mrc_layer",
+            executor=executor,
+        )
+
+    assert layer.dtype == np.dtype("uint16")
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]  # drop channel dim
+    # Dataset stores as (x, y, z); original data is (z, y, x) → transpose
+    np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
 
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
@@ -58,23 +83,19 @@ def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
             shard_shape=(64, 64, 64),
             executor=executor,
         )
-    assert layer.bounding_box.topleft == wk.VecInt(
-        2, 55, 100, 100, axes=("t", "z", "y", "x")
-    )
-    assert layer.bounding_box.size == wk.VecInt(
-        7, 5, 167, 439, axes=("t", "z", "y", "x")
-    )
+    assert layer.bounding_box.topleft == wk.VecInt(t=2, z=55, y=100, x=100)
+    assert layer.bounding_box.size == wk.VecInt(t=7, z=5, y=167, x=439)
     read_with_tifffile_reader = TiffFile(
         "testdata/4D/4D_series/4D-series.ome.tif"
     ).asarray()
-    read_first_channel_from_dataset = layer.get_finest_mag().read()[0]
-    np.testing.assert_array_equal(
-        read_with_tifffile_reader, read_first_channel_from_dataset
-    )
+    # For ND data without explicit channel axis, read() returns data directly
+    # without a channel wrapper dimension
+    read_from_dataset = layer.get_finest_mag().read()
+    np.testing.assert_array_equal(read_with_tifffile_reader, read_from_dataset)
 
 
 REPO_IMAGES_ARGS: list[
-    tuple[str | list[UPath], dict[str, Any], str, int, int, tuple[int, ...]]
+    tuple[str | list[UPath], dict[str, Any], str, int, int, wk.VecInt]
 ] = [
     (
         "testdata/tiff/test.*.tiff",
@@ -82,7 +103,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (265, 265, 257),
+        wk.VecInt(c=1, x=265, y=265, z=257),
     ),
     (
         [
@@ -94,7 +115,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (265, 265, 3),
+        wk.VecInt(c=1, x=265, y=265, z=3),
     ),
     (
         "testdata/rgb_tiff/test_rgb.tif",
@@ -102,7 +123,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (64, 64, 6),
+        wk.VecInt(c=1, x=64, y=64, z=6),
     ),
     (
         "testdata/rgb_tiff",
@@ -110,7 +131,7 @@ REPO_IMAGES_ARGS: list[
         "uint32",
         1,
         1,
-        (64, 64, 6),
+        wk.VecInt(c=1, x=64, y=64, z=6),
     ),
     (
         "testdata/temca2/*/*/*.jpg",
@@ -118,7 +139,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (1024, 1024, 12),
+        wk.VecInt(c=1, x=1024, y=1024, z=12),
     ),
     (
         "testdata/temca2",
@@ -129,7 +150,7 @@ REPO_IMAGES_ARGS: list[
         # The topmost folder contains an extra image,
         # which is included here as well, but not in
         # the glob pattern above. Therefore z is +1.
-        (1024, 1024, 13),
+        wk.VecInt(c=1, x=1024, y=1024, z=13),
     ),
     (
         "testdata/tiff_with_different_shapes/*",
@@ -137,7 +158,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         1,
-        (2970, 2521, 4),
+        wk.VecInt(c=1, x=2970, y=2521, z=4),
     ),
     (
         "testdata/various_tiff_formats/test_CS.tif",
@@ -145,7 +166,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         5,
-        (3, 64, 128, 128),
+        wk.VecInt(s=3, x=64, c=1, y=128, z=128),
     ),
     (
         "testdata/various_tiff_formats/test_C.tif",
@@ -153,7 +174,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         5,
-        (128, 128, 64),
+        wk.VecInt(c=1, x=128, y=128, z=64),
     ),
     # same as test_C.tif above, but as a single file in a folder:
     (
@@ -162,16 +183,23 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         5,
-        (128, 128, 64),
+        wk.VecInt(c=1, x=128, y=128, z=64),
     ),
-    ("testdata/various_tiff_formats/test_I.tif", {}, "uint32", 1, 1, (64, 128, 64)),
+    (
+        "testdata/various_tiff_formats/test_I.tif",
+        {},
+        "uint32",
+        1,
+        1,
+        wk.VecInt(c=1, x=64, y=128, z=64),
+    ),
     (
         "testdata/various_tiff_formats/test_S.tif",
         {"data_format": "zarr3"},
         "uint16",
         1,
         1,
-        (3, 64, 128, 128),
+        wk.VecInt(s=3, x=64, y=128, z=128),
     ),
     (
         "testdata/4D/single_channel/single-channel.ome.tiff",
@@ -179,7 +207,7 @@ REPO_IMAGES_ARGS: list[
         "int8",
         1,
         1,
-        (439, 167, 1),
+        wk.VecInt(c=1, x=439, y=167, z=1),
     ),
     (
         "testdata/4D/multi_channel_z_series/multi-channel-z-series.ome.tif",
@@ -187,7 +215,7 @@ REPO_IMAGES_ARGS: list[
         "int8",
         1,
         3,
-        (439, 167, 5),
+        wk.VecInt(c=1, x=439, y=167, z=5),
     ),
 ]
 
@@ -199,7 +227,7 @@ def _test_repo_images(
     dtype: str,
     num_channels: int,
     num_layers: int,
-    size: tuple[int, ...],
+    size: wk.VecInt,
 ) -> wk.Dataset:
     with SequentialExecutor() as executor:
         ds = wk.Dataset(tmp_upath, (1, 1, 1))
@@ -211,10 +239,10 @@ def _test_repo_images(
             use_bioformats=False,
             **kwargs,
         )
-        assert layer.dtype_per_channel == np.dtype(dtype)
+        assert layer.dtype == np.dtype(dtype)
         assert layer.num_channels == num_channels
         assert len(ds.layers) == num_layers
-        assert layer.bounding_box.size.to_tuple() == size
+        assert layer.normalized_bounding_box.size == size
         if isinstance(layer, wk.SegmentationLayer):
             assert layer.largest_segment_id is not None
             assert layer.largest_segment_id > 0
@@ -231,7 +259,7 @@ def test_repo_images(
     dtype: str,
     num_channels: int,
     num_layers: int,
-    size: tuple[int, ...],
+    size: wk.VecInt,
 ) -> None:
     _test_repo_images(tmp_upath, path, kwargs, dtype, num_channels, num_layers, size)
 
@@ -246,17 +274,8 @@ def download_and_unpack(
     for url_i, filename_i in zip(url, filename):
         with NamedTemporaryFile() as download_file:
             with httpx.stream("GET", url_i, follow_redirects=True) as response:
-                total = int(response.headers["Content-Length"])
-
-                with wk.utils.get_rich_progress() as progress:
-                    download_task = progress.add_task(
-                        "Download Image Data", total=total
-                    )
-                    for chunk in response.iter_bytes():
-                        download_file.write(chunk)
-                        progress.update(
-                            download_task, completed=response.num_bytes_downloaded
-                        )
+                for chunk in response.iter_bytes():
+                    download_file.write(chunk)
             try:
                 with ZipFile(download_file, "r") as zip_file:
                     zip_file.extractall(str(out_path))
@@ -327,7 +346,7 @@ def _test_bioformats(
     unzip_path = tmp_upath / "unzip"
     download_and_unpack(url, unzip_path, filename)
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
-    with wk.utils.get_executor_for_args(None) as executor:
+    with SequentialExecutor() as executor:
         layer = ds.add_layer_from_images(
             str(unzip_path / filename),
             layer_name="color",
@@ -336,7 +355,7 @@ def _test_bioformats(
             use_bioformats=True,
             **kwargs,
         )
-        assert layer.dtype_per_channel == np.dtype(dtype)
+        assert layer.dtype == np.dtype(dtype)
         assert layer.num_channels == num_channels
         assert layer.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
     assert len(ds.layers) == num_layers
@@ -476,7 +495,7 @@ def _test_test_images(
         layer_name = filename
         path = unzip_path / filename
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
-    with wk.utils.get_executor_for_args(None) as executor:
+    with SequentialExecutor() as executor:
         l_bio: wk.Layer | None
         try:
             l_bio = ds.add_layer_from_images(
@@ -491,7 +510,7 @@ def _test_test_images(
             print(e)
             l_bio = None
         else:
-            assert l_bio.dtype_per_channel == np.dtype(dtype)
+            assert l_bio.dtype == np.dtype(dtype)
             assert l_bio.num_channels == num_channels
             assert l_bio.bounding_box.size.to_tuple() == size
         l_normal = ds.add_layer_from_images(
@@ -502,7 +521,7 @@ def _test_test_images(
             use_bioformats=False,
             **kwargs,
         )
-        assert l_normal.dtype_per_channel == np.dtype(dtype)
+        assert l_normal.dtype == np.dtype(dtype)
         assert l_normal.num_channels == num_channels
         assert l_normal.bounding_box.size.to_tuple() == size
         if l_bio is not None:
@@ -543,7 +562,7 @@ if __name__ == "__main__":
             print(repo_image)
             print(
                 _test_repo_images(UPath(tempdir), *repo_image)
-                .upload(f"test_repo_images_{name}_{time()}")
+                .upload(new_dataset_name=f"test_repo_images_{name}_{time()}")
                 .url
             )
 
@@ -553,7 +572,7 @@ if __name__ == "__main__":
             print(bioformat_image)
             print(
                 _test_bioformats(UPath(tempdir), *bioformat_image)
-                .upload(f"test_bioformats_{name}_{time()}")
+                .upload(new_dataset_name=f"test_bioformats_{name}_{time()}")
                 .url
             )
 
@@ -563,6 +582,6 @@ if __name__ == "__main__":
             print(*test_images_args)
             print(
                 _test_test_images(UPath(tempdir), *test_images_args)
-                .upload(f"test_test_images_{name}_{time()}")
+                .upload(new_dataset_name=f"test_test_images_{name}_{time()}")
                 .url
             )

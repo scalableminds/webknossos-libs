@@ -10,13 +10,20 @@ from cluster_tools import Executor
 from upath import UPath
 
 from ....dataset_properties import DataFormat
-from ....geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from ....geometry import (
+    Mag,
+    NDBoundingBox,
+    NormalizedBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+)
 from ....geometry.vec_int import VecIntLike
 from ....utils import (
     count_defined_values,
-    get_executor_for_args,
     get_rich_progress,
     wait_and_ensure_success,
+    warn_deprecated,
+    wrap_executor,
 )
 from ._array import ArrayInfo, BaseArray
 
@@ -57,7 +64,7 @@ class View:
 
     _path: UPath
     _data_format: DataFormat
-    _bounding_box: NDBoundingBox | None
+    _normalized_bounding_box: NormalizedBoundingBox | None
     _read_only: bool
     _cached_array: BaseArray | None
     _mag: Mag
@@ -65,7 +72,7 @@ class View:
     def __init__(
         self,
         path_to_mag_view: UPath,
-        bounding_box: NDBoundingBox
+        bounding_box: NormalizedBoundingBox
         | None,  # in mag 1, absolute coordinates, optional only for mag_view since it overwrites the bounding_box property
         mag: Mag,
         data_format: DataFormat,
@@ -93,9 +100,14 @@ class View:
             view = mag_view.get_view(size=(100, 100, 10))
             ```
         """
+        from .mag_view import MagView
+
+        if not isinstance(self, MagView) and bounding_box is None:
+            raise ValueError("Please provide a bounding box when creating a View.")
+
         self._path = path_to_mag_view
         self._data_format = data_format
-        self._bounding_box = bounding_box
+        self._normalized_bounding_box = bounding_box
         self._read_only = read_only
         self._cached_array = cached_array
         self._mag = mag
@@ -106,14 +118,14 @@ class View:
 
         Returns:
             ArrayInfo: Object containing array metadata such as data type,
-                num_channels, and other array-specific information.
+                bounding box, and other array-specific information.
 
         Examples:
             ```python
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
             array_info = view.info
             print(f"Data type: {array_info.data_type}")
-            print(f"Num channels: {array_info.num_channels}")
+            print(f"Shape: {array_info.bounding_box.size}")
             ```
         """
         return self._array.info
@@ -138,8 +150,28 @@ class View:
             print(f"Size: {bbox.size}")
             ```
         """
-        assert self._bounding_box is not None
-        return self._bounding_box
+        return self.normalized_bounding_box.denormalize()
+
+    @property
+    def normalized_bounding_box(self) -> NormalizedBoundingBox:
+        """Gets the bounding box with axes normalized to include the channel dimension.
+
+        Returns:
+            NormalizedBoundingBox: Bounding box with channel axis included
+        """
+        assert self._normalized_bounding_box is not None, (
+            "Invalid state. Non-MagView views must have a bounding box."
+        )
+        return self._normalized_bounding_box
+
+    @property
+    def num_channels(self) -> int:
+        """Gets the number of channels in this view.
+
+        Returns:
+            int: Number of channels
+        """
+        return self.normalized_bounding_box.size.get("c", 0)
 
     @property
     def mag(self) -> Mag:
@@ -183,13 +215,14 @@ class View:
 
     def _get_mag1_bbox(
         self,
+        *,
         abs_mag1_bbox: NDBoundingBox | None = None,
         rel_mag1_bbox: NDBoundingBox | None = None,
         abs_mag1_offset: Vec3IntLike | None = None,
         rel_mag1_offset: Vec3IntLike | None = None,
         mag1_size: Vec3IntLike | None = None,
         current_mag_size: Vec3IntLike | None = None,
-    ) -> NDBoundingBox:
+    ) -> NormalizedBoundingBox:
         num_bboxes = count_defined_values([abs_mag1_bbox, rel_mag1_bbox])
         num_offsets = count_defined_values([abs_mag1_offset, rel_mag1_offset])
         num_sizes = count_defined_values([mag1_size, current_mag_size])
@@ -210,27 +243,33 @@ class View:
             )
 
         if abs_mag1_bbox is not None:
-            return abs_mag1_bbox
+            return abs_mag1_bbox.normalize_axes(self.num_channels)
 
         if rel_mag1_bbox is not None:
-            return rel_mag1_bbox.offset(self.bounding_box.topleft)
-
-        else:
-            mag_vec = self._mag.to_vec3_int()
-            if rel_mag1_offset is not None:
-                abs_mag1_offset = self.bounding_box.topleft + rel_mag1_offset
-
-            if current_mag_size is not None:
-                mag1_size = Vec3Int(current_mag_size) * mag_vec
-
-            assert abs_mag1_offset is not None, "No offset was supplied."
-            assert mag1_size is not None, "No size was supplied."
-
-            assert len(self.bounding_box) == 3, (
-                "The delivered offset and size are only usable for 3D views."
+            return rel_mag1_bbox.normalize_axes(self.num_channels).offset(
+                self.bounding_box.topleft
             )
 
-            return self.bounding_box.with_topleft(abs_mag1_offset).with_size(mag1_size)
+        mag_vec = self._mag.to_vec3_int()
+        if rel_mag1_offset is not None:
+            abs_mag1_offset = self.bounding_box.topleft_xyz + Vec3Int(rel_mag1_offset)
+
+        if current_mag_size is not None:
+            mag1_size = Vec3Int(current_mag_size) * mag_vec
+
+        assert abs_mag1_offset is not None, "No offset was supplied."
+        assert mag1_size is not None, "No size was supplied."
+
+        assert self.bounding_box.axes == ("x", "y", "z") or self.bounding_box.axes == (
+            "c",
+            "x",
+            "y",
+            "z",
+        ), "The delivered offset and size are only usable for 3D views."
+
+        return self.normalized_bounding_box.with_topleft_xyz(
+            abs_mag1_offset
+        ).with_size_xyz(mag1_size)
 
     def write(
         self,
@@ -317,6 +356,8 @@ class View:
         ):
             if len(data.shape) == len(self.bounding_box):
                 shape_in_current_mag = data.shape
+            elif len(data.shape) + 1 == len(self.bounding_box):
+                shape_in_current_mag = (1,) + data.shape
             else:
                 shape_in_current_mag = data.shape[1:]
 
@@ -331,14 +372,28 @@ class View:
         else:
             data_shape = Vec3Int(data.shape[-3:])
 
-        num_channels = self._array.info.num_channels
-        if len(data.shape) == len(self.bounding_box):
-            assert num_channels == 1, (
-                f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data (1)"
-            )
+        self_bbox = self.normalized_bounding_box
+        if self_bbox.axes == ("c", "x", "y", "z"):
+            if len(data.shape) == 3:
+                assert self_bbox.size.c == 1, (
+                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data (1)"
+                )
+                data = np.expand_dims(data, axis=0)
+            elif len(data.shape) == 4:
+                assert self_bbox.size.c == data.shape[self_bbox.index.c], (
+                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
+                )
+            else:
+                raise ValueError(
+                    f"The passed data has to have the dimensions (c, x, y, z) or (x, y, z), got shape {data.shape}"
+                )
         else:
-            assert num_channels == data.shape[0], (
-                f"The number of channels of the dataset ({num_channels}) does not match the number of channels of the passed data ({data.shape[0]})"
+            if "c" in self_bbox.axes:
+                assert self_bbox.size.c == data.shape[self_bbox.index.c], (
+                    f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
+                )
+            assert len(data.shape) == len(self_bbox.axes), (
+                f"The passed data has to have the dimensions {self_bbox.axes}, got shape {data.shape}"
             )
 
         mag1_bbox = self._get_mag1_bbox(
@@ -348,8 +403,8 @@ class View:
             abs_mag1_bbox=absolute_bounding_box,
             current_mag_size=data_shape,
         )
-        assert self.bounding_box.contains_bbox(mag1_bbox), (
-            f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self.bounding_box}"
+        assert self_bbox.contains_bbox(mag1_bbox), (
+            f"The bounding box to write {mag1_bbox} is larger than the view's bounding box {self_bbox}"
         )
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
@@ -376,23 +431,131 @@ class View:
         else:
             self._array.write(current_mag_bbox, data)
 
-    def _check_shard_alignment(self, bbox: NDBoundingBox) -> None:
+    def _resolve_cxyz_write(
+        self,
+        data: np.ndarray,
+        relative_offset: Vec3IntLike | None,
+        absolute_offset: Vec3IntLike | None,
+        relative_bounding_box: NDBoundingBox | None,
+        absolute_bounding_box: NDBoundingBox | None,
+    ) -> tuple[np.ndarray, dict]:
+        """Reorder cxyz data to storage order and build write location kwargs.
+
+        For standard axes the original positioning args are returned unchanged;
+        for non-standard axes the bbox is resolved to an absolute_bounding_box.
+        """
+        self_bbox = self.normalized_bounding_box
+        if self_bbox.axes in (("c", "x", "y", "z"), ("x", "y", "z")):
+            return View._reorder_cxyz_to_storage(data, self_bbox.axes), dict(
+                relative_offset=relative_offset,
+                absolute_offset=absolute_offset,
+                relative_bounding_box=relative_bounding_box,
+                absolute_bounding_box=absolute_bounding_box,
+            )
+        assert (relative_bounding_box is not None) or (
+            absolute_bounding_box is not None
+        ), (
+            "write_cxyz with non-standard axis ordering requires an explicit "
+            "relative_bounding_box or absolute_bounding_box"
+        )
+        mag1_bbox = self._get_mag1_bbox(
+            rel_mag1_bbox=relative_bounding_box,
+            abs_mag1_bbox=absolute_bounding_box,
+        )
+        return View._reorder_cxyz_to_storage(data, mag1_bbox.axes), dict(
+            absolute_bounding_box=mag1_bbox,
+        )
+
+    def write_cxyz(
+        self,
+        data: np.ndarray,
+        *,
+        allow_unaligned: bool = False,
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
+    ) -> None:
+        """Write data from a (c, x, y, z) ordered array to the view.
+
+        Accepts data always in ``(c, x, y, z)`` axis order regardless of the
+        underlying storage axis ordering, reordering axes internally as needed.
+
+        Args:
+            data (np.ndarray): 4D array in ``(c, x, y, z)`` order.
+            allow_unaligned (bool, optional): If True, allows writing data without
+                being aligned to the shard shape. Defaults to False.
+            relative_offset (Vec3IntLike | None, optional): Offset relative to view's
+                position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box relative
+                to view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding box
+                in Mag(1) coordinates. Defaults to None.
+        """
+        assert len(data.shape) == 4, (
+            f"write_cxyz expects a 4D (c, x, y, z) array, got shape {data.shape}"
+        )
+        data, write_loc = self._resolve_cxyz_write(
+            data,
+            relative_offset,
+            absolute_offset,
+            relative_bounding_box,
+            absolute_bounding_box,
+        )
+        self.write(data, allow_unaligned=allow_unaligned, **write_loc)
+
+    @staticmethod
+    def _reorder_cxyz_to_storage(
+        data: np.ndarray, storage_axes: tuple[str, ...]
+    ) -> np.ndarray:
+        """Reorder a 4D ``(c, x, y, z)`` array to the given storage axis order.
+
+        Cxyz axes absent from ``storage_axes`` are squeezed (they must have size 1).
+        Extra non-cxyz axes in ``storage_axes`` are inserted as size-1 dimensions.
+        """
+        cxyz = ("c", "x", "y", "z")
+        # validate: cxyz axes absent from storage must be size 1 in input
+        for i, axis in enumerate(cxyz):
+            if axis not in storage_axes:
+                assert data.shape[i] == 1, (
+                    f"Cannot write '{axis}' axis (size {data.shape[i]}) "
+                    f"to a layer that has no '{axis}' axis"
+                )
+        # squeeze missing cxyz axes from the input
+        axes_to_squeeze = tuple(i for i, a in enumerate(cxyz) if a not in storage_axes)
+        if axes_to_squeeze:
+            data = data.squeeze(axis=axes_to_squeeze)
+        # remaining axes in data are the cxyz axes present in storage, in cxyz order
+        remaining = [a for a in cxyz if a in storage_axes]
+        # extra storage axes (non-cxyz) get new size-1 dimensions appended
+        extra = [a for a in storage_axes if a not in set(cxyz)]
+        for _ in extra:
+            data = np.expand_dims(data, axis=-1)
+        # reorder from [remaining..., extra...] to storage order
+        all_current = remaining + extra
+        src = [all_current.index(a) for a in storage_axes]
+        return np.moveaxis(data, src, list(range(len(storage_axes))))
+
+    def _check_shard_alignment(self, bbox: NormalizedBoundingBox) -> None:
         """Check that the bounding box is aligned with the shard grid"""
         shard_shape = self.info.shard_shape
         shard_bbox = bbox.align_with_mag(shard_shape, ceil=True)
-        if shard_bbox.intersected_with(self.bounding_box.in_mag(self._mag)) != bbox:
+        self_bbox = self.normalized_bounding_box
+        if shard_bbox.intersected_with(self_bbox.in_mag(self._mag)) != bbox:
             raise ValueError(
                 f"The bounding box to write {bbox} is not aligned with the shard shape {shard_shape}. "
-                + "Performance will be degraded as existing shard data has to be read, combined and "
-                + "written as whole shards. Additionally, writing without shard alignment data can lead to "
-                + f"issues when writing in parallel. Bounding box: {self.bounding_box}",
+                + "This is disallowed because of issues with performance and concurrent writes. "
+                + "Either, ensure that you write shard-aligned chunks OR pass allow_unaligned=True. "
+                + f"When using the latter, take care to not write concurrently. Bounding box: {self_bbox}"
             )
 
     def _prepare_compressed_write(
         self,
-        current_mag_bbox: NDBoundingBox,
+        current_mag_bbox: NormalizedBoundingBox,
         data: np.ndarray,
-    ) -> Iterator[tuple[NDBoundingBox, np.ndarray]]:
+    ) -> Iterator[tuple[NormalizedBoundingBox, np.ndarray]]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox,
         divides these into chunks of shard_shape size and delegates
         the preparation to _prepare_compressed_write_chunk."""
@@ -402,23 +565,14 @@ class View:
             chunk_border_alignments=self._array.info.shard_shape,
         )
         for chunked_bbox in chunked_bboxes:
-            source_slice: Any
-            if len(data.shape) == len(current_mag_bbox):
-                source_slice = chunked_bbox.offset(
-                    -current_mag_bbox.topleft
-                ).to_slices()
-            else:
-                source_slice = (slice(None, None),) + chunked_bbox.offset(
-                    -current_mag_bbox.topleft
-                ).to_slices()
-
+            source_slice = chunked_bbox.offset(-current_mag_bbox.topleft).to_slices()
             yield self._prepare_compressed_write_chunk(chunked_bbox, data[source_slice])
 
     def _prepare_compressed_write_chunk(
         self,
-        current_mag_bbox: NDBoundingBox,
+        current_mag_bbox: NormalizedBoundingBox,
         data: np.ndarray,
-    ) -> tuple[NDBoundingBox, np.ndarray]:
+    ) -> tuple[NormalizedBoundingBox, np.ndarray]:
         """This method takes an arbitrary sized chunk of data with an accompanying bbox
         (ideally not larger than a shard) and enlarges that chunk to fit the shard it
         resides in (by reading the entire shard data and writing the passed data ndarray
@@ -432,9 +586,7 @@ class View:
             # The data bbox should either be aligned or match the dataset's bounding box:
             aligned_data = self._read_without_checks(aligned_bbox)
 
-            index_slice = (slice(None, None),) + current_mag_bbox.offset(
-                -aligned_bbox.topleft
-            ).to_slices()
+            index_slice = current_mag_bbox.offset(-aligned_bbox.topleft).to_slices()
             # overwrite the specified data
             aligned_data[index_slice] = data
             return aligned_bbox, aligned_data
@@ -470,9 +622,8 @@ class View:
                 in Mag(1) coordinates. Defaults to None.
 
         Returns:
-            np.ndarray: The requested data as a numpy array. The shape will be either
-                (channels, x, y, z) for multi-channel data or (x, y, z) for
-                single-channel data. Areas outside the dataset are zero-padded.
+            np.ndarray: The requested data as a numpy array. The shape will be
+                (channels, x, y, z). Areas outside the dataset are zero-padded.
 
         Raises:
             AssertionError: If incompatible parameters are provided (e.g., both
@@ -482,7 +633,7 @@ class View:
             ```python
             # Read entire view's data
             view = layer.get_mag("1").get_view(size=(100, 100, 10))
-            data = view.read()  # Returns (x, y, z) array for single-channel data
+            data = view.read()  # Returns (1, x, y, z) array for single-channel data
 
             # Read with relative offset and size
             data = view.read(
@@ -502,12 +653,30 @@ class View:
         Note:
             - Use only one method to specify the region (offset+size or bounding_box)
             - All coordinates are in Mag(1)
-            - For multi-channel data, the returned array has shape (C, X, Y, Z)
-            - For single-channel data, the returned array has shape (X, Y, Z)
+            - The returned array always has the shape (C, X, Y, Z), even for single channel data
             - Regions outside the dataset are automatically zero-padded
             - The view's magnification affects the actual data resolution
             - Data shape must match the target region size
         """
+        mag1_bbox = self._resolve_read_bbox(
+            size,
+            relative_offset,
+            absolute_offset,
+            relative_bounding_box,
+            absolute_bounding_box,
+            "read",
+        )
+        return self._read_without_checks(mag1_bbox.in_mag(self._mag))
+
+    def _resolve_read_bbox(
+        self,
+        size: Vec3IntLike | None,
+        relative_offset: Vec3IntLike | None,
+        absolute_offset: Vec3IntLike | None,
+        relative_bounding_box: NDBoundingBox | None,
+        absolute_bounding_box: NDBoundingBox | None,
+        method_name: str,
+    ) -> NormalizedBoundingBox:
         current_mag_size: Vec3IntLike | None
         mag1_size: Vec3IntLike | None
         if absolute_bounding_box is None and relative_bounding_box is None:
@@ -520,13 +689,12 @@ class View:
                 mag1_size = None
             else:
                 if relative_offset is None and absolute_offset is None:
-                    if type(self) is View:
-                        offset_param = "relative_offset"
-                    else:
-                        offset_param = "absolute_offset"
+                    offset_param = (
+                        "relative_offset" if type(self) is View else "absolute_offset"
+                    )
                     warnings.warn(
-                        "[DEPRECATION] Using view.read(size=my_vec) only with a size is deprecated. "
-                        + f"Please use view.read({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
+                        f"[DEPRECATION] Using view.{method_name}(size=my_vec) only with a size is deprecated. "
+                        + f"Please use view.{method_name}({offset_param}=(0, 0, 0), size=size_vec * view.mag.to_vec3_int()) instead.",
                         DeprecationWarning,
                     )
                     current_mag_size = size
@@ -537,16 +705,12 @@ class View:
 
             if all(
                 i is None
-                for i in [
-                    absolute_offset,
-                    relative_offset,
-                    absolute_bounding_box,
-                ]
+                for i in [absolute_offset, relative_offset, absolute_bounding_box]
             ):
                 relative_offset = Vec3Int.zeros()
         else:
             assert size is None, (
-                "Cannot supply a size when using bounding_box in view.read()"
+                f"Cannot supply a size when using bounding_box in view.{method_name}()"
             )
             current_mag_size = None
             mag1_size = None
@@ -566,11 +730,11 @@ class View:
         assert mag1_bbox.topleft.is_positive(), (
             f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
         )
-
-        return self._read_without_checks(mag1_bbox.in_mag(self._mag))
+        return mag1_bbox
 
     def read_xyz(
         self,
+        *,
         relative_bounding_box: NDBoundingBox | None = None,
         absolute_bounding_box: NDBoundingBox | None = None,
     ) -> np.ndarray:
@@ -592,8 +756,7 @@ class View:
 
         Returns:
             np.ndarray: The requested data as a numpy array with dimensions ordered as
-                (channels, X, Y, Z) for multi-channel data or (X, Y, Z) for single-channel
-                data. Areas outside the dataset are zero-padded.
+                (channels, X, Y, Z) data. Areas outside the dataset are zero-padded.
 
         Examples:
             ```python
@@ -612,26 +775,118 @@ class View:
             - The returned array's axes are ordered differently from read()
             - All coordinates are in Mag(1)
         """
+        warn_deprecated("read_xyz", "read_cxyz")
         mag1_bbox = self._get_mag1_bbox(
             rel_mag1_bbox=relative_bounding_box,
             abs_mag1_bbox=absolute_bounding_box,
         )
-        if isinstance(mag1_bbox, BoundingBox):
-            return self._read_without_checks(mag1_bbox.in_mag(self._mag))
 
         data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
         # transform data to xyz order
-        data = np.moveaxis(
-            data,
-            mag1_bbox.index_xyz,
-            [1, 2, 3],
+        if "c" in mag1_bbox.axes:
+            data = np.moveaxis(
+                data,
+                (mag1_bbox.index.c,) + mag1_bbox.index_xyz.to_tuple(),
+                [0, 1, 2, 3],
+            )
+        else:
+            data = np.expand_dims(data, axis=0)
+            data = np.moveaxis(
+                data,
+                mag1_bbox.index_xyz.to_tuple(),
+                [1, 2, 3],
+            )
+        # all additional axes have been moved to the end; they must all be size 1
+        extra_axes = [a for a in mag1_bbox.axes if a not in ("c", "x", "y", "z")]
+        for i, axis in enumerate(extra_axes):
+            size = data.shape[4 + i]
+            if size != 1:
+                raise ValueError(
+                    f"Cannot read into (c, x, y, z) format: extra axis '{axis}' "
+                    f"has size {size} > 1. Use read() and handle the extra axis manually."
+                )
+        data = data.squeeze(axis=tuple(range(4, len(data.shape))))
+        return data
+
+    def read_cxyz(
+        self,
+        size: Vec3IntLike
+        | None = None,  # usually in mag1, in current mag if offset is given
+        *,
+        relative_offset: Vec3IntLike | None = None,  # in mag1
+        absolute_offset: Vec3IntLike | None = None,  # in mag1
+        relative_bounding_box: NDBoundingBox | None = None,  # in mag1
+        absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
+    ) -> np.ndarray:
+        """Read data from the view and return it in ``(c, x, y, z)`` axis order.
+
+        Equivalent to :meth:`read` but always returns a 4-D array ordered as
+        ``(channels, x, y, z)`` regardless of the underlying storage axis ordering.
+        If the array does not have a channel axis, one of size 1 is added.
+
+        Args:
+            size (Vec3IntLike | None, optional): Size of region to read in Mag(1)
+                coordinates. Defaults to None.
+            relative_offset (Vec3IntLike | None, optional): Offset relative to the
+                view's position in Mag(1) coordinates. Defaults to None.
+            absolute_offset (Vec3IntLike | None, optional): Absolute offset in Mag(1)
+                coordinates. Defaults to None.
+            relative_bounding_box (NDBoundingBox | None, optional): Bounding box
+                relative to the view's position in Mag(1) coordinates. Defaults to None.
+            absolute_bounding_box (NDBoundingBox | None, optional): Absolute bounding
+                box in Mag(1) coordinates. Defaults to None.
+
+        Returns:
+            np.ndarray: Data as a 4-D numpy array with shape ``(c, x, y, z)``.
+                Areas outside the dataset are zero-padded.
+
+        Examples:
+            ```python
+            # Read entire view's data in cxyz order
+            view = layer.get_mag("1").get_view(size=(100, 100, 10))
+            data = view.read_cxyz()  # Always returns (c, x, y, z) array
+
+            # Read with relative offset and size
+            data = view.read_cxyz(relative_offset=(10, 10, 0), size=(50, 50, 10))
+            ```
+        """
+        mag1_bbox = self._resolve_read_bbox(
+            size,
+            relative_offset,
+            absolute_offset,
+            relative_bounding_box,
+            absolute_bounding_box,
+            "read_cxyz",
         )
+        data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
+        # reorder to (c, x, y, z), inserting a size-1 axis for each missing cxyz axis
+        storage_axes = mag1_bbox.axes
+        source_positions = []
+        next_appended = len(storage_axes)
+        for axis in ("c", "x", "y", "z"):
+            if axis in storage_axes:
+                source_positions.append(storage_axes.index(axis))
+            else:
+                data = np.expand_dims(data, axis=-1)
+                source_positions.append(next_appended)
+                next_appended += 1
+        data = np.moveaxis(data, source_positions, [0, 1, 2, 3])
+        # squeeze any extra non-cxyz axes that were moved to positions 4+;
+        # they must all be size 1 or the data can't be collapsed to (c, x, y, z)
+        extra_axes = [a for a in storage_axes if a not in ("c", "x", "y", "z")]
+        for i, axis in enumerate(extra_axes):
+            size = data.shape[4 + i]
+            if size != 1:
+                raise ValueError(
+                    f"Cannot read into (c, x, y, z) format: extra axis '{axis}' "
+                    f"has size {size} > 1. Use read() and handle the extra axis manually."
+                )
         data = data.squeeze(axis=tuple(range(4, len(data.shape))))
         return data
 
     def _read_without_checks(
         self,
-        current_mag_bbox: NDBoundingBox,
+        current_mag_bbox: NormalizedBoundingBox,
     ) -> np.ndarray:
         data = self._array.read(current_mag_bbox)
         return data
@@ -767,7 +1022,7 @@ class View:
         )
 
         if not read_only:
-            assert self.bounding_box.contains_bbox(mag1_bbox), (
+            assert self.normalized_bounding_box.contains_bbox(mag1_bbox), (
                 f"The bounding box of the new subview {mag1_bbox} is larger than the view's bounding box {self.bounding_box}. "
                 + "This is only allowed for read-only views."
             )
@@ -778,7 +1033,7 @@ class View:
                 shard_shape, ceil=True
             )
             # The data bbox should either be aligned or match the dataset's bounding box:
-            current_mag_view_bbox = self.bounding_box.in_mag(self._mag)
+            current_mag_view_bbox = self.normalized_bounding_box.in_mag(self._mag)
             if current_mag_bbox != current_mag_view_bbox.intersected_with(
                 current_mag_aligned_bbox, dont_assert=True
             ):
@@ -804,7 +1059,7 @@ class View:
     def get_buffered_slice_writer(
         self,
         buffer_size: int | None = None,
-        dimension: int = 2,  # z
+        dimension: str | int = "z",
         *,
         relative_offset: Vec3IntLike | None = None,  # in mag1
         absolute_offset: Vec3IntLike | None = None,  # in mag1
@@ -821,8 +1076,8 @@ class View:
         Args:
             buffer_size (int): Number of slices to buffer before performing a write.
                 Defaults to the size of the shard in the `dimension`.
-            dimension (int): Axis along which to write slices (0=x, 1=y, 2=z).
-                Defaults to 2 (z-axis).
+            dimension (str | int): Axis along which to write slices (0=x, 1=y, 2=z).
+                Defaults to "z".
             relative_offset (Vec3IntLike | None): Offset in mag1 coordinates, relative
                 to the current view's position. Mutually exclusive with absolute_offset.
                 Defaults to None.
@@ -865,14 +1120,18 @@ class View:
             - Remember to use the writer in a context manager
             - Only one positioning parameter should be specified
         """
-        from ..._utils.buffered_slice_writer import BufferedSliceWriter
+        from ..._utils.buffered_slice_writer import (
+            BufferedSliceWriter,
+            _parse_dimension,
+        )
 
         assert not self._read_only, (
             "Cannot get a buffered slice writer on a read-only view."
         )
 
+        dimension = _parse_dimension(dimension)
         if buffer_size is None:
-            buffer_size = self.info.shard_shape[dimension]
+            buffer_size = self.info.shard_shape.get(dimension)
 
         return BufferedSliceWriter(
             view=self,
@@ -889,7 +1148,7 @@ class View:
     def get_buffered_slice_reader(
         self,
         buffer_size: int | None = None,
-        dimension: int = 2,  # z
+        dimension: str | int = "z",
         *,
         relative_bounding_box: NDBoundingBox | None = None,  # in mag1
         absolute_bounding_box: NDBoundingBox | None = None,  # in mag1
@@ -904,8 +1163,8 @@ class View:
         Args:
             buffer_size (int): Number of slices to buffer in memory at once.
                 Defaults to the size of the shard in the `dimension`.
-            dimension (int): Axis along which to read slices (0=x, 1=y, 2=z).
-                Defaults to 2 (z-axis).
+            dimension (str | int): Axis along which to read slices (0=x, 1=y, 2=z).
+                Defaults to "z".
             relative_bounding_box (NDBoundingBox | None): Bounding box in mag1 coordinates,
                 relative to the current view's offset. Mutually exclusive with
                 absolute_bounding_box. Defaults to None.
@@ -929,7 +1188,7 @@ class View:
             # Read y-slices with custom buffer size
             with view.get_buffered_slice_reader(
                 buffer_size=10,
-                dimension=1,  # y-axis
+                dimension="y",
                 relative_offset=(10, 0, 0)
             ) as reader:
             ```
@@ -941,9 +1200,11 @@ class View:
             - The reader can be used as an iterator
         """
         from ..._utils.buffered_slice_reader import BufferedSliceReader
+        from ..._utils.buffered_slice_writer import _parse_dimension
 
+        dimension = _parse_dimension(dimension)
         if buffer_size is None:
-            buffer_size = self.info.shard_shape[dimension]
+            buffer_size = self.info.shard_shape.get(dimension)
 
         return BufferedSliceReader(
             view=self,
@@ -957,6 +1218,7 @@ class View:
     def for_each_chunk(
         self,
         func_per_chunk: Callable[[tuple["View", int]], None],
+        *,
         chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
         executor: Executor | None = None,
         progress_desc: str | None = None,
@@ -1015,10 +1277,7 @@ class View:
 
         job_args = []
         for i, chunk in enumerate(self.bounding_box.chunk(chunk_shape, chunk_shape)):
-            chunk_view = self.get_view(
-                absolute_offset=chunk.topleft,
-                size=chunk.size,
-            )
+            chunk_view = self.get_view(absolute_bounding_box=chunk)
             job_args.append((chunk_view, i))
 
         # execute the work for each chunk
@@ -1047,6 +1306,7 @@ class View:
     def map_chunk(
         self,
         func_per_chunk: Callable[["View"], Any],
+        *,
         chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
         executor: Executor | None = None,
         progress_desc: str | None = None,
@@ -1110,14 +1370,11 @@ class View:
 
         job_args = []
         for chunk in self.bounding_box.chunk(chunk_shape, chunk_shape):
-            chunk_view = self.get_view(
-                absolute_offset=chunk.topleft,
-                size=chunk.size,
-            )
+            chunk_view = self.get_view(absolute_bounding_box=chunk)
             job_args.append(chunk_view)
 
         # execute the work for each chunk
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
             results = wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, job_args),
                 executor=executor,
@@ -1129,8 +1386,9 @@ class View:
     def chunk(
         self,
         chunk_shape: VecIntLike,
+        *,
         chunk_border_alignments: VecIntLike | None = None,
-        read_only: bool = False,
+        read_only: bool | None = None,
     ) -> Generator["View", None, None]:
         """Generate a sequence of sub-views by chunking the current view.
 
@@ -1144,7 +1402,7 @@ class View:
                 borders in Mag(1) coordinates. If None, aligns to (0, 0, 0).
                 Defaults to None.
             read_only (bool, optional): Whether the generated chunks should be read-only.
-                Defaults to False.
+                Defaults to self.read_only.
 
         Yields:
             View: Sub-views representing each chunk of the original view.
@@ -1155,6 +1413,8 @@ class View:
         chunks = mag1.chunk(chunk_shape=(100, 100, 100), chunk_border_alignments=(50, 50, 50))
         ```
         """
+        if read_only is None:
+            read_only = self.read_only
 
         for chunk in self.bounding_box.chunk(chunk_shape, chunk_border_alignments):
             yield self.get_view(absolute_bounding_box=chunk, read_only=read_only)
@@ -1163,6 +1423,7 @@ class View:
         self,
         func_per_chunk: Callable[[tuple["View", "View", int]], None],
         target_view: "View",
+        *,
         source_chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
         target_chunk_shape: Vec3IntLike | None = None,  # in Mag(1)
         executor: Executor | None = None,
@@ -1226,7 +1487,7 @@ class View:
         else:
             source_chunk_shape = Vec3Int(source_chunk_shape)
             target_chunk_shape = Vec3Int(target_chunk_shape)
-            self._check_chunk_shape(source_chunk_shape, read_only=True)
+            self._check_chunk_shape(source_chunk_shape, read_only=self.read_only)
             target_view._check_chunk_shape(
                 target_chunk_shape, read_only=target_view.read_only
             )
@@ -1246,9 +1507,11 @@ class View:
         )
 
         source_views = self.chunk(
-            source_chunk_shape, source_chunk_shape, read_only=True
+            source_chunk_shape, chunk_border_alignments=source_chunk_shape
         )
-        target_views = target_view.chunk(target_chunk_shape, target_chunk_shape)
+        target_views = target_view.chunk(
+            target_chunk_shape, chunk_border_alignments=target_chunk_shape
+        )
 
         job_args = (
             (source_view, target_view, i)
@@ -1280,8 +1543,10 @@ class View:
     def content_is_equal(
         self,
         other: "View",
+        *,
         executor: Executor | None = None,
         progress_desc: str | None = None,
+        chunk_shape: Vec3IntLike | None = None,
     ) -> bool:
         """Compare the content of this view with another view.
 
@@ -1314,13 +1579,19 @@ class View:
         """
         if self.bounding_box.size != other.bounding_box.size:
             return False
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
+            # read-only views are required for more flexible chunk shapes
+            # otherwise, shard-aligned chunk shapes would be required
+            read_only_self = self.get_view(read_only=True)
+            read_only_other = other.get_view(read_only=True)
             try:
-                self.for_zipped_chunks(
+                read_only_self.for_zipped_chunks(
                     _assert_check_equality,
-                    other,
+                    read_only_other,
                     executor=executor,
                     progress_desc=progress_desc or "Comparing contents",
+                    source_chunk_shape=chunk_shape,
+                    target_chunk_shape=chunk_shape,
                 )
             except AssertionError:
                 return False

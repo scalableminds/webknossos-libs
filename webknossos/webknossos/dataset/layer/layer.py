@@ -15,7 +15,7 @@ from webknossos.dataset_properties import (
     LayerProperties,
     MagViewProperties,
 )
-from webknossos.geometry import Mag, Vec3Int, Vec3IntLike
+from webknossos.geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from webknossos.geometry.mag import MagLike
 
 from ._downsampling_utils import (
@@ -46,19 +46,21 @@ if TYPE_CHECKING:
 
 from webknossos.dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
-    DEFAULT_SHARD_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD,
+    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
+    DEFAULT_CHUNKS_PER_SHARD_ZARR,
 )
 from webknossos.utils import (
     cheap_resolve,
     copytree,
     dump_path,
     enrich_path,
-    get_executor_for_args,
     is_fs_path,
     movetree,
     named_partial,
     rmtree,
     warn_deprecated,
+    wrap_executor,
 )
 
 logger = logging.getLogger(__name__)
@@ -72,18 +74,33 @@ def _copy_job(args: tuple[View, View, int]) -> None:
     target_view.write(source_view.read())
 
 
-def _get_shard_shape(
+def _get_shard_and_chunk_shapes(
     *,
-    chunk_shape: Vec3Int,
-    chunks_per_shard: Vec3IntLike | int | None,
-    shard_shape: Vec3IntLike | int | None,
-) -> Vec3Int | None:
+    data_format: DataFormat,
+    layer_bounding_box: NDBoundingBox | None = None,
+    chunk_shape: Vec3IntLike | int | None = None,
+    chunks_per_shard: Vec3IntLike | int | None = None,
+    shard_shape: Vec3IntLike | int | None = None,
+) -> tuple[Vec3Int, Vec3Int]:
+    """This function is used to determine the chunk and shard shapes for a layer.
+
+    - If chunk_shape, shard_shape or chunks_per_shard are specified, they are used as is.
+    - If the data_format is Zarr3, we can use arbitrary shard shapes. So, for flat data (few sections in z),
+      we use more chunks per shard in x and y and just a single chunk in z.
+    - If the data_format is Zarr, we cannot use sharding and use a single chunk in x,y,z.
+    - The default is 32x32x32 chunks per shard for Zarr3 and WKW.
+    """
+
     if shard_shape is not None and chunks_per_shard is not None:
         raise ValueError(
             "shard_shape and chunks_per_shard must not be specified at the same time."
         )
 
-    elif shard_shape is not None:
+    if chunk_shape is not None:
+        chunk_shape = Vec3Int.from_vec_or_int(chunk_shape)
+    else:
+        chunk_shape = DEFAULT_CHUNK_SHAPE
+    if shard_shape is not None:
         shard_shape = Vec3Int.from_vec_or_int(shard_shape)
         if shard_shape % chunk_shape != Vec3Int.zeros():
             raise ValueError(
@@ -91,11 +108,19 @@ def _get_shard_shape(
             )
     elif chunks_per_shard is not None:
         warn_deprecated("chunks_per_shard", "shard_shape")
-        shard_shape = Vec3Int.from_vec_or_int(chunks_per_shard) * (
-            chunk_shape or DEFAULT_CHUNK_SHAPE
-        )
-
-    return shard_shape
+        shard_shape = Vec3Int.from_vec_or_int(chunks_per_shard) * chunk_shape
+    elif data_format == DataFormat.Zarr:
+        shard_shape = chunk_shape * DEFAULT_CHUNKS_PER_SHARD_ZARR
+    elif (
+        layer_bounding_box is not None
+        and data_format == DataFormat.Zarr3
+        and layer_bounding_box.size.z
+        <= (chunk_shape.z * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES.z)
+    ):
+        shard_shape = chunk_shape * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
+    else:
+        shard_shape = chunk_shape * DEFAULT_CHUNKS_PER_SHARD
+    return chunk_shape, shard_shape
 
 
 def _is_foreign_mag(dataset_path: UPath, layer_name: str, mag_path: UPath) -> bool:
@@ -140,8 +165,7 @@ class Layer(AbstractLayer):
             dataset (Dataset): Parent dataset containing this layer
             path (Path): Filesystem path to this layer's data
             category (LayerCategoryType): Category of data (e.g. color, segmentation)
-            dtype_per_layer (str): Deprecated, use dtype_per_channel. Data type used for the entire layer
-            dtype_per_channel (np.dtype): Data type used per channel
+            dtype (np.dtype): Data type used per channel
             num_channels (int): Number of channels in the layer
             data_format (DataFormat): Format used to store the data
             default_view_configuration (LayerViewConfiguration | None): View configuration
@@ -224,7 +248,7 @@ class Layer(AbstractLayer):
         Renames the layer to `layer_name`. This changes the name of the directory on disk and updates the properties.
         Only layers on local file systems can be renamed.
         """
-        from webknossos.dataset.layer.abstract_layer import _ALLOWED_LAYER_NAME_REGEX
+        from webknossos.dataset.dataset import _validate_layer_name
 
         if layer_name == self.name:
             return
@@ -235,10 +259,8 @@ class Layer(AbstractLayer):
             raise ValueError(
                 f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."
             )
-        if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
-            raise ValueError(
-                f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
-            )
+
+        _validate_layer_name(layer_name)
 
         if self.path.exists():
             assert is_fs_path(self.dataset.path), (
@@ -311,21 +333,15 @@ class Layer(AbstractLayer):
         # normalize the name of the mag
         mag = Mag(mag)
 
-        chunk_shape = (
-            DEFAULT_CHUNK_SHAPE
-            if chunk_shape is None
-            else Vec3Int.from_vec_or_int(chunk_shape)
-        )
-        shard_shape = _get_shard_shape(
+        chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
+            data_format=self.data_format,
+            # If this is the first mag, the bounding box is probably not yet set,
+            # so we don't use it for computing chunk and shard shapes
+            layer_bounding_box=(None if len(self.mags) == 0 else self.bounding_box),
             chunk_shape=chunk_shape,
             chunks_per_shard=chunks_per_shard,
             shard_shape=shard_shape,
         )
-        if shard_shape is None:
-            if self.data_format == DataFormat.Zarr:
-                shard_shape = chunk_shape
-            else:
-                shard_shape = DEFAULT_SHARD_SHAPE
 
         if chunk_shape not in (Vec3Int.full(32), Vec3Int.full(64)):
             warnings.warn(
@@ -359,7 +375,7 @@ class Layer(AbstractLayer):
         )
 
         mag_view._array.resize(
-            self.bounding_box.align_with_mag(mag, ceil=True).in_mag(mag)
+            self.normalized_bounding_box.align_with_mag(mag, ceil=True).in_mag(mag)
         )
 
         self._mags[mag] = mag_view
@@ -370,16 +386,6 @@ class Layer(AbstractLayer):
                 cube_length=(
                     mag_array_info.shard_shape.x
                     if mag_array_info.data_format == DataFormat.WKW
-                    else None
-                ),
-                axis_order=(
-                    dict(
-                        zip(
-                            ("c", "x", "y", "z"),
-                            (0, *self.bounding_box.index_xyz),
-                        )
-                    )
-                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
                     else None
                 ),
                 path=dump_path(mag_path, self.dataset.resolved_path),
@@ -433,17 +439,6 @@ class Layer(AbstractLayer):
                     if mag_array_info.data_format == DataFormat.WKW
                     else None
                 ),
-                axis_order=(
-                    {
-                        key: value
-                        for key, value in zip(
-                            ("c", "x", "y", "z"),
-                            (0, *self.bounding_box.index_xyz),
-                        )
-                    }
-                    if mag_array_info.data_format in (DataFormat.Zarr, DataFormat.Zarr3)
-                    else None
-                ),
                 path=stored_path,
             )
         )
@@ -475,23 +470,28 @@ class Layer(AbstractLayer):
 
         if mag in self._mags.keys():
             mag_view = self._mags[mag]
-            chunk_shape = Vec3Int.from_vec_or_int(
-                chunk_shape or mag_view.info.chunk_shape
-            )
-            shard_shape = _get_shard_shape(
+
+            chunk_shape_parsed, shard_shape_parsed = _get_shard_and_chunk_shapes(
+                data_format=self.data_format,
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 shard_shape=shard_shape,
             )
 
-            if chunk_shape is not None and mag_view.info.chunk_shape != chunk_shape:
+            if (
+                chunk_shape is not None
+                and mag_view.info.chunk_shape != chunk_shape_parsed
+            ):
                 raise ValueError(
-                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk shapes do not match. Expected {mag_view.info.chunk_shape}, got {chunk_shape}."
+                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the chunk shapes do not match. Expected {mag_view.info.chunk_shape}, got {chunk_shape_parsed}."
                 )
 
-            if shard_shape is not None and mag_view.info.shard_shape != shard_shape:
+            if (
+                shard_shape is not None
+                and mag_view.info.shard_shape != shard_shape_parsed
+            ):
                 raise ValueError(
-                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the shard shapes do not match. Expected {mag_view.info.shard_shape}, got {shard_shape}."
+                    f"Cannot get_or_add_mag: The mag {mag} already exists, but the shard shapes do not match. Expected {mag_view.info.shard_shape}, got {shard_shape_parsed}."
                 )
 
             if (
@@ -518,8 +518,10 @@ class Layer(AbstractLayer):
 
             return self.get_mag(mag)
         else:
-            chunk_shape = Vec3Int.from_vec_or_int(chunk_shape or DEFAULT_CHUNK_SHAPE)
-            shard_shape = _get_shard_shape(
+            chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
+                data_format=self.data_format,
+                # same reasoning as in add_mag
+                layer_bounding_box=(None if len(self.mags) == 0 else self.bounding_box),
                 chunk_shape=chunk_shape,
                 chunks_per_shard=chunks_per_shard,
                 shard_shape=shard_shape,
@@ -704,7 +706,7 @@ class Layer(AbstractLayer):
 
         # use the target shard shape for the copy operation
         copy_shape = mag_view.info.shard_shape * mag_view.mag.to_vec3_int()
-        foreign_mag_view.for_zipped_chunks(
+        foreign_mag_view.get_view(read_only=True).for_zipped_chunks(
             func_per_chunk=_copy_job,
             target_view=mag_view,
             executor=executor,
@@ -815,9 +817,9 @@ class Layer(AbstractLayer):
             f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
             + f"does not match the layers data format {self.data_format}"
         )
-        assert self.dtype_per_channel == foreign_mag_view.get_dtype(), (
+        assert self.dtype == foreign_mag_view.get_dtype(), (
             f"The dtype/elementClass of the remote mag {foreign_mag_view.get_dtype()} "
-            + f"must match the layer's dtype {self.dtype_per_channel}"
+            + f"must match the layer's dtype {self.dtype}"
         )
 
         self._setup_mag(mag, foreign_mag_view.path, read_only=True)
@@ -828,7 +830,6 @@ class Layer(AbstractLayer):
                 mag=mag,
                 path=dump_path(foreign_mag_view.path, self.dataset.resolved_path),
                 cube_length=foreign_mag_view._properties.cube_length,
-                axis_order=foreign_mag_view._properties.axis_order,
             )
         )
         self._save_layer_properties()
@@ -937,12 +938,7 @@ class Layer(AbstractLayer):
             if extend_layer_bounding_box:
                 # assumption: the topleft of the bounding box is still the same, the size might differ
                 # axes of the layer and the zarr array provided are the same
-                zarray_size = (
-                    mag_view.info.shape[mag_view.info.dimension_names.index(axis)]
-                    for axis in self.bounding_box.axes
-                    if axis != "c"
-                )
-                size = self.bounding_box.size.pairmax(zarray_size)
+                size = self.bounding_box.size.pairmax(mag_view.info.bounding_box.size)
                 self.bounding_box = self.bounding_box.with_size(size)
 
             return mag_view
@@ -971,10 +967,13 @@ class Layer(AbstractLayer):
         compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset", "RemoteDataset"] = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         force_sampling_scheme: bool = False,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
+        from_mag_view: MagView | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Downsample data from a source magnification to coarser magnifications.
@@ -991,14 +990,17 @@ class Layer(AbstractLayer):
             sampling_mode (str | SamplingModes): How dimensions should be downsampled.
                 Defaults to ANISOTROPIC.
             align_with_other_layers (bool | Dataset | RemoteDataset): Whether to align with other layers. True by default.
-            buffer_shape (Vec3Int | None): Shape of processing buffer. Defaults to None.
+            buffer_shape (Vec3IntLike | int | None): Shape of processing buffer. Defaults to None.
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage. Recommended (32,32,32) or (64,64,64). Defaults to (32,32,32).
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage. Must be a multiple of chunk_shape. Defaults to (1024, 1024, 1024).
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
             allow_overwrite (bool): Whether existing mags can be overwritten. False by default.
             only_setup_mags (bool): Only create mags without data. False by default.
+            from_mag_view: Source magnification view, pass only if the source data should be from another layer or dataset.
             executor (Executor | None): Executor for parallel processing. None by default.
 
         Raises:
-            AssertionError: If from_mag does not exist
+            KeyError: If from_mag doesn't exist is invalid.
             RuntimeError: If sampling scheme produces invalid magnifications
             AttributeError: If sampling_mode is invalid
 
@@ -1025,9 +1027,10 @@ class Layer(AbstractLayer):
             )
             from_mag = max(self.mags.keys())
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        if from_mag_view is None and from_mag not in self.mags.keys():
+            raise KeyError(
+                f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+            )
 
         if coarsest_mag is None:
             coarsest_mag = calculate_default_coarsest_mag(self.bounding_box.size_xyz)
@@ -1076,8 +1079,10 @@ class Layer(AbstractLayer):
             else:
                 raise RuntimeError(msg)
 
-        for prev_mag, target_mag in zip(
-            [from_mag] + mags_to_downsample[:-1], mags_to_downsample
+        prev_mag_views = [from_mag_view] + [None] * (len(mags_to_downsample) - 1)
+
+        for prev_mag, target_mag, prev_mag_view in zip(
+            [from_mag] + mags_to_downsample[:-1], mags_to_downsample, prev_mag_views
         ):
             self.downsample_mag(
                 from_mag=prev_mag,
@@ -1085,8 +1090,11 @@ class Layer(AbstractLayer):
                 interpolation_mode=interpolation_mode,
                 compress=compress,
                 buffer_shape=buffer_shape,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
+                from_mag_view=prev_mag_view,
                 executor=executor,
             )
 
@@ -1097,9 +1105,12 @@ class Layer(AbstractLayer):
         *,
         interpolation_mode: str = "default",
         compress: bool | Zarr3Config = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         allow_overwrite: bool = False,
         only_setup_mag: bool = False,
+        from_mag_view: MagView | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Performs a single downsampling step between magnification levels.
@@ -1110,30 +1121,52 @@ class Layer(AbstractLayer):
             interpolation_mode: Method for interpolation ("median", "mode", "nearest", "bilinear", "bicubic")
             compress: Whether to compress target data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape: Shape of processing buffer
+            chunk_shape: Shape of chunks for storage.
+            shard_shape: Shape of shards for storage.
             allow_overwrite: Whether to allow overwriting existing mag
             only_setup_mag: Only create mag without data. This parameter can be used to prepare for parallel downsampling of multiple layers while avoiding parallel writes with outdated updates to the datasource-properties.json file.
+            from_mag_view: Source magnification view, pass only if the source data should be from another layer or dataset.
             executor: Executor for parallel processing
 
         Raises:
-            AssertionError: If from_mag doesn't exist or target exists without overwrite"""
+            KeyError: If from_mag doesn't exist is invalid.
+            AssertionError: If target exists without overwrite
+            ValueError: If from_mag is greater than target_mag
+        """
         self._dataset._ensure_writable()
-
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
 
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.category
         )
 
-        assert from_mag <= target_mag
-        assert allow_overwrite or target_mag not in self.mags, (
-            "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
-        )
-
-        prev_mag_view = self.mags[from_mag]
+        if not (from_mag <= target_mag):  # note, not the same as from_mag > target_mag
+            raise ValueError(
+                f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) is greater than the target_mag ({target_mag.to_layer_name()})."
+            )
+        if not allow_overwrite and target_mag in self.mags:
+            raise ValueError(
+                "The target mag already exists. Pass allow_overwrite=True if you want to overwrite it."
+            )
+        if from_mag_view is not None:
+            if from_mag_view.mag != from_mag:
+                raise ValueError(
+                    f"from_mag_view {from_mag_view.mag} was supplied to downsample, but does not match from_mag {from_mag}."
+                )
+        else:
+            if from_mag not in self.mags.keys():
+                raise KeyError(
+                    f"Failed to downsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+                )
+            from_mag_view = self.mags[from_mag]
 
         mag_factors = target_mag.to_vec3_int() // from_mag.to_vec3_int()
+
+        chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
+            data_format=self.data_format,
+            layer_bounding_box=self.bounding_box,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
+        )
 
         if target_mag in self.mags.keys() and allow_overwrite:
             target_mag_view = self.get_mag(target_mag)
@@ -1141,8 +1174,10 @@ class Layer(AbstractLayer):
             # initialize the new mag
             target_mag_view = self._initialize_mag_from_other_mag(
                 target_mag,
-                prev_mag_view,
+                from_mag_view,
                 compress=compress,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
             )
 
         if only_setup_mag:
@@ -1153,27 +1188,43 @@ class Layer(AbstractLayer):
         # Get target view
         target_view = target_mag_view.get_view(absolute_bounding_box=bb_mag1)
 
-        source_view = prev_mag_view.get_view(
+        source_view = from_mag_view.get_view(
             absolute_bounding_box=bb_mag1,
             read_only=True,
         )
 
         # perform downsampling
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
             if buffer_shape is None:
-                buffer_shape = determine_downsample_buffer_shape(prev_mag_view.info)
+                buffer_shape = determine_downsample_buffer_shape(target_view.info)
+            else:
+                buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
             func = named_partial(
                 downsample_cube_job,
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
                 buffer_shape=buffer_shape,
             )
-
+            # The downsampling computation is chunked using buffer_shape anyways.
+            # The target_chunk_shape determines how many jobs are spawned. Increase it
+            # to avoid job computation overhead.
+            _MIN_TARGET_VOXELS = 1024**3
+            target_chunk_shape = target_view.info.shard_shape
+            while target_chunk_shape.prod() < _MIN_TARGET_VOXELS:
+                axes = [
+                    target_chunk_shape.x,
+                    target_chunk_shape.y,
+                    target_chunk_shape.z,
+                ]
+                axes[axes.index(min(axes))] *= 2
+                target_chunk_shape = Vec3Int(*axes)
             source_view.for_zipped_chunks(
                 # this view is restricted to the bounding box specified in the properties
                 func,
                 target_view=target_view,
                 executor=executor,
+                source_chunk_shape=target_chunk_shape * target_mag.to_np(),
+                target_chunk_shape=target_chunk_shape * target_mag.to_np(),
                 progress_desc=f"Downsampling layer {self.name} from Mag {from_mag} to Mag {target_mag}",
             )
 
@@ -1182,7 +1233,9 @@ class Layer(AbstractLayer):
         *,
         interpolation_mode: str = "default",
         compress: bool | Zarr3Config = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Recompute all downsampled magnifications from base mag.
@@ -1194,6 +1247,8 @@ class Layer(AbstractLayer):
             interpolation_mode: Method for interpolation
             compress: Whether to compress recomputed data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             buffer_shape: Shape of processing buffer
+            chunk_shape: Shape of chunks for storage.
+            shard_shape: Shape of shards for storage.
             executor: Executor for parallel processing
         """
 
@@ -1209,6 +1264,8 @@ class Layer(AbstractLayer):
             interpolation_mode=interpolation_mode,
             compress=compress,
             buffer_shape=buffer_shape,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
             allow_overwrite=True,
             executor=executor,
         )
@@ -1220,7 +1277,9 @@ class Layer(AbstractLayer):
         *,
         interpolation_mode: str = "default",
         compress: bool | Zarr3Config = True,
-        buffer_shape: Vec3Int | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         allow_overwrite: bool = False,
         only_setup_mags: bool = False,
         executor: Executor | None = None,
@@ -1235,19 +1294,23 @@ class Layer(AbstractLayer):
             target_mags (List[Mag]): Ordered list of target magnifications
             interpolation_mode (str): Interpolation method to use. Defaults to "default".
             compress (bool | Zarr3Config): Whether to compress outputs. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
-            buffer_shape (Vec3Int | None): Shape of processing buffer.
+            buffer_shape (Vec3IntLike | int | None): Shape of processing buffer.
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage.
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage.
             allow_overwrite (bool): Whether to allow overwriting mags. Defaults to False.
             only_setup_mags (bool): Only create mag structures without data. Defaults to False.
             executor (Executor | None): Executor for parallel processing.
 
         Raises:
-            AssertionError: If from_mag doesn't exist or target mags not in ascending order
+            KeyError: If from_mag doesn't exist is invalid.
+            AssertionError: If target mags not in ascending order
 
         See downsample_mag() for more details on parameters.
         """
-        assert from_mag in self.mags.keys(), (
-            f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
-        )
+        if from_mag not in self.mags.keys():
+            raise KeyError(
+                f"Failed to downsample data. The from_mag ({from_mag}) does not exist."
+            )
 
         # The lambda function is important because 'sorted(target_mags)' would only sort by the maximum element per mag
         target_mags = sorted(target_mags, key=lambda m: m.to_list())
@@ -1268,6 +1331,8 @@ class Layer(AbstractLayer):
                 interpolation_mode=interpolation_mode,
                 compress=compress,
                 buffer_shape=buffer_shape,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
                 allow_overwrite=allow_overwrite,
                 only_setup_mag=only_setup_mags,
                 executor=executor,
@@ -1278,11 +1343,14 @@ class Layer(AbstractLayer):
         self,
         from_mag: Mag,
         *,
+        from_mag_view: MagView | None = None,
         finest_mag: Mag = Mag(1),
         compress: bool | Zarr3Config = True,
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: Union[bool, "Dataset"] = True,
-        buffer_shape: Vec3IntLike | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
+        chunk_shape: Vec3IntLike | int | None = None,
+        shard_shape: Vec3IntLike | int | None = None,
         executor: Executor | None = None,
     ) -> None:
         """Upsample data to finer magnifications.
@@ -1292,6 +1360,7 @@ class Layer(AbstractLayer):
 
         Args:
             from_mag (Mag): Source coarse magnification
+            from_mag_view (MagView | None): Source coarse magnification view, pass only if the source data should be from another layer or dataset.
             finest_mag (Mag): Target finest magnification (default Mag(1))
             compress (bool | Zarr3Config): Whether to compress upsampled data. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
             sampling_mode (str | SamplingModes): How dimensions should be upsampled:
@@ -1299,19 +1368,30 @@ class Layer(AbstractLayer):
                 - 'isotropic': Equal upsampling in all dimensions
                 - 'constant_z': Only upsamples x/y dimensions. z remains unchanged.
             align_with_other_layers: Whether to align mags with others. Defaults to True.
-            buffer_shape (Vec3IntLike | None): Shape of processing buffer.
+            buffer_shape (Vec3IntLike | int | None): Shape of processing buffer.
+            chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage.
+            shard_shape (Vec3IntLike | int | None): Shape of shards for storage.
             executor (Executor | None): Executor for parallel processing.
 
         Raises:
-            AssertionError: If from_mag doesn't exist or finest_mag invalid
+            KeyError: If from_mag doesn't exist is invalid.
+            AssertionError: If finest_mag is invalid.
             AttributeError: If sampling_mode is invalid
         """
 
         self._dataset._ensure_writable()
 
-        assert from_mag in self.mags.keys(), (
-            f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
-        )
+        if from_mag_view is not None:
+            if from_mag_view.mag != from_mag:
+                raise ValueError(
+                    f"from_mag_view {from_mag_view.mag} was supplied to upsample, but does not match from_mag {from_mag}."
+                )
+        else:
+            if from_mag not in self.mags.keys():
+                raise KeyError(
+                    f"Failed to upsample data. The from_mag ({from_mag.to_layer_name()}) does not exist."
+                )
+            from_mag_view = self.mags[from_mag]
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
@@ -1337,13 +1417,22 @@ class Layer(AbstractLayer):
             from_mag, finest_mag, dataset_to_align_with, voxel_size
         )
 
+        chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
+            data_format=self.data_format,
+            layer_bounding_box=self.bounding_box,
+            chunk_shape=chunk_shape,
+            shard_shape=shard_shape,
+        )
+
         for prev_mag, target_mag in zip(
             [from_mag] + mags_to_upsample[:-1], mags_to_upsample
         ):
             assert prev_mag > target_mag
             assert target_mag not in self.mags
 
-            prev_mag_view = self.mags[prev_mag]
+            prev_mag_view = (
+                from_mag_view if prev_mag == from_mag else self.mags[prev_mag]
+            )
 
             mag_factors = [
                 t / s for (t, s) in zip(target_mag.to_list(), prev_mag.to_list())
@@ -1354,6 +1443,8 @@ class Layer(AbstractLayer):
                 target_mag,
                 prev_mag_view,
                 compress=compress,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
             )
 
             # We need to make sure the layer's bounding box is aligned
@@ -1366,7 +1457,7 @@ class Layer(AbstractLayer):
             target_view = target_mag_view.get_view(absolute_bounding_box=bbox_mag1)
 
             # perform upsampling
-            with get_executor_for_args(None, executor) as actual_executor:
+            with wrap_executor(executor) as actual_executor:
                 if buffer_shape is None:
                     buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
                 else:
@@ -1377,7 +1468,7 @@ class Layer(AbstractLayer):
                     buffer_shape=buffer_shape,
                 )
                 prev_mag_view.get_view(
-                    absolute_bounding_box=bbox_mag1
+                    absolute_bounding_box=bbox_mag1, read_only=True
                 ).for_zipped_chunks(
                     # this view is restricted to the bounding box specified in the properties
                     func,
@@ -1393,6 +1484,8 @@ class Layer(AbstractLayer):
         new_mag_name: str | Mag,
         other_mag: MagView,
         compress: bool | Zarr3Config,
+        chunk_shape: Vec3Int | None = None,
+        shard_shape: Vec3Int | None = None,
     ) -> MagView["Layer"]:
         """Creates a new magnification based on settings from existing mag.
 
@@ -1406,13 +1499,13 @@ class Layer(AbstractLayer):
         """
         return self.add_mag(
             new_mag_name,
-            chunk_shape=other_mag.info.chunk_shape,
-            shard_shape=other_mag.info.shard_shape,
+            chunk_shape=chunk_shape or other_mag.info.chunk_shape,
+            shard_shape=shard_shape or other_mag.info.shard_shape,
             compress=compress,
         )
 
     def __repr__(self) -> str:
-        return f"Layer({repr(self.name)}, dtype_per_channel={self.dtype_per_channel}, num_channels={self.num_channels})"
+        return f"Layer({repr(self.name)}, dtype={self.dtype}, num_channels={self.num_channels})"
 
     def as_segmentation_layer(self) -> "SegmentationLayer":
         """Casts into SegmentationLayer."""

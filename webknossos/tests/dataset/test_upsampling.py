@@ -3,6 +3,7 @@ from collections.abc import Iterator
 
 import numpy as np
 import pytest
+from cluster_tools import SequentialExecutor
 from upath import UPath
 
 from webknossos import (
@@ -15,7 +16,6 @@ from webknossos import (
 )
 from webknossos.dataset.layer._upsampling_utils import upsample_cube, upsample_cube_job
 from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.utils import get_executor_for_args
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)
@@ -121,7 +121,7 @@ def test_upsample_multi_channel(tmp_upath: UPath) -> None:
     layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=num_channels,
     )
     mag2 = layer.add_mag("2")
@@ -154,7 +154,7 @@ def test_upsample_multi_channel(tmp_upath: UPath) -> None:
 def test_upsampling_non_aligned(tmp_upath: UPath) -> None:
     ds = Dataset(tmp_upath / "test", (50, 50, 50))
     layer = ds.add_layer(
-        "color", SEGMENTATION_CATEGORY, dtype_per_channel="uint8", largest_segment_id=0
+        "color", SEGMENTATION_CATEGORY, dtype="uint8", largest_segment_id=0
     )
     layer.bounding_box = BoundingBox(topleft=(0, 0, 0), size=(8409, 10267, 5271))
     layer.add_mag(32)
@@ -171,6 +171,58 @@ def test_upsampling_non_aligned(tmp_upath: UPath) -> None:
     )
 
 
+def test_upsample_from_mag_view(tmp_upath: UPath) -> None:
+    """upsample with from_mag_view reads source data from another layer."""
+    source_data = (np.random.rand(1, 32, 32, 8) * 255).astype(np.uint8)
+
+    source_ds = Dataset(tmp_upath / "source", voxel_size=(1, 1, 1))
+    source_layer = source_ds.add_layer("color", COLOR_CATEGORY)
+    source_mag = source_layer.add_mag(Mag(2))
+    source_mag.write(source_data, allow_resize=True)
+
+    target_ds = Dataset(tmp_upath / "target", voxel_size=(1, 1, 1))
+    target_layer = target_ds.add_layer(
+        "color", COLOR_CATEGORY, bounding_box=source_layer.bounding_box
+    )
+
+    target_layer.upsample(
+        from_mag=Mag(2),
+        from_mag_view=source_mag,
+        finest_mag=Mag(1),
+        compress=False,
+        sampling_mode=SamplingModes.ISOTROPIC,
+        align_with_other_layers=False,
+        shard_shape=Vec3Int(64, 64, 32),
+    )
+
+    assert Mag(1) in target_layer.mags
+    result = target_layer.get_mag(1).read()
+    assert result.shape == (1, 64, 64, 16)
+    assert result.mean() == pytest.approx(source_data.mean(), abs=1)
+
+
+def test_upsample_from_mag_view_mag_mismatch(tmp_upath: UPath) -> None:
+    """upsample raises ValueError when from_mag_view.mag != from_mag."""
+    source_ds = Dataset(tmp_upath / "source", voxel_size=(1, 1, 1))
+    source_layer = source_ds.add_layer("color", COLOR_CATEGORY)
+    source_mag = source_layer.add_mag(Mag(4))
+    source_mag.write(
+        (np.random.rand(1, 8, 8, 8) * 255).astype(np.uint8), allow_resize=True
+    )
+
+    target_ds = Dataset(tmp_upath / "target", voxel_size=(1, 1, 1))
+    target_layer = target_ds.add_layer(
+        "color", COLOR_CATEGORY, bounding_box=source_layer.bounding_box
+    )
+
+    with pytest.raises(ValueError, match="does not match from_mag"):
+        target_layer.upsample(
+            from_mag=Mag(2),
+            from_mag_view=source_mag,  # mag=4, but from_mag=2
+            finest_mag=Mag(1),
+        )
+
+
 def test_upsample_nd_dataset(tmp_upath: UPath) -> None:
     source_path = (
         UPath(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
@@ -184,12 +236,12 @@ def test_upsample_nd_dataset(tmp_upath: UPath) -> None:
         "color",
         COLOR_CATEGORY,
         bounding_box=source_layer.bounding_box,
-        dtype_per_channel=source_layer.dtype_per_channel,
+        dtype=source_layer.dtype,
         data_format="zarr3",
     )
 
     source_mag = source_layer.get_mag("2")
-    with get_executor_for_args(None) as executor:
+    with SequentialExecutor() as executor:
         target_layer.add_mag_as_copy(source_mag, executor=executor)
         target_layer.upsample(
             from_mag=Mag(2),

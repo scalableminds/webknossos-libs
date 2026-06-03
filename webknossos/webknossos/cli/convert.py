@@ -1,26 +1,39 @@
 """This module converts an image stack to a WEBKNOSSOS dataset."""
 
-from argparse import Namespace
-from multiprocessing import cpu_count
+import tempfile
 from typing import Annotated, Any
 
 import typer
+from upath import UPath
 
-from ..dataset import Dataset, SamplingModes
-from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
-from ..dataset_properties import DataFormat, LengthUnit, VoxelSize
+from ..client._defaults import DEFAULT_WEBKNOSSOS_URL
+from ..client.context import webknossos_context
+from ..dataset import Dataset, RemoteFolder, SamplingModes, TransferMode
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..dataset_properties import VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
-from ..geometry import Mag, Vec3Int
-from ..utils import get_executor_for_args, rmtree
+from ..geometry import Mag
+from ..utils import rmtree
 from ._utils import (
+    DEFAULT_DATA_FORMAT_STR,
+    ChunkShapeOption,
+    ChunksPerShardOption,
+    DataFormatOption,
     DistributionStrategy,
+    DistributionStrategyOption,
+    JobResourcesOption,
+    JobsOption,
     LayerCategory,
     SamplingMode,
-    VoxelSizeTuple,
+    SamplingModeOption,
+    ShardShapeOption,
+    TokenOption,
+    UnitOption,
+    VoxelSizeOption,
+    WebknossosUrlOption,
+    get_executor_for_args,
     parse_mag,
     parse_path,
-    parse_vec3int,
-    parse_voxel_size,
     prepare_shard_shape,
 )
 
@@ -38,27 +51,13 @@ def main(
     target: Annotated[
         Any,
         typer.Argument(
-            help="Target path to save your WEBKNOSSOS dataset.",
+            help="Target path to save your WEBKNOSSOS dataset. Required unless --upload is set.",
             show_default=False,
             parser=parse_path,
         ),
-    ],
-    voxel_size: Annotated[
-        VoxelSizeTuple,
-        typer.Option(
-            help="The size of one voxel in source data in nanometers. "
-            "Should be a comma-separated string (e.g. 11.0,11.0,20.0).",
-            parser=parse_voxel_size,
-            metavar="VoxelSize",
-            show_default=False,
-        ),
-    ],
-    unit: Annotated[
-        LengthUnit,
-        typer.Option(
-            help="The unit of the voxel size.",
-        ),
-    ] = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    ] = None,
+    voxel_size: VoxelSizeOption,
+    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
     layer_name: Annotated[
         str | None,
         typer.Option(
@@ -71,46 +70,18 @@ def main(
             help="The category of the layer that should be created.",
         ),
     ] = None,
-    data_format: Annotated[
-        DataFormat,
-        typer.Option(
-            help="Data format to store the target dataset in.",
-        ),
-    ] = str(DEFAULT_DATA_FORMAT),  # type:ignore
+    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # type: ignore
     name: Annotated[
         str | None,
         typer.Option(
-            help="New name for the WEBKNOSSOS dataset "
-            "(if not provided, final component of target path is used)"
+            help="Name for the WEBKNOSSOS dataset. "
+            "If not provided, the final component of the target path is used (local) "
+            "or the source directory name (upload)."
         ),
     ] = None,
-    chunk_shape: Annotated[
-        Vec3Int,
-        typer.Option(
-            help="Number of voxels to be stored as a chunk in the output format "
-            "(e.g. `32` or `32,32,32`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = DEFAULT_CHUNK_SHAPE,
-    shard_shape: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="Number of voxels to be stored as a shard in the output format "
-            "(e.g. `1024` or `1024,1024,1024`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
-    chunks_per_shard: Annotated[
-        Vec3Int | None,
-        typer.Option(
-            help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
-            "(e.g. `32` or `32,32,32`).",
-            parser=parse_vec3int,
-            metavar="Vec3Int",
-        ),
-    ] = None,
+    chunk_shape: ChunkShapeOption = DEFAULT_CHUNK_SHAPE,
+    shard_shape: ShardShapeOption = None,
+    chunks_per_shard: ChunksPerShardOption = None,
     compress: Annotated[
         bool, typer.Option(help="Enable compression of the target dataset.")
     ] = True,
@@ -133,9 +104,7 @@ def main(
             "(median, mode, nearest, bilinear or bicubic)."
         ),
     ] = "default",
-    sampling_mode: Annotated[
-        SamplingMode, typer.Option(help="The sampling mode to use.")
-    ] = SamplingMode.ANISOTROPIC,
+    sampling_mode: SamplingModeOption = SamplingMode.ANISOTROPIC,
     batch_size: Annotated[
         int | None,
         typer.Option(
@@ -152,30 +121,44 @@ def main(
             show_default=False,
         ),
     ] = False,
-    jobs: Annotated[
-        int,
+    upload: Annotated[
+        bool,
         typer.Option(
-            help="Number of processes to be spawned.",
-            rich_help_panel="Executor options",
+            help="Convert to a temporary directory and upload the result to a WEBKNOSSOS server. "
+            "Requires --token (or WK_TOKEN). TARGET must not be provided.",
+            rich_help_panel="WEBKNOSSOS context",
         ),
-    ] = cpu_count(),
-    distribution_strategy: Annotated[
-        DistributionStrategy,
-        typer.Option(
-            help="Strategy to distribute the task across CPUs or nodes.",
-            rich_help_panel="Executor options",
-        ),
-    ] = DistributionStrategy.MULTIPROCESSING,
-    job_resources: Annotated[
+    ] = False,
+    webknossos_url: WebknossosUrlOption = DEFAULT_WEBKNOSSOS_URL,
+    token: TokenOption = None,
+    folder: Annotated[
         str | None,
         typer.Option(
-            help="Necessary when using slurm as distribution strategy. Should be a JSON string "
-            '(e.g., --job-resources=\'{"mem": "10M"}\')\'',
-            rich_help_panel="Executor options",
+            help="WEBKNOSSOS dataset folder in which the dataset should be placed. "
+            "Specify the folder path as a string, separated by `/`. "
+            "Example: `Datasets/mySubfolder`. "
+            "If not provided, the root folder is used.",
+            rich_help_panel="WEBKNOSSOS context",
         ),
     ] = None,
+    transfer_mode: Annotated[
+        TransferMode,
+        typer.Option(
+            help="The transfer mode to use when uploading. 'http' is the default. "
+            "Other modes like 'copy', 'move+symlink', 'symlink' are for users with direct filesystem access to the WEBKNOSSOS datastore.",
+            rich_help_panel="WEBKNOSSOS context",
+        ),
+    ] = TransferMode.HTTP,
+    jobs: JobsOption = None,
+    distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
+    job_resources: JobResourcesOption = None,
 ) -> None:
     """Automatic detection of an image stack and conversion to a WEBKNOSSOS dataset."""
+
+    if upload and target is not None:
+        raise typer.BadParameter("TARGET must not be provided when --upload is set.")
+    if not upload and target is None:
+        raise typer.BadParameter("TARGET is required unless --upload is set.")
 
     shard_shape = prepare_shard_shape(
         chunk_shape=chunk_shape,
@@ -183,38 +166,58 @@ def main(
         chunks_per_shard=chunks_per_shard,
     )
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
     voxel_size_with_unit = VoxelSize(voxel_size, unit)
     mode = SamplingModes.parse(sampling_mode.value)
 
-    if overwrite_existing and target.exists():
-        rmtree(target)
-
-    with get_executor_for_args(args=executor_args) as executor:
-        dataset = Dataset.from_images(
-            source,
-            target,
-            name=name,
-            voxel_size_with_unit=voxel_size_with_unit,
-            chunk_shape=chunk_shape,
-            shard_shape=shard_shape,
-            data_format=data_format,
-            executor=executor,
-            compress=compress,
-            layer_name=layer_name,
-            batch_size=batch_size,
-            layer_category=category.value if category else None,
-        )
-    if downsample:
-        with get_executor_for_args(args=executor_args) as executor:
-            dataset.downsample(
-                coarsest_mag=max_mag,
-                interpolation_mode=interpolation_mode,
-                compress=compress,
-                sampling_mode=mode,
+    def _convert_and_downsample(target_path: UPath) -> Dataset:
+        with get_executor_for_args(
+            jobs=jobs,
+            distribution_strategy=distribution_strategy,
+            job_resources=job_resources,
+        ) as executor:
+            dataset = Dataset.from_images(
+                source,
+                target_path,
+                name=name,
+                voxel_size_with_unit=voxel_size_with_unit,
+                chunk_shape=chunk_shape,
+                shard_shape=shard_shape,
+                data_format=data_format,
                 executor=executor,
+                compress=compress,
+                layer_name=layer_name,
+                batch_size=batch_size,
+                layer_category=category.value if category else None,
             )
+        if downsample:
+            with get_executor_for_args(
+                jobs=jobs,
+                distribution_strategy=distribution_strategy,
+                job_resources=job_resources,
+            ) as executor:
+                dataset.downsample(
+                    coarsest_mag=max_mag,
+                    interpolation_mode=interpolation_mode,
+                    compress=compress,
+                    sampling_mode=mode,
+                    executor=executor,
+                )
+        return dataset
+
+    if upload:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            dataset = _convert_and_downsample(UPath(tmp_dir) / "dataset")
+            with webknossos_context(url=webknossos_url, token=token):
+                folder_obj: None | RemoteFolder = None
+                if folder is not None:
+                    folder_obj = RemoteFolder.get_by_path(folder)
+                remote_dataset = dataset.upload(
+                    new_dataset_name=name,
+                    folder=folder_obj,
+                    transfer_mode=transfer_mode,
+                )
+                print(f"Uploaded to: {remote_dataset.url}")
+    else:
+        if overwrite_existing and target.exists():
+            rmtree(target)
+        _convert_and_downsample(target)

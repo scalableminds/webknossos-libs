@@ -103,6 +103,8 @@ class Tree(nx.Graph):
         skeleton (Skeleton): The skeleton this tree is part of.
         color (Vector4 | None, optional): RGBA color values for the tree. Defaults to None.
         enforced_id (int | None, optional): Specific ID to use for the tree. Defaults to None.
+        metadata (dict, optional): Key-value metadata associated with the tree. Defaults to {}.
+        is_visible (bool, optional): Whether the tree is visible in WEBKNOSSOS. Defaults to True.
 
     Returns:
         Tree: A new Tree instance that represents a collection of nodes and edges.
@@ -150,6 +152,7 @@ class Tree(nx.Graph):
         color: Vector4 | None = None,
         enforced_id: int | None = None,  # noqa: ARG002 Unused method argument: `enforced_id`
         metadata: dict[str, str | int | float | Sequence[str]] = {},
+        is_visible: bool = True,
     ) -> None:
         """
         To create a tree, it is recommended to use `Skeleton.add_tree` or
@@ -163,6 +166,7 @@ class Tree(nx.Graph):
         self.group = group
         self.color = color
         self.metadata = metadata
+        self.is_visible = is_visible
 
         # only used internally
         self._skeleton = skeleton
@@ -175,6 +179,7 @@ class Tree(nx.Graph):
         color: Vector4 | None = None,  # noqa: ARG004 Unused static method argument: `color`
         enforced_id: int | None = None,
         metadata: dict[str, str | int | float | Sequence[str]] = {},  # noqa: ARG004 Unused static method argument: `metadata`
+        is_visible: bool = True,  # noqa: ARG004 Unused static method argument: `is_visible`
     ) -> "Tree":
         self = super().__new__(cls)
 
@@ -223,6 +228,7 @@ class Tree(nx.Graph):
             self.name,
             self.id,
             self.color,
+            self.is_visible,
             sorted(self.nodes),
             sorted(self.edges),
         )

@@ -25,7 +25,7 @@ class AbstractApiClient(ABC):
         self,
         timeout_seconds: float,
         headers: dict[str, str] | None = None,
-        webknossos_api_version: int = 12,
+        webknossos_api_version: int = 14,
     ):
         self.headers = headers
         self.timeout_seconds = timeout_seconds
@@ -97,6 +97,22 @@ class AbstractApiClient(ABC):
             retry_count=retry_count,
             timeout_seconds=timeout_seconds,
             body_json=body_json,
+        )
+        return self._parse_json(response, response_type)
+
+    def _put_with_json_response(
+        self,
+        route: str,
+        response_type: type[T],
+        query: Query | None = None,
+        retry_count: int = 0,
+        timeout_seconds: float | None = None,
+    ) -> T:
+        response = self._put(
+            route,
+            query=query,
+            retry_count=retry_count,
+            timeout_seconds=timeout_seconds,
         )
         return self._parse_json(response, response_type)
 

@@ -61,9 +61,6 @@ extra:
       link: https://medium.com/webknossos
   generator: false
 
-extra_javascript:
-  - javascripts/runllm-widget.js
-
 plugins:
   # - gen-files:
   #     scripts:
@@ -78,6 +75,11 @@ plugins:
       is_video: False
       mark: "youtube-video"
   - glightbox
+  - llmstxt:
+      full_output: llms-full.txt
+      sections:
+        API Reference:
+          - api/**/*.md
   - mkdocstrings:
       default_handler: python
       handlers:
@@ -89,7 +91,7 @@ plugins:
                     heading_level: 1
                     inherited_members: true
                     merge_init_into_class: true
-                    parameter_headings: true
+                    parameter_headings: false
                     preload_modules: [webknossos]
                     separate_signature: true
                     show_root_heading: true
@@ -99,7 +101,6 @@ plugins:
                     show_symbol_type_toc: true
                     show_if_no_docstring: true
                     signature_crossrefs: true
-                    parameter_headings: false
                     unwrap_annotated: true
                     line_length: 60
                     filters:
@@ -201,6 +202,7 @@ nav:
         - Concepts: webknossos/tasks_projects/concepts.md
         - Tasks: webknossos/tasks_projects/tasks.md
         - Projects: webknossos/tasks_projects/projects.md
+        - Scripts: webknossos/tasks_projects/scripts.md
       - Collaboration and sharing:
         - webknossos/sharing/index.md
         - Annotation Sharing: webknossos/sharing/annotation_sharing.md
@@ -208,6 +210,7 @@ nav:
       - AI Automations and Jobs:
         - webknossos/automation/index.md
         - AI Segmentations: webknossos/automation/ai_segmentation.md
+        - AI Model Training: webknossos/automation/ai_training.md
         - Alignment: webknossos/automation/alignment.md
         - Animations: webknossos/automation/animations.md
         - Jobs: webknossos/automation/jobs.md
@@ -222,9 +225,10 @@ nav:
         - Installation: webknossos/open_source/installation.md
         - Dataset Handling: webknossos/open_source/dataset_handling.md
     - Tutorials:
-      - Volume Annotation: webknossos/tutorial_volume_annotation.md
-      - Data Sharing: webknossos/tutorial_data_sharing.md
-      - Automation: webknossos/tutorial_automation.md
+      - Volume Annotation: webknossos/tutorials/volume_annotation.md
+      - Data Sharing: webknossos/tutorials/data_sharing.md
+      - Automation: webknossos/tutorials/automation.md
+      - AI Training Data Annotation: webknossos/tutorials/trainingdata_annotation.md
       - Today I Learned: webknossos/today_i_learned.md
     - Reference:
       - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
@@ -267,6 +271,7 @@ nav:
       - Geometry:
         - BoundingBox: api/webknossos/geometry/bounding_box.md
         - NDBoundingBox: api/webknossos/geometry/nd_bounding_box.md
+        - NormalizedBoundingBox: api/webknossos/geometry/normalized_bounding_box.md
         - Mag: api/webknossos/geometry/mag.md
         - Vec3Int: api/webknossos/geometry/vec3_int.md
         - VecInt: api/webknossos/geometry/vec_int.md
@@ -274,13 +279,23 @@ nav:
         - Dataset: api/webknossos/dataset/dataset.md
         - Layer: api/webknossos/dataset/layer/layer.md
         - SegmentationLayer: api/webknossos/dataset/layer/segmentation_layer/segmentation_layer.md
+        - Attachment: api/webknossos/dataset/layer/segmentation_layer/attachments/attachment.md
+        - Attachments: api/webknossos/dataset/layer/segmentation_layer/attachments/attachments.md
         - MagView: api/webknossos/dataset/layer/view/mag_view.md
         - View: api/webknossos/dataset/layer/view/view.md
         - RemoteDataset: api/webknossos/dataset/remote_dataset.md
+        - RemoteDatasetRegistry: api/webknossos/dataset/remote_dataset_registry.md
         - RemoteLayer: api/webknossos/dataset/layer/remote_layer.md
         - RemoteSegmentationLayer: api/webknossos/dataset/layer/segmentation_layer/remote_segmentation_layer.md
         - RemoteFolder: api/webknossos/dataset/remote_folder.md
-      - Annotation: api/webknossos/annotation/annotation.md
+        - TransferMode: api/webknossos/dataset/transfer_mode.md
+        - SamplingModes: api/webknossos/dataset/sampling_modes.md
+        - DataFormat: api/webknossos/dataset_properties/data_format.md
+        - LengthUnit: api/webknossos/dataset_properties/length_unit.md
+        - LayerToLink: api/webknossos/dataset/layer/layer_to_link.md
+      - Annotation:
+        - Annotation: api/webknossos/annotation/annotation.md
+        - AnnotationInfo: api/webknossos/annotation/annotation_info.md
       - Skeleton:
         - Skeleton: api/webknossos/skeleton/skeleton.md
         - Group: api/webknossos/skeleton/group.md
@@ -292,6 +307,7 @@ nav:
         - Team: api/webknossos/administration/team.md
         - Project: api/webknossos/administration/project.md
         - Task: api/webknossos/administration/task.md
+      - LLMs.txt: https://docs.webknossos.org/llms.txt" target="_blank
     - CLI Reference:
       - Overview: cli/index.md
       - Install and Run: cli/install.md
@@ -313,6 +329,9 @@ nav:
     - Community:
       - webknossos-py/CONTRIBUTING.md
       - GitHub: https://github.com/scalableminds/webknossos-libs/tree/master/webknossos" target="_blank
+    - Specifications:
+      - Datasource Properties: webknossos-py/spec/datasource_properties.md
+      - Agglomerate Attachment: webknossos-py/spec/agglomerate_attachment.md
   - Community:
     - webknossos/faq.md
     - Terminology: webknossos/terminology.md

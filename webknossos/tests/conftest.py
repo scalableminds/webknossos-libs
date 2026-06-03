@@ -1,13 +1,11 @@
 import gc
-import os
+import sys
 import warnings
 from collections.abc import Generator, Iterator
 from pathlib import Path
 from shutil import unpack_archive
 from typing import Any
 
-import fsspec.implementations.http as http
-import httpx
 import pytest
 from hypothesis import strategies as st
 from upath import UPath
@@ -18,6 +16,12 @@ from webknossos.client.context import _clear_all_context_caches
 from webknossos.utils import rmtree
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    for item in items:
+        if item.get_closest_marker("skip_on_windows") and sys.platform == "win32":
+            item.add_marker(pytest.mark.skip(reason="not supported on Windows"))
 
 
 @pytest.fixture()
@@ -78,24 +82,6 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 ### PYTEST SETUP & TEARDOWN
 
 
-# fsspec uses aiohttp for http paths, but aiohttp does not consider environment variables by default
-# as we need to set the HTTP_PROXY environment variable for proxay, we need to monkeypatch the fsspec http implementation
-@pytest.fixture(autouse=True)
-def aiohttp_use_env_variables(monkeypatch: pytest.MonkeyPatch) -> Generator:
-    import aiohttp
-
-    class PatchedClientSession(aiohttp.ClientSession):
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            if "trust_env" not in kwargs:
-                kwargs["trust_env"] = True
-            super().__init__(*args, **kwargs)
-
-    # When aiohttp's ClientSession is imported in tests, it will be replaced by PatchedClientSession
-    # PatchedClientSession will behave like the original ClientSession, but with trust_env set to True by default
-    monkeypatch.setattr(http.aiohttp, "ClientSession", PatchedClientSession)
-    yield
-
-
 @pytest.fixture(autouse=True, scope="function")
 def clear_testoutput() -> Generator:
     TESTOUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -124,21 +110,6 @@ def error_on_warnings() -> Generator:
     with warnings.catch_warnings():
         warnings.filterwarnings("error", module="webknossos", message=r"\[WARNING\]")
         yield
-
-
-@pytest.fixture(autouse=True, scope="function")
-def use_replay_proxay(request: Any) -> Generator:
-    testname = f"{request.node.parent.name.removesuffix('.py')}/{request.node.name.replace('/', '__')}"
-    if "use_proxay" in request.keywords:
-        os.environ["HTTP_PROXY"] = "http://localhost:3000"
-        os.environ["http_proxy"] = (
-            "http://localhost:3000"  # for tensorstore. env var names are case-sensitive on Linux
-        )
-        httpx.post("http://localhost:3000/__proxay/tape", json={"tape": testname})
-    yield
-    if "HTTP_PROXY" in os.environ:
-        os.environ.pop("HTTP_PROXY", None)
-        os.environ.pop("http_proxy", None)
 
 
 ### Misc fixtures

@@ -8,36 +8,40 @@ jobs:
     if: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - uses: actions/checkout@v3
-      with:
-        repository: scalableminds/webknossos
-        path: docs/wk-repo
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v6
+        with:
+          repository: scalableminds/webknossos
+          path: docs/wk-repo
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.0.0
 
-    - name: Build Docs
-      run: |
-        cd docs
-        ./generate.sh --persist
+      - name: Build Docs
+        run: |
+          cd docs
+          ./generate.sh --persist
 
-    - name: Push docs
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "eu-west-1"
-      run: |
-        CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
-        NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-        aws s3 sync --acl public-read docs/out s3://static.webknossos.org/docs/${NORMALIZED_CI_BRANCH}
+      - name: Push docs
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          N8N_TOKEN: ${{ secrets.N8N_USERNAME }}
+          N8N_USERNAME: ${{ secrets.N8N_TOKEN }}
+        run: |
+          CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
+          NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
+          set -e 
 
-    - name: Check links (on master)
-      env:
-        SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
-      run: |
-        cd docs
-        uv run --frozen linkchecker --config linkcheckerrc https://docs.webknossos.org > link_status || \
-          curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on docs.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
-            "$SLACK_HOOK"
+          uvx --from awscli aws s3 cp --recursive --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
+          curl --basic -u "${N8N_TOKEN}:${N8N_USERNAME}" https://docs.webknossos.org/webhooks/index-docs
+
+      - name: Check links (on master)
+        env:
+          SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
+        run: |
+          cd docs
+          uv run --frozen linkchecker --config linkcheckerrc https://docs.webknossos.org > link_status || \
+            curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on docs.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
+              "$SLACK_HOOK"

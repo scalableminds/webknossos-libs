@@ -5,12 +5,10 @@ import numpy as np
 from rich.progress import track
 from upath import UPath
 
-from .. import LayerCategoryType
 from ..dataset import Dataset
-from ..dataset.layer.abstract_layer import _element_class_to_dtype_per_channel
-from ..dataset_properties import (
-    LayerProperties,
-)
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
+from ..dataset.layer.abstract_layer import LayerCategoryType
+from ..dataset_properties import DataFormat, LayerProperties
 from ..geometry import BoundingBox, Mag, Vec3Int
 from .api_client.models import ApiUnusableDataSource
 from .context import _get_context
@@ -26,12 +24,14 @@ _DOWNLOAD_CHUNK_SHAPE = Vec3Int(512, 512, 512)
 
 def download_dataset(
     dataset_id: str,
+    *,
     sharing_token: str | None = None,
     bbox: BoundingBox | None = None,
     layers: list[str] | None = None,
     mags: list[Mag] | None = None,
     path: UPath | str | None = None,
     exist_ok: bool = False,
+    data_format: DataFormat | None = None,
 ) -> Dataset:
     context = _get_context()
     api_client = context.api_client
@@ -70,16 +70,12 @@ def download_dataset(
         )
         api_data_layer: LayerProperties = matching_api_data_layers[0]
         category = cast(LayerCategoryType, api_data_layer.category)
-        element_class = api_data_layer.element_class
-        num_channels = 3 if element_class == "uint24" else 1
-        dtype_per_channel = _element_class_to_dtype_per_channel(
-            element_class, num_channels
-        )
         layer = dataset.add_layer(
             layer_name=layer_name,
             category=category,
-            dtype_per_channel=dtype_per_channel,
-            num_channels=num_channels,
+            data_format=data_format or DEFAULT_DATA_FORMAT,
+            dtype=api_data_layer.dtype_np,
+            num_channels=api_data_layer.bounding_box.size.c,
             largest_segment_id=getattr(api_data_layer, "largest_segment_id", None),
         )
 
@@ -98,8 +94,10 @@ def download_dataset(
             mag_view = layer.get_or_add_mag(
                 mag,
                 compress=True,
-                chunk_shape=Vec3Int.full(32),
-                shard_shape=_DOWNLOAD_CHUNK_SHAPE,
+                chunk_shape=DEFAULT_CHUNK_SHAPE,
+                shard_shape=_DOWNLOAD_CHUNK_SHAPE
+                if data_format != DataFormat.Zarr
+                else DEFAULT_CHUNK_SHAPE,
             )
             aligned_bbox = layer.bounding_box.align_with_mag(mag, ceil=True)
             download_chunk_shape_in_mag = _DOWNLOAD_CHUNK_SHAPE * mag.to_vec3_int()
@@ -116,7 +114,7 @@ def download_dataset(
                     dataset_id=dataset_id,
                     data_layer_name=layer_name,
                     mag=mag.to_long_layer_name(),
-                    token=sharing_token,
+                    sharing_token=sharing_token,
                     x=chunk.topleft.x,
                     y=chunk.topleft.y,
                     z=chunk.topleft.z,
@@ -127,8 +125,8 @@ def download_dataset(
                 assert missing_buckets == "[]", (
                     f"Download contained missing buckets {missing_buckets}."
                 )
-                data = np.frombuffer(
-                    chunk_bytes, dtype=layer.dtype_per_channel
-                ).reshape(layer.num_channels, *chunk_in_mag.size, order="F")
-                mag_view.write(data, absolute_offset=chunk.topleft)
+                data = np.frombuffer(chunk_bytes, dtype=layer.dtype).reshape(
+                    layer.num_channels, *chunk_in_mag.size, order="F"
+                )
+                mag_view.write_cxyz(data, absolute_offset=chunk.topleft)
     return dataset

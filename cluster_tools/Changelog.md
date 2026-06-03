@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.0...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,85 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [3.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.0) - 2026-06-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...v3.5.0)
+
+
+## [3.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.3) - 2026-05-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.2...v3.4.3)
+
+
+## [3.4.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.2) - 2026-04-28
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.1...v3.4.2)
+
+
+## [3.4.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.1) - 2026-04-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.0...v3.4.1)
+
+### Fixed
+- Fixed a bug where the name of the tasks in the BatchingExecutor was not set correctly.
+
+
+
+## [3.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.0) - 2026-04-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.3.0...v3.4.0)
+
+### Added
+- Added BatchingExecutor. [#1442](https://github.com/scalableminds/webknossos-libs/pull/1442)
+
+
+## [3.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.3.0) - 2026-03-31
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.4...v3.3.0)
+
+
+## [3.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.4) - 2026-03-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.3...v3.2.4)
+
+
+## [3.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.3) - 2026-03-16
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.2...v3.2.3)
+
+
+## [3.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.2) - 2026-03-04
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.1...v3.2.2)
+
+
+## [3.2.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.1) - 2026-03-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.2.0...v3.2.1)
+
+
+## [3.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.2.0) - 2026-02-25
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.5...v3.2.0)
+
+
+## [3.1.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.5) - 2026-02-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.4...v3.1.5)
+
+
+## [3.1.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.4) - 2026-01-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.3...v3.1.4)
+
+
+## [3.1.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.3) - 2026-01-15
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.2...v3.1.3)
+
+
+## [3.1.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.2) - 2026-01-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.1...v3.1.2)
+
+
+## [3.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.1) - 2026-01-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.1.0...v3.1.1)
+
+
+## [3.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.1.0) - 2025-12-11
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.4...v3.1.0)
+
+
+## [3.0.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.4) - 2025-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.0.3...v3.0.4)
 
 
 ## [3.0.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.0.3) - 2025-11-11

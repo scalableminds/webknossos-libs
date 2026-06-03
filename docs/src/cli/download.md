@@ -21,7 +21,7 @@ webknossos download [OPTIONS] TARGET
     Example: `--url https://webknossos.org/dataset/12345`.
 
 - `--token`  
-    Authentication token for your WEBKNOSSOS instance (e.g., https://webknossos.org/auth/token).  
+    Authentication token for your WEBKNOSSOS instance (e.g., https://webknossos.org/account/token).  
     This option can be provided via the environment variable `WK_TOKEN`.
 
 - `--bbox`  
@@ -39,6 +39,12 @@ webknossos download [OPTIONS] TARGET
     The value can be a number or a minus-separated string (e.g. `2` or `2-2-2`).  
     For multiple mags, use the option multiple times.  
     Example: `--mag 1 --mag 2`.
+
+- `--data-format`  
+    Specify the data format of the downloaded dataset.  
+    The value can be `zarr3`, `zarr` or `wkw`.  
+    Example: `--data-format zarr3`.
+    Default: `zarr3`.
 
 ## Example Commands
 

@@ -1,14 +1,33 @@
 """Utilities to work with the CLI of webknossos."""
 
+import json
+import logging
+import re
+from collections.abc import Iterator
+from contextlib import AbstractContextManager, contextmanager
 from enum import Enum
+from multiprocessing import cpu_count
 from os import environ
-from typing import NamedTuple
+from typing import Annotated, NamedTuple
+from urllib.parse import urlparse
 
 import numpy as np
+import typer
+from cluster_tools import BatchingExecutor, Executor, get_executor
 from upath import UPath
 
-from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
+from ..client import webknossos_context
+from ..client._resolve_short_link import resolve_short_link
+from ..dataset import Dataset, RemoteDataset
+from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
+from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
+from ..dataset.remote_dataset import RemoteAccessMode
+from ..dataset_properties import DataFormat, LengthUnit
 from ..geometry import BoundingBox, Mag, Vec3Int
+from ..utils import is_fs_path
+
+logger = logging.getLogger(__name__)
 
 
 class VoxelSizeTuple(NamedTuple):
@@ -28,28 +47,172 @@ class Vec2Int(NamedTuple):
 
 
 class DistributionStrategy(str, Enum):
-    """Enum of available distribution strategies.
-
-    TODO
-    - As soon as supported by typer this enum should be
-    replaced with typing.Literal in type hint.
-    https://github.com/tiangolo/typer/pull/669
-    """
+    """Enum of available distribution strategies."""
 
     SLURM = "slurm"
+    SLURM_BATCHING = "slurm+batching"
     KUBERNETES = "kubernetes"
     MULTIPROCESSING = "multiprocessing"
     SEQUENTIAL = "sequential"
 
 
-class LayerCategory(str, Enum):
-    """Enum of available layer categories.
+JobsOption = Annotated[
+    int | None,
+    typer.Option(
+        help="Number of processes to be spawned. By default the number of CPUs is used.",
+        rich_help_panel="Executor options",
+    ),
+]
 
-    TODO
-    - As soon as supported by typer this enum should be
-    replaced with typing.Literal in type hint.
-    https://github.com/tiangolo/typer/pull/669
+DistributionStrategyOption = Annotated[
+    DistributionStrategy,
+    typer.Option(
+        help="Strategy to distribute the task across CPUs or nodes.",
+        rich_help_panel="Executor options",
+    ),
+]
+
+
+def _try_parse_number(value: str) -> str | int | float:
+    try:
+        return int(value)
+    except ValueError:
+        pass
+    try:
+        return float(value)
+    except ValueError:
+        pass
+    return value
+
+
+def parse_job_resources(value: str) -> dict:
+    """Parses --job-resources in 'key=value,key=value' or JSON format.
+
+    key=value format: dashes in keys are converted to underscores (e.g. cpus-per-task=4).
+    JSON format: keys are used as-is and must already use underscores (e.g. {"cpus_per_task": 4}).
     """
+    value = value.strip()
+    if value.startswith("{"):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON for --job-resources: {e}") from e
+    try:
+        result = {}
+        for pair in value.split(","):
+            key, val = pair.split("=", 1)
+            result[key.strip().replace("-", "_")] = _try_parse_number(val.strip())
+        return result
+    except ValueError as e:
+        raise ValueError(
+            f"Invalid --job-resources format. Expected 'key=value,key=value' or JSON. Got: {value!r}"
+        ) from e
+
+
+JobResourcesOption = Annotated[
+    dict | None,
+    typer.Option(
+        help="Resources for cluster jobs (slurm, slurm+batching, kubernetes). "
+        "Format: key=value pairs separated by commas (e.g. mem=32G,time=02:00:00).",
+        rich_help_panel="Executor options",
+        parser=parse_job_resources,
+        metavar="KEY=VALUE,...",
+    ),
+]
+
+
+def get_executor_for_args(
+    *,
+    jobs: int | None,
+    distribution_strategy: DistributionStrategy,
+    job_resources: dict | None,
+) -> AbstractContextManager[Executor]:
+    if distribution_strategy == DistributionStrategy.MULTIPROCESSING:
+        if job_resources is not None:
+            raise typer.BadParameter(
+                "Job resources are not supported for multiprocessing execution.",
+                param_hint="--job-resources",
+            )
+        resolved_jobs = jobs if jobs is not None else cpu_count()
+        logger.info(f"Using pool of {resolved_jobs} workers.")
+        return get_executor("multiprocessing", max_workers=resolved_jobs)
+
+    if distribution_strategy in (
+        DistributionStrategy.SLURM,
+        DistributionStrategy.SLURM_BATCHING,
+        DistributionStrategy.KUBERNETES,
+    ):
+        if job_resources is None:
+            resources_example = (
+                "mem=32G"
+                if distribution_strategy != DistributionStrategy.KUBERNETES
+                else "memory=32G"
+            )
+            raise typer.BadParameter(
+                f"Job resources has to be provided when using {distribution_strategy.value} as distribution strategy. "
+                f"Example: --job-resources={resources_example}",
+                param_hint="--job-resources",
+            )
+        job_resources_parsed = dict(job_resources)
+
+        if distribution_strategy == DistributionStrategy.SLURM_BATCHING:
+            batch_size = job_resources_parsed.pop("batch_size", None)
+            if batch_size is not None and jobs is not None:
+                raise typer.BadParameter(
+                    "--jobs and batch-size in --job-resources are mutually exclusive for slurm+batching.",
+                    param_hint="--jobs",
+                )
+            if batch_size is None and jobs is None:
+                raise typer.BadParameter(
+                    "--jobs is required for slurm+batching when batch-size is not set in --job-resources.",
+                    param_hint="--jobs",
+                )
+            distribution_strategy = DistributionStrategy.SLURM
+            logger.info(f"Using {distribution_strategy.value} cluster with batching.")
+            return BatchingExecutor(
+                get_executor(
+                    distribution_strategy.value,
+                    debug=True,
+                    keep_logs=True,
+                    job_resources=job_resources_parsed,
+                ),
+                target_job_count=jobs,
+                batch_size=batch_size,
+            )
+
+        logger.info(f"Using {distribution_strategy.value} cluster.")
+        return get_executor(
+            distribution_strategy.value,
+            debug=True,
+            keep_logs=True,
+            job_resources=job_resources_parsed,
+        )
+
+    if distribution_strategy == DistributionStrategy.SEQUENTIAL:
+        if job_resources is not None:
+            raise typer.BadParameter(
+                "Job resources are not supported for sequential execution.",
+                param_hint="--job-resources",
+            )
+        if jobs is not None:
+            raise typer.BadParameter(
+                "Number of jobs is not supported for sequential execution.",
+                param_hint="--jobs",
+            )
+        return get_executor(
+            distribution_strategy.value,
+            debug=True,
+            keep_logs=True,
+        )
+
+    raise typer.BadParameter(
+        f"Unknown distribution strategy: {distribution_strategy.value}",
+        param_hint="--distribution-strategy",
+    )
+
+
+class LayerCategory(str, Enum):
+    """Enum of available layer categories."""
 
     COLOR = "color"
     SEGMENTATION = "segmentation"
@@ -68,6 +231,16 @@ class Order(str, Enum):
 
     C = "C"
     F = "F"
+
+
+AccessModeOption = Annotated[
+    RemoteAccessMode | None,
+    typer.Option(
+        help="How to access the remote dataset's data. "
+        "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'proxy_path'.",
+        rich_help_panel="WEBKNOSSOS context",
+    ),
+]
 
 
 def parse_mag(mag_str: str) -> Mag:
@@ -126,6 +299,89 @@ def parse_vec3int(vec3int_like: str | Vec3Int) -> Vec3Int:
             "The value could not be parsed to VoxelSize. "
             "Please format the voxel size like 1,1,2 ."
         ) from err
+
+
+DEFAULT_DATA_FORMAT_STR: str = str(DEFAULT_DATA_FORMAT)
+
+DataFormatOption = Annotated[
+    DataFormat,
+    typer.Option(help="Data format to store the target dataset in."),
+]
+
+ChunkShapeOption = Annotated[
+    Vec3Int,
+    typer.Option(
+        help="Number of voxels to be stored as a chunk in the output format "
+        "(e.g. `32` or `32,32,32`).",
+        parser=parse_vec3int,
+        metavar="Vec3Int",
+    ),
+]
+
+ShardShapeOption = Annotated[
+    Vec3Int | None,
+    typer.Option(
+        help="Number of voxels to be stored as a shard in the output format "
+        "(e.g. `1024` or `1024,1024,1024`).",
+        parser=parse_vec3int,
+        metavar="Vec3Int",
+    ),
+]
+
+ChunksPerShardOption = Annotated[
+    Vec3Int | None,
+    typer.Option(
+        help="Deprecated, use --shard-shape. Number of chunks to be stored as a shard in the output format "
+        "(e.g. `32` or `32,32,32`).",
+        parser=parse_vec3int,
+        metavar="Vec3Int",
+    ),
+]
+
+ExistsOkOption = Annotated[
+    bool,
+    typer.Option(help="Whether it should overwrite an existing dataset."),
+]
+
+TokenOption = Annotated[
+    str | None,
+    typer.Option(
+        help="Authentication token for WEBKNOSSOS instance "
+        "(https://webknossos.org/account/token).",
+        rich_help_panel="WEBKNOSSOS context",
+        envvar="WK_TOKEN",
+    ),
+]
+
+WebknossosUrlOption = Annotated[
+    str,
+    typer.Option(
+        help="URL to WEBKNOSSOS instance.",
+        rich_help_panel="WEBKNOSSOS context",
+        envvar="WK_URL",
+    ),
+]
+
+SamplingModeOption = Annotated[
+    SamplingMode,
+    typer.Option(help="The sampling mode to use."),
+]
+
+VoxelSizeOption = Annotated[
+    VoxelSizeTuple,
+    typer.Option(
+        help="The size of one voxel in source data in nanometers. "
+        "Should be a comma-separated string (e.g. 11.0,11.0,20.0).",
+        parser=parse_voxel_size,
+        metavar="VoxelSize",
+        show_default=False,
+    ),
+]
+
+UnitOption = Annotated[
+    LengthUnit,
+    typer.Option(help="The unit of the voxel size."),
+]
 
 
 def parse_vec2int(vec2int_str: str) -> Vec2Int:
@@ -190,11 +446,12 @@ def parse_path(value: str) -> UPath:
             value,
             auth=(environ["HTTP_BASIC_USER"], environ["HTTP_BASIC_PASSWORD"]),
         )
-    if value.startswith("s3://") and "S3_ENDPOINT_URL" in environ:
-        return UPath(
-            value,
-            endpoint_url=environ["S3_ENDPOINT_URL"],
-        )
+    if value.startswith("s3://"):
+        if "S3_ENDPOINT_URL" in environ:
+            return UPath(
+                value,
+                endpoint_url=environ["S3_ENDPOINT_URL"],
+            )
 
     return UPath(value)
 
@@ -275,3 +532,33 @@ def prepare_shard_shape(
                 f"The shard_shape {shard_shape} must be cleanly divisible by the chunk_shape {chunk_shape}."
             )
         return shard_shape
+
+
+@contextmanager
+def open_dataset(
+    source: UPath,
+    annotation_ok: bool,
+    token: str | None = None,
+    access_mode: RemoteAccessMode | None = None,
+) -> Iterator[Dataset | RemoteDataset]:
+    if not is_fs_path(source):
+        url = resolve_short_link(str(source))
+        parsed = urlparse(url)
+        domain = f"{parsed.scheme}://{parsed.netloc}"
+        with webknossos_context(url=domain, token=token):
+            if re.match(_DATASET_URL_REGEX, url) or re.match(
+                _DATASET_DEPRECATED_URL_REGEX, url
+            ):
+                yield RemoteDataset.open(url, access_mode=access_mode)
+            elif re.match(_ANNOTATION_URL_REGEX, url):
+                if not annotation_ok:
+                    raise ValueError(
+                        "The provided URL leads to an annotation, not a dataset."
+                    )
+                yield Annotation.open_as_remote_dataset(annotation_id_or_url=url)
+            else:
+                raise ValueError(
+                    "The provided URL does not lead to a WEBKNOSSOS dataset or annotation."
+                )
+    else:
+        yield Dataset.open(source)

@@ -1,12 +1,10 @@
 import logging
-import operator
 import re
 from abc import abstractmethod
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy._typing import DTypeLike
 from upath import UPath
 
 from webknossos.dataset_properties import (
@@ -18,79 +16,25 @@ from webknossos.dataset_properties import (
 )
 from webknossos.dataset_properties.structuring import (
     MagViewProperties,
-    _properties_floating_type_to_python_type,
 )
-from webknossos.geometry import NDBoundingBox
+from webknossos.geometry import NDBoundingBox, NormalizedBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
 
 from ...utils import warn_deprecated
 from .view import ArrayException, MagView
 
 if TYPE_CHECKING:
-    from ..abstract_dataset import AbstractDataset
+    from ..abstract_dataset import AbstractDataset, AttachmentRenaming, LayerRenaming
     from .segmentation_layer.abstract_segmentation_layer import (
         AbstractSegmentationLayer,
     )
 
 
-def _is_int(s: str) -> bool:
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-
-
-def _convert_dtypes(
-    dtype: DTypeLike,
-    num_channels: int,
-    dtype_per_layer_to_dtype_per_channel: bool,
-) -> str:
-    op = operator.truediv if dtype_per_layer_to_dtype_per_channel else operator.mul
-
-    # split the dtype into the actual type and the number of bits
-    # example: "uint24" -> ["uint", "24"]
-    dtype_parts = re.split(r"(\d+)", str(dtype))
-    # calculate number of bits for dtype_per_channel
-    converted_dtype_parts = [
-        (str(int(op(int(part), num_channels))) if _is_int(part) else part)
-        for part in dtype_parts
-    ]
-    return "".join(converted_dtype_parts)
-
-
-def _dtype_per_layer_to_dtype_per_channel(
-    dtype_per_layer: DTypeLike, num_channels: int
-) -> np.dtype:
-    try:
-        return np.dtype(
-            _convert_dtypes(
-                dtype_per_layer, num_channels, dtype_per_layer_to_dtype_per_channel=True
-            )
+def _validate_layer_name(layer_name: str) -> None:
+    if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
+        raise ValueError(
+            f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
         )
-    except TypeError as e:
-        raise TypeError(
-            "Converting dtype_per_layer to dtype_per_channel failed. Double check if the dtype_per_layer value is correct."
-        ) from e
-
-
-def _dtype_per_channel_to_dtype_per_layer(
-    dtype_per_channel: DTypeLike, num_channels: int
-) -> str:
-    return _convert_dtypes(
-        np.dtype(dtype_per_channel),
-        num_channels,
-        dtype_per_layer_to_dtype_per_channel=False,
-    )
-
-
-def _element_class_to_dtype_per_channel(
-    element_class: str, num_channels: int
-) -> np.dtype:
-    dtype_per_layer = _properties_floating_type_to_python_type.get(
-        element_class, element_class
-    )
-    return _dtype_per_layer_to_dtype_per_channel(dtype_per_layer, num_channels)
 
 
 # A layer name is allowed to contain letters, numbers, underscores, hyphens and dots.
@@ -108,18 +52,18 @@ class AbstractLayer:
     def __init__(
         self, dataset: "AbstractDataset", properties: LayerProperties, read_only: bool
     ) -> None:
+        self._dataset = dataset
+        self._apply_properties(properties, read_only)
+
+    def _apply_properties(self, properties: LayerProperties, read_only: bool) -> None:
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
-        assert properties.num_channels is not None
-        assert _ALLOWED_LAYER_NAME_REGEX.match(properties.name), (
-            f"The layer name '{properties.name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
+        assert "/" not in properties.name and not properties.name.startswith("."), (
+            f"The layer name '{properties.name}' is invalid."
         )
-        self._dataset = dataset
         self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
 
-        self._dtype_per_channel = _element_class_to_dtype_per_channel(
-            properties.element_class, properties.num_channels
-        )
+        self._dtype = properties.dtype_np
         self._mags = {}
         self._read_only = read_only
 
@@ -171,8 +115,10 @@ class AbstractLayer:
             if layer_property.name == self.name
         )
 
-    def _save_layer_properties(self) -> None:
-        self.dataset._save_dataset_properties()
+    def _save_layer_properties(
+        self, renamings: "Sequence[LayerRenaming | AttachmentRenaming] | None" = None
+    ) -> None:
+        self.dataset._save_dataset_properties(renamings=renamings)
 
     def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
         """Initialize a magnification level when opening the Dataset.
@@ -229,7 +175,7 @@ class AbstractLayer:
             NDBoundingBox: Bounding box with layer dimensions
         """
 
-        return self._properties.bounding_box
+        return self._properties.bounding_box.denormalize()
 
     @bounding_box.setter
     def bounding_box(self, bbox: NDBoundingBox) -> None:
@@ -238,10 +184,20 @@ class AbstractLayer:
         assert bbox.topleft.is_positive(), (
             f"Updating the bounding box of layer {self} to {bbox} failed, topleft must not contain negative dimensions."
         )
+        bbox = bbox.normalize_axes(self.num_channels)
         self._properties.bounding_box = bbox
         self._save_layer_properties()
         for mag in self.mags.values():
             mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
+
+    @property
+    def normalized_bounding_box(self) -> NormalizedBoundingBox:
+        """Gets the bounding box with axes normalized to include the channel dimension.
+
+        Returns:
+            NormalizedBoundingBox: Bounding box with channel axis included
+        """
+        return self._properties.bounding_box
 
     @property
     def category(self) -> LayerCategoryType:
@@ -254,28 +210,24 @@ class AbstractLayer:
         return COLOR_CATEGORY
 
     @property
-    def dtype_per_layer(self) -> str:
-        """Deprecated, use dtype_per_channel instead.
-        Gets the data type used for the entire layer.
-
-        Returns:
-            str: Data type string (e.g. "uint8")
-        """
-
-        warn_deprecated("dtype_per_layer", "dtype_per_channel")
-        return _dtype_per_channel_to_dtype_per_layer(
-            self.dtype_per_channel, self.num_channels
-        )
-
-    @property
-    def dtype_per_channel(self) -> np.dtype:
+    def dtype(self) -> np.dtype:
         """Gets the data type used per channel.
 
         Returns:
             np.dtype: NumPy data type for individual channels
         """
+        return self._dtype
 
-        return self._dtype_per_channel
+    @property
+    def dtype_per_channel(self) -> np.dtype:
+        """Deprecated. Use `dtype` instead.
+        Gets the data type used per channel.
+
+        Returns:
+            np.dtype: NumPy data type for individual channels
+        """
+        warn_deprecated("dtype_per_channel", "dtype")
+        return self._dtype
 
     @property
     def num_channels(self) -> int:
@@ -288,8 +240,7 @@ class AbstractLayer:
             AssertionError: If num_channels is not set in properties
         """
 
-        assert self._properties.num_channels is not None
-        return self._properties.num_channels
+        return self.normalized_bounding_box.size.get("c", 1)
 
     @property
     def data_format(self) -> DataFormat:

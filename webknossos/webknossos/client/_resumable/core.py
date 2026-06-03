@@ -49,8 +49,9 @@ class Resumable:
         max_chunk_retries: int = 100,
         permanent_errors: Sequence[int] = (400, 404, 415, 500, 501),
         query: dict[str, Any] | None = None,
-        generate_unique_identifier: Callable[[UPath, UPath], str] = lambda _path,
-        _relative_path: str(uuid.uuid4()),
+        generate_unique_identifier: Callable[
+            [UPath, UPath], str
+        ] = lambda _path, _relative_path: str(uuid.uuid4()),
         client: httpx.Client = httpx.Client(),
     ) -> None:
         if headers is None:

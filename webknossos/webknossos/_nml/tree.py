@@ -19,6 +19,7 @@ class Tree(NamedTuple):
     edges: list[Edge]
     metadata: list[MetadataEntry]
     groupId: int | None = None
+    is_visible: bool = True
 
     def _dump(self, xf: XmlWriter) -> None:
         color = self.color or (1, 1, 1, 1)
@@ -29,6 +30,7 @@ class Tree(NamedTuple):
             "color.b": str(color[2]),
             "color.a": str(color[3]),
             "name": self.name,
+            "isVisible": "true" if self.is_visible else "false",
         }
 
         if self.groupId is not None:
@@ -73,6 +75,8 @@ class Tree(NamedTuple):
         except ValueError:
             groupId = -1
 
+        is_visible = nml_tree.get("isVisible", "true") == "true"
+
         return cls(
             nodes=[],
             edges=[],
@@ -81,4 +85,5 @@ class Tree(NamedTuple):
             name=name,
             groupId=groupId if groupId >= 0 else None,
             color=color,
+            is_visible=is_visible,
         )

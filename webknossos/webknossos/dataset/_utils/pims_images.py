@@ -43,6 +43,11 @@ def _pims_imports() -> str | None:
     except ImportError as import_error:
         import_exceptions.append(f"PimsTiffReader: {import_error.msg}")
 
+    try:
+        from .pims_mrc_reader import PimsMrcReader  # noqa: F401 unused-import
+    except ImportError as import_error:
+        import_exceptions.append(f"PimsMrcReader: {import_error.msg}")
+
     if import_exceptions:
         import_exception_string = "".join(
             f"\t- {import_exception}\n" for import_exception in import_exceptions
@@ -83,7 +88,7 @@ class PimsImages:
         flip_x: bool,
         flip_y: bool,
         flip_z: bool,
-        use_bioformats: bool | None,
+        use_bioformats: bool,
         is_segmentation: bool,
     ) -> None:
         """
@@ -124,7 +129,6 @@ class PimsImages:
         self._use_bioformats = use_bioformats
 
         ## attributes that will be set in __init__()
-        # _bundle_axes
         self._iter_axes: list[str] = []
         self._iter_loop_size = None
         self._possible_layers = {}
@@ -524,7 +528,7 @@ class PimsImages:
             assert all(
                 size == 1
                 for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
-                if axis not in ("x", "y", "z")
+                if axis not in ("c", "x", "y", "z")
             ), (
                 "The delivered BoundingBox has to be flat except for x,y and z dimension."
             )
@@ -648,10 +652,10 @@ class PimsImages:
             else:
                 if isinstance(images, pims.FramesSequenceND):
                     axes_names = (self._iter_axes or []) + [
-                        axis for axis in self._bundle_axes if axis != "c"
+                        axis for axis in self._bundle_axes
                     ]
                     axes_sizes = [images.sizes[axis] for axis in axes_names]
-                    axes_index = list(range(1, len(axes_names) + 1))
+                    axes_index = list(range(0, len(axes_names)))
                     topleft = VecInt.zeros(tuple(axes_names))
 
                     if self._swap_xy:
@@ -751,7 +755,7 @@ def get_valid_bioformats_suffixes() -> set[str]:
 
 def has_image_z_dimension(
     filepath: UPath,
-    use_bioformats: bool | None,
+    use_bioformats: bool,
     is_segmentation: bool,
 ) -> bool:
     pims_images = PimsImages(

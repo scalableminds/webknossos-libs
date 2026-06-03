@@ -16,13 +16,12 @@ from contextlib import contextmanager
 from pathlib import Path
 from shutil import copyfileobj, rmtree, unpack_archive
 from time import sleep
-from typing import Literal
 
 import requests
 
 WK_TOKEN = "1b88db86331a38c21a0b235794b9e459856490d70408bcffb767f64ade0f83d2bdb4c4e181b9a9a30cdece7cb7c65208cc43b6c1bb5987f5ece00d348b1a905502a266f8fc64f0371cd6559393d72e031d0c2d0cabad58cccf957bb258bc86f05b5dc3d4fff3d5e3d9c0389a6027d861a21e78e3222fb6c5b7944520ef21761e"
 WK_URL = "http://localhost:9000"
-WK_API_VERSION = 12
+WK_API_VERSION = 14
 IS_WINDOWS = sys.platform == "win32"
 PROXAY_VERSION = "1.9.0"
 
@@ -65,8 +64,14 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     if not (org_binary_data_dir / "l4_sample").exists():
         org_binary_data_dir.mkdir(parents=True, exist_ok=True)
         download_and_unpack(
-            "https://static.webknossos.org/data/l4_sample.zip", org_binary_data_dir
+            "https://static.webknossos.org/data/zarr_v3/l4_sample.zip",
+            org_binary_data_dir,
         )
+
+    # Prepare test database
+    subprocess.check_call(
+        ["docker", "compose", "run", "--rm", "prepare-test-db"], cwd=wk_docker_dir
+    )
 
     # Start the webknossos server
     subprocess.check_call(
@@ -74,6 +79,7 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
         cwd=wk_docker_dir,
         env={
             **os.environ,
+            "BINARY_DATA_DIR": binary_data_dir.resolve().as_posix(),
             "USER_UID": str(os.getuid()),
             "USER_GID": str(os.getgid()),
         },
@@ -82,20 +88,6 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     # Wait for booting
     while not is_wk_healthy():
         sleep(1)
-
-    # Prepare the test database
-    subprocess.check_call(
-        [
-            "docker",
-            "compose",
-            "exec",
-            "-T",
-            "webknossos",
-            "tools/postgres/dbtool.js",
-            "prepare-test-db",
-        ],
-        cwd=wk_docker_dir,
-    )
 
 
 def is_wk_healthy():
@@ -118,6 +110,7 @@ def local_test_wk() -> Iterator[None]:
         f"https://webknossos.org/api/v{WK_API_VERSION}/buildinfo"
     ).json()["webknossos"]["version"]
     wk_docker_tag = f"master__{wk_version}"
+
     os.environ["DOCKER_TAG"] = wk_docker_tag
     wk_docker_dir = Path("tests")
     tear_down_wk = False
@@ -157,61 +150,6 @@ Please ensure that the test-db is prepared by running this in the webknossos rep
             subprocess.check_call(["docker", "compose", "down"], cwd=wk_docker_dir)
 
 
-@contextmanager
-def proxay(mode: Literal["record", "replay"], quiet: bool) -> Iterator[None]:
-    # Ensure that proxay is installed, otherwise it will lead to hard-to-debug errors
-    try:
-        subprocess.check_output(
-            ["npx", "-y", f"proxay@{PROXAY_VERSION}"],
-            text=True,
-            stderr=subprocess.STDOUT,
-            shell=IS_WINDOWS,
-        )
-    except subprocess.CalledProcessError as e:
-        # Checking that proxay is installed properly
-        if "Please specify a valid mode (record or replay)" not in e.output:
-            raise
-
-    cmd = ["npx", f"proxay@{PROXAY_VERSION}"]
-    if mode == "record":
-        cmd += [
-            "--mode",
-            "record",
-            "--host",
-            WK_URL,
-            "--tapes-dir",
-            "tests/cassettes",
-        ]
-    elif mode == "replay":
-        cmd += ["--mode", "replay", "--tapes-dir", "tests/cassettes"]
-    else:
-        raise ValueError(f"Invalid mode: {mode}")
-
-    proxay_process = None
-    try:
-        print(f"Starting proxay with command: {cmd} {quiet=}", flush=True)
-        if quiet:
-            proxay_process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                shell=IS_WINDOWS,
-            )
-        else:
-            proxay_process = subprocess.Popen(
-                cmd,
-                shell=IS_WINDOWS,
-            )
-        sleep(1)
-        yield
-    finally:
-        if proxay_process is not None:
-            print("Terminating proxay", flush=True)
-            proxay_process.terminate()
-            proxay_process.wait(5)
-            proxay_process.kill()
-
-
 def run_pytest(args: list[str]) -> None:
     process = subprocess.Popen(args)
     try:
@@ -228,7 +166,7 @@ def run_pytest(args: list[str]) -> None:
         raise ValueError("pytest failed")
 
 
-def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) -> None:
+def main(args: list[str]) -> None:
     python_version = os.environ.get("PYTHON_VERSION", "3.13")
 
     # Using forkserver instead of spawn is faster. Fork should never be used due to potential deadlock problems.
@@ -256,24 +194,15 @@ def main(snapshot_command: Literal["refresh", "add"] | None, args: list[str]) ->
         "-vv",
     ]
 
-    if snapshot_command == "refresh":
-        rmtree("tests/cassettes", ignore_errors=True)
-
-        with proxay("record", quiet=False), local_test_wk():
-            run_pytest(pytest_cmd + ["-m", "use_proxay"] + args)
-    elif snapshot_command == "add":
-        with proxay("record", quiet=False), local_test_wk():
-            run_pytest(pytest_cmd + ["-m", "use_proxay"] + args)
+    if IS_WINDOWS:
+        run_pytest(pytest_cmd + args)
     else:
-        with proxay("replay", quiet=False):
-            run_pytest(pytest_cmd + ["--timeout=360"] + args)
+        with local_test_wk():
+            run_pytest(pytest_cmd + args)
 
 
 if __name__ == "__main__":
     snapshot_command = None
     args = sys.argv[1:]
-    if len(args) > 0 and args[0] in ["--refresh-snapshots", "--add-snapshots"]:
-        snapshot_command = args[0][2:-10]
-        args = args[1:]
 
-    main(snapshot_command, args)
+    main(args)

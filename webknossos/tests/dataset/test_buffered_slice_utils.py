@@ -26,7 +26,7 @@ def test_buffered_slice_writer() -> None:
     layer = ds.add_layer(
         "color",
         COLOR_CATEGORY,
-        dtype_per_channel=dtype,
+        dtype=dtype,
         bounding_box=BoundingBox(origin, (24, 24, 35)),
     )
     mag_view = layer.add_mag(mag, shard_shape=(1024, 1024, 32))
@@ -59,21 +59,23 @@ def test_buffered_slice_writer() -> None:
     test_img_3d = np.zeros((test_img.shape[0], test_img.shape[1], 35))
     for i in range(35):
         test_img_3d[:, :, i] = test_img
-    assert np.array_equal(test_img_3d, read_data), (
-        "The data from the disk is not the same as the data that should be written."
+
+    np.testing.assert_equal(
+        test_img_3d,
+        read_data,
+        "The data from the disk is not the same as the data that should be written.",
     )
 
 
-@pytest.mark.parametrize("dim", [0, 1, 2])
+@pytest.mark.parametrize("dim", ["x", "y", "z"])
 def test_buffered_slice_writer_along_different_axis(
-    tmp_upath: UPath, dim: Literal[0, 1, 2]
+    tmp_upath: UPath, dim: Literal["x", "y", "z"]
 ) -> None:
     test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
-    cube_size_without_channel = test_cube.shape[1:]
+    cube_size_without_channel = Vec3Int(test_cube.shape[1:])
     offset = Vec3Int(64, 96, 32)
 
-    shard_shape = [1024, 1024, 1024]
-    shard_shape[dim] = 32
+    shard_shape = Vec3Int(1024, 1024, 1024).with_replaced(dim, 32)
 
     ds = Dataset(tmp_upath / f"buffered_slice_writer_{dim}", voxel_size=(1, 1, 1))
     layer = ds.add_layer(
@@ -87,15 +89,15 @@ def test_buffered_slice_writer_along_different_axis(
     with mag_view.get_buffered_slice_writer(
         absolute_offset=offset, buffer_size=5, dimension=dim, allow_unaligned=True
     ) as writer:
-        for i in range(cube_size_without_channel[dim]):
-            if dim == 0:
+        for i in range(cube_size_without_channel.get(dim)):
+            if dim == "x":
                 current_slice = test_cube[:, i, :, :]
-            elif dim == 1:
+            elif dim == "y":
                 current_slice = test_cube[:, :, i, :]
-            else:  # dim == 2
+            else:  # dim == "z"
                 current_slice = test_cube[:, :, :, i]
             writer.send(current_slice)
-    assert np.array_equal(
+    np.testing.assert_equal(
         mag_view.read(absolute_offset=offset, size=cube_size_without_channel),
         test_cube,
     )
@@ -106,7 +108,7 @@ def test_buffered_slice_reader_along_different_axis(tmp_upath: UPath) -> None:
     cube_size_without_channel = Vec3Int(test_cube.shape[1:])
     offset = Vec3Int(5, 10, 20)
 
-    for dim in [0, 1, 2]:
+    for dim in ["x", "y", "z"]:
         ds = Dataset(tmp_upath / f"buffered_slice_reader_{dim}", voxel_size=(1, 1, 1))
         layer = ds.add_layer(
             "color",
@@ -129,16 +131,16 @@ def test_buffered_slice_reader_along_different_axis(tmp_upath: UPath) -> None:
         ):
             i = 0
             for slice_data_a, slice_data_b in zip(reader_a, reader_b):
-                if dim == 0:
+                if dim == "x":
                     original_slice = test_cube[:, i, :, :]
-                elif dim == 1:
+                elif dim == "y":
                     original_slice = test_cube[:, :, i, :]
-                else:  # dim == 2
+                else:  # dim == "z"
                     original_slice = test_cube[:, :, :, i]
                 i += 1
 
-                assert np.array_equal(slice_data_a, original_slice)
-                assert np.array_equal(slice_data_b, original_slice)
+                np.testing.assert_equal(slice_data_a, original_slice)
+                np.testing.assert_equal(slice_data_b, original_slice)
 
 
 def test_basic_buffered_slice_writer(tmp_upath: UPath) -> None:
@@ -151,7 +153,7 @@ def test_basic_buffered_slice_writer(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), shape),
     )
@@ -179,7 +181,7 @@ def test_buffered_slice_writer_unaligned(
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (513, 513, 36)),
     )
@@ -225,7 +227,7 @@ def test_buffered_slice_writer_should_raise_unaligned_usage(
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (513, 513, 33)),
     )
@@ -256,7 +258,7 @@ def test_basic_buffered_slice_writer_multi_shard(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (160, 150, 140)),
     )
@@ -289,7 +291,7 @@ def test_basic_buffered_slice_writer_multi_shard_multi_channel(
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=3,
         bounding_box=BoundingBox((0, 0, 0), (160, 150, 140)),
     )
@@ -316,7 +318,7 @@ def test_buffered_slice_writer_reset_offset(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
         bounding_box=BoundingBox((0, 0, 0), (512, 512, 40)),
     )
@@ -363,7 +365,7 @@ def test_buffered_slice_writer_resize_error(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         layer_name="color",
         category="color",
-        dtype_per_channel="uint8",
+        dtype="uint8",
         num_channels=1,
     )  # intentionally not setting a bounding box
     mag1 = layer.add_mag("1")
@@ -374,3 +376,36 @@ def test_buffered_slice_writer_resize_error(tmp_upath: UPath) -> None:
             for z in range(0, shape[2]):
                 section = data[:, :, z]
                 writer.send(section)
+
+
+def test_buffered_slice_writer_mag2_absolute_bbox(tmp_upath: UPath) -> None:
+    # write to a non mag1 mag using an absolute bbox with offset
+    target_mag = Mag("2-2-1")
+
+    # intentionally start at some offset
+    mag1_bbox = BoundingBox((128, 128, 0), (32, 32, 8))
+    mag2_bbox = mag1_bbox.in_mag(target_mag)
+
+    # Allocate some data
+    data = np.random.randint(0, 255, tuple(mag2_bbox.size), dtype=np.uint8)
+
+    # Create DS
+    dataset = Dataset(tmp_upath, voxel_size=(1, 1, 1))
+    layer = dataset.add_layer(
+        layer_name="color",
+        category="color",
+        dtype="uint8",
+        num_channels=1,
+        bounding_box=mag1_bbox,
+        chunk_shape=mag1_bbox.size,
+    )
+    mag2 = layer.add_mag("2-2-1")
+
+    # Write some slices
+    with mag2.get_buffered_slice_writer(absolute_bounding_box=mag1_bbox) as writer:
+        for z in range(0, mag2_bbox.size[2]):
+            section = data[:, :, z]
+            writer.send(section)
+
+    written_data = mag2.read(absolute_bounding_box=mag1_bbox)
+    np.testing.assert_array_equal(data, written_data.squeeze())

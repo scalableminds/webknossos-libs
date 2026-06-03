@@ -6,14 +6,14 @@ from urllib.parse import urlparse
 
 import typer
 
-from webknossos import RemoteDataset
-
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
 from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
+from ..dataset.remote_dataset import RemoteDataset
+from ..dataset_properties import DataFormat
 from ..geometry import BoundingBox, Mag
-from ._utils import parse_bbox, parse_mag, parse_path
+from ._utils import TokenOption, parse_bbox, parse_mag, parse_path
 
 
 def main(
@@ -32,15 +32,7 @@ def main(
             help="URL of your dataset or your annotation.",
         ),
     ],
-    token: Annotated[
-        str | None,
-        typer.Option(
-            help="Authentication token for WEBKNOSSOS instance "
-            "(https://webknossos.org/auth/token).",
-            rich_help_panel="WEBKNOSSOS context",
-            envvar="WK_TOKEN",
-        ),
-    ] = None,
+    token: TokenOption = None,
     bbox: Annotated[
         BoundingBox | None,
         typer.Option(
@@ -65,10 +57,18 @@ def main(
         typer.Option(
             rich_help_panel="Partial download",
             help="Mags that should be downloaded. "
-            "Should be number or minus separated string (e.g. 2 or 2-2-2). "
+            "Should be number or hyphen-separated string (e.g. 2 or 2-2-2). "
             "For multiple mags type: --mag 1 --mag 2",
             parser=parse_mag,
             metavar="MAG",
+        ),
+    ] = None,
+    data_format: Annotated[
+        DataFormat | None,
+        typer.Option(
+            rich_help_panel="Partial download",
+            help="Data format of the downloaded dataset.",
+            metavar="DATA_FORMAT",
         ),
     ] = None,
 ) -> None:
@@ -86,11 +86,16 @@ def main(
         ):
             RemoteDataset.open(url).download(
                 path=target,
-                bbox=bbox,
+                bounding_box=bbox,
                 layers=layers,
                 mags=mags,
+                data_format=data_format,
             )
         elif re.match(_ANNOTATION_URL_REGEX, url):
+            if data_format is not None:
+                raise typer.BadParameter(
+                    "The --data-format option is not supported for annotation downloads."
+                )
             Annotation.download(annotation_id_or_url=url).save(target)
         else:
             raise RuntimeError(

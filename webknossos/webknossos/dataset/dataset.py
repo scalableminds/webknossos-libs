@@ -17,8 +17,8 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ..client.api_client.models import (
-    ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
+    ApiReserveDatasetUploadToPathsParameters,
 )
 from ..geometry import (
     BoundingBox,
@@ -31,13 +31,17 @@ from ..geometry import (
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._utils import pims_images
-from .abstract_dataset import DEFAULT_VERSION, AbstractDataset
+from .abstract_dataset import (
+    DEFAULT_VERSION,
+    AbstractDataset,
+    AttachmentRenaming,
+    LayerRenaming,
+    _dtype_maybe,
+)
 from .defaults import (
-    DEFAULT_BIT_DEPTH,
-    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_DATA_FORMAT,
-    DEFAULT_SHARD_SHAPE,
-    DEFAULT_SHARD_SHAPE_FROM_IMAGES,
+    DEFAULT_DTYPE,
     PROPERTIES_FILE_NAME,
     ZARR_JSON_FILE_NAME,
     ZGROUP_FILE_NAME,
@@ -52,11 +56,11 @@ from .layer import (
 )
 from .layer.abstract_layer import (
     _UNALLOWED_LAYER_NAME_CHARS,
-    _dtype_per_channel_to_dtype_per_layer,
+    _validate_layer_name,
 )
-from .layer.layer import _get_shard_shape
+from .layer.layer import _get_shard_and_chunk_shapes
 from .ome_metadata import write_ome_metadata
-from .remote_dataset import RemoteDataset
+from .remote_dataset import RemoteAccessMode, RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .transfer_mode import TransferMode
@@ -70,9 +74,6 @@ from webknossos.dataset.layer import (
     RemoteLayer,
     SegmentationLayer,
 )
-from webknossos.dataset.layer.abstract_layer import (
-    _dtype_per_layer_to_dtype_per_channel,
-)
 
 from ..dataset_properties import (
     COLOR_CATEGORY,
@@ -85,24 +86,20 @@ from ..dataset_properties import (
     SegmentationLayerProperties,
     VoxelSize,
 )
-from ..dataset_properties.structuring import (
-    _properties_floating_type_to_python_type,
-    _python_floating_type_to_properties_type,
-    get_dataset_converter,
-)
+from ..dataset_properties.structuring import get_dataset_converter
 from ..utils import (
     cheap_resolve,
     copytree,
     count_defined_values,
     dump_path,
     enrich_path,
-    get_executor_for_args,
     is_fs_path,
     named_partial,
     rmtree,
     strip_trailing_slash,
     wait_and_ensure_success,
     warn_deprecated,
+    wrap_executor,
 )
 from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
 from ._utils.segmentation_recognition import (
@@ -239,7 +236,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             self,
             input_path: UPath,
             input_files: Sequence[UPath],
-            use_bioformats: bool | None,
+            use_bioformats: bool,
         ) -> Callable[[UPath], str]:
             ConversionLayerMapping = Dataset.ConversionLayerMapping
 
@@ -416,14 +413,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def _SegmentationLayerType(self) -> type[SegmentationLayer]:
         return SegmentationLayer
 
-    def _initialize_layer_from_properties(
-        self, properties: LayerProperties, read_only: bool
-    ) -> Layer:
-        # If the numChannels key is not present in the dataset properties, assume it is 1.
-        if properties.num_channels is None:
-            properties.num_channels = 1
-        return super()._initialize_layer_from_properties(properties, read_only)
-
     @classmethod
     def open(
         cls, dataset_path: str | PathLike | UPath, read_only: bool = False
@@ -450,24 +439,27 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def open_remote(
         cls,
         dataset_name_or_url: str | None = None,
+        *,
         organization_id: str | None = None,
         sharing_token: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
         annotation_id: str | None = None,
-        use_zarr_streaming: bool = True,
+        access_mode: RemoteAccessMode | None = None,
         read_only: bool = False,
-    ) -> "RemoteDataset":
+        use_zarr_streaming: bool | None = None,
+    ) -> RemoteDataset:
         warn_deprecated("Dataset.open_remote", "RemoteDataset.open")
         return RemoteDataset.open(
-            dataset_name_or_url,
-            organization_id,
-            sharing_token,
-            webknossos_url,
-            dataset_id,
-            annotation_id,
-            use_zarr_streaming,
-            read_only,
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=sharing_token,
+            webknossos_url=webknossos_url,
+            dataset_id=dataset_id,
+            annotation_id_or_url=annotation_id,
+            use_zarr_streaming=use_zarr_streaming,
+            access_mode=access_mode,
+            read_only=read_only,
         )
 
     def __repr__(self) -> str:
@@ -479,11 +471,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
         return self._load_dataset_properties_from_path(self.path)
 
-    def _save_dataset_properties_impl(self) -> None:
+    def _save_dataset_properties_impl(
+        self, *, renamings: Sequence[LayerRenaming | AttachmentRenaming] | None = None
+    ) -> None:
         """
         Exports the current dataset properties to json on disk.
         And writes out Zarr and OME-Ngff metadata if there is a Zarr layer.
         """
+        del renamings  # only used in remote case
         (self.path / PROPERTIES_FILE_NAME).write_text(
             json.dumps(
                 get_dataset_converter().unstructure(self._properties),
@@ -537,7 +532,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
           If a URL is used, `organization_id`, `webknossos_url` and `sharing_token` must not be set.
         * `organization_id` may be supplied if a dataset name was used in the previous argument,
           it defaults to your current organization from the `webknossos_context`.
-          You can find your `organization_id` [here](https://webknossos.org/auth/token).
+          You can find your `organization_id` [here](https://webknossos.org/account/token).
         * `sharing_token` may be supplied if a dataset name was used and can specify a sharing token.
         * `webknossos_url` may be supplied if a dataset name was used,
           and allows to specify in which webknossos instance to search for the dataset.
@@ -551,15 +546,24 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         warn_deprecated("Dataset.download", "RemoteDataset.download")
 
         remote_dataset = RemoteDataset.open(
-            dataset_name_or_url, organization_id, sharing_token, webknossos_url
+            dataset_name_or_url=dataset_name_or_url,
+            organization_id=organization_id,
+            sharing_token=sharing_token,
+            webknossos_url=webknossos_url,
         )
         return remote_dataset.download(
-            sharing_token, bbox, layers, mags, path, exist_ok
+            sharing_token=sharing_token,
+            bounding_box=bbox,
+            layers=layers,
+            mags=mags,
+            path=path,
+            exist_ok=exist_ok,
         )
 
     def publish_to_preliminary_dataset(
         self,
         dataset_id: str,
+        *,
         path_prefix: str | None = None,
         transfer_mode: TransferMode = TransferMode.COPY,
     ) -> None:
@@ -591,14 +595,16 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def upload(
         self,
+        *,
         new_dataset_name: str | None = None,
         initial_team_ids: list[str] | None = None,
-        folder_id: str | RemoteFolder | None = None,
+        folder: str | RemoteFolder | None = None,
         require_unique_name: bool = False,
         layers_to_link: Sequence[LayerToLink | RemoteLayer] | None = None,
         transfer_mode: TransferMode = TransferMode.HTTP,
         jobs: int | None = None,
         common_storage_path_prefix: str | None = None,
+        folder_id: str | RemoteFolder | None = None,
     ) -> "RemoteDataset":
         """Upload this dataset to webknossos.
 
@@ -608,12 +614,13 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Args:
             new_dataset_name: Name for the new dataset defaults to the current name.
             initial_team_ids: Optional list of team IDs to grant initial access
-            folder_id: Optional ID of folder where dataset should be placed
+            folder: Optional ID of folder where dataset should be placed
             require_unique_name: Whether to make request fail in case a dataset with the name already exists
             layers_to_link: Optional list of LayerToLink to link already published layers to the dataset.
             jobs: Optional number of jobs to use for uploading the data.
             common_storage_path_prefix: Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
                                         to select one of the available WEBKNOSSOS storages.
+            folder_id: Deprecated, use folder instead.
         Returns:
             RemoteDataset: Reference to the newly created remote dataset
         Note:
@@ -639,8 +646,16 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         new_dataset_name = new_dataset_name or self.name
 
-        if isinstance(folder_id, RemoteFolder):
-            folder_id = folder_id.id
+        if folder_id is not None:
+            warn_deprecated("folder_id", "folder")
+            if folder is not None:
+                raise ValueError(
+                    "Both folder_id and folder were provided. Only one is allowed."
+                )
+            folder = folder_id
+
+        if isinstance(folder, RemoteFolder):
+            folder = folder.id
 
         converted_layers_to_link = (
             None
@@ -658,10 +673,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         ):
             client = _get_api_client()
             response = client.reserve_dataset_upload_to_paths(
-                ApiReserveDatasetUplaodToPathsParameters(
+                ApiReserveDatasetUploadToPathsParameters(
                     dataset_name=new_dataset_name,
                     initial_team_ids=initial_team_ids or [],
-                    folder_id=folder_id,
+                    folder_id=folder,
                     require_unique_name=require_unique_name,
                     data_source=self._properties,
                     layers_to_link=[
@@ -686,16 +701,15 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     "common_storage_path_prefix is not None, but uploading via HTTP."
                     " Ignoring common_storage_path_prefix."
                 )
-            for layer in self.get_segmentation_layers():
-                if not layer.attachments.is_empty:
-                    raise NotImplementedError(
-                        f"Uploading layers with attachments is not supported yet. Layer {layer.name} has attachments."
-                    )
 
             from ..client._upload_dataset import upload_dataset
 
             new_dataset_id = upload_dataset(
-                self, new_dataset_name, converted_layers_to_link, jobs
+                self,
+                new_dataset_name,
+                converted_layers_to_link,
+                jobs,
+                folder_id=folder,
             )
 
         return RemoteDataset.open(dataset_id=new_dataset_id)
@@ -719,7 +733,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 src_mag = src_layer.mags[mag.mag]
                 assert mag.path is not None, "mag.path must be set to copy/move data"
                 dst_mag_path = enrich_path(mag.path)
-                transfer_mode.transfer(src_mag.path, dst_mag_path)
+                transfer_mode.transfer(
+                    src_mag.path,
+                    dst_mag_path,
+                    progress_desc_label=f"{layer.name}/{mag.mag}",
+                )
             if isinstance(src_layer, SegmentationLayer):
                 assert isinstance(layer, SegmentationLayerProperties), (
                     "If src_layer is a SegmentationLayer, then layer must be a SegmentationLayerProperties"
@@ -729,7 +747,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     src_layer.attachments, layer.attachments
                 ):
                     dst_attachment_path = enrich_path(dst_attachment.path)
-                    transfer_mode.transfer(src_attachment.path, dst_attachment_path)
+                    transfer_mode.transfer(
+                        src_attachment.path,
+                        dst_attachment_path,
+                        progress_desc_label=f"{layer.name}/{src_attachment.type_name}:{src_attachment.name}",
+                    )
 
     @staticmethod
     def get_remote_datasets(
@@ -747,13 +769,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     @classmethod
     def trigger_reload_in_datastore(
         cls,
+        *,
         dataset_name_or_url: str | None = None,
         organization_id: str | None = None,
         webknossos_url: str | None = None,
         dataset_id: str | None = None,
         organization: str | None = None,
-        token: str | None = None,
         datastore_url: str | None = None,
+        token: str | None = None,
     ) -> None:
         warn_deprecated(
             "Dataset.trigger_reload_in_datastore",
@@ -765,13 +788,13 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             webknossos_url=webknossos_url,
             dataset_id=dataset_id,
             organization=organization,
-            token=token,
             datastore_url=datastore_url,
+            token=token,
         )
 
     @classmethod
     def trigger_dataset_import(
-        cls, directory_name: str, organization: str, token: str | None = None
+        cls, directory_name: str, organization: str, token: str
     ) -> None:
         """Deprecated. Use `Dataset.trigger_reload_in_datastore` instead."""
         warn_deprecated(
@@ -794,7 +817,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         *,
         map_filepath_to_layer_name: ConversionLayerMapping
         | Callable[[UPath], str] = ConversionLayerMapping.INSPECT_SINGLE_FILE,
-        z_slices_sort_key: Callable[[UPath], Any] = natsort_keygen(),
+        z_slices_sort_key: Callable[[UPath], Any] | None = None,
         voxel_size_with_unit: VoxelSize | None = None,
         layer_name: str | None = None,
         layer_category: LayerCategoryType | None = None,
@@ -807,7 +830,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        use_bioformats: bool | None = None,
+        use_bioformats: bool = False,
         max_layers: int = 20,
         batch_size: int | None = None,
         executor: Executor | None = None,
@@ -847,7 +870,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             flip_x: Whether to flip the x axis
             flip_y: Whether to flip the y axis
             flip_z: Whether to flip the z axis
-            use_bioformats: Whether to use bioformats for reading
+            use_bioformats: Whether to use bioformats for reading, defaults to False
             max_layers: Maximum number of layers to create
             batch_size: Size of batches for processing
             executor: Optional executor for parallelization
@@ -864,7 +887,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         Note:
             This method needs extra packages like tifffile or pylibczirw.
-            Install with `pip install "webknossos[all]"` and `pip install --extra-index-url https://pypi.scm.io/simple/ "webknossos[czi]"`.
+            Install with `pip install "webknossos[all]"`.
         """
 
         input_upath = UPath(input_path)
@@ -872,6 +895,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         valid_suffixes = pims_images.get_valid_pims_suffixes()
         if use_bioformats is not False:
             valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
+
+        if z_slices_sort_key is None:
+            z_slices_sort_key = natsort_keygen()
 
         if input_upath.is_file():
             if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
@@ -950,7 +976,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 filepaths_per_layer = {
                     f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
                 }
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
             with warnings.catch_warnings():
                 warnings.filterwarnings(
                     "ignore",
@@ -993,7 +1019,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         layer_name: str,
         category: LayerCategoryType,
         *,
-        dtype_per_layer: DTypeLike | None = None,
+        dtype: DTypeLike | None = None,
         dtype_per_channel: DTypeLike | None = None,
         num_channels: int | None = None,
         data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
@@ -1007,8 +1033,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Args:
             layer_name: Name for the new layer
             category: Either 'color' or 'segmentation'
-            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer, e.g. np.uint8
-            dtype_per_channel: Optional data type per channel, e.g. np.uint8
+            dtype: Optional data type per channel, e.g. np.uint8
+            dtype_per_channel: Deprecated, use dtype.
             num_channels: Number of channels (default 1)
             data_format: Format to store data ('wkw', 'zarr', 'zarr3')
             bounding_box: Optional initial bounding box of layer
@@ -1022,7 +1048,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Raises:
             IndexError: If layer with given name already exists
             RuntimeError: If invalid category specified
-            AttributeError: If both dtype_per_layer and dtype_per_channel specified
+            AttributeError: If both dtype and dtype_per_channel specified
             AssertionError: If invalid layer name or WKW format used with remote dataset
 
         Examples:
@@ -1031,7 +1057,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 layer = ds.add_layer(
                     "my_raw_microscopy_layer",
                     LayerCategoryType.COLOR_CATEGORY,
-                    dtype_per_channel=np.uint8,
+                    dtype=np.uint8,
                 )
                 ```
 
@@ -1040,7 +1066,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 layer = ds.add_layer(
                     "my_segmentation_labels",
                     LayerCategoryType.SEGMENTATION_CATEGORY,
-                    dtype_per_channel=np.uint64
+                    dtype=np.uint64
                 )
                 ```
 
@@ -1052,66 +1078,57 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         self._ensure_writable()
 
+        _validate_layer_name(layer_name)
+
         if num_channels is None:
             num_channels = 1
 
-        if dtype_per_layer is not None and dtype_per_channel is not None:
-            raise AttributeError(
-                "Cannot add layer. Specifying both 'dtype_per_layer' and 'dtype_per_channel' is not allowed"
-            )
-        elif dtype_per_channel is not None:
-            dtype_per_channel = _properties_floating_type_to_python_type.get(
-                dtype_per_channel,  # type: ignore[arg-type]
-                dtype_per_channel,  # type: ignore[arg-type]
-            )
-            dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)  # type: ignore[arg-type]
-        elif dtype_per_layer is not None:
-            warn_deprecated("dtype_per_layer", "dtype_per_channel")
-            dtype_per_layer = _properties_floating_type_to_python_type.get(
-                dtype_per_layer,  # type: ignore[arg-type]
-                dtype_per_layer,  # type: ignore[arg-type]
-            )
-            dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)  # type: ignore[arg-type]
-            dtype_per_channel = _dtype_per_layer_to_dtype_per_channel(
-                dtype_per_layer, num_channels
-            )
-        else:
-            dtype_per_channel = np.dtype("uint" + str(DEFAULT_BIT_DEPTH))
+        dtype = _dtype_maybe(dtype, dtype_per_channel)
+        if dtype is None:
+            dtype = DEFAULT_DTYPE
 
-        # assert that the dtype_per_channel is supported by webknossos
+        # assert that the dtype is supported by webknossos
         if category == COLOR_CATEGORY:
-            if dtype_per_channel.name not in _ALLOWED_COLOR_LAYER_DTYPES:
+            if dtype.name not in _ALLOWED_COLOR_LAYER_DTYPES:
                 raise ValueError(
-                    f"Cannot add color layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(_ALLOWED_COLOR_LAYER_DTYPES)}."
+                    f"Cannot add color layer with dtype {dtype.name}. "
+                    f"Supported dtypes are: {', '.join(_ALLOWED_COLOR_LAYER_DTYPES)}. "
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
         else:
-            if dtype_per_channel.name not in _ALLOWED_SEGMENTATION_LAYER_DTYPES:
+            if dtype.name not in _ALLOWED_SEGMENTATION_LAYER_DTYPES:
                 raise ValueError(
-                    f"Cannot add segmentation layer with dtype {dtype_per_channel.name}. "
-                    f"Supported dtypes are: {', '.join(_ALLOWED_SEGMENTATION_LAYER_DTYPES)}."
+                    f"Cannot add segmentation layer with dtype {dtype.name}. "
+                    f"Supported dtypes are: {', '.join(_ALLOWED_SEGMENTATION_LAYER_DTYPES)}. "
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
+
+        if (num_channels > 1 and dtype.name != "uint8") or (
+            num_channels not in (1, 3) and dtype.name == "uint8"
+        ):
+            warnings.warn(
+                f"Data type {dtype.name} with multiple channels (got {num_channels}) not supported by WEBKNOSSOS. Create multiple layers instead."
+            )
 
         if layer_name in self.layers.keys():
             raise IndexError(
                 f"Adding layer {layer_name} failed. There is already a layer with this name"
             )
 
-        assert is_fs_path(self.path) or data_format != DataFormat.WKW, (
-            "Cannot create WKW layers in remote datasets. Use `data_format='zarr'`."
-        )
+        if data_format == DataFormat.WKW and not is_fs_path(self.path):
+            warnings.warn(
+                "Creating WKW layers in remote datasets is not recommended because of poor performance. "
+                + "Use `data_format='zarr3'` instead."
+            )
 
+        bounding_box = bounding_box or BoundingBox((0, 0, 0), (0, 0, 0))
+        bounding_box = bounding_box.normalize_axes(num_channels)
         layer_properties = LayerProperties(
             name=layer_name,
             category=category,
-            bounding_box=bounding_box or BoundingBox((0, 0, 0), (0, 0, 0)),
-            element_class=_dtype_per_channel_to_element_class(
-                dtype_per_channel, num_channels
-            ),
+            bounding_box=bounding_box,
+            dtype=dtype.name,
             mags=[],
-            num_channels=num_channels,
             data_format=DataFormat(data_format),
         )
 
@@ -1141,107 +1158,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         self._save_dataset_properties()
         return self.layers[layer_name]
 
-    def get_or_add_layer(
-        self,
-        layer_name: str,
-        category: LayerCategoryType,
-        *,
-        dtype_per_layer: DTypeLike | None = None,
-        dtype_per_channel: DTypeLike | None = None,
-        num_channels: int | None = None,
-        data_format: str | DataFormat = DEFAULT_DATA_FORMAT,
-        **kwargs: Any,
-    ) -> Layer:
-        """Get an existing layer or create a new one.
-
-        Gets a layer with the given name if it exists, otherwise creates a new layer
-        with the specified parameters.
-
-        Args:
-            layer_name: Name of the layer to get or create
-            category: Layer category ('color' or 'segmentation')
-            dtype_per_layer: Deprecated, use dtype_per_channel. Optional data type for entire layer
-            dtype_per_channel: Optional data type per channel
-            num_channels: Optional number of channels
-            data_format: Format to store data ('wkw', 'zarr', etc.)
-            **kwargs: Additional arguments passed to add_layer()
-
-        Returns:
-            Layer: The existing or newly created layer
-
-        Raises:
-            AssertionError: If existing layer's properties don't match specified parameters
-            ValueError: If both dtype_per_layer and dtype_per_channel specified
-            RuntimeError: If invalid category specified
-
-        Examples:
-            ```
-            layer = ds.get_or_add_layer(
-                "segmentation",
-                LayerCategoryType.SEGMENTATION_CATEGORY,
-                dtype_per_channel=np.uint64,
-            )
-            ```
-
-        Note:
-            The dtype can be specified either per layer or per channel, but not both.
-            For existing layers, the parameters are validated against the layer properties.
-        """
-
-        if layer_name in self.layers.keys():
-            assert (
-                num_channels is None
-                or self.layers[layer_name].num_channels == num_channels
-            ), (
-                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the number of channels do not match. "
-                + f"The number of channels of the existing layer are '{self.layers[layer_name].num_channels}' "
-                + f"and the passed parameter is '{num_channels}'."
-            )
-            assert self.get_layer(layer_name).category == category, (
-                f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the categories do not match. "
-                + f"The category of the existing layer is '{self.get_layer(layer_name).category}' "
-                + f"and the passed parameter is '{category}'."
-            )
-
-            if dtype_per_channel is not None:
-                dtype_per_channel = _normalize_dtype_per_channel(dtype_per_channel)
-
-            if dtype_per_layer is not None:
-                warn_deprecated("dtype_per_layer", "dtype_per_channel")
-                dtype_per_layer = _normalize_dtype_per_layer(dtype_per_layer)
-
-            if dtype_per_channel is not None or dtype_per_layer is not None:
-                dtype_per_channel = (
-                    dtype_per_channel
-                    or _dtype_per_layer_to_dtype_per_channel(
-                        dtype_per_layer,  # type: ignore[arg-type]
-                        num_channels or self.layers[layer_name].num_channels,
-                    )
-                )
-                assert (
-                    dtype_per_channel is None
-                    or self.layers[layer_name].dtype_per_channel == dtype_per_channel
-                ), (
-                    f"Cannot get_or_add_layer: The layer '{layer_name}' already exists, but the dtypes do not match. "
-                    + f"The dtype_per_channel of the existing layer is '{self.layers[layer_name].dtype_per_channel}' "
-                    + f"and the passed parameter would result in a dtype_per_channel of '{dtype_per_channel}'."
-                )
-            return self.layers[layer_name]
-        else:
-            return self.add_layer(
-                layer_name,
-                category,
-                dtype_per_layer=dtype_per_layer,
-                dtype_per_channel=dtype_per_channel,
-                num_channels=num_channels,
-                data_format=DataFormat(data_format),
-                **kwargs,
-            )
-
     def add_layer_like(
         self, other_layer: Layer | RemoteLayer, layer_name: str
     ) -> Layer:
         self._ensure_writable()
+
+        _validate_layer_name(layer_name)
 
         if layer_name in self.layers.keys():
             raise IndexError(
@@ -1304,7 +1226,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             category: Layer category ('color' or 'segmentation')
             **kwargs: Additional arguments:
                 - num_channels: Override detected number of channels
-                - dtype_per_channel: Override detected data type
+                - dtype: Override detected data type
+                - dtype_per_channel: Deprecated, use dtype instead
                 - data_format: Override detected data format
                 - bounding_box: Override detected bounding box
 
@@ -1329,7 +1252,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 layer = ds.add_layer_for_existing_files(
                     "segmentation_data",
                     "segmentation",
-                    dtype_per_channel=np.uint64
+                    dtype=np.uint64
                 )
                 ```
 
@@ -1339,6 +1262,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             Magnifications are discovered automatically.
         """
         self._ensure_writable()
+
+        _validate_layer_name(layer_name)
         assert layer_name not in self.layers, f"Layer {layer_name} already exists!"
 
         array_info = _find_array_info(self.path / layer_name)
@@ -1346,15 +1271,22 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             f"Could not find any valid mags in {self.path / layer_name}. Cannot add layer."
         )
 
-        num_channels = kwargs.pop("num_channels", array_info.num_channels)
-        dtype_per_channel = kwargs.pop("dtype_per_channel", array_info.voxel_type)
+        num_channels = kwargs.pop(
+            "num_channels", array_info.bounding_box.size.get("c", 0)
+        )
+        dtype = (
+            _dtype_maybe(
+                kwargs.pop("dtype", None), kwargs.pop("dtype_per_channel", None)
+            )
+            or array_info.voxel_type
+        )
         data_format = kwargs.pop("data_format", array_info.data_format)
 
         layer = self.add_layer(
             layer_name,
             category=category,
             num_channels=num_channels,
-            dtype_per_channel=dtype_per_channel,
+            dtype=dtype,
             data_format=data_format,
             **kwargs,
         )
@@ -1400,7 +1332,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         flip_y: bool = False,
         flip_z: bool = False,
         dtype: DTypeLike | None = None,
-        use_bioformats: bool | None = None,
+        use_bioformats: bool = False,
         channel: int | None = None,
         timepoint: int | None = None,
         czi_channel: int | None = None,
@@ -1421,7 +1353,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Please see the [pims docs](http://soft-matter.github.io/pims/v0.6.1/opening_files.html) for more information.
 
         This method needs extra packages like tifffile or pylibczirw. Please install the respective extras,
-        e.g. using `python -m pip install "webknossos[all]"`.
+        e.g. using `pip install "webknossos[all]"`.
 
         Further Arguments:
 
@@ -1435,7 +1367,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
         * `use_bioformats`: set to `True` to only use the
           [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html) directly, needs a JVM,
-          set to `False` to forbid using the bioformats adapter, by default it is tried as a last option
+          set to `False` to forbid using the bioformats adapter. Defaults to `False`.
         * `channel`: may be used to select a single channel, if multiple are available
         * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
@@ -1445,6 +1377,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
+
+        _validate_layer_name(layer_name)
         if category is None:
             image_path_for_category_guess: UPath
             if (
@@ -1563,61 +1497,42 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     current_dtype = current_dtype.newbyteorder("<")
             else:
                 current_dtype = np.dtype(dtype)
+
             layer = self.add_layer(
                 layer_name=layer_name + layer_name_suffix,
                 category=category,
                 data_format=data_format,
-                dtype_per_channel=current_dtype,
+                dtype=current_dtype,
                 num_channels=pims_image_sequence.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
 
             expected_bbox = pims_image_sequence.expected_bbox
 
-            # When the expected bbox is 2D the chunk_shape is set to 2D too.
-            if expected_bbox.get_shape("z") == 1 and layer.data_format in (
-                DataFormat.Zarr,
-                DataFormat.Zarr3,
+            _shard_shape_user_specified = (
+                shard_shape is not None or chunks_per_shard is not None
+            )
+            chunk_shape, shard_shape = _get_shard_and_chunk_shapes(
+                data_format=layer.data_format,
+                layer_bounding_box=None,
+                chunk_shape=chunk_shape,
+                chunks_per_shard=chunks_per_shard,
+                shard_shape=shard_shape,
+            )
+            # For Zarr3 image imports, default to z-aligned shards for efficient
+            # slice-by-slice writing, regardless of total z size.
+            if (
+                not _shard_shape_user_specified
+                and layer.data_format == DataFormat.Zarr3
             ):
-                chunk_shape = (
-                    DEFAULT_CHUNK_SHAPE.with_z(1)
-                    if chunk_shape is None
-                    else Vec3Int.from_vec_or_int(chunk_shape)
-                )
-                shard_shape = _get_shard_shape(
-                    chunk_shape=chunk_shape,
-                    chunks_per_shard=chunks_per_shard,
-                    shard_shape=shard_shape,
-                )
-                if shard_shape is None:
-                    if layer.data_format == DataFormat.Zarr3:
-                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES.with_z(
-                            chunk_shape.z
-                        )
-                    else:
-                        shard_shape = DEFAULT_CHUNK_SHAPE.with_z(chunk_shape.z)
-                else:
-                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
-            else:
-                chunk_shape = (
-                    DEFAULT_CHUNK_SHAPE
-                    if chunk_shape is None
-                    else Vec3Int.from_vec_or_int(chunk_shape)
-                )
-                shard_shape = _get_shard_shape(
-                    chunk_shape=chunk_shape,
-                    chunks_per_shard=chunks_per_shard,
-                    shard_shape=shard_shape,
-                )
-                if shard_shape is None:
-                    if layer.data_format == DataFormat.Zarr3:
-                        shard_shape = DEFAULT_SHARD_SHAPE_FROM_IMAGES
-                    elif layer.data_format == DataFormat.Zarr:
-                        shard_shape = DEFAULT_CHUNK_SHAPE
-                    else:
-                        shard_shape = DEFAULT_SHARD_SHAPE
-                else:
-                    shard_shape = Vec3Int.from_vec_or_int(shard_shape)
+                shard_shape = chunk_shape * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
+            # When the expected bbox is 2D the chunk_shape is set to 2D too.
+            if (
+                expected_bbox.get_shape("z") == 1
+                and layer.data_format == DataFormat.Zarr3
+            ):
+                chunk_shape = chunk_shape.with_z(1)
+                shard_shape = shard_shape.with_z(1)
 
             mag = Mag(mag)
 
@@ -1666,7 +1581,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
             if (
                 additional_axes := set(layer.bounding_box.axes).difference(
-                    "x", "y", "z"
+                    "c", "x", "y", "z"
                 )
             ) and layer.data_format == DataFormat.WKW:
                 if all(
@@ -1705,7 +1620,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     category=UserWarning,
                     module="webknossos",
                 )
-                with get_executor_for_args(None, executor) as executor:
+                with wrap_executor(executor) as executor:
                     shapes_and_max_ids = wait_and_ensure_success(
                         executor.map_to_futures(func_per_chunk, args),
                         executor=executor,
@@ -1814,7 +1729,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             category,
             data_format=data_format,
             num_channels=num_channels,
-            dtype_per_channel=data.dtype,
+            dtype=data.dtype,
             bounding_box=mag1_bbox,
         )
 
@@ -1965,12 +1880,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
+        else:
+            _validate_layer_name(new_layer_name)
 
         if exists_ok:
             layer = self.get_or_add_layer(
                 new_layer_name,
                 category=foreign_layer.category,
-                dtype_per_channel=foreign_layer.dtype_per_channel,
+                dtype=foreign_layer.dtype,
                 num_channels=foreign_layer.num_channels,
                 data_format=data_format or foreign_layer.data_format,
                 largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
@@ -1984,7 +1901,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             layer = self.add_layer(
                 new_layer_name,
                 category=foreign_layer.category,
-                dtype_per_channel=foreign_layer.dtype_per_channel,
+                dtype=foreign_layer.dtype,
                 num_channels=foreign_layer.num_channels,
                 data_format=data_format or foreign_layer.data_format,
                 largest_segment_id=foreign_layer._get_largest_segment_id_maybe(),
@@ -2158,7 +2075,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     ) -> Layer:
         """Add a layer from another dataset by reference.
 
-        Creates a layer that references data from a remote dataset. The image data
+        Creates a layer that references data from another dataset. The image data
         will be streamed on-demand when accessed.
 
         Args:
@@ -2166,7 +2083,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             new_layer_name: Optional name for the new layer, uses original name if None
 
         Returns:
-            Layer: The newly created remote layer referencing the foreign data
+            Layer: The newly created layer referencing the foreign data
 
         Raises:
             IndexError: If target layer name already exists
@@ -2176,9 +2093,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Examples:
             ```
             ds = Dataset.open("other/dataset")
-            remote_ds = RemoteDataset.open("my_dataset", "my_org_id")
+            foreign_ds = Dataset.open("my_dataset")
             new_layer = ds.add_layer_as_ref(
-                remote_ds.get_layer("color")
+                foreign_ds.get_layer("color")
             )
             ```
 
@@ -2192,6 +2109,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
+        else:
+            _validate_layer_name(new_layer_name)
 
         if new_layer_name in self.layers.keys():
             raise IndexError(
@@ -2332,15 +2251,22 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         new_dataset_path = UPath(new_dataset_path)
 
-        if data_format == DataFormat.WKW:
-            assert is_fs_path(new_dataset_path), (
-                "Cannot create WKW-based remote datasets. Use `data_format='zarr3'` instead."
+        if data_format == DataFormat.WKW and not is_fs_path(new_dataset_path):
+            warnings.warn(
+                "Creating WKW-based remote datasets is not recommended because of poor performance. "
+                + "Use `data_format='zarr3'` instead."
             )
-        if data_format is None and any(
-            layer.data_format == DataFormat.WKW for layer in self.layers.values()
+
+        if (
+            data_format is None
+            and any(
+                layer.data_format == DataFormat.WKW for layer in self.layers.values()
+            )
+            and not is_fs_path(new_dataset_path)
         ):
-            assert is_fs_path(new_dataset_path), (
-                "Cannot create WKW layers in remote datasets. Use explicit `data_format='zarr3'`."
+            warnings.warn(
+                "Creating WKW layers in remote datasets is not recommended because of poor performance. "
+                + "Use explicit `data_format='zarr3'`."
             )
 
         if voxel_size_with_unit is None:
@@ -2355,7 +2281,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
         new_dataset.default_view_configuration = self.default_view_configuration
 
-        with get_executor_for_args(None, executor) as executor:
+        with wrap_executor(executor) as executor:
             for layer in self.layers.values():
                 if layers_to_ignore is not None and layer.name in layers_to_ignore:
                     continue
@@ -2410,9 +2336,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         new_dataset_path = UPath(new_dataset_path)
 
-        if any(layer.data_format == DataFormat.WKW for layer in self.layers.values()):
-            assert is_fs_path(new_dataset_path), (
-                "Cannot create WKW layers in remote datasets. Use `Dataset.copy_dataset` with `data_format='zarr3'`."
+        if any(
+            layer.data_format == DataFormat.WKW for layer in self.layers.values()
+        ) and not is_fs_path(new_dataset_path):
+            warnings.warn(
+                "Creating WKW layers in remote datasets is not recommended because of poor performance. "
+                + "Use `Dataset.copy_dataset` with `data_format='zarr3'`."
             )
 
         new_dataset = Dataset(
@@ -2601,31 +2530,3 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             raise IndexError(
                 f"Failed to get segmentation layer: There are multiple {category} layer."
             )
-
-
-def _dtype_per_channel_to_element_class(
-    dtype_per_channel: DTypeLike, num_channels: int
-) -> str:
-    dtype_per_layer = _dtype_per_channel_to_dtype_per_layer(
-        dtype_per_channel, num_channels
-    )
-    return _python_floating_type_to_properties_type.get(
-        dtype_per_layer, dtype_per_layer
-    )
-
-
-def _normalize_dtype_per_channel(dtype_per_channel: DTypeLike) -> np.dtype:
-    try:
-        return np.dtype(dtype_per_channel)
-    except TypeError as e:
-        raise TypeError(
-            "Cannot add layer. The specified 'dtype_per_channel' must be a valid dtype."
-        ) from e
-
-
-def _normalize_dtype_per_layer(dtype_per_layer: DTypeLike) -> DTypeLike:
-    try:
-        dtype_per_layer = str(np.dtype(dtype_per_layer))
-    except Exception:
-        pass  # casting to np.dtype fails if the user specifies a special dtype like "uint24"
-    return dtype_per_layer  # type: ignore[return-value]

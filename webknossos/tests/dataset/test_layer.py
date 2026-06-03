@@ -6,7 +6,7 @@ import webknossos as wk
 from webknossos import DataFormat
 
 
-def test_add_mag_from_zarrarray(tmp_upath: UPath) -> None:
+def test_add_mag_from_zarrarray3D(tmp_upath: UPath) -> None:
     dataset = wk.Dataset(
         tmp_upath / "test_add_mag_from_zarrarray", voxel_size=(10, 10, 10)
     )
@@ -14,7 +14,9 @@ def test_add_mag_from_zarrarray(tmp_upath: UPath) -> None:
         "color",
         wk.COLOR_CATEGORY,
         data_format="zarr3",
-        bounding_box=wk.BoundingBox((0, 0, 0), (16, 16, 16)),
+        bounding_box=wk.NDBoundingBox(
+            topleft=(0, 0, 0), size=(16, 16, 16), axes=("x", "y", "z"), index=(0, 1, 2)
+        ),
     )
     zarr_mag_path = tmp_upath / "zarr_data" / "mag1.zarr"
     zarr_data = np.random.randint(0, 255, (16, 16, 16), dtype="uint8")
@@ -35,10 +37,7 @@ def test_add_mag_from_zarrarray(tmp_upath: UPath) -> None:
                 },
                 "fill_value": 0,
                 "codecs": [
-                    {
-                        "name": "bytes",
-                        "configuration": {"endian": "little"},
-                    },
+                    "bytes",
                     {
                         "name": "blosc",
                         "configuration": {
@@ -58,10 +57,65 @@ def test_add_mag_from_zarrarray(tmp_upath: UPath) -> None:
 
     layer.add_mag_from_zarrarray("1", zarr_mag_path, extend_layer_bounding_box=False)
 
-    assert layer.get_mag("1").read().shape == (1, 16, 16, 16)
-    assert layer.get_mag("1").info.num_channels == 1
-    assert layer.get_mag("1").info.dimension_names == ("c", "x", "y", "z")
-    assert (layer.get_mag("1").read()[0] == zarr_data).all()
+    assert layer.get_mag("1").read().shape == (16, 16, 16)
+    assert layer.get_mag("1").info.bounding_box.axes == ("x", "y", "z")
+    np.testing.assert_array_equal(layer.get_mag("1").read(), zarr_data)
+
+
+def test_add_mag_from_zarrarray4D(tmp_upath: UPath) -> None:
+    dataset = wk.Dataset(
+        tmp_upath / "test_add_mag_from_zarrarray", voxel_size=(10, 10, 10)
+    )
+    layer = dataset.add_layer(
+        "color",
+        wk.COLOR_CATEGORY,
+        data_format="zarr3",
+        bounding_box=wk.BoundingBox(topleft=(0, 0, 0), size=(16, 16, 16)),
+        num_channels=3,
+    )
+    zarr_mag_path = tmp_upath / "zarr_data" / "mag1.zarr"
+    zarr_data = np.random.randint(0, 255, (3, 16, 16, 16), dtype="uint8")
+    zarr_mag = tensorstore.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {"driver": "file", "path": str(zarr_mag_path)},
+            "metadata": {
+                "data_type": "uint8",
+                "shape": (3, 16, 16, 16),
+                "chunk_grid": {
+                    "name": "regular",
+                    "configuration": {"chunk_shape": (3, 8, 8, 8)},
+                },
+                "chunk_key_encoding": {
+                    "name": "default",
+                    "configuration": {"separator": "."},
+                },
+                "fill_value": 0,
+                "codecs": [
+                    "bytes",
+                    {
+                        "name": "blosc",
+                        "configuration": {
+                            "cname": "zstd",
+                            "clevel": 5,
+                            "shuffle": "shuffle",
+                            "typesize": 1,
+                        },
+                    },
+                ],
+            },
+            "create": True,
+        }
+    ).result()
+
+    zarr_mag[:].write(zarr_data).result()
+
+    layer.add_mag_from_zarrarray("1", zarr_mag_path, extend_layer_bounding_box=False)
+
+    assert layer.get_mag("1").read().shape == (3, 16, 16, 16)
+    assert layer.get_mag("1").info.bounding_box.size.c == 3
+    assert layer.get_mag("1").info.bounding_box.axes == ("c", "x", "y", "z")
+    np.testing.assert_array_equal(layer.get_mag("1").read(), zarr_data)
 
 
 def test_add_mag_with_chunk_shape_zarr2(tmp_upath: UPath) -> None:

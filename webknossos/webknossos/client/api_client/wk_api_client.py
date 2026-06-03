@@ -4,9 +4,13 @@ from typing import Any
 import httpx
 
 from webknossos.client.api_client.models import (
+    ApiAiModel,
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
+    ApiDatasetComposeAttachment,
+    ApiDatasetComposeLayer,
+    ApiDatasetComposeMag,
     ApiDatasetExploreAndAddRemote,
     ApiDatasetId,
     ApiDatasetIsValidNewNameResponse,
@@ -18,11 +22,13 @@ from webknossos.client.api_client.models import (
     ApiNmlTaskParameters,
     ApiProject,
     ApiProjectCreate,
+    ApiReserveAiModelUploadToPathParameters,
     ApiReserveAttachmentUploadToPathParameters,
-    ApiReserveDatasetUplaodToPathsParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
     ApiReserveDatasetUploadToPathsForPreliminaryResponse,
+    ApiReserveDatasetUploadToPathsParameters,
     ApiReserveDatasetUploadToPathsResponse,
+    ApiReserveMagUploadToPathParameters,
     ApiSharingToken,
     ApiShortLink,
     ApiTask,
@@ -37,6 +43,7 @@ from webknossos.client.api_client.models import (
     ApiWkBuildInfo,
 )
 
+from ...dataset_properties import DatasetViewConfiguration
 from ...utils import time_since_epoch_in_ms
 from ._abstract_api_client import AbstractApiClient
 
@@ -123,6 +130,24 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/{dataset_id}/updatePartial"
         self._patch_json(route, dataset_updates)
 
+    def dataset_add_layer_as_ref(
+        self, *, dataset_id: str, compose_layer: ApiDatasetComposeLayer
+    ) -> None:
+        route = f"/datasets/{dataset_id}/compose/addLayer"
+        self._post_json(route, compose_layer)
+
+    def dataset_add_mag_as_ref(
+        self, *, dataset_id: str, compose_mag: ApiDatasetComposeMag
+    ) -> None:
+        route = f"/datasets/{dataset_id}/compose/addMag"
+        self._post_json(route, compose_mag)
+
+    def dataset_add_attachment_as_ref(
+        self, *, dataset_id: str, compose_attachment: ApiDatasetComposeAttachment
+    ) -> None:
+        route = f"/datasets/{dataset_id}/compose/addAttachment"
+        self._post_json(route, compose_attachment)
+
     def dataset_sharing_token(self, *, dataset_id: str) -> ApiSharingToken:
         route = f"/datasets/{dataset_id}/sharingToken"
         return self._get_json(route, ApiSharingToken)
@@ -132,6 +157,17 @@ class WkApiClient(AbstractApiClient):
     ) -> ApiDatasetIsValidNewNameResponse:
         route = f"/datasets/{dataset_name}/isValidNewName"
         return self._get_json(route, ApiDatasetIsValidNewNameResponse)
+
+    def dataset_configuration(
+        self,
+        *,
+        dataset_id: str,
+        volume_tracing_ids: list[str],
+    ) -> DatasetViewConfiguration:
+        route = f"/datasetConfigurations/{dataset_id}"
+        return self._post_json_with_json_response(
+            route, volume_tracing_ids, DatasetViewConfiguration
+        )
 
     def dataset_explore_and_add_remote(
         self, *, dataset: ApiDatasetExploreAndAddRemote
@@ -274,11 +310,11 @@ class WkApiClient(AbstractApiClient):
         )
 
     def folder_move(self, *, folder_id: str, new_parent_id: str) -> ApiFolderWithParent:
-        route = "/folders/create"
-        return self._post_with_json_response(
+        route = f"/folders/{folder_id}/move"
+        return self._put_with_json_response(
             route,
             ApiFolderWithParent,
-            query={"newParentId": new_parent_id, "id": folder_id},
+            query={"newParentId": new_parent_id},
         )
 
     def folder_delete(self, *, folder_id: str) -> None:
@@ -355,7 +391,7 @@ class WkApiClient(AbstractApiClient):
 
     def reserve_dataset_upload_to_paths(
         self,
-        reserve_dataset_upload_to_path_parameters: ApiReserveDatasetUplaodToPathsParameters,
+        reserve_dataset_upload_to_path_parameters: ApiReserveDatasetUploadToPathsParameters,
     ) -> ApiReserveDatasetUploadToPathsResponse:
         route = "/datasets/reserveUploadToPaths"
         return self._post_json_with_json_response(
@@ -384,6 +420,7 @@ class WkApiClient(AbstractApiClient):
         attachment_type: str,
         attachment_dataformat: str,
         common_storage_prefix: str | None = None,
+        overwrite_pending: bool = True,
     ) -> str:
         route = f"/datasets/{dataset_id}/reserveAttachmentUploadToPath"
         return self._post_json_with_json_response(
@@ -394,6 +431,7 @@ class WkApiClient(AbstractApiClient):
                 attachment_type,
                 attachment_dataformat,
                 common_storage_prefix,
+                overwrite_pending=overwrite_pending,
             ),
             str,
         )
@@ -421,3 +459,51 @@ class WkApiClient(AbstractApiClient):
 
     def finish_dataset_upload_to_paths(self, dataset_id: str) -> None:
         self._post(f"/datasets/{dataset_id}/finishUploadToPaths")
+
+    def reserve_mag_upload_to_paths(
+        self,
+        dataset_id: str,
+        reserve_mag_upload_to_path_parameters: ApiReserveMagUploadToPathParameters,
+    ) -> str:
+        route = f"/datasets/{dataset_id}/reserveMagUploadToPath"
+        return self._post_json_with_json_response(
+            route, reserve_mag_upload_to_path_parameters, str
+        )
+
+    def finish_mag_upload_to_paths(
+        self,
+        dataset_id: str,
+        reserve_mag_upload_to_path_parameters: ApiReserveMagUploadToPathParameters,
+    ) -> None:
+        route = f"/datasets/{dataset_id}/finishMagUploadToPath"
+        self._post_json(route, reserve_mag_upload_to_path_parameters)
+
+    def reserve_ai_model_upload_to_path(
+        self, params: ApiReserveAiModelUploadToPathParameters
+    ) -> ApiAiModel:
+        route = "/aiModels/reserveUploadToPath"
+        return self._post_json_with_json_response(route, params, ApiAiModel)
+
+    def finish_ai_model_upload_to_path(self, ai_model_id: str) -> None:
+        self._post(f"/aiModels/{ai_model_id}/finishUploadToPath")
+
+    def get_ai_model_info(self, ai_model_id: str) -> ApiAiModel:
+        route = f"/aiModels/{ai_model_id}"
+        ai_model = self._get_json(route, ApiAiModel)
+        return ai_model
+
+
+class WkApiClientV13(WkApiClient):
+    def __init__(
+        self,
+        *,
+        base_wk_url: str,
+        timeout_seconds: float,
+        headers: dict[str, str] | None = None,
+    ):
+        super().__init__(
+            base_wk_url=base_wk_url,
+            timeout_seconds=timeout_seconds,
+            headers=headers,
+        )
+        self.webknossos_api_version = 13

@@ -8,9 +8,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from math import ceil
 from tempfile import TemporaryDirectory
+from typing import Literal
 
 import numpy as np
 import pytest
+import tensorstore as ts
 from PIL import Image
 from typer.testing import CliRunner
 from upath import UPath
@@ -24,8 +26,12 @@ from tests.constants import (
     use_minio,
 )
 from webknossos import BoundingBox, DataFormat, Dataset, Mag
-from webknossos.cli.export_as_tiff import _make_tiff_name
+from webknossos.cli.export_as_tiff import _apply_mapping, _make_tiff_name
 from webknossos.cli.main import app
+from webknossos.dataset._utils.tensorstore_helpers import (
+    open_zarr3_array,
+    write_zarr3_array,
+)
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE
 from webknossos.utils import copytree
@@ -258,7 +264,7 @@ def test_convert() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff"
-        wkw_path = UPath("wkw_from_tiff_simple")
+        wkw_path = UPath("wk_from_tiff_simple")
 
         result = runner.invoke(
             app,
@@ -281,7 +287,7 @@ def test_convert_single_file() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff" / "test.0000.tiff"
-        wkw_path = UPath("wkw_from_tiff_single_file")
+        wkw_path = UPath("wk_from_tiff_single_file")
 
         result = runner.invoke(
             app,
@@ -303,7 +309,7 @@ def test_convert_with_all_params() -> None:
 
     with tmp_cwd():
         origin_path = TESTDATA_DIR / "tiff_with_different_shapes"
-        wkw_path = UPath(f"wkw_from_{origin_path.name}")
+        wkw_path = UPath(f"wk_from_{origin_path.name}")
         with pytest.warns(UserWarning, match="Some images are larger than expected,"):
             result = runner.invoke(
                 app,
@@ -314,7 +320,7 @@ def test_convert_with_all_params() -> None:
                     "--data-format",
                     "wkw",
                     "--name",
-                    "wkw_from_tiff",
+                    "wk_from_tiff",
                     "--compress",
                     str(origin_path),
                     str(wkw_path),
@@ -333,7 +339,7 @@ def test_convert_raw() -> None:
         origin_path.write_bytes(
             np.array([[0.2, 0.4], [0.6, 0.8]], dtype="float32").tobytes(order="F")
         )
-        out_path = UPath(f"wkw_from_{origin_path.name}")
+        out_path = UPath(f"wk_from_{origin_path.name}")
         result = runner.invoke(
             app,
             [
@@ -363,7 +369,63 @@ def test_convert_raw() -> None:
         )
 
 
-@pytest.mark.use_proxay
+@pytest.mark.parametrize("zarr_format", ["zarr", "zarr3"])
+def test_convert_zarr(zarr_format: Literal["zarr", "zarr3"]) -> None:
+    """Tests the functionality of convert-zarr subcommand."""
+
+    with tmp_cwd():
+        test_data = np.arange(32 * 32 * 32, dtype="uint16").reshape(32, 32, 32)
+
+        origin_path = UPath("test.zarr")
+        metadata = (
+            {
+                "shape": [32, 32, 32],
+                "chunk_grid": {
+                    "name": "regular",
+                    "configuration": {"chunk_shape": [32, 32, 32]},
+                },
+                "data_type": "uint16",
+            }
+            if zarr_format == "zarr3"
+            else {
+                "shape": [32, 32, 32],
+                "chunks": [32, 32, 32],
+                "dtype": "<u2",
+            }
+        )
+
+        ts.open(
+            {
+                "driver": zarr_format,
+                "kvstore": {"driver": "file", "path": str(origin_path)},
+                "metadata": metadata,
+                "create": True,
+            }
+        ).result().write(test_data).result()
+
+        out_path = UPath(f"wk_from_{origin_path.name}")
+        result = runner.invoke(
+            app,
+            [
+                "convert-zarr",
+                "--voxel-size",
+                "11.0,11.0,11.0",
+                str(origin_path),
+                str(out_path),
+            ],
+        )
+
+        assert result.exit_code == 0, result.stdout
+        assert (out_path / PROPERTIES_FILE_NAME).exists()
+
+        out_ds = Dataset.open(out_path)
+        np.testing.assert_array_equal(
+            out_ds.get_layer("color").get_finest_mag().read()[0],
+            test_data,
+        )
+
+
+@pytest.mark.skip_on_windows
 @pytest.mark.parametrize(
     "url",
     [
@@ -425,11 +487,97 @@ def test_downsample_and_upsample() -> None:
         assert (wkw_path / "color" / "1" / "z0" / "y0" / "x0.wkw").exists()
 
 
+@pytest.mark.skip_on_windows
 def test_upload() -> None:
     """Tests the functionality of upload subcommand."""
 
     result_without_args = runner.invoke(app, ["upload"])
     assert result_without_args.exit_code == 2
+
+    result = runner.invoke(
+        app,
+        [
+            "upload",
+            "--dataset-name",
+            "test_upload_cli",
+            str(TESTDATA_DIR / "simple_wkw_dataset"),
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+
+
+@pytest.mark.skip_on_windows
+def test_convert_upload_downsample() -> None:
+    """Tests the functionality of convert --upload and downsample subcommand."""
+
+    result_without_args = runner.invoke(app, ["convert", "--upload"])
+    assert result_without_args.exit_code == 2
+
+    with tmp_cwd():
+        result = runner.invoke(
+            app,
+            [
+                "convert",
+                "--upload",
+                "--voxel-size",
+                "11.24,11.24,25",
+                "--no-downsample",
+                "--name",
+                "test_remote_convert",
+                "--transfer-mode",
+                "copy",
+                str(TESTDATA_DIR / "tiff"),
+            ],
+        )
+        assert result.exit_code == 0, result.stdout
+
+    result_without_args = runner.invoke(app, ["downsample"])
+    assert result_without_args.exit_code == 2
+
+    result = runner.invoke(
+        app,
+        [
+            "downsample",
+            "--jobs",
+            "2",
+            "--coarsest-mag",
+            "2-2-1",
+            "--transfer-mode",
+            "copy",
+            "http://localhost:9000/datasets/Organization_X/test_remote_convert",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+
+
+def test_apply_mapping(tmp_path: UPath) -> None:
+    """Tests the segment-to-agglomerate mapping helper."""
+    # mapping[0] = 0 (background), mapping[1..4] → agglomerate IDs
+    mapping_data = np.array([0, 10, 10, 20, 20], dtype=np.uint32)
+    mapping_path = UPath(tmp_path) / "segment_to_agglomerate"
+    write_zarr3_array(
+        mapping_path,
+        mapping_data,
+        target_chunk_size_bytes=1024,
+        target_shard_size_bytes=1024 * 1024,
+    )
+    mapping_array = open_zarr3_array(mapping_path)
+
+    # normal segment IDs: 1→10, 2→10, 3→20, 4→20
+    data = np.array([[[[1, 2], [3, 4]]]], dtype=np.uint32)
+    result = _apply_mapping(data, mapping_array)
+    np.testing.assert_array_equal(result, [[[[10, 10], [20, 20]]]])
+    assert result.dtype == np.uint32
+
+    # background (0) stays 0
+    data_bg = np.array([[[[0, 1]]]], dtype=np.uint32)
+    result_bg = _apply_mapping(data_bg, mapping_array)
+    np.testing.assert_array_equal(result_bg, [[[[0, 10]]]])
+
+    # out-of-bounds segment IDs map to 0
+    data_oob = np.array([[[[5, 99]]]], dtype=np.uint32)
+    result_oob = _apply_mapping(data_oob, mapping_array)
+    np.testing.assert_array_equal(result_oob, [[[[0, 0]]]])
 
 
 def test_export_tiff_stack(tmp_upath: UPath) -> None:
@@ -477,9 +625,10 @@ def test_export_tiff_stack(tmp_upath: UPath) -> None:
         )
         correct_image = np.squeeze(correct_image)
 
-        assert np.array_equal(correct_image, test_image), (
-            f"The tiff file {tiff_path} that was written is not "
-            f"equal to the original wkw_file."
+        np.testing.assert_array_equal(
+            correct_image,
+            test_image,
+            f"The tiff file {tiff_path} that was written is not equal to the original wkw_file.",
         )
 
 
@@ -542,9 +691,11 @@ def test_export_tiff_stack_tile_size(tmp_upath: UPath) -> None:
 
                 correct_image = np.squeeze(correct_image)
 
-                assert np.array_equal(correct_image, test_image), (
+                np.testing.assert_array_equal(
+                    correct_image,
+                    test_image,
                     f"The tiff file {tiff_path} that was written "
-                    f"is not equal to the original wkw_file."
+                    f"is not equal to the original wkw_file.",
                 )
 
 
@@ -607,9 +758,10 @@ def test_export_tiff_stack_tiles_per_dimension(tmp_upath: UPath) -> None:
 
                 correct_image = np.squeeze(correct_image)
 
-                assert np.array_equal(correct_image, test_image), (
-                    f"The tiff file {tiff_path} that was written "
-                    f"is not equal to the original wkw_file."
+                np.testing.assert_array_equal(
+                    correct_image,
+                    test_image,
+                    f"The tiff file {tiff_path} that was written is not equal to the original wkw_file.",
                 )
 
 
@@ -630,7 +782,7 @@ def test_merge_fallback_no_fallback_layer(
         .add_layer(
             "fallback_layer",
             SEGMENTATION_CATEGORY,
-            dtype_per_channel=fallback_layer_data.dtype,
+            dtype=fallback_layer_data.dtype,
             data_format=DataFormat.WKW,
         )
         .add_mag(
@@ -658,7 +810,7 @@ def test_merge_fallback_no_fallback_layer(
         "Volume",
         SEGMENTATION_CATEGORY,
         data_format=DataFormat.WKW,
-        dtype_per_channel=annotation_data.dtype,
+        dtype=annotation_data.dtype,
         largest_segment_id=largest_segment_id,
     )
 

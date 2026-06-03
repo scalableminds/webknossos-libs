@@ -1,94 +1,110 @@
 """This module takes care of upsampling WEBKNOSSOS datasets."""
 
-from argparse import Namespace
-from multiprocessing import cpu_count
-from typing import Annotated, Any
+from typing import Annotated
 
 import typer
+from upath import UPath
 
-from ..dataset import Dataset, SamplingModes
+from ..dataset import RemoteDataset, SamplingModes, TransferMode
+from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import Mag
-from ..utils import get_executor_for_args
-from ._utils import DistributionStrategy, SamplingMode, parse_mag, parse_path
+from ._utils import (
+    AccessModeOption,
+    DistributionStrategy,
+    DistributionStrategyOption,
+    JobResourcesOption,
+    JobsOption,
+    SamplingMode,
+    SamplingModeOption,
+    TokenOption,
+    get_executor_for_args,
+    open_dataset,
+    parse_mag,
+)
 
 
 def main(
     *,
     source: Annotated[
-        Any,
+        str,
         typer.Argument(
-            help="Path to your WEBKNOSSOS dataset.",
+            help="Path to your WEBKNOSSOS dataset, or URL to a dataset on a WEBKNOSSOS server.",
             show_default=False,
-            parser=parse_path,
         ),
     ],
-    sampling_mode: Annotated[
-        SamplingMode, typer.Option(help="The sampling mode to use.")
-    ] = SamplingMode.ANISOTROPIC,
+    sampling_mode: SamplingModeOption = SamplingMode.ANISOTROPIC,
     from_mag: Annotated[
         Mag,
         typer.Option(
             help="Mag to start upsampling from. \
-Should be number or minus separated string (e.g. 2 or 2-2-2).",
+Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             parser=parse_mag,
         ),
     ],
     layer_name: Annotated[
         str | None,
         typer.Option(
-            help="Name of the layer that should be downsampled.", show_default=False
+            help="Name of the layer that should be upsampled.", show_default=False
         ),
     ] = None,
-    jobs: Annotated[
-        int,
+    token: TokenOption = None,
+    jobs: JobsOption = None,
+    distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
+    job_resources: JobResourcesOption = None,
+    transfer_mode: Annotated[
+        TransferMode | None,
         typer.Option(
-            help="Number of processes to be spawned.",
-            rich_help_panel="Executor options",
-        ),
-    ] = cpu_count(),
-    distribution_strategy: Annotated[
-        DistributionStrategy,
-        typer.Option(
-            help="Strategy to distribute the task across CPUs or nodes.",
-            rich_help_panel="Executor options",
-        ),
-    ] = DistributionStrategy.MULTIPROCESSING,
-    job_resources: Annotated[
-        str | None,
-        typer.Option(
-            help='Necessary when using slurm as distribution strategy. Should be a JSON string \
-(e.g., --job-resources=\'{"mem": "10M"}\')\'',
-            rich_help_panel="Executor options",
+            help="The transfer mode to use. Required for remote datasets. "
+            "Options: 'copy', 'move+symlink', 'symlink', 'http'.",
+            rich_help_panel="WEBKNOSSOS context",
         ),
     ] = None,
+    access_mode: AccessModeOption = None,
 ) -> None:
     """Upsample your WEBKNOSSOS dataset."""
 
-    executor_args = Namespace(
-        jobs=jobs,
-        distribution_strategy=distribution_strategy.value,
-        job_resources=job_resources,
-    )
-    dataset = Dataset.open(source)
     mode = SamplingModes.parse(sampling_mode.value)
 
-    if layer_name is None:
-        upsample_all_layers(dataset, mode, from_mag, executor_args)
-    else:
-        with get_executor_for_args(args=executor_args) as executor:
-            layer = dataset.get_layer(layer_name)
-            layer.upsample(from_mag=from_mag, sampling_mode=mode, executor=executor)
+    if access_mode is None:
+        if transfer_mode is not None and transfer_mode != TransferMode.HTTP:
+            access_mode = RemoteAccessMode.DIRECT_PATH
+        else:
+            access_mode = RemoteAccessMode.PROXY_PATH
 
-
-def upsample_all_layers(
-    dataset: Dataset, mode: SamplingModes, from_mag: Mag, executor_args: Namespace
-) -> None:
-    """Iterates over all layers and upsamples them."""
-
-    for layer in dataset.layers.values():
-        with get_executor_for_args(args=executor_args) as executor:
-            layer.upsample(
-                from_mag=from_mag,
-                sampling_mode=mode,
-                executor=executor,
-            )
+    with open_dataset(
+        UPath(source), annotation_ok=False, token=token, access_mode=access_mode
+    ) as dataset:
+        if isinstance(dataset, RemoteDataset):
+            if transfer_mode is None:
+                raise typer.BadParameter(
+                    "--transfer-mode is required for remote datasets.",
+                    param_hint="--transfer-mode",
+                )
+            extra_kwargs: dict = {"transfer_mode": transfer_mode}
+        else:
+            extra_kwargs = {}
+        if layer_name is None:
+            for layer in dataset.layers.values():
+                with get_executor_for_args(
+                    jobs=jobs,
+                    distribution_strategy=distribution_strategy,
+                    job_resources=job_resources,
+                ) as executor:
+                    layer.upsample(
+                        from_mag=from_mag,
+                        sampling_mode=mode,
+                        executor=executor,
+                        **extra_kwargs,
+                    )
+        else:
+            with get_executor_for_args(
+                jobs=jobs,
+                distribution_strategy=distribution_strategy,
+                job_resources=job_resources,
+            ) as executor:
+                dataset.get_layer(layer_name).upsample(
+                    from_mag=from_mag,
+                    sampling_mode=mode,
+                    executor=executor,
+                    **extra_kwargs,
+                )

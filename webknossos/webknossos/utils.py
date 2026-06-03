@@ -107,10 +107,17 @@ def time_stop(identifier: str) -> None:
     logger.debug(f"{identifier} took {time.time() - _time:.8f}s")
 
 
+def wrap_executor(executor: Executor | None = None) -> AbstractContextManager[Executor]:
+    if executor is not None:
+        return nullcontext(enter_result=executor)
+    return get_executor("multiprocessing", max_workers=cpu_count())
+
+
 def get_executor_for_args(
     args: argparse.Namespace | None,
     executor: Executor | None = None,
 ) -> AbstractContextManager[Executor]:
+    warn_deprecated("get_executor_for_args", "cluster_tools.get_executor")
     if executor is not None:
         return nullcontext(enter_result=executor)
 
@@ -310,36 +317,26 @@ def is_writable_path(path: UPath) -> bool:
 
 def strip_trailing_slash(path: UPath) -> UPath:
     path_parts = path.parts
-    if path_parts[-1] == "":
+    if len(path_parts) > 1 and path_parts[-1] == "":
         path_parts = path_parts[:-1]
     return path.with_segments(*path_parts)
 
 
 def rmtree(path: UPath) -> None:
-    def _walk(path: UPath) -> Iterator[UPath]:
-        if path.exists():
-            if path.is_dir() and not path.is_symlink():
-                for p in path.iterdir():
-                    yield from _walk(p)
-            yield path
-
-    for sub_path in _walk(path):
-        try:
-            if sub_path.is_file() or sub_path.is_symlink():
-                sub_path.unlink()
-            elif sub_path.is_dir():
-                sub_path.rmdir()
-        except FileNotFoundError:  # noqa:  PERF203 `try`-`except` within a loop incurs performance overhead
-            # Some implementations `UPath` do not have explicit directory representations
-            # Therefore, directories only exist, if they have files. Consequently, when
-            # all files have been deleted, the directory does not exist anymore.
-            pass
+    try:
+        path.fs.delete(str(path), recursive=True)
+    except FileNotFoundError:
+        # Some implementations of `UPath` do not have explicit directory representations
+        # Therefore, directories only exist, if they have files. Consequently, when
+        # all files have been deleted, the directory does not exist anymore.
+        pass
 
 
 def copytree(
     in_path: UPath,
     out_path: UPath,
     *,
+    ignore: Callable[[UPath, list[str]], set[str]] | None = None,
     threads: int | None = 10,
     progress_desc: str | None = None,
 ) -> None:
@@ -350,8 +347,12 @@ def copytree(
         yield (path, tuple(path.parts[len(base_path.parts) :]))
 
         if path.is_dir():
+            ignored_names: set[str] = set()
+            if ignore is not None:
+                ignored_names.update(ignore(path, [p.name for p in path.iterdir()]))
             for p in path.iterdir():
-                yield from _walk(p, base_path)
+                if p.name not in ignored_names:
+                    yield from _walk(p, base_path)
 
     def _append(path: UPath, parts: tuple[str, ...]) -> UPath:
         for p in parts:
@@ -526,6 +527,65 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
     return False
 
 
+def set_s3fs_retry_settings(
+    *, read_timeout: int = 60, connect_timeout: int = 30, retries: int = 10
+) -> None:
+    try:
+        # Only set retry settings if s3fs is installed
+        # If S3 paths are used, it will fail in later stages
+        import s3fs
+    except ImportError:
+        return
+
+    from aiohttp.client_exceptions import ClientPayloadError
+    from aiohttp.http_exceptions import TransferEncodingError
+    from botocore.exceptions import ClientError, ConnectionClosedError
+
+    s3fs_logger = logging.getLogger("s3fs")
+    s3fs.S3FileSystem.read_timeout = read_timeout
+    s3fs.S3FileSystem.connect_timeout = connect_timeout
+    s3fs.S3FileSystem.retries = retries
+
+    def custom_s3fs_error_handler(exception: Exception) -> bool:
+        if isinstance(exception, ClientError):
+            # don't retry 404 errors
+            if "Not Found" in str(exception):
+                return False
+
+            # otherwise retry all other ClientErrors
+            s3fs_logger.warning(
+                f"Retrying unexpected ClientError: {exception}",
+                exc_info=exception,
+                stack_info=True,
+            )
+            return True
+
+        if isinstance(exception, OSError):
+            s3fs_logger.warning(
+                f"Retrying unexpected OSError: {exception}",
+                exc_info=exception,
+                stack_info=True,
+            )
+            return True
+        if (
+            "connection was closed" in str(exception).lower()
+            or "not enough data for satisfy" in str(exception).lower()
+        ):
+            s3fs_logger.warning(
+                f"Retrying unexpected error: {exception}",
+                exc_info=exception,
+                stack_info=True,
+            )
+            return True
+
+        return False
+
+    s3fs.add_retryable_error(ConnectionClosedError)
+    s3fs.add_retryable_error(TransferEncodingError)
+    s3fs.add_retryable_error(ClientPayloadError)
+    s3fs.set_custom_error_handler(custom_s3fs_error_handler)
+
+
 def enrich_path(
     path: str | PathLike | UPath, dataset_path: UPath | None = None
 ) -> UPath:
@@ -587,3 +647,18 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
         endpoint_url = path.storage_options["endpoint_url"]
         return f"s3://{urlparse(endpoint_url).netloc}/{path.path}"
     return path.as_posix()
+
+
+class WkImportError(ImportError):
+    """Exception raised when a dependency is missing."""
+
+    def __init__(
+        self,
+        missing_package: str,
+        extras: str = "all",
+        custom_message: str | None = None,
+    ) -> None:
+        msg = (
+            custom_message or f"Cannot import {missing_package}. "
+        ) + f"Please install it e.g. using `pip install webknossos[{extras}]`."
+        super().__init__(msg)

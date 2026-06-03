@@ -59,7 +59,7 @@ from upath import UPath
 from zipp import Path as ZipPath
 
 import webknossos._nml as wknml
-from webknossos.dataset import RemoteDataset
+from webknossos.dataset import RemoteAccessMode, RemoteDataset
 from webknossos.geometry.mag import Mag, MagLike
 
 from ..client.api_client.models import (
@@ -77,10 +77,15 @@ from ..dataset_properties import (
     DataFormat,
     VoxelSize,
 )
-from ..geometry import NDBoundingBox, Vec3Int
-from ..proofreading.agglomerate_graph import AgglomerateGraph
+from ..geometry import NDBoundingBox, Vec3Int, Vec3IntLike
+from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
-from ..utils import get_executor_for_args, is_fs_path, time_since_epoch_in_ms
+from ..utils import (
+    is_fs_path,
+    time_since_epoch_in_ms,
+    warn_deprecated,
+    wrap_executor,
+)
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 from .volume_layer import SegmentInformation, VolumeLayer
 
@@ -326,9 +331,10 @@ class Annotation:
             ```
         """
         annotation_path = UPath(annotation_path)
-        assert annotation_path.exists(), (
-            f"Annotation path {annotation_path} does not exist."
-        )
+        if not annotation_path.exists():
+            raise FileNotFoundError(
+                f"Annotation path {annotation_path} does not exist."
+            )
         if annotation_path.suffix == ".zip":
             return cls._load_from_zip(annotation_path)
         elif annotation_path.suffix == ".nml":
@@ -336,7 +342,7 @@ class Annotation:
                 return cls._load_from_nml(annotation_path.stem, f)
         else:
             raise RuntimeError(
-                "The loaded annotation must have the suffix .zip or .nml, but is {annotation_path.suffix}"
+                f"The loaded annotation must have the suffix .zip or .nml, but is {annotation_path.suffix}"
             )
 
     @overload
@@ -802,7 +808,7 @@ class Annotation:
 
             if volume_layer.zip is None:
                 logger.info("No volume annotation found. Copy fallback layer.")
-                with get_executor_for_args(args=None, executor=executor) as executor:
+                with wrap_executor(executor) as executor:
                     output_dataset.add_layer_as_copy(
                         fallback_layer, compress=True, executor=executor
                     )
@@ -835,7 +841,7 @@ class Annotation:
                     fallback_layer, fallback_layer.name
                 )
 
-                with get_executor_for_args(args=None, executor=executor) as executor:
+                with wrap_executor(executor) as executor:
                     logger.info(
                         "Copy Mag %s from %s to %s",
                         fallback_mag.mag,
@@ -895,7 +901,7 @@ class Annotation:
             createGroupForEachFile=False,
         )
 
-        return f"{context.url}/annotations/{response_annotation_info.annotation.typ}/{response_annotation_info.annotation.id}"
+        return f"{context.url}/annotations/{response_annotation_info.annotation.id}"
 
     def _binary_zip(self) -> bytes:
         with BytesIO() as buffer:
@@ -979,7 +985,7 @@ class Annotation:
             organization_id=organization_id,
             dataset_id=self.dataset_id,
             annotation_id_or_url=self.annotation_id,
-            use_zarr_streaming=True,
+            access_mode=RemoteAccessMode.ZARR_STREAMING,
         )
 
     def get_remote_base_dataset(
@@ -1011,7 +1017,7 @@ class Annotation:
         """
         return RemoteDataset.open(
             self.dataset_name,
-            self.organization_id,
+            organization_id=self.organization_id,
             sharing_token=sharing_token,
             webknossos_url=webknossos_url,
             dataset_id=self.dataset_id,
@@ -1105,7 +1111,7 @@ class Annotation:
                 volume_layer.layer_name,
                 SEGMENTATION_CATEGORY,
                 data_format=DataFormat.Zarr3,
-                dtype_per_channel=dtype,
+                dtype=dtype,
             )
             volume_layer._write_dir_to_zip(tempdir)
         return volume_layer
@@ -1490,7 +1496,7 @@ class RemoteAnnotation(Annotation):
         mapping_name: str | None = None,
         mapping_type: Literal["agglomerate", "json"] | None = None,
         mag: MagLike | None = None,
-        seed_position: Vec3Int | None = None,
+        seed_position: Vec3IntLike | None = None,
         token: str | None = None,
     ) -> UPath:
         from ..client.context import _get_context
@@ -1510,6 +1516,7 @@ class RemoteAnnotation(Annotation):
             assert seed_position is not None, (
                 "seed_position is required for downloading ad-hoc mesh"
             )
+            seed_position = Vec3Int(seed_position)
             mesh_info = ApiAdHocMeshInfo(
                 lod=lod,
                 segment_id=segment_id,
@@ -1532,16 +1539,20 @@ class RemoteAnnotation(Annotation):
                 f.write(chunk)
         return file_path
 
-    def get_agglomerate_graph(self, agglomerate_id: int) -> AgglomerateGraph:
+    def get_agglomerate_graph(self, agglomerate_id: int) -> AgglomerateGraphData:
+        warn_deprecated("get_agglomerate_graph", "get_agglomerate_graph_data")
+        return self.get_agglomerate_graph_data(agglomerate_id)
+
+    def get_agglomerate_graph_data(self, agglomerate_id: int) -> AgglomerateGraphData:
         """
-        Get the agglomerate graph for the specified agglomerate id.
+        Get the agglomerate graph data for the specified agglomerate id.
         This works only for proofreading annotations that have only a single volume layer.
 
         Args:
             agglomerate_id (int): The id of the agglomerate to get the graph for.
 
         Returns:
-            AgglomerateGraph: The agglomerate graph for the specified agglomerate id.
+            AgglomerateGraphData: The agglomerate graph for the specified agglomerate id.
             The agglomerate graph has a vertex for all segments that belong to the agglomerate.
             Adjacent segments are connected by an edge.
 

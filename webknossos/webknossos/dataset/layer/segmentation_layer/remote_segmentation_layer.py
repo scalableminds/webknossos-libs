@@ -12,8 +12,9 @@ from webknossos.dataset.layer.segmentation_layer.abstract_segmentation_layer imp
     AbstractSegmentationLayer,
 )
 from webknossos.dataset_properties import SegmentationLayerProperties
-from webknossos.geometry import Vec3Int
+from webknossos.geometry import Vec3Int, Vec3IntLike
 from webknossos.geometry.mag import Mag, MagLike
+from webknossos.utils import warn_deprecated
 
 if TYPE_CHECKING:
     from webknossos.dataset import RemoteDataset
@@ -44,11 +45,15 @@ class RemoteSegmentationLayer(
         mapping_name: str | None = None,
         mapping_type: Literal["agglomerate", "json"] | None = None,
         mag: MagLike | None = None,
-        seed_position: Vec3Int | None = None,
+        seed_position: Vec3IntLike | None = None,
         token: str | None = None,
+        sharing_token: str | None = None,
     ) -> UPath:
         from webknossos.client.context import _get_context
         from webknossos.datastore import Datastore
+
+        if token is not None:
+            warn_deprecated("token", "sharing_token or context")
 
         context = _get_context()
         datastore_url = datastore_url or Datastore.get_upload_url()
@@ -65,6 +70,7 @@ class RemoteSegmentationLayer(
             assert seed_position is not None, (
                 "seed_position is required for downloading ad-hoc mesh"
             )
+            seed_position = Vec3Int(seed_position)
             mesh_info = ApiAdHocMeshInfo(
                 lod=lod,
                 segment_id=segment_id,
@@ -74,16 +80,16 @@ class RemoteSegmentationLayer(
                 seed_position=seed_position.to_tuple(),
             )
         file_path: UPath
-        datastore = context.get_datastore_api_client(datastore_url=datastore_url)
+        datastore_client = context.get_datastore_api_client(datastore_url=datastore_url)
         api_dataset = context.api_client.dataset_info(
             dataset_id=self.dataset.dataset_id
         )
         directory_name = api_dataset.directory_name
-        mesh_download = datastore.download_mesh(
+        mesh_download = datastore_client.download_mesh(
             mesh_info=mesh_info,
             dataset_id=self.dataset.dataset_id,
             layer_name=self.name,
-            token=token,
+            sharing_token=sharing_token or token,
         )
         file_path = UPath(output_dir) / f"{directory_name}_{self.name}_{segment_id}.stl"
 

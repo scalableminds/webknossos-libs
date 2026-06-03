@@ -5,7 +5,7 @@ import pytest
 import webknossos as wk
 from webknossos.client.api_client.errors import UnexpectedStatusError
 
-pytestmark = [pytest.mark.use_proxay]
+pytestmark = [pytest.mark.skip_on_windows]
 
 TEST_PROJECT_NAME = "test_project"
 TEST_TASK_TYPE_NAME = "test_task_type"
