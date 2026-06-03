@@ -146,12 +146,17 @@ class ApiSharingToken:
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetUploadInformation:
+class ApiDatasetUploadSuccess:
+    dataset_id: str
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetUploadInformationV13:
     upload_id: str
 
 
 @attr.s(auto_attribs=True)
-class ApiDatasetUploadSuccess:
+class ApiDatasetUploadSuccessV13:
     new_dataset_id: str
 
 
@@ -197,7 +202,24 @@ class ApiDatasetComposeAttachment:
 
 
 @attr.s(auto_attribs=True)
-class ApiReserveDatasetUploadInformation:
+class ApiResumableUploadInfo:
+    upload_id: str
+    total_file_count: int
+    total_file_size_in_bytes: int
+
+
+@attr.s(auto_attribs=True)
+class ApiDatasetUploadInfo:
+    resumable_upload_info: ApiResumableUploadInfo
+    dataset_name: str
+    organization_id: str
+    initial_team_ids: list[str]
+    layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
+    folder_id: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiReserveDatasetUploadInformationV13:
     upload_id: str
     name: str
     organization: str
@@ -206,6 +228,39 @@ class ApiReserveDatasetUploadInformation:
     initial_teams: list[str]
     layers_to_link: list[ApiLinkedLayerIdentifier] | None = None
     folder_id: str | None = None
+
+
+@attr.s(auto_attribs=True)
+class ApiMagProperties:
+    mag: tuple[int, int, int]
+    channel_index: int | None
+    axis_order: dict[str, int] | None
+
+
+@attr.s(auto_attribs=True)
+class ApiMagUploadInfo:
+    resumable_upload_info: ApiResumableUploadInfo
+    dataset_id: str
+    layer_name: str
+    mag: ApiMagProperties
+    overwritePending: bool
+
+
+@attr.s(auto_attribs=True)
+class ApiAttachmentProperties:
+    name: str
+    path: str
+    dataFormat: str
+
+
+@attr.s(auto_attribs=True)
+class ApiAttachmentUploadInfo:
+    resumable_upload_info: ApiResumableUploadInfo
+    dataset_id: str
+    layer_name: str
+    attachment_type: str
+    attachment: ApiAttachmentProperties
+    overwritePending: bool
 
 
 @attr.s(auto_attribs=True)
@@ -454,7 +509,7 @@ class ApiAdHocMeshInfo:
 
 
 @attr.s(auto_attribs=True)
-class ApiReserveDatasetUplaodToPathsParameters:
+class ApiReserveDatasetUploadToPathsParameters:
     dataset_name: str
     initial_team_ids: list[str]
     folder_id: str | None
@@ -477,6 +532,7 @@ class ApiReserveAttachmentUploadToPathParameters:
     attachment_type: str
     attachment_dataformat: str
     path_prefix: str | None
+    overwrite_pending: bool | None = None
 
 
 @attr.s(auto_attribs=True)

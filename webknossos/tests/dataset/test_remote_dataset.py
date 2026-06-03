@@ -24,6 +24,7 @@ from webknossos import (
     Team,
     TransferMode,
     Vec3Int,
+    webknossos_context,
 )
 from webknossos.dataset.layer.remote_layer import RemoteLayer
 from webknossos.dataset.layer.segmentation_layer.attachments.attachments import (
@@ -94,7 +95,8 @@ def _prepare_dataset_path(output_path: UPath, suffix: str) -> UPath:
 
 
 @pytest.mark.parametrize(
-    "transfer_mode", [TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK]
+    "transfer_mode",
+    [TransferMode.HTTP, TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK],
 )
 def test_remote_dataset_add_layer_as_copy(transfer_mode: TransferMode) -> None:
     ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_src")
@@ -122,7 +124,8 @@ def test_remote_dataset_add_layer_as_copy(transfer_mode: TransferMode) -> None:
 
 
 @pytest.mark.parametrize(
-    "transfer_mode", [TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK]
+    "transfer_mode",
+    [TransferMode.HTTP, TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK],
 )
 def test_remote_dataset_add_mag_as_copy(transfer_mode: TransferMode) -> None:
     ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_mag_src")
@@ -205,6 +208,38 @@ def test_add_remote_mags_from_path(
         assert (
             str(added_mag.path) == str(mag_path)  # or added_mag.path == mag_path.parent
         ), "Added remote mag's path does not match remote path of mag added."
+
+
+@pytest.mark.parametrize(
+    "transfer_mode",
+    [TransferMode.HTTP, TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK],
+)
+def test_remote_attachments_add_attachment_as_copy(
+    tmp_upath: UPath, transfer_mode: TransferMode
+) -> None:
+    local_ds = get_sample_dataset(
+        tmp_upath / "source",
+        layers=["segmentation"],
+        bbox=SAMPLE_BBOX.with_size_xyz(Vec3Int(32, 32, 32)),
+    )
+
+    remote_ds = local_ds.upload(new_dataset_name="test_add_layer_as_ref_src")
+    remote_ds = reopen_dataset(remote_ds)
+
+    attach_agglomerate(local_ds.get_segmentation_layer("segmentation"))
+    remote_ds.get_segmentation_layer("segmentation").attachments.add_attachment_as_copy(
+        local_ds.get_segmentation_layer("segmentation").attachments.agglomerates[0],
+        transfer_mode=transfer_mode,
+    )
+
+    assert (
+        len(
+            reopen_dataset(remote_ds)
+            .get_segmentation_layer("segmentation")
+            .attachments.agglomerates
+        )
+        == 1
+    )
 
 
 def test_ref_layer_from_remote_layer(sample_downloaded_dataset: Dataset) -> None:
@@ -378,16 +413,24 @@ def test_url_open_remote(
 @pytest.mark.parametrize(
     "transfer_mode", [TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK]
 )
-def test_upload_dataset(tmp_upath: UPath, transfer_mode: TransferMode) -> None:
-    sample_dataset = get_sample_dataset(tmp_upath)
-    remote_ds = sample_dataset.upload(
-        new_dataset_name="test_remote_symlink",
-        transfer_mode=transfer_mode,
-    )
-    np.testing.assert_array_equal(
-        remote_ds.get_color_layers()[0].get_finest_mag().read(),
-        sample_dataset.get_color_layers()[0].get_finest_mag().read(),
-    )
+@pytest.mark.parametrize("api_version", [13, 14])
+def test_upload_dataset(
+    tmp_upath: UPath, transfer_mode: TransferMode, api_version: int
+) -> None:
+    from webknossos.client.context import _get_context
+
+    with webknossos_context(
+        url=_get_context().url, token=_get_context().token, api_version=api_version
+    ):
+        sample_dataset = get_sample_dataset(tmp_upath)
+        remote_ds = sample_dataset.upload(
+            new_dataset_name="test_remote_symlink",
+            transfer_mode=transfer_mode,
+        )
+        np.testing.assert_array_equal(
+            remote_ds.get_color_layers()[0].get_finest_mag().read(),
+            sample_dataset.get_color_layers()[0].get_finest_mag().read(),
+        )
 
 
 def test_remote_dataset(tmp_upath: UPath) -> None:

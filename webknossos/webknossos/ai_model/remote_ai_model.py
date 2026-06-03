@@ -29,6 +29,7 @@ class RemoteAiModel:
     def upload_from_path(
         cls,
         src_path: UPath,
+        *,
         existing_id: str | None,
         data_store_name: str,
         name: str,

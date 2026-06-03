@@ -10,19 +10,34 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.0) - 2026-06-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...v3.5.0)
+
+### Breaking Changes
+- `existing_id`, `data_store_name`, `name`, `comment`, `category`, `path_prefix` and `transfer_mode` in `RemoteAiModel.upload_from_path` are now keyword-only arguments. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
 - `View.read_xyz` is deprecated in favor of `View.read_cxyz`. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
 
 ### Added
+- `RemoteDataset.add_layer_as_copy`, `RemoteLayer.add_mag_as_copy` and `RemoteAttachments.add_add_attachment_as_copy` now accept `transfer_mode=TransferMode.HTTP`. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
+- Added support for older WEBKNOSSOS server API versions. The oldest currently supported API version is v13. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
+- Added `overwrite_pending` parameter (defaults to True) to `RemoteAttachments.add_add_attachment_as_copy`. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450)
 - Added support for reading MRC files using the `mrcfile` package. [#1465](https://github.com/scalableminds/webknossos-libs/pull/1465)
 - Added `View.read_cxyz` and `View.write_cxyz` to read and write arrays with guaranteed cxyz axis ordering. [#1461](https://github.com/scalableminds/webknossos-libs/pull/1461)
 - Added support for mag views on `gs://`. [#1466](https://github.com/scalableminds/webknossos-libs/pull/1466)
 
 ### Changed
-
-### Fixed
+- Updated the api version of the webknossos-api to 14. Version 13 is still supported. [#1450](https://github.com/scalableminds/webknossos-libs/pull/1450])
 
 
 ## [3.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.3) - 2026-05-06
