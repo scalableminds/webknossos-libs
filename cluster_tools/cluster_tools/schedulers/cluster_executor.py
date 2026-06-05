@@ -199,7 +199,12 @@ class ClusterExecutor(futures.Executor):
 
     @classmethod
     def _register_shutdown_hook(cls, hook: Callable[[], None]) -> None:
-        cls._shutdown_hooks.append(hook)
+        with cls._state_lock:
+            cls._shutdown_hooks.append(hook)
+            # New active executors exist; allow hooks to run again if signaled.
+            # This handles the case where a previous signal already ran hooks
+            # (setting _shutdown_hooks_ran=True) but new executors are now active.
+            cls._shutdown_hooks_ran = False
         cls._ensure_signal_handlers_are_installed()
 
     @classmethod
