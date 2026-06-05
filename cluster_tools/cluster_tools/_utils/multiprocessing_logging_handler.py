@@ -17,7 +17,7 @@ from typing import Any
 
 # Since the root logger object is global, accessing it from multiple threads can be problematic
 # To be thread safe, we use a lock.
-ROOT_LOGGER_LOCK = threading.Lock()
+LOGGER_LOCK = threading.Lock()
 
 
 class _MultiprocessingLoggingHandler(logging.Handler):
@@ -88,21 +88,22 @@ class _MultiprocessingLoggingHandler(logging.Handler):
         self._usage_counter += 1
 
     def decrement_usage(self) -> None:
-        self._usage_counter -= 1
-        if self._usage_counter == 0:
-            # unwrap inner handler:
-            with ROOT_LOGGER_LOCK:
+        with LOGGER_LOCK:
+            self._usage_counter -= 1
+            if self._usage_counter == 0:
+                # unwrap inner handler:
                 root_logger = getLogger()
                 root_logger.removeHandler(self)
                 root_logger.addHandler(self.wrapped_handler)
 
+                # Thread-owned handlers (e.g. task-specific file handlers) are closed by their
+                # owner (attach_logging_handler), not by the pool.
+                if not getattr(self.wrapped_handler, "_owner_thread_id", None):
+                    self.wrapped_handler.close()
+        if self._usage_counter == 0:
             self._is_closed = True
             self._queue_thread.join(30)
             self._manager.shutdown()
-            # Thread-owned handlers (e.g. task-specific file handlers) are closed by their
-            # owner (attach_logging_handler), not by the pool.
-            if not getattr(self.wrapped_handler, "_owner_thread_id", None):
-                self.wrapped_handler.close()
             super().close()
 
     def close(self) -> None:
@@ -123,7 +124,7 @@ def _setup_logging_multiprocessing(
     """
     warnings.filters = filters
 
-    with ROOT_LOGGER_LOCK:
+    with LOGGER_LOCK:
         root_logger = getLogger()
         for handler in root_logger.handlers:
             root_logger.removeHandler(handler)
@@ -137,7 +138,7 @@ def _setup_logging_multiprocessing(
 
 class _MultiprocessingLoggingHandlerPool:
     def __init__(self) -> None:
-        with ROOT_LOGGER_LOCK:
+        with LOGGER_LOCK:
             root_logger = getLogger()
             current_thread_id = threading.get_ident()
 
@@ -151,8 +152,8 @@ class _MultiprocessingLoggingHandlerPool:
                     else handler
                 )
                 owner_thread = getattr(underlying, "_owner_thread_id", None)
-                # Skip handlers owned by a different thread: wrapping them would transfer
-                # lifecycle ownership, causing premature closure of another task's file handler.
+                # Skip handlers owned by a different thread: relevant when starting multiprocessing from multiple threads
+                # where each thread should only handle the logging for its own multiprocessing executor
                 if owner_thread is not None and owner_thread != current_thread_id:
                     continue
 
