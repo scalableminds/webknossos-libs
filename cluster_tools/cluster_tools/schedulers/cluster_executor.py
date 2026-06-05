@@ -218,11 +218,15 @@ class ClusterExecutor(futures.Executor):
             if cls._shutdown_hooks_ran:
                 return
             cls._shutdown_hooks_ran = True
-        for hook in cls._shutdown_hooks:
+            # Copying the list of hooks since hooks might unregister themselves when executed.
+            # Without the copy, this would cause the cls._shutdown_hooks list to be modified
+            # while we iterate over it which is dangerous!
+            hooks = list(cls._shutdown_hooks)
+        for hook in hooks:
             try:
                 hook()
             except Exception as e:  # noqa: PERF203
-                print(f"Error during shutdown: {e}")
+                logging.error(f"Error during running shutdown hook {hook}: {e}")
 
     @classmethod
     def _handle_shutdown(
@@ -232,7 +236,7 @@ class ClusterExecutor(futures.Executor):
         frame: Any,
     ) -> None:
         logging.critical(
-            f"[{cls.__name__}] Caught signal {signal.Signals(signum).name}, running shutdown hooks"
+            f"[{cls.__name__}] Caught signal {signal.Signals(signum).name}, starting shutdown hooks"
         )
         cls._run_shutdown_hooks()
 
