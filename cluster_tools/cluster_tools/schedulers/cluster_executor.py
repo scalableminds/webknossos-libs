@@ -212,7 +212,7 @@ class ClusterExecutor(futures.Executor):
         for hook in cls._shutdown_hooks:
             try:
                 hook()
-            except Exception as e:
+            except Exception as e:  # noqa: PERF203
                 print(f"Error during shutdown: {e}")
 
     @classmethod
