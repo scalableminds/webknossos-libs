@@ -71,6 +71,7 @@ class ClusterExecutor(futures.Executor):
     _shutdown_hooks: list[Callable[[], None]] = []
     _installed_signal_handler: bool = False
     _installed_atexit_handler: bool = False
+    _setup_lock: threading.Lock = threading.Lock()
 
     def __init__(
         self,
@@ -144,9 +145,10 @@ class ClusterExecutor(futures.Executor):
 
     @classmethod
     def _ensure_signal_handlers_are_installed(cls) -> None:
-        if not cls._installed_atexit_handler:
-            atexit.register(cls._run_shutdown_hooks)
-            cls._installed_atexit_handler = True
+        with cls._setup_lock:
+            if not cls._installed_atexit_handler:
+                atexit.register(cls._run_shutdown_hooks)
+                cls._installed_atexit_handler = True
 
         # signal.signal() only works from the main thread. If we're on a worker
         # thread, skip but don't mark as installed — a later main-thread
