@@ -5,6 +5,7 @@ from shutil import copytree
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import mrcfile
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor
@@ -13,6 +14,7 @@ from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset, RemoteDataset
+from webknossos.dataset._utils.pims_mrc_reader import PimsMrcReader
 from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
 from webknossos.geometry import Vec3Int, VecInt
 
@@ -172,6 +174,53 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
             * mag1.info.shard_shape
         ).bottomright
         assert array_shape == shard_aligned_bottomright.to_list()
+
+
+def test_mrc_reader_basic(tmp_upath: UPath) -> None:
+    Z, Y, X = 5, 16, 32
+    data = np.arange(Z * Y * X, dtype="float32").reshape(Z, Y, X)
+    mrc_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+
+    reader = PimsMrcReader(mrc_path)
+    reader.bundle_axes = ["y", "x"]
+    reader.iter_axes = ["z"]
+
+    assert reader.shape == (Z, Y, X)
+    assert reader.pixel_type == np.dtype("float32")
+    assert reader.frame_shape == (Y, X)
+
+    for z in range(Z):
+        np.testing.assert_array_equal(np.array(reader[z]), data[z])
+
+
+def test_mrc_reader_reopens_per_frame(tmp_upath: UPath) -> None:
+    Z, Y, X = 4, 8, 8
+    data = np.zeros((Z, Y, X), dtype="uint16")
+    mrc_path = tmp_upath / "test_reopen.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+
+    reader = PimsMrcReader(mrc_path)
+    reader.bundle_axes = ["y", "x"]
+    reader.iter_axes = ["z"]
+
+    open_count = 0
+    original_mmap = mrcfile.mmap
+
+    def counting_mmap(*args: Any, **kwargs: Any) -> Any:
+        nonlocal open_count
+        open_count += 1
+        return original_mmap(*args, **kwargs)
+
+    with patch("mrcfile.mmap", counting_mmap):
+        for z in range(Z):
+            np.array(reader[z])
+
+    assert open_count == Z, (
+        f"Expected mrcfile.mmap to be called {Z} times (once per frame), got {open_count}"
+    )
 
 
 def test_from_dicom_images(tmp_upath: UPath) -> None:

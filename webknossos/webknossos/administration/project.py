@@ -82,7 +82,10 @@ class Project:
         try:
             api_project = api_client.project_info_by_name(project_name=name)
         except UnexpectedStatusError as e:
-            if "Project could not be found" in str(e):
+            if "Project could not be found" in str(e) or (
+                "Project with name" in str(e)
+                and "could not be found or accessed" in str(e)
+            ):
                 raise ValueError(f"Project with name '{name}' does not exist.") from e
             raise e
         return cls._from_api_project(api_project)

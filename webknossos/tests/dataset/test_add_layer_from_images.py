@@ -9,6 +9,7 @@ from typing import Any
 from zipfile import BadZipFile, ZipFile
 
 import httpx
+import mrcfile
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor
@@ -45,6 +46,28 @@ def test_compare_tifffile(tmp_upath: UPath) -> None:
         with TiffFile("testdata/tiff/test.0200.tiff") as tif_file:
             comparison_slice = tif_file.asarray().T
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
+
+
+def test_mrc_from_images(tmp_upath: UPath) -> None:
+    Z, Y, X = 6, 24, 32
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    mrc_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            mrc_path,
+            layer_name="mrc_layer",
+            executor=executor,
+        )
+
+    assert layer.dtype == np.dtype("uint16")
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]  # drop channel dim
+    # Dataset stores as (x, y, z); original data is (z, y, x) → transpose
+    np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
 
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:

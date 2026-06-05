@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.0...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [3.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.0) - 2026-06-02
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.4.3...v3.5.0)
 
 
 ## [3.4.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.4.3) - 2026-05-06

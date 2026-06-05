@@ -4,12 +4,12 @@ import numpy as np
 from pims import FramesSequenceND
 from upath import UPath
 
+from ...utils import WkImportError
+
 try:
     import tifffile
 except ImportError as e:
-    raise ImportError(
-        "Cannot import tifffile, please install it e.g. using 'webknossos[tifffile]'"
-    ) from e
+    raise WkImportError("tifffile", "tifffile") from e
 
 
 class PimsTiffReader(FramesSequenceND):

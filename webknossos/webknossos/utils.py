@@ -3,6 +3,7 @@ import calendar
 import functools
 import json
 import logging
+import mimetypes
 import os
 import time
 import warnings
@@ -360,10 +361,16 @@ def copytree(
 
     def _copy(args: tuple[UPath, UPath, tuple[str, ...]]) -> None:
         in_path, out_path, sub_path = args
-
+        dest = _append(out_path, sub_path)
+        content_type, _ = mimetypes.guess_type(dest.name)
+        write_kwargs: dict[str, Any] = (
+            {"ContentType": content_type}
+            if content_type is not None and dest.protocol == "s3"
+            else {}
+        )
         with (
             _append(in_path, sub_path).open("rb") as in_file,
-            _append(out_path, sub_path).open("wb") as out_file,
+            dest.open("wb", **write_kwargs) as out_file,
         ):
             copyfileobj(in_file, out_file)
 
@@ -523,7 +530,13 @@ def safe_is_relative_to(path: UPath, base_path: UPath) -> bool:
 def set_s3fs_retry_settings(
     *, read_timeout: int = 60, connect_timeout: int = 30, retries: int = 10
 ) -> None:
-    import s3fs
+    try:
+        # Only set retry settings if s3fs is installed
+        # If S3 paths are used, it will fail in later stages
+        import s3fs
+    except ImportError:
+        return
+
     from aiohttp.client_exceptions import ClientPayloadError
     from aiohttp.http_exceptions import TransferEncodingError
     from botocore.exceptions import ClientError, ConnectionClosedError
@@ -634,3 +647,18 @@ def dump_path(path: UPath, dataset_path: UPath | None) -> str:
         endpoint_url = path.storage_options["endpoint_url"]
         return f"s3://{urlparse(endpoint_url).netloc}/{path.path}"
     return path.as_posix()
+
+
+class WkImportError(ImportError):
+    """Exception raised when a dependency is missing."""
+
+    def __init__(
+        self,
+        missing_package: str,
+        extras: str = "all",
+        custom_message: str | None = None,
+    ) -> None:
+        msg = (
+            custom_message or f"Cannot import {missing_package}. "
+        ) + f"Please install it e.g. using `pip install webknossos[{extras}]`."
+        super().__init__(msg)
