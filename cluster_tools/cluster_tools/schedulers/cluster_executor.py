@@ -71,7 +71,9 @@ class ClusterExecutor(futures.Executor):
     _shutdown_hooks: list[Callable[[], None]] = []
     _installed_signal_handler: bool = False
     _installed_atexit_handler: bool = False
-    _setup_lock: threading.Lock = threading.Lock()
+    _shutdown_hooks_ran: bool = False
+    # We keep a lock to guard critical parts against race conditions when being called from multiple threads
+    _state_lock: threading.Lock = threading.Lock()
 
     def __init__(
         self,
@@ -145,7 +147,7 @@ class ClusterExecutor(futures.Executor):
 
     @classmethod
     def _ensure_signal_handlers_are_installed(cls) -> None:
-        with cls._setup_lock:
+        with cls._state_lock:
             if not cls._installed_atexit_handler:
                 atexit.register(cls._run_shutdown_hooks)
                 cls._installed_atexit_handler = True
@@ -211,6 +213,11 @@ class ClusterExecutor(futures.Executor):
 
     @classmethod
     def _run_shutdown_hooks(cls) -> None:
+        # Make sure shutdown hooks run only once
+        with cls._state_lock:
+            if cls._shutdown_hooks_ran:
+                return
+            cls._shutdown_hooks_ran = True
         for hook in cls._shutdown_hooks:
             try:
                 hook()
