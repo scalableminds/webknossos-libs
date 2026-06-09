@@ -169,7 +169,6 @@ nav:
         - webknossos/meshes/index.md
         - Loading Meshes: webknossos/meshes/loading_meshes.md
         - Working with Meshes: webknossos/meshes/working_with_meshes.md
-        - Precomputed Meshes: webknossos/meshes/precomputed_meshes.md
       - Data Sources and Import/Export:
         - webknossos/data/index.md
         - Data Sources:
