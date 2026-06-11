@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Make `MultiprocessExecutor` safe to be use from multiple threads simultaneously [#1464](https://github.com/scalableminds/webknossos-libs/pull/1464)
 
 
 ## [3.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.0) - 2026-06-02
