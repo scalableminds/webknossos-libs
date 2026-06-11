@@ -1,3 +1,4 @@
+import atexit
 import logging
 import os
 import signal
@@ -69,6 +70,10 @@ class ClusterExecutor(futures.Executor):
 
     _shutdown_hooks: list[Callable[[], None]] = []
     _installed_signal_handler: bool = False
+    _installed_atexit_handler: bool = False
+    _shutdown_hooks_ran: bool = False
+    # We keep a lock to guard critical parts against race conditions when being called from multiple threads
+    _state_lock: threading.Lock = threading.Lock()
 
     def __init__(
         self,
@@ -142,8 +147,24 @@ class ClusterExecutor(futures.Executor):
 
     @classmethod
     def _ensure_signal_handlers_are_installed(cls) -> None:
-        # Only overwrite the signal handler once
+        with cls._state_lock:
+            if not cls._installed_atexit_handler:
+                atexit.register(cls._run_shutdown_hooks)
+                cls._installed_atexit_handler = True
+
+        # signal.signal() only works from the main thread. If we're on a worker
+        # thread, skip but don't mark as installed — a later main-thread
+        # instantiation will still be able to install the handlers.
         if cls._installed_signal_handler:
+            return
+        if threading.current_thread() is not threading.main_thread():
+            logging.warning(
+                f"[{cls.__name__}] Cannot install signal handlers because the executor "
+                "was instantiated from a non-main thread. Cleanup on SIGTERM will not "
+                "work; SIGINT and normal exits are covered via atexit. "
+                f"Call {cls.__name__}.install_signal_handlers() from the main thread "
+                "at startup to enable full signal handling."
+            )
             return
 
         # Clean up if a SIGINT or SIGTERM signal is received. However, do not
@@ -163,8 +184,31 @@ class ClusterExecutor(futures.Executor):
         cls._installed_signal_handler = True
 
     @classmethod
+    def install_signal_handlers(cls) -> None:
+        """Install SIGINT/SIGTERM handlers for cluster job cleanup.
+
+        Must be called from the main thread. Call this once at program startup
+        before using ClusterExecutor from worker threads to ensure that
+        SIGINT and SIGTERM trigger proper job cancellation and cleanup.
+        """
+        if threading.current_thread() is not threading.main_thread():
+            raise RuntimeError(
+                f"{cls.__name__}.install_signal_handlers() must be called from the main thread."
+            )
+        cls._ensure_signal_handlers_are_installed()
+
+    @classmethod
     def _register_shutdown_hook(cls, hook: Callable[[], None]) -> None:
-        cls._shutdown_hooks.append(hook)
+        with cls._state_lock:
+            cls._shutdown_hooks.append(hook)
+            # New active executors exist; allow hooks to run again if signaled.
+            # This handles the case where a previous signal already ran hooks
+            # (setting _shutdown_hooks_ran=True) but new executors are now active.
+            # IMPORTANT: This should not happen during normal execution!
+            # However, it might happen during tests (since multiple tests run in the same process).
+            # So we keep it to allow the tests to work and also to make the code more robust against weird edge cases
+            # where new shutdown hooks are registered after a first shutdown was already triggered.
+            cls._shutdown_hooks_ran = False
         cls._ensure_signal_handlers_are_installed()
 
     @classmethod
@@ -177,6 +221,23 @@ class ClusterExecutor(futures.Executor):
             )
 
     @classmethod
+    def _run_shutdown_hooks(cls) -> None:
+        # Make sure shutdown hooks run only once
+        with cls._state_lock:
+            if cls._shutdown_hooks_ran:
+                return
+            cls._shutdown_hooks_ran = True
+            # Copying the list of hooks since hooks might unregister themselves when executed.
+            # Without the copy, this would cause the cls._shutdown_hooks list to be modified
+            # while we iterate over it which is dangerous!
+            hooks = list(cls._shutdown_hooks)
+        for hook in hooks:
+            try:
+                hook()
+            except Exception as e:  # noqa: PERF203
+                logging.error(f"Error during running shutdown hook {hook}: {e}")
+
+    @classmethod
     def _handle_shutdown(
         cls,
         existing_signal_handler: Callable[[int, FrameType | None], None] | int | None,
@@ -184,13 +245,9 @@ class ClusterExecutor(futures.Executor):
         frame: Any,
     ) -> None:
         logging.critical(
-            f"[{cls.__name__}] Caught signal {signal.Signals(signum).name}, running shutdown hooks"
+            f"[{cls.__name__}] Caught signal {signal.Signals(signum).name}, starting shutdown hooks"
         )
-        try:
-            for hook in cls._shutdown_hooks:
-                hook()
-        except Exception as e:
-            print(f"Error during shutdown: {e}")
+        cls._run_shutdown_hooks()
 
         if (
             callable(existing_signal_handler)
