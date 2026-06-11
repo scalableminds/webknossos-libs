@@ -204,6 +204,10 @@ class ClusterExecutor(futures.Executor):
             # New active executors exist; allow hooks to run again if signaled.
             # This handles the case where a previous signal already ran hooks
             # (setting _shutdown_hooks_ran=True) but new executors are now active.
+            # IMPORTANT: This should not happen during normal execution!
+            # However, it might happen during tests (since multiple tests run in the same process).
+            # So we keep it to allow the tests to work and also to make the code more robust against weird edge cases
+            # where new shutdown hooks are registered after a first shutdown was already triggered.
             cls._shutdown_hooks_ran = False
         cls._ensure_signal_handlers_are_installed()
 
