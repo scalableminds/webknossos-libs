@@ -481,7 +481,6 @@ class Annotation:
                 annotation.annotation_id,
                 annotation.organization_id,
                 annotation.dataset_id,
-                name=annotation.name,
                 skeleton=annotation.skeleton,
                 owner_name=annotation.owner_name,
                 time=annotation.time,
@@ -1391,7 +1390,6 @@ class RemoteAnnotation(Annotation):
         organization_id: str,
         dataset_id: str | None = None,
         *,
-        name: str,
         skeleton: Skeleton,
         owner_name: str,
         time: int | None = None,
@@ -1408,7 +1406,6 @@ class RemoteAnnotation(Annotation):
         self.skeleton = skeleton
         self.dataset_id = dataset_id
         self.organization_id = organization_id
-        self.name = name
         self.owner_name = owner_name
         self.time = time
         self.edit_position = edit_position
