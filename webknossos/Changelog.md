@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed unwarrented PermissionError when using Annotation.open_remote(...). [#1470](https://github.com/scalableminds/webknossos-libs/pull/1470)
 
 
 ## [3.5.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.0) - 2026-06-02
