@@ -1578,6 +1578,11 @@ class Layer(AbstractLayer):
                 "Layer.transform is only supported for layers with 3D (x, y, z) bounding boxes, "
                 + f"got {type(self.bounding_box).__name__} for layer {self.name}."
             )
+        if self.bounding_box.is_empty():
+            raise ValueError(
+                f"The input layer {self.name} has an empty bounding box. "
+                + "Please write some data to it or set its bounding box first."
+            )
         if self.dtype != output_layer.dtype:
             raise ValueError(
                 f"The dtype of the output layer ({output_layer.dtype}) "
