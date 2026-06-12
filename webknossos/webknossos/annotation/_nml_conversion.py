@@ -1,5 +1,4 @@
 import colorsys
-import itertools
 import warnings
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
@@ -18,6 +17,7 @@ if TYPE_CHECKING:
 
 def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
     from ..skeleton import Skeleton
+    from ..skeleton.skeleton import _Counter
 
     skeleton = Skeleton(
         dataset_id=nml.parameters.dataset_id,
@@ -67,7 +67,7 @@ def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
             node.branchpoint_time = branchpoint.time
 
     max_id = max(skeleton.get_max_tree_id(), skeleton.get_max_node_id())
-    skeleton._element_id_generator = itertools.count(max_id + 1)
+    skeleton._element_id_generator = _Counter(max_id + 1)
 
     if nml.parameters.offset is not None and not all(
         i == 0 for i in nml.parameters.offset
