@@ -1494,6 +1494,7 @@ class Layer(AbstractLayer):
         output_bbox: NDBoundingBox | None = None,
         translate_to_positive: bool = True,
         input_mask_layer: "Layer | None" = None,
+        fill_value: int | float | None = None,
         chunk_shape: Vec3IntLike | None = None,
         buffer_shape: Vec3IntLike | int | None = None,
         executor: Executor | None = None,
@@ -1503,12 +1504,12 @@ class Layer(AbstractLayer):
 
         For every voxel position of the output bounding box, the `inverse_transform` is used
         to look up the corresponding position in this layer and the data is copied using
-        nearest-neighbor sampling. Every voxel of the output bounding box is written: voxels
-        that map outside this layer's bounding box (or whose transformed coordinates contain
-        NaN) are set to zero, overwriting any previous content. The sampling conventions
-        match `scipy.ndimage.affine_transform` with `order=0` and `mode="constant"`:
-        rounding ties are rounded up and coordinates are considered in-bounds up to the
-        last sample position (`bottomright - mag`) per axis.
+        nearest-neighbor sampling. Output voxels without a source (mapping outside this
+        layer's bounding box, transformed coordinates containing NaN, or masked out by
+        `input_mask_layer`) keep their previous value, or are set to `fill_value` if it is
+        given. The sampling conventions match `scipy.ndimage.affine_transform` with
+        `order=0` and `mode="constant"`: rounding ties are rounded up and coordinates are
+        considered in-bounds up to the last sample position (`bottomright - mag`) per axis.
 
         Args:
             output_layer: Existing layer to write the transformed data to. Must have the same
@@ -1526,6 +1527,10 @@ class Layer(AbstractLayer):
                 accordingly). If False, a negative topleft raises a ValueError.
             input_mask_layer: Optional mask layer (same dataset geometry as this layer). Only
                 voxels where the mask is greater than zero in all channels are copied.
+            fill_value: Value for output voxels without a source. If None (default), the
+                existing output data is read first and such voxels keep their previous
+                value. If set, the output buffer is initialized with this value instead,
+                so the whole output bounding box is overwritten deterministically.
             chunk_shape: Size of the chunks to process per job, in Mag(1) coordinates. Must be
                 a multiple of the output mag's shard shape (in Mag(1)), so that parallel jobs
                 never write to the same shard. Defaults to one shard per job.
@@ -1660,6 +1665,7 @@ class Layer(AbstractLayer):
             input_bbox=self.bounding_box.align_with_mag(mag, ceil=False),
             mag=mag,
             buffer_shape=buffer_shape,
+            fill_value=fill_value,
         )
         if progress_desc is None:
             progress_desc = (
@@ -1686,6 +1692,7 @@ class Layer(AbstractLayer):
         output_bbox: NDBoundingBox | None = None,
         translate_to_positive: bool = True,
         input_mask_layer: "Layer | None" = None,
+        fill_value: int | float | None = None,
         chunk_shape: Vec3IntLike | None = None,
         buffer_shape: Vec3IntLike | int | None = None,
         executor: Executor | None = None,
@@ -1708,6 +1715,8 @@ class Layer(AbstractLayer):
                 shifted into positive space. If False, a negative topleft raises a ValueError.
             input_mask_layer: Optional mask layer (same dataset geometry as this layer). Only
                 voxels where the mask is greater than zero in all channels are copied.
+            fill_value: Value for output voxels without a source. If None (default), such
+                voxels keep their previous value; if set, they are set to this value.
             chunk_shape: Size of the chunks to process per job, in Mag(1) coordinates. Must be
                 a multiple of the output mag's shard shape (in Mag(1)). Defaults to one shard
                 per job.
@@ -1744,6 +1753,7 @@ class Layer(AbstractLayer):
             output_bbox=output_bbox,
             translate_to_positive=translate_to_positive,
             input_mask_layer=input_mask_layer,
+            fill_value=fill_value,
             chunk_shape=chunk_shape,
             buffer_shape=buffer_shape,
             executor=executor,

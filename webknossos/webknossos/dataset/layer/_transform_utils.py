@@ -106,7 +106,7 @@ def _transform_tile(
         )
     input_coords = input_coords[in_bounds]
     if len(input_coords) == 0:
-        return  # nothing maps into this tile, the buffer stays zero
+        return  # nothing maps into this tile, the buffer keeps its initial values
     output_coords = output_coords[in_bounds]
 
     # The 2 * mag margin guarantees that the rounded relative input coordinates
@@ -151,15 +151,22 @@ def transform_chunk_job(
     input_bbox: BoundingBox,
     mag: Mag,
     buffer_shape: Vec3Int,
+    fill_value: int | float | None,
 ) -> None:
     (output_view, _i) = args
     try:
         chunk_bbox = output_view.bounding_box
         output_shape = chunk_bbox.in_mag(mag).size
-        output_data = np.zeros(
-            (input_mag_view.layer.num_channels, *output_shape),
-            dtype=input_mag_view.get_dtype(),
-        )
+        if fill_value is None:
+            # Initialize the buffer with the existing output data so that voxels
+            # without a source (out-of-bounds, NaN or masked out) keep their value.
+            output_data = output_view.read()
+        else:
+            output_data = np.full(
+                (input_mag_view.layer.num_channels, *output_shape),
+                fill_value,
+                dtype=input_mag_view.get_dtype(),
+            )
 
         # Process the chunk in smaller tiles to bound the size of the coordinate
         # arrays and of the input reads, overlapping IO with a few threads.
@@ -184,8 +191,6 @@ def transform_chunk_job(
             ):
                 pass
 
-        # Always write the full chunk so that the previous content of the output
-        # bounding box is overwritten deterministically.
         output_view.write(output_data)
     except Exception as exc:
         logger.exception(

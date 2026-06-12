@@ -275,7 +275,8 @@ def test_transform_multiprocessing(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(output_data[0], data)
 
 
-def test_transform_overwrites_output_bbox(tmp_upath: UPath) -> None:
+@pytest.mark.parametrize("fill_value", [None, 0, 100])
+def test_transform_fill_value(tmp_upath: UPath, fill_value: int | None) -> None:
     data = (np.random.rand(32, 32, 32) * 254 + 1).astype(np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
 
@@ -286,19 +287,22 @@ def test_transform_overwrites_output_bbox(tmp_upath: UPath) -> None:
         np.full((64, 64, 64), 255, dtype=np.uint8), allow_resize=True
     )
 
-    # Shift the input into the bbox corner: only [16:48] has a source. Chunks in the
-    # opposite corner have no source at all and must be zeroed as well.
+    # Shift the input into the bbox center: only [16:48] has a source. Chunks in the
+    # corners have no source at all; with fill_value=None they must keep the previous
+    # data, otherwise they must be set to the fill_value.
     shift = (16, 16, 16)
     with SequentialExecutor() as executor:
         input_layer.transform(
             output_layer,
             _Translate(tuple(-s for s in shift)),
             output_bbox=output_bbox,
+            fill_value=fill_value,
             executor=executor,
         )
 
     output_data = output_layer.get_mag(1).read(absolute_bounding_box=output_bbox)[0]
-    expected = np.zeros((64, 64, 64), dtype=np.uint8)
+    background = 255 if fill_value is None else fill_value
+    expected = np.full((64, 64, 64), background, dtype=np.uint8)
     expected[16:48, 16:48, 16:48] = data
     np.testing.assert_array_equal(output_data, expected)
 
