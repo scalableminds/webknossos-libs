@@ -275,6 +275,54 @@ def test_transform_multiprocessing(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(output_data[0], data)
 
 
+def test_transform_overwrites_output_bbox(tmp_upath: UPath) -> None:
+    data = (np.random.rand(32, 32, 32) * 254 + 1).astype(np.uint8)
+    input_layer = _make_input_layer(tmp_upath / "in", data)
+
+    # Pre-fill the output layer with nonzero data covering the whole output bbox.
+    output_layer = _make_output_layer(tmp_upath / "out")
+    output_bbox = BoundingBox((0, 0, 0), (64, 64, 64))
+    output_layer.add_mag(1, chunk_shape=CHUNK_SHAPE, shard_shape=SHARD_SHAPE).write(
+        np.full((64, 64, 64), 255, dtype=np.uint8), allow_resize=True
+    )
+
+    # Shift the input into the bbox corner: only [16:48] has a source. Chunks in the
+    # opposite corner have no source at all and must be zeroed as well.
+    shift = (16, 16, 16)
+    with SequentialExecutor() as executor:
+        input_layer.transform(
+            output_layer,
+            _Translate(tuple(-s for s in shift)),
+            output_bbox=output_bbox,
+            executor=executor,
+        )
+
+    output_data = output_layer.get_mag(1).read(absolute_bounding_box=output_bbox)[0]
+    expected = np.zeros((64, 64, 64), dtype=np.uint8)
+    expected[16:48, 16:48, 16:48] = data
+    np.testing.assert_array_equal(output_data, expected)
+
+
+def test_transform_small_buffer_shape(tmp_upath: UPath) -> None:
+    data = (np.random.rand(64, 64, 64) * 255).astype(np.uint8)
+    input_layer = _make_input_layer(tmp_upath / "in", data)
+    output_layer = _make_output_layer(tmp_upath / "out")
+
+    with SequentialExecutor() as executor:
+        # buffer_shape that does not evenly divide the 16**3 job chunks, so the
+        # tiling (incl. truncated tiles and threading) is exercised.
+        written_bbox = input_layer.transform(
+            output_layer,
+            _identity,
+            output_bbox=input_layer.bounding_box,
+            buffer_shape=(6, 5, 7),
+            executor=executor,
+        )
+
+    output_data = output_layer.get_mag(1).read(absolute_bounding_box=written_bbox)
+    np.testing.assert_array_equal(output_data[0], data)
+
+
 def test_transform_negative_output_bbox(tmp_upath: UPath) -> None:
     data = (np.random.rand(32, 32, 32) * 255).astype(np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)

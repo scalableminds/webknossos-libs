@@ -1,9 +1,10 @@
 import logging
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-from webknossos.geometry import BoundingBox, Mag, Vec3Int
+from webknossos.geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int
 
 from .view import MagView, View
 
@@ -12,6 +13,19 @@ logger = logging.getLogger(__name__)
 # Maps an (N, 3) array of Mag(1) coordinates to an (N, 3) array of Mag(1)
 # coordinates. Rows may contain NaN to mark coordinates without a source.
 TransformFunction = Callable[[np.ndarray], np.ndarray]
+
+# Number of threads per job used to process buffer tiles. The tile reads are
+# IO-bound and the coordinate math releases the GIL, so a few threads hide the
+# read latency. Kept small because the storage backend (e.g. tensorstore) adds
+# its own read concurrency and jobs typically already run one per core.
+_NUM_TILE_THREADS = 4
+
+
+def determine_transform_buffer_shape(input_chunk_shape: Vec3Int) -> Vec3Int:
+    # Roughly 128**3 voxels per processing tile (bounding the coordinate arrays
+    # to a few hundred MB), rounded up to a multiple of the input storage chunk
+    # shape since reads decompress whole input chunks anyway.
+    return input_chunk_shape * Vec3Int.full(128).ceildiv(input_chunk_shape).pairmax(1)
 
 
 class AffineTransform:
@@ -47,8 +61,10 @@ class AffineTransform:
         return BoundingBox(topleft=topleft, size=bottomright - topleft)
 
 
-def transform_chunk_job(
-    args: tuple[View, int],
+def _transform_tile(
+    tile_bbox: NDBoundingBox,
+    output_data: np.ndarray,
+    chunk_topleft: np.ndarray,
     input_mag_view: MagView,
     input_mask_mag_view: MagView | None,
     inverse_transform: TransformFunction,
@@ -56,13 +72,16 @@ def transform_chunk_job(
     input_bbox: BoundingBox,
     mag: Mag,
 ) -> None:
-    (output_view, _i) = args
-    chunk_bbox = output_view.bounding_box
-    mag_np = mag.to_np()
-    topleft = chunk_bbox.topleft.to_np()
-    bottomright = chunk_bbox.bottomright.to_np()
+    """Fills the part of `output_data` (the buffer of the whole chunk) covered by `tile_bbox`.
 
-    # Build the grid of all output voxel positions of this chunk (in Mag(1) coordinates)
+    Tiles write disjoint regions of `output_data`, so this is safe to run in
+    multiple threads without locking.
+    """
+    mag_np = mag.to_np()
+    topleft = tile_bbox.topleft.to_np()
+    bottomright = tile_bbox.bottomright.to_np()
+
+    # Build the grid of all output voxel positions of this tile (in Mag(1) coordinates)
     grid = np.meshgrid(
         np.arange(topleft[0], bottomright[0], step=mag_np[0], dtype=np.float64),
         np.arange(topleft[1], bottomright[1], step=mag_np[1], dtype=np.float64),
@@ -70,6 +89,7 @@ def transform_chunk_job(
         indexing="ij",
     )
     output_coords = np.stack([g.flatten() for g in grid], axis=1)
+    del grid
     input_coords = np.asarray(
         inverse_transform(output_coords - translation.to_np()), dtype=np.float64
     )
@@ -86,7 +106,7 @@ def transform_chunk_job(
         )
     input_coords = input_coords[in_bounds]
     if len(input_coords) == 0:
-        return
+        return  # nothing maps into this tile, the buffer stays zero
     output_coords = output_coords[in_bounds]
 
     # The 2 * mag margin guarantees that the rounded relative input coordinates
@@ -101,7 +121,7 @@ def transform_chunk_job(
 
     input_data = input_mag_view.read(absolute_bounding_box=relevant_input_bbox)
 
-    output_coords = ((output_coords - topleft) / mag_np).astype(np.int64)
+    output_coords = ((output_coords - chunk_topleft) / mag_np).astype(np.int64)
     # Nearest-neighbor with ties rounding up (floor(x + 0.5)), matching scipy.ndimage
     input_coords = np.floor(
         (input_coords - np.array(relevant_input_bbox.topleft)) / mag_np + 0.5
@@ -117,9 +137,58 @@ def transform_chunk_job(
         if len(input_coords) == 0:
             return
 
-    output_shape = chunk_bbox.in_mag(mag).size
-    output_data = np.zeros((input_data.shape[0], *output_shape), dtype=input_data.dtype)
     output_data[:, output_coords[:, 0], output_coords[:, 1], output_coords[:, 2]] = (
         input_data[:, input_coords[:, 0], input_coords[:, 1], input_coords[:, 2]]
     )
-    output_view.write(output_data)
+
+
+def transform_chunk_job(
+    args: tuple[View, int],
+    input_mag_view: MagView,
+    input_mask_mag_view: MagView | None,
+    inverse_transform: TransformFunction,
+    translation: Vec3Int,
+    input_bbox: BoundingBox,
+    mag: Mag,
+    buffer_shape: Vec3Int,
+) -> None:
+    (output_view, _i) = args
+    try:
+        chunk_bbox = output_view.bounding_box
+        output_shape = chunk_bbox.in_mag(mag).size
+        output_data = np.zeros(
+            (input_mag_view.layer.num_channels, *output_shape),
+            dtype=input_mag_view.get_dtype(),
+        )
+
+        # Process the chunk in smaller tiles to bound the size of the coordinate
+        # arrays and of the input reads, overlapping IO with a few threads.
+        buffer_shape_mag1 = buffer_shape * mag.to_vec3_int()
+        tile_bboxes = list(chunk_bbox.chunk(buffer_shape_mag1, buffer_shape_mag1))
+        with ThreadPoolExecutor(
+            max_workers=min(_NUM_TILE_THREADS, len(tile_bboxes))
+        ) as pool:
+            for _ in pool.map(
+                lambda tile_bbox: _transform_tile(
+                    tile_bbox,
+                    output_data,
+                    chunk_bbox.topleft.to_np(),
+                    input_mag_view,
+                    input_mask_mag_view,
+                    inverse_transform,
+                    translation,
+                    input_bbox,
+                    mag,
+                ),
+                tile_bboxes,
+            ):
+                pass
+
+        # Always write the full chunk so that the previous content of the output
+        # bounding box is overwritten deterministically.
+        output_view.write(output_data)
+    except Exception as exc:
+        logger.exception(
+            f"Transforming chunk {output_view.bounding_box} failed with {exc}"
+        )
+        raise exc

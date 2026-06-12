@@ -28,7 +28,11 @@ from ._downsampling_utils import (
     downsample_cube_job,
     parse_interpolation_mode,
 )
-from ._transform_utils import AffineTransform, transform_chunk_job
+from ._transform_utils import (
+    AffineTransform,
+    determine_transform_buffer_shape,
+    transform_chunk_job,
+)
 from ._upsampling_utils import upsample_cube_job
 from .abstract_layer import AbstractLayer
 from .view import (
@@ -1491,6 +1495,7 @@ class Layer(AbstractLayer):
         translate_to_positive: bool = True,
         input_mask_layer: "Layer | None" = None,
         chunk_shape: Vec3IntLike | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
         executor: Executor | None = None,
         progress_desc: str | None = None,
     ) -> BoundingBox:
@@ -1498,11 +1503,12 @@ class Layer(AbstractLayer):
 
         For every voxel position of the output bounding box, the `inverse_transform` is used
         to look up the corresponding position in this layer and the data is copied using
-        nearest-neighbor sampling. Output voxels that map outside this layer's bounding box
-        (or whose transformed coordinates contain NaN) are left at zero. The sampling
-        conventions match `scipy.ndimage.affine_transform` with `order=0` and
-        `mode="constant"`: rounding ties are rounded up and coordinates are considered
-        in-bounds up to the last sample position (`bottomright - mag`) per axis.
+        nearest-neighbor sampling. Every voxel of the output bounding box is written: voxels
+        that map outside this layer's bounding box (or whose transformed coordinates contain
+        NaN) are set to zero, overwriting any previous content. The sampling conventions
+        match `scipy.ndimage.affine_transform` with `order=0` and `mode="constant"`:
+        rounding ties are rounded up and coordinates are considered in-bounds up to the
+        last sample position (`bottomright - mag`) per axis.
 
         Args:
             output_layer: Existing layer to write the transformed data to. Must have the same
@@ -1523,6 +1529,10 @@ class Layer(AbstractLayer):
             chunk_shape: Size of the chunks to process per job, in Mag(1) coordinates. Must be
                 a multiple of the output mag's shard shape (in Mag(1)), so that parallel jobs
                 never write to the same shard. Defaults to one shard per job.
+            buffer_shape: Size of the processing tiles within a chunk, in voxels of the
+                current mag. Bounds the memory per job: the coordinate arrays take roughly
+                100 bytes per buffer voxel per tile thread. Defaults to roughly 128**3
+                voxels, rounded up to a multiple of the input mag's storage chunk shape.
             executor: Executor for parallel processing (e.g. multiprocessing, slurm). If None,
                 a multiprocessing executor is used.
             progress_desc: Description for the progress bar.
@@ -1551,8 +1561,10 @@ class Layer(AbstractLayer):
 
         Note:
             - Sampling is nearest-neighbor, no interpolation is performed.
-            - Each job reads the axis-aligned bounding box of its transformed chunk from this
-              layer, which can be considerably larger than the chunk itself for rotations.
+            - Each chunk is processed in `buffer_shape`-sized tiles using a few threads to
+              overlap reads with computation. Each tile reads the axis-aligned bounding box
+              of its transformed extent from this layer, which can be considerably larger
+              than the tile itself for rotations.
         """
         output_layer._dataset._ensure_writable()
 
@@ -1629,6 +1641,13 @@ class Layer(AbstractLayer):
                 mag, self.get_mag(mag), compress=True
             )
 
+        if buffer_shape is None:
+            buffer_shape = determine_transform_buffer_shape(
+                self.get_mag(mag).info.chunk_shape
+            )
+        else:
+            buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
+
         output_view = output_mag_view.get_view(absolute_bounding_box=output_bbox)
         func = named_partial(
             transform_chunk_job,
@@ -1640,6 +1659,7 @@ class Layer(AbstractLayer):
             translation=translation,
             input_bbox=self.bounding_box.align_with_mag(mag, ceil=False),
             mag=mag,
+            buffer_shape=buffer_shape,
         )
         if progress_desc is None:
             progress_desc = (
@@ -1667,6 +1687,7 @@ class Layer(AbstractLayer):
         translate_to_positive: bool = True,
         input_mask_layer: "Layer | None" = None,
         chunk_shape: Vec3IntLike | None = None,
+        buffer_shape: Vec3IntLike | int | None = None,
         executor: Executor | None = None,
         progress_desc: str | None = None,
     ) -> BoundingBox:
@@ -1690,6 +1711,9 @@ class Layer(AbstractLayer):
             chunk_shape: Size of the chunks to process per job, in Mag(1) coordinates. Must be
                 a multiple of the output mag's shard shape (in Mag(1)). Defaults to one shard
                 per job.
+            buffer_shape: Size of the processing tiles within a chunk, in voxels of the
+                current mag. Defaults to roughly 128**3 voxels, rounded up to a multiple of
+                the input mag's storage chunk shape.
             executor: Executor for parallel processing (e.g. multiprocessing, slurm). If None,
                 a multiprocessing executor is used.
             progress_desc: Description for the progress bar.
@@ -1721,6 +1745,7 @@ class Layer(AbstractLayer):
             translate_to_positive=translate_to_positive,
             input_mask_layer=input_mask_layer,
             chunk_shape=chunk_shape,
+            buffer_shape=buffer_shape,
             executor=executor,
             progress_desc=progress_desc,
         )
