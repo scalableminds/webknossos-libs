@@ -12,7 +12,11 @@ from webknossos import (
     Mag,
     Vec3Int,
 )
-from webknossos.dataset.layer._transform_utils import AffineTransform
+from webknossos.dataset.layer._transform_utils import (
+    AffineTransform,
+    transform,
+    transform_affine,
+)
 
 # Small chunk/shard shapes so that the tests exercise multiple chunk jobs
 # (including bbox-truncated border chunks).
@@ -62,7 +66,8 @@ def test_transform_identity(tmp_upath: UPath) -> None:
     output_layer = _make_output_layer(tmp_upath / "out")
 
     with SequentialExecutor() as executor:
-        written_bbox = input_layer.transform(
+        written_bbox = transform(
+            input_layer,
             output_layer,
             _identity,
             output_bbox=input_layer.bounding_box,
@@ -83,7 +88,8 @@ def test_transform_translation(tmp_upath: UPath) -> None:
     shift = (100, 50, 30)
     output_bbox = input_layer.bounding_box.offset(shift)
     with SequentialExecutor() as executor:
-        written_bbox = input_layer.transform(
+        written_bbox = transform(
+            input_layer,
             output_layer,
             _Translate(tuple(-s for s in shift)),
             output_bbox=output_bbox,
@@ -114,7 +120,8 @@ def test_transform_affine_rotation(tmp_upath: UPath) -> None:
     )
     output_bbox = BoundingBox((-32, 0, 0), (32, 32, 16))
     with SequentialExecutor() as executor:
-        written_bbox = input_layer.transform_affine(
+        written_bbox = transform_affine(
+            input_layer,
             output_layer,
             rotation,
             output_bbox=output_bbox,
@@ -135,8 +142,8 @@ def test_transform_affine_scale(tmp_upath: UPath) -> None:
     scale = np.diag([3.0, 3.0, 3.0, 1.0])
     with SequentialExecutor() as executor:
         # No output_bbox: it is computed from the transformed input bbox corners.
-        written_bbox = input_layer.transform_affine(
-            output_layer, scale, executor=executor
+        written_bbox = transform_affine(
+            input_layer, output_layer, scale, executor=executor
         )
 
     assert written_bbox == BoundingBox((0, 0, 0), (48, 48, 48))
@@ -172,8 +179,8 @@ def test_transform_affine_against_scipy(tmp_upath: UPath) -> None:
     forward[:3, 3] = (5.5, -3.25, 7.0)
 
     with SequentialExecutor() as executor:
-        written_bbox = input_layer.transform_affine(
-            output_layer, forward, executor=executor
+        written_bbox = transform_affine(
+            input_layer, output_layer, forward, executor=executor
         )
 
     output_data = output_layer.get_mag(1).read(absolute_bounding_box=written_bbox)[0]
@@ -215,7 +222,8 @@ def test_transform_with_mask(tmp_upath: UPath) -> None:
     output_layer = _make_output_layer(tmp_upath / "out", num_channels=2)
 
     with SequentialExecutor() as executor:
-        written_bbox = input_layer.transform(
+        written_bbox = transform(
+            input_layer,
             output_layer,
             _identity,
             output_bbox=input_layer.bounding_box,
@@ -242,7 +250,8 @@ def test_transform_mag2(tmp_upath: UPath) -> None:
     output_bbox = input_layer.bounding_box.offset(shift)
     with SequentialExecutor() as executor:
         # mag=None defaults to the finest available mag, here Mag(2)
-        written_bbox = input_layer.transform(
+        written_bbox = transform(
+            input_layer,
             output_layer,
             _Translate(tuple(-s for s in shift)),
             output_bbox=output_bbox,
@@ -264,7 +273,8 @@ def test_transform_multiprocessing(tmp_upath: UPath) -> None:
     shift = (16, 0, 32)
     output_bbox = input_layer.bounding_box.offset(shift)
     with get_executor("multiprocessing", max_workers=2) as executor:
-        written_bbox = input_layer.transform(
+        written_bbox = transform(
+            input_layer,
             output_layer,
             _Translate(tuple(-s for s in shift)),
             output_bbox=output_bbox,
@@ -292,7 +302,8 @@ def test_transform_fill_value(tmp_upath: UPath, fill_value: int | None) -> None:
     # data, otherwise they must be set to the fill_value.
     shift = (16, 16, 16)
     with SequentialExecutor() as executor:
-        input_layer.transform(
+        transform(
+            input_layer,
             output_layer,
             _Translate(tuple(-s for s in shift)),
             output_bbox=output_bbox,
@@ -315,7 +326,8 @@ def test_transform_small_buffer_shape(tmp_upath: UPath) -> None:
     with SequentialExecutor() as executor:
         # buffer_shape that does not evenly divide the 16**3 job chunks, so the
         # tiling (incl. truncated tiles and threading) is exercised.
-        written_bbox = input_layer.transform(
+        written_bbox = transform(
+            input_layer,
             output_layer,
             _identity,
             output_bbox=input_layer.bounding_box,
@@ -335,7 +347,8 @@ def test_transform_negative_output_bbox(tmp_upath: UPath) -> None:
     output_bbox = BoundingBox((-32, -32, -32), (32, 32, 32))
     with SequentialExecutor() as executor:
         with pytest.raises(ValueError):
-            input_layer.transform(
+            transform(
+                input_layer,
                 output_layer,
                 _Translate((32, 32, 32)),
                 output_bbox=output_bbox,
@@ -345,7 +358,8 @@ def test_transform_negative_output_bbox(tmp_upath: UPath) -> None:
 
         # With translate_to_positive (default), the bbox is shifted to the origin and
         # the inverse transform still receives the original (untranslated) coordinates.
-        written_bbox = input_layer.transform(
+        written_bbox = transform(
+            input_layer,
             output_layer,
             _Translate((32, 32, 32)),
             output_bbox=output_bbox,
