@@ -18,21 +18,22 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Maps an (N, 3) array of Mag(1) coordinates to an (N, 3) array of Mag(1)
-# coordinates. Rows may contain NaN to mark coordinates without a source.
+# coordinates. Coordinates contain NaN to mark coordinates without a source.
 TransformFunction = Callable[[np.ndarray], np.ndarray]
 
 # Number of threads per job used to process buffer tiles. The tile reads are
 # IO-bound and the coordinate math releases the GIL, so a few threads hide the
 # read latency. Kept small because the storage backend (e.g. tensorstore) adds
-# its own read concurrency and jobs typically already run one per core.
+# its own read concurrency and jobs typically already run one per core using
+# a cluster executor.
 _NUM_TILE_THREADS = 4
 
 
 def determine_transform_buffer_shape(input_chunk_shape: Vec3Int) -> Vec3Int:
-    # Roughly 128**3 voxels per processing tile (bounding the coordinate arrays
+    # Roughly 256**3 voxels per processing tile (bounding the coordinate arrays
     # to a few hundred MB), rounded up to a multiple of the input storage chunk
     # shape since reads decompress whole input chunks anyway.
-    return input_chunk_shape * Vec3Int.full(128).ceildiv(input_chunk_shape).pairmax(1)
+    return input_chunk_shape * Vec3Int.full(256).ceildiv(input_chunk_shape).pairmax(1)
 
 
 class AffineTransform:
@@ -79,11 +80,7 @@ def _transform_tile(
     input_bbox: BoundingBox,
     mag: Mag,
 ) -> None:
-    """Fills the part of `output_data` (the buffer of the whole chunk) covered by `tile_bbox`.
-
-    Tiles write disjoint regions of `output_data`, so this is safe to run in
-    multiple threads without locking.
-    """
+    """Fills the part of `output_data` (the buffer of the whole chunk) covered by `tile_bbox`."""
     mag_np = mag.to_np()
     topleft = tile_bbox.topleft.to_np()
     bottomright = tile_bbox.bottomright.to_np()
@@ -149,7 +146,7 @@ def _transform_tile(
     )
 
 
-def transform_chunk_job(
+def _transform_chunk_job(
     args: tuple[View, int],
     input_mag_view: MagView,
     input_mask_mag_view: MagView | None,
@@ -213,15 +210,17 @@ def transform(
     *,
     mag: MagLike | None = None,
     output_bbox: NDBoundingBox | None = None,
-    translate_to_positive: bool = True,
-    input_mask_layer: "Layer | None" = None,
     fill_value: int | float | None = None,
+    input_mask_layer: "Layer | None" = None,
+    translate_to_positive: bool = False,
     chunk_shape: Vec3IntLike | None = None,
     buffer_shape: Vec3IntLike | int | None = None,
     executor: Executor | None = None,
     progress_desc: str | None = None,
 ) -> BoundingBox:
-    """Resamples `input_layer`'s data into `output_layer` using an arbitrary coordinate transform.
+    """Resamples `input_layer`'s data into `output_layer` using an arbitrary coordinate transform
+    given as inverse transform callable mapping coordinates from the output space into the input
+    space.
 
     For every voxel position of the output bounding box, the `inverse_transform` is used
     to look up the corresponding position in `input_layer` and the data is copied using
@@ -246,7 +245,8 @@ def transform(
             the output layer's current bounding box.
         translate_to_positive: If True, an output bounding box with negative topleft is
             shifted into positive space (and `inverse_transform` inputs are shifted back
-            accordingly). If False, a negative topleft raises a ValueError.
+            accordingly) because voxels cannot be written at negative coordinates.
+            If False, a negative topleft raises a ValueError.
         input_mask_layer: Optional mask layer (same dataset geometry as `input_layer`). Only
             voxels where the mask is greater than zero in all channels are copied.
         fill_value: Value for output voxels without a source. If None (default), the
@@ -262,7 +262,7 @@ def transform(
             voxels, rounded up to a multiple of the input mag's storage chunk shape.
         executor: Executor for parallel processing (e.g. multiprocessing, slurm). If None,
             a multiprocessing executor is used.
-        progress_desc: Description for the progress bar.
+        progress_desc: Description for the progress bar. If None, no progress bar will be shown.
 
     Returns:
         BoundingBox: The bounding box that was written to the output layer (mag-aligned
@@ -381,7 +381,7 @@ def transform(
 
     output_view = output_mag_view.get_view(absolute_bounding_box=output_bbox)
     func = named_partial(
-        transform_chunk_job,
+        _transform_chunk_job,
         input_mag_view=input_layer.get_mag(mag),
         input_mask_mag_view=(
             input_mask_layer.get_mag(mag) if input_mask_layer is not None else None
@@ -393,10 +393,6 @@ def transform(
         buffer_shape=buffer_shape,
         fill_value=fill_value,
     )
-    if progress_desc is None:
-        progress_desc = (
-            f"Transforming layer {input_layer.name} into layer {output_layer.name}"
-        )
     with wrap_executor(executor) as actual_executor:
         # The default chunk_shape is one shard per job and explicit chunk_shapes are
         # validated to be multiples of the shard shape. Since chunk borders are aligned
@@ -417,9 +413,9 @@ def transform_affine(
     *,
     mag: MagLike | None = None,
     output_bbox: NDBoundingBox | None = None,
-    translate_to_positive: bool = True,
-    input_mask_layer: "Layer | None" = None,
     fill_value: int | float | None = None,
+    input_mask_layer: "Layer | None" = None,
+    translate_to_positive: bool = False,
     chunk_shape: Vec3IntLike | None = None,
     buffer_shape: Vec3IntLike | int | None = None,
     executor: Executor | None = None,

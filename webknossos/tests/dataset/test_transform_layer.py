@@ -24,8 +24,8 @@ CHUNK_SHAPE = Vec3Int.full(8)
 SHARD_SHAPE = Vec3Int.full(16)
 
 
-def _identity(points: np.ndarray) -> np.ndarray:
-    return points
+def _identity(coordinates: np.ndarray) -> np.ndarray:
+    return coordinates
 
 
 class _Translate:
@@ -126,6 +126,7 @@ def test_transform_affine_rotation(tmp_upath: UPath) -> None:
             rotation,
             output_bbox=output_bbox,
             executor=executor,
+            translate_to_positive=True,
         )
 
     # The negative output bbox is translated into positive space.
@@ -180,7 +181,11 @@ def test_transform_affine_against_scipy(tmp_upath: UPath) -> None:
 
     with SequentialExecutor() as executor:
         written_bbox = transform_affine(
-            input_layer, output_layer, forward, executor=executor
+            input_layer,
+            output_layer,
+            forward,
+            executor=executor,
+            translate_to_positive=True,
         )
 
     output_data = output_layer.get_mag(1).read(absolute_bounding_box=written_bbox)[0]
@@ -215,7 +220,7 @@ def test_transform_with_mask(tmp_upath: UPath) -> None:
     input_layer = _make_input_layer(tmp_upath / "in", data, num_channels=2)
     mask_data = np.zeros((32, 32, 32), dtype=np.uint8)
     mask_data[:16, :, :] = 1
-    mask_layer = input_layer._dataset.add_layer("mask", COLOR_CATEGORY)
+    mask_layer = input_layer.dataset.add_layer("mask", COLOR_CATEGORY)
     mask_layer.add_mag(1, chunk_shape=CHUNK_SHAPE, shard_shape=SHARD_SHAPE).write(
         mask_data, allow_resize=True
     )
@@ -356,7 +361,7 @@ def test_transform_negative_output_bbox(tmp_upath: UPath) -> None:
                 executor=executor,
             )
 
-        # With translate_to_positive (default), the bbox is shifted to the origin and
+        # With translate_to_positive, the bbox is shifted to the origin and
         # the inverse transform still receives the original (untranslated) coordinates.
         written_bbox = transform(
             input_layer,
@@ -364,6 +369,7 @@ def test_transform_negative_output_bbox(tmp_upath: UPath) -> None:
             _Translate((32, 32, 32)),
             output_bbox=output_bbox,
             executor=executor,
+            translate_to_positive=True,
         )
 
     assert written_bbox == BoundingBox((0, 0, 0), (32, 32, 32))
