@@ -587,10 +587,14 @@ def set_s3fs_retry_settings(
 
 
 def _detect_aws_credentials(path_parts: Sequence[str]) -> tuple[str, str] | None:
-    path_parts = list(path_parts)
+    path_parts = [part for part in path_parts if part != ""]
     while len(path_parts) > 0:
         env_var_suffix = (
-            "__".join(path_parts).replace(".", "_").replace(":", "_").upper()
+            "__".join(path_parts)
+            .replace(".", "_")
+            .replace(":", "_")
+            .replace("-", "_")
+            .upper()
         )
         if (
             f"AWS_ACCESS_KEY_ID__{env_var_suffix}" in os.environ
@@ -628,18 +632,23 @@ def enrich_path(
         parsed_url = urlparse(str(upath))
         endpoint_domain = parsed_url.netloc
         endpoint_url = f"https://{endpoint_domain}"
-        bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
+
+        path_parts = parsed_url.path.lstrip("/").split("/", maxsplit=1)
+        bucket = path_parts[0]
+        key = path_parts[1] if len(path_parts) > 1 else ""
+        s3_path = f"s3://{bucket}/{key}" if key else f"s3://{bucket}"
+        key_parts = tuple(part for part in key.split("/") if part)
 
         if credentials := _detect_aws_credentials(
-            (endpoint_domain, bucket) + tuple(key.split("/"))
+            (endpoint_domain, bucket) + key_parts
         ):
             return UPath(
-                f"s3://{bucket}/{key}",
+                s3_path,
                 endpoint_url=endpoint_url,
                 key=credentials[0],
                 secret=credentials[1],
             )
-        return UPath(f"s3://{bucket}/{key}", endpoint_url=endpoint_url)
+        return UPath(s3_path, endpoint_url=endpoint_url)
 
     if not upath.is_absolute():
         assert dataset_path is not None, (
