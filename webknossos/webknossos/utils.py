@@ -586,6 +586,25 @@ def set_s3fs_retry_settings(
     s3fs.set_custom_error_handler(custom_s3fs_error_handler)
 
 
+def _detect_aws_credentials(path_parts: Sequence[str]) -> tuple[str, str] | None:
+    path_parts = list(path_parts)
+    while len(path_parts) > 0:
+        env_var_suffix = (
+            "__".join(path_parts).replace(".", "_").replace(":", "_").upper()
+        )
+        if (
+            f"AWS_ACCESS_KEY_ID__{env_var_suffix}" in os.environ
+            and f"AWS_SECRET_ACCESS_KEY__{env_var_suffix}" in os.environ
+        ):
+            return os.environ[f"AWS_ACCESS_KEY_ID__{env_var_suffix}"], os.environ[
+                f"AWS_SECRET_ACCESS_KEY__{env_var_suffix}"
+            ]
+        path_parts.pop()
+    if "AWS_ACCESS_KEY_ID" in os.environ and "AWS_SECRET_ACCESS_KEY" in os.environ:
+        return os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"]
+    return None
+
+
 def enrich_path(
     path: str | PathLike | UPath, dataset_path: UPath | None = None
 ) -> UPath:
@@ -607,9 +626,19 @@ def enrich_path(
         if upath.storage_options.get("endpoint_url") is not None:
             return upath
         parsed_url = urlparse(str(upath))
-        endpoint_url = f"https://{parsed_url.netloc}"
+        endpoint_domain = parsed_url.netloc
+        endpoint_url = f"https://{endpoint_domain}"
         bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
 
+        if credentials := _detect_aws_credentials(
+            (endpoint_domain, bucket) + tuple(key.split("/"))
+        ):
+            return UPath(
+                f"s3://{bucket}/{key}",
+                endpoint_url=endpoint_url,
+                key=credentials[0],
+                secret=credentials[1],
+            )
         return UPath(f"s3://{bucket}/{key}", endpoint_url=endpoint_url)
 
     if not upath.is_absolute():

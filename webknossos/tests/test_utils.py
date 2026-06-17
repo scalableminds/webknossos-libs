@@ -1,3 +1,4 @@
+import os
 from shutil import ignore_patterns
 from unittest.mock import Mock, patch
 
@@ -5,7 +6,7 @@ import pytest
 from upath import UPath
 
 from tests.utils import TestTemporaryDirectoryNonLocal
-from webknossos.utils import call_with_retries, copytree, dump_path
+from webknossos.utils import call_with_retries, copytree, dump_path, enrich_path
 
 
 def test_call_with_retries_success() -> None:
@@ -233,3 +234,26 @@ def test_copytree_with_ignore() -> None:
 
         # subdir2 should have been ignored entirely
         assert not (dst_dir / "subdir2").exists()
+
+
+@pytest.mark.parametrize(
+    "s3_path,env",
+    [
+        ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM__BUCKET__PATH__TO__FILE"),
+        ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM__BUCKET__PATH__TO"),
+        ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM__BUCKET"),
+        ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM"),
+        ("s3://localhost:5000/bucket/path/to/file", "LOCALHOST_5000"),
+    ],
+)
+def test_enrich_path_aws_credentials(s3_path: str, env: str) -> None:
+    os.environ[f"AWS_ACCESS_KEY_ID__{env}"] = "access_key"
+    os.environ[f"AWS_SECRET_ACCESS_KEY__{env}"] = "secret_key"
+    try:
+        upath = enrich_path(s3_path)
+        assert upath.protocol == "s3"
+        assert upath.storage_options["key"] == "access_key"
+        assert upath.storage_options["secret"] == "secret_key"
+    finally:
+        del os.environ[f"AWS_ACCESS_KEY_ID__{env}"]
+        del os.environ[f"AWS_SECRET_ACCESS_KEY__{env}"]
