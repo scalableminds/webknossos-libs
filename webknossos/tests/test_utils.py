@@ -1,4 +1,3 @@
-import os
 from shutil import ignore_patterns
 from unittest.mock import Mock, patch
 
@@ -243,38 +242,24 @@ def test_copytree_with_ignore() -> None:
         ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM__BUCKET__PATH__TO"),
         ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM__BUCKET"),
         ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM"),
+        ("s3://example.com/bucket/", "EXAMPLE_COM__BUCKET"),
+        ("s3://example.com/bucket/", "EXAMPLE_COM"),
+        ("s3://example.com/bucket", "EXAMPLE_COM__BUCKET"),
+        ("s3://example.com/bucket", "EXAMPLE_COM"),
         ("s3://localhost:5000/bucket/path/to/file", "LOCALHOST_5000"),
         (
             "s3://my-endpoint.com/my-bucket/path/to/file",
             "MY_ENDPOINT_COM__MY_BUCKET__PATH__TO__FILE",
         ),
         ("s3://my-endpoint.com/my-bucket/path/to/file", "MY_ENDPOINT_COM__MY_BUCKET"),
-        ("s3://my-endpoint.com/my-bucket", "MY_ENDPOINT_COM__MY_BUCKET"),
-        ("s3://my-endpoint.com/my-bucket", "MY_ENDPOINT_COM"),
-        ("s3://my-endpoint.com/my-bucket/", "MY_ENDPOINT_COM__MY_BUCKET"),
     ],
 )
-def test_enrich_path_aws_credentials(s3_path: str, env: str) -> None:
-    os.environ[f"AWS_ACCESS_KEY_ID__{env}"] = "access_key"
-    os.environ[f"AWS_SECRET_ACCESS_KEY__{env}"] = "secret_key"
-    try:
-        upath = enrich_path(s3_path)
-        assert upath.protocol == "s3"
-        assert upath.storage_options["key"] == "access_key"
-        assert upath.storage_options["secret"] == "secret_key"
-    finally:
-        del os.environ[f"AWS_ACCESS_KEY_ID__{env}"]
-        del os.environ[f"AWS_SECRET_ACCESS_KEY__{env}"]
-
-
-def test_enrich_path_aws_credentials_bucket_only() -> None:
-    os.environ["AWS_ACCESS_KEY_ID__EXAMPLE_COM__BUCKET"] = "access_key"
-    os.environ["AWS_SECRET_ACCESS_KEY__EXAMPLE_COM__BUCKET"] = "secret_key"
-    try:
-        upath = enrich_path("s3://example.com/bucket")
-        assert upath.protocol == "s3"
-        assert upath.storage_options["key"] == "access_key"
-        assert upath.storage_options["secret"] == "secret_key"
-    finally:
-        del os.environ["AWS_ACCESS_KEY_ID__EXAMPLE_COM__BUCKET"]
-        del os.environ["AWS_SECRET_ACCESS_KEY__EXAMPLE_COM__BUCKET"]
+def test_enrich_path_aws_credentials(
+    s3_path: str, env: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv(f"AWS_ACCESS_KEY_ID__{env}", "access_key")
+    monkeypatch.setenv(f"AWS_SECRET_ACCESS_KEY__{env}", "secret_key")
+    upath = enrich_path(s3_path)
+    assert upath.protocol == "s3"
+    assert upath.storage_options["key"] == "access_key"
+    assert upath.storage_options["secret"] == "secret_key"

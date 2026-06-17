@@ -586,7 +586,7 @@ def set_s3fs_retry_settings(
     s3fs.set_custom_error_handler(custom_s3fs_error_handler)
 
 
-def _detect_aws_credentials(path_parts: Sequence[str]) -> tuple[str, str] | None:
+def _detect_aws_credentials(path_parts: Iterable[str]) -> tuple[str, str] | None:
     path_parts = [part for part in path_parts if part != ""]
     while len(path_parts) > 0:
         env_var_suffix = (
@@ -596,16 +596,15 @@ def _detect_aws_credentials(path_parts: Sequence[str]) -> tuple[str, str] | None
             .replace("-", "_")
             .upper()
         )
-        if (
-            f"AWS_ACCESS_KEY_ID__{env_var_suffix}" in os.environ
-            and f"AWS_SECRET_ACCESS_KEY__{env_var_suffix}" in os.environ
-        ):
-            return os.environ[f"AWS_ACCESS_KEY_ID__{env_var_suffix}"], os.environ[
-                f"AWS_SECRET_ACCESS_KEY__{env_var_suffix}"
-            ]
+        access_key = os.environ.get(f"AWS_ACCESS_KEY_ID__{env_var_suffix}")
+        secret_key = os.environ.get(f"AWS_SECRET_ACCESS_KEY__{env_var_suffix}")
+        if access_key and secret_key:
+            return access_key, secret_key
         path_parts.pop()
-    if "AWS_ACCESS_KEY_ID" in os.environ and "AWS_SECRET_ACCESS_KEY" in os.environ:
-        return os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"]
+    access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    if access_key and secret_key:
+        return access_key, secret_key
     return None
 
 
