@@ -1,4 +1,3 @@
-import itertools
 from collections.abc import Iterator
 from os import PathLike
 
@@ -10,6 +9,21 @@ from ..dataset_properties import _LENGTH_UNIT_TO_NANOMETER, VoxelSize
 from .group import Group
 
 Vector3 = tuple[float, float, float]
+
+
+class _Counter:
+    """Simple incrementing counter that supports deepcopy (unlike itertools.count)."""
+
+    def __init__(self, start: int = 0) -> None:
+        self._n = start
+
+    def __next__(self) -> int:
+        n = self._n
+        self._n += 1
+        return n
+
+    def __iter__(self) -> Iterator[int]:
+        return self
 
 
 @attr.define(eq=False)
@@ -93,13 +107,13 @@ class Skeleton(Group):
 
     # initialized in post_init:
     _id: int = attr.field(init=False, repr=False)
-    _element_id_generator: Iterator[int] = attr.field(init=False, eq=False, repr=False)
+    _element_id_generator: _Counter = attr.field(init=False, eq=False, repr=False)
     _skeleton: "Skeleton" = attr.field(init=False, eq=False, repr=False)
 
     def __attrs_post_init__(self) -> None:
         if not isinstance(self._voxel_size, VoxelSize):
             self._voxel_size = VoxelSize(self._voxel_size)
-        self._element_id_generator = itertools.count()
+        self._element_id_generator = _Counter()
         self._skeleton = self
         super().__attrs_post_init__()  # sets self._id
 
