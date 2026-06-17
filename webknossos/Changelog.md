@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added support for Python 3.14. [#1473](https://github.com/scalableminds/webknossos-libs/pull/1473)
+- Added `transform` and `transform_affine` functions to resample a layer's data into another layer using an arbitrary inverse coordinate transform or a 4x4 affine matrix, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
 
 ### Changed
 
