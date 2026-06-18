@@ -5,7 +5,7 @@ import pytest
 from upath import UPath
 
 from tests.utils import TestTemporaryDirectoryNonLocal
-from webknossos.utils import call_with_retries, copytree, dump_path
+from webknossos.utils import call_with_retries, copytree, dump_path, enrich_path
 
 
 def test_call_with_retries_success() -> None:
@@ -233,3 +233,102 @@ def test_copytree_with_ignore() -> None:
 
         # subdir2 should have been ignored entirely
         assert not (dst_dir / "subdir2").exists()
+
+
+@pytest.mark.parametrize(
+    "s3_path,env",
+    [
+        ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM__BUCKET__PATH__TO__FILE"),
+        ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM__BUCKET__PATH__TO"),
+        ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM__BUCKET"),
+        ("s3://example.com/bucket/path/to/file", "EXAMPLE_COM"),
+        ("s3://example.com/bucket/", "EXAMPLE_COM__BUCKET"),
+        ("s3://example.com/bucket/", "EXAMPLE_COM"),
+        ("s3://example.com/bucket", "EXAMPLE_COM__BUCKET"),
+        ("s3://example.com/bucket", "EXAMPLE_COM"),
+        ("s3://localhost:5000/bucket/path/to/file", "LOCALHOST_5000"),
+        (
+            "s3://my-endpoint.com/my-bucket/path/to/file",
+            "MY_ENDPOINT_COM__MY_BUCKET__PATH__TO__FILE",
+        ),
+        ("s3://my-endpoint.com/my-bucket/path/to/file", "MY_ENDPOINT_COM__MY_BUCKET"),
+    ],
+)
+def test_enrich_path_aws_credentials(
+    s3_path: str, env: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv(f"AWS_ACCESS_KEY_ID__{env}", "access_key")
+    monkeypatch.setenv(f"AWS_SECRET_ACCESS_KEY__{env}", "secret_key")
+    upath = enrich_path(s3_path)
+    assert upath.protocol == "s3"
+    assert upath.storage_options["key"] == "access_key"
+    assert upath.storage_options["secret"] == "secret_key"
+
+
+@pytest.mark.parametrize(
+    "s3_path,env",
+    [
+        ("s3://ex.com/bucket/path/to/file", "EXAMPLE_COM__BUCKET__PATH__TO__FILE"),
+        (
+            "s3://example.com/bucket/path/to/file",
+            "EXAMPLE_COM__BUCKET__PATH__TO__OTHER",
+        ),
+        ("s3://example.com/buck/path/to/file", "EXAMPLE_COM__BUCKET"),
+        ("s3://example.com/bucket/path/to/file", "EXAMPLE"),
+        ("s3://example.com/bucket/", "EXAMPLE_COM__BUCK"),
+        ("s3://localhost:5000/bucket/path/to/file", "LOCALHOST"),
+        ("s3://localhost/bucket/path/to/file", "LOCALHOST_5000"),
+        ("s3://localhost:6000/bucket/path/to/file", "LOCALHOST_5000"),
+    ],
+)
+def test_enrich_path_aws_credentials_fail(
+    s3_path: str, env: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv(f"AWS_ACCESS_KEY_ID__{env}", "access_key")
+    monkeypatch.setenv(f"AWS_SECRET_ACCESS_KEY__{env}", "secret_key")
+    upath = enrich_path(s3_path)
+    assert upath.protocol == "s3"
+    assert "key" not in upath.storage_options
+    assert "secret" not in upath.storage_options
+
+
+def test_enrich_path_aws_credentials_bare_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "access_key")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret_key")
+    upath = enrich_path("s3://example.com/bucket/path/to/file")
+    assert upath.protocol == "s3"
+    assert upath.storage_options["key"] == "access_key"
+    assert upath.storage_options["secret"] == "secret_key"
+
+
+def test_enrich_path_aws_credentials_missing_secret(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID__EXAMPLE_COM__BUCKET", "access_key")
+    upath = enrich_path("s3://example.com/bucket/path/to/file")
+    assert upath.protocol == "s3"
+    assert "key" not in upath.storage_options
+    assert "secret" not in upath.storage_options
+
+
+def test_enrich_path_aws_credentials_empty_string(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID__EXAMPLE_COM__BUCKET", "")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY__EXAMPLE_COM__BUCKET", "secret_key")
+    upath = enrich_path("s3://example.com/bucket/path/to/file")
+    assert upath.protocol == "s3"
+    assert "key" not in upath.storage_options
+    assert "secret" not in upath.storage_options
+
+
+def test_enrich_path_aws_credentials_bare_missing_secret(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "access_key")
+    upath = enrich_path("s3://example.com/bucket/path/to/file")
+    assert upath.protocol == "s3"
+    assert "key" not in upath.storage_options
+    assert "secret" not in upath.storage_options

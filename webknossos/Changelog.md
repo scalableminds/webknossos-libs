@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added support for Python 3.14. [#1473](https://github.com/scalableminds/webknossos-libs/pull/1473)
+- Added support for endpoint and path specific AWS credentials in env vars, e.g. `AWS_ACCESS_KEY_ID__EXAMPLE_COM__BUCKET` for `s3://example.com/bucket/path/to/file`. [#1475](https://github.com/scalableminds/webknossos-libs/pull/1475)
 
 ### Changed
 

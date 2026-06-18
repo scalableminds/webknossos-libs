@@ -586,6 +586,28 @@ def set_s3fs_retry_settings(
     s3fs.set_custom_error_handler(custom_s3fs_error_handler)
 
 
+def _detect_aws_credentials(path_parts: Iterable[str]) -> tuple[str, str] | None:
+    path_parts = [part for part in path_parts if part != ""]
+    while len(path_parts) > 0:
+        env_var_suffix = (
+            "__".join(path_parts)
+            .replace(".", "_")
+            .replace(":", "_")
+            .replace("-", "_")
+            .upper()
+        )
+        access_key = os.environ.get(f"AWS_ACCESS_KEY_ID__{env_var_suffix}")
+        secret_key = os.environ.get(f"AWS_SECRET_ACCESS_KEY__{env_var_suffix}")
+        if access_key and secret_key:
+            return access_key, secret_key
+        path_parts.pop()
+    access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    if access_key and secret_key:
+        return access_key, secret_key
+    return None
+
+
 def enrich_path(
     path: str | PathLike | UPath, dataset_path: UPath | None = None
 ) -> UPath:
@@ -607,10 +629,25 @@ def enrich_path(
         if upath.storage_options.get("endpoint_url") is not None:
             return upath
         parsed_url = urlparse(str(upath))
-        endpoint_url = f"https://{parsed_url.netloc}"
-        bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
+        endpoint_domain = parsed_url.netloc
+        endpoint_url = f"https://{endpoint_domain}"
 
-        return UPath(f"s3://{bucket}/{key}", endpoint_url=endpoint_url)
+        path_parts = parsed_url.path.lstrip("/").split("/", maxsplit=1)
+        bucket = path_parts[0]
+        key = path_parts[1] if len(path_parts) > 1 else ""
+        s3_path = f"s3://{bucket}/{key}" if key else f"s3://{bucket}"
+        key_parts = tuple(part for part in key.split("/") if part)
+
+        if credentials := _detect_aws_credentials(
+            (endpoint_domain, bucket) + key_parts
+        ):
+            return UPath(
+                s3_path,
+                endpoint_url=endpoint_url,
+                key=credentials[0],
+                secret=credentials[1],
+            )
+        return UPath(s3_path, endpoint_url=endpoint_url)
 
     if not upath.is_absolute():
         assert dataset_path is not None, (
