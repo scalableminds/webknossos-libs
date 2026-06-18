@@ -10,17 +10,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.2...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added support for Python 3.14. [#1473](https://github.com/scalableminds/webknossos-libs/pull/1473)
-- Added support for endpoint and path specific AWS credentials in env vars, e.g. `AWS_ACCESS_KEY_ID__EXAMPLE_COM__BUCKET` for `s3://example.com/bucket/path/to/file`. [#1475](https://github.com/scalableminds/webknossos-libs/pull/1475)
 
 ### Changed
 
 ### Fixed
+
+
+## [3.5.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.2) - 2026-06-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.1...v3.5.2)
+
+### Added
+- Added support for Python 3.14. [#1473](https://github.com/scalableminds/webknossos-libs/pull/1473)
+- Added support for endpoint and path specific AWS credentials in env vars, e.g. `AWS_ACCESS_KEY_ID__EXAMPLE_COM__BUCKET` for `s3://example.com/bucket/path/to/file`. [#1475](https://github.com/scalableminds/webknossos-libs/pull/1475)
 
 
 ## [3.5.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.1) - 2026-06-11
