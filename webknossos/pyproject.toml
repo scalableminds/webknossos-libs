@@ -80,6 +80,7 @@ czi = ["pylibCZIrw ==5.1.1"]
 mrcfile = [
     "mrcfile>=1.4.3",
 ]
+ims = ["imaris-ims-file-reader >=0.1.8"]
 s3 = ["s3fs >=2026.2.0"]
 examples = [
     "webknossos[fastremap]",
@@ -96,6 +97,7 @@ all = [
     "webknossos[bioformats]",
     "webknossos[czi]",
     "webknossos[mrcfile]",
+    "webknossos[ims]",
     "webknossos[s3]",
     "webknossos[examples]",
 ]
