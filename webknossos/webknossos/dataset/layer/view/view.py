@@ -11,6 +11,7 @@ from upath import UPath
 
 from ....dataset_properties import DataFormat
 from ....geometry import (
+    BoundingBox,
     Mag,
     NDBoundingBox,
     NormalizedBoundingBox,
@@ -497,6 +498,21 @@ class View:
         assert len(data.shape) == 4, (
             f"write_cxyz expects a 4D (c, x, y, z) array, got shape {data.shape}"
         )
+        if "c" not in self.normalized_bounding_box.axes:
+            if isinstance(absolute_bounding_box, BoundingBox):
+                absolute_bounding_box = NDBoundingBox(
+                    topleft=absolute_bounding_box.topleft.to_tuple(),
+                    size=absolute_bounding_box.size.to_tuple(),
+                    axes=absolute_bounding_box.axes,
+                    index=absolute_bounding_box.index.to_tuple(),
+                )
+            if isinstance(relative_bounding_box, BoundingBox):
+                relative_bounding_box = NDBoundingBox(
+                    topleft=relative_bounding_box.topleft.to_tuple(),
+                    size=relative_bounding_box.size.to_tuple(),
+                    axes=relative_bounding_box.axes,
+                    index=relative_bounding_box.index.to_tuple(),
+                )
         data, write_loc = self._resolve_cxyz_write(
             data,
             relative_offset,
@@ -850,6 +866,21 @@ class View:
             data = view.read_cxyz(relative_offset=(10, 10, 0), size=(50, 50, 10))
             ```
         """
+        if "c" not in self.normalized_bounding_box.axes:
+            if isinstance(absolute_bounding_box, BoundingBox):
+                absolute_bounding_box = NDBoundingBox(
+                    topleft=absolute_bounding_box.topleft.to_tuple(),
+                    size=absolute_bounding_box.size.to_tuple(),
+                    axes=absolute_bounding_box.axes,
+                    index=absolute_bounding_box.index.to_tuple(),
+                )
+            if isinstance(relative_bounding_box, BoundingBox):
+                relative_bounding_box = NDBoundingBox(
+                    topleft=relative_bounding_box.topleft.to_tuple(),
+                    size=relative_bounding_box.size.to_tuple(),
+                    axes=relative_bounding_box.axes,
+                    index=relative_bounding_box.index.to_tuple(),
+                )
         mag1_bbox = self._resolve_read_bbox(
             size,
             relative_offset,

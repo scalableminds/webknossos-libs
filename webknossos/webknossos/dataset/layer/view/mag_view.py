@@ -20,6 +20,7 @@ from webknossos.utils import (
 
 from ....dataset_properties import DataFormat, MagViewProperties
 from ....geometry import (
+    BoundingBox,
     Mag,
     NDBoundingBox,
     NormalizedBoundingBox,
@@ -449,6 +450,21 @@ class MagView(View, Generic[LayerTypeT]):
         assert len(data.shape) == 4, (
             f"write_cxyz expects a 4D (c, x, y, z) array, got shape {data.shape}"
         )
+        if "c" not in self.normalized_bounding_box.axes:
+            if isinstance(absolute_bounding_box, BoundingBox):
+                absolute_bounding_box = NDBoundingBox(
+                    topleft=absolute_bounding_box.topleft.to_tuple(),
+                    size=absolute_bounding_box.size.to_tuple(),
+                    axes=absolute_bounding_box.axes,
+                    index=absolute_bounding_box.index.to_tuple(),
+                )
+            if isinstance(relative_bounding_box, BoundingBox):
+                relative_bounding_box = NDBoundingBox(
+                    topleft=relative_bounding_box.topleft.to_tuple(),
+                    size=relative_bounding_box.size.to_tuple(),
+                    axes=relative_bounding_box.axes,
+                    index=relative_bounding_box.index.to_tuple(),
+                )
         data, write_loc = self._resolve_cxyz_write(
             data,
             relative_offset,

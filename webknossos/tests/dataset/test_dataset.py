@@ -673,6 +673,20 @@ def test_read_cxyz_adds_channel_axis(
     data = mag.read_cxyz(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     assert data.shape == (1, 10, 10, 10)
 
+    # Regression: passing absolute_bounding_box=BoundingBox must not raise a rank mismatch
+    data = mag.read_cxyz(absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)))
+    assert data.shape == (1, 10, 10, 10)
+
+    # Same for write_cxyz
+    write_data_cxyz = np.ones((1, 10, 10, 10), dtype=np.uint64)
+    mag.write_cxyz(
+        write_data_cxyz,
+        allow_unaligned=True,
+        absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)),
+    )
+    readback = mag.read_cxyz(absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)))
+    np.testing.assert_array_equal(readback, write_data_cxyz)
+
 
 @pytest.mark.parametrize(
     "layer_bbox,write_bbox,write_data,expected_shape",
