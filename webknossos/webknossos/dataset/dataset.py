@@ -132,6 +132,13 @@ _ALLOWED_SEGMENTATION_LAYER_DTYPES = (
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
+def _is_single_ims_path(images: object) -> bool:
+    return (
+        isinstance(images, (str, UPath))
+        and UPath(images).suffix.lower() == ".ims"
+    )
+
+
 def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
     for f in layer_path.iterdir():
         if f.is_dir():
@@ -1573,11 +1580,28 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
                 )
 
-            func_per_chunk = named_partial(
-                pims_image_sequence.copy_to_view,
-                mag_view=mag_view,
-                dtype=current_dtype,
-            )
+            if _is_single_ims_path(images) and not use_bioformats:
+                from ._utils.pims_ims_reader import copy_ims_slab_to_view
+
+                func_per_chunk = named_partial(
+                    copy_ims_slab_to_view,
+                    path=UPath(images),  # type: ignore[arg-type]
+                    mag_view=mag_view,
+                    timepoint=timepoint or 0,
+                    channel=pims_image_sequence._channel,
+                    num_channels=pims_image_sequence.num_channels,
+                    flip_x=flip_x,
+                    flip_y=flip_y,
+                    flip_z=flip_z,
+                    swap_xy=swap_xy,
+                    dtype=current_dtype,
+                )
+            else:
+                func_per_chunk = named_partial(
+                    pims_image_sequence.copy_to_view,
+                    mag_view=mag_view,
+                    dtype=current_dtype,
+                )
 
             if (
                 additional_axes := set(layer.bounding_box.axes).difference(
