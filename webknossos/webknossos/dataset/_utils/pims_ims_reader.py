@@ -89,7 +89,7 @@ class PimsImsReader(FramesSequenceND):
         return (y, x)
 
 
-def copy_ims_slab_to_view(
+def copy_ims_chunk_to_view(
     bbox: object,
     *,
     path: UPath,
@@ -104,14 +104,15 @@ def copy_ims_slab_to_view(
     dtype: DTypeLike | None,
 ) -> tuple[tuple[int, int], int]:
     """
-    Write one z-slab of an IMS file to mag_view.
+    Write one shard-sized 3D block of an IMS file directly to mag_view.
 
-    Reads the entire slab in a single h5py call per channel — one HDF5 chunk
-    decompression per (chunk_z × y × x) block instead of one per z-slice,
-    which is the bottleneck of the pims slice-by-slice path.
+    Reads exactly the 3D block for the given bounding box in a single h5py call
+    per channel, then calls mag_view.write() directly — no BufferedSliceWriter
+    needed. This avoids reading wasted y/x data at border shards and eliminates
+    per-slice overhead.
 
-    The signature matches the partial applied over args in add_layer_from_images,
-    so it can be dropped in as a replacement for PimsImages.copy_to_view.
+    The signature matches the partial applied over shard-aligned args in
+    add_layer_from_images, replacing PimsImages.copy_to_view for IMS files.
     """
     from ...geometry.bounding_box import BoundingBox
     from ...geometry.nd_bounding_box import NDBoundingBox
@@ -120,47 +121,46 @@ def copy_ims_slab_to_view(
     assert isinstance(mag_view, MagView)
     assert isinstance(bbox, (BoundingBox, NDBoundingBox))
 
-    absolute_bbox = bbox
-    relative_bbox = absolute_bbox.offset(-mag_view.bounding_box.topleft)
+    relative_bbox = bbox.offset(-mag_view.bounding_box.topleft)
+    x_start, x_end = relative_bbox.get_bounds("x")
+    y_start, y_end = relative_bbox.get_bounds("y")
     z_start, z_end = relative_bbox.get_bounds("z")
-    slab_depth = z_end - z_start
 
     channels_to_read = list(range(num_channels)) if channel is None else [channel]
 
     with h5py.File(str(path), "r") as hf:
         ds = hf["DataSet"]
-        # Read the whole slab for each channel in one call — avoids per-slice overhead.
         slabs = []
         for ci in channels_to_read:
             loc = f"ResolutionLevel 0/TimePoint {timepoint}/Channel {ci}/Data"
-            slabs.append(ds[loc][z_start:z_end])  # (slab_z, y, x)
-        # shape: (c, slab_z, y, x)
-        block = np.stack(slabs, axis=0)
+            # Read exactly the 3D block needed — one decompression per HDF5 chunk row
+            slabs.append(ds[loc][z_start:z_end, y_start:y_end, x_start:x_end])
+        block = np.stack(slabs, axis=0)  # (c, z, y, x)
 
+    # Apply flips in HDF5 axis order (c, z, y, x).
+    # flip_x/-y follow PimsImages convention: flip_x flips memory axis -2 (y in HDF5),
+    # flip_y flips memory axis -1 (x in HDF5).
     if flip_z:
         block = block[:, ::-1]
     if flip_x:
         block = block[:, :, ::-1]
     if flip_y:
         block = block[:, :, :, ::-1]
-    if swap_xy:
-        block = np.swapaxes(block, -1, -2)
+
+    # Transpose to mag_view.write() convention (c, x, y, z).
+    # swap_xy=False (default): (c, z, y, x) → (c, x, y, z)
+    # swap_xy=True:            (c, z, y, x) → (c, y, x, z)
+    block = block.transpose(0, 3, 2, 1) if not swap_xy else block.transpose(0, 2, 3, 1)
 
     if dtype is not None:
-        block = block.astype(dtype, order="F")
+        block = block.astype(dtype)
 
     max_value = int(block.max())
-    _, _, y_size, x_size = block.shape
+    if num_channels == 1:
+        block = block[0]  # (x, y, z) — single-channel layers have no c axis
 
-    with mag_view.get_buffered_slice_writer(
-        absolute_bounding_box=absolute_bbox,
-        buffer_size=slab_depth,
-        allow_unaligned=True,
-    ) as writer:
-        for zi in range(slab_depth):
-            slice_data = block[:, zi]  # (c, y, x)
-            if num_channels == 1:
-                slice_data = slice_data[0]  # (y, x) — single-channel layers have no c axis
-            writer.send(slice_data)
+    mag_view.write(block, absolute_bounding_box=bbox)
 
+    y_size = y_end - y_start
+    x_size = x_end - x_start
     return (y_size, x_size), max_value
