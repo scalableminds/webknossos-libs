@@ -711,7 +711,9 @@ def test_read_write_cxyz_bounding_box_with_extra_axes(
     )
 
     # read_cxyz with BoundingBox must not raise a rank mismatch with the 4D (x,y,z,t) array
-    data_bbox = mag.read_cxyz(absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)))
+    data_bbox = mag.read_cxyz(
+        absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10))
+    )
     assert data_bbox.shape == (1, 10, 10, 10)
 
     # Reading via BoundingBox and via NDBoundingBox must produce identical results
