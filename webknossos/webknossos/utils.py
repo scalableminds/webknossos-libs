@@ -601,10 +601,6 @@ def _detect_aws_credentials(path_parts: Iterable[str]) -> tuple[str, str] | None
         if access_key and secret_key:
             return access_key, secret_key
         path_parts.pop()
-    access_key = os.environ.get("AWS_ACCESS_KEY_ID")
-    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
-    if access_key and secret_key:
-        return access_key, secret_key
     return None
 
 

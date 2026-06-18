@@ -292,17 +292,6 @@ def test_enrich_path_aws_credentials_fail(
     assert "secret" not in upath.storage_options
 
 
-def test_enrich_path_aws_credentials_bare_fallback(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "access_key")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret_key")
-    upath = enrich_path("s3://example.com/bucket/path/to/file")
-    assert upath.protocol == "s3"
-    assert upath.storage_options["key"] == "access_key"
-    assert upath.storage_options["secret"] == "secret_key"
-
-
 def test_enrich_path_aws_credentials_missing_secret(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
