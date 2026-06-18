@@ -20,13 +20,11 @@ from webknossos.utils import (
 
 from ....dataset_properties import DataFormat, MagViewProperties
 from ....geometry import (
-    BoundingBox,
     Mag,
     NDBoundingBox,
     NormalizedBoundingBox,
     Vec3Int,
     Vec3IntLike,
-    VecInt,
 )
 from ._array import (
     ArrayInfo,
