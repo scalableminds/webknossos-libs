@@ -673,7 +673,7 @@ def test_read_cxyz_adds_channel_axis(
     data = mag.read_cxyz(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     assert data.shape == (1, 10, 10, 10)
 
-    # Regression: passing absolute_bounding_box=BoundingBox must not raise a rank mismatch
+    # Passing absolute_bounding_box=BoundingBox must not raise a rank mismatch
     data = mag.read_cxyz(absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)))
     assert data.shape == (1, 10, 10, 10)
 
