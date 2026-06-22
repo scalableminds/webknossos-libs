@@ -29,12 +29,14 @@ jobs:
 
       - name: Install webknossos
         run: |
+          source .venv/bin/activate
           python -m pip install --upgrade pip
           python -m pip install webknossos${{ matrix.extras }}
 
       - name: Verify installation
         if: ${{ matrix.python-version != '3.10' }}
         run: |
+          source .venv/bin/activate
           python -c "import webknossos; from webknossos import version; print(f'webknossos version: {version.__version__}')"
 
           if [ "${{ matrix.extras }}" = "[all]" ]; then
@@ -45,6 +47,7 @@ jobs:
       - name: Verify installation
         if: ${{ matrix.python-version == '3.10' }}
         run: |
+          source .venv/bin/activate
           python -c "import webknossos; from webknossos import version; print(f'webknossos version: {version.__version__}')"
 
       - uses: slackapi/slack-github-action@v3.0.1
