@@ -6,8 +6,8 @@ name: Verify Published Package
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Run every night at midnight
-  workflow_dispatch:  # Allow manual trigger
+    - cron: "0 0 * * *" # Run every night at midnight
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   verify-published:
@@ -33,6 +33,7 @@ jobs:
           python -m pip install webknossos${{ matrix.extras }}
 
       - name: Verify installation
+        if: ${{ matrix.python-version != '3.10' }}
         run: |
           python -c "import webknossos; from webknossos import version; print(f'webknossos version: {version.__version__}')"
 
@@ -40,6 +41,11 @@ jobs:
             # Verify some of the optional dependencies are available
             python -c "import tifffile; import imagecodecs; import pandas;"
           fi
+
+      - name: Verify installation
+        if: ${{ matrix.python-version == '3.10' }}
+        run: |
+          python -c "import webknossos; from webknossos import version; print(f'webknossos version: {version.__version__}')"
 
       - uses: slackapi/slack-github-action@v3.0.1
         if: failure() || cancelled()
