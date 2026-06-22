@@ -35,6 +35,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - Fixed unwarrented PermissionError when using Annotation.open_remote(...). [#1470](https://github.com/scalableminds/webknossos-libs/pull/1470)
 - Make `MultiprocessExecutor` safe to be use from multiple threads simultaneously [#1464](https://github.com/scalableminds/webknossos-libs/pull/1464)
+- Broader s3fs retries for `Not enough data...` errors. [#1479](https://github.com/scalableminds/webknossos-libs/pull/1479)
 
 
 
