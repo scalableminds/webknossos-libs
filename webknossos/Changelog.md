@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 
 ### Changed
+- `MagView.read_cxyz` and `MagView.write_cxyz` are more robust for datasets that have only `xyz` axes or additional axes (e.g. `t`) of length 1. [#1478](https://github.com/scalableminds/webknossos-libs/pull/1478)
 
 ### Fixed
 

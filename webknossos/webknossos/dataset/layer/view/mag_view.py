@@ -449,6 +449,13 @@ class MagView(View, Generic[LayerTypeT]):
         assert len(data.shape) == 4, (
             f"write_cxyz expects a 4D (c, x, y, z) array, got shape {data.shape}"
         )
+        absolute_bounding_box = self._normalize_bbox(
+            absolute_bounding_box, relative=False
+        )
+        relative_bounding_box = self._normalize_bbox(
+            relative_bounding_box, relative=True
+        )
+
         data, write_loc = self._resolve_cxyz_write(
             data,
             relative_offset,
