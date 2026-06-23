@@ -569,7 +569,7 @@ def set_s3fs_retry_settings(
             return True
         if (
             "connection was closed" in str(exception).lower()
-            or "not enough data for satisfy" in str(exception).lower()
+            or "not enough data" in str(exception).lower()
         ):
             s3fs_logger.warning(
                 f"Retrying unexpected error: {exception}",
