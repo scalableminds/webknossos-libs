@@ -796,10 +796,10 @@ class ClusterExecutor(futures.Executor):
         while not log_file_exists and retries < max_retries:
             log_file_exists = os.path.exists(log_path)
             retries += 1
-            time.sleep(LOG_FILE_POLLING_INTERVAL_SECONDS)
             sys.stdout.write(
                 f"Job with id {fut.cluster_jobid} is finished but log file couldn't be found at {log_path}. Retrying {retries}/{max_retries}"  # type: ignore[attr-defined]
             )
+            time.sleep(LOG_FILE_POLLING_INTERVAL_SECONDS)
         tailer.follow(LOG_FILE_POLLING_INTERVAL_SECONDS)
         return fut.result()
 
