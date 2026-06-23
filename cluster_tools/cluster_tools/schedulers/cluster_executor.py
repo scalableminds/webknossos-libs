@@ -27,7 +27,7 @@ from cluster_tools._utils.reflection import (
     get_function_name,
 )
 from cluster_tools._utils.string_ import random_string, with_preliminary_postfix
-from cluster_tools._utils.tailf import Tail
+from cluster_tools._utils.tailf import Tail, TailError
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 from cluster_tools.executors.multiprocessing_ import CFutDict
 
@@ -780,9 +780,20 @@ class ClusterExecutor(futures.Executor):
         while not (os.path.exists(log_path) or tailer.is_cancelled):
             time.sleep(2)
 
-        # Log the output of the log file until future is resolved
-        # by the done_callback we attached earlier.
-        tailer.follow(2)
+        if not tailer.is_cancelled:
+            # Log the output of the log file until future is resolved
+            # by the done_callback we attached earlier.
+            tailer.follow(2)
+        else:
+            # If the future is already done we still try to read + print any remaining log lines
+            # if this fails (e.g. log file does for some reason not existing, log file not yet visible from the current node due to slow NFS)
+            # we log this.
+            try:
+                tailer.follow(2)
+            except TailError as error:
+                maybe_missing_logs_message = f"Could not read all logs for finished job with id {fut.cluster_jobid}. Some log lines might have been lost. Error was: {error}"  # type: ignore[attr-defined]
+                sys.stderr.write(maybe_missing_logs_message)
+                sys.stdout.write(maybe_missing_logs_message)
         return fut.result()
 
     @abstractmethod

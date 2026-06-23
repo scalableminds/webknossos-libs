@@ -33,15 +33,7 @@ class Tail:
             seconds - Number of seconds to wait between each iteration; Defaults to 1.
         """
 
-        if self.is_cancelled:
-            return
-
-        try:
-            self.check_file_validity(self.tailed_file)
-        except TailError:
-            if self.is_cancelled:
-                return
-            raise
+        self.check_file_validity(self.tailed_file)
         with open(self.tailed_file, encoding="utf-8", errors="replace") as file_:
             # Don't seek, since we want to print the entire file here.
             while True:
