@@ -780,20 +780,18 @@ class ClusterExecutor(futures.Executor):
         while not (os.path.exists(log_path) or tailer.is_cancelled):
             time.sleep(2)
 
-        if not tailer.is_cancelled:
-            # Log the output of the log file until future is resolved
-            # by the done_callback we attached earlier.
+        # If the future is already done we still try to read + print any remaining log lines.
+        # If this fails (e.g. log file not yet visible from the current node due to slow NFS)
+        # and the job has already completed, we log a warning. Otherwise we re-raise.
+        try:
             tailer.follow(2)
-        else:
-            # If the future is already done we still try to read + print any remaining log lines
-            # if this fails (e.g. log file does for some reason not existing, log file not yet visible from the current node due to slow NFS)
-            # we log this.
-            try:
-                tailer.follow(2)
-            except TailError as error:
-                maybe_missing_logs_message = f"Could not read all logs for finished job with id {fut.cluster_jobid}. Some log lines might have been lost. Error was: {error}"  # type: ignore[attr-defined]
+        except TailError as error:
+            if tailer.is_cancelled:
+                maybe_missing_logs_message = f"Could not read all logs for finished job with id {fut.cluster_jobid}. Some log lines might have been lost. Error was: {error}\n"  # type: ignore[attr-defined]
                 sys.stderr.write(maybe_missing_logs_message)
                 sys.stdout.write(maybe_missing_logs_message)
+            else:
+                raise
         return fut.result()
 
     @abstractmethod
