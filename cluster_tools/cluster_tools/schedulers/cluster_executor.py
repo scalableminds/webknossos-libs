@@ -1,5 +1,6 @@
 import atexit
 import logging
+import math
 import os
 import signal
 import sys
@@ -37,6 +38,9 @@ NOT_YET_SUBMITTED_STATE: NOT_YET_SUBMITTED_STATE_TYPE = "NOT_YET_SUBMITTED"
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
 _S = TypeVar("_S")
+
+LOG_FILE_POLLING_INTERVAL_SECONDS = 2
+MAX_LOG_FILE_POLLING_TIME_SECONDS = 120
 
 
 def join_messages(strings: list[str]) -> str:
@@ -776,21 +780,27 @@ class ClusterExecutor(futures.Executor):
         tailer = Tail(log_path, log_callback)
         fut.add_done_callback(lambda _: tailer.cancel())
 
-        # Poll until the log file exists
-        while not (os.path.exists(log_path) or tailer.is_cancelled):
-            time.sleep(2)
+        # Wait until the log file exists or the job is completed/cancelled
+        log_file_exists = False
+        while not (
+            (log_file_exists := os.path.exists(log_path)) or tailer.is_cancelled
+        ):
+            time.sleep(LOG_FILE_POLLING_INTERVAL_SECONDS)
 
-        # If the future is already done (tailer.is_cancelled==True) we still try to read + print any remaining log lines.
-        # However, we allow certain errors e.g. if a job is done/cancelled but no log file exists, we just continue with a warning.
-        try:
-            tailer.follow(2)
-        except TailError as error:
-            if tailer.is_cancelled:
-                maybe_missing_logs_message = f"Could not read all logs for finished job with id {fut.cluster_jobid}. Some log lines might have been lost. Error was: {error}\n"  # type: ignore[attr-defined]
-                sys.stderr.write(maybe_missing_logs_message)
-                sys.stdout.write(maybe_missing_logs_message)
-            else:
-                raise
+        # The job might be done/cancelled but the log file might still not exist (e.g. slow/inconsistent NFS)
+        # In this case, we keep polling but with an upper limit to not run into a deadlock.
+        retries = 0
+        max_retries = math.ceil(
+            MAX_LOG_FILE_POLLING_TIME_SECONDS / LOG_FILE_POLLING_INTERVAL_SECONDS
+        )
+        while not log_file_exists and retries < max_retries:
+            log_file_exists = os.path.exists(log_path)
+            retries += 1
+            time.sleep(LOG_FILE_POLLING_INTERVAL_SECONDS)
+            sys.stdout.write(
+                f"Job with id {fut.cluster_jobid} is finished but log file couldn't be found at {log_path}. Retrying {retries}/{max_retries}"  # type: ignore[attr-defined]
+            )
+        tailer.follow(LOG_FILE_POLLING_INTERVAL_SECONDS)
         return fut.result()
 
     @abstractmethod
