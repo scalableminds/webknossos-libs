@@ -14,7 +14,6 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
-- Stop 
 
 ### Fixed
 - Fixed `forward_log` raising an unhandled `TailError` when a cluster job completes without a log file being visible from the head node (e.g. due to slow NFS). [#1480](https://github.com/scalableminds/webknossos-libs/pull/1480)
