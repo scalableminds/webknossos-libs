@@ -40,7 +40,7 @@ _P = ParamSpec("_P")
 _S = TypeVar("_S")
 
 LOG_FILE_POLLING_INTERVAL_SECONDS = 2
-MAX_LOG_FILE_POLLING_TIME_SECONDS = 120
+MAX_LOG_FILE_POLLING_DURATION_SECONDS = 120
 
 
 def join_messages(strings: list[str]) -> str:
@@ -791,7 +791,7 @@ class ClusterExecutor(futures.Executor):
         # In this case, we keep polling but with an upper limit to not run into a deadlock.
         retries = 0
         max_retries = math.ceil(
-            MAX_LOG_FILE_POLLING_TIME_SECONDS / LOG_FILE_POLLING_INTERVAL_SECONDS
+            MAX_LOG_FILE_POLLING_DURATION_SECONDS / LOG_FILE_POLLING_INTERVAL_SECONDS
         )
         while not log_file_exists and retries < max_retries:
             log_file_exists = os.path.exists(log_path)
