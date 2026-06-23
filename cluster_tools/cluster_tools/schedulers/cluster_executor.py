@@ -780,9 +780,8 @@ class ClusterExecutor(futures.Executor):
         while not (os.path.exists(log_path) or tailer.is_cancelled):
             time.sleep(2)
 
-        # If the future is already done we still try to read + print any remaining log lines.
-        # If this fails (e.g. log file not yet visible from the current node due to slow NFS)
-        # and the job has already completed, we log a warning. Otherwise we re-raise.
+        # If the future is already done (tailer.is_cancelled==True) we still try to read + print any remaining log lines.
+        # However, we allow certain errors e.g. if a job is done/cancelled but no log file exists, we just continue with a warning.
         try:
             tailer.follow(2)
         except TailError as error:
