@@ -116,6 +116,11 @@ class PimsTiffReader(FramesSequenceND):
                     assert series.dataoffset is not None
                     f.seek(series.dataoffset + page_idx * frame_bytes)
                     raw = f.read(frame_bytes)
+                    if len(raw) < frame_bytes:
+                        raise OSError(
+                            f"Premature end of file while reading frame {page_idx}. "
+                            f"Expected {frame_bytes} bytes, got {len(raw)}."
+                        )
                     page_data: np.ndarray = (
                         np.frombuffer(raw, dtype=raw_dtype)
                         .reshape(self._shape)
