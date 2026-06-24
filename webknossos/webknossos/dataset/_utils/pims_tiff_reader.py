@@ -122,8 +122,12 @@ class PimsTiffReader(FramesSequenceND):
                         .astype(self._dtype)
                     )
                 else:
-                    page = pages[page_idx]
-                    assert page is not None, f"Page {page_idx} not found in TIFF file."
+                    try:
+                        page = pages[page_idx]
+                    except IndexError:
+                        raise ValueError(f"Page {page_idx} not found in TIFF file.")
+                    if page is None:
+                        raise ValueError(f"Page {page_idx} not found in TIFF file.")
                     page_data = page.asarray()
 
                 # Index away page axes that are not part of bundle_axes (e.g. S in ZCYXS)
