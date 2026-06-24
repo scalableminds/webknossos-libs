@@ -51,6 +51,11 @@ class PimsTiffReader(FramesSequenceND):
                 axis for axis in self._tiff_axes if axis not in self._other_axes
             )
 
+            # ImageJ virtual stacks store all frames contiguously after a single IFD
+            # (series.is_truncated). In that case series.pages only exposes 1 real
+            # page and we must seek by computed byte offsets instead.
+            self._series_is_truncated = _tiff.is_truncated
+
             if "c" in self._tiff_axes:
                 self._register_get_frame(self.get_frame_2D, "cyx")
             else:
@@ -74,7 +79,18 @@ class PimsTiffReader(FramesSequenceND):
         ]
 
         with self.path.open("rb") as f:
-            pages = tifffile.TiffFile(f).series[0].pages
+            tiff = tifffile.TiffFile(f)
+            series = tiff.series[0]
+
+            # ImageJ virtual stacks (series.is_truncated=True) have only 1 real IFD
+            # but store all frames contiguously at series.dataoffset. Reading them
+            # via series.pages[i] fails for i > 0; use direct byte seeks instead.
+            use_direct_seek = series.is_truncated and series.dataoffset is not None
+            if use_direct_seek:
+                frame_bytes = int(np.prod(self._shape)) * self._dtype.itemsize
+                raw_dtype = np.dtype(tiff.byteorder + self._dtype.str[1:])
+            else:
+                pages = series.pages
 
             for bundled_page_coords in (
                 product(*[range(self.sizes[axis]) for axis in bundled_page_axes])
@@ -96,9 +112,19 @@ class PimsTiffReader(FramesSequenceND):
                     else 0
                 )
 
-                page = pages[page_idx]
-                assert page is not None, f"Page {page_idx} not found in TIFF file."
-                page_data = page.asarray()
+                if use_direct_seek:
+                    assert series.dataoffset is not None
+                    f.seek(series.dataoffset + page_idx * frame_bytes)
+                    raw = f.read(frame_bytes)
+                    page_data: np.ndarray = (
+                        np.frombuffer(raw, dtype=raw_dtype)
+                        .reshape(self._shape)
+                        .astype(self._dtype)
+                    )
+                else:
+                    page = pages[page_idx]
+                    assert page is not None, f"Page {page_idx} not found in TIFF file."
+                    page_data = page.asarray()
 
                 # Index away page axes that are not part of bundle_axes (e.g. S in ZCYXS)
                 if extra_page_axes:
