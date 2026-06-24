@@ -7,17 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.3...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
+
+### Fixed
+
+
+## [3.5.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.3) - 2026-06-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.2...v3.5.3)
+
+### Changed
 - Upgraded `mypy` to `2.1.0`. [#1482](https://github.com/scalableminds/webknossos-libs/pull/1482)
 
 ### Fixed
 - Longer polling for log files of finished jobs in `forward_log` to prevent unhandled `TailError`s when a cluster job completes but the log file is not yet visible from the head node e.g. due to a slow NFS. [#1480](https://github.com/scalableminds/webknossos-libs/pull/1480)
+
 
 ## [3.5.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.2) - 2026-06-18
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.1...v3.5.2)
