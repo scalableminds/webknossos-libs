@@ -268,7 +268,7 @@ class AbstractLayer:
 
     @default_view_configuration.setter
     def default_view_configuration(
-        self, view_configuration: LayerViewConfiguration
+        self, view_configuration: LayerViewConfiguration | None
     ) -> None:
         self._ensure_metadata_writable()
         self._properties.default_view_configuration = view_configuration

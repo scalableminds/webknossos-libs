@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Upgraded `mypy` to `2.1.0`. [#1482](https://github.com/scalableminds/webknossos-libs/pull/1482)
 
 ### Fixed
 - Longer polling for log files of finished jobs in `forward_log` to prevent unhandled `TailError`s when a cluster job completes but the log file is not yet visible from the head node e.g. due to a slow NFS. [#1480](https://github.com/scalableminds/webknossos-libs/pull/1480)
