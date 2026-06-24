@@ -132,6 +132,13 @@ _ALLOWED_SEGMENTATION_LAYER_DTYPES = (
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
+def _is_single_ims_path(images: object) -> bool:
+    return (
+        isinstance(images, (str, UPath))
+        and UPath(images).suffix.lower() == ".ims"
+    )
+
+
 def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
     for f in layer_path.iterdir():
         if f.is_dir():
@@ -1553,31 +1560,49 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 compress=compress,
             )
 
-            if batch_size is None:
-                if compress or (
-                    layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)
-                ):
-                    # if data is compressed or dataformat is zarr, parallel write access
-                    # to a shard leads to corrupted data, the batch size must be aligned
-                    # with the shard size
-                    batch_size = mag_view.info.shard_shape.z
-                else:
-                    # in uncompressed wkw only writing to the same chunk is problematic
-                    batch_size = mag_view.info.chunk_shape.z
-            elif compress or (layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)):
-                assert batch_size % mag_view.info.shard_shape.z == 0, (
-                    f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
+            if _is_single_ims_path(images) and not use_bioformats:
+                from ._utils.pims_ims_reader import copy_ims_chunk_to_view
+
+                func_per_chunk = named_partial(
+                    copy_ims_chunk_to_view,
+                    path=UPath(images),  # type: ignore[arg-type]
+                    mag_view=mag_view,
+                    timepoint=timepoint or 0,
+                    channel=pims_image_sequence._channel,
+                    num_channels=pims_image_sequence.num_channels,
+                    flip_x=flip_x,
+                    flip_y=flip_y,
+                    flip_z=flip_z,
+                    swap_xy=swap_xy,
+                    dtype=current_dtype,
                 )
             else:
-                assert batch_size % mag_view.info.chunk_shape.z == 0, (
-                    f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
+                if batch_size is None:
+                    if compress or (
+                        layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)
+                    ):
+                        # if data is compressed or dataformat is zarr, parallel write access
+                        # to a shard leads to corrupted data, the batch size must be aligned
+                        # with the shard size
+                        batch_size = mag_view.info.shard_shape.z
+                    else:
+                        # in uncompressed wkw only writing to the same chunk is problematic
+                        batch_size = mag_view.info.chunk_shape.z
+                elif compress or (
+                    layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)
+                ):
+                    assert batch_size % mag_view.info.shard_shape.z == 0, (
+                        f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
+                    )
+                else:
+                    assert batch_size % mag_view.info.chunk_shape.z == 0, (
+                        f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
+                    )
+                func_per_chunk = named_partial(
+                    pims_image_sequence.copy_to_view,
+                    mag_view=mag_view,
+                    dtype=current_dtype,
                 )
-
-            func_per_chunk = named_partial(
-                pims_image_sequence.copy_to_view,
-                mag_view=mag_view,
-                dtype=current_dtype,
-            )
 
             if (
                 additional_axes := set(layer.bounding_box.axes).difference(
@@ -1597,13 +1622,21 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                         f"WKW datasets only support x, y, z axes, got {additional_axes}. Please use `data_format='zarr3'` instead."
                     )
 
-            buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
-            args = list(
-                layer.bounding_box.chunk(
-                    buffered_slice_writer_shape,
-                    Vec3Int(1, 1, batch_size),
+            if _is_single_ims_path(images) and not use_bioformats:
+                # IMS path: split into full 3D shard-aligned chunks so each job
+                # reads exactly one shard's worth of data and writes it directly.
+                ims_shard_shape = mag_view.info.shard_shape
+                args = list(layer.bounding_box.chunk(ims_shard_shape, ims_shard_shape))
+            else:
+                buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(
+                    batch_size
                 )
-            )
+                args = list(
+                    layer.bounding_box.chunk(
+                        buffered_slice_writer_shape,
+                        Vec3Int(1, 1, batch_size),
+                    )
+                )
 
             with warnings.catch_warnings():
                 # We need to catch and ignore a warning here about comparing persisted properties.
