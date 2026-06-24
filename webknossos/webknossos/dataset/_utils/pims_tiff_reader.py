@@ -74,7 +74,18 @@ class PimsTiffReader(FramesSequenceND):
         ]
 
         with self.path.open("rb") as f:
-            pages = tifffile.TiffFile(f).series[0].pages
+            tiff = tifffile.TiffFile(f)
+            series = tiff.series[0]
+
+            # truncated tiff series (for example ImageJ virtual stacks) have only 1 real IFD
+            # but store all frames contiguously at series.dataoffset. Reading them
+            # via series.pages[i] fails for i > 0; use direct byte seeks instead.
+            use_direct_seek = series.is_truncated and series.dataoffset is not None
+            if use_direct_seek:
+                frame_bytes = int(np.prod(self._shape)) * self._dtype.itemsize
+                raw_dtype = np.dtype(tiff.byteorder + self._dtype.str[1:])
+            else:
+                pages = series.pages
 
             for bundled_page_coords in (
                 product(*[range(self.sizes[axis]) for axis in bundled_page_axes])
@@ -96,9 +107,28 @@ class PimsTiffReader(FramesSequenceND):
                     else 0
                 )
 
-                page = pages[page_idx]
-                assert page is not None, f"Page {page_idx} not found in TIFF file."
-                page_data = page.asarray()
+                if use_direct_seek:
+                    assert series.dataoffset is not None
+                    f.seek(series.dataoffset + page_idx * frame_bytes)
+                    raw = f.read(frame_bytes)
+                    if len(raw) < frame_bytes:
+                        raise OSError(
+                            f"Premature end of file while reading frame {page_idx}. "
+                            f"Expected {frame_bytes} bytes, got {len(raw)}."
+                        )
+                    page_data: np.ndarray = (
+                        np.frombuffer(raw, dtype=raw_dtype)
+                        .reshape(self._shape)
+                        .astype(self._dtype)
+                    )
+                else:
+                    try:
+                        page = pages[page_idx]
+                    except IndexError:
+                        raise ValueError(f"Page {page_idx} not found in TIFF file.")
+                    if page is None:
+                        raise ValueError(f"Page {page_idx} not found in TIFF file.")
+                    page_data = page.asarray()
 
                 # Index away page axes that are not part of bundle_axes (e.g. S in ZCYXS)
                 if extra_page_axes:

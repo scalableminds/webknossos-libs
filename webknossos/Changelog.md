@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - `MagView.read_cxyz` and `MagView.write_cxyz` are more robust for datasets that have only `xyz` axes or additional axes (e.g. `t`) of length 1. [#1478](https://github.com/scalableminds/webknossos-libs/pull/1478)
 
 ### Fixed
+- Fixed a conversion issue with Tiff files produced by ImageJ virtual stacks. [#1481](https://github.com/scalableminds/webknossos-libs/pull/1481)
 
 
 ## [3.5.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.2) - 2026-06-18
