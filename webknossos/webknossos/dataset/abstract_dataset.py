@@ -282,7 +282,7 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
 
     @default_view_configuration.setter
     def default_view_configuration(
-        self, view_configuration: DatasetViewConfiguration
+        self, view_configuration: DatasetViewConfiguration | None
     ) -> None:
         self._ensure_writable()
         self._properties.default_view_configuration = view_configuration

@@ -36,7 +36,7 @@ from upath.implementations.local import PosixUPath, WindowsUPath
 
 logger = logging.getLogger(__name__)
 
-times = {}
+times: dict[str, float] = {}
 
 ReturnType = TypeVar("ReturnType")
 
@@ -165,7 +165,7 @@ def get_executor_for_args(
             keep_logs=True,
         )
     else:
-        logger.error(f"Unknown distribution strategy: {args.distribution_strategy}")
+        raise ValueError(f"Unknown distribution strategy: {args.distribution_strategy}")
 
     return executor
 
