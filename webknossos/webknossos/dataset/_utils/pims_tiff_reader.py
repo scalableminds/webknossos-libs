@@ -51,11 +51,6 @@ class PimsTiffReader(FramesSequenceND):
                 axis for axis in self._tiff_axes if axis not in self._other_axes
             )
 
-            # ImageJ virtual stacks store all frames contiguously after a single IFD
-            # (series.is_truncated). In that case series.pages only exposes 1 real
-            # page and we must seek by computed byte offsets instead.
-            self._series_is_truncated = _tiff.is_truncated
-
             if "c" in self._tiff_axes:
                 self._register_get_frame(self.get_frame_2D, "cyx")
             else:
