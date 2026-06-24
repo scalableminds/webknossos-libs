@@ -18,6 +18,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - `MagView.read_cxyz` and `MagView.write_cxyz` are more robust for datasets that have only `xyz` axes or additional axes (e.g. `t`) of length 1. [#1478](https://github.com/scalableminds/webknossos-libs/pull/1478)
+- Upgraded `mypy` to `2.1.0`. [#1482](https://github.com/scalableminds/webknossos-libs/pull/1482)
+
 
 ### Fixed
 
