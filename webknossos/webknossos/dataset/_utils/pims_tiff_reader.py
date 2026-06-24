@@ -77,7 +77,7 @@ class PimsTiffReader(FramesSequenceND):
             tiff = tifffile.TiffFile(f)
             series = tiff.series[0]
 
-            # ImageJ virtual stacks (series.is_truncated=True) have only 1 real IFD
+            # truncated tiff series (for example ImageJ virtual stacks) have only 1 real IFD
             # but store all frames contiguously at series.dataoffset. Reading them
             # via series.pages[i] fails for i > 0; use direct byte seeks instead.
             use_direct_seek = series.is_truncated and series.dataoffset is not None
