@@ -1147,6 +1147,24 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self._save_dataset_properties()
         return self.layers[layer_name]
 
+    def delete(self) -> None:
+        """Deletes the dataset from the WEBKNOSSOS server. This action is irreversible.
+
+        Raises:
+            RuntimeError: If dataset is read-only, or if this instance was opened as
+                an annotation view of another dataset.
+        """
+        from ..client.context import _get_api_client
+
+        self._ensure_writable()
+        if self.annotation_id is not None:
+            raise RuntimeError("Cannot delete a dataset from an annotation view.")
+
+        with self._context:
+            client = _get_api_client()
+            client.dataset_delete(dataset_id=self.dataset_id)
+        self._read_only = True
+
     @classmethod
     def list(
         cls,
