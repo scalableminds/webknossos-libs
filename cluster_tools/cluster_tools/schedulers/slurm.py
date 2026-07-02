@@ -54,6 +54,22 @@ SLURM_STATES = {
     "Unclear": ["SUSPENDED", "REVOKED", "SIGNALING", "SPECIAL_EXIT", "STAGE_OUT"],
 }
 
+# Since Slurm 22.05, some resource flags are not automatically inherited from the
+# enclosing sbatch job by srun calls within the script anymore and must be restated
+# explicitly, or srun computes its own (potentially conflicting) resource request
+# leading to failures like:
+# "srun: fatal: cpus-per-task set by two different environment variables ..."
+# Other job_resources (e.g. --mem, --gres) should be inherited by srun automatically.
+# Therefore, we currently do not add them to the srun call
+SLURM_SRUN_NON_INHERITED_RESOURCE_KEYS = {
+    "cpus-per-task",
+    "ntasks",
+    "gpus",
+    "gpus-per-node",
+    "gpus-per-socket",
+    "gpus-per-task",
+}
+
 SLURM_QUEUE_CHECK_INTERVAL = 1 if "pytest" in sys.modules else 60
 
 T = TypeVar("T")
@@ -307,11 +323,8 @@ class SlurmExecutor(ClusterExecutor):
         if self.job_resources is not None:
             for resource, value in self.job_resources.items():
                 job_resources_lines += [f"#SBATCH --{resource}={value}"]
-                srun_resource_args += [f"--{resource}={value}"]
-        # Resources requested via #SBATCH (e.g. --cpus-per-task) are not
-        # automatically inherited by srun calls within the script anymore and need to be
-        # restated explicitly. Otherwise, srun computes its own (potentially conflicting)
-        # resource request, which can lead to errors.
+                if resource in SLURM_SRUN_NON_INHERITED_RESOURCE_KEYS:
+                    srun_resource_args += [f"--{resource}={value}"]
         srun_resource_args_str = (
             " " + " ".join(srun_resource_args) if srun_resource_args else ""
         )
