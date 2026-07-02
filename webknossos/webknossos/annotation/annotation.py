@@ -47,7 +47,7 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory
 from typing import IO, Literal, Union, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
@@ -81,7 +81,6 @@ from ..geometry import NDBoundingBox, Vec3Int, Vec3IntLike
 from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import (
-    is_fs_path,
     time_since_epoch_in_ms,
     warn_deprecated,
     wrap_executor,
@@ -447,11 +446,6 @@ class Annotation:
             )
             annotation = Annotation._load_from_zip(BytesIO(file_body))
 
-        volume_zip_root = NamedTemporaryFile(suffix=".zip").name
-        with ZipFile(volume_zip_root, "w"):
-            pass
-        annotation._write_volume_layers(UPath(volume_zip_root))
-
         if _return_context:
             return annotation, context
         else:
@@ -668,32 +662,6 @@ class Annotation:
             return cls._load_from_nml(
                 nml_paths[0].stem, nml_f, possible_volume_paths=paths
             )
-
-    def _write_volume_layers(self, path: UPath) -> None:
-        """
-        Writes all volume layers with zip data to a single zip file at the specified location.
-        """
-
-        assert is_fs_path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-
-        with (
-            path.open(mode="wb") as f,
-            ZipFile(
-                f,
-                mode="w",
-                compression=ZIP_DEFLATED,
-                compresslevel=Z_BEST_SPEED,
-            ) as zf,
-        ):
-            for layer in self._volume_layers:
-                if layer.zip is not None:
-                    with layer.zip.open(mode="rb") as f:
-                        zf.writestr(layer.zip.at, f.read())
-
-        for layer in self._volume_layers:
-            if layer.zip is not None:
-                layer.zip = ZipPath(path, layer.zip.at)
 
     def save(self, path: str | PathLike | UPath) -> None:
         """Saves the annotation to a file.
@@ -1070,10 +1038,10 @@ class Annotation:
             annotation.add_volume_layer("segmentation", fallback_layer="base_segmentation", dtype=np.uint32)
             ```
         """
-        volume_zip_root = NamedTemporaryFile(suffix=".zip").name
-        with ZipFile(volume_zip_root, "w"):
+        volume_zip_buffer = BytesIO()
+        with ZipFile(volume_zip_buffer, mode="w"):
             pass
-        volume_zip_path = ZipPath(volume_zip_root, f"{name}.zip")
+        volume_zip_path = ZipPath(ZipFile(volume_zip_buffer), f"{name}.zip")
 
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
