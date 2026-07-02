@@ -1147,6 +1147,15 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self._save_dataset_properties()
         return self.layers[layer_name]
 
+    def delete(self) -> None:
+        """Deletes the dataset from the WEBKNOSSOS server. This action is irreversible."""
+        from ..client.context import _get_api_client
+
+        self._ensure_writable()
+        with self._context:
+            client = _get_api_client()
+            client.dataset_delete(dataset_id=self.dataset_id)
+
     @classmethod
     def list(
         cls,
