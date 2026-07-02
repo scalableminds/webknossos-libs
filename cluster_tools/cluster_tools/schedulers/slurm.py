@@ -303,9 +303,18 @@ class SlurmExecutor(ClusterExecutor):
         log_path = self.format_log_file_path(self.cfut_dir, job_id_string)
 
         job_resources_lines = []
+        srun_resource_args = []
         if self.job_resources is not None:
             for resource, value in self.job_resources.items():
                 job_resources_lines += [f"#SBATCH --{resource}={value}"]
+                srun_resource_args += [f"--{resource}={value}"]
+        # Resources requested via #SBATCH (e.g. --cpus-per-task) are not
+        # automatically inherited by srun calls within the script anymore and need to be
+        # restated explicitly. Otherwise, srun computes its own (potentially conflicting)
+        # resource request, which can lead to errors.
+        srun_resource_args_str = (
+            " " + " ".join(srun_resource_args) if srun_resource_args else ""
+        )
 
         max_array_size = self.get_max_array_size()
         max_submit_jobs = self.get_max_submit_jobs()
@@ -340,7 +349,7 @@ class SlurmExecutor(ClusterExecutor):
                 + job_resources_lines
                 + [
                     *additional_setup_lines,
-                    f"srun {cmdline} {job_index_start}",
+                    f"srun{srun_resource_args_str} {cmdline} {job_index_start}",
                 ]
             )
 
