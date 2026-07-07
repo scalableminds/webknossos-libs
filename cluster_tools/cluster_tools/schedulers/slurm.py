@@ -60,7 +60,11 @@ SLURM_STATES = {
 # leading to failures like:
 # "srun: fatal: cpus-per-task set by two different environment variables ..."
 # Other job_resources (e.g. --mem, --gres) should be inherited by srun automatically.
-# Therefore, we currently do not add them to the srun call
+# Therefore, we currently explicitely restate only the potentially non-inherited resource but for the srun call.
+# It is worth noting that this change was quite disruptive, particularly for MPI implementations.
+# Because of this, in Slurm 23.11, this requirement was largely walked back.
+# SRUN_CPUS_PER_TASK war reverted back to SLURM_CPUS_PER_TASK and an --external-launcher option was introduced to srun
+# to prevent task launchers from being bound to a single CPU.
 SLURM_SRUN_NON_INHERITED_RESOURCE_KEYS = {
     "cpus-per-task",
     "ntasks",
