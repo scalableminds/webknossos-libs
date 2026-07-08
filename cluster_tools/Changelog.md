@@ -16,6 +16,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+- Pass the configured `job_resources` that Slurm's `srun` does not automatically inherit from the enclosing `sbatch` job (e.g. `cpus-per-task`, `gpus`) also to the `srun` call within the generated `sbatch` script, since Slurm versions >=22.05 no longer inherit these settings automatically, leading to `SlurmExecutor` jobs failing with errors such as `srun: fatal: cpus-per-task set by two different environment variables...` on some clusters. [#1483](https://github.com/scalableminds/webknossos-libs/pull/1483)
 
 
 ## [3.5.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.3) - 2026-06-24
