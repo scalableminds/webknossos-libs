@@ -15,11 +15,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
-- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
 
 ### Changed
 
 ### Fixed
+- Fixed a storage leak where downloading annotations and editing volume layers wrote zip data to temporary files on disk instead of keeping it in memory. [#1485](https://github.com/scalableminds/webknossos-libs/pull/1485)
 
 
 ## [3.5.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.3) - 2026-06-24
