@@ -19,10 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fix SlurmExecutor on certain slurm clusters: explicitly state `--ntasks=1` in srun calls. [#1487](https://github.com/scalableminds/webknossos-libs/pull/1487)
 
 
 ## [3.5.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.4) - 2026-07-08
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.3...v3.5.4)
+
+### Fixed
+- Fix SlurmExecutor on certain slurm clusters: explicitly repeat srun options that might not be inherited from sbatch. [#1483](https://github.com/scalableminds/webknossos-libs/pull/1483)
 
 
 ## [3.5.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.3) - 2026-06-24
