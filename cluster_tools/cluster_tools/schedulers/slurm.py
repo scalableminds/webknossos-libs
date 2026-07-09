@@ -68,7 +68,6 @@ SLURM_STATES = {
 # to prevent task launchers from being bound to a single CPU.
 SLURM_SRUN_NON_INHERITED_RESOURCE_KEYS = {
     "cpus-per-task",
-    "ntasks",
     "gpus",
     "gpus-per-node",
     "gpus-per-socket",
@@ -367,7 +366,7 @@ class SlurmExecutor(ClusterExecutor):
                 + job_resources_lines
                 + [
                     *additional_setup_lines,
-                    f"srun{srun_resource_args_str} {cmdline} {job_index_start}",
+                    f"srun{srun_resource_args_str} --ntasks=1 {cmdline} {job_index_start}",
                 ]
             )
 
