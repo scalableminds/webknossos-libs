@@ -83,7 +83,7 @@ def _assert_same_webknossos_instance(
 
 
 @attr.frozen
-class ExploreCredentials:
+class StorageCredentials:
     """Credentials for accessing remote storage when exploring and adding a dataset."""
 
     credential_identifier: str
@@ -1440,7 +1440,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         *,
         folder: str | RemoteFolder | None = None,
         folder_path: str | None = None,
-        credentials: ExploreCredentials | None = None,
+        credentials: StorageCredentials | None = None,
     ) -> "RemoteDataset":
         """Explore and add an external dataset as a remote dataset.
 
