@@ -1487,7 +1487,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         client = _get_api_client()
         dataset = ApiDatasetExploreAndAddRemote(
-            remote_uri=dataset_uri,
+            remote_uri=str(dataset_uri),
             dataset_name=dataset_name,
             folder_id=None if folder_obj is None else folder_obj.id,
             data_store_name=None,
