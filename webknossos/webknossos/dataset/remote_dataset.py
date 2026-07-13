@@ -82,6 +82,16 @@ def _assert_same_webknossos_instance(
         )
 
 
+@attr.frozen
+class ExploreCredentials:
+    """Credentials for accessing remote storage when exploring and adding a dataset."""
+
+    credential_identifier: str
+    """Remote storage credential identifier (e.g. aws access key id)."""
+    credential_secret: str
+    """Remote storage credential secret (e.g. aws secret access key)."""
+
+
 class RemoteAccessMode(Enum):
     """Determines how data of a remote dataset is accessed. Note that DIRECT_PATH can only be used if the client has access to the underlying storage."""
 
@@ -1430,8 +1440,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         *,
         folder: str | RemoteFolder | None = None,
         folder_path: str | None = None,
-        credential_identifier: str | None = None,
-        credential_secret: str | None = None,
+        credentials: ExploreCredentials | None = None,
     ) -> "RemoteDataset":
         """Explore and add an external dataset as a remote dataset.
 
@@ -1443,8 +1452,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             dataset_name: Name to register dataset under in WEBKNOSSOS
             folder: Path in WEBKNOSSOS folder structure where dataset should appear
             folder_path: Deprecated, use folder instead.
-            credential_identifier: remote storage credential identifier (e.g. aws access key id)
-            credential_secret: remote storage credential secret (e.g. aws secret access key)
+            credentials: Credentials for accessing remote storage
 
         Returns:
             RemoteDataset: The newly added dataset accessible via WEBKNOSSOS
@@ -1479,12 +1487,16 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         client = _get_api_client()
         dataset = ApiDatasetExploreAndAddRemote(
-            remote_uri=UPath(dataset_uri).resolve().as_uri(),
+            remote_uri=dataset_uri,
             dataset_name=dataset_name,
             folder_id=None if folder_obj is None else folder_obj.id,
             data_store_name=None,
-            credential_identifier=credential_identifier,
-            credential_secret=credential_secret,
+            credential_identifier=(
+                None if credentials is None else credentials.credential_identifier
+            ),
+            credential_secret=(
+                None if credentials is None else credentials.credential_secret
+            ),
         )
         dataset_id = client.dataset_explore_and_add_remote(dataset=dataset)
 
