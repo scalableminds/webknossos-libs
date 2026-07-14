@@ -25,7 +25,7 @@ from .layer import (
     SegmentIndexAttachment,
     View,
 )
-from .remote_dataset import StorageCredentials, RemoteAccessMode, RemoteDataset
+from .remote_dataset import RemoteAccessMode, RemoteDataset, StorageCredentials
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .transfer_mode import TransferMode
