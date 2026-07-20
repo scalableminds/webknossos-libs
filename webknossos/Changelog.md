@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- `RemoteDataset.explore_and_add_remote` can now take optional remote storage credentials. [#1488](https://github.com/scalableminds/webknossos-libs/pull/1488)
 
 ### Changed
 
