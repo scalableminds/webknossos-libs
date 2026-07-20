@@ -1438,8 +1438,7 @@ class RemoteAnnotation(Annotation):
         return self._get_annotation_info().description
 
     @description.setter
-    def description(self, value: str) -> None:
-        assert isinstance(value, str), "Description must be a string."
+    def description(self, value: str | None) -> None:
         self._set_annotation_info(description=value)
 
     def _get_annotation_info(self) -> ApiAnnotation:

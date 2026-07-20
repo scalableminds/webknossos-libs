@@ -8,7 +8,7 @@ license-files = ["LICENSE"]
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
-    "typing-extensions ~=4.12.0",
+    "typing-extensions ~=4.15.0",
 ]
 
 [project.urls]
@@ -24,7 +24,7 @@ all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
 [dependency-groups]
 dev = [
     "icecream ~=2.1.1",
-    "mypy ~=1.15.0",
+    "mypy ~=2.1.0",
     "pytest ~=8.3.3",
     "pytest-timeout>=2.4.0",
     "ruff ~=0.11.0",

@@ -11,11 +11,13 @@ from upath import UPath
 
 from ....dataset_properties import DataFormat
 from ....geometry import (
+    BoundingBox,
     Mag,
     NDBoundingBox,
     NormalizedBoundingBox,
     Vec3Int,
     Vec3IntLike,
+    VecInt,
 )
 from ....geometry.vec_int import VecIntLike
 from ....utils import (
@@ -271,6 +273,22 @@ class View:
             abs_mag1_offset
         ).with_size_xyz(mag1_size)
 
+    def _normalize_bbox(
+        self,
+        bbox: BoundingBox | NDBoundingBox | None,
+        relative: bool = False,
+    ) -> NDBoundingBox | None:
+        if not isinstance(bbox, BoundingBox):
+            return bbox
+        view_bbox = self.normalized_bounding_box
+        if relative:
+            return (
+                view_bbox.with_topleft(VecInt.zeros(view_bbox.axes))
+                .with_topleft_xyz(bbox.topleft)
+                .with_size_xyz(bbox.size)
+            )
+        return view_bbox.with_topleft_xyz(bbox.topleft).with_size_xyz(bbox.size)
+
     def write(
         self,
         data: np.ndarray,
@@ -497,6 +515,13 @@ class View:
         assert len(data.shape) == 4, (
             f"write_cxyz expects a 4D (c, x, y, z) array, got shape {data.shape}"
         )
+        absolute_bounding_box = self._normalize_bbox(
+            absolute_bounding_box, relative=False
+        )
+        relative_bounding_box = self._normalize_bbox(
+            relative_bounding_box, relative=True
+        )
+
         data, write_loc = self._resolve_cxyz_write(
             data,
             relative_offset,
@@ -850,6 +875,13 @@ class View:
             data = view.read_cxyz(relative_offset=(10, 10, 0), size=(50, 50, 10))
             ```
         """
+        absolute_bounding_box = self._normalize_bbox(
+            absolute_bounding_box, relative=False
+        )
+        relative_bounding_box = self._normalize_bbox(
+            relative_bounding_box, relative=True
+        )
+
         mag1_bbox = self._resolve_read_bbox(
             size,
             relative_offset,

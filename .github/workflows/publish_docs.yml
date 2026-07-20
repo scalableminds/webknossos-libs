@@ -34,7 +34,7 @@ jobs:
           NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
           set -e 
 
-          uvx --from awscli aws s3 cp --recursive --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
+          uvx --from awscli aws s3 cp --recursive --endpoint-url https://eu-central-2.storage.impossibleapi.net docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
           curl --basic -u "${N8N_TOKEN}:${N8N_USERNAME}" https://docs.webknossos.org/webhooks/index-docs
 
       - name: Check links (on master)

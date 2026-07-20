@@ -673,6 +673,64 @@ def test_read_cxyz_adds_channel_axis(
     data = mag.read_cxyz(absolute_offset=(0, 0, 0), size=(10, 10, 10))
     assert data.shape == (1, 10, 10, 10)
 
+    # Passing absolute_bounding_box=BoundingBox must not raise a rank mismatch
+    data = mag.read_cxyz(absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)))
+    assert data.shape == (1, 10, 10, 10)
+
+    # Same for write_cxyz
+    write_data_cxyz = np.ones((1, 10, 10, 10), dtype=np.uint64)
+    mag.write_cxyz(
+        write_data_cxyz,
+        allow_unaligned=True,
+        absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)),
+    )
+    readback = mag.read_cxyz(absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)))
+    np.testing.assert_array_equal(readback, write_data_cxyz)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_read_write_cxyz_bounding_box_with_extra_axes(
+    data_format: DataFormat, output_path: UPath
+) -> None:
+    """read_cxyz/write_cxyz with BoundingBox must work for layers that have extra axes (e.g. t) with size 1."""
+    if data_format == DataFormat.WKW:
+        pytest.skip("WKW requires (c, x, y, z) axes and cannot store extra axes")
+    ds_path = prepare_dataset_path(data_format, output_path)
+    layer = Dataset(ds_path, voxel_size=(1, 1, 1)).add_layer(
+        "segmentation",
+        SEGMENTATION_CATEGORY,
+        bounding_box=NDBoundingBox(
+            (0, 0, 0, 0), (10, 10, 10, 1), axes=("x", "y", "z", "t"), index=(0, 1, 2, 3)
+        ),
+        data_format=data_format,
+        num_channels=1,
+    )
+    mag = layer.add_mag("1")
+    layer_bbox = NDBoundingBox(
+        (0, 0, 0, 0), (10, 10, 10, 1), axes=("x", "y", "z", "t"), index=(0, 1, 2, 3)
+    )
+
+    # read_cxyz with BoundingBox must not raise a rank mismatch with the 4D (x,y,z,t) array
+    data_bbox = mag.read_cxyz(
+        absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10))
+    )
+    assert data_bbox.shape == (1, 10, 10, 10)
+
+    # Reading via BoundingBox and via NDBoundingBox must produce identical results
+    data_ndbbox = mag.read_cxyz(absolute_bounding_box=layer_bbox)
+    np.testing.assert_array_equal(data_bbox, data_ndbbox)
+
+    # write_cxyz with BoundingBox must not raise; verify with uniform data to avoid
+    # pre-existing axis-ordering quirks in the 5D write path
+    write_data_cxyz = np.ones((1, 10, 10, 10), dtype=np.uint64)
+    mag.write_cxyz(
+        write_data_cxyz,
+        allow_unaligned=True,
+        absolute_bounding_box=BoundingBox((0, 0, 0), (10, 10, 10)),
+    )
+    readback = mag.read_cxyz(absolute_bounding_box=layer_bbox)
+    np.testing.assert_array_equal(readback, write_data_cxyz)
+
 
 @pytest.mark.parametrize(
     "layer_bbox,write_bbox,write_data,expected_shape",

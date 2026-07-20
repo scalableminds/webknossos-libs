@@ -10,17 +10,60 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added support for Python 3.14. [#1473](https://github.com/scalableminds/webknossos-libs/pull/1473)
 - Added `transform` and `transform_affine` functions to resample a layer's data into another layer using an arbitrary inverse coordinate transform or a 4x4 affine matrix, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
+
 
 ### Changed
 
 ### Fixed
+
+
+## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.5...v3.5.6)
+
+### Added
+- `RemoteDataset.explore_and_add_remote` can now take optional remote storage credentials. [#1488](https://github.com/scalableminds/webknossos-libs/pull/1488)
+
+
+## [3.5.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.5) - 2026-07-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.4...v3.5.5)
+
+### Fixed
+- Fix SlurmExecutor on certain slurm clusters: explicitly state `--ntasks=1` in srun calls. [#1487](https://github.com/scalableminds/webknossos-libs/pull/1487)
+
+
+
+## [3.5.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.4) - 2026-07-08
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.3...v3.5.4)
+
+### Fixed
+- Fix SlurmExecutor on certain slurm clusters: explicitly repeat srun options that might not be inherited from sbatch. [#1483](https://github.com/scalableminds/webknossos-libs/pull/1483)
+
+
+## [3.5.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.3) - 2026-06-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.2...v3.5.3)
+
+### Changed
+- `MagView.read_cxyz` and `MagView.write_cxyz` are more robust for datasets that have only `xyz` axes or additional axes (e.g. `t`) of length 1. [#1478](https://github.com/scalableminds/webknossos-libs/pull/1478)
+- Upgraded `mypy` to `2.1.0`. [#1482](https://github.com/scalableminds/webknossos-libs/pull/1482)
+
+
+### Fixed
+- Fixed a conversion issue with Tiff files produced by ImageJ virtual stacks. [#1481](https://github.com/scalableminds/webknossos-libs/pull/1481)
+
+
+
+## [3.5.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.2) - 2026-06-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.1...v3.5.2)
+
+### Added
+- Added support for Python 3.14. [#1473](https://github.com/scalableminds/webknossos-libs/pull/1473)
+- Added support for endpoint and path specific AWS credentials in env vars, e.g. `AWS_ACCESS_KEY_ID__EXAMPLE_COM__BUCKET` for `s3://example.com/bucket/path/to/file`. [#1475](https://github.com/scalableminds/webknossos-libs/pull/1475)
 
 
 ## [3.5.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.1) - 2026-06-11
@@ -29,6 +72,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - Fixed unwarrented PermissionError when using Annotation.open_remote(...). [#1470](https://github.com/scalableminds/webknossos-libs/pull/1470)
 - Make `MultiprocessExecutor` safe to be use from multiple threads simultaneously [#1464](https://github.com/scalableminds/webknossos-libs/pull/1464)
+- Broader s3fs retries for `Not enough data...` errors. [#1479](https://github.com/scalableminds/webknossos-libs/pull/1479)
 
 
 

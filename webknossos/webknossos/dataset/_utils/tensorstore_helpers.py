@@ -1,3 +1,4 @@
+import atexit
 import math
 from functools import lru_cache
 from tempfile import mkdtemp
@@ -8,7 +9,7 @@ import numpy as np
 import tensorstore as ts
 from upath import UPath
 
-from ...utils import is_fs_path
+from ...utils import is_fs_path, rmtree
 
 TS_CONTEXT = ts.Context()
 
@@ -23,6 +24,8 @@ class AWSCredentialManager:
 
         self.credentials_file_path.touch()
         self.config_file_path.write_text("[default]\n")
+
+        atexit.register(self._cleanup)
 
     @property
     def credentials_file_path(self) -> UPath:
@@ -44,6 +47,9 @@ class AWSCredentialManager:
                 ]
             )
         )
+
+    def _cleanup(self) -> None:
+        rmtree(self.folder_path)
 
     def add(self, access_key_id: str, secret_access_key: str) -> dict[str, str]:
         key_tuple = (access_key_id, secret_access_key)

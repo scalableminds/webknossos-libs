@@ -87,13 +87,13 @@ def _tiff_cubing(out_path: UPath, data_format: DataFormat) -> None:
     assert (out_path / "tiff" / "1").exists()
 
 
-def test_tiff_cubing_zarr_s3() -> None:
+def test_tiff_cubing_zarr_s3(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests zarr support when performing tiff cubing."""
 
     out_path = REMOTE_TESTOUTPUT_DIR / "tiff_cubing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = MINIO_ROOT_PASSWORD
-    os.environ["AWS_ACCESS_KEY_ID"] = MINIO_ROOT_USER
-    os.environ["S3_ENDPOINT_URL"] = f"http://localhost:{MINIO_PORT}"
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", MINIO_ROOT_PASSWORD)
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", MINIO_ROOT_USER)
+    monkeypatch.setenv("S3_ENDPOINT_URL", f"http://localhost:{MINIO_PORT}")
 
     random.seed(1)
     _tiff_cubing(out_path, DataFormat.Zarr3)

@@ -36,7 +36,7 @@ from upath.implementations.local import PosixUPath, WindowsUPath
 
 logger = logging.getLogger(__name__)
 
-times = {}
+times: dict[str, float] = {}
 
 ReturnType = TypeVar("ReturnType")
 
@@ -165,7 +165,7 @@ def get_executor_for_args(
             keep_logs=True,
         )
     else:
-        logger.error(f"Unknown distribution strategy: {args.distribution_strategy}")
+        raise ValueError(f"Unknown distribution strategy: {args.distribution_strategy}")
 
     return executor
 
@@ -569,7 +569,7 @@ def set_s3fs_retry_settings(
             return True
         if (
             "connection was closed" in str(exception).lower()
-            or "not enough data for satisfy" in str(exception).lower()
+            or "not enough data" in str(exception).lower()
         ):
             s3fs_logger.warning(
                 f"Retrying unexpected error: {exception}",
@@ -584,6 +584,24 @@ def set_s3fs_retry_settings(
     s3fs.add_retryable_error(TransferEncodingError)
     s3fs.add_retryable_error(ClientPayloadError)
     s3fs.set_custom_error_handler(custom_s3fs_error_handler)
+
+
+def _detect_aws_credentials(path_parts: Iterable[str]) -> tuple[str, str] | None:
+    path_parts = [part for part in path_parts if part != ""]
+    while len(path_parts) > 0:
+        env_var_suffix = (
+            "__".join(path_parts)
+            .replace(".", "_")
+            .replace(":", "_")
+            .replace("-", "_")
+            .upper()
+        )
+        access_key = os.environ.get(f"AWS_ACCESS_KEY_ID__{env_var_suffix}")
+        secret_key = os.environ.get(f"AWS_SECRET_ACCESS_KEY__{env_var_suffix}")
+        if access_key and secret_key:
+            return access_key, secret_key
+        path_parts.pop()
+    return None
 
 
 def enrich_path(
@@ -607,10 +625,25 @@ def enrich_path(
         if upath.storage_options.get("endpoint_url") is not None:
             return upath
         parsed_url = urlparse(str(upath))
-        endpoint_url = f"https://{parsed_url.netloc}"
-        bucket, key = parsed_url.path.lstrip("/").split("/", maxsplit=1)
+        endpoint_domain = parsed_url.netloc
+        endpoint_url = f"https://{endpoint_domain}"
 
-        return UPath(f"s3://{bucket}/{key}", endpoint_url=endpoint_url)
+        path_parts = parsed_url.path.lstrip("/").split("/", maxsplit=1)
+        bucket = path_parts[0]
+        key = path_parts[1] if len(path_parts) > 1 else ""
+        s3_path = f"s3://{bucket}/{key}" if key else f"s3://{bucket}"
+        key_parts = tuple(part for part in key.split("/") if part)
+
+        if credentials := _detect_aws_credentials(
+            (endpoint_domain, bucket) + key_parts
+        ):
+            return UPath(
+                s3_path,
+                endpoint_url=endpoint_url,
+                key=credentials[0],
+                secret=credentials[1],
+            )
+        return UPath(s3_path, endpoint_url=endpoint_url)
 
     if not upath.is_absolute():
         assert dataset_path is not None, (

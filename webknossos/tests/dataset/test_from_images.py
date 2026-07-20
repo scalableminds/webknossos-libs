@@ -74,6 +74,44 @@ def test_ZCYX_tiff(tmp_upath: UPath) -> None:
     assert ds.get_color_layers()[0].bounding_box.size == Vec3Int(x=6, y=7, z=5)
 
 
+def test_imagej_virtual_stack_tiff(tmp_upath: UPath) -> None:
+    # ImageJ virtual stacks store all frames contiguously after a single IFD
+    # (series.is_truncated=True). series.pages only exposes that 1 IFD, so
+    # reading any frame beyond index 0 used to raise IndexError.
+    Z, Y, X = 8, 16, 12
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    tif_path = tmp_upath / "test_virtual_stack.tif"
+    imwrite(str(tif_path), data, imagej=True, truncate=True, metadata={"axes": "ZYX"})
+
+    t = TiffFile(str(tif_path))
+    assert t.series[0].is_truncated, (
+        "expected an ImageJ virtual stack (truncated series)"
+    )
+    assert len(t.pages) == 1, "expected exactly 1 real IFD"
+    assert t.series[0].shape == (Z, Y, X)
+
+    reader = PimsTiffReader(tif_path)
+    reader.bundle_axes = ["y", "x"]
+    reader.iter_axes = ["z"]
+
+    assert reader.shape == (Z, Y, X)
+    assert reader.frame_shape == (Y, X)
+
+    for z in range(Z):
+        np.testing.assert_array_equal(np.array(reader[z]), data[z])
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            tif_path,
+            tmp_upath / "ds",
+            (1, 1, 1),
+            executor=executor,
+        )
+    assert ds.get_color_layers()[0].bounding_box.size == Vec3Int(x=X, y=Y, z=Z)
+    result = ds.get_color_layers()[0].get_finest_mag().read()[0]
+    np.testing.assert_array_equal(result, data.transpose(2, 1, 0))
+
+
 def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
     import tifffile as tifffile_module
 

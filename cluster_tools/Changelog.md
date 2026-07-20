@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...HEAD)
 
 ### Breaking Changes
 
@@ -16,6 +16,36 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Changed
 
 ### Fixed
+
+
+## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.5...v3.5.6)
+
+
+## [3.5.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.5) - 2026-07-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.4...v3.5.5)
+
+
+## [3.5.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.4) - 2026-07-08
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.3...v3.5.4)
+
+### Fixed
+- Pass the configured `job_resources` that Slurm's `srun` does not automatically inherit from the enclosing `sbatch` job (e.g. `cpus-per-task`, `gpus`) also to the `srun` call within the generated `sbatch` script, since Slurm versions >=22.05 no longer inherit these settings automatically, leading to `SlurmExecutor` jobs failing with errors such as `srun: fatal: cpus-per-task set by two different environment variables...` on some clusters. [#1483](https://github.com/scalableminds/webknossos-libs/pull/1483)
+
+
+
+## [3.5.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.3) - 2026-06-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.2...v3.5.3)
+
+### Changed
+- Upgraded `mypy` to `2.1.0`. [#1482](https://github.com/scalableminds/webknossos-libs/pull/1482)
+
+### Fixed
+- Longer polling for log files of finished jobs in `forward_log` to prevent unhandled `TailError`s when a cluster job completes but the log file is not yet visible from the head node e.g. due to a slow NFS. [#1480](https://github.com/scalableminds/webknossos-libs/pull/1480)
+
+
+## [3.5.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.2) - 2026-06-18
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.1...v3.5.2)
 
 
 ## [3.5.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.1) - 2026-06-11
