@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Generator, Iterable
+from collections.abc import Generator, Iterable, Iterator
 from itertools import product
 from typing import (
     TYPE_CHECKING,
@@ -697,25 +697,19 @@ class NDBoundingBox:
         self._check_compatibility(inner_bbox)
         return inner_bbox.intersected_with(self, dont_assert=True) == inner_bbox
 
-    def chunk(
-        self: _T,
+    def _normalize_chunk_grid(
+        self,
         chunk_shape: VecIntLike,
-        chunk_border_alignments: VecIntLike | None = None,
-    ) -> Generator[_T, None, None]:
-        """
-        Decompose the bounding box into smaller chunks of size `chunk_shape`.
+        chunk_border_alignments: VecIntLike | None,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Normalize `chunk_shape` and `chunk_border_alignments` to numpy arrays that
+        match this box's axes and compute the (aligned) start offset.
 
-        Chunks at the border of the bounding box might be smaller than chunk_shape.
-        If `chunk_border_alignment` is set, all border coordinates
-        *between two chunks* will be divisible by that value.
+        This is the shared grid math used by `chunk()`, `iter_chunk_starts()` and
+        `iter_overlapping_grid_cells()` so there is a single source of truth.
 
-        Args:
-            chunk_shape (VecIntLike): The size of the chunks to generate.
-            chunk_border_alignments (VecIntLike | None): The alignment of the chunk borders.
-
-
-        Yields:
-            Generator[NDBoundingBox]: A generator of the chunks.
+        Returns:
+            A tuple of ``(start, chunk_shape, start_adjust)`` numpy arrays.
         """
 
         start = self.topleft.to_np()
@@ -758,18 +752,137 @@ class NDBoundingBox:
             # the start of the first chunk, because we'll intersect with `self`,
             # but it'll lead to all chunk borders being aligned correctly.
             start_adjust = start % chunk_border_alignments
-        for coordinates in product(
+
+        return start, chunk_shape, start_adjust
+
+    def iter_chunk_starts(
+        self,
+        chunk_shape: VecIntLike,
+        chunk_border_alignments: VecIntLike | None = None,
+    ) -> Iterator[tuple[int, ...]]:
+        """Yield the topleft coordinate of every chunk as a plain int tuple.
+
+        This is a fast, allocation-free variant of `chunk()`: it performs no
+        per-chunk `Vec3Int`/`NDBoundingBox` allocation and does **not** clip the
+        chunks to this box (border chunks are therefore *not* shrunk – the caller
+        can clip/filter cheaply on the raw integers if needed).
+
+        The chunk grid matches `chunk()` exactly (same cells, same order). Without
+        `chunk_border_alignments`, the yielded starts equal the chunk toplefts, i.e.
+        ``list(self.iter_chunk_starts(cs)) == [tuple(c.topleft) for c in self.chunk(cs)]``.
+        With `chunk_border_alignments`, the first grid line on an axis may lie
+        *before* this box's topleft; `chunk()` clips that first chunk's topleft up to
+        the box, whereas this method yields the unclipped grid start.
+
+        Args:
+            chunk_shape (VecIntLike): The size of the chunks to generate.
+            chunk_border_alignments (VecIntLike | None): The alignment of the chunk borders.
+
+        Yields:
+            tuple[int, ...]: The topleft coordinate of each chunk, in axis order.
+        """
+
+        start, chunk_shape_np, start_adjust = self._normalize_chunk_grid(
+            chunk_shape, chunk_border_alignments
+        )
+
+        # Work on plain python ints so the yielded tuples contain no numpy scalars.
+        starts = start.tolist()
+        sizes = self.size.to_np().tolist()
+        steps = chunk_shape_np.tolist()
+        adjusts = start_adjust.tolist()
+
+        yield from product(
             *[
-                range(
-                    start[i] - start_adjust[i], start[i] + self.size[i], chunk_shape[i]
-                )
+                range(starts[i] - adjusts[i], starts[i] + sizes[i], steps[i])
                 for i in range(len(self.axes))
             ]
-        ):
+        )
+
+    def iter_overlapping_grid_cells(
+        self,
+        chunk_shape: VecIntLike,
+        clip_to: "NDBoundingBox | None" = None,
+    ) -> Iterator[tuple[int, ...]]:
+        """Yield the topleft of every origin-aligned grid cell overlapping this box.
+
+        The grid is aligned to the coordinate origin (cell ``k`` on an axis spans
+        ``[k * cell, (k + 1) * cell)``) and has cell size `chunk_shape`. This differs
+        from `chunk()` / `iter_chunk_starts()`, whose grid is aligned to the box's own
+        topleft.
+
+        Overlap uses half-open intervals: cells that only *touch* this box (or
+        `clip_to`) at a border are not returned. Like `iter_chunk_starts()`, this is
+        allocation-free and yields plain int tuples.
+
+        Args:
+            chunk_shape (VecIntLike): The size of the grid cells.
+            clip_to (NDBoundingBox | None): If given, only cells overlapping both this
+                box and `clip_to` are yielded.
+
+        Yields:
+            tuple[int, ...]: The topleft coordinate of each overlapping grid cell.
+        """
+
+        _, chunk_shape_np, _ = self._normalize_chunk_grid(chunk_shape, None)
+
+        region_start = self.topleft.to_np()
+        region_end = region_start + self.size.to_np()
+        if clip_to is not None:
+            self._check_compatibility(clip_to)
+            region_start = np.maximum(region_start, clip_to.topleft.to_np())
+            region_end = np.minimum(region_end, clip_to.bottomright.to_np())
+
+        starts = region_start.tolist()
+        ends = region_end.tolist()
+        cells = chunk_shape_np.tolist()
+
+        ranges = []
+        for i in range(len(self.axes)):
+            start_i, end_i, cell_i = starts[i], ends[i], cells[i]
+            if start_i >= end_i:
+                # Empty overlap on at least one axis -> no cells at all.
+                return
+            first = start_i // cell_i
+            last = (end_i - 1) // cell_i
+            ranges.append(range(first * cell_i, last * cell_i + 1, cell_i))
+
+        yield from product(*ranges)
+
+    def chunk(
+        self: _T,
+        chunk_shape: VecIntLike,
+        chunk_border_alignments: VecIntLike | None = None,
+    ) -> Generator[_T, None, None]:
+        """
+        Decompose the bounding box into smaller chunks of size `chunk_shape`.
+
+        Chunks at the border of the bounding box might be smaller than chunk_shape.
+        If `chunk_border_alignment` is set, all border coordinates
+        *between two chunks* will be divisible by that value.
+
+        For a fast, allocation-free variant that yields raw integer coordinates
+        instead of `NDBoundingBox` objects, see `iter_chunk_starts()`.
+
+        Args:
+            chunk_shape (VecIntLike): The size of the chunks to generate.
+            chunk_border_alignments (VecIntLike | None): The alignment of the chunk borders.
+
+
+        Yields:
+            Generator[NDBoundingBox]: A generator of the chunks.
+        """
+
+        _, chunk_shape_np, _ = self._normalize_chunk_grid(
+            chunk_shape, chunk_border_alignments
+        )
+        chunk_size = VecInt(chunk_shape_np, axes=self.axes)
+
+        for coordinates in self.iter_chunk_starts(chunk_shape, chunk_border_alignments):
             yield self.intersected_with(
                 self.__class__(
                     topleft=VecInt(coordinates, axes=self.axes),
-                    size=VecInt(chunk_shape, axes=self.axes),
+                    size=chunk_size,
                     axes=self.axes,
                     index=self.index,
                 )

@@ -196,3 +196,88 @@ def test_contains_bbox_with_normalized_bbox() -> None:
     # NormalizedBoundingBox.contains_bbox(BoundingBox)
     assert outer_normalized.contains_bbox(inner)
     assert not outer_normalized.contains_bbox(not_contained)
+
+
+@pytest.mark.parametrize(
+    "topleft, size, chunk_shape, alignment",
+    [
+        ((0, 0, 0), (100, 100, 100), (32, 32, 32), None),
+        ((5, 7, 9), (50, 60, 70), (16, 16, 16), None),
+        ((7, 3, 1), (33, 33, 33), (10, 10, 10), None),
+        ((0, 0, 0), (100, 100, 100), (32, 32, 32), (16, 16, 16)),
+    ],
+)
+def test_iter_chunk_starts_matches_chunk(
+    topleft: tuple[int, int, int],
+    size: tuple[int, int, int],
+    chunk_shape: tuple[int, int, int],
+    alignment: tuple[int, int, int] | None,
+) -> None:
+    bbox = BoundingBox(topleft, size)
+    starts = list(bbox.iter_chunk_starts(chunk_shape, alignment))
+
+    # Yielded values are plain python int tuples (no numpy scalars).
+    assert all(type(v) is int for start in starts for v in start)
+
+    # Reconstructing chunk() by wrapping+clipping each start is identical to chunk().
+    reconstructed = [
+        BoundingBox(list(start), chunk_shape).intersected_with(bbox) for start in starts
+    ]
+    assert reconstructed == list(bbox.chunk(chunk_shape, alignment))
+
+
+def test_iter_chunk_starts_equals_toplefts_without_alignment() -> None:
+    bbox = BoundingBox((5, 7, 9), (50, 60, 70))
+    assert list(bbox.iter_chunk_starts((16, 16, 16))) == [
+        tuple(chunk.topleft) for chunk in bbox.chunk((16, 16, 16))
+    ]
+
+
+def test_iter_chunk_starts_alignment_yields_unclipped_start() -> None:
+    bbox = BoundingBox((10, 10, 10), (100, 100, 100))
+    starts = list(bbox.iter_chunk_starts((32, 32, 32), (16, 16, 16)))
+    # First grid line lies before the box topleft and is *not* clipped.
+    assert starts[0] == (0, 0, 0)
+
+
+def test_iter_chunk_starts_alignment_divisibility_assertion() -> None:
+    bbox = BoundingBox((0, 0, 0), (10, 10, 10))
+    with pytest.raises(AssertionError):
+        list(bbox.iter_chunk_starts((32, 32, 32), (7, 7, 7)))
+
+
+def test_iter_overlapping_grid_cells() -> None:
+    # Box [10, 50) on every axis overlaps origin-aligned 32-grid cells 0 and 32.
+    bbox = BoundingBox((10, 10, 10), (40, 40, 40))
+    cells = list(bbox.iter_overlapping_grid_cells((32, 32, 32)))
+    assert all(type(v) is int for cell in cells for v in cell)
+    assert cells == [(x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)]
+
+
+def test_iter_overlapping_grid_cells_touching_border_excluded() -> None:
+    # Box exactly spanning one grid cell [32, 64) only overlaps that single cell;
+    # neighbouring cells that merely touch its borders are excluded (half-open).
+    bbox = BoundingBox((32, 32, 32), (32, 32, 32))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32))) == [(32, 32, 32)]
+
+
+def test_iter_overlapping_grid_cells_non_origin_aligned() -> None:
+    # Box [1, 33) crosses the grid line at 32, so it overlaps cells 0 and 32.
+    bbox = BoundingBox((1, 1, 1), (32, 32, 32))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32))) == [
+        (x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)
+    ]
+
+
+def test_iter_overlapping_grid_cells_clip_to() -> None:
+    bbox = BoundingBox((10, 10, 10), (100, 100, 100))
+    clip = BoundingBox((0, 0, 0), (40, 40, 40))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32), clip_to=clip)) == [
+        (x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)
+    ]
+
+
+def test_iter_overlapping_grid_cells_outside_clip_is_empty() -> None:
+    bbox = BoundingBox((200, 200, 200), (10, 10, 10))
+    clip = BoundingBox((0, 0, 0), (40, 40, 40))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32), clip_to=clip)) == []

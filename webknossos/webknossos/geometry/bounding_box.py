@@ -1,6 +1,6 @@
 import json
 import re
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Iterator
 from typing import Union, cast, overload
 
 import attr
@@ -441,12 +441,114 @@ class BoundingBox(NDBoundingBox):
                 and self.topleft[2] <= coord[2] < self.bottomright[2]
             )
 
+    def iter_chunk_starts(
+        self,
+        chunk_shape: Vec3IntLike,
+        chunk_border_alignments: Vec3IntLike | None = None,
+    ) -> Iterator[tuple[int, int, int]]:
+        """Yield the topleft coordinate of every chunk as a plain ``(x, y, z)`` int tuple.
+
+        This is a fast, allocation-free variant of `chunk()`: it performs no
+        per-chunk `Vec3Int`/`BoundingBox` allocation and does **not** clip the chunks
+        to this box (border chunks are therefore *not* shrunk – the caller can
+        clip/filter cheaply on the raw integers if needed).
+
+        The chunk grid matches `chunk()` exactly (same cells, same order). Without
+        `chunk_border_alignments`, the yielded starts equal the chunk toplefts, i.e.
+        ``list(self.iter_chunk_starts(cs)) == [tuple(c.topleft) for c in self.chunk(cs)]``.
+        With `chunk_border_alignments`, the first grid line on an axis may lie
+        *before* this box's topleft; `chunk()` clips that first chunk's topleft up to
+        the box, whereas this method yields the unclipped grid start.
+
+        Args:
+            chunk_shape (Vec3IntLike): The size of the chunks to generate.
+            chunk_border_alignments (Vec3IntLike | None): The alignment of the chunk borders.
+
+        Yields:
+            tuple[int, int, int]: The topleft coordinate of each chunk.
+        """
+
+        start = self.topleft.to_np()
+        chunk_shape_array = Vec3Int(chunk_shape).to_np()
+
+        start_adjust = np.array([0, 0, 0])
+        if chunk_border_alignments is not None:
+            chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
+            assert np.all(chunk_shape_array % chunk_border_alignments_array == 0), (
+                f"{chunk_shape_array} not divisible by {chunk_border_alignments_array}"
+            )
+
+            # Move the start to be aligned correctly. This doesn't actually change
+            # the start of the first chunk, because callers clip against `self`, but
+            # it'll lead to all chunk borders being aligned correctly.
+            start_adjust = start % chunk_border_alignments_array
+
+        # Work on plain python ints so the yielded tuples contain no numpy scalars.
+        (sx, sy, sz) = start.tolist()
+        (wx, wy, wz) = self.size.to_np().tolist()
+        (cx, cy, cz) = chunk_shape_array.tolist()
+        (ax, ay, az) = start_adjust.tolist()
+
+        for x in range(sx - ax, sx + wx, cx):
+            for y in range(sy - ay, sy + wy, cy):
+                for z in range(sz - az, sz + wz, cz):
+                    yield (x, y, z)
+
+    def iter_overlapping_grid_cells(
+        self,
+        chunk_shape: Vec3IntLike,
+        clip_to: "NDBoundingBox | None" = None,
+    ) -> Iterator[tuple[int, int, int]]:
+        """Yield the topleft of every origin-aligned grid cell overlapping this box.
+
+        The grid is aligned to the coordinate origin (cell ``k`` on an axis spans
+        ``[k * cell, (k + 1) * cell)``) and has cell size `chunk_shape`. This differs
+        from `chunk()` / `iter_chunk_starts()`, whose grid is aligned to the box's own
+        topleft.
+
+        Overlap uses half-open intervals: cells that only *touch* this box (or
+        `clip_to`) at a border are not returned. Like `iter_chunk_starts()`, this is
+        allocation-free and yields plain ``(x, y, z)`` int tuples.
+
+        Args:
+            chunk_shape (Vec3IntLike): The size of the grid cells.
+            clip_to (NDBoundingBox | None): If given, only cells overlapping both this
+                box and `clip_to` are yielded.
+
+        Yields:
+            tuple[int, int, int]: The topleft coordinate of each overlapping grid cell.
+        """
+
+        (cx, cy, cz) = Vec3Int(chunk_shape).to_np().tolist()
+
+        region_start = self.topleft.to_np()
+        region_end = region_start + self.size.to_np()
+        if clip_to is not None:
+            self._check_compatibility(clip_to)
+            region_start = np.maximum(region_start, clip_to.topleft.to_np())
+            region_end = np.minimum(region_end, clip_to.bottomright.to_np())
+
+        (start_x, start_y, start_z) = region_start.tolist()
+        (end_x, end_y, end_z) = region_end.tolist()
+
+        if start_x >= end_x or start_y >= end_y or start_z >= end_z:
+            # Empty overlap on at least one axis -> no cells at all.
+            return
+
+        for x in range((start_x // cx) * cx, end_x, cx):
+            for y in range((start_y // cy) * cy, end_y, cy):
+                for z in range((start_z // cz) * cz, end_z, cz):
+                    yield (x, y, z)
+
     def chunk(
         self,
         chunk_shape: Vec3IntLike,
         chunk_border_alignments: Vec3IntLike | None = None,
     ) -> Generator["BoundingBox", None, None]:
         """Decompose the bounding box into smaller chunks of size `chunk_shape`.
+
+        For a fast, allocation-free variant that yields raw integer coordinates
+        instead of `BoundingBox` objects, see `iter_chunk_starts()`.
 
         Args:
             chunk_shape (Vec3IntLike): Size of chunks to decompose into. Each chunk
@@ -468,34 +570,13 @@ class BoundingBox(NDBoundingBox):
               chunks will be aligned to those values
         """
 
-        start = self.topleft.to_np()
-        chunk_shape = Vec3Int(chunk_shape).to_np()
+        chunk_shape = Vec3Int(chunk_shape)
 
-        start_adjust = np.array([0, 0, 0])
-        if chunk_border_alignments is not None:
-            chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
-            assert np.all(chunk_shape % chunk_border_alignments_array == 0), (
-                f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
+        for x, y, z in self.iter_chunk_starts(chunk_shape, chunk_border_alignments):
+            yield cast(
+                BoundingBox,
+                BoundingBox([x, y, z], chunk_shape).intersected_with(self),
             )
-
-            # Move the start to be aligned correctly. This doesn't actually change
-            # the start of the first chunk, because we'll intersect with `self`,
-            # but it'll lead to all chunk borders being aligned correctly.
-            start_adjust = start % chunk_border_alignments_array
-
-        for x in range(
-            start[0] - start_adjust[0], start[0] + self.size[0], chunk_shape[0]
-        ):
-            for y in range(
-                start[1] - start_adjust[1], start[1] + self.size[1], chunk_shape[1]
-            ):
-                for z in range(
-                    start[2] - start_adjust[2], start[2] + self.size[2], chunk_shape[2]
-                ):
-                    yield cast(
-                        BoundingBox,
-                        BoundingBox([x, y, z], chunk_shape).intersected_with(self),
-                    )
 
     def offset(self, vector: Vec3IntLike) -> "BoundingBox":
         """Creates an offset copy of this bounding box by adding a vector to the topleft coordinate.

@@ -333,3 +333,60 @@ def test_negative_inversion(
     """Flipping the topleft and bottomright (by padding both with the negative size)
     results in the original bbox, as negative sizes are converted to positive ones."""
     assert bbox == bbox.padded_with_margins(-bbox.size, -bbox.size)
+
+
+def test_iter_chunk_starts_matches_chunk_toplefts_nd() -> None:
+    bbox = NDBoundingBox(
+        topleft=(0, 0, 0, 0, 0),
+        size=(50, 60, 70, 3, 4),
+        axes=("x", "y", "z", "c", "t"),
+    )
+    assert list(bbox.iter_chunk_starts((16, 16, 16))) == [
+        tuple(chunk.topleft) for chunk in bbox.chunk((16, 16, 16))
+    ]
+
+
+def test_iter_chunk_starts_full_nd_shape() -> None:
+    bbox = NDBoundingBox(
+        topleft=(10, 20, 5),
+        size=(30, 30, 30),
+        axes=("x", "y", "t"),
+    )
+    # A full-length (non-xyz-shorthand) chunk shape is used verbatim per axis.
+    assert list(bbox.iter_chunk_starts((16, 16, 16))) == [
+        tuple(chunk.topleft) for chunk in bbox.chunk((16, 16, 16))
+    ]
+
+
+def test_iter_chunk_starts_alignment_divisibility_assertion_nd() -> None:
+    bbox = NDBoundingBox(
+        topleft=(0, 0, 0, 0, 0),
+        size=(10, 10, 10, 1, 1),
+        axes=("x", "y", "z", "c", "t"),
+    )
+    with pytest.raises(AssertionError):
+        list(bbox.iter_chunk_starts((32, 32, 32), (7, 7, 7)))
+
+
+def test_iter_overlapping_grid_cells_nd_clip_to() -> None:
+    bbox = NDBoundingBox(
+        topleft=(0, 0, 0, 0, 0),
+        size=(50, 60, 70, 3, 4),
+        axes=("x", "y", "z", "c", "t"),
+    )
+    clip = NDBoundingBox(
+        topleft=(0, 0, 0, 0, 0),
+        size=(20, 20, 20, 3, 4),
+        axes=("x", "y", "z", "c", "t"),
+    )
+    cells = list(bbox.iter_overlapping_grid_cells((16, 16, 16), clip_to=clip))
+    assert all(type(v) is int for cell in cells for v in cell)
+    # xyz overlap cells 0 and 16, the c axis collapses to a single cell (cell size
+    # == size.c), and the t axis (size 1) yields every t index in the clip range.
+    assert cells == [
+        (x, y, z, 0, t)
+        for x in (0, 16)
+        for y in (0, 16)
+        for z in (0, 16)
+        for t in (0, 1, 2, 3)
+    ]
