@@ -14,7 +14,9 @@ services:
       - -Dtracingstore.redis.address=redis
       - -Ddatastore.redis.address=redis
       - -Dslick.db.url=jdbc:postgresql://postgres/webknossos
-      - -Ddatastore.baseDirectory=${BINARY_DATA_DIR}
+      - -Ddatastore.baseDirectories.0.path=${BINARY_DATA_DIR}
+      - -Ddatastore.baseDirectories.0.allowsUpload=true
+      - -Ddatastore.baseDirectories.0.doScan=true
     volumes:
       - ${BINARY_DATA_DIR}:${BINARY_DATA_DIR}
     environment:

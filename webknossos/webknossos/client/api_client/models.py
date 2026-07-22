@@ -132,6 +132,8 @@ class ApiDatasetExploreAndAddRemote:
     dataset_name: str
     folder_id: str | None = None
     data_store_name: str | None = None
+    credential_identifier: str | None = None
+    credential_secret: str | None = attr.ib(default=None, repr=False)
 
 
 @attr.s(auto_attribs=True)
