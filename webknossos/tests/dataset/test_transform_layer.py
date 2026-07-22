@@ -378,7 +378,7 @@ def test_transform_negative_output_bbox(tmp_upath: UPath) -> None:
 
 
 class _Shift(AbstractTransform):
-    """A custom (non-affine) AbstractTransform adding a constant offset."""
+    """A custom  AbstractTransform adding a constant offset."""
 
     def __init__(self, offset: tuple[float, ...]) -> None:
         self.offset = np.asarray(offset, dtype=np.float64)
