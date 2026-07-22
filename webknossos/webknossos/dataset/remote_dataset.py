@@ -1148,7 +1148,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         return self.layers[layer_name]
 
     def delete(self) -> None:
-        """Deletes the dataset from the WEBKNOSSOS server. This action is irreversible.
+        """Deletes the dataset from the WEBKNOSSOS server. Use with caution: This action is irreversible.
 
         Raises:
             RuntimeError: If dataset is read-only, or if this instance was opened as
