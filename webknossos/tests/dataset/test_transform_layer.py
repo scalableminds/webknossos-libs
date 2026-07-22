@@ -13,9 +13,9 @@ from webknossos import (
     Vec3Int,
 )
 from webknossos.dataset.layer._transform_utils import (
+    AbstractTransform,
     AffineTransform,
     transform,
-    transform_affine,
 )
 
 # Small chunk/shard shapes so that the tests exercise multiple chunk jobs
@@ -69,7 +69,7 @@ def test_transform_identity(tmp_upath: UPath) -> None:
         written_bbox = transform(
             input_layer,
             output_layer,
-            _identity,
+            inverse_transform=_identity,
             output_bbox=input_layer.bounding_box,
             executor=executor,
         )
@@ -91,7 +91,7 @@ def test_transform_translation(tmp_upath: UPath) -> None:
         written_bbox = transform(
             input_layer,
             output_layer,
-            _Translate(tuple(-s for s in shift)),
+            inverse_transform=_Translate(tuple(-s for s in shift)),
             output_bbox=output_bbox,
             executor=executor,
         )
@@ -120,10 +120,10 @@ def test_transform_affine_rotation(tmp_upath: UPath) -> None:
     )
     output_bbox = BoundingBox((-32, 0, 0), (32, 32, 16))
     with SequentialExecutor() as executor:
-        written_bbox = transform_affine(
+        written_bbox = transform(
             input_layer,
             output_layer,
-            rotation,
+            AffineTransform(rotation),
             output_bbox=output_bbox,
             executor=executor,
             translate_to_positive=True,
@@ -143,8 +143,8 @@ def test_transform_affine_scale(tmp_upath: UPath) -> None:
     scale = np.diag([3.0, 3.0, 3.0, 1.0])
     with SequentialExecutor() as executor:
         # No output_bbox: it is computed from the transformed input bbox corners.
-        written_bbox = transform_affine(
-            input_layer, output_layer, scale, executor=executor
+        written_bbox = transform(
+            input_layer, output_layer, AffineTransform(scale), executor=executor
         )
 
     assert written_bbox == BoundingBox((0, 0, 0), (48, 48, 48))
@@ -180,10 +180,10 @@ def test_transform_affine_against_scipy(tmp_upath: UPath) -> None:
     forward[:3, 3] = (5.5, -3.25, 7.0)
 
     with SequentialExecutor() as executor:
-        written_bbox = transform_affine(
+        written_bbox = transform(
             input_layer,
             output_layer,
-            forward,
+            AffineTransform(forward),
             executor=executor,
             translate_to_positive=True,
         )
@@ -230,7 +230,7 @@ def test_transform_with_mask(tmp_upath: UPath) -> None:
         written_bbox = transform(
             input_layer,
             output_layer,
-            _identity,
+            inverse_transform=_identity,
             output_bbox=input_layer.bounding_box,
             input_mask_layer=mask_layer,
             executor=executor,
@@ -258,7 +258,7 @@ def test_transform_mag2(tmp_upath: UPath) -> None:
         written_bbox = transform(
             input_layer,
             output_layer,
-            _Translate(tuple(-s for s in shift)),
+            inverse_transform=_Translate(tuple(-s for s in shift)),
             output_bbox=output_bbox,
             executor=executor,
         )
@@ -281,7 +281,7 @@ def test_transform_multiprocessing(tmp_upath: UPath) -> None:
         written_bbox = transform(
             input_layer,
             output_layer,
-            _Translate(tuple(-s for s in shift)),
+            inverse_transform=_Translate(tuple(-s for s in shift)),
             output_bbox=output_bbox,
             executor=executor,
         )
@@ -310,7 +310,7 @@ def test_transform_fill_value(tmp_upath: UPath, fill_value: int | None) -> None:
         transform(
             input_layer,
             output_layer,
-            _Translate(tuple(-s for s in shift)),
+            inverse_transform=_Translate(tuple(-s for s in shift)),
             output_bbox=output_bbox,
             fill_value=fill_value,
             executor=executor,
@@ -334,7 +334,7 @@ def test_transform_small_buffer_shape(tmp_upath: UPath) -> None:
         written_bbox = transform(
             input_layer,
             output_layer,
-            _identity,
+            inverse_transform=_identity,
             output_bbox=input_layer.bounding_box,
             buffer_shape=(6, 5, 7),
             executor=executor,
@@ -355,7 +355,7 @@ def test_transform_negative_output_bbox(tmp_upath: UPath) -> None:
             transform(
                 input_layer,
                 output_layer,
-                _Translate((32, 32, 32)),
+                inverse_transform=_Translate((32, 32, 32)),
                 output_bbox=output_bbox,
                 translate_to_positive=False,
                 executor=executor,
@@ -366,12 +366,62 @@ def test_transform_negative_output_bbox(tmp_upath: UPath) -> None:
         written_bbox = transform(
             input_layer,
             output_layer,
-            _Translate((32, 32, 32)),
+            inverse_transform=_Translate((32, 32, 32)),
             output_bbox=output_bbox,
             executor=executor,
             translate_to_positive=True,
         )
 
     assert written_bbox == BoundingBox((0, 0, 0), (32, 32, 32))
+    output_data = output_layer.get_mag(1).read(absolute_bounding_box=written_bbox)
+    np.testing.assert_array_equal(output_data[0], data)
+
+
+class _Shift(AbstractTransform):
+    """A custom (non-affine) AbstractTransform adding a constant offset."""
+
+    def __init__(self, offset: tuple[float, ...]) -> None:
+        self.offset = np.asarray(offset, dtype=np.float64)
+
+    def apply(self, points: np.ndarray) -> np.ndarray:
+        return points + self.offset
+
+    def inverse(self) -> "_Shift":
+        return _Shift(tuple(-self.offset))
+
+
+def test_transform_argument_validation(tmp_upath: UPath) -> None:
+    data = (np.random.rand(16, 16, 16) * 255).astype(np.uint8)
+    input_layer = _make_input_layer(tmp_upath / "in", data)
+    output_layer = _make_output_layer(tmp_upath / "out")
+
+    # Neither transform nor inverse_transform provided.
+    with pytest.raises(ValueError, match="Exactly one"):
+        transform(input_layer, output_layer)
+
+    # Both provided.
+    with pytest.raises(ValueError, match="Exactly one"):
+        transform(
+            input_layer,
+            output_layer,
+            AffineTransform(np.eye(4)),
+            inverse_transform=_identity,
+        )
+
+
+def test_transform_custom_abstract_transform(tmp_upath: UPath) -> None:
+    data = (np.random.rand(32, 32, 32) * 255).astype(np.uint8)
+    input_layer = _make_input_layer(tmp_upath / "in", data)
+    output_layer = _make_output_layer(tmp_upath / "out")
+
+    # A user-defined AbstractTransform is inverted internally via its inverse method,
+    # and the default output_bbox is derived from its transform_bbox.
+    shift = (16, 8, 24)
+    with SequentialExecutor() as executor:
+        written_bbox = transform(
+            input_layer, output_layer, _Shift(shift), executor=executor
+        )
+
+    assert written_bbox == input_layer.bounding_box.offset(shift)
     output_data = output_layer.get_mag(1).read(absolute_bounding_box=written_bbox)
     np.testing.assert_array_equal(output_data[0], data)

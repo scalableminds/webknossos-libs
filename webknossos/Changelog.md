@@ -15,7 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
-- Added `transform` and `transform_affine` functions to resample a layer's data into another layer using an arbitrary inverse coordinate transform or a 4x4 affine matrix, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
+- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` (inverted internally) or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
 
 
 ### Changed
