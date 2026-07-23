@@ -25,6 +25,7 @@ from .attachment import (
     CumsumAttachment,
     MeshAttachment,
     SegmentIndexAttachment,
+    SegmentStatisticsAttachment,
     _validate_name,
 )
 
@@ -51,9 +52,10 @@ def _assert_absolute_path(path: str | PathLike | UPath) -> UPath:
 
 def _is_singleton_attachment(
     attachment: Attachment,
-) -> TypeGuard[CumsumAttachment | SegmentIndexAttachment]:
-    return isinstance(attachment, CumsumAttachment) or isinstance(
-        attachment, SegmentIndexAttachment
+) -> TypeGuard[CumsumAttachment | SegmentIndexAttachment | SegmentStatisticsAttachment]:
+    return isinstance(
+        attachment,
+        (CumsumAttachment, SegmentIndexAttachment, SegmentStatisticsAttachment),
     )
 
 
@@ -115,6 +117,18 @@ class AbstractAttachments:
         )
 
     @property
+    def segment_statistics(self) -> SegmentStatisticsAttachment | None:
+        if self._properties.segment_statistics is None:
+            return None
+        return SegmentStatisticsAttachment(
+            self._properties.segment_statistics,
+            enrich_path(
+                self._properties.segment_statistics.path,
+                self._get_optional_dataset_path(),
+            ),
+        )
+
+    @property
     def cumsum(self) -> CumsumAttachment | None:
         if self._properties.cumsum is None:
             return None
@@ -164,6 +178,7 @@ class AbstractAttachments:
             and (len(self.agglomerates) == 0)
             and (len(self.connectomes) == 0)
             and (self.segment_index is None)
+            and (self.segment_statistics is None)
             and (self.cumsum is None)
         )
 
@@ -172,6 +187,8 @@ class AbstractAttachments:
         yield from (self.agglomerates or [])
         if self.segment_index is not None:
             yield self.segment_index
+        if self.segment_statistics is not None:
+            yield self.segment_statistics
         if self.cumsum is not None:
             yield self.cumsum
         yield from (self.connectomes or [])

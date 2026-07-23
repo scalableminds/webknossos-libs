@@ -119,6 +119,7 @@ class AttachmentsProperties:
     meshes: list[AttachmentProperties] | None = None
     agglomerates: list[AttachmentProperties] | None = None
     segment_index: AttachmentProperties | None = None
+    segment_statistics: AttachmentProperties | None = None
     cumsum: AttachmentProperties | None = None
     connectomes: list[AttachmentProperties] | None = None
 
@@ -129,6 +130,8 @@ class AttachmentsProperties:
             yield attachment
         if self.segment_index is not None:
             yield self.segment_index
+        if self.segment_statistics is not None:
+            yield self.segment_statistics
         if self.cumsum is not None:
             yield self.cumsum
         for attachment in self.connectomes or []:

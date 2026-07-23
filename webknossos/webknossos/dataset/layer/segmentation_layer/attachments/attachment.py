@@ -110,6 +110,12 @@ class SegmentIndexAttachment(Attachment):
     type_name = "segmentIndex"
 
 
+class SegmentStatisticsAttachment(Attachment):
+    data_format: Literal[AttachmentDataFormat.Zarr3]
+    container_name = "segment_statistics"
+    type_name = "segmentStatistics"
+
+
 class CumsumAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.JSON]
     container_name = "cumsum"
