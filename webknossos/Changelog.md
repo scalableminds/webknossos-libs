@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `NDBoundingBox.iter_chunk_starts` / `BoundingBox.iter_chunk_starts`, a fast, allocation-free variant of `chunk()` that yields the raw integer topleft coordinate of each chunk (no per-chunk `Vec3Int`/`BoundingBox` allocation). Also added `iter_overlapping_grid_cells`, which yields the toplefts of the origin-aligned grid cells that overlap the box (optionally clipped to another box). [#1489](https://github.com/scalableminds/webknossos-libs/pull/1489)
 
 ### Changed
+- `NDBoundingBox.chunk` (and the new chunk iterators) now accept a `VecInt` chunk shape with axis names, which is matched to the box's axes by name instead of by position. A shape of three unnamed entries is still the xyz shorthand, but it is now rejected with a `ValueError` for a box with exactly three axes that are not x, y and z (e.g. `("x", "y", "t")`), where it previously silently dropped the third entry and iterated the remaining axis one index at a time. [#1489](https://github.com/scalableminds/webknossos-libs/pull/1489)
 
 ### Fixed
 

@@ -702,22 +702,47 @@ class NDBoundingBox:
     ) -> list[int]:
         """Expand a chunk/cell `shape` to all axes of this bounding box.
 
-        A shape with exactly three entries is interpreted as the xyz shorthand: it is
-        assumed that iteration over xyz is intended, so all other axes get a size of 1
-        – except for the channel axis, which spans all channels if `channels_whole` is
-        set (`chunk()` does this so that every chunk contains all channels). Note that
-        this also applies if the box has no z axis, in which case only its x and y axis
-        take their size from `shape`.
+        A `VecInt` carries its own axis names, so it is matched to this box's axes by
+        name (reordered if necessary) and used verbatim. This is the unambiguous way to
+        specify a shape.
 
-        Any other shape must have one entry per axis and is used verbatim, i.e. the
-        channel axis is not treated specially.
+        A shape without axis names is interpreted by its length: a shape with exactly
+        three entries is the xyz shorthand, i.e. it gives the sizes of the x, y and z
+        axis *by name* (the axes may be in any order) and all other axes get a size of
+        1 – except for the channel axis, which spans all channels if `channels_whole`
+        is set (`chunk()` does this so that every chunk contains all channels). Note
+        that a `Vec3Int` is such a shorthand, since its axes are always ``("x", "y",
+        "z")``. Any other length must match the number of axes and is used verbatim, in
+        axis order.
 
         Returns:
             The expanded shape as a list of ints, in axis order.
+
+        Raises:
+            ValueError: If a shape without axis names is ambiguous, i.e. it has three
+                entries and this box has three axes that are not x, y and z. Pass a
+                `VecInt` with this box's axes to say which axis each entry belongs to.
+            AssertionError: If a shape without axis names has neither three entries nor
+                one entry per axis.
         """
+
+        if isinstance(shape, VecInt):
+            # The shape names its own axes, so there is nothing to interpret.
+            if shape.axes == self.axes:
+                return list(shape)
+            if set(shape.axes) == set(self.axes):
+                return [shape[shape.axes.index(axis)] for axis in self.axes]
 
         shape_list = [int(i) for i in shape]
         if len(shape_list) == 3:
+            if len(self.axes) == 3 and set(self.axes) != {"x", "y", "z"}:
+                raise ValueError(
+                    f"A shape with three entries is ambiguous for a bounding box with "
+                    f"the axes {self.axes}: it could be the xyz shorthand or one entry "
+                    f"per axis. Pass a VecInt with axes={self.axes} instead of "
+                    f"{shape_list}."
+                )
+
             size_x, size_y, size_z = shape_list
             expanded = []
             for i, axis in enumerate(self.axes):
@@ -804,7 +829,9 @@ class NDBoundingBox:
         the box, whereas this method yields the unclipped grid start.
 
         Args:
-            chunk_shape (VecIntLike): The size of the chunks to generate.
+            chunk_shape (VecIntLike): The size of the chunks to generate. Either one
+                entry per axis, or three entries for the sizes of the x, y and z axis
+                (matched by name); a `VecInt` is matched by its own axis names.
             chunk_border_alignments (VecIntLike | None): The alignment of the chunk borders.
 
         Yields:
@@ -826,23 +853,25 @@ class NDBoundingBox:
         from `chunk()` / `iter_chunk_starts()`, whose grid is aligned to the box's own
         topleft.
 
-        If a 3D `chunk_shape` is given, all non-xyz axes (including a channel axis) use
-        a cell size of 1, i.e. every index on those axes is yielded. Unlike for
-        `chunk()`, the channel axis is *not* collapsed into a single cell, so that the
-        grid only depends on `chunk_shape` and not on this box's own size. A
-        `chunk_shape` with one entry per axis is used verbatim.
+        If the xyz shorthand is used for `chunk_shape`, all non-xyz axes (including a
+        channel axis) use a cell size of 1, i.e. every index on those axes is yielded.
+        Unlike for `chunk()`, the channel axis is *not* collapsed into a single cell, so
+        that the grid only depends on `chunk_shape` and not on this box's own size.
 
         Overlap uses half-open intervals: cells that only *touch* this box (or
         `clip_to`) at a border are not returned. Like `iter_chunk_starts()`, this is
         allocation-free and yields plain int tuples.
 
         Args:
-            chunk_shape (VecIntLike): The size of the grid cells.
+            chunk_shape (VecIntLike): The size of the grid cells. Either one entry per
+                axis, or three entries for the sizes of the x, y and z axis (matched by
+                name); a `VecInt` is matched by its own axis names.
             clip_to (NDBoundingBox | None): If given, only cells overlapping both this
                 box and `clip_to` are yielded. Must have the same axes as this box.
 
         Raises:
-            ValueError: If `clip_to` does not have the same axes as this box.
+            ValueError: If `clip_to` does not have the same axes as this box, or if
+                `chunk_shape` is ambiguous for this box's axes.
 
         Yields:
             tuple[int, ...]: The topleft coordinate of each overlapping grid cell.
@@ -885,7 +914,10 @@ class NDBoundingBox:
         *between two chunks* will be divisible by that value.
 
         Args:
-            chunk_shape (VecIntLike): The size of the chunks to generate.
+            chunk_shape (VecIntLike): The size of the chunks to generate. Either one
+                entry per axis, or three entries for the sizes of the x, y and z axis
+                (matched by name), in which case every chunk spans all channels and a
+                single index of any other axis.
             chunk_border_alignments (VecIntLike | None): The alignment of the chunk borders.
 
 

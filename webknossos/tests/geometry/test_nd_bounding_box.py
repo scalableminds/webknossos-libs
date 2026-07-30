@@ -354,16 +354,56 @@ def test_iter_chunk_starts_nd() -> None:
     ]
 
 
-def test_iter_chunk_starts_xyz_shorthand_without_z_axis() -> None:
+def test_iter_chunk_starts_three_entries_are_ambiguous_without_z_axis() -> None:
     bbox = NDBoundingBox(
         topleft=(10, 20, 5),
         size=(30, 30, 30),
         axes=("x", "y", "t"),
     )
-    # A 3D chunk shape is the xyz shorthand even if the box has no z axis: x and y use
-    # the given sizes, every other axis (here t) is iterated one index at a time.
+    # Three entries for a three-axis box that is not xyz could be either reading, so
+    # an unnamed shape is rejected instead of silently dropping the third entry.
+    with pytest.raises(ValueError, match="ambiguous"):
+        list(bbox.iter_chunk_starts((16, 16, 16)))
+
+    # A named shape says which entry belongs to which axis and is used verbatim.
+    assert list(bbox.iter_chunk_starts(VecInt(16, 16, 16, axes=("x", "y", "t")))) == [
+        (x, y, t) for x in (10, 26) for y in (20, 36) for t in (5, 21)
+    ]
+
+
+def test_iter_chunk_starts_xyz_shorthand_maps_by_axis_name() -> None:
+    """Three unnamed entries are the sizes of x, y and z whatever the axis order is."""
+    bbox = NDBoundingBox(topleft=(0, 0, 0), size=(64, 64, 64), axes=("z", "y", "x"))
+    assert [tuple(chunk.size) for chunk in bbox.chunk((8, 16, 32))][0] == (32, 16, 8)
+    assert list(bbox.iter_chunk_starts((8, 16, 32)))[:2] == [(0, 0, 0), (0, 0, 8)]
+
+
+def test_iter_chunk_starts_named_shape_is_reordered_to_box_axes() -> None:
+    bbox = NDBoundingBox(
+        topleft=(0, 0, 0, 0),
+        size=(20, 20, 20, 4),
+        axes=("x", "y", "z", "t"),
+    )
+    reordered = VecInt(2, 16, 16, 16, axes=("t", "z", "y", "x"))
+    assert list(bbox.iter_chunk_starts(reordered)) == list(
+        bbox.iter_chunk_starts(VecInt(16, 16, 16, 2, axes=bbox.axes))
+    )
+
+
+def test_iter_chunk_starts_xyz_shorthand_ignores_missing_z_axis() -> None:
+    """With more than three axes a three-entry shape is unambiguous, so the entry for
+    the missing z axis is simply unused."""
+    bbox = NDBoundingBox(
+        topleft=(0, 0, 0, 0),
+        size=(20, 20, 3, 2),
+        axes=("x", "y", "t", "s"),
+    )
     assert list(bbox.iter_chunk_starts((16, 16, 16))) == [
-        (x, y, t) for x in (10, 26) for y in (20, 36) for t in range(5, 35)
+        (x, y, t, s)
+        for x in (0, 16)
+        for y in (0, 16)
+        for t in (0, 1, 2)
+        for s in (0, 1)
     ]
 
 
