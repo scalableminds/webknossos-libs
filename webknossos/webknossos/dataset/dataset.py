@@ -1908,6 +1908,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 bounding_box=foreign_layer.bounding_box,
             )
 
+        layer._copy_metadata_from(foreign_layer)
+
         for mag_view in foreign_layer.mags.values():
             progress_desc = (
                 f"Copying {mag_view.layer.name}/{mag_view.mag.to_layer_name()}"

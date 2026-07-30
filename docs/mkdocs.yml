@@ -291,6 +291,7 @@ nav:
         - SamplingModes: api/webknossos/dataset/sampling_modes.md
         - DataFormat: api/webknossos/dataset_properties/data_format.md
         - LengthUnit: api/webknossos/dataset_properties/length_unit.md
+        - CoordinateTransformation: api/webknossos/dataset_properties/coordinate_transformations.md
         - LayerToLink: api/webknossos/dataset/layer/layer_to_link.md
       - Annotation:
         - Annotation: api/webknossos/annotation/annotation.md

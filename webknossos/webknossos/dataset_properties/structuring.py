@@ -10,6 +10,7 @@ from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 from ..dataset_properties import (
     AttachmentProperties,
     AttachmentsProperties,
+    CoordinateTransformation,
     DatasetProperties,
     DatasetViewConfiguration,
     LayerProperties,
@@ -22,6 +23,7 @@ from ..dataset_properties import (
 from ..dataset_properties.dataset_properties import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import Mag, NormalizedBoundingBox, Vec3Int
 from ..utils import snake_to_camel_case
+from .coordinate_transformations import _coordinate_transformation_from_dict
 from .dtype_conversion import (
     dtype_per_channel_to_element_class,
     element_class_to_dtype_per_channel,
@@ -183,6 +185,15 @@ def get_dataset_converter() -> cattr.Converter:
     dataset_converter.register_structure_hook_func(
         lambda d: d == LayerCategoryType,  # type: ignore[comparison-overlap]
         lambda d, _: str(d),
+    )
+
+    # The concrete transformation classes are distinguished by their `type` field,
+    # therefore both hooks are registered on the common base class.
+    dataset_converter.register_unstructure_hook(
+        CoordinateTransformation, lambda o: o._to_dict()
+    )
+    dataset_converter.register_structure_hook(
+        CoordinateTransformation, lambda d, _: _coordinate_transformation_from_dict(d)
     )
 
     # Register (un-)structure hooks for attr-classes to bring the data into the expected format.

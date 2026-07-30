@@ -979,6 +979,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 bounding_box=foreign_layer.bounding_box,
             )
 
+        layer._copy_metadata_from(foreign_layer)
+
         for mag_view in foreign_layer.mags.values():
             layer.add_mag_as_copy(
                 mag_view,

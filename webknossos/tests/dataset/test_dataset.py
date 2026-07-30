@@ -2,6 +2,7 @@ import itertools
 import json
 import os
 import pickle
+import traceback
 from collections.abc import Iterator
 from typing import cast
 from unittest import mock
@@ -33,6 +34,7 @@ from webknossos.dataset.layer.view._array import Zarr3ArrayInfo, Zarr3Config
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
+    AffineCoordinateTransformation,
     AttachmentDataFormat,
     DataFormat,
     DatasetProperties,
@@ -40,6 +42,7 @@ from webknossos.dataset_properties import (
     LayerCategoryType,
     LayerViewConfiguration,
     SegmentationLayerProperties,
+    ThinPlateSplineCoordinateTransformation,
 )
 from webknossos.dataset_properties.structuring import get_dataset_converter
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, VecIntLike
@@ -1436,6 +1439,19 @@ def test_properties_with_segmentation() -> None:
             0
         ],
     )
+    color_layer = [
+        layer for layer in ds_properties.data_layers if layer.name == "color"
+    ][0]
+    assert color_layer.coordinate_transformations == [
+        AffineCoordinateTransformation.from_translation((10, 20, 30))
+    ]
+    assert segmentation_layer.coordinate_transformations == [
+        ThinPlateSplineCoordinateTransformation(
+            source=[[0, 0, 0], [1, 2, 3], [4, 5, 6]],
+            target=[[1, 1, 1], [2, 4, 6], [8, 10, 12]],
+        )
+    ]
+
     assert segmentation_layer.largest_segment_id == 1000000000
     assert segmentation_layer.mappings == [
         "larger5um1",
@@ -3191,6 +3207,102 @@ def test_layer_view_configuration() -> None:
     assure_exported_properties(ds1)
 
 
+def test_layer_coordinate_transformations() -> None:
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds1 = Dataset(ds_path, voxel_size=(2, 2, 1))
+    layer1 = ds1.add_layer("color", COLOR_CATEGORY)
+    assert layer1.coordinate_transformations == []
+    assert (
+        "coordinateTransformations"
+        not in json.loads((ds1.path / PROPERTIES_FILE_NAME).read_text())["dataLayers"][
+            0
+        ]
+    )
+
+    affine = AffineCoordinateTransformation.from_translation((10, 20, 30))
+    thin_plate_spline = ThinPlateSplineCoordinateTransformation(
+        source=[[0, 0, 0], [1, 2, 3], [4, 5, 6]],
+        target=[[1, 1, 1], [2, 4, 6], [8, 10, 12]],
+    )
+    layer1.coordinate_transformations = [affine, thin_plate_spline]
+    assert layer1.coordinate_transformations == [affine, thin_plate_spline]
+
+    # Test the exact representation on disk, it must match what WEBKNOSSOS expects
+    properties = json.loads((ds1.path / PROPERTIES_FILE_NAME).read_text())
+    assert properties["dataLayers"][0]["coordinateTransformations"] == [
+        {
+            "type": "affine",
+            "matrix": [
+                [1.0, 0.0, 0.0, 10.0],
+                [0.0, 1.0, 0.0, 20.0],
+                [0.0, 0.0, 1.0, 30.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        },
+        {
+            "type": "thin_plate_spline",
+            "correspondences": {
+                "source": [[0.0, 0.0, 0.0], [1.0, 2.0, 3.0], [4.0, 5.0, 6.0]],
+                "target": [[1.0, 1.0, 1.0], [2.0, 4.0, 6.0], [8.0, 10.0, 12.0]],
+            },
+        },
+    ]
+
+    # Test if the data is persisted to disk
+    ds2 = Dataset.open(ds_path)
+    layer2 = ds2.get_layer("color")
+    assert layer2.coordinate_transformations == [affine, thin_plate_spline]
+    np.testing.assert_array_equal(
+        cast(
+            AffineCoordinateTransformation, layer2.coordinate_transformations[0]
+        ).matrix,
+        affine.matrix,
+    )
+
+    # The getter returns a copy, mutating it must not change the layer
+    layer2.coordinate_transformations.clear()
+    assert len(layer2.coordinate_transformations) == 2
+
+    # Unsetting removes the key from the properties again
+    layer2.coordinate_transformations = []
+    assert layer2.coordinate_transformations == []
+    assert (
+        "coordinateTransformations"
+        not in json.loads((ds2.path / PROPERTIES_FILE_NAME).read_text())["dataLayers"][
+            0
+        ]
+    )
+
+    assure_exported_properties(ds2)
+
+
+def test_coordinate_transformation_validation() -> None:
+    with pytest.raises(ValueError, match=r"shape \(4, 4\)"):
+        AffineCoordinateTransformation(matrix=np.eye(3))
+
+    with pytest.raises(ValueError, match=r"shape \(N, 3\)"):
+        ThinPlateSplineCoordinateTransformation(
+            source=[[0, 0], [1, 2]], target=[[0, 0], [1, 2]]
+        )
+
+    with pytest.raises(ValueError, match="same length"):
+        ThinPlateSplineCoordinateTransformation(
+            source=[[0, 0, 0]], target=[[0, 0, 0], [1, 2, 3]]
+        )
+
+    # An unsupported transformation type is rejected while reading a dataset
+    data = json.loads(
+        (TESTDATA_DIR / "complex_property_ds" / PROPERTIES_FILE_NAME).read_text()
+    )
+    data["dataLayers"][0]["coordinateTransformations"] = [
+        {"type": "translation", "translation": [1, 2, 3]}
+    ]
+    with pytest.raises(Exception) as exc_info:
+        get_dataset_converter().structure(data, DatasetProperties)
+    # cattrs wraps the error in an ExceptionGroup, therefore the whole traceback is checked
+    assert "affine" in "".join(traceback.format_exception(exc_info.value))
+
+
 def test_get_largest_segment_id() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -3335,6 +3447,64 @@ def test_add_layer_as_copy(data_format: DataFormat, output_path: UPath) -> None:
     assert "color" in Dataset.open(ds_path).layers.keys()
 
     assure_exported_properties(ds)
+
+
+def test_copy_preserves_layer_metadata() -> None:
+    """Copying a layer or a whole dataset carries over the optional layer metadata."""
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_original")
+    layer_copy_path = prepare_dataset_path(
+        DataFormat.WKW, TESTOUTPUT_DIR, "metadata_layer_copy"
+    )
+    dataset_copy_path = prepare_dataset_path(
+        DataFormat.WKW, TESTOUTPUT_DIR, "metadata_dataset_copy"
+    )
+
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY)
+    layer.add_mag(1)
+    view_configuration = LayerViewConfiguration(color=(255, 0, 0), alpha=50.0)
+    coordinate_transformations = [
+        AffineCoordinateTransformation.from_translation((1, 2, 3))
+    ]
+    layer.default_view_configuration = view_configuration
+    layer.coordinate_transformations = coordinate_transformations
+
+    # add_layer_as_copy
+    copied_layer = Dataset(layer_copy_path, voxel_size=(1, 1, 1)).add_layer_as_copy(
+        layer, "color_copy"
+    )
+    assert copied_layer.default_view_configuration == view_configuration
+    assert copied_layer.coordinate_transformations == coordinate_transformations
+
+    # copy_dataset
+    copied_dataset_layer = ds.copy_dataset(dataset_copy_path).get_layer("color")
+    assert copied_dataset_layer.default_view_configuration == view_configuration
+    assert copied_dataset_layer.coordinate_transformations == coordinate_transformations
+
+    # The copy must not share any mutable state with the layer it was copied from
+    assert copied_layer.default_view_configuration is not None
+    copied_layer.default_view_configuration.color = (0, 255, 0)
+    cast(
+        AffineCoordinateTransformation, copied_layer.coordinate_transformations[0]
+    ).matrix[0][3] = 99
+    assert layer.default_view_configuration == view_configuration
+    assert layer.coordinate_transformations == coordinate_transformations
+
+    # A layer without this metadata does not get empty entries in the properties
+    layer.default_view_configuration = None
+    layer.coordinate_transformations = []
+    bare_dataset = Dataset(
+        prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_bare"),
+        voxel_size=(1, 1, 1),
+    )
+    bare_layer = bare_dataset.add_layer_as_copy(layer, "color_bare")
+    assert bare_layer.default_view_configuration is None
+    assert bare_layer.coordinate_transformations == []
+    properties = json.loads((bare_dataset.path / PROPERTIES_FILE_NAME).read_text())
+    assert "defaultViewConfiguration" not in properties["dataLayers"][0]
+    assert "coordinateTransformations" not in properties["dataLayers"][0]
+
+    assure_exported_properties(bare_dataset)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)

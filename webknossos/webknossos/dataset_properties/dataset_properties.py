@@ -4,6 +4,7 @@ import attr
 import numpy as np
 
 from ..geometry import Mag, NormalizedBoundingBox
+from .coordinate_transformations import CoordinateTransformation
 from .data_format import AttachmentDataFormat, DataFormat
 from .layer_categories import LayerCategoryType
 from .length_unit import _LENGTH_UNIT_TO_NANOMETER, LengthUnit
@@ -101,6 +102,7 @@ class LayerProperties:
     data_format: DataFormat
     mags: list[MagViewProperties]
     default_view_configuration: LayerViewConfiguration | None = None
+    coordinate_transformations: list[CoordinateTransformation] | None = None
 
     @property
     def dtype_np(self) -> np.dtype:

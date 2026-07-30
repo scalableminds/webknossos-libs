@@ -17,11 +17,13 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
 - Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
+- Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`. Previously, the `coordinateTransformations` of a layer were dropped when reading a dataset and lost on the next write. [#1489](https://github.com/scalableminds/webknossos-libs/pull/1489)
 
 
 ### Changed
 
 ### Fixed
+- `Dataset.add_layer_as_copy` and `Dataset.copy_dataset` now carry over the `default_view_configuration` and the `coordinate_transformations` of the copied layers, which were previously lost. [#1489](https://github.com/scalableminds/webknossos-libs/pull/1489)
 
 
 ## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20
