@@ -526,6 +526,19 @@ def test_upload_twice(tmp_upath: UPath) -> None:
     assert remote1.name == remote2.name
 
 
+def test_delete_remote_dataset(tmp_upath: UPath) -> None:
+    ds_original = get_sample_dataset(tmp_upath)
+    remote_ds = ds_original.upload(new_dataset_name="test_delete_remote_dataset")
+    dataset_id = remote_ds.dataset_id
+
+    remote_ds.delete()
+
+    assert remote_ds.read_only
+    with pytest.raises(RuntimeError):
+        remote_ds.description = "should fail"
+    assert dataset_id not in RemoteDataset.list()
+
+
 def test_remote_dataset_add_layer_as_ref_rejects_local_layer(
     tmp_upath: UPath,
 ) -> None:

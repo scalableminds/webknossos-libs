@@ -15,6 +15,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
+- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
 - Added `NDBoundingBox.iter_chunk_starts` / `BoundingBox.iter_chunk_starts`, a fast, allocation-free variant of `chunk()` that yields the raw integer topleft coordinate of each chunk (no per-chunk `Vec3Int`/`BoundingBox` allocation). Also added `iter_overlapping_grid_cells`, which yields the toplefts of the origin-aligned grid cells that overlap the box (optionally clipped to another box). [#1489](https://github.com/scalableminds/webknossos-libs/pull/1489)
 
 ### Changed
