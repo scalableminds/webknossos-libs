@@ -31,6 +31,7 @@ from ..geometry import (
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._utils import pims_images
+from ._utils.chunked_images import ChunkedImages, try_open_chunked_images
 from .abstract_dataset import (
     DEFAULT_VERSION,
     AbstractDataset,
@@ -130,10 +131,6 @@ _ALLOWED_SEGMENTATION_LAYER_DTYPES = (
 )
 
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
-
-
-def _is_single_ims_path(images: object) -> bool:
-    return isinstance(images, (str, UPath)) and UPath(images).suffix.lower() == ".ims"
 
 
 def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
@@ -1402,19 +1399,61 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         else:
             user_set_category = True
 
-        pims_image_sequence = pims_images.PimsImages(
-            images,
-            channel=channel,
-            timepoint=timepoint,
-            czi_channel=czi_channel,
-            swap_xy=swap_xy,
-            flip_x=flip_x,
-            flip_y=flip_y,
-            flip_z=flip_z,
-            use_bioformats=use_bioformats,
-            is_segmentation=category == "segmentation",
+        def _open_chunked_images(open_kwargs: dict) -> ChunkedImages | None:
+            # Chunk-based formats (currently only .ims) know their exact
+            # bounding box from metadata alone and read/write whole
+            # shard-sized blocks directly; explicitly requesting bioformats
+            # bypasses this in favor of the generic pims path.
+            if use_bioformats:
+                return None
+            return try_open_chunked_images(
+                images,
+                channel=open_kwargs.get("channel", channel),
+                timepoint=open_kwargs.get("timepoint", timepoint),
+                swap_xy=swap_xy,
+                flip_x=flip_x,
+                flip_y=flip_y,
+                flip_z=flip_z,
+                is_segmentation=category == "segmentation",
+            )
+
+        def _reopen_image_source(
+            open_kwargs: dict,
+        ) -> "pims_images.PimsImages | ChunkedImages":
+            chunked = _open_chunked_images(open_kwargs)
+            if chunked is not None:
+                return chunked
+            return pims_images.PimsImages(
+                images,
+                swap_xy=swap_xy,
+                flip_x=flip_x,
+                flip_y=flip_y,
+                flip_z=flip_z,
+                use_bioformats=use_bioformats,
+                is_segmentation=category == "segmentation",
+                **open_kwargs,
+            )
+
+        image_source: pims_images.PimsImages | ChunkedImages
+        chunked_image_source = _open_chunked_images(
+            {"channel": channel, "timepoint": timepoint}
         )
-        possible_layers = pims_image_sequence.get_possible_layers()
+        if chunked_image_source is not None:
+            image_source = chunked_image_source
+        else:
+            image_source = pims_images.PimsImages(
+                images,
+                channel=channel,
+                timepoint=timepoint,
+                czi_channel=czi_channel,
+                swap_xy=swap_xy,
+                flip_x=flip_x,
+                flip_y=flip_y,
+                flip_z=flip_z,
+                use_bioformats=use_bioformats,
+                is_segmentation=category == "segmentation",
+            )
+        possible_layers = image_source.get_possible_layers()
         # Check if 4 color channels should be converted to
         # 3 color channels (rbg)
         if (
@@ -1485,18 +1524,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 pims_open_kwargs.setdefault("timepoint", timepoint)  # type: ignore
                 pims_open_kwargs.setdefault("channel", channel)  # type: ignore
                 pims_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
-                pims_image_sequence = pims_images.PimsImages(
-                    images,
-                    swap_xy=swap_xy,
-                    flip_x=flip_x,
-                    flip_y=flip_y,
-                    flip_z=flip_z,
-                    use_bioformats=use_bioformats,
-                    is_segmentation=category == "segmentation",
-                    **pims_open_kwargs,
-                )
+                image_source = _reopen_image_source(pims_open_kwargs)
             if dtype is None:
-                current_dtype = np.dtype(pims_image_sequence.dtype)
+                current_dtype = np.dtype(image_source.dtype)
                 if current_dtype.byteorder == ">":
                     current_dtype = current_dtype.newbyteorder("<")
             else:
@@ -1507,11 +1537,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 category=category,
                 data_format=data_format,
                 dtype=current_dtype,
-                num_channels=pims_image_sequence.num_channels,
+                num_channels=image_source.num_channels,
                 **add_layer_kwargs,  # type: ignore[arg-type]
             )
 
-            expected_bbox = pims_image_sequence.expected_bbox
+            expected_bbox = image_source.expected_bbox
 
             _shard_shape_user_specified = (
                 shard_shape is not None or chunks_per_shard is not None
@@ -1539,34 +1569,21 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 shard_shape = shard_shape.with_z(1)
 
             mag = Mag(mag)
-
-            # mag1_expected_bbox holds the exact expected extents (before the
-            # x/y placeholder inflation below). For IMS files this is precise
-            # metadata, so the fast IMS path chunks against this directly
-            # instead of the inflated placeholder used by the generic pims path.
             mag1_expected_bbox = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
 
-            # The IMS fast path reads exactly one timepoint per job and can't
-            # yet handle a "t" axis spanning more than one timepoint (which only
-            # occurs here when the file has multiple timepoints and no explicit
-            # `timepoint` was given). Fall back to the generic pims path in that case.
-            is_ims = (
-                _is_single_ims_path(images)
-                and not use_bioformats
-                and not (
-                    "t" in mag1_expected_bbox.axes
-                    and mag1_expected_bbox.get_shape("t") > 1
-                )
-            )
-
-            # Setting a large enough bounding box, because the exact bounding box
-            # cannot be know a priori all the time. It will be replaced with the
-            # correct bounding box after reading through all actual images.
-            safe_size = mag1_expected_bbox.size.with_replaced(
-                mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
-            ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
-            safe_expected_bbox = mag1_expected_bbox.with_size(safe_size)
-            layer.bounding_box = safe_expected_bbox
+            if isinstance(image_source, ChunkedImages):
+                # ChunkedImages formats know their exact bounding box from
+                # metadata alone, so no placeholder inflation (and no
+                # post-hoc correction below) is needed.
+                layer.bounding_box = mag1_expected_bbox
+            else:
+                # Setting a large enough bounding box, because the exact bounding box
+                # cannot be know a priori all the time. It will be replaced with the
+                # correct bounding box after reading through all actual images.
+                safe_size = mag1_expected_bbox.size.with_replaced(
+                    mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
+                ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
+                layer.bounding_box = mag1_expected_bbox.with_size(safe_size)
 
             mag_view = layer.add_mag(
                 mag=mag,
@@ -1575,20 +1592,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 compress=compress,
             )
 
-            if is_ims:
-                from ._utils.pims_ims_reader import copy_ims_chunk_to_view
-
+            if isinstance(image_source, ChunkedImages):
                 func_per_chunk = named_partial(
-                    copy_ims_chunk_to_view,
-                    path=UPath(images),  # type: ignore[arg-type]
+                    image_source.read_chunk,
                     mag_view=mag_view,
-                    timepoint=timepoint or 0,
-                    channel=pims_image_sequence.channel,
-                    num_channels=pims_image_sequence.num_channels,
-                    flip_x=flip_x,
-                    flip_y=flip_y,
-                    flip_z=flip_z,
-                    swap_xy=swap_xy,
                     dtype=current_dtype,
                 )
             else:
@@ -1614,7 +1621,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                         f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
                     )
                 func_per_chunk = named_partial(
-                    pims_image_sequence.copy_to_view,
+                    image_source.copy_to_view,
                     mag_view=mag_view,
                     dtype=current_dtype,
                 )
@@ -1637,15 +1644,15 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                         f"WKW datasets only support x, y, z axes, got {additional_axes}. Please use `data_format='zarr3'` instead."
                     )
 
-            if is_ims:
-                # IMS path: split into full 3D shard-aligned chunks so each job
-                # reads exactly one shard's worth of data and writes it directly.
-                # Chunked against the precise mag1_expected_bbox, not the
-                # placeholder-inflated layer.bounding_box (which is only a safe
-                # upper bound for the generic pims path and would otherwise
-                # explode into an unusable number of empty chunks here).
-                ims_shard_shape = mag_view.info.shard_shape
-                args = list(mag1_expected_bbox.chunk(ims_shard_shape, ims_shard_shape))
+            if isinstance(image_source, ChunkedImages):
+                # Split into full 3D shard-aligned chunks so each job reads
+                # exactly one shard's worth of data and writes it directly.
+                # layer.bounding_box is already the exact bbox (no placeholder
+                # inflation) for ChunkedImages, so chunking it directly is safe.
+                chunked_shard_shape = mag_view.info.shard_shape
+                args = list(
+                    layer.bounding_box.chunk(chunked_shard_shape, chunked_shard_shape)
+                )
             else:
                 buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(
                     batch_size
@@ -1682,13 +1689,18 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 if category == "segmentation":
                     max_id = max(max_ids)
                     cast(SegmentationLayer, layer).largest_segment_id = max_id
-                layer.bounding_box = layer.bounding_box.with_size_xyz(
-                    Vec3Int(
-                        pims_images.dimwise_max(shapes)
-                        + (layer.bounding_box.get_shape("z"),)
+                if not isinstance(image_source, ChunkedImages):
+                    # ChunkedImages formats already have the exact bbox set
+                    # above; correcting it from per-chunk shapes here would be
+                    # wrong for them anyway, since each job's shape reflects
+                    # only its own shard-sized chunk, not the full extent.
+                    layer.bounding_box = layer.bounding_box.with_size_xyz(
+                        Vec3Int(
+                            pims_images.dimwise_max(shapes)
+                            + (layer.bounding_box.get_shape("z"),)
+                        )
+                        * mag.to_vec3_int().with_z(1)
                     )
-                    * mag.to_vec3_int().with_z(1)
-                )
             if expected_bbox != layer.bounding_box:
                 warnings.warn(
                     "[WARNING] Some images are larger than expected, smaller slices are padded with zeros now. "

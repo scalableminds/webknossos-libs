@@ -1,3 +1,4 @@
+import importlib
 import os
 import sys
 import warnings
@@ -117,14 +118,41 @@ def test_ims_from_images(tmp_upath: UPath, channel: int) -> None:
     np.testing.assert_array_equal(read_data, reference.transpose(2, 1, 0))
 
 
+def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
+    # With an explicit shard_shape smaller than the image extent, conversion
+    # must split into multiple shards along x and y. The final bounding box
+    # must reflect the *full* image extent, not just a single shard's size —
+    # a per-chunk-shape-based correction (as used for the generic pims path)
+    # would be wrong here, since each ChunkedImages job only reports its own
+    # shard-sized chunk, not the total extent.
+    ims_path = _download_ims(tmp_upath)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ims_path,
+            layer_name="ims_layer",
+            channel=0,
+            chunk_shape=(32, 32, 32),
+            shard_shape=(256, 256, 32),
+            executor=executor,
+        )
+
+    read_data = layer.get_finest_mag().read()[0]
+    reference = _read_ims_reference(ims_path, 0)
+    expected = reference.transpose(2, 1, 0)
+    assert layer.bounding_box.size.to_tuple() == expected.shape
+    np.testing.assert_array_equal(read_data, expected)
+
+
 def test_ims_from_images_flip_and_swap_matches_pims_path(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # .ims conversion uses a fast per-shard path (copy_ims_chunk_to_view) instead
-    # of the generic pims-based BufferedSliceWriter path used for other formats.
+    # .ims conversion uses a fast per-shard ChunkedImages path instead of the
+    # generic pims-based BufferedSliceWriter path used for other formats.
     # Rather than re-deriving the expected flip/swap transform by hand, this
     # compares the fast path's output directly against the generic pims path
-    # (forced via monkeypatching _is_single_ims_path) for identical options.
+    # (forced via monkeypatching try_open_chunked_images) for identical options.
     ims_path = _download_ims(tmp_upath)
     common_kwargs: dict = dict(
         channel=0, flip_x=True, flip_y=True, flip_z=True, swap_xy=True
@@ -137,10 +165,10 @@ def test_ims_from_images_flip_and_swap_matches_pims_path(
         )
     fast_data = layer_fast.get_finest_mag().read()[0]
 
-    import importlib
-
     dataset_module = importlib.import_module("webknossos.dataset.dataset")
-    monkeypatch.setattr(dataset_module, "_is_single_ims_path", lambda _images: False)
+    monkeypatch.setattr(
+        dataset_module, "try_open_chunked_images", lambda *_args, **_kwargs: None
+    )
 
     ds_slow = wk.Dataset(tmp_upath / "ds_slow", (1, 1, 1))
     with SequentialExecutor() as executor:
@@ -150,6 +178,94 @@ def test_ims_from_images_flip_and_swap_matches_pims_path(
     slow_data = layer_slow.get_finest_mag().read()[0]
 
     np.testing.assert_array_equal(fast_data, slow_data)
+
+
+def _create_synthetic_multi_timepoint_ims(
+    path: UPath, *, num_timepoints: int, num_channels: int, z: int, y: int, x: int
+) -> None:
+    # Minimal HDF5 structure matching what ImsChunkedImages actually reads
+    # (DataSet/ResolutionLevel 0/TimePoint {t}/Channel {c}/Data). This
+    # intentionally skips the DataSetInfo attributes that the full
+    # imaris_ims_file_reader library needs, since _read_ims_metadata_quietly
+    # is monkeypatched in these tests instead of relying on a byte-perfect
+    # Imaris file.
+    with h5py.File(str(path), "w") as f:
+        res0 = f.create_group("DataSet").create_group("ResolutionLevel 0")
+        for t in range(num_timepoints):
+            tp = res0.create_group(f"TimePoint {t}")
+            for c in range(num_channels):
+                ch = tp.create_group(f"Channel {c}")
+                # encodes (t, c) into every voxel so we can verify both axes
+                # were read correctly, independent of x/y/z position
+                data = np.full((z, y, x), t * 100 + c, dtype=np.uint16)
+                ch.create_dataset("Data", data=data)
+
+
+def test_ims_from_images_multi_timepoint(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Multi-timepoint .ims files (without an explicit `timepoint=`) are a new
+    # capability of the ChunkedImages abstraction: the bounding box gets a "t"
+    # axis, and each chunk along it reads its own timepoint.
+    ims_path = tmp_upath / "synthetic_multi_t.ims"
+    _create_synthetic_multi_timepoint_ims(
+        ims_path, num_timepoints=3, num_channels=1, z=4, y=8, x=10
+    )
+    ims_chunked_images = importlib.import_module(
+        "webknossos.dataset._utils.ims_chunked_images"
+    )
+    monkeypatch.setattr(
+        ims_chunked_images,
+        "_read_ims_metadata_quietly",
+        lambda _path: ((3, 1, 4, 8, 10), np.dtype("uint16")),
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ims_path,
+            layer_name="multi_t",
+            data_format="zarr3",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.axes == ("t", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (3, 10, 8, 4)
+    data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
+    for t in range(3):
+        assert (data[t] == t * 100).all()
+
+
+def test_ims_from_images_multi_timepoint_multi_channel_requires_explicit_timepoint(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # expected_bbox never carries a "c" axis (channels are handled via
+    # num_channels/mag_view directly), so a file with both multiple
+    # timepoints and multiple (3+) channels can't be chunked along "t"
+    # without an explicit timepoint — this must fail clearly rather than
+    # silently producing wrong data.
+    ims_path = tmp_upath / "synthetic_multi_t_multi_c.ims"
+    _create_synthetic_multi_timepoint_ims(
+        ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
+    )
+    ims_chunked_images = importlib.import_module(
+        "webknossos.dataset._utils.ims_chunked_images"
+    )
+    monkeypatch.setattr(
+        ims_chunked_images,
+        "_read_ims_metadata_quietly",
+        lambda _path: ((2, 3, 4, 8, 10), np.dtype("uint16")),
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with pytest.raises(ValueError, match="multiple timepoints and multiple channels"):
+        with SequentialExecutor() as executor:
+            ds.add_layer_from_images(
+                ims_path,
+                layer_name="multi_t_multi_c",
+                data_format="zarr3",
+                executor=executor,
+            )
 
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:

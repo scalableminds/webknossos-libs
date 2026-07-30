@@ -79,6 +79,33 @@ def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
     return dim_size == 1 or (dim_size == 3 and dtype == np.dtype("uint8"))
 
 
+def compute_channel_selection(
+    raw_num_channels: int, channel: int | None
+) -> tuple[int, int | None, int | None, list[int] | None]:
+    """
+    Shared channel-selection rule used by both PimsImages and ChunkedImages
+    implementations. Returns (num_channels, selected_channel,
+    first_n_channels, possible_channels):
+    - num_channels: the number of channels that will actually be written
+    - selected_channel: a single pinned channel index, or None if all
+      (up to first_n_channels) channels are used
+    - first_n_channels: set when raw_num_channels >= 3, truncating to the
+      first 3 channels (e.g. RGB out of RGBA)
+    - possible_channels: channel indices that could each become their own
+      layer (see get_possible_layers()), or None if not applicable
+    """
+    if channel is not None:
+        assert channel < raw_num_channels, (
+            f"Selected channel {channel} (0-indexed), but only {raw_num_channels} channels are available."
+        )
+        return 1, channel, None, None
+    if raw_num_channels == 2:
+        return 1, 0, None, [0, 1]
+    if raw_num_channels >= 3:
+        return 3, None, 3, list(range(raw_num_channels))
+    return raw_num_channels, None, None, None
+
+
 class PimsImages:
     dtype: DTypeLike
     num_channels: int
@@ -300,21 +327,11 @@ class PimsImages:
             else:
                 self.num_channels = 1
 
-        self._first_n_channels = None
-        if self._channel is not None:
-            assert self._channel < self.num_channels, (
-                f"Selected channel {self._channel} (0-indexed), but only {self.num_channels} channels are available."
-            )
-            self.num_channels = 1
-        else:
-            if self.num_channels == 2:
-                self._possible_layers["channel"] = [0, 1]
-                self.num_channels = 1
-                self._channel = 0
-            elif self.num_channels >= 3:
-                self._possible_layers["channel"] = list(range(0, self.num_channels))
-                self.num_channels = 3
-                self._first_n_channels = 3
+        self.num_channels, self._channel, self._first_n_channels, possible_channels = (
+            compute_channel_selection(self.num_channels, self._channel)
+        )
+        if possible_channels is not None:
+            self._possible_layers["channel"] = possible_channels
 
     def _normalize_original_images(self) -> str | list[str]:
         original_images = self._original_images
