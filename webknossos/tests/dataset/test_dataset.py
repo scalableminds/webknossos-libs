@@ -3276,6 +3276,88 @@ def test_layer_coordinate_transformations() -> None:
     assure_exported_properties(ds2)
 
 
+def _apply_affine(
+    transformation: AffineCoordinateTransformation, point: tuple[float, float, float]
+) -> np.ndarray:
+    matrix = transformation.matrix
+    return np.round(matrix[:3, :3] @ np.array(point, dtype=float) + matrix[:3, 3], 6)
+
+
+def test_affine_coordinate_transformation_builders() -> None:
+    # The rotations must match the convention that WEBKNOSSOS uses, i.e. a rotation
+    # around z has its sine at matrix[1][0].
+    assert AffineCoordinateTransformation.from_rotation("z", 90).matrix[1][0] == 1.0
+    np.testing.assert_array_equal(
+        _apply_affine(AffineCoordinateTransformation.from_rotation("z", 90), (1, 0, 0)),
+        [0, 1, 0],
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(AffineCoordinateTransformation.from_rotation("x", 90), (0, 1, 0)),
+        [0, 0, 1],
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(AffineCoordinateTransformation.from_rotation("y", 90), (0, 0, 1)),
+        [1, 0, 0],
+    )
+
+    # `chain` applies the receiver first and its argument afterwards
+    translation = AffineCoordinateTransformation.from_translation((10, 0, 0))
+    scaling = AffineCoordinateTransformation.from_scale((2, 2, 2))
+    np.testing.assert_array_equal(
+        _apply_affine(translation.chain(scaling), (1, 0, 0)), [22, 0, 0]
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(scaling.chain(translation), (1, 0, 0)), [12, 0, 0]
+    )
+
+    # The fluent methods are equivalent to chaining the respective transformation
+    identity = AffineCoordinateTransformation.identity()
+    assert identity.translate((10, 0, 0)) == identity.chain(translation)
+    assert identity.scale((2, 2, 2)) == identity.chain(scaling)
+    assert identity.rotate("z", 90) == identity.chain(
+        AffineCoordinateTransformation.from_rotation("z", 90)
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(identity.rotate("z", 90).translate((5, 0, 0)), (1, 0, 0)),
+        [5, 1, 0],
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(identity.flip("y"), (3, 4, 5)), [3, -4, 5]
+    )
+
+    # The builders return new objects and never modify the receiver
+    assert identity == AffineCoordinateTransformation.identity()
+
+    with pytest.raises(ValueError, match="must be `x`, `y` or `z`"):
+        AffineCoordinateTransformation.from_rotation("w", 90)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="must be `x`, `y` or `z`"):
+        identity.flip("w")  # type: ignore[arg-type]
+
+
+def test_thin_plate_spline_coordinate_transformation_pairs() -> None:
+    transformation = ThinPlateSplineCoordinateTransformation.from_pairs(
+        [
+            [Vec3Int(0, 0, 0), Vec3Int(1, 1, 1)],
+            [(1, 2, 3), (4, 5, 6)],
+        ]
+    )
+    assert transformation.pairs == (
+        (Vec3Int(0, 0, 0), Vec3Int(1, 1, 1)),
+        (Vec3Int(1, 2, 3), Vec3Int(4, 5, 6)),
+    )
+    np.testing.assert_array_equal(transformation.source, [[0, 0, 0], [1, 2, 3]])
+    np.testing.assert_array_equal(transformation.target, [[1, 1, 1], [4, 5, 6]])
+
+    # Round-trips through `pairs`
+    assert (
+        ThinPlateSplineCoordinateTransformation.from_pairs(transformation.pairs)
+        == transformation
+    )
+
+    with pytest.raises(ValueError, match="pair of a source and a target"):
+        ThinPlateSplineCoordinateTransformation.from_pairs([[(0, 0, 0)]])
+
+
 def test_coordinate_transformation_validation() -> None:
     with pytest.raises(ValueError, match=r"shape \(4, 4\)"):
         AffineCoordinateTransformation(matrix=np.eye(3))

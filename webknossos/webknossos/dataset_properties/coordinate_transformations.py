@@ -12,10 +12,23 @@ applied in order.
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Literal
 
 import attr
 import numpy as np
+
+from ..geometry import Vec3Int, Vec3IntLike
+
+Axis = Literal["x", "y", "z"]
+
+_AXIS_TO_INDEX: dict[str, int] = {"x": 0, "y": 1, "z": 2}
+
+
+def _axis_index(axis: Axis) -> int:
+    try:
+        return _AXIS_TO_INDEX[axis]
+    except KeyError:
+        raise ValueError(f"The axis must be `x`, `y` or `z`, got {axis!r}.") from None
 
 
 def _as_matrix(value: Any) -> np.ndarray:
@@ -65,6 +78,18 @@ class AffineCoordinateTransformation(CoordinateTransformation):
     ```
 
     translates the layer by `(10, 20, 30)`.
+
+    Instead of writing the matrix by hand, it can be built up from the `identity`,
+    `from_translation`, `from_scale` and `from_rotation` constructors together with the
+    `translate`, `scale`, `rotate`, `flip` and `chain` methods. Those methods return a
+    new transformation and never modify the one they are called on. Each of them is
+    applied after the transformation it is called on, so
+
+    ```
+    AffineCoordinateTransformation.identity().rotate("z", 90).translate((5, 0, 0))
+    ```
+
+    rotates the layer first and translates the result afterwards.
     """
 
     matrix: np.ndarray = attr.field(
@@ -92,6 +117,64 @@ class AffineCoordinateTransformation(CoordinateTransformation):
         matrix = np.eye(4)
         matrix[:3, :3] = np.diag(np.asarray(scale, dtype=np.float64))
         return cls(matrix=matrix)
+
+    @classmethod
+    def from_rotation(
+        cls, axis: Axis, angle: float
+    ) -> "AffineCoordinateTransformation":
+        """Creates a transformation that rotates the layer around the origin.
+
+        Args:
+            axis: The axis to rotate around, one of `"x"`, `"y"` or `"z"`.
+            angle: The rotation angle in degrees, counter-clockwise when looking
+                from the positive end of `axis` towards the origin.
+        """
+        index = _axis_index(axis)
+        radians = np.deg2rad(angle)
+        cosine = np.cos(radians)
+        sine = np.sin(radians)
+        # The two axes spanning the plane that is rotated
+        first = (index + 1) % 3
+        second = (index + 2) % 3
+        matrix = np.eye(4)
+        matrix[first, first] = cosine
+        matrix[first, second] = -sine
+        matrix[second, first] = sine
+        matrix[second, second] = cosine
+        return cls(matrix=matrix)
+
+    def chain(
+        self, other: "AffineCoordinateTransformation"
+    ) -> "AffineCoordinateTransformation":
+        """Returns a new transformation that applies this one first and `other` afterwards."""
+        return AffineCoordinateTransformation(matrix=other.matrix @ self.matrix)
+
+    def translate(
+        self, translation: Sequence[float]
+    ) -> "AffineCoordinateTransformation":
+        """Returns a new transformation that additionally translates by `translation`."""
+        return self.chain(self.from_translation(translation))
+
+    def scale(self, scale: Sequence[float]) -> "AffineCoordinateTransformation":
+        """Returns a new transformation that additionally scales by `scale` around the origin."""
+        return self.chain(self.from_scale(scale))
+
+    def rotate(self, axis: Axis, angle: float) -> "AffineCoordinateTransformation":
+        """Returns a new transformation that additionally rotates by `angle` degrees around `axis`.
+
+        See `from_rotation` for the orientation of the rotation.
+        """
+        return self.chain(self.from_rotation(axis, angle))
+
+    def flip(self, axis: Axis) -> "AffineCoordinateTransformation":
+        """Returns a new transformation that additionally mirrors along `axis`.
+
+        The layer is mirrored at the origin, i.e. the coordinates along `axis` change
+        their sign.
+        """
+        scale = [1.0, 1.0, 1.0]
+        scale[_axis_index(axis)] = -1.0
+        return self.chain(self.from_scale(scale))
 
     def _to_dict(self) -> dict[str, Any]:
         return {"type": "affine", "matrix": self.matrix.tolist()}
@@ -121,6 +204,46 @@ class ThinPlateSplineCoordinateTransformation(CoordinateTransformation):
                 "The source and target correspondences must have the same length, "
                 + f"got {len(self.source)} and {len(self.target)}."
             )
+
+    @classmethod
+    def from_pairs(
+        cls, pairs: Sequence[Sequence[Vec3IntLike]]
+    ) -> "ThinPlateSplineCoordinateTransformation":
+        """Creates a transformation from `(source, target)` correspondence pairs.
+
+        Args:
+            pairs: The correspondences, each a pair of a source and a target point.
+
+        Note:
+            The points are interpreted as voxel coordinates. Use the `source` and
+            `target` constructor arguments directly for sub-voxel precision, which the
+            underlying format supports.
+        """
+        source = []
+        target = []
+        for pair in pairs:
+            pair = list(pair)
+            if len(pair) != 2:
+                raise ValueError(
+                    "Each correspondence must be a pair of a source and a target "
+                    + f"point, got {len(pair)} points."
+                )
+            source.append(Vec3Int(pair[0]).to_list())
+            target.append(Vec3Int(pair[1]).to_list())
+        return cls(source=source, target=target)
+
+    @property
+    def pairs(self) -> tuple[tuple[Vec3Int, Vec3Int], ...]:
+        """The correspondences as `(source, target)` pairs.
+
+        Note:
+            The coordinates are truncated to integers. Use `source` and `target` to read
+            them with the sub-voxel precision that the underlying format supports.
+        """
+        return tuple(
+            (Vec3Int(source), Vec3Int(target))
+            for source, target in zip(self.source, self.target, strict=True)
+        )
 
     def _to_dict(self) -> dict[str, Any]:
         return {
