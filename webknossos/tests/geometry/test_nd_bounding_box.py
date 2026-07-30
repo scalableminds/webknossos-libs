@@ -335,26 +335,74 @@ def test_negative_inversion(
     assert bbox == bbox.padded_with_margins(-bbox.size, -bbox.size)
 
 
-def test_iter_chunk_starts_matches_chunk_toplefts_nd() -> None:
+def test_iter_chunk_starts_nd() -> None:
     bbox = NDBoundingBox(
         topleft=(0, 0, 0, 0, 0),
-        size=(50, 60, 70, 3, 4),
+        size=(20, 20, 20, 3, 2),
         axes=("x", "y", "z", "c", "t"),
     )
-    assert list(bbox.iter_chunk_starts((16, 16, 16))) == [
-        tuple(chunk.topleft) for chunk in bbox.chunk((16, 16, 16))
+    starts = list(bbox.iter_chunk_starts((16, 16, 16)))
+    assert all(type(v) is int for start in starts for v in start)
+    # An xyz chunk shape chunks xyz, spans the whole c axis and iterates all other axes
+    # one index at a time.
+    assert starts == [
+        (x, y, z, 0, t)
+        for x in (0, 16)
+        for y in (0, 16)
+        for z in (0, 16)
+        for t in (0, 1)
     ]
 
 
-def test_iter_chunk_starts_full_nd_shape() -> None:
+def test_iter_chunk_starts_xyz_shorthand_without_z_axis() -> None:
     bbox = NDBoundingBox(
         topleft=(10, 20, 5),
         size=(30, 30, 30),
         axes=("x", "y", "t"),
     )
-    # A full-length (non-xyz-shorthand) chunk shape is used verbatim per axis.
+    # A 3D chunk shape is the xyz shorthand even if the box has no z axis: x and y use
+    # the given sizes, every other axis (here t) is iterated one index at a time.
     assert list(bbox.iter_chunk_starts((16, 16, 16))) == [
-        tuple(chunk.topleft) for chunk in bbox.chunk((16, 16, 16))
+        (x, y, t) for x in (10, 26) for y in (20, 36) for t in range(5, 35)
+    ]
+
+
+def test_iter_chunk_starts_full_length_shape() -> None:
+    bbox = NDBoundingBox(
+        topleft=(0, 0, 0, 0, 0),
+        size=(20, 20, 20, 3, 4),
+        axes=("x", "y", "z", "c", "t"),
+    )
+    # A chunk shape with one entry per axis is used verbatim, i.e. the c axis is not
+    # forced to span all channels.
+    assert list(bbox.iter_chunk_starts((16, 16, 16, 2, 2))) == [
+        (x, y, z, c, t)
+        for x in (0, 16)
+        for y in (0, 16)
+        for z in (0, 16)
+        for c in (0, 2)
+        for t in (0, 2)
+    ]
+
+
+def test_chunk_nd() -> None:
+    bbox = NDBoundingBox(
+        topleft=(0, 0, 0, 0, 0),
+        size=(20, 20, 20, 3, 2),
+        axes=("x", "y", "z", "c", "t"),
+    )
+    axes = ("x", "y", "z", "c", "t")
+    # Border chunks are clipped to the box, the c axis is never split.
+    assert list(bbox.chunk((16, 16, 16))) == [
+        NDBoundingBox(
+            topleft=VecInt(x, y, z, 0, t, axes=axes),
+            size=VecInt(x_size, y_size, z_size, 3, 1, axes=axes),
+            axes=axes,
+        )
+        for x, x_size in ((0, 16), (16, 4))
+        for y, y_size in ((0, 16), (16, 4))
+        for z, z_size in ((0, 16), (16, 4))
+        for t in (0, 1)
     ]
 
 
@@ -419,12 +467,12 @@ def test_iter_chunk_starts_nd_alignment_and_negative_coordinates() -> None:
     starts = list(bbox.iter_chunk_starts((32, 32, 32), (16, 16, 16)))
     assert all(type(v) is int for start in starts for v in start)
 
-    # Reconstructing chunk() by wrapping+clipping each start is identical to chunk().
-    chunk_size = VecInt(32, 32, 32, 3, 1, axes=bbox.axes)
-    reconstructed = [
-        bbox.intersected_with(
-            NDBoundingBox(topleft=start, size=chunk_size, axes=bbox.axes)
-        )
-        for start in starts
+    # Per axis the first start is the previous multiple of the alignment:
+    # -33 % 16 == 15 -> -48, 7 % 16 == 7 -> 0, -64 % 16 == 0 -> -64.
+    assert starts == [
+        (x, y, z, 0, t)
+        for x in (-48, -16, 16)
+        for y in (0, 32, 64)
+        for z in (-64, -32, 0)
+        for t in (0, 1)
     ]
-    assert reconstructed == list(bbox.chunk((32, 32, 32), (16, 16, 16)))

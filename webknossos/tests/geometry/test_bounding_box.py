@@ -199,48 +199,114 @@ def test_contains_bbox_with_normalized_bbox() -> None:
 
 
 @pytest.mark.parametrize(
-    "topleft, size, chunk_shape, alignment",
+    "topleft, size, chunk_shape, alignment, expected",
     [
-        ((0, 0, 0), (100, 100, 100), (32, 32, 32), None),
-        ((5, 7, 9), (50, 60, 70), (16, 16, 16), None),
-        ((7, 3, 1), (33, 33, 33), (10, 10, 10), None),
-        ((0, 0, 0), (100, 100, 100), (32, 32, 32), (16, 16, 16)),
-        ((-33, -1, -64), (50, 60, 70), (32, 32, 32), None),
-        ((-5, 3, -7), (33, 17, 64), (16, 8, 4), (8, 4, 2)),
-        ((5, 7, 9), (50, 60, 70), (32, 32, 32), (16, 16, 16)),
+        # Grid is aligned to the box topleft, ordered x-major, z-minor.
+        (
+            (0, 0, 0),
+            (20, 20, 20),
+            (16, 16, 16),
+            None,
+            [(x, y, z) for x in (0, 16) for y in (0, 16) for z in (0, 16)],
+        ),
+        # Unaligned topleft: starts are offset by the topleft, the last chunk of each
+        # axis sticks out of the box (starts are not clipped).
+        (
+            (5, 7, 9),
+            (20, 20, 20),
+            (16, 16, 16),
+            None,
+            [(x, y, z) for x in (5, 21) for y in (7, 23) for z in (9, 25)],
+        ),
+        # Chunk shape larger than the box -> exactly one chunk at the box topleft.
+        ((7, 3, 1), (5, 5, 5), (10, 10, 10), None, [(7, 3, 1)]),
+        # Negative coordinates.
+        (
+            (-33, -1, -64),
+            (40, 40, 40),
+            (32, 32, 32),
+            None,
+            [(x, y, z) for x in (-33, -1) for y in (-1, 31) for z in (-64, -32)],
+        ),
+        # With alignment the first start is moved back to the previous multiple of the
+        # alignment (topleft 10 -> 0 for alignment 16), so all borders between chunks
+        # are multiples of the alignment.
+        (
+            (10, 10, 10),
+            (60, 60, 60),
+            (32, 32, 32),
+            (16, 16, 16),
+            [(x, y, z) for x in (0, 32, 64) for y in (0, 32, 64) for z in (0, 32, 64)],
+        ),
+        # Per-axis alignment with negative coordinates: -5 % 8 == 3 -> -8,
+        # 3 % 4 == 3 -> 0, -7 % 2 == 1 -> -8.
+        (
+            (-5, 3, -7),
+            (20, 10, 10),
+            (16, 8, 4),
+            (8, 4, 2),
+            [(x, y, z) for x in (-8, 8) for y in (0, 8) for z in (-8, -4, 0)],
+        ),
     ],
 )
-def test_iter_chunk_starts_matches_chunk(
+def test_iter_chunk_starts(
     topleft: tuple[int, int, int],
     size: tuple[int, int, int],
     chunk_shape: tuple[int, int, int],
     alignment: tuple[int, int, int] | None,
+    expected: list[tuple[int, int, int]],
 ) -> None:
     bbox = BoundingBox(topleft, size)
     starts = list(bbox.iter_chunk_starts(chunk_shape, alignment))
 
+    assert starts == expected
     # Yielded values are plain python int tuples (no numpy scalars).
     assert all(type(v) is int for start in starts for v in start)
 
-    # Reconstructing chunk() by wrapping+clipping each start is identical to chunk().
-    reconstructed = [
-        BoundingBox(list(start), chunk_shape).intersected_with(bbox) for start in starts
+
+@pytest.mark.parametrize(
+    "topleft, size, chunk_shape, alignment, expected",
+    [
+        # Border chunks are clipped to the box.
+        (
+            (0, 0, 0),
+            (20, 20, 20),
+            (16, 16, 16),
+            None,
+            [
+                ((x, y, z), (x_s, y_s, z_s))
+                for x, x_s in ((0, 16), (16, 4))
+                for y, y_s in ((0, 16), (16, 4))
+                for z, z_s in ((0, 16), (16, 4))
+            ],
+        ),
+        # With alignment the first chunk's topleft is clipped up to the box topleft
+        # (unlike `iter_chunk_starts()`, which yields the raw grid start).
+        (
+            (10, 10, 10),
+            (60, 60, 60),
+            (32, 32, 32),
+            (16, 16, 16),
+            [
+                ((x, y, z), (x_s, y_s, z_s))
+                for x, x_s in ((10, 22), (32, 32), (64, 6))
+                for y, y_s in ((10, 22), (32, 32), (64, 6))
+                for z, z_s in ((10, 22), (32, 32), (64, 6))
+            ],
+        ),
+    ],
+)
+def test_chunk(
+    topleft: tuple[int, int, int],
+    size: tuple[int, int, int],
+    chunk_shape: tuple[int, int, int],
+    alignment: tuple[int, int, int] | None,
+    expected: list[tuple[tuple[int, int, int], tuple[int, int, int]]],
+) -> None:
+    bbox = BoundingBox(topleft, size)
+    assert list(bbox.chunk(chunk_shape, alignment)) == [
+        BoundingBox(chunk_topleft, chunk_size) for chunk_topleft, chunk_size in expected
     ]
-    assert reconstructed == list(bbox.chunk(chunk_shape, alignment))
-
-
-def test_iter_chunk_starts_equals_toplefts_without_alignment() -> None:
-    bbox = BoundingBox((5, 7, 9), (50, 60, 70))
-    assert list(bbox.iter_chunk_starts((16, 16, 16))) == [
-        tuple(chunk.topleft) for chunk in bbox.chunk((16, 16, 16))
-    ]
-
-
-def test_iter_chunk_starts_alignment_yields_unclipped_start() -> None:
-    bbox = BoundingBox((10, 10, 10), (100, 100, 100))
-    starts = list(bbox.iter_chunk_starts((32, 32, 32), (16, 16, 16)))
-    # First grid line lies before the box topleft and is *not* clipped.
-    assert starts[0] == (0, 0, 0)
 
 
 def test_iter_chunk_starts_alignment_divisibility_assertion() -> None:
