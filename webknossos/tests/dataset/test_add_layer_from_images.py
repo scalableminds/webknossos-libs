@@ -72,7 +72,7 @@ def test_mrc_from_images(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
 
 
-IMS_URL = "https://github.com/CBI-PITT/imaris_ims_file_reader/raw/refs/heads/master/imaris_ims_file_reader/_tests/brain_crop3.ims"
+IMS_URL = "https://static.webknossos.org/data/wklibs-samples/brain_crop3.ims"
 
 
 def _download_ims(tmp_upath: UPath) -> UPath:
