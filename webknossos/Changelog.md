@@ -18,7 +18,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `NDBoundingBox.iter_chunk_starts` / `BoundingBox.iter_chunk_starts`, a fast, allocation-free variant of `chunk()` that yields the raw integer topleft coordinate of each chunk (no per-chunk `Vec3Int`/`BoundingBox` allocation). Also added `iter_overlapping_grid_cells`, which yields the toplefts of the origin-aligned grid cells that overlap the box (optionally clipped to another box). [#1489](https://github.com/scalableminds/webknossos-libs/pull/1489)
 
 ### Changed
-- `BoundingBox.chunk` / `NDBoundingBox.chunk` now share their chunk-grid math with the new `iter_chunk_starts` iterator. Their output is unchanged. [#1489](https://github.com/scalableminds/webknossos-libs/pull/1489)
 
 ### Fixed
 

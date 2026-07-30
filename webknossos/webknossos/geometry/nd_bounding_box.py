@@ -699,69 +699,90 @@ class NDBoundingBox:
 
     def _expand_shape_to_axes(
         self, shape: VecIntLike, channels_whole: bool
-    ) -> np.ndarray:
+    ) -> list[int]:
         """Expand a chunk/cell `shape` to all axes of this bounding box.
 
-        A shape with one entry per axis is used verbatim. If a 3D shape is given it is
+        A shape with exactly three entries is interpreted as the xyz shorthand: it is
         assumed that iteration over xyz is intended, so all other axes get a size of 1
         – except for the channel axis, which spans all channels if `channels_whole` is
-        set (`chunk()` does this so that every chunk contains all channels).
+        set (`chunk()` does this so that every chunk contains all channels). Note that
+        this also applies if the box has no z axis, in which case only its x and y axis
+        take their size from `shape`.
+
+        Any other shape must have one entry per axis and is used verbatim, i.e. the
+        channel axis is not treated specially.
 
         Returns:
-            The expanded shape as a numpy array, in axis order.
+            The expanded shape as a list of ints, in axis order.
         """
 
-        try:
-            expanded = VecInt.ones(self.axes).with_xyz(Vec3Int(shape))
-            if channels_whole and "c" in self.axes:
-                expanded = expanded.with_c(self.size.c)
-            return expanded.to_np()
-        except AssertionError:
-            return VecInt(shape, axes=self.axes).to_np()
+        shape_list = [int(i) for i in shape]
+        if len(shape_list) == 3:
+            size_x, size_y, size_z = shape_list
+            expanded = []
+            for i, axis in enumerate(self.axes):
+                if axis == "x":
+                    expanded.append(size_x)
+                elif axis == "y":
+                    expanded.append(size_y)
+                elif axis == "z":
+                    expanded.append(size_z)
+                elif axis == "c" and channels_whole:
+                    expanded.append(self.size[i])
+                else:
+                    expanded.append(1)
+            return expanded
+
+        assert len(shape_list) == len(self.axes), (
+            f"Expected a shape with 3 or {len(self.axes)} entries, got {shape_list}."
+        )
+        return shape_list
 
     def _chunk_grid_ranges(
         self,
         chunk_shape: VecIntLike,
         chunk_border_alignments: VecIntLike | None,
-    ) -> tuple[list[range], np.ndarray]:
+    ) -> tuple[list[range], list[int]]:
         """Compute the chunk grid of `chunk()` / `iter_chunk_starts()`.
 
         This is the shared grid math of both methods, so there is a single source of
-        truth for the chunk start coordinates.
+        truth for the chunk start coordinates. Everything is computed on plain python
+        ints, so that no numpy scalars leak into the yielded coordinates and small
+        boxes don't pay for numpy round-trips.
 
         Returns:
-            A tuple of the per-axis ranges of chunk start coordinates (as plain python
-            ints, so no numpy scalars leak into the yielded coordinates) and the
-            expanded `chunk_shape` as a numpy array.
+            A tuple of the per-axis ranges of chunk start coordinates and the expanded
+            `chunk_shape`.
         """
 
-        start = self.topleft.to_np()
-        chunk_shape_np = self._expand_shape_to_axes(chunk_shape, channels_whole=True)
-
-        start_adjust = VecInt.zeros(self.axes).to_np()
-        if chunk_border_alignments is not None:
-            alignments = self._expand_shape_to_axes(
-                chunk_border_alignments, channels_whole=True
-            )
-
-            assert np.all(chunk_shape_np % alignments == 0), (
-                f"{chunk_shape_np} not divisible by {alignments}"
-            )
-
-            # Move the start to be aligned correctly. This doesn't actually change
-            # the start of the first chunk, because we'll intersect with `self`,
-            # but it'll lead to all chunk borders being aligned correctly.
-            start_adjust = start % alignments
-
-        starts = start.tolist()
+        starts = list(self.topleft)
         sizes = list(self.size)
-        steps = chunk_shape_np.tolist()
-        adjusts = start_adjust.tolist()
+        steps = self._expand_shape_to_axes(chunk_shape, channels_whole=True)
 
+        if chunk_border_alignments is None:
+            return [
+                range(start, start + size, step)
+                for start, size, step in zip(starts, sizes, steps, strict=True)
+            ], steps
+
+        alignments = self._expand_shape_to_axes(
+            chunk_border_alignments, channels_whole=True
+        )
+        assert all(
+            step % alignment == 0
+            for step, alignment in zip(steps, alignments, strict=True)
+        ), f"{steps} not divisible by {alignments}"
+
+        # Move the start back to the previous multiple of the alignment, so that all
+        # borders *between* chunks are aligned. The first start may then lie before
+        # this box; `chunk()` intersects it with `self` again, whereas
+        # `iter_chunk_starts()` deliberately yields it unclipped.
         return [
-            range(starts[i] - adjusts[i], starts[i] + sizes[i], steps[i])
-            for i in range(len(self.axes))
-        ], chunk_shape_np
+            range(start - start % alignment, start + size, step)
+            for start, size, step, alignment in zip(
+                starts, sizes, steps, alignments, strict=True
+            )
+        ], steps
 
     def iter_chunk_starts(
         self,
@@ -775,7 +796,7 @@ class NDBoundingBox:
         chunks to this box (border chunks are therefore *not* shrunk – the caller
         can clip/filter cheaply on the raw integers if needed).
 
-        The chunk grid matches `chunk()` exactly (same cells, same order). Without
+        `chunk()` shares the same grid (same cells, same order). Without
         `chunk_border_alignments`, the yielded starts equal the chunk toplefts, i.e.
         ``list(self.iter_chunk_starts(cs)) == [tuple(c.topleft) for c in self.chunk(cs)]``.
         With `chunk_border_alignments`, the first grid line on an axis may lie
@@ -808,7 +829,8 @@ class NDBoundingBox:
         If a 3D `chunk_shape` is given, all non-xyz axes (including a channel axis) use
         a cell size of 1, i.e. every index on those axes is yielded. Unlike for
         `chunk()`, the channel axis is *not* collapsed into a single cell, so that the
-        grid only depends on `chunk_shape` and not on this box's own size.
+        grid only depends on `chunk_shape` and not on this box's own size. A
+        `chunk_shape` with one entry per axis is used verbatim.
 
         Overlap uses half-open intervals: cells that only *touch* this box (or
         `clip_to`) at a border are not returned. Like `iter_chunk_starts()`, this is
@@ -826,28 +848,27 @@ class NDBoundingBox:
             tuple[int, ...]: The topleft coordinate of each overlapping grid cell.
         """
 
-        chunk_shape_np = self._expand_shape_to_axes(chunk_shape, channels_whole=False)
+        cells = self._expand_shape_to_axes(chunk_shape, channels_whole=False)
 
-        region_start = self.topleft.to_np()
-        region_end = region_start + self.size.to_np()
+        starts = list(self.topleft)
+        ends = list(self.bottomright)
         if clip_to is not None:
             self._check_compatibility(clip_to)
-            region_start = np.maximum(region_start, clip_to.topleft.to_np())
-            region_end = np.minimum(region_end, clip_to.bottomright.to_np())
-
-        starts = region_start.tolist()
-        ends = region_end.tolist()
-        cells = chunk_shape_np.tolist()
+            starts = [
+                max(start, clip_start)
+                for start, clip_start in zip(starts, clip_to.topleft, strict=True)
+            ]
+            ends = [
+                min(end, clip_end)
+                for end, clip_end in zip(ends, clip_to.bottomright, strict=True)
+            ]
 
         ranges = []
-        for i in range(len(self.axes)):
-            start_i, end_i, cell_i = starts[i], ends[i], cells[i]
-            if start_i >= end_i:
+        for start, end, cell in zip(starts, ends, cells, strict=True):
+            if start >= end:
                 # Empty overlap on at least one axis -> no cells at all.
                 return
-            first = start_i // cell_i
-            last = (end_i - 1) // cell_i
-            ranges.append(range(first * cell_i, last * cell_i + 1, cell_i))
+            ranges.append(range((start // cell) * cell, end, cell))
 
         yield from product(*ranges)
 
@@ -863,9 +884,6 @@ class NDBoundingBox:
         If `chunk_border_alignment` is set, all border coordinates
         *between two chunks* will be divisible by that value.
 
-        For a fast, allocation-free variant that yields raw integer coordinates
-        instead of `NDBoundingBox` objects, see `iter_chunk_starts()`.
-
         Args:
             chunk_shape (VecIntLike): The size of the chunks to generate.
             chunk_border_alignments (VecIntLike | None): The alignment of the chunk borders.
@@ -875,10 +893,10 @@ class NDBoundingBox:
             Generator[NDBoundingBox]: A generator of the chunks.
         """
 
-        ranges, chunk_shape_np = self._chunk_grid_ranges(
+        ranges, expanded_chunk_shape = self._chunk_grid_ranges(
             chunk_shape, chunk_border_alignments
         )
-        chunk_size = VecInt(chunk_shape_np, axes=self.axes)
+        chunk_size = VecInt(expanded_chunk_shape, axes=self.axes)
 
         for coordinates in product(*ranges):
             yield self.intersected_with(

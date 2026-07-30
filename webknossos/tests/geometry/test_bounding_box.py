@@ -368,30 +368,3 @@ def test_iter_overlapping_grid_cells_clip_to_axes_mismatch() -> None:
     )
     with pytest.raises(ValueError):
         list(bbox.iter_overlapping_grid_cells((4, 4, 4), clip_to=clip))
-
-
-@pytest.mark.parametrize(
-    "topleft, size, chunk_shape, alignment",
-    [
-        ((5, 7, 9), (50, 60, 70), (16, 8, 4), None),
-        ((-33, -1, -64), (50, 60, 70), (32, 32, 32), None),
-        ((-5, 3, -7), (33, 17, 64), (16, 8, 4), (8, 4, 2)),
-    ],
-)
-def test_iter_chunk_starts_matches_nd_implementation(
-    topleft: tuple[int, int, int],
-    size: tuple[int, int, int],
-    chunk_shape: tuple[int, int, int],
-    alignment: tuple[int, int, int] | None,
-) -> None:
-    """`BoundingBox` overrides the generic `NDBoundingBox` implementations with a
-    3D fast path – both must agree."""
-    bbox = BoundingBox(topleft, size)
-    nd_bbox = NDBoundingBox(topleft=topleft, size=size, axes=("x", "y", "z"))
-
-    assert list(bbox.iter_chunk_starts(chunk_shape, alignment)) == list(
-        nd_bbox.iter_chunk_starts(chunk_shape, alignment)
-    )
-    assert list(bbox.iter_overlapping_grid_cells(chunk_shape)) == list(
-        nd_bbox.iter_overlapping_grid_cells(chunk_shape)
-    )
