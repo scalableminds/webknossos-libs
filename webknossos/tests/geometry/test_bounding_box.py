@@ -3,7 +3,7 @@ import pytest
 from hypothesis import given, infer
 
 from webknossos import BoundingBox, Mag
-from webknossos.geometry import NormalizedBoundingBox
+from webknossos.geometry import NDBoundingBox, NormalizedBoundingBox
 
 
 def test_align_with_mag_ceiled() -> None:
@@ -205,6 +205,9 @@ def test_contains_bbox_with_normalized_bbox() -> None:
         ((5, 7, 9), (50, 60, 70), (16, 16, 16), None),
         ((7, 3, 1), (33, 33, 33), (10, 10, 10), None),
         ((0, 0, 0), (100, 100, 100), (32, 32, 32), (16, 16, 16)),
+        ((-33, -1, -64), (50, 60, 70), (32, 32, 32), None),
+        ((-5, 3, -7), (33, 17, 64), (16, 8, 4), (8, 4, 2)),
+        ((5, 7, 9), (50, 60, 70), (32, 32, 32), (16, 16, 16)),
     ],
 )
 def test_iter_chunk_starts_matches_chunk(
@@ -281,3 +284,48 @@ def test_iter_overlapping_grid_cells_outside_clip_is_empty() -> None:
     bbox = BoundingBox((200, 200, 200), (10, 10, 10))
     clip = BoundingBox((0, 0, 0), (40, 40, 40))
     assert list(bbox.iter_overlapping_grid_cells((32, 32, 32), clip_to=clip)) == []
+
+
+def test_iter_overlapping_grid_cells_negative_coordinates() -> None:
+    # Box [-33, -1) crosses the grid lines at -32 and 0, so it overlaps the cells
+    # starting at -64 and -32 (the grid is aligned to the origin, not to the box).
+    bbox = BoundingBox((-33, -33, -33), (32, 32, 32))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32))) == [
+        (x, y, z) for x in (-64, -32) for y in (-64, -32) for z in (-64, -32)
+    ]
+
+
+def test_iter_overlapping_grid_cells_clip_to_axes_mismatch() -> None:
+    bbox = BoundingBox((0, 0, 0), (10, 10, 10))
+    clip = NDBoundingBox(
+        topleft=(0, 0, 0, 0), size=(5, 5, 5, 5), axes=("x", "y", "z", "t")
+    )
+    with pytest.raises(ValueError):
+        list(bbox.iter_overlapping_grid_cells((4, 4, 4), clip_to=clip))
+
+
+@pytest.mark.parametrize(
+    "topleft, size, chunk_shape, alignment",
+    [
+        ((5, 7, 9), (50, 60, 70), (16, 8, 4), None),
+        ((-33, -1, -64), (50, 60, 70), (32, 32, 32), None),
+        ((-5, 3, -7), (33, 17, 64), (16, 8, 4), (8, 4, 2)),
+    ],
+)
+def test_iter_chunk_starts_matches_nd_implementation(
+    topleft: tuple[int, int, int],
+    size: tuple[int, int, int],
+    chunk_shape: tuple[int, int, int],
+    alignment: tuple[int, int, int] | None,
+) -> None:
+    """`BoundingBox` overrides the generic `NDBoundingBox` implementations with a
+    3D fast path – both must agree."""
+    bbox = BoundingBox(topleft, size)
+    nd_bbox = NDBoundingBox(topleft=topleft, size=size, axes=("x", "y", "z"))
+
+    assert list(bbox.iter_chunk_starts(chunk_shape, alignment)) == list(
+        nd_bbox.iter_chunk_starts(chunk_shape, alignment)
+    )
+    assert list(bbox.iter_overlapping_grid_cells(chunk_shape)) == list(
+        nd_bbox.iter_overlapping_grid_cells(chunk_shape)
+    )

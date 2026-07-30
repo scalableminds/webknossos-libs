@@ -468,26 +468,27 @@ class BoundingBox(NDBoundingBox):
             tuple[int, int, int]: The topleft coordinate of each chunk.
         """
 
-        start = self.topleft.to_np()
-        chunk_shape_array = Vec3Int(chunk_shape).to_np()
+        # This intentionally duplicates the grid math of
+        # `NDBoundingBox.iter_chunk_starts()` (as `chunk()` does, too): staying on
+        # plain python ints avoids the generic per-axis machinery, which dominates the
+        # runtime for small boxes. Keep both implementations in sync.
+        (sx, sy, sz) = self.topleft
+        (wx, wy, wz) = self.size
+        chunk_shape_vec = Vec3Int(chunk_shape)
+        (cx, cy, cz) = chunk_shape_vec
 
-        start_adjust = np.array([0, 0, 0])
+        (ax, ay, az) = (0, 0, 0)
         if chunk_border_alignments is not None:
-            chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
-            assert np.all(chunk_shape_array % chunk_border_alignments_array == 0), (
-                f"{chunk_shape_array} not divisible by {chunk_border_alignments_array}"
+            alignments = Vec3Int(chunk_border_alignments)
+            (alx, aly, alz) = alignments
+            assert cx % alx == 0 and cy % aly == 0 and cz % alz == 0, (
+                f"{chunk_shape_vec} not divisible by {alignments}"
             )
 
             # Move the start to be aligned correctly. This doesn't actually change
             # the start of the first chunk, because callers clip against `self`, but
             # it'll lead to all chunk borders being aligned correctly.
-            start_adjust = start % chunk_border_alignments_array
-
-        # Work on plain python ints so the yielded tuples contain no numpy scalars.
-        (sx, sy, sz) = start.tolist()
-        (wx, wy, wz) = self.size.to_np().tolist()
-        (cx, cy, cz) = chunk_shape_array.tolist()
-        (ax, ay, az) = start_adjust.tolist()
+            (ax, ay, az) = (sx % alx, sy % aly, sz % alz)
 
         for x in range(sx - ax, sx + wx, cx):
             for y in range(sy - ay, sy + wy, cy):
@@ -513,23 +514,29 @@ class BoundingBox(NDBoundingBox):
         Args:
             chunk_shape (Vec3IntLike): The size of the grid cells.
             clip_to (NDBoundingBox | None): If given, only cells overlapping both this
-                box and `clip_to` are yielded.
+                box and `clip_to` are yielded. Must have the same axes as this box,
+                i.e. a plain 3D bounding box.
+
+        Raises:
+            ValueError: If `clip_to` does not have the same axes as this box.
 
         Yields:
             tuple[int, int, int]: The topleft coordinate of each overlapping grid cell.
         """
 
-        (cx, cy, cz) = Vec3Int(chunk_shape).to_np().tolist()
+        # Kept in sync with `NDBoundingBox.iter_overlapping_grid_cells()`, see the note
+        # in `iter_chunk_starts()` about the duplicated grid math.
+        (cx, cy, cz) = Vec3Int(chunk_shape)
 
-        region_start = self.topleft.to_np()
-        region_end = region_start + self.size.to_np()
+        region_start = self.topleft
+        region_end = self.bottomright
         if clip_to is not None:
             self._check_compatibility(clip_to)
-            region_start = np.maximum(region_start, clip_to.topleft.to_np())
-            region_end = np.minimum(region_end, clip_to.bottomright.to_np())
+            region_start = region_start.pairmax(clip_to.topleft)
+            region_end = region_end.pairmin(clip_to.bottomright)
 
-        (start_x, start_y, start_z) = region_start.tolist()
-        (end_x, end_y, end_z) = region_end.tolist()
+        (start_x, start_y, start_z) = region_start
+        (end_x, end_y, end_z) = region_end
 
         if start_x >= end_x or start_y >= end_y or start_z >= end_z:
             # Empty overlap on at least one axis -> no cells at all.

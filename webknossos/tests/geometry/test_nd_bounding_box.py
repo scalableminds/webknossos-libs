@@ -381,12 +381,50 @@ def test_iter_overlapping_grid_cells_nd_clip_to() -> None:
     )
     cells = list(bbox.iter_overlapping_grid_cells((16, 16, 16), clip_to=clip))
     assert all(type(v) is int for cell in cells for v in cell)
-    # xyz overlap cells 0 and 16, the c axis collapses to a single cell (cell size
-    # == size.c), and the t axis (size 1) yields every t index in the clip range.
+    # xyz overlap cells 0 and 16; all non-xyz axes (c and t) use a cell size of 1, so
+    # every index in the clip range is yielded for them.
     assert cells == [
-        (x, y, z, 0, t)
+        (x, y, z, c, t)
         for x in (0, 16)
         for y in (0, 16)
         for z in (0, 16)
+        for c in (0, 1, 2)
         for t in (0, 1, 2, 3)
     ]
+
+
+def test_iter_overlapping_grid_cells_nd_grid_is_independent_of_box_size() -> None:
+    """Unlike `chunk()`, the origin-aligned grid must not depend on the box's own
+    size on the channel axis."""
+    cells_per_c_size = [
+        list(
+            NDBoundingBox(
+                topleft=(0, 0, 0, 2),
+                size=(8, 8, 8, c_size),
+                axes=("x", "y", "z", "c"),
+            ).iter_overlapping_grid_cells((8, 8, 8))
+        )
+        for c_size in (1, 2)
+    ]
+    assert cells_per_c_size[0] == [(0, 0, 0, 2)]
+    assert cells_per_c_size[1] == [(0, 0, 0, 2), (0, 0, 0, 3)]
+
+
+def test_iter_chunk_starts_nd_alignment_and_negative_coordinates() -> None:
+    bbox = NDBoundingBox(
+        topleft=(-33, 7, -64, 0, 0),
+        size=(50, 60, 70, 3, 2),
+        axes=("x", "y", "z", "c", "t"),
+    )
+    starts = list(bbox.iter_chunk_starts((32, 32, 32), (16, 16, 16)))
+    assert all(type(v) is int for start in starts for v in start)
+
+    # Reconstructing chunk() by wrapping+clipping each start is identical to chunk().
+    chunk_size = VecInt(32, 32, 32, 3, 1, axes=bbox.axes)
+    reconstructed = [
+        bbox.intersected_with(
+            NDBoundingBox(topleft=start, size=chunk_size, axes=bbox.axes)
+        )
+        for start in starts
+    ]
+    assert reconstructed == list(bbox.chunk((32, 32, 32), (16, 16, 16)))
