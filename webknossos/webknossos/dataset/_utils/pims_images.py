@@ -613,6 +613,15 @@ class PimsImages:
             return self._possible_layers
 
     @property
+    def channel(self) -> int | None:
+        """The selected channel, or None if all channels are used.
+
+        May differ from the `channel` constructor argument: e.g. it is set
+        to 0 automatically when the source has exactly two channels.
+        """
+        return self._channel
+
+    @property
     def expected_bbox(self) -> NDBoundingBox:
         # replaces the previous expected_shape to enable n-dimensional input files
         with self._open_images() as images:

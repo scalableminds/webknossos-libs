@@ -133,10 +133,7 @@ SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
 def _is_single_ims_path(images: object) -> bool:
-    return (
-        isinstance(images, (str, UPath))
-        and UPath(images).suffix.lower() == ".ims"
-    )
+    return isinstance(images, (str, UPath)) and UPath(images).suffix.lower() == ".ims"
 
 
 def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
@@ -1543,14 +1540,32 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
             mag = Mag(mag)
 
+            # mag1_expected_bbox holds the exact expected extents (before the
+            # x/y placeholder inflation below). For IMS files this is precise
+            # metadata, so the fast IMS path chunks against this directly
+            # instead of the inflated placeholder used by the generic pims path.
+            mag1_expected_bbox = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
+
+            # The IMS fast path reads exactly one timepoint per job and can't
+            # yet handle a "t" axis spanning more than one timepoint (which only
+            # occurs here when the file has multiple timepoints and no explicit
+            # `timepoint` was given). Fall back to the generic pims path in that case.
+            is_ims = (
+                _is_single_ims_path(images)
+                and not use_bioformats
+                and not (
+                    "t" in mag1_expected_bbox.axes
+                    and mag1_expected_bbox.get_shape("t") > 1
+                )
+            )
+
             # Setting a large enough bounding box, because the exact bounding box
             # cannot be know a priori all the time. It will be replaced with the
             # correct bounding box after reading through all actual images.
-            safe_expected_bbox = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
-            safe_size = safe_expected_bbox.size.with_replaced(
-                safe_expected_bbox.axes.index("x"), SAFE_LARGE_XY
-            ).with_replaced(safe_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
-            safe_expected_bbox = safe_expected_bbox.with_size(safe_size)
+            safe_size = mag1_expected_bbox.size.with_replaced(
+                mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
+            ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
+            safe_expected_bbox = mag1_expected_bbox.with_size(safe_size)
             layer.bounding_box = safe_expected_bbox
 
             mag_view = layer.add_mag(
@@ -1560,7 +1575,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 compress=compress,
             )
 
-            if _is_single_ims_path(images) and not use_bioformats:
+            if is_ims:
                 from ._utils.pims_ims_reader import copy_ims_chunk_to_view
 
                 func_per_chunk = named_partial(
@@ -1568,7 +1583,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     path=UPath(images),  # type: ignore[arg-type]
                     mag_view=mag_view,
                     timepoint=timepoint or 0,
-                    channel=pims_image_sequence._channel,
+                    channel=pims_image_sequence.channel,
                     num_channels=pims_image_sequence.num_channels,
                     flip_x=flip_x,
                     flip_y=flip_y,
@@ -1622,11 +1637,15 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                         f"WKW datasets only support x, y, z axes, got {additional_axes}. Please use `data_format='zarr3'` instead."
                     )
 
-            if _is_single_ims_path(images) and not use_bioformats:
+            if is_ims:
                 # IMS path: split into full 3D shard-aligned chunks so each job
                 # reads exactly one shard's worth of data and writes it directly.
+                # Chunked against the precise mag1_expected_bbox, not the
+                # placeholder-inflated layer.bounding_box (which is only a safe
+                # upper bound for the generic pims path and would otherwise
+                # explode into an unusable number of empty chunks here).
                 ims_shard_shape = mag_view.info.shard_shape
-                args = list(layer.bounding_box.chunk(ims_shard_shape, ims_shard_shape))
+                args = list(mag1_expected_bbox.chunk(ims_shard_shape, ims_shard_shape))
             else:
                 buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(
                     batch_size

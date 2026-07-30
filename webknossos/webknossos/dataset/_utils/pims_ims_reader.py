@@ -35,7 +35,7 @@ class PimsImsReader(FramesSequenceND):
 
         # Open once to read metadata, then close — ImsFile holds an h5py file handle
         # which is not pickleable, so we must not retain it as an attribute.
-        _ims = ImsFile(str(self.path), squeeze_output=False)
+        _ims = ImsFile(str(self.path), squeeze_output=False, verbose=False)
         t, c, z, y, x = _ims.shape
         self._file_shape: tuple[int, int, int, int, int] = (t, c, z, y, x)
         self._dtype: np.dtype = np.dtype(_ims.dtype)
@@ -153,7 +153,9 @@ def copy_ims_chunk_to_view(
     block = block.transpose(0, 3, 2, 1) if not swap_xy else block.transpose(0, 2, 3, 1)
 
     if dtype is not None:
-        block = block.astype(dtype)
+        # order="F" matches PimsImages.copy_to_view, which produces
+        # Fortran-contiguous slices for the same downstream writers.
+        block = block.astype(dtype, order="F")
 
     max_value = int(block.max())
     if num_channels == 1:
