@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import contextlib
+import gc
+import io
+
 import h5py
 import numpy as np
 from numpy.typing import DTypeLike
@@ -12,6 +16,25 @@ try:
     from imaris_ims_file_reader.ims import ims as ImsFile
 except ImportError as e:
     raise WkImportError("imaris-ims-file-reader", "ims") from e
+
+
+def _read_ims_metadata_quietly(
+    path: str,
+) -> tuple[tuple[int, int, int, int, int], np.dtype]:
+    # The published imaris-ims-file-reader (as of 0.1.8) unconditionally prints
+    # "Opening readonly file: ..." / "Closing file: ..." and has no `verbose`
+    # kwarg to suppress it. It also calls close() again from __del__, so the
+    # object must be closed, deleted, and garbage-collected while stdout is
+    # still redirected — otherwise that second "Closing file" print leaks out
+    # once the object is finalized after this function returns.
+    with contextlib.redirect_stdout(io.StringIO()):
+        ims_obj = ImsFile(path, squeeze_output=False)
+        shape = tuple(int(s) for s in ims_obj.shape)
+        dtype = np.dtype(ims_obj.dtype)
+        ims_obj.close()
+        del ims_obj
+        gc.collect()
+    return shape, dtype  # type: ignore[return-value]
 
 
 class PimsImsReader(FramesSequenceND):
@@ -35,11 +58,8 @@ class PimsImsReader(FramesSequenceND):
 
         # Open once to read metadata, then close — ImsFile holds an h5py file handle
         # which is not pickleable, so we must not retain it as an attribute.
-        _ims = ImsFile(str(self.path), squeeze_output=False, verbose=False)
-        t, c, z, y, x = _ims.shape
-        self._file_shape: tuple[int, int, int, int, int] = (t, c, z, y, x)
-        self._dtype: np.dtype = np.dtype(_ims.dtype)
-        _ims.close()
+        self._file_shape, self._dtype = _read_ims_metadata_quietly(str(self.path))
+        t, c, z, y, x = self._file_shape
 
         if t > 1:
             self._init_axis("t", t)
@@ -60,18 +80,22 @@ class PimsImsReader(FramesSequenceND):
         _, c, _, y, x = self._file_shape
 
         # Reopen per call so no h5py handle crosses a multiprocessing boundary.
+        # Cropped to (y, x) — the reader's own declared axis sizes from
+        # __init__ — since the raw HDF5 page can be larger than that when a
+        # file's metadata-declared extent doesn't match its stored array (as
+        # happens with some cropped/edited .ims files).
         with h5py.File(str(self.path), "r") as hf:
             dataset = hf["DataSet"]
             if "c" in self.bundle_axes:
                 frames = []
                 for ci in range(c):
                     loc = f"ResolutionLevel 0/TimePoint {t}/Channel {ci}/Data"
-                    frames.append(dataset[loc][z])
+                    frames.append(dataset[loc][z, :y, :x])
                 return np.stack(frames, axis=0)
             else:
                 ci = ind.get("c", 0)
                 loc = f"ResolutionLevel 0/TimePoint {t}/Channel {ci}/Data"
-                return np.array(dataset[loc][z])
+                return np.array(dataset[loc][z, :y, :x])
 
     @property
     def pixel_type(self) -> np.dtype:
@@ -122,9 +146,29 @@ def copy_ims_chunk_to_view(
     assert isinstance(bbox, (BoundingBox, NDBoundingBox))
 
     relative_bbox = bbox.offset(-mag_view.bounding_box.topleft)
-    x_start, x_end = relative_bbox.get_bounds("x")
-    y_start, y_end = relative_bbox.get_bounds("y")
+    # bbox's x/y axes describe the *output* extents. When swap_xy is set,
+    # PimsImages.expected_bbox swaps which source axis feeds which output
+    # axis, so bbox.x holds the source y-extent and bbox.y holds the source
+    # x-extent — the HDF5 read below must use the matching source-space bound.
+    out_x_start, out_x_end = relative_bbox.get_bounds("x")
+    out_y_start, out_y_end = relative_bbox.get_bounds("y")
     z_start, z_end = relative_bbox.get_bounds("z")
+    if swap_xy:
+        source_y_start, source_y_end = out_x_start, out_x_end
+        source_x_start, source_x_end = out_y_start, out_y_end
+    else:
+        source_x_start, source_x_end = out_x_start, out_x_end
+        source_y_start, source_y_end = out_y_start, out_y_end
+
+    # flip_z mirrors the *entire* z-extent (matching PimsImages.copy_to_view,
+    # which reverses the full image sequence before slicing per-batch), not
+    # just this chunk in isolation. Read the mirrored source range and reverse
+    # it back into output order, rather than locally reversing this chunk.
+    if flip_z:
+        total_z = mag_view.bounding_box.get_shape("z")
+        read_z_start, read_z_end = total_z - z_end, total_z - z_start
+    else:
+        read_z_start, read_z_end = z_start, z_end
 
     channels_to_read = list(range(num_channels)) if channel is None else [channel]
 
@@ -134,14 +178,21 @@ def copy_ims_chunk_to_view(
         for ci in channels_to_read:
             loc = f"ResolutionLevel 0/TimePoint {timepoint}/Channel {ci}/Data"
             # Read exactly the 3D block needed — one decompression per HDF5 chunk row
-            slabs.append(ds[loc][z_start:z_end, y_start:y_end, x_start:x_end])
+            slabs.append(
+                ds[loc][
+                    read_z_start:read_z_end,
+                    source_y_start:source_y_end,
+                    source_x_start:source_x_end,
+                ]
+            )
         block = np.stack(slabs, axis=0)  # (c, z, y, x)
+        if flip_z:
+            block = block[:, ::-1]  # mirrored read range -> correct output order
 
-    # Apply flips in HDF5 axis order (c, z, y, x).
+    # Apply x/y flips in HDF5 axis order (c, z, y, x); flip_z was already
+    # handled above via the mirrored read range.
     # flip_x/-y follow PimsImages convention: flip_x flips memory axis -2 (y in HDF5),
     # flip_y flips memory axis -1 (x in HDF5).
-    if flip_z:
-        block = block[:, ::-1]
     if flip_x:
         block = block[:, :, ::-1]
     if flip_y:
@@ -161,8 +212,18 @@ def copy_ims_chunk_to_view(
     if num_channels == 1:
         block = block[0]  # (x, y, z) — single-channel layers have no c axis
 
-    mag_view.write(block, absolute_bounding_box=bbox)
+    # allow_unaligned=True: real image extents rarely divide evenly into full
+    # shards, so border chunks are smaller than shard_shape. mag_view's own
+    # bounding box is still the inflated placeholder at this point (corrected
+    # only after all jobs finish), so the built-in alignment check would
+    # otherwise reject every border chunk. Safe here because each parallel job
+    # writes a disjoint, shard-aligned-or-smaller region — no two jobs ever
+    # target overlapping data.
+    mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
 
-    y_size = y_end - y_start
-    x_size = x_end - x_start
-    return (y_size, x_size), max_value
+    # Returned as (x_size, y_size) to match the convention established by
+    # PimsImages.copy_to_view, whose result feeds directly into
+    # `Vec3Int(dimwise_max(shapes) + (z_shape,))` in add_layer_from_images.
+    x_size = out_x_end - out_x_start
+    y_size = out_y_end - out_y_start
+    return (x_size, y_size), max_value

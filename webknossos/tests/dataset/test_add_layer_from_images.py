@@ -8,6 +8,7 @@ from time import gmtime, strftime
 from typing import Any
 from zipfile import BadZipFile, ZipFile
 
+import h5py
 import httpx
 import mrcfile
 import numpy as np
@@ -68,6 +69,87 @@ def test_mrc_from_images(tmp_upath: UPath) -> None:
     read_data = layer.get_finest_mag().read()[0]  # drop channel dim
     # Dataset stores as (x, y, z); original data is (z, y, x) → transpose
     np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
+
+
+IMS_URL = "https://github.com/CBI-PITT/imaris_ims_file_reader/raw/refs/heads/master/imaris_ims_file_reader/_tests/brain_crop3.ims"
+
+
+def _download_ims(tmp_upath: UPath) -> UPath:
+    unzip_path = tmp_upath / "unzip"
+    download_and_unpack(IMS_URL, unzip_path, "brain_crop3.ims")
+    return unzip_path / "brain_crop3.ims"
+
+
+def _read_ims_reference(ims_path: UPath, channel: int) -> np.ndarray:
+    # Read independently via h5py/imaris_ims_file_reader rather than through
+    # our own PimsImsReader, to get a reference unrelated to the code under test.
+    from imaris_ims_file_reader.ims import ims as ImsFile
+
+    ims_obj = ImsFile(str(ims_path), squeeze_output=False)
+    _, _, z, y, x = ims_obj.shape
+    ims_obj.close()
+    with h5py.File(str(ims_path), "r") as hf:
+        data = np.array(
+            hf[f"DataSet/ResolutionLevel 0/TimePoint 0/Channel {channel}/Data"]
+        )
+    # This particular fixture's DataSetInfo metadata (used by ims_reader.shape)
+    # declares smaller extents than the raw stored array, so crop to match.
+    return data[:z, :y, :x]  # (z, y, x)
+
+
+@pytest.mark.parametrize("channel", [0, 1])
+def test_ims_from_images(tmp_upath: UPath, channel: int) -> None:
+    ims_path = _download_ims(tmp_upath)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ims_path,
+            layer_name="ims_layer",
+            channel=channel,
+            executor=executor,
+        )
+
+    assert layer.dtype == np.dtype("uint16")
+    assert layer.num_channels == 1
+    read_data = layer.get_finest_mag().read()[0]  # drop channel dim, shape (x, y, z)
+    reference = _read_ims_reference(ims_path, channel)  # (z, y, x)
+    np.testing.assert_array_equal(read_data, reference.transpose(2, 1, 0))
+
+
+def test_ims_from_images_flip_and_swap_matches_pims_path(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # .ims conversion uses a fast per-shard path (copy_ims_chunk_to_view) instead
+    # of the generic pims-based BufferedSliceWriter path used for other formats.
+    # Rather than re-deriving the expected flip/swap transform by hand, this
+    # compares the fast path's output directly against the generic pims path
+    # (forced via monkeypatching _is_single_ims_path) for identical options.
+    ims_path = _download_ims(tmp_upath)
+    common_kwargs: dict = dict(
+        channel=0, flip_x=True, flip_y=True, flip_z=True, swap_xy=True
+    )
+
+    ds_fast = wk.Dataset(tmp_upath / "ds_fast", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer_fast = ds_fast.add_layer_from_images(
+            ims_path, layer_name="fast", executor=executor, **common_kwargs
+        )
+    fast_data = layer_fast.get_finest_mag().read()[0]
+
+    import importlib
+
+    dataset_module = importlib.import_module("webknossos.dataset.dataset")
+    monkeypatch.setattr(dataset_module, "_is_single_ims_path", lambda _images: False)
+
+    ds_slow = wk.Dataset(tmp_upath / "ds_slow", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer_slow = ds_slow.add_layer_from_images(
+            ims_path, layer_name="slow", executor=executor, **common_kwargs
+        )
+    slow_data = layer_slow.get_finest_mag().read()[0]
+
+    np.testing.assert_array_equal(fast_data, slow_data)
 
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
