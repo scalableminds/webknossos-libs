@@ -7,6 +7,7 @@ from boltons.strutils import unit_len
 
 import webknossos._nml as wknml
 
+from ..geometry import Vec3Float
 from .tree import Tree
 
 if TYPE_CHECKING:
@@ -14,7 +15,6 @@ if TYPE_CHECKING:
     from .skeleton import Skeleton
 
 
-Vector3 = tuple[float, float, float]
 Vector4 = tuple[float, float, float, float]
 GroupOrTree = Union["Group", Tree]
 
@@ -111,7 +111,7 @@ class Group:
     def add_tree(
         self,
         name_or_tree: str | Tree,
-        color: Vector4 | Vector3 | None = None,
+        color: Vector4 | Vec3Float | None = None,
         _enforced_id: int | None = None,
         metadata: dict[str, str | int | float | Sequence[str]] = {},
         is_visible: bool = True,

@@ -3,7 +3,7 @@ from collections.abc import Iterable, Iterator
 import attr
 import numpy as np
 
-from ..geometry import Mag, NormalizedBoundingBox
+from ..geometry import Mag, NormalizedBoundingBox, Vec3Float
 from .coordinate_transformations import CoordinateTransformation
 from .data_format import AttachmentDataFormat, DataFormat
 from .layer_categories import LayerCategoryType
@@ -146,10 +146,10 @@ class SegmentationLayerProperties(LayerProperties):
 
 @attr.define
 class VoxelSize:
-    factor: tuple[float, float, float] = attr.field(converter=float_tpl)
+    factor: Vec3Float = attr.field(converter=float_tpl)
     unit: LengthUnit = DEFAULT_LENGTH_UNIT
 
-    def to_nanometer(self) -> tuple[float, float, float]:
+    def to_nanometer(self) -> Vec3Float:
         conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self.unit]
         return (
             self.factor[0] * conversion_factor,

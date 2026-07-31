@@ -2,12 +2,10 @@ from typing import TYPE_CHECKING, Any
 
 import attr
 
-from ..geometry import Vec3Int
+from ..geometry import Vec3Float, Vec3Int
 
 if TYPE_CHECKING:
     from .skeleton import Skeleton
-
-Vec3Float = tuple[float, float, float]
 
 
 # Defining an order on nodes is necessary to allow to sort them,

@@ -18,7 +18,7 @@ from ..client.api_client.models import (
     ApiTaskTypeCreate,
 )
 from ..client.context import _get_api_client, _get_context
-from ..geometry import BoundingBox, Vec3Int
+from ..geometry import BoundingBox, Vec3Float, Vec3Int
 from ..utils import warn_deprecated
 from .project import Project
 from .team import Team
@@ -262,7 +262,7 @@ class Task:
     task_type: TaskType
     experience: TaskExperience
     edit_position: Vec3Int
-    edit_rotation: tuple[float, float, float]
+    edit_rotation: Vec3Float
     script_id: str | None = None
     bounding_box: BoundingBox | None = None
 

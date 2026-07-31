@@ -35,10 +35,9 @@ from ..dataset import (
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME
 from ..dataset.layer import Zarr3Config
-from ..geometry import Vec3Int
+from ..geometry import Vec3Float, Vec3Int
 from ..utils import is_fs_path
 
-Vector3 = tuple[float, float, float]
 Vector4 = tuple[float, float, float, float]
 
 
@@ -96,7 +95,7 @@ class VolumeLayer:
     zip: ZipPath | None
     segments: dict[int, SegmentInformation]
     largest_segment_id: int | None
-    voxel_size: Vector3 | None
+    voxel_size: Vec3Float | None
     dtype: DTypeLike | None = None
     layer_name: str = "volumeAnnotationData"
 

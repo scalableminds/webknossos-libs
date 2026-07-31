@@ -6,9 +6,8 @@ import networkx as nx
 from upath import UPath
 
 from ..dataset_properties import _LENGTH_UNIT_TO_NANOMETER, VoxelSize
+from ..geometry import Vec3Float
 from .group import Group
-
-Vector3 = tuple[float, float, float]
 
 
 class _Counter:
@@ -94,7 +93,7 @@ class Skeleton(Group):
         - Annotation: Container class for working with WEBKNOSSOS
     """
 
-    _voxel_size: VoxelSize | Vector3
+    _voxel_size: VoxelSize | Vec3Float
     dataset_name: str
     dataset_id: str | None = None
     organization_id: str | None = None
@@ -118,21 +117,21 @@ class Skeleton(Group):
         super().__attrs_post_init__()  # sets self._id
 
     @property
-    def voxel_size(self) -> Vector3:
+    def voxel_size(self) -> Vec3Float:
         """Get the voxel size of the skeleton in nanometers.
 
         Returns:
-            Vector3: A tuple (x, y, z) representing the voxel size in nanometers.
+            Vec3Float: A tuple (x, y, z) representing the voxel size in nanometers.
         """
         assert isinstance(self._voxel_size, VoxelSize)
         return self._voxel_size.to_nanometer()
 
     @voxel_size.setter
-    def voxel_size(self, voxel_size: Vector3) -> None:
+    def voxel_size(self, voxel_size: Vec3Float) -> None:
         """Set the voxel size of the skeleton in nanometers.
 
         Args:
-            voxel_size (Vector3): A tuple (x, y, z) representing the new voxel size in nanometers.
+            voxel_size (Vec3Float): A tuple (x, y, z) representing the new voxel size in nanometers.
         """
         assert isinstance(self._voxel_size, VoxelSize)
         conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self._voxel_size.unit]
