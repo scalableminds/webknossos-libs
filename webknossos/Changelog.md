@@ -18,6 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
 - Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
 - Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`. Previously, the `coordinateTransformations` of a layer were dropped when reading a dataset and lost on the next write. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Added the `Vec3Float` type alias, the `Vec3FloatLike` union and `parse_vec3_float` to `webknossos.geometry`, as the float counterpart to `Vec3Int` / `Vec3IntLike`. Float triples such as a voxel size or a node rotation now use this shared alias instead of the copies that each module declared. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 
 
 ### Changed

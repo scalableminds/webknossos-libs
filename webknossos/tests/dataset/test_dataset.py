@@ -3342,8 +3342,8 @@ def test_thin_plate_spline_coordinate_transformation_pairs() -> None:
         ]
     )
     assert transformation.pairs == (
-        (Vec3Int(0, 0, 0), Vec3Int(1, 1, 1)),
-        (Vec3Int(1, 2, 3), Vec3Int(4, 5, 6)),
+        ((0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0)),
     )
     np.testing.assert_array_equal(transformation.source, [[0, 0, 0], [1, 2, 3]])
     np.testing.assert_array_equal(transformation.target, [[1, 1, 1], [4, 5, 6]])
@@ -3354,8 +3354,19 @@ def test_thin_plate_spline_coordinate_transformation_pairs() -> None:
         == transformation
     )
 
+    # Sub-voxel precision survives, since the format stores the landmarks as floats
+    sub_voxel = ThinPlateSplineCoordinateTransformation.from_pairs(
+        [[(0.5, 1.25, 2.0), np.array([3.5, 4.0, 5.75])]]
+    )
+    assert sub_voxel.pairs == (((0.5, 1.25, 2.0), (3.5, 4.0, 5.75)),)
+    assert ThinPlateSplineCoordinateTransformation.from_pairs(sub_voxel.pairs) == (
+        sub_voxel
+    )
+
     with pytest.raises(ValueError, match="pair of a source and a target"):
         ThinPlateSplineCoordinateTransformation.from_pairs([[(0, 0, 0)]])
+    with pytest.raises(ValueError, match="three floats"):
+        ThinPlateSplineCoordinateTransformation.from_pairs([[(0, 0), (1, 1, 1)]])
 
 
 def test_coordinate_transformation_validation() -> None:

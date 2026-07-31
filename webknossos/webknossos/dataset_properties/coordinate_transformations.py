@@ -17,7 +17,7 @@ from typing import Any, Literal
 import attr
 import numpy as np
 
-from ..geometry import Vec3Int, Vec3IntLike
+from ..geometry import Vec3Float, Vec3FloatLike, parse_vec3_float
 
 Axis = Literal["x", "y", "z"]
 
@@ -207,17 +207,14 @@ class ThinPlateSplineCoordinateTransformation(CoordinateTransformation):
 
     @classmethod
     def from_pairs(
-        cls, pairs: Sequence[Sequence[Vec3IntLike]]
+        cls, pairs: Sequence[Sequence[Vec3FloatLike]]
     ) -> "ThinPlateSplineCoordinateTransformation":
         """Creates a transformation from `(source, target)` correspondence pairs.
 
         Args:
             pairs: The correspondences, each a pair of a source and a target point.
-
-        Note:
-            The points are interpreted as voxel coordinates. Use the `source` and
-            `target` constructor arguments directly for sub-voxel precision, which the
-            underlying format supports.
+                The points may be `Vec3Int`, tuples, numpy arrays or any other iterable
+                of three numbers.
         """
         source = []
         target = []
@@ -228,20 +225,15 @@ class ThinPlateSplineCoordinateTransformation(CoordinateTransformation):
                     "Each correspondence must be a pair of a source and a target "
                     + f"point, got {len(pair)} points."
                 )
-            source.append(Vec3Int(pair[0]).to_list())
-            target.append(Vec3Int(pair[1]).to_list())
+            source.append(parse_vec3_float(pair[0]))
+            target.append(parse_vec3_float(pair[1]))
         return cls(source=source, target=target)
 
     @property
-    def pairs(self) -> tuple[tuple[Vec3Int, Vec3Int], ...]:
-        """The correspondences as `(source, target)` pairs.
-
-        Note:
-            The coordinates are truncated to integers. Use `source` and `target` to read
-            them with the sub-voxel precision that the underlying format supports.
-        """
+    def pairs(self) -> tuple[tuple[Vec3Float, Vec3Float], ...]:
+        """The correspondences as `(source, target)` pairs."""
         return tuple(
-            (Vec3Int(source), Vec3Int(target))
+            (parse_vec3_float(source), parse_vec3_float(target))
             for source, target in zip(self.source, self.target, strict=True)
         )
 
