@@ -7,7 +7,7 @@ from enum import Enum, unique
 from itertools import product
 from os import PathLike
 from os.path import relpath
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, Union, cast
 
 import attr
 import numpy as np
@@ -72,6 +72,8 @@ from .transfer_mode import TransferMode
 
 if TYPE_CHECKING:
     import pims
+
+    from .layer.view import MagView
 
 
 from webknossos.dataset.layer import (
@@ -159,6 +161,115 @@ def _has_image_z_dimension(
         return chunked_images.expected_bbox.get_shape("z") > 1
     return pims_images.has_image_z_dimension(
         filepath, use_bioformats=use_bioformats, is_segmentation=is_segmentation
+    )
+
+
+class _ImageConversionSetup(NamedTuple):
+    """Everything add_layer_from_images needs to actually run the conversion,
+    computed differently for ChunkedImages vs. PimsImages sources by
+    _prepare_chunked_image_conversion / _prepare_pims_image_conversion. This
+    covers the parts of the two paths that differ (bounding box, mag_view,
+    per-chunk function, batch_size) — the surrounding layer/mag setup and
+    execution machinery stay shared in add_layer_from_images itself.
+    """
+
+    mag_view: "MagView"
+    func_per_chunk: Callable[..., tuple[tuple[int, int], int | None]]
+    batch_size: int | None
+
+
+def _prepare_chunked_image_conversion(
+    image_source: ChunkedImages,
+    layer: Layer,
+    *,
+    mag: Mag,
+    mag1_expected_bbox: NDBoundingBox,
+    chunk_shape: Vec3Int,
+    shard_shape: Vec3Int,
+    compress: bool,
+    current_dtype: np.dtype,
+    batch_size: int | None,
+) -> _ImageConversionSetup:
+    # ChunkedImages formats know their exact bounding box from metadata
+    # alone, so no placeholder inflation (and no post-hoc correction
+    # afterward) is needed.
+    layer.bounding_box = mag1_expected_bbox
+
+    mag_view = layer.add_mag(
+        mag=mag,
+        chunk_shape=chunk_shape,
+        shard_shape=shard_shape,
+        compress=compress,
+    )
+
+    func_per_chunk = named_partial(
+        image_source.read_chunk,
+        mag_view=mag_view,
+        dtype=current_dtype,
+    )
+
+    return _ImageConversionSetup(
+        mag_view=mag_view,
+        func_per_chunk=func_per_chunk,
+        batch_size=batch_size,  # unused for this path, passed through unchanged
+    )
+
+
+def _prepare_pims_image_conversion(
+    image_source: pims_images.PimsImages,
+    layer: Layer,
+    *,
+    mag: Mag,
+    mag1_expected_bbox: NDBoundingBox,
+    chunk_shape: Vec3Int,
+    shard_shape: Vec3Int,
+    compress: bool,
+    current_dtype: np.dtype,
+    batch_size: int | None,
+) -> _ImageConversionSetup:
+    # Setting a large enough bounding box, because the exact bounding box
+    # cannot be know a priori all the time. It will be replaced with the
+    # correct bounding box after reading through all actual images.
+    safe_size = mag1_expected_bbox.size.with_replaced(
+        mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
+    ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
+    layer.bounding_box = mag1_expected_bbox.with_size(safe_size)
+
+    mag_view = layer.add_mag(
+        mag=mag,
+        chunk_shape=chunk_shape,
+        shard_shape=shard_shape,
+        compress=compress,
+    )
+
+    if batch_size is None:
+        if compress or (layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)):
+            # if data is compressed or dataformat is zarr, parallel write access
+            # to a shard leads to corrupted data, the batch size must be aligned
+            # with the shard size
+            batch_size = mag_view.info.shard_shape.z
+        else:
+            # in uncompressed wkw only writing to the same chunk is problematic
+            batch_size = mag_view.info.chunk_shape.z
+    elif compress or (layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)):
+        assert batch_size % mag_view.info.shard_shape.z == 0, (
+            f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
+        )
+    else:
+        assert batch_size % mag_view.info.chunk_shape.z == 0, (
+            f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
+        )
+
+    func_per_chunk = named_partial(
+        image_source.copy_to_view,
+        mag_view=mag_view,
+        dtype=current_dtype,
+    )
+
+    return _ImageConversionSetup(
+        mag_view=mag_view,
+        func_per_chunk=func_per_chunk,
+        batch_size=batch_size,
     )
 
 
@@ -1599,60 +1710,22 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             mag = Mag(mag)
             mag1_expected_bbox = expected_bbox.from_mag_to_mag1(mag).offset(topleft)
 
-            if isinstance(image_source, ChunkedImages):
-                # ChunkedImages formats know their exact bounding box from
-                # metadata alone, so no placeholder inflation (and no
-                # post-hoc correction below) is needed.
-                layer.bounding_box = mag1_expected_bbox
-            else:
-                # Setting a large enough bounding box, because the exact bounding box
-                # cannot be know a priori all the time. It will be replaced with the
-                # correct bounding box after reading through all actual images.
-                safe_size = mag1_expected_bbox.size.with_replaced(
-                    mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
-                ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
-                layer.bounding_box = mag1_expected_bbox.with_size(safe_size)
-
-            mag_view = layer.add_mag(
+            prepare_conversion = (
+                _prepare_chunked_image_conversion
+                if isinstance(image_source, ChunkedImages)
+                else _prepare_pims_image_conversion
+            )
+            mag_view, func_per_chunk, batch_size = prepare_conversion(
+                image_source,  # type: ignore[arg-type]
+                layer,
                 mag=mag,
+                mag1_expected_bbox=mag1_expected_bbox,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compress=compress,
+                current_dtype=current_dtype,
+                batch_size=batch_size,
             )
-
-            if isinstance(image_source, ChunkedImages):
-                func_per_chunk = named_partial(
-                    image_source.read_chunk,
-                    mag_view=mag_view,
-                    dtype=current_dtype,
-                )
-            else:
-                if batch_size is None:
-                    if compress or (
-                        layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)
-                    ):
-                        # if data is compressed or dataformat is zarr, parallel write access
-                        # to a shard leads to corrupted data, the batch size must be aligned
-                        # with the shard size
-                        batch_size = mag_view.info.shard_shape.z
-                    else:
-                        # in uncompressed wkw only writing to the same chunk is problematic
-                        batch_size = mag_view.info.chunk_shape.z
-                elif compress or (
-                    layer.data_format in (DataFormat.Zarr3, DataFormat.Zarr)
-                ):
-                    assert batch_size % mag_view.info.shard_shape.z == 0, (
-                        f"batch_size {batch_size} must be divisible by z shard-size {mag_view.info.shard_shape.z} when creating compressed layers"
-                    )
-                else:
-                    assert batch_size % mag_view.info.chunk_shape.z == 0, (
-                        f"batch_size {batch_size} must be divisible by z chunk-size {mag_view.info.chunk_shape.z}"
-                    )
-                func_per_chunk = named_partial(
-                    image_source.copy_to_view,
-                    mag_view=mag_view,
-                    dtype=current_dtype,
-                )
 
             if (
                 additional_axes := set(layer.bounding_box.axes).difference(
@@ -1682,6 +1755,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     layer.bounding_box.chunk(chunked_shard_shape, chunked_shard_shape)
                 )
             else:
+                # _prepare_pims_image_conversion always resolves batch_size to
+                # a concrete int; only the (unused-here) ChunkedImages path
+                # leaves it as None.
+                assert batch_size is not None
                 buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(
                     batch_size
                 )
