@@ -31,7 +31,11 @@ from ..geometry import (
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
 from ._utils import pims_images
-from ._utils.chunked_images import ChunkedImages, try_open_chunked_images
+from ._utils.chunked_images import (
+    ChunkedImages,
+    get_valid_chunked_image_suffixes,
+    try_open_chunked_images,
+)
 from .abstract_dataset import (
     DEFAULT_VERSION,
     AbstractDataset,
@@ -131,6 +135,31 @@ _ALLOWED_SEGMENTATION_LAYER_DTYPES = (
 )
 
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
+
+
+def _has_image_z_dimension(
+    filepath: UPath,
+    use_bioformats: bool,
+    is_segmentation: bool,
+) -> bool:
+    # Formats handled by a registered ChunkedImages subclass (e.g. .ims) are
+    # never probed through PimsImages/pims — they know their exact
+    # expected_bbox directly, and this is the only way such files are read.
+    chunked_images = try_open_chunked_images(
+        filepath,
+        channel=None,
+        timepoint=None,
+        swap_xy=False,
+        flip_x=False,
+        flip_y=False,
+        flip_z=False,
+        is_segmentation=is_segmentation,
+    )
+    if chunked_images is not None:
+        return chunked_images.expected_bbox.get_shape("z") > 1
+    return pims_images.has_image_z_dimension(
+        filepath, use_bioformats=use_bioformats, is_segmentation=is_segmentation
+    )
 
 
 def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
@@ -258,7 +287,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 # if it's 2D, the folder becomes a layer.
                 return lambda p: (
                     str(p)
-                    if pims_images.has_image_z_dimension(
+                    if _has_image_z_dimension(
                         input_path / p,
                         use_bioformats=use_bioformats,
                         is_segmentation=guess_if_segmentation_path(p),
@@ -271,7 +300,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 )
             elif self == ConversionLayerMapping.INSPECT_SINGLE_FILE:
                 # As before, but only a single image is inspected to determine 2D vs 3D.
-                if pims_images.has_image_z_dimension(
+                if _has_image_z_dimension(
                     input_path / input_files[0],
                     use_bioformats=use_bioformats,
                     is_segmentation=guess_if_segmentation_path(input_files[0]),
@@ -894,6 +923,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         input_upath = UPath(input_path)
 
         valid_suffixes = pims_images.get_valid_pims_suffixes()
+        valid_suffixes.update(get_valid_chunked_image_suffixes())
         if use_bioformats is not False:
             valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
 
@@ -1402,10 +1432,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         def _open_chunked_images(open_kwargs: dict) -> ChunkedImages | None:
             # Chunk-based formats (currently only .ims) know their exact
             # bounding box from metadata alone and read/write whole
-            # shard-sized blocks directly; explicitly requesting bioformats
-            # bypasses this in favor of the generic pims path.
-            if use_bioformats:
-                return None
+            # shard-sized blocks directly. This is the only way such formats
+            # are read — use_bioformats has no effect on them.
             return try_open_chunked_images(
                 images,
                 channel=open_kwargs.get("channel", channel),

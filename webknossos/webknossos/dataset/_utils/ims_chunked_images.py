@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import contextlib
+import gc
+import io
+
 import h5py
 import numpy as np
 from numpy.typing import DTypeLike
@@ -8,11 +12,34 @@ from upath import UPath
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
-from ...utils import is_remote_path
+from ...utils import WkImportError, is_remote_path
 from ..layer.view import MagView
 from .chunked_images import ChunkedImages, register_chunked_images
 from .pims_images import compute_channel_selection
-from .pims_ims_reader import _read_ims_metadata_quietly
+
+try:
+    from imaris_ims_file_reader.ims import ims as ImsFile
+except ImportError as e:
+    raise WkImportError("imaris-ims-file-reader", "ims") from e
+
+
+def _read_ims_metadata_quietly(
+    path: str,
+) -> tuple[tuple[int, int, int, int, int], np.dtype]:
+    # The published imaris-ims-file-reader (as of 0.1.8) unconditionally prints
+    # "Opening readonly file: ..." / "Closing file: ..." and has no `verbose`
+    # kwarg to suppress it. It also calls close() again from __del__, so the
+    # object must be closed, deleted, and garbage-collected while stdout is
+    # still redirected — otherwise that second "Closing file" print leaks out
+    # once the object is finalized after this function returns.
+    with contextlib.redirect_stdout(io.StringIO()):
+        ims_obj = ImsFile(path, squeeze_output=False)
+        shape = tuple(int(s) for s in ims_obj.shape)
+        dtype = np.dtype(ims_obj.dtype)
+        ims_obj.close()
+        del ims_obj
+        gc.collect()
+    return shape, dtype  # type: ignore[return-value]
 
 
 @register_chunked_images
@@ -21,11 +48,12 @@ class ImsChunkedImages(ChunkedImages):
     ChunkedImages implementation for Imaris .ims files. Reads shard-sized 3D
     blocks directly from the underlying HDF5 file via h5py and writes them
     to mag_view directly — no slice-by-slice pims reading, no BufferedSliceWriter.
+    This is the only supported way .ims files are read for conversion.
     """
 
     @classmethod
-    def accepts(cls, path: UPath) -> bool:
-        return path.suffix.lower() == ".ims"
+    def class_exts(cls) -> set[str]:
+        return {"ims"}
 
     def __init__(
         self,

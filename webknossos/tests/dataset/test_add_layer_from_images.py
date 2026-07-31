@@ -83,7 +83,7 @@ def _download_ims(tmp_upath: UPath) -> UPath:
 
 def _read_ims_reference(ims_path: UPath, channel: int) -> np.ndarray:
     # Read independently via h5py/imaris_ims_file_reader rather than through
-    # our own PimsImsReader, to get a reference unrelated to the code under test.
+    # ImsChunkedImages, to get a reference unrelated to the code under test.
     from imaris_ims_file_reader.ims import ims as ImsFile
 
     ims_obj = ImsFile(str(ims_path), squeeze_output=False)
@@ -145,39 +145,34 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, expected)
 
 
-def test_ims_from_images_flip_and_swap_matches_pims_path(
-    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    # .ims conversion uses a fast per-shard ChunkedImages path instead of the
-    # generic pims-based BufferedSliceWriter path used for other formats.
-    # Rather than re-deriving the expected flip/swap transform by hand, this
-    # compares the fast path's output directly against the generic pims path
-    # (forced via monkeypatching try_open_chunked_images) for identical options.
+def test_ims_from_images_flip_and_swap(tmp_upath: UPath) -> None:
+    # .ims files are read exclusively through ImsChunkedImages (never through
+    # pims), so there's no separate "slow path" to compare against. Instead,
+    # this derives the expected flip/swap transform directly from the h5py
+    # reference: flip_z/flip_x/flip_y reverse the source's z/y/x axes
+    # respectively (in that source-axis order, regardless of swap_xy), and
+    # swap_xy then picks (y, x, z) instead of (x, y, z) as the output order.
     ims_path = _download_ims(tmp_upath)
-    common_kwargs: dict = dict(
-        channel=0, flip_x=True, flip_y=True, flip_z=True, swap_xy=True
-    )
 
-    ds_fast = wk.Dataset(tmp_upath / "ds_fast", (1, 1, 1))
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
-        layer_fast = ds_fast.add_layer_from_images(
-            ims_path, layer_name="fast", executor=executor, **common_kwargs
+        layer = ds.add_layer_from_images(
+            ims_path,
+            layer_name="flipped",
+            channel=0,
+            flip_x=True,
+            flip_y=True,
+            flip_z=True,
+            swap_xy=True,
+            executor=executor,
         )
-    fast_data = layer_fast.get_finest_mag().read()[0]
+    actual = layer.get_finest_mag().read()[0]
 
-    dataset_module = importlib.import_module("webknossos.dataset.dataset")
-    monkeypatch.setattr(
-        dataset_module, "try_open_chunked_images", lambda *_args, **_kwargs: None
-    )
+    reference = _read_ims_reference(ims_path, 0)  # (z, y, x)
+    intermediate = reference[::-1, ::-1, ::-1]  # flip_z, flip_x, flip_y
+    expected = intermediate.transpose(1, 2, 0)  # swap_xy -> (y, x, z)
 
-    ds_slow = wk.Dataset(tmp_upath / "ds_slow", (1, 1, 1))
-    with SequentialExecutor() as executor:
-        layer_slow = ds_slow.add_layer_from_images(
-            ims_path, layer_name="slow", executor=executor, **common_kwargs
-        )
-    slow_data = layer_slow.get_finest_mag().read()[0]
-
-    np.testing.assert_array_equal(fast_data, slow_data)
+    np.testing.assert_array_equal(actual, expected)
 
 
 def _create_synthetic_multi_timepoint_ims(

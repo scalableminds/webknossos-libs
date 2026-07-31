@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
+from os import environ
 
 from numpy.typing import DTypeLike
 from upath import UPath
@@ -20,6 +22,10 @@ class ChunkedImages(ABC):
     its exact expected_bbox from metadata alone, and reads/writes whole
     shard-sized 3D/4D blocks aligned to the output shard grid directly,
     without going through a slice-based writer.
+
+    Formats handled by a registered ChunkedImages subclass are read
+    exclusively through that subclass — never through PimsImages/pims,
+    regardless of `use_bioformats`.
     """
 
     dtype: DTypeLike
@@ -41,8 +47,8 @@ class ChunkedImages(ABC):
 
     @classmethod
     @abstractmethod
-    def accepts(cls, path: UPath) -> bool:
-        """Whether this class can read the given path."""
+    def class_exts(cls) -> set[str]:
+        """File extensions (without the dot, lowercase) this class can read."""
 
     @property
     @abstractmethod
@@ -88,6 +94,13 @@ def register_chunked_images(cls: type[ChunkedImages]) -> type[ChunkedImages]:
     return cls
 
 
+def get_valid_chunked_image_suffixes() -> set[str]:
+    valid_suffixes: set[str] = set()
+    for cls in _CHUNKED_IMAGE_CLASSES:
+        valid_suffixes.update(cls.class_exts())
+    return valid_suffixes
+
+
 def try_open_chunked_images(
     images: object,
     *,
@@ -100,16 +113,18 @@ def try_open_chunked_images(
     is_segmentation: bool,
 ) -> ChunkedImages | None:
     """
-    Returns a ChunkedImages instance if `images` is a single path that a
-    registered chunk-based format can read, else None. Chunk-based formats
-    are inherently single-file, so lists of paths and pims.FramesSequence
-    instances always fall back to the generic PimsImages path.
+    Returns a ChunkedImages instance if `images` is a single path whose
+    suffix a registered chunk-based format handles, else None. Chunk-based
+    formats are inherently single-file, so lists of paths and
+    pims.FramesSequence instances always fall back to the generic PimsImages
+    path.
     """
     if not isinstance(images, (str, UPath)):
         return None
     path = UPath(images)
+    suffix = path.suffix.lstrip(".").lower()
     for cls in _CHUNKED_IMAGE_CLASSES:
-        if cls.accepts(path):
+        if suffix in cls.class_exts():
             return cls(
                 path,
                 channel=channel,
@@ -123,11 +138,33 @@ def try_open_chunked_images(
     return None
 
 
-def _chunked_images_imports() -> None:
+def _chunked_images_imports() -> str | None:
+    import_exceptions = []
+
     try:
-        from .ims_chunked_images import ImsChunkedImages  # noqa: F401
-    except ImportError:
-        pass  # the `ims` extra isn't installed; .ims files fall back to the generic pims path
+        from .ims_chunked_images import ImsChunkedImages  # noqa: F401 unused-import
+    except ImportError as import_error:
+        import_exceptions.append(f"ImsChunkedImages: {import_error.msg}")
+
+    if import_exceptions:
+        import_exception_string = "".join(
+            f"\t- {import_exception}\n" for import_exception in import_exceptions
+        )
+        return import_exception_string
+    return None
 
 
-_chunked_images_imports()
+if (chunked_images_warnings := _chunked_images_imports()) is not None:
+    if (
+        environ.get("WEBKNOSSOS_SHOWED_CHUNKED_IMAGES_IMPORT_WARNING", "False")
+        == "False"
+    ):
+        # If the environment variable is not set, we assume that the user has not seen the warning yet.
+        # We set it to True to prevent showing the warning again.
+        environ["WEBKNOSSOS_SHOWED_CHUNKED_IMAGES_IMPORT_WARNING"] = "True"
+        warnings.warn(
+            f"[WARNING] Not all chunk-based image readers could be imported:\n{chunked_images_warnings}Install the readers you need or use 'webknossos[all]' to install all readers.",
+            category=UserWarning,
+            source=None,
+            stacklevel=2,
+        )
