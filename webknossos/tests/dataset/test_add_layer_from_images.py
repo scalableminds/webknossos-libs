@@ -20,6 +20,7 @@ from upath import UPath
 
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
+from tests.utils import download_ims_fixture
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -122,15 +123,6 @@ def test_mrc_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
 
 
-IMS_URL = "https://static.webknossos.org/data/wklibs-samples/brain_crop3.ims"
-
-
-def _download_ims(tmp_upath: UPath) -> UPath:
-    unzip_path = tmp_upath / "unzip"
-    download_and_unpack(IMS_URL, unzip_path, "brain_crop3.ims")
-    return unzip_path / "brain_crop3.ims"
-
-
 def _read_ims_reference(ims_path: UPath, channel: int) -> np.ndarray:
     # Read independently via h5py/imaris_ims_file_reader rather than through
     # ImsChunkedImages, to get a reference unrelated to the code under test.
@@ -150,7 +142,7 @@ def _read_ims_reference(ims_path: UPath, channel: int) -> np.ndarray:
 
 @pytest.mark.parametrize("channel", [0, 1])
 def test_ims_from_images(tmp_upath: UPath, channel: int) -> None:
-    ims_path = _download_ims(tmp_upath)
+    ims_path = download_ims_fixture(tmp_upath)
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
@@ -175,7 +167,7 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     # a per-chunk-shape-based correction (as used for the generic pims path)
     # would be wrong here, since each ChunkedImages job only reports its own
     # shard-sized chunk, not the total extent.
-    ims_path = _download_ims(tmp_upath)
+    ims_path = download_ims_fixture(tmp_upath)
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
@@ -202,7 +194,7 @@ def test_ims_from_images_flip_and_swap(tmp_upath: UPath) -> None:
     # reference: flip_z/flip_x/flip_y reverse the source's z/y/x axes
     # respectively (in that source-axis order, regardless of swap_xy), and
     # swap_xy then picks (y, x, z) instead of (x, y, z) as the output order.
-    ims_path = _download_ims(tmp_upath)
+    ims_path = download_ims_fixture(tmp_upath)
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:

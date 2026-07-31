@@ -1,12 +1,10 @@
 import json
 import warnings
 from collections.abc import Iterator
-from shutil import copy, copytree
-from tempfile import NamedTemporaryFile
+from shutil import copytree
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-import httpx
 import mrcfile
 import numpy as np
 import pytest
@@ -15,6 +13,7 @@ from tifffile import TiffFile, imwrite
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR
+from tests.utils import download_ims_fixture
 from webknossos.dataset import Dataset, RemoteDataset
 from webknossos.dataset._utils.mrc_chunked_images import MrcChunkedImages
 from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
@@ -178,28 +177,12 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         assert array_shape == shard_aligned_bottomright.to_list()
 
 
-IMS_URL = "https://static.webknossos.org/data/wklibs-samples/brain_crop3.ims"
-
-
-def _download_ims(tmp_upath: UPath) -> UPath:
-    ims_path = tmp_upath / "brain_crop3.ims"
-    with NamedTemporaryFile() as download_file:
-        with httpx.stream("GET", IMS_URL, follow_redirects=True) as response:
-            for chunk in response.iter_bytes():
-                download_file.write(chunk)
-        # copy() reopens the file by name, so pending writes must be flushed
-        # to disk first, or the copy would see a truncated file.
-        download_file.flush()
-        copy(download_file.name, str(ims_path))
-    return ims_path
-
-
 def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     # brain_crop3.ims has 2 channels and no explicit channel is selected, so
     # ImsChunkedImages.get_possible_layers() reports {"channel": [0, 1]} and
     # from_images() (which always passes allow_multiple_layers=True) should
     # split it into one layer per channel instead of picking just the first.
-    ims_path = _download_ims(tmp_upath)
+    ims_path = download_ims_fixture(tmp_upath)
 
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
