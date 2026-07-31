@@ -104,18 +104,18 @@ class AffineCoordinateTransformation(CoordinateTransformation):
 
     @classmethod
     def from_translation(
-        cls, translation: Sequence[float]
+        cls, translation: Vec3FloatLike
     ) -> "AffineCoordinateTransformation":
         """Creates a transformation that translates the layer by `translation`."""
         matrix = np.eye(4)
-        matrix[:3, 3] = translation
+        matrix[:3, 3] = parse_vec3_float(translation)
         return cls(matrix=matrix)
 
     @classmethod
-    def from_scale(cls, scale: Sequence[float]) -> "AffineCoordinateTransformation":
+    def from_scale(cls, scale: Vec3FloatLike) -> "AffineCoordinateTransformation":
         """Creates a transformation that scales the layer by `scale` around the origin."""
         matrix = np.eye(4)
-        matrix[:3, :3] = np.diag(np.asarray(scale, dtype=np.float64))
+        matrix[:3, :3] = np.diag(parse_vec3_float(scale))
         return cls(matrix=matrix)
 
     @classmethod
@@ -149,13 +149,11 @@ class AffineCoordinateTransformation(CoordinateTransformation):
         """Returns a new transformation that applies this one first and `other` afterwards."""
         return AffineCoordinateTransformation(matrix=other.matrix @ self.matrix)
 
-    def translate(
-        self, translation: Sequence[float]
-    ) -> "AffineCoordinateTransformation":
+    def translate(self, translation: Vec3FloatLike) -> "AffineCoordinateTransformation":
         """Returns a new transformation that additionally translates by `translation`."""
         return self.chain(self.from_translation(translation))
 
-    def scale(self, scale: Sequence[float]) -> "AffineCoordinateTransformation":
+    def scale(self, scale: Vec3FloatLike) -> "AffineCoordinateTransformation":
         """Returns a new transformation that additionally scales by `scale` around the origin."""
         return self.chain(self.from_scale(scale))
 
