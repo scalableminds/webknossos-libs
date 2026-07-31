@@ -13,8 +13,8 @@ from ..layer.view import MagView
 
 class ChunkedImages(ABC):
     """
-    Base class for volumetric, chunk-based input formats (Imaris .ims now;
-    zarr, n5, neuroglancer_precomputed in the future).
+    Base class for volumetric, chunk-based input formats (Imaris .ims and
+    MRC now; zarr, n5, neuroglancer_precomputed in the future).
 
     Unlike PimsImages, which reads slice-by-slice and can't always know its
     true x/y extent ahead of time (requiring a placeholder bounding box that
@@ -145,6 +145,11 @@ def _chunked_images_imports() -> str | None:
         from .ims_chunked_images import ImsChunkedImages  # noqa: F401 unused-import
     except ImportError as import_error:
         import_exceptions.append(f"ImsChunkedImages: {import_error.msg}")
+
+    try:
+        from .mrc_chunked_images import MrcChunkedImages  # noqa: F401 unused-import
+    except ImportError as import_error:
+        import_exceptions.append(f"MrcChunkedImages: {import_error.msg}")
 
     if import_exceptions:
         import_exception_string = "".join(

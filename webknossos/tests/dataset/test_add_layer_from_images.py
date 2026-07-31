@@ -72,6 +72,56 @@ def test_mrc_from_images(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
 
 
+def test_mrc_from_images_flip_and_swap(tmp_upath: UPath) -> None:
+    Z, Y, X = 6, 24, 32
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    mrc_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            mrc_path,
+            layer_name="mrc_layer",
+            flip_x=True,
+            flip_y=True,
+            flip_z=True,
+            swap_xy=True,
+            executor=executor,
+        )
+    actual = layer.get_finest_mag().read()[0]
+
+    intermediate = data[::-1, ::-1, ::-1]  # flip_z, flip_x, flip_y
+    expected = intermediate.transpose(1, 2, 0)  # swap_xy -> (y, x, z)
+    np.testing.assert_array_equal(actual, expected)
+
+
+def test_mrc_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
+    # With an explicit shard_shape smaller than the image extent, conversion
+    # must split into multiple shards along x and y. The final bounding box
+    # must reflect the full image extent regardless.
+    Z, Y, X = 6, 24, 32
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    mrc_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            mrc_path,
+            layer_name="mrc_layer",
+            chunk_shape=(8, 8, 8),
+            shard_shape=(16, 16, 8),
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
+
+
 IMS_URL = "https://static.webknossos.org/data/wklibs-samples/brain_crop3.ims"
 
 

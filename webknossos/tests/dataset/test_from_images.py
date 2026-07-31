@@ -14,9 +14,9 @@ from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos.dataset import Dataset, RemoteDataset
-from webknossos.dataset._utils.pims_mrc_reader import PimsMrcReader
+from webknossos.dataset._utils.mrc_chunked_images import MrcChunkedImages
 from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
-from webknossos.geometry import Vec3Int, VecInt
+from webknossos.geometry import BoundingBox, Vec3Int, VecInt
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -176,35 +176,51 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         assert array_shape == shard_aligned_bottomright.to_list()
 
 
-def test_mrc_reader_basic(tmp_upath: UPath) -> None:
+def _open_mrc_chunked_images(mrc_path: UPath) -> MrcChunkedImages:
+    return MrcChunkedImages(
+        mrc_path,
+        channel=None,
+        timepoint=None,
+        swap_xy=False,
+        flip_x=False,
+        flip_y=False,
+        flip_z=False,
+        is_segmentation=False,
+    )
+
+
+def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
     Z, Y, X = 5, 16, 32
     data = np.arange(Z * Y * X, dtype="float32").reshape(Z, Y, X)
     mrc_path = tmp_upath / "test.mrc"
     with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
         mrc.set_data(data)
 
-    reader = PimsMrcReader(mrc_path)
-    reader.bundle_axes = ["y", "x"]
-    reader.iter_axes = ["z"]
+    reader = _open_mrc_chunked_images(mrc_path)
 
-    assert reader.shape == (Z, Y, X)
-    assert reader.pixel_type == np.dtype("float32")
-    assert reader.frame_shape == (Y, X)
-
-    for z in range(Z):
-        np.testing.assert_array_equal(np.array(reader[z]), data[z])
+    assert reader.dtype == np.dtype("float32")
+    assert reader.num_channels == 1
+    assert reader.channel is None
+    assert reader.get_possible_layers() is None
+    assert reader.expected_bbox.size.to_tuple() == (X, Y, Z)
 
 
-def test_mrc_reader_reopens_per_frame(tmp_upath: UPath) -> None:
+def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
+    # MRC data is read via a memory-mapped array; each read_chunk() call must
+    # reopen its own mmap (rather than reusing a shared/cached one), so no
+    # mmap handle crosses a multiprocessing boundary between parallel jobs.
     Z, Y, X = 4, 8, 8
     data = np.zeros((Z, Y, X), dtype="uint16")
     mrc_path = tmp_upath / "test_reopen.mrc"
     with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
         mrc.set_data(data)
 
-    reader = PimsMrcReader(mrc_path)
-    reader.bundle_axes = ["y", "x"]
-    reader.iter_axes = ["z"]
+    reader = _open_mrc_chunked_images(mrc_path)
+
+    ds = Dataset(tmp_upath / "ds", (1, 1, 1))
+    layer = ds.add_layer("mrc", category="color", dtype=reader.dtype)
+    layer.bounding_box = reader.expected_bbox
+    mag_view = layer.add_mag(1)
 
     open_count = 0
     original_mmap = mrcfile.mmap
@@ -216,10 +232,11 @@ def test_mrc_reader_reopens_per_frame(tmp_upath: UPath) -> None:
 
     with patch("mrcfile.mmap", counting_mmap):
         for z in range(Z):
-            np.array(reader[z])
+            bbox = BoundingBox((0, 0, z), (X, Y, 1))
+            reader.read_chunk(bbox, mag_view=mag_view, dtype=None)
 
     assert open_count == Z, (
-        f"Expected mrcfile.mmap to be called {Z} times (once per frame), got {open_count}"
+        f"Expected mrcfile.mmap to be called {Z} times (once per chunk), got {open_count}"
     )
 
 
