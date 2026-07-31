@@ -1,10 +1,12 @@
 import json
 import warnings
 from collections.abc import Iterator
-from shutil import copytree
+from shutil import copy, copytree
+from tempfile import NamedTemporaryFile
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import httpx
 import mrcfile
 import numpy as np
 import pytest
@@ -174,6 +176,54 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
             * mag1.info.shard_shape
         ).bottomright
         assert array_shape == shard_aligned_bottomright.to_list()
+
+
+IMS_URL = "https://static.webknossos.org/data/wklibs-samples/brain_crop3.ims"
+
+
+def _download_ims(tmp_upath: UPath) -> UPath:
+    ims_path = tmp_upath / "brain_crop3.ims"
+    with NamedTemporaryFile() as download_file:
+        with httpx.stream("GET", IMS_URL, follow_redirects=True) as response:
+            for chunk in response.iter_bytes():
+                download_file.write(chunk)
+        # copy() reopens the file by name, so pending writes must be flushed
+        # to disk first, or the copy would see a truncated file.
+        download_file.flush()
+        copy(download_file.name, str(ims_path))
+    return ims_path
+
+
+def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
+    # brain_crop3.ims has 2 channels and no explicit channel is selected, so
+    # ImsChunkedImages.get_possible_layers() reports {"channel": [0, 1]} and
+    # from_images() (which always passes allow_multiple_layers=True) should
+    # split it into one layer per channel instead of picking just the first.
+    ims_path = _download_ims(tmp_upath)
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            ims_path,
+            tmp_upath / "ds",
+            (1, 1, 1),
+            layer_name="brain",
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"brain__channel0", "brain__channel1"}
+
+    channel_data = {}
+    for layer_name, layer in ds.layers.items():
+        assert layer.dtype == np.dtype("uint16")
+        assert layer.num_channels == 1
+        assert layer.bounding_box.size.to_tuple() == (673, 635, 51)
+        channel_data[layer_name] = layer.get_finest_mag().read()[0]
+
+    # Sanity check the two layers actually hold different channel data,
+    # rather than both being (accidentally) the same channel duplicated.
+    assert not np.array_equal(
+        channel_data["brain__channel0"], channel_data["brain__channel1"]
+    )
 
 
 def _open_mrc_chunked_images(mrc_path: UPath) -> MrcChunkedImages:
