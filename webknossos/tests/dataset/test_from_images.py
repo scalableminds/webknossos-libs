@@ -1,3 +1,4 @@
+import importlib
 import json
 import warnings
 from collections.abc import Iterator
@@ -13,7 +14,7 @@ from tifffile import TiffFile, imwrite
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR
-from tests.utils import download_ims_fixture
+from tests.utils import create_synthetic_multi_timepoint_ims, download_ims_fixture
 from webknossos.dataset import Dataset, RemoteDataset
 from webknossos.dataset._utils.mrc_chunked_images import MrcChunkedImages
 from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
@@ -207,6 +208,51 @@ def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     assert not np.array_equal(
         channel_data["brain__channel0"], channel_data["brain__channel1"]
     )
+
+
+def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # from_images() always passes allow_multiple_layers=True internally, so a
+    # multi-channel + multi-timepoint .ims file should split into one layer
+    # per channel (via get_possible_layers()'s {"channel": [...]} report),
+    # each keeping its own "t" axis for all timepoints, rather than raising
+    # the "multiple timepoints and multiple channels" ValueError that firing
+    # on the unpinned from_images() discovery probe would otherwise cause.
+    ims_path = tmp_upath / "synthetic_multi_t_multi_c.ims"
+    create_synthetic_multi_timepoint_ims(
+        ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
+    )
+    ims_chunked_images = importlib.import_module(
+        "webknossos.dataset._utils.ims_chunked_images"
+    )
+    monkeypatch.setattr(
+        ims_chunked_images,
+        "_read_ims_metadata_quietly",
+        lambda _path: ((2, 3, 4, 8, 10), np.dtype("uint16")),
+    )
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            ims_path,
+            tmp_upath / "ds",
+            (1, 1, 1),
+            layer_name="multi",
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {
+        "multi__channel0",
+        "multi__channel1",
+        "multi__channel2",
+    }
+    for c in range(3):
+        layer = ds.layers[f"multi__channel{c}"]
+        assert layer.bounding_box.axes == ("t", "x", "y", "z")
+        assert layer.bounding_box.size.to_tuple() == (2, 10, 8, 4)
+        data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
+        for t in range(2):
+            assert (data[t] == t * 100 + c).all()
 
 
 def _open_mrc_chunked_images(mrc_path: UPath) -> MrcChunkedImages:

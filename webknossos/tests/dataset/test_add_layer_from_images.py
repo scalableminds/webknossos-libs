@@ -20,7 +20,7 @@ from upath import UPath
 
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
-from tests.utils import download_ims_fixture
+from tests.utils import create_synthetic_multi_timepoint_ims, download_ims_fixture
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -217,27 +217,6 @@ def test_ims_from_images_flip_and_swap(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(actual, expected)
 
 
-def _create_synthetic_multi_timepoint_ims(
-    path: UPath, *, num_timepoints: int, num_channels: int, z: int, y: int, x: int
-) -> None:
-    # Minimal HDF5 structure matching what ImsChunkedImages actually reads
-    # (DataSet/ResolutionLevel 0/TimePoint {t}/Channel {c}/Data). This
-    # intentionally skips the DataSetInfo attributes that the full
-    # imaris_ims_file_reader library needs, since _read_ims_metadata_quietly
-    # is monkeypatched in these tests instead of relying on a byte-perfect
-    # Imaris file.
-    with h5py.File(str(path), "w") as f:
-        res0 = f.create_group("DataSet").create_group("ResolutionLevel 0")
-        for t in range(num_timepoints):
-            tp = res0.create_group(f"TimePoint {t}")
-            for c in range(num_channels):
-                ch = tp.create_group(f"Channel {c}")
-                # encodes (t, c) into every voxel so we can verify both axes
-                # were read correctly, independent of x/y/z position
-                data = np.full((z, y, x), t * 100 + c, dtype=np.uint16)
-                ch.create_dataset("Data", data=data)
-
-
 def test_ims_from_images_multi_timepoint(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -245,7 +224,7 @@ def test_ims_from_images_multi_timepoint(
     # capability of the ChunkedImages abstraction: the bounding box gets a "t"
     # axis, and each chunk along it reads its own timepoint.
     ims_path = tmp_upath / "synthetic_multi_t.ims"
-    _create_synthetic_multi_timepoint_ims(
+    create_synthetic_multi_timepoint_ims(
         ims_path, num_timepoints=3, num_channels=1, z=4, y=8, x=10
     )
     ims_chunked_images = importlib.import_module(
@@ -273,16 +252,20 @@ def test_ims_from_images_multi_timepoint(
         assert (data[t] == t * 100).all()
 
 
-def test_ims_from_images_multi_timepoint_multi_channel_requires_explicit_timepoint(
+def test_ims_from_images_multi_timepoint_multi_channel_single_layer_requires_explicit_timepoint(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # expected_bbox never carries a "c" axis (channels are handled via
     # num_channels/mag_view directly), so a file with both multiple
     # timepoints and multiple (3+) channels can't be chunked along "t"
-    # without an explicit timepoint — this must fail clearly rather than
-    # silently producing wrong data.
+    # without an explicit timepoint *when it's forced into a single layer*
+    # (allow_multiple_layers=False, the default here) — this must fail
+    # clearly rather than silently producing wrong data. With
+    # allow_multiple_layers=True instead, channels are split into separate
+    # layers first (each pinned to one channel), which resolves the
+    # conflict — see test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers.
     ims_path = tmp_upath / "synthetic_multi_t_multi_c.ims"
-    _create_synthetic_multi_timepoint_ims(
+    create_synthetic_multi_timepoint_ims(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
     ims_chunked_images = importlib.import_module(
@@ -303,6 +286,49 @@ def test_ims_from_images_multi_timepoint_multi_channel_requires_explicit_timepoi
                 data_format="zarr3",
                 executor=executor,
             )
+
+
+def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # With allow_multiple_layers=True, a multi-channel + multi-timepoint .ims
+    # file should split into one layer per channel, each still keeping its
+    # own "t" axis for all timepoints, rather than raising.
+    ims_path = tmp_upath / "synthetic_multi_t_multi_c.ims"
+    create_synthetic_multi_timepoint_ims(
+        ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
+    )
+    ims_chunked_images = importlib.import_module(
+        "webknossos.dataset._utils.ims_chunked_images"
+    )
+    monkeypatch.setattr(
+        ims_chunked_images,
+        "_read_ims_metadata_quietly",
+        lambda _path: ((2, 3, 4, 8, 10), np.dtype("uint16")),
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            ims_path,
+            layer_name="multi_t_multi_c",
+            data_format="zarr3",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {
+        "multi_t_multi_c__channel0",
+        "multi_t_multi_c__channel1",
+        "multi_t_multi_c__channel2",
+    }
+    for c in range(3):
+        layer = ds.layers[f"multi_t_multi_c__channel{c}"]
+        assert layer.bounding_box.axes == ("t", "x", "y", "z")
+        assert layer.bounding_box.size.to_tuple() == (2, 10, 8, 4)
+        data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
+        for t in range(2):
+            assert (data[t] == t * 100 + c).all()
 
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:

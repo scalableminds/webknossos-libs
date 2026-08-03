@@ -63,7 +63,19 @@ class ChunkedImages(ABC):
         native Mag(1) space. Unlike PimsImages.expected_bbox, this never
         needs placeholder inflation, since chunk-based formats know their
         true extents from metadata alone.
+
+        May raise if the format/channel/timepoint combination is ambiguous
+        (e.g. a multi-channel, multi-timepoint .ims file with neither pinned)
+        — callers that only need to know whether the data is 2D or 3D should
+        use `has_z_dimension` instead, which is always well-defined.
         """
+
+    @property
+    @abstractmethod
+    def has_z_dimension(self) -> bool:
+        """Whether the data has more than one z-slice. Always well-defined,
+        independent of any channel/timepoint ambiguity that expected_bbox
+        may not be able to resolve."""
 
     @abstractmethod
     def get_possible_layers(self) -> dict[str, list[int]] | None:

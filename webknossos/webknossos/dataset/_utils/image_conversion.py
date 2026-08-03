@@ -185,8 +185,11 @@ def _has_image_z_dimension(
     is_segmentation: bool,
 ) -> bool:
     # Formats handled by a registered ChunkedImages subclass (e.g. .ims) are
-    # never probed through PimsImages/pims — they know their exact
-    # expected_bbox directly, and this is the only way such files are read.
+    # never probed through PimsImages/pims — they know their exact extents
+    # directly, and this is the only way such files are read. has_z_dimension
+    # (rather than expected_bbox) is used here since this probe always opens
+    # with channel=None/timepoint=None, which expected_bbox may not be able
+    # to resolve for e.g. a multi-channel, multi-timepoint .ims file.
     chunked_images = try_open_chunked_images(
         filepath,
         channel=None,
@@ -198,7 +201,7 @@ def _has_image_z_dimension(
         is_segmentation=is_segmentation,
     )
     if chunked_images is not None:
-        return chunked_images.expected_bbox.get_shape("z") > 1
+        return chunked_images.has_z_dimension
     return pims_images.has_image_z_dimension(
         filepath, use_bioformats=use_bioformats, is_segmentation=is_segmentation
     )

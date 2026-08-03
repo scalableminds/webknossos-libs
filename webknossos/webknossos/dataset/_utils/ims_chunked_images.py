@@ -105,17 +105,17 @@ class ImsChunkedImages(ChunkedImages):
         # (channels are handled via num_channels/mag_view directly), so this
         # can't be combined with num_channels > 1 without an explicit
         # timepoint — the resulting (t, x, y, z) bbox has no room for a
-        # channel dimension.
+        # channel dimension. This is only actually a problem if the caller
+        # ends up using *this* instance directly (see expected_bbox below):
+        # add_layer_from_images(..., allow_multiple_layers=True) reopens a
+        # fresh instance per channel with `channel` pinned before ever
+        # reading expected_bbox, which makes num_channels == 1 and resolves
+        # the conflict — so raising here (before that per-channel reopening
+        # even had a chance to happen) would break that case unnecessarily.
         if timepoint is not None:
             self._fixed_timepoint: int | None = timepoint
             self._include_t_axis = False
         elif t > 1:
-            if self.num_channels > 1:
-                raise ValueError(
-                    f"{path} has multiple timepoints and multiple channels; "
-                    "please pass an explicit `timepoint=` to select one when "
-                    "converting a multi-channel, multi-timepoint .ims file."
-                )
             self._fixed_timepoint = None
             self._include_t_axis = True
         else:
@@ -132,7 +132,24 @@ class ImsChunkedImages(ChunkedImages):
         return self._possible_layers
 
     @property
+    def has_z_dimension(self) -> bool:
+        return self._z > 1
+
+    @property
     def expected_bbox(self) -> NDBoundingBox:
+        if self._include_t_axis and self.num_channels > 1:
+            # See the comment in __init__: this instance was never reopened
+            # with a specific channel pinned (add_layer_from_images only does
+            # that when allow_multiple_layers=True and get_possible_layers()
+            # reported a "channel" split), so there's genuinely no axis left
+            # to represent both multiple timepoints and multiple channels.
+            raise ValueError(
+                f"{self.path} has multiple timepoints and multiple channels; "
+                "please pass an explicit `timepoint=`, or `allow_multiple_layers=True` "
+                "to split channels into separate layers (each keeping all timepoints), "
+                "when converting a multi-channel, multi-timepoint .ims file."
+            )
+
         x_size, y_size = self._x, self._y
         if self._swap_xy:
             x_size, y_size = y_size, x_size

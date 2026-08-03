@@ -93,6 +93,10 @@ class MrcChunkedImages(ChunkedImages):
         return None
 
     @property
+    def has_z_dimension(self) -> bool:
+        return self._z > 1
+
+    @property
     def expected_bbox(self) -> NDBoundingBox:
         x_size, y_size = self._x, self._y
         if self._swap_xy:
