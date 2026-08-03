@@ -4,6 +4,11 @@ from .bounding_box import BoundingBox
 from .mag import Mag, MagLike
 from .nd_bounding_box import NDBoundingBox
 from .normalized_bounding_box import NormalizedBoundingBox
-from .vec3_float import Vec3Float, Vec3FloatLike, parse_vec3_float
+from .vec3_float import (
+    Vec3Float,
+    Vec3FloatLike,
+    parse_vec3_float,
+    parse_vec3_float_or_none,
+)
 from .vec3_int import Vec3Int, Vec3IntLike
 from .vec_int import VecInt, VecIntLike

@@ -77,7 +77,14 @@ from ..dataset_properties import (
     DataFormat,
     VoxelSize,
 )
-from ..geometry import NDBoundingBox, Vec3Float, Vec3Int, Vec3IntLike
+from ..geometry import (
+    NDBoundingBox,
+    Vec3Float,
+    Vec3FloatLike,
+    Vec3Int,
+    Vec3IntLike,
+    parse_vec3_float_or_none,
+)
 from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import (
@@ -161,8 +168,12 @@ class Annotation:
     owner_name: str | None = None
     annotation_id: str | None = None
     time: int | None = attr.ib(factory=time_since_epoch_in_ms)
-    edit_position: Vec3Float | None = None
-    edit_rotation: Vec3Float | None = None
+    edit_position: Vec3Float | None = attr.ib(
+        default=None, converter=parse_vec3_float_or_none
+    )
+    edit_rotation: Vec3Float | None = attr.ib(
+        default=None, converter=parse_vec3_float_or_none
+    )
     zoom_level: float | None = None
     metadata: dict[str, str] = attr.Factory(dict)
     task_bounding_box: NDBoundingBox | None = None
@@ -1391,8 +1402,8 @@ class RemoteAnnotation(Annotation):
         skeleton: Skeleton,
         owner_name: str,
         time: int | None = None,
-        edit_position: Vec3Float | None = None,
-        edit_rotation: Vec3Float | None = None,
+        edit_position: Vec3FloatLike | None = None,
+        edit_rotation: Vec3FloatLike | None = None,
         zoom_level: float | None = None,
         task_bounding_box: NDBoundingBox | None = None,
         user_bounding_boxes: list[NDBoundingBox] | None = None,
@@ -1406,8 +1417,8 @@ class RemoteAnnotation(Annotation):
         self.organization_id = organization_id
         self.owner_name = owner_name
         self.time = time
-        self.edit_position = edit_position
-        self.edit_rotation = edit_rotation
+        self.edit_position = parse_vec3_float_or_none(edit_position)
+        self.edit_rotation = parse_vec3_float_or_none(edit_rotation)
         self.zoom_level = zoom_level
         self.task_bounding_box = task_bounding_box
         self.user_bounding_boxes = user_bounding_boxes or []

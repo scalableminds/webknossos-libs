@@ -35,3 +35,12 @@ def parse_vec3_float(vec3_float_like: Vec3FloatLike) -> Vec3Float:
             f"Vector components must be three floats, got an object of shape {array.shape}."
         )
     return (float(array[0]), float(array[1]), float(array[2]))
+
+
+def parse_vec3_float_or_none(
+    vec3_float_like: Vec3FloatLike | None,
+) -> Vec3Float | None:
+    """Like `parse_vec3_float`, but passes `None` through."""
+    if vec3_float_like is None:
+        return None
+    return parse_vec3_float(vec3_float_like)

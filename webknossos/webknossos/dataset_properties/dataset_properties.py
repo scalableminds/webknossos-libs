@@ -1,9 +1,9 @@
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 
 import attr
 import numpy as np
 
-from ..geometry import Mag, NormalizedBoundingBox, Vec3Float
+from ..geometry import Mag, NormalizedBoundingBox, Vec3Float, parse_vec3_float
 from .coordinate_transformations import CoordinateTransformation
 from .data_format import AttachmentDataFormat, DataFormat
 from .layer_categories import LayerCategoryType
@@ -11,18 +11,6 @@ from .length_unit import _LENGTH_UNIT_TO_NANOMETER, LengthUnit
 
 DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER
 DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
-
-
-def float_tpl(voxel_size: list | tuple) -> Iterable:
-    # Fix for mypy bug https://github.com/python/mypy/issues/5313.
-    # Solution based on other issue for the same bug: https://github.com/python/mypy/issues/8389.
-    return tuple(
-        (
-            voxel_size[0],
-            voxel_size[1],
-            voxel_size[2],
-        )
-    )
 
 
 @attr.define
@@ -146,7 +134,7 @@ class SegmentationLayerProperties(LayerProperties):
 
 @attr.define
 class VoxelSize:
-    factor: Vec3Float = attr.field(converter=float_tpl)
+    factor: Vec3Float = attr.field(converter=parse_vec3_float)
     unit: LengthUnit = DEFAULT_LENGTH_UNIT
 
     def to_nanometer(self) -> Vec3Float:

@@ -24,7 +24,7 @@ from ..geometry import (
     BoundingBox,
     Mag,
     NDBoundingBox,
-    Vec3Float,
+    Vec3FloatLike,
     Vec3Int,
     Vec3IntLike,
     VecIntLike,
@@ -287,7 +287,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     def __init__(
         self,
         dataset_path: str | PathLike | UPath,
-        voxel_size: Vec3Float | None = None,  # in nanometers
+        voxel_size: Vec3FloatLike | None = None,  # in nanometers
         name: str | None = None,
         exist_ok: bool = False,
         *,
@@ -813,7 +813,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         cls,
         input_path: str | PathLike | UPath,
         output_path: str | PathLike | UPath,
-        voxel_size: Vec3Float | None = None,
+        voxel_size: Vec3FloatLike | None = None,
         name: str | None = None,
         *,
         map_filepath_to_layer_name: ConversionLayerMapping
@@ -2198,7 +2198,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         self,
         new_dataset_path: str | PathLike | UPath,
         *,
-        voxel_size: Vec3Float | None = None,
+        voxel_size: Vec3FloatLike | None = None,
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         chunks_per_shard: Vec3IntLike | int | None = None,

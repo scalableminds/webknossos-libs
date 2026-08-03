@@ -6,7 +6,7 @@ import networkx as nx
 from upath import UPath
 
 from ..dataset_properties import _LENGTH_UNIT_TO_NANOMETER, VoxelSize
-from ..geometry import Vec3Float
+from ..geometry import Vec3Float, Vec3FloatLike, parse_vec3_float
 from .group import Group
 
 
@@ -127,13 +127,14 @@ class Skeleton(Group):
         return self._voxel_size.to_nanometer()
 
     @voxel_size.setter
-    def voxel_size(self, voxel_size: Vec3Float) -> None:
+    def voxel_size(self, voxel_size: Vec3FloatLike) -> None:
         """Set the voxel size of the skeleton in nanometers.
 
         Args:
             voxel_size (Vec3Float): A tuple (x, y, z) representing the new voxel size in nanometers.
         """
         assert isinstance(self._voxel_size, VoxelSize)
+        voxel_size = parse_vec3_float(voxel_size)
         conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self._voxel_size.unit]
         new_factor = (
             voxel_size[0] / conversion_factor,

@@ -52,7 +52,7 @@ from webknossos.dataset_properties import (
 from webknossos.geometry import (
     BoundingBox,
     NDBoundingBox,
-    Vec3Float,
+    Vec3FloatLike,
     Vec3Int,
     Vec3IntLike,
 )
@@ -1532,7 +1532,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def from_images(
         cls,
         input_path: str | PathLike | UPath,
-        voxel_size: Vec3Float | None = None,
+        voxel_size: Vec3FloatLike | None = None,
         name: str | None = None,
         *,
         map_filepath_to_layer_name: Any = None,

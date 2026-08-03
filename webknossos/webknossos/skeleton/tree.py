@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 import networkx as nx
 import numpy as np
 
-from ..geometry import Vec3Float, Vec3Int, Vec3IntLike
+from ..geometry import Vec3FloatLike, Vec3Int, Vec3IntLike
 from .node import Node
 
 if TYPE_CHECKING:
@@ -278,7 +278,7 @@ class Tree(nx.Graph):
         position: Vec3IntLike,
         comment: str | None = None,
         radius: float | None = None,
-        rotation: Vec3Float | None = None,
+        rotation: Vec3FloatLike | None = None,
         inVp: int | None = None,
         inMag: int | None = None,
         bitDepth: int | None = None,
