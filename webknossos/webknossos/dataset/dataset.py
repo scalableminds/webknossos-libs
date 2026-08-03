@@ -27,7 +27,7 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
-from . import image_conversion
+from ._utils import image_conversion
 from .abstract_dataset import (
     DEFAULT_VERSION,
     AbstractDataset,

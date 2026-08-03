@@ -25,7 +25,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from ..dataset_properties import (
+from ...dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
     DataFormat,
@@ -34,29 +34,36 @@ from ..dataset_properties import (
     SegmentationLayerProperties,
     VoxelSize,
 )
-from ..geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecIntLike
-from ..geometry.mag import MagLike
-from ..utils import named_partial, wait_and_ensure_success, wrap_executor
-from ._utils import pims_images
-from ._utils.chunked_images import (
+from ...geometry import (
+    BoundingBox,
+    Mag,
+    NDBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+    VecIntLike,
+)
+from ...geometry.mag import MagLike
+from ...utils import named_partial, wait_and_ensure_success, wrap_executor
+from ..defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
+from ..layer import Layer, SegmentationLayer
+from ..layer.abstract_layer import _UNALLOWED_LAYER_NAME_CHARS, _validate_layer_name
+from ..layer.layer import _get_shard_and_chunk_shapes
+from . import pims_images
+from .chunked_images import (
     ChunkedImages,
     get_valid_chunked_image_suffixes,
     try_open_chunked_images,
 )
-from ._utils.segmentation_recognition import (
+from .segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
 )
-from .defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
-from .layer import Layer, SegmentationLayer
-from .layer.abstract_layer import _UNALLOWED_LAYER_NAME_CHARS, _validate_layer_name
-from .layer.layer import _get_shard_and_chunk_shapes
 
 if TYPE_CHECKING:
     import pims
 
-    from .dataset import Dataset
-    from .layer.view import MagView
+    from ..dataset import Dataset
+    from ..layer.view import MagView
 
 
 logger = logging.getLogger(__name__)
