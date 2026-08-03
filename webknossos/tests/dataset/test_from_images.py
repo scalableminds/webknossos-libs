@@ -259,7 +259,6 @@ def _open_mrc_chunked_images(mrc_path: UPath) -> MrcChunkedImages:
     return MrcChunkedImages(
         mrc_path,
         channel=None,
-        timepoint=None,
         swap_xy=False,
         flip_x=False,
         flip_y=False,

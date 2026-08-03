@@ -38,7 +38,6 @@ class MrcChunkedImages(ChunkedImages):
         path: UPath,
         *,
         channel: int | None,
-        timepoint: int | None,
         swap_xy: bool,
         flip_x: bool,
         flip_y: bool,
@@ -48,7 +47,6 @@ class MrcChunkedImages(ChunkedImages):
         super().__init__(
             path,
             channel=channel,
-            timepoint=timepoint,
             swap_xy=swap_xy,
             flip_x=flip_x,
             flip_y=flip_y,
@@ -91,10 +89,6 @@ class MrcChunkedImages(ChunkedImages):
 
     def get_possible_layers(self) -> dict[str, list[int]] | None:
         return None
-
-    @property
-    def has_z_dimension(self) -> bool:
-        return self._z > 1
 
     @property
     def expected_bbox(self) -> NDBoundingBox:

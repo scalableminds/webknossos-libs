@@ -13,14 +13,17 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.2...HEAD)
 
 ### Breaking Changes
+- Removed the `timepoint` argument of `Dataset.add_layer_from_images`. Timeseries are now converted into a single layer with a `t` axis covering all timepoints, so selecting one only discarded data. Remove the argument from calls, and slice the `t` axis afterwards if you need a single timepoint. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 ### Added
 - Added support for converting Imaris (`.ims`) files via `Dataset.from_images`/`add_layer_from_images`, including multi-channel and multi-timepoint files. Converting a file that is both multi-channel and multi-timepoint yields one layer per channel, each keeping all of its timepoints. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 ### Changed
 - `.ims` and MRC file conversion now reads shard-sized blocks directly instead of slice-by-slice, improving conversion performance for large files. `use_bioformats` no longer has any effect on `.ims`/MRC conversion, since these formats are now always read through a dedicated reader. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
+- Timepoints are no longer split into separate layers by `allow_multiple_layers=True`; readers that can address them expose all timepoints on a `t` axis within one layer instead. Readers that cannot (images without dimension metadata) now warn that only the first timepoint is converted. `allow_multiple_layers` still splits channels. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 ### Fixed
+- Fixed the bounding box reported for multi-channel n-dimensional images (e.g. a multi-channel, multi-timepoint file) contradicting the layer's channel count, which caused a spurious "Some images are larger than expected" warning and a bounding box that disagreed with the written data. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 
 ## [3.5.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.2) - 2026-06-18

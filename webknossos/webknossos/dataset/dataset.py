@@ -1117,7 +1117,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         dtype: DTypeLike | None = None,
         use_bioformats: bool = False,
         channel: int | None = None,
-        timepoint: int | None = None,
         czi_channel: int | None = None,
         batch_size: int | None = None,  # defaults to shard-size z
         allow_multiple_layers: bool = False,
@@ -1152,11 +1151,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
           [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html) directly, needs a JVM,
           set to `False` to forbid using the bioformats adapter. Defaults to `False`.
         * `channel`: may be used to select a single channel, if multiple are available
-        * `timepoint`: for timeseries, select a timepoint to use by specifying it as an int, starting from 0
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
         * `batch_size`: size to process the images (influences RAM consumption), must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
-        * `allow_multiple_layers`: set to `True` if timepoints or channels may result in multiple layers being added (only the first is returned)
-        * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels or timepoints
+        * `allow_multiple_layers`: set to `True` if channels may result in multiple layers being added (only the first is returned)
+        * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
         """
@@ -1180,7 +1178,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             dtype=dtype,
             use_bioformats=use_bioformats,
             channel=channel,
-            timepoint=timepoint,
             czi_channel=czi_channel,
             batch_size=batch_size,
             allow_multiple_layers=allow_multiple_layers,

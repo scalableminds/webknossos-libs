@@ -185,15 +185,11 @@ def _has_image_z_dimension(
     is_segmentation: bool,
 ) -> bool:
     # Formats handled by a registered ChunkedImages subclass (e.g. .ims) are
-    # never probed through PimsImages/pims — they know their exact extents
-    # directly, and this is the only way such files are read. has_z_dimension
-    # (rather than expected_bbox) is used here since this probe always opens
-    # with channel=None/timepoint=None, which expected_bbox may not be able
-    # to resolve for e.g. a multi-channel, multi-timepoint .ims file.
+    # never probed through PimsImages/pims — they know their exact
+    # expected_bbox directly, and this is the only way such files are read.
     chunked_images = try_open_chunked_images(
         filepath,
         channel=None,
-        timepoint=None,
         swap_xy=False,
         flip_x=False,
         flip_y=False,
@@ -201,7 +197,7 @@ def _has_image_z_dimension(
         is_segmentation=is_segmentation,
     )
     if chunked_images is not None:
-        return chunked_images.has_z_dimension
+        return chunked_images.expected_bbox.get_shape("z") > 1
     return pims_images.has_image_z_dimension(
         filepath, use_bioformats=use_bioformats, is_segmentation=is_segmentation
     )
@@ -491,7 +487,6 @@ def add_layer_from_images(
     dtype: DTypeLike | None = None,
     use_bioformats: bool = False,
     channel: int | None = None,
-    timepoint: int | None = None,
     czi_channel: int | None = None,
     batch_size: int | None = None,  # defaults to shard-size z
     allow_multiple_layers: bool = False,
@@ -528,7 +523,6 @@ def add_layer_from_images(
         return try_open_chunked_images(
             images,
             channel=open_kwargs.get("channel", channel),
-            timepoint=open_kwargs.get("timepoint", timepoint),
             swap_xy=swap_xy,
             flip_x=flip_x,
             flip_y=flip_y,
@@ -554,16 +548,13 @@ def add_layer_from_images(
         )
 
     image_source: pims_images.PimsImages | ChunkedImages
-    chunked_image_source = _open_chunked_images(
-        {"channel": channel, "timepoint": timepoint}
-    )
+    chunked_image_source = _open_chunked_images({"channel": channel})
     if chunked_image_source is not None:
         image_source = chunked_image_source
     else:
         image_source = pims_images.PimsImages(
             images,
             channel=channel,
-            timepoint=timepoint,
             czi_channel=czi_channel,
             swap_xy=swap_xy,
             flip_x=flip_x,
@@ -591,17 +582,18 @@ def add_layer_from_images(
         if allow_multiple_layers:
             # Get all combinations of possible layers. E.g.
             # possible_layers = {
-            #    "channel": [0, 1, 3, 4, 5],
-            #    "timepoint": [0, 1],
+            #    "channel": [0, 1, 2],
+            #    "czi_channel": [0, 1],
             # }
             # suffix_with_pims_open_kwargs_per_layer = {
-            #    "__channel0_timepoint0", {"channel": 0, "timepoint": 0},
-            #    "__channel0_timepoint1", {"channel": 0, "timepoint": 1},
-            #    "__channel0_timepoint2", {"channel": 0, "timepoint": 2},
+            #    "__channel0_czi_channel0", {"channel": 0, "czi_channel": 0},
+            #    "__channel0_czi_channel1", {"channel": 0, "czi_channel": 1},
             #    …,
-            #    "__channel1_timepoint0", {"channel": 1, "timepoint": 0},
+            #    "__channel1_czi_channel0", {"channel": 1, "czi_channel": 0},
             #    …,
             # }
+            # Timepoints are never split this way: readers that can address
+            # them expose all timepoints on a "t" axis within a single layer.
             suffix_with_pims_open_kwargs_per_layer = {
                 "__" + "_".join(f"{k}{v}" for k, v in sorted(pairs)): dict(pairs)
                 for pairs in product(
@@ -640,7 +632,6 @@ def add_layer_from_images(
         if len(pims_open_kwargs) > 0:
             # Set parameters from this method as default
             # if they are not part of the kwargs per layer:
-            pims_open_kwargs.setdefault("timepoint", timepoint)  # type: ignore
             pims_open_kwargs.setdefault("channel", channel)  # type: ignore
             pims_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
             image_source = _reopen_image_source(pims_open_kwargs)

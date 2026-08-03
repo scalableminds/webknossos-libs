@@ -217,6 +217,18 @@ def test_ims_from_images_flip_and_swap(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(actual, expected)
 
 
+def test_timepoint_argument_is_removed(tmp_upath: UPath) -> None:
+    # All timepoints land in one layer on a "t" axis, so there is nothing left
+    # to select; the argument is gone rather than silently ignored.
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with pytest.raises(TypeError, match="timepoint"):
+        ds.add_layer_from_images(
+            tmp_upath / "unused.ims",
+            layer_name="x",
+            timepoint=0,  # type: ignore[call-arg]
+        )
+
+
 def test_ims_from_images_multi_timepoint(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -252,18 +264,15 @@ def test_ims_from_images_multi_timepoint(
         assert (data[t] == t * 100).all()
 
 
-def test_ims_from_images_multi_timepoint_multi_channel_single_layer_requires_explicit_timepoint(
+def test_ims_from_images_multi_timepoint_multi_channel_single_layer_keeps_both_axes(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # expected_bbox never carries a "c" axis (channels are handled via
-    # num_channels/mag_view directly), so a file with both multiple
-    # timepoints and multiple (3+) channels can't be chunked along "t"
-    # without an explicit timepoint *when it's forced into a single layer*
-    # (allow_multiple_layers=False, the default here) — this must fail
-    # clearly rather than silently producing wrong data. With
-    # allow_multiple_layers=True instead, channels are split into separate
-    # layers first (each pinned to one channel), which resolves the
-    # conflict — see test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers.
+    # expected_bbox reports every axis the source actually has, so a file with
+    # both multiple timepoints and multiple (3+) channels fits in a single
+    # layer as (t, c, x, y, z) — "c" is where NormalizedBoundingBox reads
+    # num_channels from, and NDBoundingBox.chunk() keeps it whole. Splitting
+    # channels into separate layers is what allow_multiple_layers=True does
+    # instead — see test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers.
     ims_path = tmp_upath / "synthetic_multi_t_multi_c.ims"
     create_synthetic_multi_timepoint_ims(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
@@ -278,14 +287,22 @@ def test_ims_from_images_multi_timepoint_multi_channel_single_layer_requires_exp
     )
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
-    with pytest.raises(ValueError, match="multiple timepoints and multiple channels"):
-        with SequentialExecutor() as executor:
-            ds.add_layer_from_images(
-                ims_path,
-                layer_name="multi_t_multi_c",
-                data_format="zarr3",
-                executor=executor,
-            )
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ims_path,
+            layer_name="multi_t_multi_c",
+            data_format="zarr3",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.axes == ("t", "c", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (2, 3, 10, 8, 4)
+    assert layer.num_channels == 3
+    data = layer.get_finest_mag().read()
+    assert data.shape == (2, 3, 10, 8, 4)
+    for t in range(2):
+        for c in range(3):
+            assert (data[t, c] == t * 100 + c).all()
 
 
 def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
@@ -558,10 +575,10 @@ BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]
     (
         "https://static.webknossos.org/data/wklibs-samples/wtembryo.zip",
         "wtembryo.mov",
-        {"timepoint": 50, "swap_xy": True},
+        {"swap_xy": True},
         "uint8",
         3,
-        (240, 320, 1),
+        (240, 320, 108),
         1,
     ),
     (
@@ -571,15 +588,6 @@ BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]
         "uint8",
         1,
         (512, 512, 30),
-        1,
-    ),
-    (
-        "https://static.webknossos.org/data/wklibs-samples/sdub.zip",
-        "sdub*.pic",
-        {"timepoint": 3},
-        "uint8",
-        1,
-        (192, 128, 9),
         1,
     ),
     (

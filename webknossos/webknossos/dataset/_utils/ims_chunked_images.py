@@ -60,7 +60,6 @@ class ImsChunkedImages(ChunkedImages):
         path: UPath,
         *,
         channel: int | None,
-        timepoint: int | None,
         swap_xy: bool,
         flip_x: bool,
         flip_y: bool,
@@ -70,7 +69,6 @@ class ImsChunkedImages(ChunkedImages):
         super().__init__(
             path,
             channel=channel,
-            timepoint=timepoint,
             swap_xy=swap_xy,
             flip_x=flip_x,
             flip_y=flip_y,
@@ -98,29 +96,12 @@ class ImsChunkedImages(ChunkedImages):
         if possible_channels is not None:
             self._possible_layers["channel"] = possible_channels
 
-        # A "t" axis is only needed on the bounding box when there are
-        # multiple timepoints and the user didn't pin one; each chunk along
-        # that axis then carries its own timepoint (chunk size 1), read per
-        # chunk in read_chunk() below. expected_bbox never carries a "c" axis
-        # (channels are handled via num_channels/mag_view directly), so this
-        # can't be combined with num_channels > 1 without an explicit
-        # timepoint — the resulting (t, x, y, z) bbox has no room for a
-        # channel dimension. This is only actually a problem if the caller
-        # ends up using *this* instance directly (see expected_bbox below):
-        # add_layer_from_images(..., allow_multiple_layers=True) reopens a
-        # fresh instance per channel with `channel` pinned before ever
-        # reading expected_bbox, which makes num_channels == 1 and resolves
-        # the conflict — so raising here (before that per-channel reopening
-        # even had a chance to happen) would break that case unnecessarily.
-        if timepoint is not None:
-            self._fixed_timepoint: int | None = timepoint
-            self._include_t_axis = False
-        elif t > 1:
-            self._fixed_timepoint = None
-            self._include_t_axis = True
-        else:
-            self._fixed_timepoint = 0
-            self._include_t_axis = False
+        # A "t" axis is only added to the bounding box when there actually are
+        # multiple timepoints; each chunk along that axis then carries its own
+        # timepoint (chunk size 1), read per chunk in read_chunk() below. A
+        # single-timepoint file stays 3D and always reads timepoint 0.
+        self._include_t_axis = t > 1
+        self._fixed_timepoint: int | None = None if self._include_t_axis else 0
 
     @property
     def channel(self) -> int | None:
@@ -132,33 +113,28 @@ class ImsChunkedImages(ChunkedImages):
         return self._possible_layers
 
     @property
-    def has_z_dimension(self) -> bool:
-        return self._z > 1
-
-    @property
     def expected_bbox(self) -> NDBoundingBox:
-        if self._include_t_axis and self.num_channels > 1:
-            # See the comment in __init__: this instance was never reopened
-            # with a specific channel pinned (add_layer_from_images only does
-            # that when allow_multiple_layers=True and get_possible_layers()
-            # reported a "channel" split), so there's genuinely no axis left
-            # to represent both multiple timepoints and multiple channels.
-            raise ValueError(
-                f"{self.path} has multiple timepoints and multiple channels; "
-                "please pass an explicit `timepoint=`, or `allow_multiple_layers=True` "
-                "to split channels into separate layers (each keeping all timepoints), "
-                "when converting a multi-channel, multi-timepoint .ims file."
-            )
-
         x_size, y_size = self._x, self._y
         if self._swap_xy:
             x_size, y_size = y_size, x_size
 
-        if not self._include_t_axis:
+        if not self._include_t_axis and self.num_channels == 1:
             return BoundingBox((0, 0, 0), (x_size, y_size, self._z))
 
-        axes = ["t", "x", "y", "z"]
-        sizes = [self._t, x_size, y_size, self._z]
+        # Report every axis the source actually has: "t" when there are
+        # multiple timepoints and none was pinned, and "c" when more than one
+        # channel is written. "c" is where NormalizedBoundingBox expects to
+        # find num_channels, and NDBoundingBox.chunk() keeps that axis whole
+        # instead of splitting it, so read_chunk() still receives the full
+        # channel extent per chunk.
+        axes = ["x", "y", "z"]
+        sizes = [x_size, y_size, self._z]
+        if self.num_channels > 1:
+            axes.insert(0, "c")
+            sizes.insert(0, self.num_channels)
+        if self._include_t_axis:
+            axes.insert(0, "t")
+            sizes.insert(0, self._t)
         return NDBoundingBox(
             VecInt.zeros(tuple(axes)),
             VecInt(sizes, axes=axes),

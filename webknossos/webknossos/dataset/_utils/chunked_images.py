@@ -36,7 +36,6 @@ class ChunkedImages(ABC):
         path: UPath,
         *,
         channel: int | None,  # noqa: ARG002 - documents the subclass constructor contract
-        timepoint: int | None,  # noqa: ARG002
         swap_xy: bool,  # noqa: ARG002
         flip_x: bool,  # noqa: ARG002
         flip_y: bool,  # noqa: ARG002
@@ -64,18 +63,11 @@ class ChunkedImages(ABC):
         needs placeholder inflation, since chunk-based formats know their
         true extents from metadata alone.
 
-        May raise if the format/channel/timepoint combination is ambiguous
-        (e.g. a multi-channel, multi-timepoint .ims file with neither pinned)
-        — callers that only need to know whether the data is 2D or 3D should
-        use `has_z_dimension` instead, which is always well-defined.
+        Reports every axis the source actually has, including "c" when more
+        than one channel is written (which is where NormalizedBoundingBox
+        reads num_channels from) and "t" for unpinned multi-timepoint data.
+        Always well-defined — it never has to reject an axis combination.
         """
-
-    @property
-    @abstractmethod
-    def has_z_dimension(self) -> bool:
-        """Whether the data has more than one z-slice. Always well-defined,
-        independent of any channel/timepoint ambiguity that expected_bbox
-        may not be able to resolve."""
 
     @abstractmethod
     def get_possible_layers(self) -> dict[str, list[int]] | None:
@@ -117,7 +109,6 @@ def try_open_chunked_images(
     images: object,
     *,
     channel: int | None,
-    timepoint: int | None,
     swap_xy: bool,
     flip_x: bool,
     flip_y: bool,
@@ -140,7 +131,6 @@ def try_open_chunked_images(
             return cls(
                 path,
                 channel=channel,
-                timepoint=timepoint,
                 swap_xy=swap_xy,
                 flip_x=flip_x,
                 flip_y=flip_y,

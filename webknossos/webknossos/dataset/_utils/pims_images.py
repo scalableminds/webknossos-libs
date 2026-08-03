@@ -104,7 +104,6 @@ class PimsImages:
         self,
         images: Union[str, UPath, "pims.FramesSequence", list[str | UPath]],
         channel: int | None,
-        timepoint: int | None,
         czi_channel: int | None,
         swap_xy: bool,
         flip_x: bool,
@@ -142,7 +141,10 @@ class PimsImages:
 
         ## arguments as inner attributes
         self._channel = channel
-        self._timepoint = timepoint
+        # Only ever set by the 5D fallback below, which cannot expose a "t"
+        # axis and therefore pins the first timepoint. Readers that name
+        # their dimensions leave this None and keep "t" as an iter axis.
+        self._timepoint: int | None = None
         self._czi_channel = czi_channel
         self._swap_xy = swap_xy
         self._flip_x = flip_x
@@ -212,12 +214,6 @@ class PimsImages:
                 if "z" in images.axes:
                     self._iter_axes.append("z")
 
-                if self._timepoint is not None:
-                    # if a timepoint is given, PimsImages should only generate image slices for that timepoint
-                    if "t" in self._iter_axes:
-                        self._iter_axes.remove("t")
-                        self._default_coords["t"] = self._timepoint
-
                 if len(self._iter_axes) > 1:
                     iter_size = 1
                     self._iter_loop_size = dict()
@@ -269,19 +265,9 @@ class PimsImages:
                         self._bundle_axes = ["y", "x", "c"]
                     self._iter_axes = ["z"]
                 elif len(images.shape) == 5:
-                    # Assume tzcyx or tzyxc
-                    # t has to be constant for this reader to obtain 4D image
-                    # (only possible if not specified manually already, since
-                    # the timepoint would already be indexed here and the
-                    # 5th dimension would be something else)
-                    if timepoint is not None:
-                        raise RuntimeError(
-                            f"Got {len(images.shape)} axes for the images after "
-                            + "removing time dimension, can only map to 3D+channels."
-                            + "To import image with more dimensions use dataformat"
-                            + "Zarr3 and set use_bioformats=True."
-                        )
-
+                    # Assume tzcyx or tzyxc. This reader addresses t
+                    # positionally (images[t]) and can only produce a 4D
+                    # image, so t is held constant at the first timepoint.
                     if _assume_color_channel(images.shape[2], images.dtype):
                         self._bundle_axes = ["c", "y", "x"]
                     else:
@@ -289,8 +275,18 @@ class PimsImages:
                     self._iter_axes = ["z"]
                     self._timepoint = 0
                     if images.shape[0] > 1:
-                        self._possible_layers["timepoint"] = list(
-                            range(0, images.shape[0])
+                        # This fallback addresses the time dimension positionally
+                        # (images[t] below) and cannot expose it as a "t" axis,
+                        # so only the first timepoint is converted. Timepoints
+                        # are no longer offered as a layer split — readers that
+                        # name their dimensions produce a real "t" axis covering
+                        # all of them in a single layer instead.
+                        warnings.warn(
+                            "[WARNING] The image has multiple timepoints, but this reader "
+                            + "cannot address them individually, so only the first one is "
+                            + "converted. Use use_bioformats=True with data_format='zarr3' "
+                            + "to convert all timepoints into a single layer with a `t` axis.",
+                            UserWarning,
                         )
                 else:
                     raise RuntimeError(
@@ -676,6 +672,16 @@ class PimsImages:
                         axis for axis in self._bundle_axes
                     ]
                     axes_sizes = [images.sizes[axis] for axis in axes_names]
+                    if "c" in axes_names:
+                        # images.sizes["c"] is the source's raw channel count,
+                        # but only self.num_channels of them are actually
+                        # written (a pinned `channel` selects one, and
+                        # _first_n_channels truncates to the first three).
+                        # Reporting the raw count here would contradict the
+                        # num_channels passed to add_layer(), which surfaces as
+                        # a spurious "images are larger than expected" warning
+                        # and a bounding box that disagrees with the data.
+                        axes_sizes[axes_names.index("c")] = self.num_channels
                     axes_index = list(range(0, len(axes_names)))
                     topleft = VecInt.zeros(tuple(axes_names))
 
@@ -784,7 +790,6 @@ def has_image_z_dimension(
         is_segmentation=is_segmentation,
         # the following arguments shouldn't matter much for the Dataset.from_images method:
         channel=None,
-        timepoint=None,
         czi_channel=None,
         swap_xy=False,
         flip_x=False,
