@@ -187,6 +187,27 @@ def test_dataset_access_via_annotation() -> None:
 
 
 @pytest.mark.skip_on_windows
+def test_annotation_dataset_rejects_other_access_modes() -> None:
+    """Annotation data is only served via zarr streaming, so mags cannot switch modes."""
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    annotation_from_file = wk.Annotation.load(path)
+    annotation_from_file.organization_id = "Organization_X"
+    annotation = wk.Annotation.download(annotation_from_file.upload())
+
+    ds = annotation.get_remote_annotation_dataset()
+    assert ds.access_mode == wk.RemoteAccessMode.ZARR_STREAMING
+    layer = ds.layers["Volume"]
+    mag = layer.get_finest_mag()
+    assert mag.direct_path is None, (
+        "An annotation's data source is not exposed by the api."
+    )
+    with pytest.raises(ValueError, match="direct paths"):
+        layer.get_mag(mag.mag, access_mode=wk.RemoteAccessMode.DIRECT_PATH)
+    with pytest.raises(ValueError, match="only supported with zarr streaming"):
+        layer.get_mag(mag.mag, access_mode=wk.RemoteAccessMode.PROXY_PATH)
+
+
+@pytest.mark.skip_on_windows
 def test_remote_annotation_list() -> None:
     path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
     annotation_from_file = wk.Annotation.load(path)

@@ -187,6 +187,7 @@ class MagView(View, Generic[LayerTypeT]):
         mag: Mag,
         path: UPath,
         read_only: bool = False,
+        data_format: DataFormat | None = None,
     ) -> None:
         """
         Do not use this constructor manually. Instead use `webknossos.dataset.layer.Layer.get_mag()`.
@@ -196,7 +197,7 @@ class MagView(View, Generic[LayerTypeT]):
             path,
             bounding_box=None,
             mag=mag,
-            data_format=layer.data_format,
+            data_format=layer.data_format if data_format is None else data_format,
             read_only=read_only,
         )
         self._layer = layer

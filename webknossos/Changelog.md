@@ -13,15 +13,24 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...HEAD)
 
 ### Breaking Changes
+- For remote datasets opened with `RemoteAccessMode.ZARR_STREAMING`, `RemoteLayer.data_format` now reports the format of the underlying storage (e.g. `zarr3`) instead of `zarr`. Use `RemoteMagView.data_format` to get the format that is actually served for a given mag.
+- The arguments of `RemoteDataset.__init__` changed. Use `RemoteDataset.open` instead, as documented.
 
 ### Added
 - Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
 - Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
-
+- The access mode of a remote dataset can now be chosen per mag: `RemoteLayer.get_mag(mag, access_mode=RemoteAccessMode.PROXY_PATH)`. Mags of the same layer may use different access modes.
+- Added `RemoteMagView` with `direct_path`, `proxy_path`, `zarr_streaming_path`, `access_mode` and `data_format`. Only the direct path is stored in the dataset properties; the zarr streaming and proxy paths are computed from the datastore url.
+- Added `RemoteDataset.access_mode`, the default access mode that all mags of a dataset inherit.
+- Added `RemoteAttachments.with_access_mode()` and `RemoteAttachments.access_mode`.
+- Added `View.data_format`.
 
 ### Changed
+- Remote datasets now load their properties from the WEBKNOSSOS api regardless of the access mode, so the underlying (direct) paths are always available. Consequently, `RemoteSegmentationLayer.attachments` is now populated in zarr streaming mode, where it used to be empty.
+- `RemoteDataset.zarr_streaming_path` is deprecated. Use the path of an individual mag instead, e.g. `layer.get_mag(mag, access_mode=RemoteAccessMode.ZARR_STREAMING).path`.
 
 ### Fixed
+- `RemoteDataset.reopen` now keeps the `read_only` flag of the original dataset.
 
 
 ## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20

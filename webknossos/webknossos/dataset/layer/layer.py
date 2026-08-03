@@ -188,9 +188,9 @@ class Layer(AbstractLayer):
         )
         super().__init__(dataset, properties, read_only)
 
-    def _determine_read_only_and_path_for_mag(
-        self, mag_properties: MagViewProperties
-    ) -> tuple[bool, UPath]:
+    def _setup_mag_from_properties(
+        self, mag_properties: MagViewProperties, read_only: bool
+    ) -> None:
         if mag_properties.path is None:
             mag_path = _find_mag_path(self.resolved_path, mag_properties.mag)
         else:
@@ -199,7 +199,11 @@ class Layer(AbstractLayer):
         mag_is_read_only = _is_foreign_mag(
             self.dataset.resolved_path, self.name, mag_path
         )
-        return mag_is_read_only, mag_path
+        self._setup_mag(
+            Mag(mag_properties.mag),
+            mag_path,
+            read_only=read_only or mag_is_read_only,
+        )
 
     @property
     def dataset(self) -> "Dataset":

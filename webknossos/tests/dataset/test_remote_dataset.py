@@ -244,11 +244,9 @@ def test_remote_attachments_add_attachment_as_copy(
 
 def test_ref_layer_from_remote_layer(sample_downloaded_dataset: Dataset) -> None:
     remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
-    assert remote_dataset.zarr_streaming_path is not None, (
-        "Zarr streaming sets a remote path."
-    )
-    assert is_remote_path(remote_dataset.zarr_streaming_path), (
-        "zarr streaming path should be remote."
+    assert remote_dataset.access_mode == RemoteAccessMode.ZARR_STREAMING
+    assert is_remote_path(remote_dataset.get_color_layers()[0].get_mag(1).path), (
+        "zarr streaming mag path should be remote."
     )
     sample_remote_layer = list(remote_dataset.layers.values())
     for layer in sample_remote_layer:
@@ -275,6 +273,95 @@ def test_ref_layer_non_public(tmp_upath: UPath) -> None:
         256,
     )
     remote_dataset.is_public = True
+
+
+def test_per_mag_access_mode() -> None:
+    remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
+    layer = remote_dataset.get_layer("color")
+
+    expected_data_format = {
+        RemoteAccessMode.DIRECT_PATH: DataFormat.Zarr3,
+        RemoteAccessMode.PROXY_PATH: DataFormat.Zarr3,
+        RemoteAccessMode.ZARR_STREAMING: DataFormat.Zarr,
+    }
+    reference = None
+    for access_mode in RemoteAccessMode:
+        mag = layer.get_mag(1, access_mode=access_mode)
+        assert mag.access_mode == access_mode
+        assert mag.data_format == expected_data_format[access_mode]
+
+        data = mag.read(absolute_bounding_box=SAMPLE_BBOX)
+        if reference is None:
+            reference = data
+        else:
+            np.testing.assert_array_equal(
+                data, reference, f"{access_mode} reads different data."
+            )
+
+    # The computed paths follow the datastore routes and are not stored in the properties.
+    mag = layer.get_mag(1)
+    assert mag.direct_path is not None
+    assert not is_remote_path(mag.direct_path)
+    assert str(mag.zarr_streaming_path).endswith("/color/1")
+    assert str(mag.proxy_path).endswith("/proxy/layers/color/mags/1")
+    assert "/zarr/" in str(mag.zarr_streaming_path)
+
+
+def test_direct_path_available_in_zarr_streaming_mode() -> None:
+    """The underlying paths stay accessible, no matter how the dataset was opened."""
+    remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
+    assert remote_dataset.access_mode == RemoteAccessMode.ZARR_STREAMING
+    for layer in remote_dataset.layers.values():
+        for mag in layer.mags.values():
+            assert mag.access_mode == RemoteAccessMode.ZARR_STREAMING
+            assert mag.direct_path is not None, (
+                f"{layer.name}/{mag.name} should expose its direct path."
+            )
+
+
+def test_mixed_access_modes_per_mag() -> None:
+    remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
+    layer = remote_dataset.get_layer("color")
+
+    mag1 = layer.get_mag(1, access_mode=RemoteAccessMode.DIRECT_PATH)
+    mag2 = layer.get_mag("2-2-1", access_mode=RemoteAccessMode.PROXY_PATH)
+    assert mag1.access_mode == RemoteAccessMode.DIRECT_PATH
+    assert mag2.access_mode == RemoteAccessMode.PROXY_PATH
+    assert mag1.read(absolute_bounding_box=SAMPLE_BBOX).sum() > 0
+    assert mag2.read(absolute_bounding_box=SAMPLE_BBOX).sum() > 0
+
+    # Requesting a mode explicitly must not change the layer's own mags.
+    assert all(
+        mag.access_mode == remote_dataset.access_mode for mag in layer.mags.values()
+    )
+    assert layer.get_mag(1) is not mag1
+
+
+def test_attachments_are_available_in_every_access_mode(tmp_upath: UPath) -> None:
+    local_ds = get_sample_dataset(
+        tmp_upath / "source",
+        layers=["segmentation"],
+        bbox=SAMPLE_BBOX.with_size_xyz(Vec3Int(32, 32, 32)),
+    )
+    remote_ds = reopen_dataset(
+        local_ds.upload(new_dataset_name="test_attachment_access_modes")
+    )
+    attach_agglomerate(local_ds.get_segmentation_layer("segmentation"))
+    remote_ds.get_segmentation_layer("segmentation").attachments.add_attachment_as_copy(
+        local_ds.get_segmentation_layer("segmentation").attachments.agglomerates[0]
+    )
+
+    # Attachments are not part of the zarr streaming datasource-properties.json, but
+    # they are still available because the properties carry the direct paths.
+    streaming_ds = RemoteDataset.open(
+        dataset_id=remote_ds.dataset_id, access_mode=RemoteAccessMode.ZARR_STREAMING
+    )
+    attachments = streaming_ds.get_segmentation_layer("segmentation").attachments
+    assert len(attachments.agglomerates) == 1
+    assert attachments.access_mode == RemoteAccessMode.DIRECT_PATH
+
+    with pytest.raises(ValueError, match="not served via"):
+        _ = attachments.with_access_mode(RemoteAccessMode.ZARR_STREAMING).agglomerates
 
 
 def test_shallow_copy_remote_layers(tmp_upath: UPath) -> None:
@@ -385,9 +472,7 @@ def test_url_download(url: str, tmp_upath: UPath) -> None:
         # "http://localhost:9000/links/93zLg9U9vJ3c_UWp",
     ],
 )
-@pytest.mark.parametrize(
-    "access_mode", [RemoteAccessMode.ZARR_STREAMING, RemoteAccessMode.PROXY_PATH]
-)
+@pytest.mark.parametrize("access_mode", list(RemoteAccessMode))
 def test_url_open_remote(
     url: str, tmp_upath: UPath, access_mode: RemoteAccessMode
 ) -> None:

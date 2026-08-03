@@ -68,10 +68,7 @@ class AbstractLayer:
         self._read_only = read_only
 
         for mag in properties.mags:
-            mag_read_only, mag_path = self._determine_read_only_and_path_for_mag(mag)
-            self._setup_mag(
-                Mag(mag.mag), mag_path, read_only=read_only or mag_read_only
-            )
+            self._setup_mag_from_properties(mag, read_only=read_only)
 
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) in self._mags
@@ -87,10 +84,14 @@ class AbstractLayer:
         pass
 
     @abstractmethod
-    def _determine_read_only_and_path_for_mag(
-        self, mag_properties: MagViewProperties
-    ) -> tuple[bool, UPath]:
-        pass
+    def _setup_mag_from_properties(
+        self, mag_properties: MagViewProperties, read_only: bool
+    ) -> None:
+        """Initialize a single mag when opening the layer.
+
+        Subclasses resolve the mag's path (and, for remote layers, its access mode)
+        and register the resulting `MagView` in `self._mags`.
+        """
 
     def _ensure_metadata_writable(self) -> None:
         if self.dataset.read_only:

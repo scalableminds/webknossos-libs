@@ -5,7 +5,6 @@ import tempfile
 import warnings
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
-from enum import Enum
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, Union
 
@@ -42,20 +41,23 @@ from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
+    AttachmentProperties,
     DataFormat,
     DatasetProperties,
     LayerCategoryType,
     LayerProperties,
+    MagViewProperties,
     SegmentationLayerProperties,
     VoxelSize,
 )
 from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int, Vec3IntLike
 from webknossos.geometry.mag import Mag, MagLike
-from webknossos.utils import infer_metadata_type, warn_deprecated
+from webknossos.utils import enrich_path, infer_metadata_type, warn_deprecated
 
 from ..client.api_client.errors import UnexpectedStatusError
 from ..ssl_context import SSL_CONTEXT
 from .defaults import DEFAULT_DATA_FORMAT, DEFAULT_DTYPE
+from .remote_access_mode import RemoteAccessMode, mag_url_suffix
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .transfer_mode import TransferMode
@@ -90,14 +92,6 @@ class StorageCredentials:
     """Remote storage credential identifier (e.g. aws access key id)."""
     credential_secret: str
     """Remote storage credential secret (e.g. aws secret access key)."""
-
-
-class RemoteAccessMode(Enum):
-    """Determines how data of a remote dataset is accessed. Note that DIRECT_PATH can only be used if the client has access to the underlying storage."""
-
-    ZARR_STREAMING = "zarr_streaming"
-    DIRECT_PATH = "direct_path"
-    PROXY_PATH = "proxy_path"
 
 
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
@@ -143,20 +137,29 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def __init__(
         self,
         *,
-        zarr_streaming_path: UPath | None,
-        dataset_properties: DatasetProperties | None,
         dataset_id: str,
         annotation_id: str | None,
         context: webknossos_context,
         read_only: bool,
+        access_mode: RemoteAccessMode,
+        datastore_url_prefix: str,
+        dataset_properties: DatasetProperties | None = None,
+        properties_are_direct: bool = True,
     ) -> None:
         """Initialize a remote dataset instance.
 
         Args:
-            zarr_streaming_path: Path to the zarr streaming directory
-            dataset_properties: Properties of the remote dataset
             dataset_id: dataset id of the remote dataset
+            annotation_id: Optional annotation id, if the dataset is viewed through an annotation
             context: Context manager for WEBKNOSSOS connection
+            read_only: Whether metadata of the dataset may be modified
+            access_mode: The default access mode that all mags of this dataset inherit
+            datastore_url_prefix: Base url of the datastore api, used to compute
+                zarr streaming and proxy paths
+            dataset_properties: Already loaded properties of the remote dataset. Loaded
+                on demand if omitted.
+            properties_are_direct: Whether `dataset_properties` stems from the api data
+                source, i.e. whether it contains direct paths.
 
         Raises:
             FileNotFoundError: If dataset cannot be opened as zarr format and no metadata exists
@@ -165,20 +168,19 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             Do not call this constructor directly, use RemoteDataset.open() instead.
             This class provides access to remote WEBKNOSSOS datasets with additional metadata manipulation.
         """
-        assert (zarr_streaming_path is not None) != (dataset_properties is not None), (
-            "Either zarr_streaming_path or dataset_properties must be set, but not both."
-        )
-        self.zarr_streaming_path = zarr_streaming_path
-        self._use_zarr_streaming = zarr_streaming_path is not None
-        if self._use_zarr_streaming:
-            dataset_properties = self._load_dataset_properties()
-
-        assert dataset_properties is not None
-        super().__init__(dataset_properties, read_only)
-
         self._dataset_id = dataset_id
         self._annotation_id = annotation_id
         self._context = context
+        self._access_mode = access_mode
+        self._datastore_url_prefix = datastore_url_prefix
+        # False if the properties stem from a served datasource-properties.json instead
+        # of the api data source. In that case the mag paths are relative to the base
+        # path of the access mode and no direct paths are available.
+        self._properties_are_direct = properties_are_direct
+
+        if dataset_properties is None:
+            dataset_properties = self._load_dataset_properties()
+        super().__init__(dataset_properties, read_only)
 
     @classmethod
     def open(
@@ -258,66 +260,45 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         with context_manager:
             wk_context = _get_context()
-            token = sharing_token or wk_context.token
             api_dataset_info = wk_context.api_client.dataset_info(
                 dataset_id=dataset_id, sharing_token=sharing_token
             )
             datastore_url = api_dataset_info.data_store.url
             url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
-            if access_mode == RemoteAccessMode.ZARR_STREAMING:
-                if annotation_id is not None:
-                    zarr_path = UPath(
-                        f"{url_prefix}/annotations/zarr/{annotation_id}/",
-                        headers={} if token is None else {"X-Auth-Token": token},
-                        ssl=SSL_CONTEXT,
-                    )
-                else:
-                    zarr_path = UPath(
-                        f"{url_prefix}/zarr/{dataset_id}/",
-                        headers={} if token is None else {"X-Auth-Token": token},
-                        ssl=SSL_CONTEXT,
-                    )
-                return cls(
-                    zarr_streaming_path=zarr_path,
-                    dataset_properties=None,
-                    dataset_id=dataset_id,
-                    annotation_id=annotation_id,
-                    context=context_manager,
-                    read_only=read_only,
-                )
-            elif access_mode == RemoteAccessMode.DIRECT_PATH:
-                if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
-                    raise RuntimeError(
-                        f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
-                    )
-
-                return cls(
-                    zarr_streaming_path=None,
-                    dataset_properties=api_dataset_info.data_source,
-                    dataset_id=dataset_id,
-                    annotation_id=annotation_id,
-                    context=context_manager,
-                    read_only=read_only,
-                )
-            elif access_mode == RemoteAccessMode.PROXY_PATH:
-                zarr_path = UPath(
-                    f"{url_prefix}/datasets/{dataset_id}/proxy/",
-                    headers={} if token is None else {"X-Auth-Token": token},
-                    ssl=SSL_CONTEXT,
-                )
-                return cls(
-                    zarr_streaming_path=zarr_path,
-                    dataset_properties=None,
-                    dataset_id=dataset_id,
-                    annotation_id=None,
-                    context=context_manager,
-                    read_only=read_only,
-                )
-            else:
+            if not isinstance(access_mode, RemoteAccessMode):
                 raise ValueError(
                     f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
                 )
+
+            if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
+                if access_mode == RemoteAccessMode.DIRECT_PATH:
+                    raise RuntimeError(
+                        f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
+                    )
+                # Without a usable api data source there are no direct paths available.
+                # The properties are loaded from the served datasource-properties.json.
+                dataset_properties = None
+                properties_are_direct = False
+            elif annotation_id is not None:
+                # The volume layers of an annotation are not part of the dataset's api
+                # data source, so the annotation's served properties are the only source.
+                dataset_properties = None
+                properties_are_direct = False
+            else:
+                dataset_properties = api_dataset_info.data_source
+                properties_are_direct = True
+
+            return cls(
+                dataset_id=dataset_id,
+                annotation_id=annotation_id,
+                context=context_manager,
+                read_only=read_only,
+                access_mode=access_mode,
+                datastore_url_prefix=url_prefix,
+                dataset_properties=dataset_properties,
+                properties_are_direct=properties_are_direct,
+            )
 
     def reopen(self, *, access_mode: RemoteAccessMode) -> "RemoteDataset":
         """Reopens the dataset in the specified access mode.
@@ -333,6 +314,115 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 dataset_id=self.dataset_id,
                 annotation_id_or_url=self.annotation_id,
                 access_mode=access_mode,
+                read_only=self.read_only,
+            )
+
+    @property
+    def access_mode(self) -> RemoteAccessMode:
+        """The default access mode of this dataset.
+
+        All mags of this dataset are accessed this way unless a different mode is
+        requested explicitly, e.g. via `RemoteLayer.get_mag(mag, access_mode=...)`.
+        """
+        return self._access_mode
+
+    @property
+    def _use_zarr_streaming(self) -> bool:
+        return self._access_mode != RemoteAccessMode.DIRECT_PATH
+
+    @property
+    def zarr_streaming_path(self) -> UPath | None:
+        """Deprecated. Use the paths of the individual mags instead, e.g.
+        `layer.get_mag(mag, access_mode=RemoteAccessMode.ZARR_STREAMING).path`."""
+        warn_deprecated("RemoteDataset.zarr_streaming_path", "RemoteMagView.path")
+        return self._base_path(self._access_mode)
+
+    def _base_path(self, access_mode: RemoteAccessMode) -> UPath | None:
+        """The base path that mags of the given access mode are relative to.
+
+        `None` for `DIRECT_PATH`, since direct paths are absolute.
+        """
+        if access_mode == RemoteAccessMode.DIRECT_PATH:
+            return None
+
+        from ..client.context import _get_context
+
+        with self._context:
+            # The token is read on every call instead of being stored, so that
+            # pickling does not freeze a token and context changes are picked up.
+            token = _get_context().token
+        headers = {} if token is None else {"X-Auth-Token": token}
+
+        if access_mode == RemoteAccessMode.ZARR_STREAMING:
+            if self._annotation_id is not None:
+                url = f"{self._datastore_url_prefix}/annotations/zarr/{self._annotation_id}/"
+            else:
+                url = f"{self._datastore_url_prefix}/zarr/{self._dataset_id}/"
+        elif access_mode == RemoteAccessMode.PROXY_PATH:
+            if self._annotation_id is not None:
+                raise ValueError(
+                    "Annotations are only supported with zarr streaming. "
+                    + f"Got {access_mode} instead."
+                )
+            url = f"{self._datastore_url_prefix}/datasets/{self._dataset_id}/proxy/"
+        else:
+            raise ValueError(
+                f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
+            )
+        return UPath(url, headers=headers, ssl=SSL_CONTEXT)
+
+    def _mag_path(
+        self,
+        layer_name: str,
+        mag: Mag,
+        mag_properties: MagViewProperties,
+        access_mode: RemoteAccessMode,
+    ) -> UPath:
+        """Resolves the path of a mag for the given access mode.
+
+        Only the direct path is stored in the properties. The zarr streaming and proxy
+        paths are computed from the datastore url and are not persisted anywhere.
+        """
+        if access_mode == RemoteAccessMode.DIRECT_PATH:
+            if not self._properties_are_direct:
+                raise ValueError(
+                    f"Cannot access {layer_name}/{mag.to_layer_name()} via "
+                    + f"{RemoteAccessMode.DIRECT_PATH}, because this dataset does not "
+                    + "expose direct paths. Its properties were loaded from the "
+                    + f"{self._access_mode.value} endpoint."
+                )
+            assert mag_properties.path is not None, (
+                f"Remote mags must have a path: {mag_properties}"
+            )
+            return enrich_path(mag_properties.path, None)
+
+        base_path = self._base_path(access_mode)
+        assert base_path is not None  # for mypy
+        if self._properties_are_direct or access_mode != self._access_mode:
+            return base_path / mag_url_suffix(access_mode, layer_name, mag)
+        # The properties were served by this very endpoint, so they already carry the
+        # matching relative paths. Prefer them over the computed layout.
+        assert mag_properties.path is not None, (
+            f"Remote mags must have a path: {mag_properties}"
+        )
+        return enrich_path(mag_properties.path, base_path)
+
+    def _attachment_path(
+        self, attachment_properties: AttachmentProperties, access_mode: RemoteAccessMode
+    ) -> UPath:
+        """Resolves the path of an attachment for the given access mode."""
+        if access_mode == RemoteAccessMode.DIRECT_PATH:
+            return enrich_path(
+                attachment_properties.path, self._base_path(self._access_mode)
+            )
+        elif access_mode == RemoteAccessMode.ZARR_STREAMING:
+            raise ValueError(
+                f"Attachments are not served via {RemoteAccessMode.ZARR_STREAMING}. "
+                + f"Use {RemoteAccessMode.DIRECT_PATH} instead."
+            )
+        else:
+            raise NotImplementedError(
+                f"Attachments are not yet supported via {access_mode}."
             )
 
     def _initialize_layer_from_properties(
@@ -351,9 +441,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         return RemoteSegmentationLayer
 
     def _load_dataset_properties(self) -> DatasetProperties:
-        if self._use_zarr_streaming:
-            assert self.zarr_streaming_path is not None
-            return self._load_dataset_properties_from_path(self.zarr_streaming_path)
+        if not self._properties_are_direct:
+            base_path = self._base_path(self._access_mode)
+            assert base_path is not None
+            return self._load_dataset_properties_from_path(base_path)
 
         api_dataset_info = self._get_dataset_info()
         assert isinstance(api_dataset_info.data_source, DatasetProperties)
