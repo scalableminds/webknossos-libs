@@ -20,7 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added support for converting Imaris (`.ims`) files via `Dataset.from_images`/`add_layer_from_images`, including multi-channel and multi-timepoint files. Converting a file that is both multi-channel and multi-timepoint yields one layer per channel, each keeping all of its timepoints. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 ### Changed
-- `.ims` and MRC file conversion now reads shard-sized blocks directly instead of slice-by-slice, improving conversion performance for large files. `use_bioformats` no longer has any effect on `.ims`/MRC conversion, since these formats are now always read through a dedicated reader. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
+- `.ims` and MRC file conversion now reads shard-sized blocks directly instead of slice-by-slice, improving conversion performance for large files. These formats are always read through a dedicated reader. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Timepoints are no longer split into separate layers by `allow_multiple_layers=True`; readers that can address them expose all timepoints on a `t` axis within one layer instead. Readers that cannot (images without dimension metadata) now warn that only the first timepoint is converted. `allow_multiple_layers` still splits channels. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 ### Fixed
