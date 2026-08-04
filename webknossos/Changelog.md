@@ -13,6 +13,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.2...HEAD)
 
 ### Breaking Changes
+- Removed Bio-Formats support, including the `use_bioformats` argument of `Dataset.from_images`/`add_layer_from_images`/`RemoteDataset.from_images`, the `webknossos[bioformats]` extra (and its `JPype1`/JVM dependency), and the DICOM upload example. Formats that were only readable through Bio-Formats — among them `.dcm`/`.dicom`, `.nd2`, `.lif`, `.lsm`, `.zvi`, `.nii`, `.nrrd` and `.stk` — can no longer be converted. Formats with a dedicated reader (TIFF, CZI, DM3/DM4, `.ims`, MRC, and the common 2D image formats) are unaffected. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Removed the `timepoint` argument of `Dataset.add_layer_from_images`. Timeseries are now converted into a single layer with a `t` axis covering all timepoints, so selecting one only discarded data. Remove the argument from calls, and slice the `t` axis afterwards if you need a single timepoint. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 ### Added

@@ -135,7 +135,6 @@ class ConversionLayerMapping(Enum):
         self,
         input_path: UPath,
         input_files: Sequence[UPath],
-        use_bioformats: bool,
     ) -> Callable[[UPath], str]:
         if self == ConversionLayerMapping.ENFORCE_LAYER_PER_FILE:
             return lambda p: p.as_posix().replace("/", "_")
@@ -156,7 +155,6 @@ class ConversionLayerMapping(Enum):
                 str(p)
                 if _has_image_z_dimension(
                     input_path / p,
-                    use_bioformats=use_bioformats,
                     is_segmentation=guess_if_segmentation_path(p),
                 )
                 else (
@@ -169,7 +167,6 @@ class ConversionLayerMapping(Enum):
             # As before, but only a single image is inspected to determine 2D vs 3D.
             if _has_image_z_dimension(
                 input_path / input_files[0],
-                use_bioformats=use_bioformats,
                 is_segmentation=guess_if_segmentation_path(input_files[0]),
             ):
                 return str
@@ -181,7 +178,6 @@ class ConversionLayerMapping(Enum):
 
 def _has_image_z_dimension(
     filepath: UPath,
-    use_bioformats: bool,
     is_segmentation: bool,
 ) -> bool:
     # Formats handled by a registered ChunkedImages subclass (e.g. .ims) are
@@ -198,9 +194,7 @@ def _has_image_z_dimension(
     )
     if chunked_images is not None:
         return chunked_images.expected_bbox.get_shape("z") > 1
-    return pims_images.has_image_z_dimension(
-        filepath, use_bioformats=use_bioformats, is_segmentation=is_segmentation
-    )
+    return pims_images.has_image_z_dimension(filepath, is_segmentation=is_segmentation)
 
 
 class _ImageConversionSetup(NamedTuple):
@@ -334,7 +328,6 @@ def from_images(
     flip_x: bool = False,
     flip_y: bool = False,
     flip_z: bool = False,
-    use_bioformats: bool = False,
     max_layers: int = 20,
     batch_size: int | None = None,
     executor: Executor | None = None,
@@ -344,8 +337,6 @@ def from_images(
 
     valid_suffixes = pims_images.get_valid_pims_suffixes()
     valid_suffixes.update(get_valid_chunked_image_suffixes())
-    if use_bioformats is not False:
-        valid_suffixes.update(pims_images.get_valid_bioformats_suffixes())
 
     if z_slices_sort_key is None:
         z_slices_sort_key = natsort_keygen()
@@ -382,7 +373,6 @@ def from_images(
             map_filepath_to_layer_name_func = map_filepath_to_layer_name._to_callable(
                 input_upath,
                 input_files=input_files,
-                use_bioformats=use_bioformats,
             )
     else:
         map_filepath_to_layer_name_func = map_filepath_to_layer_name
@@ -453,7 +443,6 @@ def from_images(
                     flip_x=flip_x,
                     flip_y=flip_y,
                     flip_z=flip_z,
-                    use_bioformats=use_bioformats,
                     batch_size=batch_size,
                     allow_multiple_layers=True,
                     max_layers=max_layers - len(ds.layers),
@@ -485,7 +474,6 @@ def add_layer_from_images(
     flip_y: bool = False,
     flip_z: bool = False,
     dtype: DTypeLike | None = None,
-    use_bioformats: bool = False,
     channel: int | None = None,
     czi_channel: int | None = None,
     batch_size: int | None = None,  # defaults to shard-size z
@@ -518,8 +506,7 @@ def add_layer_from_images(
     def _open_chunked_images(open_kwargs: dict) -> ChunkedImages | None:
         # Chunk-based formats (currently only .ims) know their exact
         # bounding box from metadata alone and read/write whole
-        # shard-sized blocks directly. This is the only way such formats
-        # are read — use_bioformats has no effect on them.
+        # shard-sized blocks directly.
         return try_open_chunked_images(
             images,
             channel=open_kwargs.get("channel", channel),
@@ -542,7 +529,6 @@ def add_layer_from_images(
             flip_x=flip_x,
             flip_y=flip_y,
             flip_z=flip_z,
-            use_bioformats=use_bioformats,
             is_segmentation=category == "segmentation",
             **open_kwargs,
         )
@@ -560,7 +546,6 @@ def add_layer_from_images(
             flip_x=flip_x,
             flip_y=flip_y,
             flip_z=flip_z,
-            use_bioformats=use_bioformats,
             is_segmentation=category == "segmentation",
         )
     possible_layers = image_source.get_possible_layers()

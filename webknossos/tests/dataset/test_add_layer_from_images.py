@@ -514,7 +514,6 @@ def _test_repo_images(
             layer_name="color",
             compress=True,
             executor=executor,
-            use_bioformats=False,
             **kwargs,
         )
         assert layer.dtype == np.dtype(dtype)
@@ -560,97 +559,6 @@ def download_and_unpack(
             except BadZipFile:
                 out_path.mkdir(parents=True, exist_ok=True)
                 copy(download_file.name, str(out_path / filename_i))
-
-
-BIOFORMATS_ARGS: list[tuple[str, str, dict, str, int, tuple[int, int, int], int]] = [
-    (
-        "https://static.webknossos.org/data/wklibs-samples/wtembryo.zip",
-        "wtembryo.mov",
-        {},
-        "uint8",
-        3,
-        (320, 240, 108),
-        1,
-    ),
-    (
-        "https://static.webknossos.org/data/wklibs-samples/wtembryo.zip",
-        "wtembryo.mov",
-        {"swap_xy": True},
-        "uint8",
-        3,
-        (240, 320, 108),
-        1,
-    ),
-    (
-        "https://static.webknossos.org/data/wklibs-samples/HEART.zip",
-        "HEART.SEQ",
-        {"flip_z": True},
-        "uint8",
-        1,
-        (512, 512, 30),
-        1,
-    ),
-    (
-        "https://static.webknossos.org/data/wklibs-samples/test-avi.zip",
-        "t1-rendering.avi",
-        {},
-        "uint8",
-        3,
-        (206, 218, 36),
-        1,
-    ),
-]
-
-
-def _test_bioformats(
-    tmp_upath: UPath,
-    url: str,
-    filename: str,
-    kwargs: dict,
-    dtype: str,
-    num_channels: int,
-    size: tuple[int, int, int],
-    num_layers: int,
-) -> wk.Dataset:
-    unzip_path = tmp_upath / "unzip"
-    download_and_unpack(url, unzip_path, filename)
-    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
-    with SequentialExecutor() as executor:
-        layer = ds.add_layer_from_images(
-            str(unzip_path / filename),
-            layer_name="color",
-            compress=True,
-            executor=executor,
-            use_bioformats=True,
-            **kwargs,
-        )
-        assert layer.dtype == np.dtype(dtype)
-        assert layer.num_channels == num_channels
-        assert layer.bounding_box == wk.BoundingBox(topleft=(0, 0, 0), size=size)
-    assert len(ds.layers) == num_layers
-    return ds
-
-
-@pytest.mark.skipif(
-    "CI" not in os.environ or os.environ["CI"] != "true" or sys.platform != "linux",
-    reason="only run on linux CI",
-)
-@pytest.mark.parametrize(
-    "url, filename, kwargs, dtype, num_channels, size, num_layers", BIOFORMATS_ARGS
-)
-def test_bioformats(
-    tmp_upath: UPath,
-    url: str,
-    filename: str,
-    kwargs: dict,
-    dtype: str,
-    num_channels: int,
-    size: tuple[int, int, int],
-    num_layers: int,
-) -> None:
-    _test_bioformats(
-        tmp_upath, url, filename, kwargs, dtype, num_channels, size, num_layers
-    )
 
 
 # All scif images used here are published with CC0 license,
@@ -765,38 +673,16 @@ def _test_test_images(
         path = unzip_path / filename
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
-        l_bio: wk.Layer | None
-        try:
-            l_bio = ds.add_layer_from_images(
-                path,
-                layer_name="bioformats_" + layer_name,
-                compress=True,
-                executor=executor,
-                use_bioformats=True,
-                **kwargs,
-            )
-        except Exception as e:
-            print(e)
-            l_bio = None
-        else:
-            assert l_bio.dtype == np.dtype(dtype)
-            assert l_bio.num_channels == num_channels
-            assert l_bio.bounding_box.size.to_tuple() == size
         l_normal = ds.add_layer_from_images(
             path,
             layer_name="normal_" + layer_name,
             compress=True,
             executor=executor,
-            use_bioformats=False,
             **kwargs,
         )
         assert l_normal.dtype == np.dtype(dtype)
         assert l_normal.num_channels == num_channels
         assert l_normal.bounding_box.size.to_tuple() == size
-        if l_bio is not None:
-            np.testing.assert_array_equal(
-                l_bio.get_finest_mag().read(), l_normal.get_finest_mag().read()
-            )
     return ds
 
 
@@ -832,16 +718,6 @@ if __name__ == "__main__":
             print(
                 _test_repo_images(UPath(tempdir), *repo_image)
                 .upload(new_dataset_name=f"test_repo_images_{name}_{time()}")
-                .url
-            )
-
-    for bioformat_image in BIOFORMATS_ARGS:
-        with TemporaryDirectory() as tempdir:
-            name = "".join(filter(str.isalnum, bioformat_image[1]))
-            print(bioformat_image)
-            print(
-                _test_bioformats(UPath(tempdir), *bioformat_image)
-                .upload(new_dataset_name=f"test_bioformats_{name}_{time()}")
                 .url
             )
 

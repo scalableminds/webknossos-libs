@@ -24,8 +24,7 @@ class ChunkedImages(ABC):
     without going through a slice-based writer.
 
     Formats handled by a registered ChunkedImages subclass are read
-    exclusively through that subclass — never through PimsImages/pims,
-    regardless of `use_bioformats`.
+    exclusively through that subclass — never through PimsImages/pims.
     """
 
     dtype: DTypeLike

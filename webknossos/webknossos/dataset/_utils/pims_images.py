@@ -4,7 +4,6 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from itertools import chain
 from os import environ
 from typing import TypeVar, Union, cast
-from urllib.error import HTTPError
 
 import numpy as np
 import pims
@@ -109,7 +108,6 @@ class PimsImages:
         flip_x: bool,
         flip_y: bool,
         flip_z: bool,
-        use_bioformats: bool,
         is_segmentation: bool,
     ) -> None:
         """
@@ -150,7 +148,6 @@ class PimsImages:
         self._flip_x = flip_x
         self._flip_y = flip_y
         self._flip_z = flip_z
-        self._use_bioformats = use_bioformats
 
         ## attributes that will be set in __init__()
         self._iter_axes: list[str] = []
@@ -284,16 +281,13 @@ class PimsImages:
                         warnings.warn(
                             "[WARNING] The image has multiple timepoints, but this reader "
                             + "cannot address them individually, so only the first one is "
-                            + "converted. Use use_bioformats=True with data_format='zarr3' "
-                            + "to convert all timepoints into a single layer with a `t` axis.",
+                            + "converted.",
                             UserWarning,
                         )
                 else:
                     raise RuntimeError(
                         f"Got {len(images.shape)} axes for the images, "
-                        + "but don't have axes information. Try to open "
-                        + "an N-dimensional image file with use_bioformats="
-                        + "True."
+                        + "but don't have axes information."
                     )
 
         #########################
@@ -325,8 +319,6 @@ class PimsImages:
             original_images_path = UPath(original_images)
             if original_images_path.is_dir():
                 valid_suffixes = get_valid_pims_suffixes()
-                if self._use_bioformats is not False:
-                    valid_suffixes.update(get_valid_bioformats_suffixes())
                 original_images = natsorted(
                     str(i)
                     for i in original_images_path.glob("**/*")
@@ -341,18 +333,6 @@ class PimsImages:
         else:
             return str(original_images)
 
-    def _ensure_correct_bioformats_usage(
-        self, images_context_manager: pims.FramesSequence
-    ) -> None:
-        if (
-            isinstance(images_context_manager, pims.bioformats.BioformatsReader)
-            and self._use_bioformats is False
-        ):  # None is allowed
-            raise RuntimeError(
-                "Selected bioformats reader, but using bioformats is not allowed "
-                + "(use_bioformats is False)."
-            )
-
     def _disable_pil_image_size_limit(self) -> None:
         from PIL import Image
 
@@ -361,18 +341,13 @@ class PimsImages:
     def _try_open_pims_images(
         self, original_images: str | list[str], exceptions: list[Exception]
     ) -> pims.FramesSequence | None:
-        if self._use_bioformats:
-            return None
-
         open_kwargs = {}
         if self._czi_channel is not None:
             open_kwargs["czi_channel"] = self._czi_channel
 
         # try normal pims.open
         def strategy_0() -> pims.FramesSequence:
-            result = pims.open(original_images, **open_kwargs)
-            self._ensure_correct_bioformats_usage(original_images)
-            return result
+            return pims.open(original_images, **open_kwargs)
 
         # try pims.ImageSequence, which uses skimage internally but works for multiple images
         strategy_1 = lambda: pims.ImageSequence(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
@@ -383,7 +358,6 @@ class PimsImages:
             if isinstance(original_images, list):
                 # assuming the same reader works for all images:
                 first_image_handler = pims.open(original_images[0], **open_kwargs)
-                self._ensure_correct_bioformats_usage(first_image_handler)
                 return pims.ReaderSequence(
                     original_images, type(first_image_handler), **open_kwargs
                 )
@@ -401,48 +375,6 @@ class PimsImages:
                 if images_context_manager is not None:
                     return images_context_manager
         return None
-
-    def _try_open_bioformats_images_raw(
-        self,
-        original_images: str | list[str],
-        exceptions: list[Exception],
-    ) -> pims.FramesSequence | None:
-        try:
-            if self._use_bioformats is False:  # None is allowed
-                raise RuntimeError(
-                    "Using bioformats is not allowed (use_bioformats is False)."
-                )
-
-            # There is a wrong warning about jpype, suppressing it here.
-            # See issue https://github.com/soft-matter/pims/issues/384
-            warnings.filterwarnings(
-                "ignore",
-                "Due to an issue with JPype 0.6.0, reading is slower.*",
-                category=UserWarning,
-                module="pims.bioformats",
-            )
-            try:
-                pims.bioformats._find_jar()
-            except HTTPError:
-                # We cannot use the newest bioformats version,
-                # since it does not include the necessary loci_tools.jar.
-                # Updates to support newer bioformats jars with pims are in PR
-                # https://github.com/soft-matter/pims/pull/403
-
-                # This is also part of the worker dockerfile to cache the
-                # jar in the image, please update Dockerfile.worker in the
-                # voxelytics repo accordingly when editing this.
-                pims.bioformats.download_jar(version="6.7.0")
-
-            if "*" in str(original_images) or isinstance(original_images, list):
-                return pims.ReaderSequence(
-                    original_images, pims.bioformats.BioformatsReader
-                )
-            else:
-                return pims.bioformats.BioformatsReader(original_images)
-        except Exception as e:
-            exceptions.append(e)
-            return None
 
     @contextmanager
     def _open_images(
@@ -464,11 +396,6 @@ class PimsImages:
             images_context_manager = self._try_open_pims_images(
                 original_images, exceptions
             )
-
-            if images_context_manager is None:
-                images_context_manager = self._try_open_bioformats_images_raw(
-                    original_images, exceptions
-                )
 
             if images_context_manager is None:
                 if len(exceptions) == 1:
@@ -741,52 +668,12 @@ def get_valid_pims_suffixes() -> set[str]:
     return valid_suffixes
 
 
-def get_valid_bioformats_suffixes() -> set[str]:
-    # Added the most present suffixes that are implemented in bioformats
-    return {
-        "bmp",
-        "btf",
-        "ch5",
-        "czi",
-        "dcm",
-        "dicom",
-        "fli",
-        "gif",
-        "ics",
-        "ids",
-        "lei",
-        "lif",
-        "lof",
-        "lsm",
-        "mdb",
-        "nd",
-        "nd2",
-        "nhdr",
-        "nii",
-        "nrrd",
-        "ome",
-        "png",
-        "pic",
-        "stk",
-        "tf2",
-        "tf8",
-        "tif",
-        "tiff",
-        "raw",
-        "xml",
-        "xlef",
-        "zvi",
-    }
-
-
 def has_image_z_dimension(
     filepath: UPath,
-    use_bioformats: bool,
     is_segmentation: bool,
 ) -> bool:
     pims_images = PimsImages(
         filepath,
-        use_bioformats=use_bioformats,
         is_segmentation=is_segmentation,
         # the following arguments shouldn't matter much for the Dataset.from_images method:
         channel=None,

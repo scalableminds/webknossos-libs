@@ -75,7 +75,6 @@ Changelog = "https://github.com/scalableminds/webknossos-libs/blob/master/webkno
 fastremap = ["fastremap ~=1.20.0"]
 tifffile = ["tifffile >=2024.8.24"]
 imagecodecs = ["imagecodecs >=2021.11.20"]
-bioformats = ["JPype1 ~=1.7.0"]
 czi = ["pylibCZIrw ==5.1.1"]
 mrcfile = [
     "mrcfile>=1.4.3",
@@ -94,7 +93,6 @@ all = [
     "webknossos[tifffile]",
     "webknossos[fastremap]",
     "webknossos[imagecodecs]",
-    "webknossos[bioformats]",
     "webknossos[czi]",
     "webknossos[mrcfile]",
     "webknossos[ims]",

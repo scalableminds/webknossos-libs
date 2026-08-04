@@ -712,7 +712,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        use_bioformats: bool = False,
         max_layers: int = 20,
         batch_size: int | None = None,
         executor: Executor | None = None,
@@ -752,7 +751,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             flip_x: Whether to flip the x axis
             flip_y: Whether to flip the y axis
             flip_z: Whether to flip the z axis
-            use_bioformats: Whether to use bioformats for reading, defaults to False
             max_layers: Maximum number of layers to create
             batch_size: Size of batches for processing
             executor: Optional executor for parallelization
@@ -791,7 +789,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             flip_x=flip_x,
             flip_y=flip_y,
             flip_z=flip_z,
-            use_bioformats=use_bioformats,
             max_layers=max_layers,
             batch_size=batch_size,
             executor=executor,
@@ -1115,7 +1112,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         flip_y: bool = False,
         flip_z: bool = False,
         dtype: DTypeLike | None = None,
-        use_bioformats: bool = False,
         channel: int | None = None,
         czi_channel: int | None = None,
         batch_size: int | None = None,  # defaults to shard-size z
@@ -1147,9 +1143,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `swap_xy`: set to `True` to interchange x and y axis before writing to disk
         * `flip_x`, `flip_y`, `flip_z`: set to `True` to reverse the respective axis before writing to disk
         * `dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
-        * `use_bioformats`: set to `True` to only use the
-          [pims bioformats adapter](https://soft-matter.github.io/pims/v0.6.1/bioformats.html) directly, needs a JVM,
-          set to `False` to forbid using the bioformats adapter. Defaults to `False`.
         * `channel`: may be used to select a single channel, if multiple are available
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
         * `batch_size`: size to process the images (influences RAM consumption), must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
@@ -1176,7 +1169,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             flip_y=flip_y,
             flip_z=flip_z,
             dtype=dtype,
-            use_bioformats=use_bioformats,
             channel=channel,
             czi_channel=czi_channel,
             batch_size=batch_size,

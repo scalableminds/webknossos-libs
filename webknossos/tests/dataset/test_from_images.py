@@ -318,22 +318,6 @@ def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
     )
 
 
-def test_from_dicom_images(tmp_upath: UPath) -> None:
-    ds = Dataset.from_images(
-        TESTDATA_DIR / "dicoms",
-        tmp_upath,
-        (1, 1, 1),
-        use_bioformats=True,
-    )
-    assert len(ds.layers) == 1
-    assert "dicoms" in ds.layers
-    data = ds.layers["dicoms"].get_finest_mag().read()
-    assert data.shape == (1, 274, 384, 10)
-    assert data.max() == 110, (
-        f"The maximum value of the image should be 127 but is {data.max()}"
-    )
-
-
 def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
     (input_path := tmp_upath / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
     copytree(
