@@ -50,10 +50,7 @@ def _as_points(value: Any) -> np.ndarray:
 
 
 class CoordinateTransformation(ABC):
-    """Base class of the coordinate transformations of a layer.
-
-    See `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`
-    for the concrete transformations.
+    """Base class of the coordinate transformations of a layer."""
     """
 
     @abstractmethod
