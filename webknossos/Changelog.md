@@ -22,7 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
-- Restored the ordering of `VecInt` and `Vec3Int`, which was lost when they stopped subclassing `tuple` in [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419). `sorted()` over vectors, and `Tree.__eq__` / `sorted(tree.nodes)` for any tree whose nodes differ in position, raised `TypeError: '<' not supported`. Vectors are ordered lexicographically again, matching the equivalent plain tuples. [#1492](https://github.com/scalableminds/webknossos-libs/pull/1492)
+- Restored the ordering of `VecInt` and `Vec3Int`, which was lost when they stopped subclassing `tuple` in [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419). `sorted()` over vectors, and `Tree.__eq__` / `sorted(tree.nodes)` for any tree whose nodes differ in position, raised `TypeError: '<' not supported`. Vectors are ordered lexicographically again, matching the equivalent plain tuples. [#1493](https://github.com/scalableminds/webknossos-libs/pull/1493)
 - Fixed a storage leak where downloading annotations and editing volume layers wrote zip data to temporary files on disk instead of keeping it in memory. [#1485](https://github.com/scalableminds/webknossos-libs/pull/1485)
 
 
