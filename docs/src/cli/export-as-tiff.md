@@ -11,8 +11,10 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
 ### Arguments
 
 - **SOURCE**  
-    Path to your raw WEBKNOSSOS dataset.  
-    Example: `/path/to/source/dataset`.
+    Path or URL to your WEBKNOSSOS dataset or annotation.  
+    This can be a local path, a remote path (e.g. `s3://...`), or a WEBKNOSSOS URL
+    pointing to a dataset or annotation.  
+    Examples: `/path/to/source/dataset`, `https://webknossos.org/datasets/.../view`.
 
 - **TARGET**  
     Target directory where the TIFF images will be saved.  
@@ -75,7 +77,7 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
 #### WEBKNOSSOS context
 
 - `--token`  
-    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/auth/token).  
+    Authentication token for the WEBKNOSSOS instance (see https://webknossos.org/account/token).  
     Can also be provided via the `WK_TOKEN` environment variable.  
     Required when SOURCE is a WEBKNOSSOS server URL pointing to a non-public dataset.
 
@@ -89,6 +91,16 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
 webknossos export-as-tiff /path/to/source/dataset /path/to/target/tiff_folder
 ```
 This command exports all slices of the dataset to TIFF files in the target folder.
+
+### Export a remote dataset from a WEBKNOSSOS URL:
+```bash
+webknossos export-as-tiff --token your-token \
+    https://webknossos.org/datasets/sample_organization/sample_dataset/view \
+    /path/to/target/tiff_folder
+```
+This command reads the dataset directly from the WEBKNOSSOS instance and exports it to
+local TIFF files. For non-public datasets, provide an authentication token via the
+the `--token` option or the `WK_TOKEN` environment variable (see https://webknossos.org/account/token).
 
 ### Export with a specified layer and downsampling:
 ```bash

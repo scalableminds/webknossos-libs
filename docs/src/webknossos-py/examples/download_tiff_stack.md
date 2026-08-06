@@ -1,6 +1,6 @@
 # Download datasets as TIFF sequences
 
-This example [accesses a dataset on webKnososs](../../api/webknossos/dataset/dataset.md#webknossos.dataset.RemoteDataset.open) and creates a TIFF sequences from the downloaded data. The [BufferedSliceReader](../../api/webknossos/dataset/layer/view/view.md#webknossos.dataset.View.get_buffered_slice_reader) is used to efficiently request sections from the remote data.
+This example [accesses a dataset on webKnososs](../../api/webknossos/dataset/remote_dataset.md#webknossos.dataset.RemoteDataset.open) and creates a TIFF sequences from the downloaded data. The [BufferedSliceReader](../../api/webknossos/dataset/layer/view/view.md#webknossos.dataset.View.get_buffered_slice_reader) is used to efficiently request sections from the remote data.
 
 ```python
 --8<--

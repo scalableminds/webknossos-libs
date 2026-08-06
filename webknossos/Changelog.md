@@ -17,10 +17,12 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm). [#1474](https://github.com/scalableminds/webknossos-libs/pull/1474)
 - Added support for the new attachment type `SegmentStatisticsAttachment` for segmentation layers. [#1490](https://github.com/scalableminds/webknossos-libs/pull/1490)
+- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
 
 ### Changed
 
 ### Fixed
+- Fixed a storage leak where downloading annotations and editing volume layers wrote zip data to temporary files on disk instead of keeping it in memory. [#1485](https://github.com/scalableminds/webknossos-libs/pull/1485)
 
 
 ## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20
