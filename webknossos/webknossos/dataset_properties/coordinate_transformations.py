@@ -51,7 +51,6 @@ def _as_points(value: Any) -> np.ndarray:
 
 class CoordinateTransformation(ABC):
     """Base class of the coordinate transformations of a layer."""
-    """
 
     @abstractmethod
     def _to_dict(self) -> dict[str, Any]:
