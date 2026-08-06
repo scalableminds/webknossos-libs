@@ -23,8 +23,9 @@ class Vec3Float(Sequence[float]):
         assert vector_1 + vector_2 == (2.0, 3.0, 4.0)
         ```
 
-    Instances compare and hash like the equivalent plain tuple, so they can be used
-    interchangeably with `(x, y, z)` in comparisons, sets and as dict keys.
+    Instances compare, order and hash like the equivalent plain tuple, so they can be
+    used interchangeably with `(x, y, z)` in comparisons, sorting, sets and as dict
+    keys.
     """
 
     _data: tuple[float, float, float]
@@ -133,6 +134,39 @@ class Vec3Float(Sequence[float]):
         if isinstance(other, tuple):
             return self._data == other
         return NotImplemented
+
+    def _comparable_data(self, other: object) -> tuple[float, ...] | None:
+        """Returns the data of `other` to compare against, or None if it is not comparable."""
+        if isinstance(other, Vec3Float):
+            return other._data
+        if isinstance(other, tuple):
+            return other
+        return None
+
+    # The vectors are ordered lexicographically, just like the equivalent plain tuples.
+    def __lt__(self, other: object) -> bool:
+        other_data = self._comparable_data(other)
+        if other_data is None:
+            return NotImplemented
+        return self._data < other_data
+
+    def __le__(self, other: object) -> bool:
+        other_data = self._comparable_data(other)
+        if other_data is None:
+            return NotImplemented
+        return self._data <= other_data
+
+    def __gt__(self, other: object) -> bool:
+        other_data = self._comparable_data(other)
+        if other_data is None:
+            return NotImplemented
+        return self._data > other_data
+
+    def __ge__(self, other: object) -> bool:
+        other_data = self._comparable_data(other)
+        if other_data is None:
+            return NotImplemented
+        return self._data >= other_data
 
     def __getnewargs__(self) -> tuple[tuple[float, float, float]]:
         return (self._data,)

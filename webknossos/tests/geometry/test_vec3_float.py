@@ -180,3 +180,26 @@ def test_tree_color_accepts_vec3_float() -> None:
     skeleton = Skeleton(voxel_size=(1, 1, 1), dataset_name="d")
     tree = skeleton.add_tree("t", color=Vec3Float(1.0, 0.0, 0.0))
     assert tree.color == (1.0, 0.0, 0.0, 1.0)
+
+
+def test_ordering() -> None:
+    """Vectors are ordered lexicographically, like the equivalent plain tuples.
+
+    `Dataset.voxel_size` and friends returned plain tuples before `Vec3Float` became a
+    class, so sorting and `min`/`max` over them has to keep working.
+    """
+    assert Vec3Float(1, 2, 3) < Vec3Float(1, 2, 4)
+    assert Vec3Float(1, 2, 4) > Vec3Float(1, 2, 3)
+    assert Vec3Float(1, 2, 3) <= Vec3Float(1, 2, 3)
+    assert Vec3Float(1, 2, 3) >= Vec3Float(1, 2, 3)
+
+    # Ordering against plain tuples works in both directions, as for `==`
+    assert Vec3Float(1, 2, 3) < (1, 2, 4)
+    assert (1, 2, 3) < Vec3Float(1, 2, 4)
+
+    vectors = [Vec3Float(4, 4, 40), Vec3Float(1, 1, 10), Vec3Float(1, 1, 2)]
+    assert sorted(vectors) == sorted(v.to_tuple() for v in vectors)
+    assert min(vectors) == (1.0, 1.0, 2.0)
+
+    with pytest.raises(TypeError):
+        Vec3Float(1, 2, 3) < "abc"  # type: ignore[operator]
