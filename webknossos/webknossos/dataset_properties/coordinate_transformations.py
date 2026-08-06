@@ -17,7 +17,7 @@ from typing import Any, Literal
 import attr
 import numpy as np
 
-from ..geometry import Vec3Float, Vec3FloatLike, parse_vec3_float
+from ..geometry import Vec3Float, Vec3FloatLike
 
 Axis = Literal["x", "y", "z"]
 
@@ -105,14 +105,14 @@ class AffineCoordinateTransformation(CoordinateTransformation):
     ) -> "AffineCoordinateTransformation":
         """Creates a transformation that translates the layer by `translation`."""
         matrix = np.eye(4)
-        matrix[:3, 3] = parse_vec3_float(translation)
+        matrix[:3, 3] = Vec3Float(translation)
         return cls(matrix=matrix)
 
     @classmethod
     def from_scale(cls, scale: Vec3FloatLike) -> "AffineCoordinateTransformation":
         """Creates a transformation that scales the layer by `scale` around the origin."""
         matrix = np.eye(4)
-        matrix[:3, :3] = np.diag(parse_vec3_float(scale))
+        matrix[:3, :3] = np.diag(Vec3Float(scale))
         return cls(matrix=matrix)
 
     @classmethod
@@ -220,15 +220,15 @@ class ThinPlateSplineCoordinateTransformation(CoordinateTransformation):
                     "Each correspondence must be a pair of a source and a target "
                     + f"point, got {len(pair)} points."
                 )
-            source.append(parse_vec3_float(pair[0]))
-            target.append(parse_vec3_float(pair[1]))
+            source.append(Vec3Float(pair[0]))
+            target.append(Vec3Float(pair[1]))
         return cls(source=source, target=target)
 
     @property
     def pairs(self) -> tuple[tuple[Vec3Float, Vec3Float], ...]:
         """The correspondences as `(source, target)` pairs."""
         return tuple(
-            (parse_vec3_float(source), parse_vec3_float(target))
+            (Vec3Float(source), Vec3Float(target))
             for source, target in zip(self.source, self.target, strict=True)
         )
 

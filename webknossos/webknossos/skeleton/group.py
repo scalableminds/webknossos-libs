@@ -7,7 +7,7 @@ from boltons.strutils import unit_len
 
 import webknossos._nml as wknml
 
-from ..geometry import Vec3Float
+from ..geometry import Vec3FloatLike
 from .tree import Tree
 
 if TYPE_CHECKING:
@@ -111,7 +111,7 @@ class Group:
     def add_tree(
         self,
         name_or_tree: str | Tree,
-        color: Vector4 | Vec3Float | None = None,
+        color: Vector4 | Vec3FloatLike | None = None,
         _enforced_id: int | None = None,
         metadata: dict[str, str | int | float | Sequence[str]] = {},
         is_visible: bool = True,
@@ -146,8 +146,11 @@ class Group:
             When copying a tree, a new ID will be generated if the original ID
             already exists in this group.
         """
-        if color is not None and len(color) == 3:
-            color = cast(Vector4 | None, color + (1.0,))
+        if color is not None:
+            color_values = tuple(float(value) for value in color)
+            if len(color_values) == 3:
+                color_values = (*color_values, 1.0)
+            color = cast(Vector4 | None, color_values)
         color = cast(Vector4 | None, color)
 
         if isinstance(name_or_tree, str):

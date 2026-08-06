@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from webknossos.dataset.dataset import Dataset, RemoteDataset
 
 from webknossos.dataset_properties import LayerCategoryType
-from webknossos.geometry import Mag, Vec3Float, Vec3Int, Vec3IntLike
+from webknossos.geometry import Mag, Vec3FloatLike, Vec3Int, Vec3IntLike
 
 from .view import ArrayInfo, View
 
@@ -48,7 +48,7 @@ def calculate_mags_to_downsample(
     from_mag: Mag,
     coarsest_mag: Mag,
     dataset_to_align_with: Union["Dataset", "RemoteDataset"] | None,
-    voxel_size: Vec3Float | None,
+    voxel_size: Vec3FloatLike | None,
 ) -> list[Mag]:
     assert np.all(from_mag.to_np() <= coarsest_mag.to_np())
     mags = []
@@ -121,7 +121,7 @@ def calculate_mags_to_upsample(
     from_mag: Mag,
     finest_mag: Mag,
     dataset_to_align_with: Union["Dataset", "RemoteDataset"] | None,
-    voxel_size: Vec3Float | None,
+    voxel_size: Vec3FloatLike | None,
 ) -> list[Mag]:
     return list(
         reversed(

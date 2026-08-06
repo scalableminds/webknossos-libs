@@ -262,7 +262,7 @@ class Task:
     task_type: TaskType
     experience: TaskExperience
     edit_position: Vec3Int
-    edit_rotation: Vec3Float
+    edit_rotation: Vec3Float = attr.field(converter=Vec3Float)
     script_id: str | None = None
     bounding_box: BoundingBox | None = None
 
@@ -598,7 +598,7 @@ class Task:
             else None,
             self.dataset_id,
             self.edit_position.to_tuple(),
-            self.edit_rotation,
+            self.edit_rotation.to_tuple(),
         )
         updated = client.task_update(task_id=self.task_id, task_parameters=api_task)
         return self._from_api_task(updated)

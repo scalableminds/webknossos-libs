@@ -6,7 +6,7 @@ import networkx as nx
 from upath import UPath
 
 from ..dataset_properties import _LENGTH_UNIT_TO_NANOMETER, VoxelSize
-from ..geometry import Vec3Float, Vec3FloatLike, parse_vec3_float
+from ..geometry import Vec3Float, Vec3FloatLike
 from .group import Group
 
 
@@ -93,7 +93,7 @@ class Skeleton(Group):
         - Annotation: Container class for working with WEBKNOSSOS
     """
 
-    _voxel_size: VoxelSize | Vec3Float
+    _voxel_size: VoxelSize | Vec3FloatLike
     dataset_name: str
     dataset_id: str | None = None
     organization_id: str | None = None
@@ -134,12 +134,8 @@ class Skeleton(Group):
             voxel_size (Vec3Float): A tuple (x, y, z) representing the new voxel size in nanometers.
         """
         assert isinstance(self._voxel_size, VoxelSize)
-        voxel_size = parse_vec3_float(voxel_size)
-        conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self._voxel_size.unit]
         new_factor = (
-            voxel_size[0] / conversion_factor,
-            voxel_size[1] / conversion_factor,
-            voxel_size[2] / conversion_factor,
+            Vec3Float(voxel_size) / _LENGTH_UNIT_TO_NANOMETER[self._voxel_size.unit]
         )
         self._voxel_size = VoxelSize(
             factor=new_factor,

@@ -45,7 +45,14 @@ from webknossos.dataset_properties import (
     ThinPlateSplineCoordinateTransformation,
 )
 from webknossos.dataset_properties.structuring import get_dataset_converter
-from webknossos.geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, VecIntLike
+from webknossos.geometry import (
+    BoundingBox,
+    Mag,
+    NDBoundingBox,
+    Vec3Float,
+    Vec3Int,
+    VecIntLike,
+)
 from webknossos.utils import (
     copytree,
     dump_path,
@@ -3342,8 +3349,8 @@ def test_thin_plate_spline_coordinate_transformation_pairs() -> None:
         ]
     )
     assert transformation.pairs == (
-        ((0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        ((1.0, 2.0, 3.0), (4.0, 5.0, 6.0)),
+        (Vec3Float(0.0, 0.0, 0.0), Vec3Float(1.0, 1.0, 1.0)),
+        (Vec3Float(1.0, 2.0, 3.0), Vec3Float(4.0, 5.0, 6.0)),
     )
     np.testing.assert_array_equal(transformation.source, [[0, 0, 0], [1, 2, 3]])
     np.testing.assert_array_equal(transformation.target, [[1, 1, 1], [4, 5, 6]])
@@ -3358,7 +3365,7 @@ def test_thin_plate_spline_coordinate_transformation_pairs() -> None:
     sub_voxel = ThinPlateSplineCoordinateTransformation.from_pairs(
         [[(0.5, 1.25, 2.0), np.array([3.5, 4.0, 5.75])]]
     )
-    assert sub_voxel.pairs == (((0.5, 1.25, 2.0), (3.5, 4.0, 5.75)),)
+    assert sub_voxel.pairs == ((Vec3Float(0.5, 1.25, 2.0), Vec3Float(3.5, 4.0, 5.75)),)
     assert ThinPlateSplineCoordinateTransformation.from_pairs(sub_voxel.pairs) == (
         sub_voxel
     )

@@ -21,7 +21,7 @@ from ..dataset_properties import (
     length_unit_from_str,
 )
 from ..dataset_properties.dataset_properties import DEFAULT_LENGTH_UNIT_STR
-from ..geometry import Mag, NormalizedBoundingBox, Vec3Int
+from ..geometry import Mag, NormalizedBoundingBox, Vec3Float, Vec3Int
 from ..utils import snake_to_camel_case
 from .coordinate_transformations import _coordinate_transformation_from_dict
 from .dtype_conversion import (
@@ -39,6 +39,7 @@ def mag_unstructure(mag: Mag) -> list[int]:
 
 
 vec3int_to_array: Callable[[Vec3Int], list[int]] = lambda o: o.to_list()  # noqa: E731
+vec3float_to_array: Callable[[Vec3Float], list[float]] = lambda o: o.to_list()  # noqa: E731
 
 
 def dataset_properties_pre_structure(converter_fn: Callable) -> Callable:
@@ -181,6 +182,11 @@ def get_dataset_converter() -> cattr.Converter:
     dataset_converter.register_structure_hook(
         Vec3Int, lambda d, _: Vec3Int.full(d) if isinstance(d, int) else Vec3Int(d)
     )
+
+    # These must be registered before the DatasetProperties hooks below, which resolve
+    # the hook for VoxelSize.factor at generation time.
+    dataset_converter.register_unstructure_hook(Vec3Float, vec3float_to_array)
+    dataset_converter.register_structure_hook(Vec3Float, lambda d, _: Vec3Float(d))
 
     dataset_converter.register_structure_hook_func(
         lambda d: d == LayerCategoryType,  # type: ignore[comparison-overlap]

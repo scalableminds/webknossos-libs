@@ -24,7 +24,7 @@ from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_U
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset.remote_dataset import RemoteAccessMode
 from ..dataset_properties import DataFormat, LengthUnit
-from ..geometry import BoundingBox, Mag, Vec3Float, Vec3Int
+from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import is_fs_path
 
 logger = logging.getLogger(__name__)
@@ -249,7 +249,7 @@ def parse_mag(mag_str: str) -> Mag:
     return Mag(mag_str)
 
 
-def parse_voxel_size(voxel_size_str: str) -> Vec3Float:
+def parse_voxel_size(voxel_size_str: str) -> VoxelSizeTuple:
     """Parses str input to tuple of three floats."""
     try:
         result = tuple(float(x) for x in voxel_size_str.split(","))
