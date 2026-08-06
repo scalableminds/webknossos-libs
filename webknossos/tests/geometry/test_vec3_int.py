@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from webknossos.geometry import Mag, Vec3Int
 
@@ -81,3 +82,24 @@ def test_custom_initialization() -> None:
 
     assert Vec3Int.ones() - Vec3Int.ones() == Vec3Int.zeros()
     assert Vec3Int.full(4) == Vec3Int.ones() * 4
+
+
+def test_ordering() -> None:
+    """Vectors are ordered lexicographically, like the equivalent plain tuples."""
+    assert Vec3Int(1, 2, 3) < Vec3Int(1, 2, 4)
+    assert Vec3Int(1, 2, 4) > Vec3Int(1, 2, 3)
+    assert Vec3Int(1, 2, 3) <= Vec3Int(1, 2, 3)
+    assert Vec3Int(1, 2, 3) >= Vec3Int(1, 2, 3)
+    assert not Vec3Int(2, 0, 0) < Vec3Int(1, 9, 9)
+
+    # Ordering against plain tuples works in both directions, as for `==`
+    assert Vec3Int(1, 2, 3) < (1, 2, 4)
+    assert (1, 2, 3) < Vec3Int(1, 2, 4)
+
+    # Sorting matches what the equivalent tuples would do
+    vectors = [Vec3Int(5, 5, 5), Vec3Int(0, 0, 0), Vec3Int(1, 9, 9)]
+    assert sorted(vectors) == sorted(v.to_tuple() for v in vectors)
+
+    # Incomparable types still raise rather than comparing by identity
+    with pytest.raises(TypeError):
+        Vec3Int(1, 2, 3) < "abc"  # type: ignore[operator]
