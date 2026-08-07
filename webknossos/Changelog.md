@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.6.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.6.0) - 2026-08-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...v3.6.0)
 
 ### Added
 - Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
@@ -20,10 +30,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `BoundingBox.iter_chunk_toplefts()`, a fast, allocation-free variant of `BoundingBox.chunk()` that yields chunk toplefts as plain int tuples instead of `BoundingBox` instances, and accepts an optional `clip_to` bounding box. [#1494](https://github.com/scalableminds/webknossos-libs/pull/1494)
 
 
-### Changed
-
 ### Fixed
 - Fixed a storage leak where downloading annotations and editing volume layers wrote zip data to temporary files on disk instead of keeping it in memory. [#1485](https://github.com/scalableminds/webknossos-libs/pull/1485)
+
 
 
 ## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20
