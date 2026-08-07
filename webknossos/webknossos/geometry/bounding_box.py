@@ -469,34 +469,13 @@ class BoundingBox(NDBoundingBox):
               chunks will be aligned to those values
         """
 
-        start = self.topleft.to_np()
-        chunk_shape = Vec3Int(chunk_shape).to_np()
+        chunk_shape = Vec3Int(chunk_shape)
 
-        start_adjust = np.array([0, 0, 0])
-        if chunk_border_alignments is not None:
-            chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
-            assert np.all(chunk_shape % chunk_border_alignments_array == 0), (
-                f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
+        for start in self.iter_chunk_toplefts(chunk_shape, chunk_border_alignments):
+            yield cast(
+                BoundingBox,
+                BoundingBox(start, chunk_shape).intersected_with(self),
             )
-
-            # Move the start to be aligned correctly. This doesn't actually change
-            # the start of the first chunk, because we'll intersect with `self`,
-            # but it'll lead to all chunk borders being aligned correctly.
-            start_adjust = start % chunk_border_alignments_array
-
-        for x in range(
-            start[0] - start_adjust[0], start[0] + self.size[0], chunk_shape[0]
-        ):
-            for y in range(
-                start[1] - start_adjust[1], start[1] + self.size[1], chunk_shape[1]
-            ):
-                for z in range(
-                    start[2] - start_adjust[2], start[2] + self.size[2], chunk_shape[2]
-                ):
-                    yield cast(
-                        BoundingBox,
-                        BoundingBox([x, y, z], chunk_shape).intersected_with(self),
-                    )
 
     def iter_chunk_toplefts(
         self,
