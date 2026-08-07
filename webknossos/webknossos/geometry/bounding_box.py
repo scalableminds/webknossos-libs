@@ -13,19 +13,6 @@ from .normalized_bounding_box import NormalizedBoundingBox
 from .vec3_int import Vec3Int, Vec3IntLike
 
 
-def _as_int3(value: Vec3IntLike) -> tuple[int, int, int]:
-    """Converts a `Vec3IntLike` to a plain 3-tuple of python ints.
-
-    This is a lighter-weight alternative to `Vec3Int(value)` for call sites
-    that don't need a `Vec3Int` (with its axis metadata) and only care about
-    the three plain int values, e.g. hot per-chunk grid computations.
-    """
-
-    result = tuple(int(v) for v in value)
-    assert len(result) == 3, f"Expected a Vec3IntLike with 3 entries, got {result}."
-    return cast(tuple[int, int, int], result)
-
-
 @attr.frozen
 class BoundingBox(NDBoundingBox):
     """An axis-aligned 3D bounding box with integer coordinates.
@@ -482,13 +469,34 @@ class BoundingBox(NDBoundingBox):
               chunks will be aligned to those values
         """
 
-        chunk_shape = Vec3Int(chunk_shape)
+        start = self.topleft.to_np()
+        chunk_shape = Vec3Int(chunk_shape).to_np()
 
-        for start in self.iter_chunk_toplefts(chunk_shape, chunk_border_alignments):
-            yield cast(
-                BoundingBox,
-                BoundingBox(start, chunk_shape).intersected_with(self),
+        start_adjust = np.array([0, 0, 0])
+        if chunk_border_alignments is not None:
+            chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
+            assert np.all(chunk_shape % chunk_border_alignments_array == 0), (
+                f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
             )
+
+            # Move the start to be aligned correctly. This doesn't actually change
+            # the start of the first chunk, because we'll intersect with `self`,
+            # but it'll lead to all chunk borders being aligned correctly.
+            start_adjust = start % chunk_border_alignments_array
+
+        for x in range(
+            start[0] - start_adjust[0], start[0] + self.size[0], chunk_shape[0]
+        ):
+            for y in range(
+                start[1] - start_adjust[1], start[1] + self.size[1], chunk_shape[1]
+            ):
+                for z in range(
+                    start[2] - start_adjust[2], start[2] + self.size[2], chunk_shape[2]
+                ):
+                    yield cast(
+                        BoundingBox,
+                        BoundingBox([x, y, z], chunk_shape).intersected_with(self),
+                    )
 
     def iter_chunk_toplefts(
         self,
@@ -499,12 +507,10 @@ class BoundingBox(NDBoundingBox):
         """Returns an iterator over the topleft coordinate of every chunk of
         `chunk()`'s grid.
 
-        This is a fast, allocation-free variant of `chunk()`: besides `self` and
-        `clip_to`, it doesn't touch any `Vec3Int`/`BoundingBox` (both the
-        computation below and the returned coordinates use plain python ints),
-        and it does **not** clip the chunks to this box (border chunks are
-        therefore *not* shrunk – the caller can clip/filter cheaply on the raw
-        integers if needed).
+        This is a fast, allocation-free variant of `chunk()`: it performs no
+        per-chunk `BoundingBox` allocation and does **not** clip the chunks to
+        this box (border chunks are therefore *not* shrunk – the caller can
+        clip/filter cheaply on the raw integers if needed).
 
         `chunk()` shares the same grid (same cells, same order). Without
         `chunk_border_alignments`, the yielded starts equal the chunk toplefts,
@@ -538,42 +544,40 @@ class BoundingBox(NDBoundingBox):
                 coordinate of each chunk.
         """
 
-        steps = _as_int3(chunk_shape)
-        topleft = tuple(self.topleft)
-        bottomright = tuple(self.bottomright)
+        chunk_shape = Vec3Int(chunk_shape)
 
         if chunk_border_alignments is not None:
-            alignments = _as_int3(chunk_border_alignments)
+            alignments = Vec3Int(chunk_border_alignments)
             assert all(
                 step % alignment == 0
-                for step, alignment in zip(steps, alignments, strict=True)
-            ), f"{steps} not divisible by {alignments}"
+                for step, alignment in zip(chunk_shape, alignments, strict=True)
+            ), f"{chunk_shape} not divisible by {alignments}"
             # The start of the grid line at or before this box's topleft, on each
             # axis. This doesn't change the start of the first chunk (the grid is
             # intersected with the requested/clipped range below), but it fixes the
             # grid's phase so that all borders *between* chunks are aligned.
-            grid_starts = tuple(
+            grid_starts = Vec3Int(
                 start - start % alignment
-                for start, alignment in zip(topleft, alignments, strict=True)
+                for start, alignment in zip(self.topleft, alignments, strict=True)
             )
         else:
-            grid_starts = topleft
+            grid_starts = self.topleft
 
-        starts = topleft
-        ends = bottomright
+        starts = self.topleft
+        ends = self.bottomright
         if clip_to is not None:
-            starts = tuple(
+            starts = Vec3Int(
                 max(start, clip_start)
                 for start, clip_start in zip(starts, clip_to.topleft, strict=True)
             )
-            ends = tuple(
+            ends = Vec3Int(
                 min(end, clip_end)
                 for end, clip_end in zip(ends, clip_to.bottomright, strict=True)
             )
 
         ranges = []
         for start, end, grid_start, step in zip(
-            starts, ends, grid_starts, steps, strict=True
+            starts, ends, grid_starts, chunk_shape, strict=True
         ):
             if start >= end:
                 # Empty overlap on at least one axis -> no chunks at all.
