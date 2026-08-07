@@ -196,3 +196,49 @@ def test_contains_bbox_with_normalized_bbox() -> None:
     # NormalizedBoundingBox.contains_bbox(BoundingBox)
     assert outer_normalized.contains_bbox(inner)
     assert not outer_normalized.contains_bbox(not_contained)
+
+
+def test_iter_overlapping_grid_cells() -> None:
+    # Box [10, 50) on every axis overlaps origin-aligned 32-grid cells 0 and 32.
+    bbox = BoundingBox((10, 10, 10), (40, 40, 40))
+    cells = list(bbox.iter_overlapping_grid_cells((32, 32, 32)))
+    assert all(type(v) is int for cell in cells for v in cell)
+    assert cells == [(x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)]
+
+
+def test_iter_overlapping_grid_cells_touching_border_excluded() -> None:
+    # Box exactly spanning one grid cell [32, 64) only overlaps that single cell;
+    # neighbouring cells that merely touch its borders are excluded (half-open).
+    bbox = BoundingBox((32, 32, 32), (32, 32, 32))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32))) == [(32, 32, 32)]
+
+
+def test_iter_overlapping_grid_cells_non_origin_aligned() -> None:
+    # Box [1, 33) crosses the grid line at 32, so it overlaps cells 0 and 32.
+    bbox = BoundingBox((1, 1, 1), (32, 32, 32))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32))) == [
+        (x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)
+    ]
+
+
+def test_iter_overlapping_grid_cells_clip_to() -> None:
+    bbox = BoundingBox((10, 10, 10), (100, 100, 100))
+    clip = BoundingBox((0, 0, 0), (40, 40, 40))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32), clip_to=clip)) == [
+        (x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)
+    ]
+
+
+def test_iter_overlapping_grid_cells_outside_clip_is_empty() -> None:
+    bbox = BoundingBox((200, 200, 200), (10, 10, 10))
+    clip = BoundingBox((0, 0, 0), (40, 40, 40))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32), clip_to=clip)) == []
+
+
+def test_iter_overlapping_grid_cells_negative_coordinates() -> None:
+    # Box [-33, -1) crosses the grid lines at -32 and 0, so it overlaps the cells
+    # starting at -64 and -32 (the grid is aligned to the origin, not to the box).
+    bbox = BoundingBox((-33, -33, -33), (32, 32, 32))
+    assert list(bbox.iter_overlapping_grid_cells((32, 32, 32))) == [
+        (x, y, z) for x in (-64, -32) for y in (-64, -32) for z in (-64, -32)
+    ]

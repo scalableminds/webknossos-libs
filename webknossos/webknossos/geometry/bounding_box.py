@@ -1,6 +1,7 @@
 import json
 import re
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Iterator
+from itertools import product
 from typing import Union, cast, overload
 
 import attr
@@ -496,6 +497,53 @@ class BoundingBox(NDBoundingBox):
                         BoundingBox,
                         BoundingBox([x, y, z], chunk_shape).intersected_with(self),
                     )
+
+    def iter_overlapping_grid_cells(
+        self,
+        cell_shape: Vec3IntLike,
+        clip_to: "BoundingBox | None" = None,
+    ) -> Iterator[tuple[int, int, int]]:
+        """Yield the topleft of every origin-aligned grid cell overlapping this box.
+
+        The grid is aligned to the coordinate origin (cell `k` on an axis spans
+        `[k * cell, (k + 1) * cell)`) and has cell size `cell_shape`. This differs
+        from `chunk()`, whose grid is aligned to the box's own topleft.
+
+        Overlap uses half-open intervals: cells that only *touch* this box (or
+        `clip_to`) at a border are not returned. Unlike `chunk()`, this does not
+        allocate a `BoundingBox` per cell; it yields plain int tuples.
+
+        Args:
+            cell_shape (Vec3IntLike): The size of the grid cells.
+            clip_to (BoundingBox | None): If given, only cells overlapping both this
+                box and `clip_to` are yielded.
+
+        Yields:
+            tuple[int, int, int]: The topleft coordinate of each overlapping grid cell.
+        """
+
+        cell_shape = Vec3Int(cell_shape)
+
+        starts = self.topleft
+        ends = self.bottomright
+        if clip_to is not None:
+            starts = Vec3Int(
+                max(start, clip_start)
+                for start, clip_start in zip(starts, clip_to.topleft, strict=True)
+            )
+            ends = Vec3Int(
+                min(end, clip_end)
+                for end, clip_end in zip(ends, clip_to.bottomright, strict=True)
+            )
+
+        ranges = []
+        for start, end, cell in zip(starts, ends, cell_shape, strict=True):
+            if start >= end:
+                # Empty overlap on at least one axis -> no cells at all.
+                return
+            ranges.append(range((start // cell) * cell, end, cell))
+
+        yield from product(*ranges)
 
     def offset(self, vector: Vec3IntLike) -> "BoundingBox":
         """Creates an offset copy of this bounding box by adding a vector to the topleft coordinate.
