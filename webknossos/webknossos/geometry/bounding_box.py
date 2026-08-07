@@ -511,7 +511,7 @@ class BoundingBox(NDBoundingBox):
 
         Overlap uses half-open intervals: cells that only *touch* this box (or
         `clip_to`) at a border are not returned. Unlike `chunk()`, this does not
-        allocate a `BoundingBox` per cell; it yields plain int tuples.
+        allocate a `BoundingBox` per cell; it yields plain int tuples which is faster.
 
         Args:
             cell_shape (Vec3IntLike): The size of the grid cells.
