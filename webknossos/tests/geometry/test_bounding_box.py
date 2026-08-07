@@ -259,7 +259,9 @@ def test_iter_chunk_toplefts(
     bbox = BoundingBox(topleft, size)
     starts = list(bbox.iter_chunk_toplefts(chunk_shape, alignment))
 
-    assert starts == expected
+    assert starts == expected, (
+        f"iter_chunk_toplefts with chunk_shape for bbox {bbox} with chunk_shape {chunk_shape} and alignment {alignment} should give {expected} but gave {starts}"
+    )
     # Yielded values are plain python int tuples (no numpy scalars).
     assert all(type(v) is int for start in starts for v in start)
     if alignment is None:
@@ -326,4 +328,6 @@ def test_iter_chunk_toplefts_as_origin_aligned_grid_cells_with_clip_to() -> None
     ]
 
     bbox = BoundingBox((200, 200, 200), (10, 10, 10))
-    assert list(bbox.iter_chunk_toplefts((32, 32, 32), (32, 32, 32), clip_to=clip)) == []
+    assert (
+        list(bbox.iter_chunk_toplefts((32, 32, 32), (32, 32, 32), clip_to=clip)) == []
+    )

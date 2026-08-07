@@ -552,40 +552,36 @@ class BoundingBox(NDBoundingBox):
                 step % alignment == 0
                 for step, alignment in zip(chunk_shape, alignments, strict=True)
             ), f"{chunk_shape} not divisible by {alignments}"
-            # The start of the grid line at or before this box's topleft, on each
-            # axis. This doesn't change the start of the first chunk (the grid is
-            # intersected with the requested/clipped range below), but it fixes the
-            # grid's phase so that all borders *between* chunks are aligned.
-            grid_starts = Vec3Int(
+            starts = Vec3Int(
                 start - start % alignment
                 for start, alignment in zip(self.topleft, alignments, strict=True)
             )
         else:
-            grid_starts = self.topleft
+            starts = self.topleft
 
-        starts = self.topleft
         ends = self.bottomright
         if clip_to is not None:
             starts = Vec3Int(
                 max(start, clip_start)
                 for start, clip_start in zip(starts, clip_to.topleft, strict=True)
             )
+            # After clipping the start might no longer be grid/shard aligned, fix this if needed.
+            if chunk_border_alignments is not None:
+                starts = Vec3Int(
+                    start - start % alignment
+                    for start, alignment in zip(starts, alignments, strict=True)
+                )
             ends = Vec3Int(
                 min(end, clip_end)
                 for end, clip_end in zip(ends, clip_to.bottomright, strict=True)
             )
 
         ranges = []
-        for start, end, grid_start, step in zip(
-            starts, ends, grid_starts, chunk_shape, strict=True
-        ):
+        for start, end, step in zip(starts, ends, chunk_shape, strict=True):
             if start >= end:
                 # Empty overlap on at least one axis -> no chunks at all.
                 return iter(())
-            # Move `start` back to the grid line at or before it, without changing
-            # the grid's phase (matters only when chunk_border_alignments is given).
-            first = start - (start - grid_start) % step
-            ranges.append(range(first, end, step))
+            ranges.append(range(start, end, step))
 
         # Returning the itertools.product iterator directly (instead of `yield
         # from`-ing it from a generator function) avoids wrapping it in an
