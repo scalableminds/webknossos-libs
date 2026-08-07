@@ -469,60 +469,76 @@ class BoundingBox(NDBoundingBox):
               chunks will be aligned to those values
         """
 
-        start = self.topleft.to_np()
-        chunk_shape = Vec3Int(chunk_shape).to_np()
+        chunk_shape = Vec3Int(chunk_shape)
 
-        start_adjust = np.array([0, 0, 0])
-        if chunk_border_alignments is not None:
-            chunk_border_alignments_array = Vec3Int(chunk_border_alignments).to_np()
-            assert np.all(chunk_shape % chunk_border_alignments_array == 0), (
-                f"{chunk_shape} not divisible by {chunk_border_alignments_array}"
+        for start in self.iter_chunk_starts(chunk_shape, chunk_border_alignments):
+            yield cast(
+                BoundingBox,
+                BoundingBox(start, chunk_shape).intersected_with(self),
             )
 
-            # Move the start to be aligned correctly. This doesn't actually change
-            # the start of the first chunk, because we'll intersect with `self`,
-            # but it'll lead to all chunk borders being aligned correctly.
-            start_adjust = start % chunk_border_alignments_array
-
-        for x in range(
-            start[0] - start_adjust[0], start[0] + self.size[0], chunk_shape[0]
-        ):
-            for y in range(
-                start[1] - start_adjust[1], start[1] + self.size[1], chunk_shape[1]
-            ):
-                for z in range(
-                    start[2] - start_adjust[2], start[2] + self.size[2], chunk_shape[2]
-                ):
-                    yield cast(
-                        BoundingBox,
-                        BoundingBox([x, y, z], chunk_shape).intersected_with(self),
-                    )
-
-    def iter_overlapping_grid_cells(
+    def iter_chunk_starts(
         self,
-        cell_shape: Vec3IntLike,
+        chunk_shape: Vec3IntLike,
+        chunk_border_alignments: Vec3IntLike | None = None,
         clip_to: "BoundingBox | None" = None,
     ) -> Iterator[tuple[int, int, int]]:
-        """Yield the topleft of every origin-aligned grid cell overlapping this box.
+        """Yield the topleft coordinate of every chunk of `chunk()`'s grid.
 
-        The grid is aligned to the coordinate origin (cell `k` on an axis spans
-        `[k * cell, (k + 1) * cell)`) and has cell size `cell_shape`. This differs
-        from `chunk()`, whose grid is aligned to the box's own topleft.
+        This is a fast, allocation-free variant of `chunk()`: it performs no
+        per-chunk `BoundingBox` allocation and does **not** clip the chunks to
+        this box (border chunks are therefore *not* shrunk – the caller can
+        clip/filter cheaply on the raw integers if needed).
 
-        Overlap uses half-open intervals: cells that only *touch* this box (or
-        `clip_to`) at a border are not returned. Unlike `chunk()`, this does not
-        allocate a `BoundingBox` per cell; it yields plain int tuples which is faster.
+        `chunk()` shares the same grid (same cells, same order). Without
+        `chunk_border_alignments`, the yielded starts equal the chunk toplefts,
+        i.e. `list(self.iter_chunk_starts(cs)) == [tuple(c.topleft) for c in
+        self.chunk(cs)]`. With `chunk_border_alignments`, the first grid line on
+        an axis may lie *before* this box's topleft; `chunk()` clips that first
+        chunk's topleft up to the box, whereas this method yields the unclipped
+        grid start.
+
+        Passing `chunk_border_alignments=chunk_shape` makes the grid aligned to
+        the coordinate origin instead of to this box's topleft (cell `k` on an
+        axis then spans `[k * chunk_shape, (k + 1) * chunk_shape)`), which is
+        useful to iterate the grid cells of an origin-aligned partitioning (e.g.
+        a chunked/sharded dataset) that overlap this box, optionally clipped to
+        another box via `clip_to`. Overlap uses half-open intervals: cells that
+        only *touch* this box (or `clip_to`) at a border are not yielded.
 
         Args:
-            cell_shape (Vec3IntLike): The size of the grid cells.
-            clip_to (BoundingBox | None): If given, only cells overlapping both this
-                box and `clip_to` are yielded.
+            chunk_shape (Vec3IntLike): The size of the chunks to generate.
+            chunk_border_alignments (Vec3IntLike | None): The alignment of the
+                chunk borders.
+            clip_to (BoundingBox | None): If given, only chunks overlapping both
+                this box and `clip_to` are yielded.
+
+        Raises:
+            AssertionError: If chunk_border_alignments is provided and chunk_shape
+                is not divisible by it.
 
         Yields:
-            tuple[int, int, int]: The topleft coordinate of each overlapping grid cell.
+            tuple[int, int, int]: The topleft coordinate of each chunk.
         """
 
-        cell_shape = Vec3Int(cell_shape)
+        chunk_shape = Vec3Int(chunk_shape)
+
+        if chunk_border_alignments is not None:
+            alignments = Vec3Int(chunk_border_alignments)
+            assert all(
+                step % alignment == 0
+                for step, alignment in zip(chunk_shape, alignments, strict=True)
+            ), f"{chunk_shape} not divisible by {alignments}"
+            # The start of the grid line at or before this box's topleft, on each
+            # axis. This doesn't change the start of the first chunk (the grid is
+            # intersected with the requested/clipped range below), but it fixes the
+            # grid's phase so that all borders *between* chunks are aligned.
+            grid_starts = Vec3Int(
+                start - start % alignment
+                for start, alignment in zip(self.topleft, alignments, strict=True)
+            )
+        else:
+            grid_starts = self.topleft
 
         starts = self.topleft
         ends = self.bottomright
@@ -537,11 +553,16 @@ class BoundingBox(NDBoundingBox):
             )
 
         ranges = []
-        for start, end, cell in zip(starts, ends, cell_shape, strict=True):
+        for start, end, grid_start, step in zip(
+            starts, ends, grid_starts, chunk_shape, strict=True
+        ):
             if start >= end:
-                # Empty overlap on at least one axis -> no cells at all.
+                # Empty overlap on at least one axis -> no chunks at all.
                 return
-            ranges.append(range((start // cell) * cell, end, cell))
+            # Move `start` back to the grid line at or before it, without changing
+            # the grid's phase (matters only when chunk_border_alignments is given).
+            first = start - (start - grid_start) % step
+            ranges.append(range(first, end, step))
 
         yield from product(*ranges)
 
