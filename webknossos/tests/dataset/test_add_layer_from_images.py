@@ -2,7 +2,8 @@ import importlib
 import os
 import sys
 import warnings
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from pathlib import Path
 from shutil import copy
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from time import gmtime, strftime
@@ -51,7 +52,12 @@ def test_compare_tifffile(tmp_upath: UPath) -> None:
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
-def test_mrc_from_images(tmp_upath: UPath) -> None:
+# Chunk-based formats have no pims reader to fall back on, so a path type that
+# try_open_chunked_images fails to recognize doesn't degrade — it fails outright
+# with "could not autodetect how to load a file of type mrc". pathlib.Path is
+# the easy one to miss, since it is not a UPath subclass.
+@pytest.mark.parametrize("path_type", [str, Path, UPath])
+def test_mrc_from_images(tmp_upath: UPath, path_type: Callable[[UPath], Any]) -> None:
     Z, Y, X = 6, 24, 32
     data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
     mrc_path = tmp_upath / "test.mrc"
@@ -61,7 +67,7 @@ def test_mrc_from_images(tmp_upath: UPath) -> None:
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
         layer = ds.add_layer_from_images(
-            mrc_path,
+            path_type(mrc_path),
             layer_name="mrc_layer",
             executor=executor,
         )

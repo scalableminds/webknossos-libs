@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
-from os import environ
+from os import PathLike, environ
 
 from numpy.typing import DTypeLike
 from upath import UPath
@@ -121,7 +121,15 @@ def try_open_chunked_images(
     pims.FramesSequence instances always fall back to the generic PimsImages
     path.
     """
-    if not isinstance(images, (str, UPath)):
+    # This only asks "is this a single path?", not "is it local?" — remote
+    # paths must reach the reader too, so that it can raise its own "must be a
+    # local file path" error (see is_remote_path there) instead of failing
+    # obscurely. Both branches are needed: PathLike catches pathlib.Path and
+    # local UPaths but not remote ones, while UPath catches remote ones but not
+    # pathlib.Path (PosixUPath subclasses Path, not the reverse). Dropping
+    # either sends a path only a chunk-based reader can handle to PimsImages,
+    # which fails with "could not autodetect how to load a file of type …".
+    if not isinstance(images, (str, PathLike, UPath)):
         return None
     path = UPath(images)
     suffix = path.suffix.lstrip(".").lower()
