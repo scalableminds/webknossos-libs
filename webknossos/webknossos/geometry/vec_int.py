@@ -59,6 +59,11 @@ class VecInt(Sequence[int]):
         ```
     """
 
+    # Instances are created in large numbers, e.g. one per chunk of a dataset, so they
+    # do without the per-instance `__dict__` that a plain class would carry. Subclasses
+    # have to declare `__slots__` as well for this to have an effect.
+    __slots__ = ("_data", "axes", "_c_pos", "_x_pos", "_y_pos", "_z_pos")
+
     _data: tuple[int, ...]
     axes: tuple[str, ...]
     _c_pos: int | None

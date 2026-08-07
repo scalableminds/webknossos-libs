@@ -10,6 +10,10 @@ _VALUE_ERROR = "Vector components must be three integers or a Vec3IntLike object
 
 
 class Vec3Int(VecInt):
+    # Adds no attributes of its own, but has to declare this for `VecInt.__slots__` to
+    # have an effect: a subclass without `__slots__` gets a `__dict__` again.
+    __slots__ = ()
+
     def __new__(
         cls,
         *args: Union["Vec3IntLike", Iterable[str], int],

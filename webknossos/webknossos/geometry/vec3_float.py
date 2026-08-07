@@ -28,6 +28,10 @@ class Vec3Float(Sequence[float]):
     keys.
     """
 
+    # Instances are created in large numbers, e.g. one per node of a skeleton, so they
+    # do without the per-instance `__dict__` that a plain class would carry.
+    __slots__ = ("_data",)
+
     _data: tuple[float, float, float]
 
     def __new__(cls, *args: Union["Vec3FloatLike", float]) -> "Vec3Float":
