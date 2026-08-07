@@ -15,7 +15,7 @@ import httpx
 import mrcfile
 import numpy as np
 import pytest
-from cluster_tools import SequentialExecutor
+from cluster_tools import SequentialExecutor, get_executor
 from tifffile import TiffFile
 from upath import UPath
 
@@ -127,6 +127,68 @@ def test_mrc_from_images_flip_and_swap(
         expected = expected[:, :, ::-1]
     expected = expected.transpose(1, 2, 0) if swap_xy else expected.transpose(2, 1, 0)
     np.testing.assert_array_equal(actual, expected)
+
+
+# layer.bounding_box is in Mag(1) but shard_shape is in mag space, so mag > 1
+# only exercises the conversion between them once the image spans several
+# shards; with one shard the mismatch cancels out.
+@pytest.mark.parametrize("mag", [1, 2, 4])
+@pytest.mark.parametrize("shard_shape", [(16, 16, 8), (64, 64, 64)])
+def test_mrc_from_images_mag(
+    tmp_upath: UPath, mag: int, shard_shape: tuple[int, int, int]
+) -> None:
+    Z, Y, X = 6, 24, 32
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    mrc_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            mrc_path,
+            layer_name="mrc_layer",
+            mag=mag,
+            chunk_shape=(8, 8, 8),
+            shard_shape=shard_shape,
+            executor=executor,
+        )
+
+    # The layer bbox is Mag(1), so it scales with mag; the data stored at that
+    # mag is the source unchanged.
+    assert layer.bounding_box.size.to_tuple() == (X * mag, Y * mag, Z * mag)
+    np.testing.assert_array_equal(
+        layer.get_finest_mag().read()[0], data.transpose(2, 1, 0)
+    )
+
+
+def test_mrc_from_images_mag_parallel_compressed(tmp_upath: UPath) -> None:
+    # Each job must own a whole shard. If chunks come out smaller than a shard
+    # — as they do when a Mag(1) bbox is chunked with a mag-space shard_shape —
+    # several workers write into the same compressed shard concurrently and
+    # corrupt it. That is invisible under SequentialExecutor, so this needs a
+    # real parallel executor to catch.
+    Z, Y, X = 8, 64, 96
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    mrc_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with get_executor("multiprocessing", max_workers=4) as executor:
+        layer = ds.add_layer_from_images(
+            mrc_path,
+            layer_name="mrc_layer",
+            mag=2,
+            compress=True,
+            chunk_shape=(16, 16, 8),
+            shard_shape=(32, 32, 8),
+            executor=executor,
+        )
+
+    np.testing.assert_array_equal(
+        layer.get_finest_mag().read()[0], data.transpose(2, 1, 0)
+    )
 
 
 def test_mrc_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:

@@ -710,7 +710,11 @@ def add_layer_from_images(
             # exactly one shard's worth of data and writes it directly.
             # layer.bounding_box is already the exact bbox (no placeholder
             # inflation) for ChunkedImages, so chunking it directly is safe.
-            chunked_shard_shape = mag_view.info.shard_shape
+            # It is in Mag(1) while shard_shape is in mag space, so the shard
+            # shape is scaled up to match; otherwise mag > 1 produces chunks a
+            # factor of `mag` too small and read_chunk is handed bounds that
+            # run past the end of the source.
+            chunked_shard_shape = mag_view.info.shard_shape * mag.to_vec3_int()
             args = list(
                 layer.bounding_box.chunk(chunked_shard_shape, chunked_shard_shape)
             )
