@@ -73,7 +73,22 @@ def test_mrc_from_images(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
 
 
-def test_mrc_from_images_flip_and_swap(tmp_upath: UPath) -> None:
+@pytest.mark.parametrize("flip_x", [False, True])
+@pytest.mark.parametrize("flip_y", [False, True])
+@pytest.mark.parametrize("flip_z", [False, True])
+@pytest.mark.parametrize("swap_xy", [False, True])
+# Every flip mirrors the whole source extent, so a shard_shape smaller than the
+# image is what distinguishes that from mirroring within each chunk. With the
+# 64-cube the data fits one shard and the two are indistinguishable.
+@pytest.mark.parametrize("shard_shape", [(64, 64, 64), (16, 16, 8)])
+def test_mrc_from_images_flip_and_swap(
+    tmp_upath: UPath,
+    shard_shape: tuple[int, int, int],
+    flip_x: bool,
+    flip_y: bool,
+    flip_z: bool,
+    swap_xy: bool,
+) -> None:
     Z, Y, X = 6, 24, 32
     data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
     mrc_path = tmp_upath / "test.mrc"
@@ -85,16 +100,26 @@ def test_mrc_from_images_flip_and_swap(tmp_upath: UPath) -> None:
         layer = ds.add_layer_from_images(
             mrc_path,
             layer_name="mrc_layer",
-            flip_x=True,
-            flip_y=True,
-            flip_z=True,
-            swap_xy=True,
+            flip_x=flip_x,
+            flip_y=flip_y,
+            flip_z=flip_z,
+            swap_xy=swap_xy,
+            chunk_shape=(8, 8, 8),
+            shard_shape=shard_shape,
             executor=executor,
         )
     actual = layer.get_finest_mag().read()[0]
 
-    intermediate = data[::-1, ::-1, ::-1]  # flip_z, flip_x, flip_y
-    expected = intermediate.transpose(1, 2, 0)  # swap_xy -> (y, x, z)
+    # flips apply in source axis order (z, y, x): flip_z mirrors z, flip_x
+    # mirrors y and flip_y mirrors x (the PimsImages convention).
+    expected = data
+    if flip_z:
+        expected = expected[::-1]
+    if flip_x:
+        expected = expected[:, ::-1]
+    if flip_y:
+        expected = expected[:, :, ::-1]
+    expected = expected.transpose(1, 2, 0) if swap_xy else expected.transpose(2, 1, 0)
     np.testing.assert_array_equal(actual, expected)
 
 
@@ -187,7 +212,14 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, expected)
 
 
-def test_ims_from_images_flip_and_swap(tmp_upath: UPath) -> None:
+# The fixture is 673x635x51, so (256, 256, 32) spans several shards in every
+# axis while (1024, 1024, 64) fits in one. Each flip mirrors the whole source
+# extent, which only differs from mirroring within each chunk once the image
+# spans more than one shard.
+@pytest.mark.parametrize("shard_shape", [(1024, 1024, 64), (256, 256, 32)])
+def test_ims_from_images_flip_and_swap(
+    tmp_upath: UPath, shard_shape: tuple[int, int, int]
+) -> None:
     # .ims files are read exclusively through ImsChunkedImages (never through
     # pims), so there's no separate "slow path" to compare against. Instead,
     # this derives the expected flip/swap transform directly from the h5py
@@ -206,6 +238,8 @@ def test_ims_from_images_flip_and_swap(tmp_upath: UPath) -> None:
             flip_y=True,
             flip_z=True,
             swap_xy=True,
+            chunk_shape=(32, 32, 32),
+            shard_shape=shard_shape,
             executor=executor,
         )
     actual = layer.get_finest_mag().read()[0]

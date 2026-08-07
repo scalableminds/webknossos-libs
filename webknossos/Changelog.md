@@ -24,6 +24,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Timepoints are no longer split into separate layers by `allow_multiple_layers=True`; readers that can address them expose all timepoints on a `t` axis within one layer instead. Readers that cannot (images without dimension metadata) now warn that only the first timepoint is converted. `allow_multiple_layers` still splits channels. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 ### Fixed
+- Fixed `flip_x`/`flip_y` mirroring each shard individually instead of the whole image when converting `.ims` or MRC files that span more than one shard in x or y, which scrambled the output into mirrored tiles. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Fixed the bounding box reported for multi-channel n-dimensional images (e.g. a multi-channel, multi-timepoint file) contradicting the layer's channel count, which caused a spurious "Some images are larger than expected" warning and a bounding box that disagreed with the written data. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 

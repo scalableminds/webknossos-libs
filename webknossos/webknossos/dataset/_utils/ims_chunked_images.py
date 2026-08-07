@@ -171,15 +171,27 @@ class ImsChunkedImages(ChunkedImages):
             source_x_start, source_x_end = out_x_start, out_x_end
             source_y_start, source_y_end = out_y_start, out_y_end
 
-        # flip_z mirrors the *entire* z-extent (matching PimsImages.copy_to_view,
-        # which reverses the full image sequence before slicing per-batch), not
-        # just this chunk in isolation. Read the mirrored source range and
-        # reverse it back into output order, rather than locally reversing
-        # this chunk.
+        # Every flip mirrors the *entire* source extent (matching
+        # PimsImages.copy_to_view, which reverses the full image sequence before
+        # slicing per-batch), not just this chunk in isolation. Each one reads a
+        # mirrored source range and reverses it back into output order below.
+        # Reversing a chunk in place would only mirror within that chunk, which
+        # is invisible while the image fits in a single shard but wrong as soon
+        # as it spans several.
+        # flip_x/-y follow the PimsImages convention: flip_x mirrors memory
+        # axis -2 (y in HDF5) and flip_y mirrors memory axis -1 (x in HDF5).
         if self._flip_z:
             read_z_start, read_z_end = self._z - z_end, self._z - z_start
         else:
             read_z_start, read_z_end = z_start, z_end
+        if self._flip_x:
+            read_y_start, read_y_end = self._y - source_y_end, self._y - source_y_start
+        else:
+            read_y_start, read_y_end = source_y_start, source_y_end
+        if self._flip_y:
+            read_x_start, read_x_end = self._x - source_x_end, self._x - source_x_start
+        else:
+            read_x_start, read_x_end = source_x_start, source_x_end
 
         if self._channel is not None:
             channels_to_read = [self._channel]
@@ -197,18 +209,16 @@ class ImsChunkedImages(ChunkedImages):
                 slabs.append(
                     ds[loc][
                         read_z_start:read_z_end,
-                        source_y_start:source_y_end,
-                        source_x_start:source_x_end,
+                        read_y_start:read_y_end,
+                        read_x_start:read_x_end,
                     ]
                 )
             block = np.stack(slabs, axis=0)  # (c, z, y, x)
-            if self._flip_z:
-                block = block[:, ::-1]  # mirrored read range -> correct output order
 
-        # Apply x/y flips in HDF5 axis order (c, z, y, x); flip_z was already
-        # handled above via the mirrored read range.
-        # flip_x/-y follow PimsImages convention: flip_x flips memory axis -2 (y in HDF5),
-        # flip_y flips memory axis -1 (x in HDF5).
+        # Mirrored read ranges -> correct output order, in HDF5 axis order
+        # (c, z, y, x).
+        if self._flip_z:
+            block = block[:, ::-1]
         if self._flip_x:
             block = block[:, :, ::-1]
         if self._flip_y:
