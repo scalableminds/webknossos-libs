@@ -10,13 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
-- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
 - Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`, which are immutable: their arrays are read-only, so a transformation is changed by building a new one and assigning it to the layer. Reading the property yields a tuple, assigning to it accepts any sequence. Previously, the `coordinateTransformations` of a layer were dropped when reading a dataset and lost on the next write. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 - Added `Vec3Float` and `Vec3FloatLike` to `webknossos.geometry`, the float counterpart to `Vec3Int` / `Vec3IntLike`. `Vec3Float` mirrors `Vec3Int`: it offers `x`/`y`/`z`, element-wise arithmetic, and `to_tuple`/`to_list`/`to_np`/`to_vec3_int`, and it compares, orders and hashes like the corresponding plain tuple, so sorting and `min`/`max` over voxel sizes keep working. Float triples such as a voxel size or a node rotation now use it instead of the `tuple[float, float, float]` aliases that seven modules each declared for themselves. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 
@@ -31,7 +29,20 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - `Dataset.add_layer_as_copy` and `Dataset.copy_dataset` now carry over the `default_view_configuration` and the `coordinate_transformations` of the copied layers, which were previously lost. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 - `Dataset.add_layer_like` no longer shares the `default_view_configuration` with the layer it copies from, so changing it on one of the two layers no longer changes it on the other as well. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+
+
+## [3.6.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.6.0) - 2026-08-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...v3.6.0)
+
+### Added
+- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
+- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
+- Added `BoundingBox.iter_chunk_toplefts()`, a fast, allocation-free variant of `BoundingBox.chunk()` that yields chunk toplefts as plain int tuples instead of `BoundingBox` instances, and accepts an optional `clip_to` bounding box. [#1494](https://github.com/scalableminds/webknossos-libs/pull/1494)
+
+
+### Fixed
 - Fixed a storage leak where downloading annotations and editing volume layers wrote zip data to temporary files on disk instead of keeping it in memory. [#1485](https://github.com/scalableminds/webknossos-libs/pull/1485)
+
 
 
 ## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20
