@@ -31,8 +31,16 @@ def _axis_index(axis: Axis) -> int:
         raise ValueError(f"The axis must be `x`, `y` or `z`, got {axis!r}.") from None
 
 
+def _read_only_array(value: Any) -> np.ndarray:
+    # `np.array` always copies, so that neither the caller's array is turned read-only
+    # nor the stored one can be written through the caller's reference
+    array = np.array(value, dtype=np.float64)
+    array.setflags(write=False)
+    return array
+
+
 def _as_matrix(value: Any) -> np.ndarray:
-    matrix = np.asarray(value, dtype=np.float64)
+    matrix = _read_only_array(value)
     if matrix.shape != (4, 4):
         raise ValueError(
             f"The affine matrix must have shape (4, 4), got {matrix.shape}."
@@ -41,7 +49,12 @@ def _as_matrix(value: Any) -> np.ndarray:
 
 
 def _as_points(value: Any) -> np.ndarray:
-    points = np.asarray(value, dtype=np.float64)
+    points = _read_only_array(value)
+    if points.size == 0:
+        raise ValueError(
+            "A thin plate spline transformation needs at least one correspondence, "
+            + "got an empty list of landmarks."
+        )
     if points.ndim != 2 or points.shape[1] != 3:
         raise ValueError(
             f"The correspondences must have shape (N, 3), got {points.shape}."
@@ -50,7 +63,19 @@ def _as_points(value: Any) -> np.ndarray:
 
 
 class CoordinateTransformation(ABC):
-    """Base class of the coordinate transformations of a layer."""
+    """Base class of the coordinate transformations of a layer.
+
+    Transformations are immutable values: their arrays are read-only and their
+    attributes cannot be reassigned. To change a transformation, build a new one and
+    assign it to `Layer.coordinate_transformations`. Copying one therefore hands back
+    the very same object.
+    """
+
+    def __copy__(self) -> "CoordinateTransformation":
+        return self
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> "CoordinateTransformation":
+        return self
 
     @abstractmethod
     def _to_dict(self) -> dict[str, Any]:
@@ -89,9 +114,11 @@ class AffineCoordinateTransformation(CoordinateTransformation):
     """
 
     matrix: np.ndarray = attr.field(
-        converter=_as_matrix, eq=attr.cmp_using(eq=np.array_equal)
+        converter=_as_matrix,
+        eq=attr.cmp_using(eq=np.array_equal),
+        on_setattr=attr.setters.frozen,
     )
-    """The 4x4 homogeneous transformation matrix as a float64 numpy array."""
+    """The 4x4 homogeneous transformation matrix as a read-only float64 numpy array."""
 
     @classmethod
     def identity(cls) -> "AffineCoordinateTransformation":
@@ -143,7 +170,7 @@ class AffineCoordinateTransformation(CoordinateTransformation):
         self, other: "AffineCoordinateTransformation"
     ) -> "AffineCoordinateTransformation":
         """Returns a new transformation that applies this one first and `other` afterwards."""
-        return AffineCoordinateTransformation(matrix=other.matrix @ self.matrix)
+        return type(self)(matrix=other.matrix @ self.matrix)
 
     def translate(self, translation: Vec3FloatLike) -> "AffineCoordinateTransformation":
         """Returns a new transformation that additionally translates by `translation`."""
@@ -183,14 +210,20 @@ class ThinPlateSplineCoordinateTransformation(CoordinateTransformation):
     """
 
     source: np.ndarray = attr.field(
-        converter=_as_points, eq=attr.cmp_using(eq=np.array_equal)
+        converter=_as_points,
+        eq=attr.cmp_using(eq=np.array_equal),
+        on_setattr=attr.setters.frozen,
     )
-    """The landmarks in the layer's own coordinate space, as an (N, 3) float64 array."""
+    """The landmarks in the layer's own coordinate space, as a read-only (N, 3) float64
+    array."""
 
     target: np.ndarray = attr.field(
-        converter=_as_points, eq=attr.cmp_using(eq=np.array_equal)
+        converter=_as_points,
+        eq=attr.cmp_using(eq=np.array_equal),
+        on_setattr=attr.setters.frozen,
     )
-    """The landmarks in the target coordinate space, as an (N, 3) float64 array."""
+    """The landmarks in the target coordinate space, as a read-only (N, 3) float64
+    array."""
 
     def __attrs_post_init__(self) -> None:
         if len(self.source) != len(self.target):
@@ -251,7 +284,7 @@ def _coordinate_transformation_from_dict(d: dict[str, Any]) -> CoordinateTransfo
             source=correspondences["source"], target=correspondences["target"]
         )
     else:
-        raise RuntimeError(
+        raise ValueError(
             "Failed to read a coordinate transformation of a layer: the type has to be "
             + f"`affine` or `thin_plate_spline`, got {transformation_type!r}."
         )

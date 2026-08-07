@@ -50,6 +50,17 @@ class Vec3Float(Sequence[float]):
         if isinstance(value, Vec3Float):
             return value
 
+        # Fast path for a single tuple of numbers, which is the shape the attrs
+        # converters actually get, e.g. for every node of a skeleton read from an NML
+        if type(value) is tuple and len(value) == 3:
+            first, second, third = value
+            if (
+                isinstance(first, (int, float))
+                and isinstance(second, (int, float))
+                and isinstance(third, (int, float))
+            ):
+                return cls.from_xyz(float(first), float(second), float(third))
+
         if not isinstance(value, np.ndarray):
             if not isinstance(value, Iterable):
                 raise ValueError(_VALUE_ERROR.format(repr(value)))

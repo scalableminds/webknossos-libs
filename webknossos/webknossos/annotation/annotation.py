@@ -277,7 +277,7 @@ class Annotation:
         return self.skeleton.voxel_size
 
     @voxel_size.setter
-    def voxel_size(self, voxel_size: Vec3Float) -> None:
+    def voxel_size(self, voxel_size: Vec3FloatLike) -> None:
         self.skeleton.voxel_size = voxel_size
 
     @property

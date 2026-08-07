@@ -1,12 +1,13 @@
+import copy
 import itertools
 import json
 import os
 import pickle
-import traceback
 from collections.abc import Iterator
 from typing import cast
 from unittest import mock
 
+import attr
 import numpy as np
 import pytest
 from cluster_tools import get_executor
@@ -3266,9 +3267,17 @@ def test_layer_coordinate_transformations() -> None:
         affine.matrix,
     )
 
-    # The getter returns a copy, mutating it must not change the layer
+    # The getter returns a copy of the list, mutating it must not change the layer
     layer2.coordinate_transformations.clear()
     assert len(layer2.coordinate_transformations) == 2
+
+    # The transformations themselves are immutable, so the layer cannot be changed
+    # through a reference to one of them either
+    with pytest.raises(ValueError, match="read-only"):
+        cast(
+            AffineCoordinateTransformation, layer2.coordinate_transformations[0]
+        ).matrix[0][3] = 99
+    assert layer2.coordinate_transformations == [affine, thin_plate_spline]
 
     # Unsetting removes the key from the properties again
     layer2.coordinate_transformations = []
@@ -3376,6 +3385,54 @@ def test_thin_plate_spline_coordinate_transformation_pairs() -> None:
         ThinPlateSplineCoordinateTransformation.from_pairs([[(0, 0), (1, 1, 1)]])
 
 
+def test_coordinate_transformations_are_immutable() -> None:
+    """The transformations are values, which is what makes sharing them safe."""
+    matrix = np.eye(4)
+    affine = AffineCoordinateTransformation(matrix=matrix)
+    thin_plate_spline = ThinPlateSplineCoordinateTransformation(
+        source=[[0, 0, 0]], target=[[1, 1, 1]]
+    )
+
+    # Constructing does not take ownership of the caller's array
+    assert matrix.flags.writeable
+    matrix[0][3] = 99
+    assert affine == AffineCoordinateTransformation.identity()
+
+    # The stored arrays cannot be written to
+    for array in [affine.matrix, thin_plate_spline.source, thin_plate_spline.target]:
+        assert not array.flags.writeable
+        with pytest.raises(ValueError, match="read-only"):
+            array[0][0] = 99
+
+    # ... nor can they be replaced
+    with pytest.raises(attr.exceptions.FrozenAttributeError):
+        affine.matrix = np.eye(4)
+    with pytest.raises(attr.exceptions.FrozenAttributeError):
+        thin_plate_spline.source = [[1, 1, 1]]  # type: ignore[assignment]
+
+    # Being immutable, copying one may and does hand back the same object
+    assert copy.deepcopy(affine) is affine
+    assert copy.copy(affine) is affine
+
+    # The builders never modify the transformation they are called on
+    assert affine.translate((1, 2, 3)) is not affine
+    assert affine == AffineCoordinateTransformation.identity()
+
+
+def _leaf_exceptions(exception: BaseException) -> Iterator[BaseException]:
+    """Yields the non-group exceptions of a possibly nested `ExceptionGroup`.
+
+    `BaseExceptionGroup` is only a builtin from Python 3.11 on, therefore the groups are
+    recognized by their `exceptions` attribute.
+    """
+    nested = getattr(exception, "exceptions", None)
+    if nested is None:
+        yield exception
+    else:
+        for child in nested:
+            yield from _leaf_exceptions(child)
+
+
 def test_coordinate_transformation_validation() -> None:
     with pytest.raises(ValueError, match=r"shape \(4, 4\)"):
         AffineCoordinateTransformation(matrix=np.eye(3))
@@ -3390,6 +3447,11 @@ def test_coordinate_transformation_validation() -> None:
             source=[[0, 0, 0]], target=[[0, 0, 0], [1, 2, 3]]
         )
 
+    with pytest.raises(ValueError, match="at least one correspondence"):
+        ThinPlateSplineCoordinateTransformation(source=[], target=[])
+    with pytest.raises(ValueError, match="at least one correspondence"):
+        ThinPlateSplineCoordinateTransformation.from_pairs([])
+
     # An unsupported transformation type is rejected while reading a dataset
     data = json.loads(
         (TESTDATA_DIR / "complex_property_ds" / PROPERTIES_FILE_NAME).read_text()
@@ -3399,8 +3461,11 @@ def test_coordinate_transformation_validation() -> None:
     ]
     with pytest.raises(Exception) as exc_info:
         get_dataset_converter().structure(data, DatasetProperties)
-    # cattrs wraps the error in an ExceptionGroup, therefore the whole traceback is checked
-    assert "affine" in "".join(traceback.format_exception(exc_info.value))
+    # cattrs wraps the error in a (possibly nested) ExceptionGroup
+    leaves = list(_leaf_exceptions(exc_info.value))
+    assert len(leaves) == 1
+    assert isinstance(leaves[0], ValueError)
+    assert "`affine` or `thin_plate_spline`" in str(leaves[0])
 
 
 def test_get_largest_segment_id() -> None:
@@ -3581,14 +3646,44 @@ def test_copy_preserves_layer_metadata() -> None:
     assert copied_dataset_layer.default_view_configuration == view_configuration
     assert copied_dataset_layer.coordinate_transformations == coordinate_transformations
 
-    # The copy must not share any mutable state with the layer it was copied from
-    assert copied_layer.default_view_configuration is not None
-    copied_layer.default_view_configuration.color = (0, 255, 0)
-    cast(
-        AffineCoordinateTransformation, copied_layer.coordinate_transformations[0]
-    ).matrix[0][3] = 99
-    assert layer.default_view_configuration == view_configuration
+    # The copies must not share any mutable state with the layer they were copied from.
+    # `view_configuration` is the very object that was assigned, so it is mutated too
+    # and cannot serve as the expected value here.
+    expected = LayerViewConfiguration(color=(255, 0, 0), alpha=50.0)
+    assert layer.default_view_configuration is not None
+    layer.default_view_configuration.color = (0, 255, 0)
+    assert copied_layer.default_view_configuration == expected
+    assert copied_dataset_layer.default_view_configuration == expected
+
+    # The same holds for a layer that was added with `add_layer_like`, which must not
+    # end up sharing the list of transformations with the layer it was created from
+    like_layer = Dataset(
+        prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_like"),
+        voxel_size=(1, 1, 1),
+    ).add_layer_like(layer, "color_like")
+    assert like_layer.coordinate_transformations == coordinate_transformations
+    assert (
+        like_layer._properties.coordinate_transformations
+        is not layer._properties.coordinate_transformations
+    )
+    like_layer.coordinate_transformations = []
     assert layer.coordinate_transformations == coordinate_transformations
+
+    # Copying onto an existing layer keeps the metadata that the source does not have
+    existing_dataset = Dataset(
+        prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_existing"),
+        voxel_size=(1, 1, 1),
+    )
+    existing_layer = existing_dataset.add_layer("color", COLOR_CATEGORY)
+    existing_view_configuration = LayerViewConfiguration(alpha=42.0)
+    existing_layer.default_view_configuration = existing_view_configuration
+    bare_source = Dataset(
+        prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_bare_source"),
+        voxel_size=(1, 1, 1),
+    ).add_layer("color", COLOR_CATEGORY)
+    bare_source.add_mag(1)
+    existing_dataset.add_layer_as_copy(bare_source, "color", exists_ok=True)
+    assert existing_layer.default_view_configuration == existing_view_configuration
 
     # A layer without this metadata does not get empty entries in the properties
     layer.default_view_configuration = None

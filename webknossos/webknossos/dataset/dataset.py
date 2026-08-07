@@ -1173,6 +1173,15 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         layer_properties = copy.copy(other_layer._properties)
         layer_properties.mags = []
+        # The shallow copy above would share the view configuration and the list of
+        # transformations with the other layer. The transformations themselves are
+        # immutable, so `deepcopy` hands them back unchanged.
+        layer_properties.default_view_configuration = copy.deepcopy(
+            other_layer._properties.default_view_configuration
+        )
+        layer_properties.coordinate_transformations = copy.deepcopy(
+            other_layer._properties.coordinate_transformations
+        )
         if isinstance(layer_properties, SegmentationLayerProperties):
             layer_properties.attachments = AttachmentsProperties()
         layer_properties.name = layer_name

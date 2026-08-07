@@ -128,14 +128,21 @@ class AbstractLayer:
         This covers the metadata that is not already derived from the layer's data
         (such as the bounding box, the dtype or the mags), so that a copied layer is
         displayed in WEBKNOSSOS just like the layer it was copied from.
+
+        Metadata that `other` does not have is left as it is, so that copying onto an
+        existing layer does not wipe the metadata of that layer.
         """
         self._ensure_metadata_writable()
-        self._properties.default_view_configuration = copy.deepcopy(
-            other.default_view_configuration
-        )
-        self._properties.coordinate_transformations = (
-            copy.deepcopy(other.coordinate_transformations) or None
-        )
+        if other.default_view_configuration is not None:
+            # The view configuration is mutable and has to be copied, the
+            # transformations are immutable and their getter already returns a new list
+            self._properties.default_view_configuration = copy.deepcopy(
+                other.default_view_configuration
+            )
+        if other.coordinate_transformations:
+            self._properties.coordinate_transformations = (
+                other.coordinate_transformations
+            )
         self._save_layer_properties()
 
     def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
@@ -304,8 +311,9 @@ class AbstractLayer:
             list[CoordinateTransformation]: The transformations, empty if there are none.
 
         Note:
-            The returned list is a copy, changing it in place has no effect. Assign a
-            new list to change the transformations of this layer.
+            The returned list is a copy and the transformations in it are immutable, so
+            neither can be changed in place. Assign a new list to change the
+            transformations of this layer.
         """
 
         return list(self._properties.coordinate_transformations or [])
