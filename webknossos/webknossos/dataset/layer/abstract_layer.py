@@ -310,11 +310,6 @@ class AbstractLayer:
         Returns:
             tuple[CoordinateTransformation, ...]: The transformations, empty if there
                 are none.
-
-        Note:
-            The result is a tuple of immutable transformations, so nothing about it can
-            be changed in place. Assign a new sequence to change the transformations of
-            this layer.
         """
 
         return tuple(self._properties.coordinate_transformations or ())
