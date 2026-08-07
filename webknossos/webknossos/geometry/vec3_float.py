@@ -252,10 +252,12 @@ Vec3FloatLike: TypeAlias = (
 """Anything the `Vec3Float` constructor can turn into a `Vec3Float`."""
 
 
-def parse_vec3_float_or_none(
+def as_vec3_float_or_none(
     vec3_float_like: Vec3FloatLike | None,
 ) -> Vec3Float | None:
     """Like the `Vec3Float` constructor, but passes `None` through.
+
+    Not part of the public API, import it from this module if you need it.
 
     Exists as a module-level function rather than a classmethod because mypy's attrs
     plugin only accepts named functions, types and lambdas as field converters.

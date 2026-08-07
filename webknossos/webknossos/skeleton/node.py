@@ -2,7 +2,8 @@ from typing import TYPE_CHECKING, Any
 
 import attr
 
-from ..geometry import Vec3Float, Vec3Int, parse_vec3_float_or_none
+from ..geometry import Vec3Float, Vec3Int
+from ..geometry.vec3_float import as_vec3_float_or_none
 
 if TYPE_CHECKING:
     from .skeleton import Skeleton
@@ -57,7 +58,7 @@ class Node:
     comment: str | None = None
     radius: float | None = None
     rotation: Vec3Float | None = attr.field(
-        default=None, converter=parse_vec3_float_or_none
+        default=None, converter=as_vec3_float_or_none
     )
     inVp: int | None = None
     inMag: int | None = None

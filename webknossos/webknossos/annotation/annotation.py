@@ -83,8 +83,8 @@ from ..geometry import (
     Vec3FloatLike,
     Vec3Int,
     Vec3IntLike,
-    parse_vec3_float_or_none,
 )
+from ..geometry.vec3_float import as_vec3_float_or_none
 from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import (
@@ -168,10 +168,10 @@ class Annotation:
     annotation_id: str | None = None
     time: int | None = attr.ib(factory=time_since_epoch_in_ms)
     edit_position: Vec3Float | None = attr.ib(
-        default=None, converter=parse_vec3_float_or_none
+        default=None, converter=as_vec3_float_or_none
     )
     edit_rotation: Vec3Float | None = attr.ib(
-        default=None, converter=parse_vec3_float_or_none
+        default=None, converter=as_vec3_float_or_none
     )
     zoom_level: float | None = None
     metadata: dict[str, str] = attr.Factory(dict)
@@ -1385,8 +1385,8 @@ class RemoteAnnotation(Annotation):
         self.organization_id = organization_id
         self.owner_name = owner_name
         self.time = time
-        self.edit_position = parse_vec3_float_or_none(edit_position)
-        self.edit_rotation = parse_vec3_float_or_none(edit_rotation)
+        self.edit_position = as_vec3_float_or_none(edit_position)
+        self.edit_rotation = as_vec3_float_or_none(edit_rotation)
         self.zoom_level = zoom_level
         self.task_bounding_box = task_bounding_box
         self.user_bounding_boxes = user_bounding_boxes or []

@@ -7,7 +7,8 @@ import pytest
 
 from webknossos import Annotation, Skeleton, VoxelSize
 from webknossos.dataset_properties import DatasetProperties, get_dataset_converter
-from webknossos.geometry import Vec3Float, Vec3Int, parse_vec3_float_or_none
+from webknossos.geometry import Vec3Float, Vec3Int
+from webknossos.geometry.vec3_float import as_vec3_float_or_none
 
 
 def test_construction() -> None:
@@ -32,8 +33,8 @@ def test_construction() -> None:
     vector = Vec3Float(1.5, 2.0, 3.0)
     assert Vec3Float(vector) is vector
 
-    assert parse_vec3_float_or_none(None) is None
-    assert parse_vec3_float_or_none((1, 2, 3)) == (1.0, 2.0, 3.0)
+    assert as_vec3_float_or_none(None) is None
+    assert as_vec3_float_or_none((1, 2, 3)) == (1.0, 2.0, 3.0)
 
 
 def test_rejects_invalid_values() -> None:
