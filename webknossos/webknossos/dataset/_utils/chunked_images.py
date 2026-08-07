@@ -105,7 +105,12 @@ def get_valid_chunked_image_suffixes() -> set[str]:
 
 
 def try_open_chunked_images(
-    images: object,
+    # Deliberately excludes pims.FramesSequence, which callers may also hold:
+    # pims ships no stubs, so that type is Any and a union containing it makes
+    # the annotation accept everything — including the un-normalized str/Path
+    # this signature exists to reject. Callers passing a FramesSequence-typed
+    # value still type-check for exactly that reason.
+    images: UPath | list[UPath],
     *,
     channel: int | None,
     swap_xy: bool,
