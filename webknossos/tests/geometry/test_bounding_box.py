@@ -249,7 +249,7 @@ def test_contains_bbox_with_normalized_bbox() -> None:
         ),
     ],
 )
-def test_iter_chunk_starts(
+def test_iter_chunk_toplefts(
     topleft: tuple[int, int, int],
     size: tuple[int, int, int],
     chunk_shape: tuple[int, int, int],
@@ -257,7 +257,7 @@ def test_iter_chunk_starts(
     expected: list[tuple[int, int, int]],
 ) -> None:
     bbox = BoundingBox(topleft, size)
-    starts = list(bbox.iter_chunk_starts(chunk_shape, alignment))
+    starts = list(bbox.iter_chunk_toplefts(chunk_shape, alignment))
 
     assert starts == expected
     # Yielded values are plain python int tuples (no numpy scalars).
@@ -267,63 +267,63 @@ def test_iter_chunk_starts(
         assert starts == [tuple(c.topleft) for c in bbox.chunk(chunk_shape, alignment)]
 
 
-def test_iter_chunk_starts_alignment_divisibility_assertion() -> None:
+def test_iter_chunk_toplefts_alignment_divisibility_assertion() -> None:
     bbox = BoundingBox((0, 0, 0), (10, 10, 10))
     with pytest.raises(AssertionError):
-        list(bbox.iter_chunk_starts((32, 32, 32), (7, 7, 7)))
+        list(bbox.iter_chunk_toplefts((32, 32, 32), (7, 7, 7)))
 
 
-def test_iter_chunk_starts_clip_to() -> None:
+def test_iter_chunk_toplefts_clip_to() -> None:
     # Without chunk_border_alignments, clip_to just restricts which of the box's own
     # (topleft-aligned) chunk starts are yielded.
     bbox = BoundingBox((0, 0, 0), (100, 100, 100))
     clip = BoundingBox((0, 0, 0), (40, 40, 40))
-    assert list(bbox.iter_chunk_starts((32, 32, 32), clip_to=clip)) == [
+    assert list(bbox.iter_chunk_toplefts((32, 32, 32), clip_to=clip)) == [
         (x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)
     ]
 
 
-def test_iter_chunk_starts_clip_to_outside_is_empty() -> None:
+def test_iter_chunk_toplefts_clip_to_outside_is_empty() -> None:
     bbox = BoundingBox((200, 200, 200), (10, 10, 10))
     clip = BoundingBox((0, 0, 0), (40, 40, 40))
-    assert list(bbox.iter_chunk_starts((32, 32, 32), clip_to=clip)) == []
+    assert list(bbox.iter_chunk_toplefts((32, 32, 32), clip_to=clip)) == []
 
 
-def test_iter_chunk_starts_as_origin_aligned_grid_cells() -> None:
+def test_iter_chunk_toplefts_as_origin_aligned_grid_cells() -> None:
     # Passing chunk_border_alignments=chunk_shape makes the grid aligned to the
     # coordinate origin instead of to the box's own topleft, which is useful to
     # iterate the grid cells of an origin-aligned partitioning that overlap this box.
 
     # Box [10, 50) on every axis overlaps origin-aligned 32-grid cells 0 and 32.
     bbox = BoundingBox((10, 10, 10), (40, 40, 40))
-    cells = list(bbox.iter_chunk_starts((32, 32, 32), (32, 32, 32)))
+    cells = list(bbox.iter_chunk_toplefts((32, 32, 32), (32, 32, 32)))
     assert cells == [(x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)]
 
     # Box exactly spanning one grid cell [32, 64) only overlaps that single cell;
     # neighbouring cells that merely touch its borders are excluded (half-open).
     bbox = BoundingBox((32, 32, 32), (32, 32, 32))
-    assert list(bbox.iter_chunk_starts((32, 32, 32), (32, 32, 32))) == [(32, 32, 32)]
+    assert list(bbox.iter_chunk_toplefts((32, 32, 32), (32, 32, 32))) == [(32, 32, 32)]
 
     # Box [1, 33) crosses the grid line at 32, so it overlaps cells 0 and 32.
     bbox = BoundingBox((1, 1, 1), (32, 32, 32))
-    assert list(bbox.iter_chunk_starts((32, 32, 32), (32, 32, 32))) == [
+    assert list(bbox.iter_chunk_toplefts((32, 32, 32), (32, 32, 32))) == [
         (x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)
     ]
 
     # Box [-33, -1) crosses the grid lines at -32 and 0, so it overlaps the cells
     # starting at -64 and -32 (the grid is aligned to the origin, not to the box).
     bbox = BoundingBox((-33, -33, -33), (32, 32, 32))
-    assert list(bbox.iter_chunk_starts((32, 32, 32), (32, 32, 32))) == [
+    assert list(bbox.iter_chunk_toplefts((32, 32, 32), (32, 32, 32))) == [
         (x, y, z) for x in (-64, -32) for y in (-64, -32) for z in (-64, -32)
     ]
 
 
-def test_iter_chunk_starts_as_origin_aligned_grid_cells_with_clip_to() -> None:
+def test_iter_chunk_toplefts_as_origin_aligned_grid_cells_with_clip_to() -> None:
     bbox = BoundingBox((10, 10, 10), (100, 100, 100))
     clip = BoundingBox((0, 0, 0), (40, 40, 40))
-    assert list(bbox.iter_chunk_starts((32, 32, 32), (32, 32, 32), clip_to=clip)) == [
+    assert list(bbox.iter_chunk_toplefts((32, 32, 32), (32, 32, 32), clip_to=clip)) == [
         (x, y, z) for x in (0, 32) for y in (0, 32) for z in (0, 32)
     ]
 
     bbox = BoundingBox((200, 200, 200), (10, 10, 10))
-    assert list(bbox.iter_chunk_starts((32, 32, 32), (32, 32, 32), clip_to=clip)) == []
+    assert list(bbox.iter_chunk_toplefts((32, 32, 32), (32, 32, 32), clip_to=clip)) == []

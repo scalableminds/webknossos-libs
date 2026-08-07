@@ -471,13 +471,13 @@ class BoundingBox(NDBoundingBox):
 
         chunk_shape = Vec3Int(chunk_shape)
 
-        for start in self.iter_chunk_starts(chunk_shape, chunk_border_alignments):
+        for start in self.iter_chunk_toplefts(chunk_shape, chunk_border_alignments):
             yield cast(
                 BoundingBox,
                 BoundingBox(start, chunk_shape).intersected_with(self),
             )
 
-    def iter_chunk_starts(
+    def iter_chunk_toplefts(
         self,
         chunk_shape: Vec3IntLike,
         chunk_border_alignments: Vec3IntLike | None = None,
@@ -492,7 +492,7 @@ class BoundingBox(NDBoundingBox):
 
         `chunk()` shares the same grid (same cells, same order). Without
         `chunk_border_alignments`, the yielded starts equal the chunk toplefts,
-        i.e. `list(self.iter_chunk_starts(cs)) == [tuple(c.topleft) for c in
+        i.e. `list(self.iter_chunk_toplefts(cs)) == [tuple(c.topleft) for c in
         self.chunk(cs)]`. With `chunk_border_alignments`, the first grid line on
         an axis may lie *before* this box's topleft; `chunk()` clips that first
         chunk's topleft up to the box, whereas this method yields the unclipped
