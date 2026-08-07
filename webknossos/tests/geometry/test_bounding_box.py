@@ -331,3 +331,27 @@ def test_iter_chunk_toplefts_as_origin_aligned_grid_cells_with_clip_to() -> None
     assert (
         list(bbox.iter_chunk_toplefts((32, 32, 32), (32, 32, 32), clip_to=clip)) == []
     )
+
+
+def test_iter_chunk_toplefts_clip_to_preserves_alignment_phase() -> None:
+    # Regression test: when chunk_border_alignments is strictly smaller than
+    # chunk_shape, clip_to must not shift the grid's phase (i.e. clip_to only
+    # restricts which chunks of the *same* grid are yielded, it doesn't define a
+    # different grid). Here the grid (without clip_to) is anchored at 4 with a
+    # period of 8 (4, 12, 20, ...); clipping to topleft 10 must still yield chunks
+    # from that grid (the one starting at 4, since [4, 12) overlaps 10), not a
+    # grid re-aligned to a multiple of the alignment (4) from the clipped start.
+    bbox = BoundingBox((5, 5, 5), (100, 100, 100))
+    clip = BoundingBox((10, 10, 10), (1000, 1000, 1000))
+
+    unclipped = list(bbox.iter_chunk_toplefts((8, 8, 8), (4, 4, 4)))
+    clipped = list(bbox.iter_chunk_toplefts((8, 8, 8), (4, 4, 4), clip_to=clip))
+
+    assert clipped[0] == (4, 4, 4)
+    # The clipped result is exactly the unclipped grid, filtered to the chunks
+    # that overlap `clip`.
+    assert clipped == [
+        start
+        for start in unclipped
+        if all(s + 8 > c_start for s, c_start in zip(start, clip.topleft))
+    ]
