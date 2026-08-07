@@ -129,17 +129,18 @@ class VolumeLayer:
                         continue
                     volume_layer_zipfile.write(full_path, arcname)
 
-        volume_zip_buffer.seek(0)
+        # Repoint self.zip to a fresh in-memory root instead of rewriting the
+        # previous root, which may be shared with other volume layers.
+        annotation_zip_buffer = io.BytesIO()
         with ZipFile(
-            self.zip.root.filename,
+            annotation_zip_buffer,
             mode="w",
             compression=ZIP_DEFLATED,
             compresslevel=Z_BEST_SPEED,
         ) as annotation_zip:
-            annotation_zip.writestr(self.zip.at, volume_zip_buffer.read())
+            annotation_zip.writestr(self.zip.at, volume_zip_buffer.getvalue())
 
-        # updating self.zip.root.__lookup to include the new file
-        self.zip = ZipPath(self.zip.root.filename, self.zip.at)
+        self.zip = ZipPath(ZipFile(annotation_zip_buffer), self.zip.at)
         assert self.zip.exists()
 
     @contextmanager
