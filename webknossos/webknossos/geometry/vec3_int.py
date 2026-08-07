@@ -1,6 +1,6 @@
 import re
 from collections.abc import Iterable
-from typing import TypeAlias, Union, cast
+from typing import Any, TypeAlias, Union, cast
 
 import numpy as np
 
@@ -34,6 +34,23 @@ class Vec3Int(VecInt):
             assert vector_1 + vector_2 == (2, 3, 4)
             ```
         """
+
+        # Fast paths for the two common shapes, `Vec3Int(1, 2, 3)` and
+        # `Vec3Int((1, 2, 3))` with the default axes. The general path below sorts the
+        # arguments by axis name and then runs a second `isinstance` ladder in
+        # `VecInt.__new__`, which together cost about seven times as much.
+        # `type(...) is int` rather than `isinstance` deliberately leaves `bool` and the
+        # numpy integer types on the general path, where `int()` converts them as before.
+        if cls is Vec3Int and not kwargs and axes == ("x", "y", "z"):
+            values: tuple[Any, ...] | None = None
+            if len(args) == 3:
+                values = args
+            elif len(args) == 1 and type(args[0]) is tuple and len(args[0]) == 3:
+                values = args[0]
+            if values is not None:
+                first, second, third = values
+                if type(first) is int and type(second) is int and type(third) is int:
+                    return Vec3Int.from_xyz(first, second, third)
 
         if args:
             if isinstance(args[0], Vec3Int):
