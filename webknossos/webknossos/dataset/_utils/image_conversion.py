@@ -453,9 +453,21 @@ def from_images(
     return ds
 
 
+def _normalize_images_argument(
+    images: str | PathLike | UPath | pims.FramesSequence | list[str | PathLike | UPath],
+) -> UPath | pims.FramesSequence | list[UPath]:
+    """Converts every path-shaped input to UPath, so the readers only ever see
+    one path type. pims.FramesSequence instances are returned unchanged."""
+    if isinstance(images, (str, PathLike, UPath)):
+        return UPath(images)
+    if isinstance(images, list):
+        return [UPath(i) for i in images]
+    return images
+
+
 def add_layer_from_images(
     dataset: Dataset,
-    images: str | pims.FramesSequence | list[str | PathLike | UPath],
+    images: str | PathLike | UPath | pims.FramesSequence | list[str | PathLike | UPath],
     ## add_layer arguments
     layer_name: str,
     category: LayerCategoryType | None = "color",
@@ -484,16 +496,16 @@ def add_layer_from_images(
 ) -> Layer:
     """See Dataset.add_layer_from_images() for the public docstring."""
     _validate_layer_name(layer_name)
+    # Normalize paths to UPath once, here at the boundary, so everything
+    # downstream (PimsImages, ChunkedImages, try_open_chunked_images) deals in
+    # a single path type and can use is_remote_path/is_fs_path directly. str
+    # round-trips through UPath unchanged, including glob patterns and URLs.
+    # pims.FramesSequence instances are passed through untouched.
+    images = _normalize_images_argument(images)
     if category is None:
-        image_path_for_category_guess: UPath
-        if (
-            isinstance(images, str)
-            or isinstance(images, PathLike)
-            or isinstance(images, UPath)
-        ):
-            image_path_for_category_guess = UPath(images)
-        else:
-            image_path_for_category_guess = UPath(images[0])
+        image_path_for_category_guess = (
+            images if isinstance(images, UPath) else UPath(images[0])
+        )
         category = (
             "segmentation"
             if guess_if_segmentation_path(image_path_for_category_guess)

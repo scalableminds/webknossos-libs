@@ -101,7 +101,7 @@ class PimsImages:
 
     def __init__(
         self,
-        images: Union[str, UPath, "pims.FramesSequence", list[str | UPath]],
+        images: Union[UPath, "pims.FramesSequence", list[UPath]],
         channel: int | None,
         czi_channel: int | None,
         swap_xy: bool,

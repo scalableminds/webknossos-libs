@@ -1093,7 +1093,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_layer_from_images(
         self,
-        images: Union[str, "pims.FramesSequence", list[str | PathLike | UPath]],
+        images: Union[
+            str, PathLike, UPath, "pims.FramesSequence", list[str | PathLike | UPath]
+        ],
         ## add_layer arguments
         layer_name: str,
         category: LayerCategoryType | None = "color",
