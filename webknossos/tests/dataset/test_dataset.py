@@ -3219,7 +3219,7 @@ def test_layer_coordinate_transformations() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds1 = Dataset(ds_path, voxel_size=(2, 2, 1))
     layer1 = ds1.add_layer("color", COLOR_CATEGORY)
-    assert layer1.coordinate_transformations == []
+    assert layer1.coordinate_transformations == ()
     assert (
         "coordinateTransformations"
         not in json.loads((ds1.path / PROPERTIES_FILE_NAME).read_text())["dataLayers"][
@@ -3233,7 +3233,7 @@ def test_layer_coordinate_transformations() -> None:
         target=[[1, 1, 1], [2, 4, 6], [8, 10, 12]],
     )
     layer1.coordinate_transformations = [affine, thin_plate_spline]
-    assert layer1.coordinate_transformations == [affine, thin_plate_spline]
+    assert layer1.coordinate_transformations == (affine, thin_plate_spline)
 
     # Test the exact representation on disk, it must match what WEBKNOSSOS expects
     properties = json.loads((ds1.path / PROPERTIES_FILE_NAME).read_text())
@@ -3259,7 +3259,7 @@ def test_layer_coordinate_transformations() -> None:
     # Test if the data is persisted to disk
     ds2 = Dataset.open(ds_path)
     layer2 = ds2.get_layer("color")
-    assert layer2.coordinate_transformations == [affine, thin_plate_spline]
+    assert layer2.coordinate_transformations == (affine, thin_plate_spline)
     np.testing.assert_array_equal(
         cast(
             AffineCoordinateTransformation, layer2.coordinate_transformations[0]
@@ -3267,9 +3267,9 @@ def test_layer_coordinate_transformations() -> None:
         affine.matrix,
     )
 
-    # The getter returns a copy of the list, mutating it must not change the layer
-    layer2.coordinate_transformations.clear()
-    assert len(layer2.coordinate_transformations) == 2
+    # The getter returns a tuple, so the layer cannot be changed by adding to or
+    # removing from what it hands out
+    assert isinstance(layer2.coordinate_transformations, tuple)
 
     # The transformations themselves are immutable, so the layer cannot be changed
     # through a reference to one of them either
@@ -3277,11 +3277,11 @@ def test_layer_coordinate_transformations() -> None:
         cast(
             AffineCoordinateTransformation, layer2.coordinate_transformations[0]
         ).matrix[0][3] = 99
-    assert layer2.coordinate_transformations == [affine, thin_plate_spline]
+    assert layer2.coordinate_transformations == (affine, thin_plate_spline)
 
     # Unsetting removes the key from the properties again
     layer2.coordinate_transformations = []
-    assert layer2.coordinate_transformations == []
+    assert layer2.coordinate_transformations == ()
     assert (
         "coordinateTransformations"
         not in json.loads((ds2.path / PROPERTIES_FILE_NAME).read_text())["dataLayers"][
@@ -3628,9 +3628,9 @@ def test_copy_preserves_layer_metadata() -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     layer.add_mag(1)
     view_configuration = LayerViewConfiguration(color=(255, 0, 0), alpha=50.0)
-    coordinate_transformations = [
-        AffineCoordinateTransformation.from_translation((1, 2, 3))
-    ]
+    coordinate_transformations = (
+        AffineCoordinateTransformation.from_translation((1, 2, 3)),
+    )
     layer.default_view_configuration = view_configuration
     layer.coordinate_transformations = coordinate_transformations
 
@@ -3656,7 +3656,8 @@ def test_copy_preserves_layer_metadata() -> None:
     assert copied_dataset_layer.default_view_configuration == expected
 
     # The same holds for a layer that was added with `add_layer_like`, which must not
-    # end up sharing the list of transformations with the layer it was created from
+    # end up sharing the stored list of transformations with the layer it was created
+    # from
     like_layer = Dataset(
         prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_like"),
         voxel_size=(1, 1, 1),
@@ -3694,7 +3695,7 @@ def test_copy_preserves_layer_metadata() -> None:
     )
     bare_layer = bare_dataset.add_layer_as_copy(layer, "color_bare")
     assert bare_layer.default_view_configuration is None
-    assert bare_layer.coordinate_transformations == []
+    assert bare_layer.coordinate_transformations == ()
     properties = json.loads((bare_dataset.path / PROPERTIES_FILE_NAME).read_text())
     assert "defaultViewConfiguration" not in properties["dataLayers"][0]
     assert "coordinateTransformations" not in properties["dataLayers"][0]

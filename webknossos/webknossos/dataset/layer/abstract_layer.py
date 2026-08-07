@@ -135,12 +135,12 @@ class AbstractLayer:
         self._ensure_metadata_writable()
         if other.default_view_configuration is not None:
             # The view configuration is mutable and has to be copied, the
-            # transformations are immutable and their getter already returns a new list
+            # transformations are immutable and only need a list of their own
             self._properties.default_view_configuration = copy.deepcopy(
                 other.default_view_configuration
             )
         if other.coordinate_transformations:
-            self._properties.coordinate_transformations = (
+            self._properties.coordinate_transformations = list(
                 other.coordinate_transformations
             )
         self._save_layer_properties()
@@ -300,7 +300,7 @@ class AbstractLayer:
         self._save_layer_properties()
 
     @property
-    def coordinate_transformations(self) -> list[CoordinateTransformation]:
+    def coordinate_transformations(self) -> tuple[CoordinateTransformation, ...]:
         """Gets the coordinate transformations that place this layer into the
         coordinate space of its dataset.
 
@@ -308,15 +308,16 @@ class AbstractLayer:
         renders the layer, the voxel data itself is not modified.
 
         Returns:
-            list[CoordinateTransformation]: The transformations, empty if there are none.
+            tuple[CoordinateTransformation, ...]: The transformations, empty if there
+                are none.
 
         Note:
-            The returned list is a copy and the transformations in it are immutable, so
-            neither can be changed in place. Assign a new list to change the
-            transformations of this layer.
+            The result is a tuple of immutable transformations, so nothing about it can
+            be changed in place. Assign a new sequence to change the transformations of
+            this layer.
         """
 
-        return list(self._properties.coordinate_transformations or [])
+        return tuple(self._properties.coordinate_transformations or ())
 
     @coordinate_transformations.setter
     def coordinate_transformations(

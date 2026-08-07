@@ -335,7 +335,7 @@ def test_remote_layer_coordinate_transformations(tmp_upath: UPath) -> None:
     )
 
     layer = remote_dataset.get_layer("color")
-    assert layer.coordinate_transformations == []
+    assert layer.coordinate_transformations == ()
 
     affine = AffineCoordinateTransformation.from_translation((10, 20, 30))
     thin_plate_spline = ThinPlateSplineCoordinateTransformation(
@@ -343,18 +343,18 @@ def test_remote_layer_coordinate_transformations(tmp_upath: UPath) -> None:
         target=[[1, 1, 1], [2, 4, 6], [8, 10, 12]],
     )
     layer.coordinate_transformations = [affine, thin_plate_spline]
-    assert layer.coordinate_transformations == [affine, thin_plate_spline]
+    assert layer.coordinate_transformations == (affine, thin_plate_spline)
 
     # Test if the transformations are persisted on the server
     assert reopen_dataset(remote_dataset).get_layer(
         "color"
-    ).coordinate_transformations == [affine, thin_plate_spline]
+    ).coordinate_transformations == (affine, thin_plate_spline)
 
     layer.coordinate_transformations = []
-    assert layer.coordinate_transformations == []
+    assert layer.coordinate_transformations == ()
     assert (
         reopen_dataset(remote_dataset).get_layer("color").coordinate_transformations
-        == []
+        == ()
     )
 
 
