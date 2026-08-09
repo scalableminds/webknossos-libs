@@ -51,6 +51,7 @@ from ..layer.layer import _get_shard_and_chunk_shapes
 from . import pims_images
 from .chunked_images import (
     ChunkedImages,
+    get_unavailable_chunked_image_suffixes,
     get_valid_chunked_image_suffixes,
     try_open_chunked_images,
 )
@@ -174,6 +175,40 @@ class ConversionLayerMapping(Enum):
                 return lambda p: input_path.name if p.parent == UPath() else p.parts[-2]
         else:
             raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
+
+
+def _find_unavailable_input_formats(input_upath: UPath) -> str | None:
+    """
+    Looks for files whose format a chunk-based reader would handle if its
+    optional dependency were installed, and describes them for the
+    "no supported image data" error. Returns None if there are none.
+
+    Only runs on that error path, so the extra directory scan costs nothing in
+    the normal case.
+    """
+    unavailable = get_unavailable_chunked_image_suffixes()
+    if not unavailable:
+        return None
+
+    if input_upath.is_file():
+        candidates = [input_upath]
+    else:
+        candidates = [p for p in input_upath.glob("**/*") if p.is_file()]
+
+    found: dict[str, str] = {}
+    for path in candidates:
+        suffix = path.suffix.lstrip(".").lower()
+        if suffix in unavailable:
+            found[suffix] = unavailable[suffix]
+    if not found:
+        return None
+
+    extras = sorted({extra for extra in found.values()})
+    return (
+        f". Found {', '.join('.' + s for s in sorted(found))} files, which need an "
+        + "optional dependency that is not installed — install it with "
+        + f"`pip install {' '.join(f'webknossos[{extra}]' for extra in extras)}`"
+    )
 
 
 def _has_image_z_dimension(
@@ -353,10 +388,16 @@ def from_images(
         ]
 
     if len(input_files) == 0:
-        raise ValueError(
+        message = (
             "Could not find any supported image data. "
             + f"The following suffixes are supported: {sorted(valid_suffixes)}"
         )
+        # A reader whose optional dependency is missing never registers, so its
+        # formats are simply absent from the list above. Without this the only
+        # clue is an import warning emitted much earlier, far from the failure.
+        if (missing := _find_unavailable_input_formats(input_upath)) is not None:
+            message += missing
+        raise ValueError(message)
 
     if isinstance(map_filepath_to_layer_name, ConversionLayerMapping):
         with warnings.catch_warnings():

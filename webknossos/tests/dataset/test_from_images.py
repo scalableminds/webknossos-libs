@@ -364,3 +364,62 @@ def test_remote_dataset_from_images() -> None:
         new_dataset_name="test_remote",
         folder=None,
     )
+
+
+def test_optional_reader_suffixes_match_class_exts() -> None:
+    # _OPTIONAL_CHUNKED_IMAGE_READERS has to restate each reader's suffixes,
+    # because a reader whose dependency is missing never imports and so cannot
+    # report its own class_exts(). Whenever a reader *is* importable, the two
+    # must agree — otherwise the missing-dependency hint names the wrong
+    # formats, or silently stops covering one.
+    from webknossos.dataset._utils.chunked_images import (
+        _CHUNKED_IMAGE_CLASSES,
+        _OPTIONAL_CHUNKED_IMAGE_READERS,
+    )
+
+    registered = {cls.__name__: cls for cls in _CHUNKED_IMAGE_CLASSES}
+    # The test env installs all extras, so every reader should be registered.
+    assert set(registered) == set(_OPTIONAL_CHUNKED_IMAGE_READERS)
+    for name, (_extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
+        assert registered[name].class_exts() == set(suffixes), (
+            f"declared suffixes for {name} are out of sync with its class_exts()"
+        )
+
+
+def test_from_images_names_missing_optional_dependency(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # With an extra uninstalled its reader never registers, so its formats are
+    # simply absent from the "supported suffixes" list and the failure gives no
+    # hint that a dependency is missing.
+    # The test env installs every extra, so simulate the missing one on both
+    # sides: its suffix drops out of the supported set and shows up as
+    # unavailable, exactly as it would with the reader unimportable.
+    image_conversion = importlib.import_module(
+        "webknossos.dataset._utils.image_conversion"
+    )
+    available = image_conversion.get_valid_chunked_image_suffixes()
+    monkeypatch.setattr(
+        image_conversion,
+        "get_valid_chunked_image_suffixes",
+        lambda: available - {"ims"},
+    )
+    monkeypatch.setattr(
+        image_conversion,
+        "get_unavailable_chunked_image_suffixes",
+        lambda: {"ims": "ims"},
+    )
+    (tmp_upath / "a.ims").write_bytes(b"stand-in for an ims file")
+
+    with pytest.raises(ValueError, match=r"pip install webknossos\[ims\]") as excinfo:
+        Dataset.from_images(tmp_upath, tmp_upath / "ds", voxel_size=(1, 1, 1))
+    assert ".ims" in str(excinfo.value)
+
+
+def test_from_images_error_unchanged_when_nothing_is_missing(
+    tmp_upath: UPath,
+) -> None:
+    # The hint must not appear when every reader imported fine.
+    (tmp_upath / "a.unsupported").write_bytes(b"x")
+    with pytest.raises(ValueError, match="Could not find any supported image data"):
+        Dataset.from_images(tmp_upath, tmp_upath / "ds", voxel_size=(1, 1, 1))

@@ -321,6 +321,34 @@ def try_open_chunked_images(
     return None
 
 
+# The suffixes and extra each optional reader is responsible for. A reader
+# whose dependency is missing never imports, so it never registers and cannot
+# report its own class_exts() — these have to be declared out here for the
+# "you are missing an optional dependency" hint to be possible at all.
+# test_optional_reader_suffixes_match_class_exts keeps them in sync.
+_OPTIONAL_CHUNKED_IMAGE_READERS: dict[str, tuple[str, frozenset[str]]] = {
+    "ImsChunkedImages": ("ims", frozenset({"ims"})),
+    "MrcChunkedImages": ("mrcfile", frozenset({"mrc", "rec", "st", "map", "ali"})),
+}
+
+# suffix -> extra, for readers that failed to import. Populated at import time
+# below and consumed by get_unavailable_chunked_image_suffixes().
+_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES: dict[str, str] = {}
+
+
+def get_unavailable_chunked_image_suffixes() -> dict[str, str]:
+    """
+    Maps each suffix that a chunk-based reader *would* handle, but cannot
+    because its optional dependency is missing, to the extra that provides it
+    (e.g. {"ims": "ims"}). Empty when every reader imported successfully.
+
+    Lets callers turn "no supported image data found" into a message that
+    names the missing dependency, rather than silently omitting the format
+    from the supported list.
+    """
+    return dict(_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES)
+
+
 def _chunked_images_imports() -> str | None:
     import_exceptions = []
 
@@ -333,6 +361,12 @@ def _chunked_images_imports() -> str | None:
         from .mrc_chunked_images import MrcChunkedImages  # noqa: F401 unused-import
     except ImportError as import_error:
         import_exceptions.append(f"MrcChunkedImages: {import_error.msg}")
+
+    registered = {cls.__name__ for cls in _CHUNKED_IMAGE_CLASSES}
+    for name, (extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
+        if name not in registered:
+            for suffix in suffixes:
+                _UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES[suffix] = extra
 
     if import_exceptions:
         import_exception_string = "".join(
