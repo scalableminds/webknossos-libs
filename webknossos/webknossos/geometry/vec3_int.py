@@ -172,3 +172,13 @@ class Vec3Int(VecInt):
 
 
 Vec3IntLike: TypeAlias = Vec3Int | tuple[int, int, int] | np.ndarray | Iterable[int]
+
+
+def as_vec3_int_or_none(vec3_int_like: "Vec3IntLike | None") -> Vec3Int | None:
+    """Like the `Vec3Int` constructor, but passes `None` through.
+
+    Useful as an attrs converter for optional fields.
+    """
+    if vec3_int_like is None:
+        return None
+    return Vec3Int(vec3_int_like)

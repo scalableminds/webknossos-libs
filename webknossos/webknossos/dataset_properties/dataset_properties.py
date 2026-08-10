@@ -73,7 +73,7 @@ class DatasetViewConfiguration:
 
 @attr.define
 class MagViewProperties:
-    mag: Mag
+    mag: Mag = attr.field(converter=Mag)
     path: str | None = None
     """
     Could be None for older datasource-proterties.json files.

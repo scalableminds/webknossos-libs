@@ -261,7 +261,7 @@ class Task:
     status: TaskStatus
     task_type: TaskType
     experience: TaskExperience
-    edit_position: Vec3Int
+    edit_position: Vec3Int = attr.field(converter=Vec3Int)
     edit_rotation: Vec3Float = attr.field(converter=Vec3Float)
     script_id: str | None = None
     bounding_box: BoundingBox | None = None
@@ -542,7 +542,7 @@ class Task:
             ),
             TaskType._from_api_task_type(api_task.type),
             TaskExperience._from_api_experience(api_task.needed_experience),
-            Vec3Int(api_task.edit_position),
+            api_task.edit_position,
             api_task.edit_rotation,
             api_task.script.id if api_task.script else None,
             BoundingBox.from_tuple2(

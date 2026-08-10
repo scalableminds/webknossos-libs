@@ -52,7 +52,7 @@ class Node:
         ```
     """
 
-    position: Vec3Int
+    position: Vec3Int = attr.field(converter=Vec3Int)
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False, order=False)
     _id: int = attr.ib(init=False)
     comment: str | None = None
