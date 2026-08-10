@@ -48,7 +48,11 @@ from ...utils import named_partial, wait_and_ensure_success, wrap_executor
 from ..defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
 from ..errors import UnsupportedImageDataError, UnsupportedImageFormatError
 from ..layer import Layer, SegmentationLayer
-from ..layer.abstract_layer import _UNALLOWED_LAYER_NAME_CHARS, _validate_layer_name
+from ..layer.abstract_layer import (
+    _UNALLOWED_LAYER_NAME_CHARS,
+    _validate_layer_name,
+    channels_fit_one_layer,
+)
 from ..layer.layer import _get_shard_and_chunk_shapes
 from . import pims_images
 from .chunked_images import (
@@ -204,6 +208,67 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
         if suffix in unavailable:
             found[suffix] = unavailable[suffix]
     return found
+
+
+# Formats whose channels mean colour rather than separate acquisitions: the
+# everyday 2D image formats, where three uint8 channels are RGB and belong in
+# one layer. Everything else — scientific formats such as TIFF, CZI, DM3/DM4,
+# .ims and MRC — stores one acquisition channel per channel, which users almost
+# always want as separate layers, even when there happen to be three of them.
+_RGB_IMAGE_SUFFIXES = frozenset(
+    {
+        "bmp",
+        "gif",
+        "ico",
+        "j2k",
+        "jp2",
+        "jpeg",
+        "jpg",
+        "pbm",
+        "pcx",
+        "pgm",
+        "png",
+        "ppm",
+        "targa",
+        "tga",
+        "webp",
+    }
+)
+
+
+def _describe_rgb_formats() -> str:
+    return ", ".join("." + suffix for suffix in sorted(_RGB_IMAGE_SUFFIXES))
+
+
+def _channels_are_one_rgb_layer(
+    num_source_channels: int,
+    *,
+    dtype: np.dtype,
+    images: UPath | pims.FramesSequence | list[UPath],
+    truncate_rgba_to_rgb: bool,
+) -> bool:
+    """
+    Whether the source's channels are colour channels of a single layer, rather
+    than separate channels that each deserve their own layer.
+
+    This needs the *source's* channel count, not the reader's `num_channels`:
+    the readers already pin or truncate channels (a two-channel source reports
+    one channel, pinned to the first), which is exactly the silent discarding
+    this decision exists to avoid.
+    """
+    if num_source_channels == 1:
+        return True
+    path = images if isinstance(images, UPath) else None
+    if path is None and isinstance(images, list) and images:
+        path = images[0]
+    if path is None or path.suffix.lstrip(".").lower() not in _RGB_IMAGE_SUFFIXES:
+        return False
+    # An RGBA image is written as RGB with the alpha channel dropped, unless the
+    # caller asked to keep every channel, in which case they become layers.
+    written_channels = (
+        3 if num_source_channels == 4 and truncate_rgba_to_rgb else num_source_channels
+    )
+    return channels_fit_one_layer(written_channels, dtype)
 
 
 def _has_image_z_dimension(
@@ -501,7 +566,10 @@ def from_images(
                     batch_size=batch_size,
                     allow_multiple_layers=True,
                     max_layers=max_layers - len(ds.layers),
-                    truncate_rgba_to_rgb=False,
+                    # An RGBA screenshot should convert into one RGB layer, not
+                    # into four grayscale ones. Channels that are not colour are
+                    # split by allow_multiple_layers above regardless.
+                    truncate_rgba_to_rgb=True,
                     executor=executor,
                 )
 
@@ -616,17 +684,34 @@ def add_layer_from_images(
             is_segmentation=category == "segmentation",
         )
     possible_layers = image_source.get_possible_layers()
-    # Check if 4 color channels should be converted to
-    # 3 color channels (rbg)
-    if (
-        possible_layers is not None
-        and truncate_rgba_to_rgb
-        and len(possible_layers.get("channel", [])) == 4
-    ):
-        # Remove channels from possible_layers to keep those
-        # and automatically truncate to 3 channels
-        # (pims_images takes care of this:)
-        del possible_layers["channel"]
+    # The dtype the layer will be written with decides whether its channels can
+    # share one layer, so an explicit `dtype` argument counts here too.
+    layer_dtype = np.dtype(dtype) if dtype is not None else np.dtype(image_source.dtype)
+    source_channels = (
+        possible_layers.get("channel") if possible_layers is not None else None
+    )
+    if source_channels is not None:
+        if _channels_are_one_rgb_layer(
+            len(source_channels),
+            dtype=layer_dtype,
+            images=images,
+            truncate_rgba_to_rgb=truncate_rgba_to_rgb,
+        ):
+            # The channels are colour, so they belong in one layer rather than
+            # being offered up as one layer each. The readers take care of the
+            # RGBA -> RGB truncation.
+            assert possible_layers is not None
+            del possible_layers["channel"]
+        elif not allow_multiple_layers:
+            raise UnsupportedImageDataError(
+                f"Cannot convert the {len(source_channels)} channels of these images "
+                + "into a single layer: WEBKNOSSOS only displays several channels "
+                + "within one layer as RGB, which means three uint8 channels of an "
+                + f"image format that stores colour ({_describe_rgb_formats()}). "
+                + "Set allow_multiple_layers=True to write one layer per channel, "
+                + "or channel=<index> to convert a single channel.",
+                path=images if isinstance(images, UPath) else None,
+            )
     # Further below, we iterate over suffix_with_pims_open_kwargs_per_layer in the for-loop
     # to add one layer per possible_layer if allow_multiple_layers is True.
     # If just a single layer is added, we still add a default value in the dict.
@@ -658,6 +743,9 @@ def add_layer_from_images(
         else:
             # initialize PimsImages as above, with normal layer name
             suffix_with_pims_open_kwargs_per_layer = {"": {}}
+            # Channels are already resolved above — either written into this
+            # layer as RGB, or refused — so anything left here is a dimension
+            # that really does default to its first value.
             warnings.warn(
                 f"[INFO] There are dimensions beyond channels and xyz which cannot be read: {possible_layers}. "
                 "Defaulting to the first one. "

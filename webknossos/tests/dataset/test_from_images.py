@@ -10,6 +10,7 @@ import mrcfile
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor
+from PIL import Image
 from tifffile import TiffFile, imwrite
 from upath import UPath
 
@@ -214,6 +215,32 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
             * mag1.info.shard_shape
         ).bottomright
         assert array_shape == shard_aligned_bottomright.to_list()
+
+
+@pytest.mark.parametrize("mode", ["RGB", "RGBA"])
+def test_rgb_image_creates_a_single_rgb_layer(tmp_upath: UPath, mode: str) -> None:
+    # from_images() passes allow_multiple_layers=True, but the colour channels
+    # of an everyday image format still belong in one layer rather than being
+    # split into grayscale ones — and an alpha channel is dropped, not turned
+    # into a fourth layer.
+    images = tmp_upath / "images"
+    images.mkdir()
+    data = np.zeros((8, 16, len(mode)), dtype="uint8")
+    for channel in range(len(mode)):
+        data[..., channel] = channel + 1
+    Image.fromarray(data, mode=mode).save(str(images / "shot.png"))
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            images, tmp_upath / "ds", (1, 1, 1), layer_name="color", executor=executor
+        )
+
+    assert set(ds.layers.keys()) == {"color"}
+    layer = ds.get_layer("color")
+    assert layer.num_channels == 3
+    read = layer.get_finest_mag().read()
+    for channel in range(3):
+        assert (read[channel] == channel + 1).all()
 
 
 def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:

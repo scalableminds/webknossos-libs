@@ -53,6 +53,7 @@ from .layer import (
 )
 from .layer.abstract_layer import (
     _validate_layer_name,
+    channels_fit_one_layer,
 )
 from .ome_metadata import write_ome_metadata
 from .remote_dataset import RemoteAccessMode, RemoteDataset
@@ -894,9 +895,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
 
-        if (num_channels > 1 and dtype.name != "uint8") or (
-            num_channels not in (1, 3) and dtype.name == "uint8"
-        ):
+        if not channels_fit_one_layer(num_channels, dtype):
             warnings.warn(
                 f"Data type {dtype.name} with multiple channels (got {num_channels}) not supported by WEBKNOSSOS. Create multiple layers instead."
             )
@@ -1171,6 +1170,14 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `allow_multiple_layers`: set to `True` if channels may result in multiple layers being added (only the first is returned)
         * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
+
+        Several channels are only written into a single layer when they are
+        actually colour: three uint8 channels of an image format that stores
+        colour (`.png`, `.jpg`, `.bmp`, …), which WEBKNOSSOS displays as RGB.
+        The channels of any other source are separate acquisitions and need one
+        layer each, so this method raises `UnsupportedImageDataError` for them
+        unless `allow_multiple_layers=True` (one layer per channel, the first is
+        returned) or `channel=<index>` (a single channel) is given.
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
 
         Raises:
@@ -1182,7 +1189,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 read, which usually means it is damaged or incomplete.
             UnsupportedImageDataError: If the images were read, but their data
                 cannot be stored as requested, e.g. a float image converted
-                into a segmentation layer.
+                into a segmentation layer, or several non-colour channels
+                without `allow_multiple_layers=True`.
         """
 
         return image_conversion.add_layer_from_images(

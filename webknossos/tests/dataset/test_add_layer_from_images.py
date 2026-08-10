@@ -16,6 +16,8 @@ import mrcfile
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor, get_executor
+from numpy.typing import DTypeLike
+from PIL import Image
 from tifffile import TiffFile, imwrite
 from upath import UPath
 
@@ -461,18 +463,28 @@ def test_ims_from_images_multi_timepoint(
         assert (data[t] == t * 100).all()
 
 
-def test_ims_from_images_multi_timepoint_multi_channel_single_layer_keeps_both_axes(
-    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("dtype", [np.uint8, np.uint16])
+@pytest.mark.parametrize("num_channels", [2, 3, 4])
+def test_ims_multi_channel_needs_one_layer_per_channel(
+    tmp_upath: UPath,
+    monkeypatch: pytest.MonkeyPatch,
+    num_channels: int,
+    dtype: DTypeLike,
 ) -> None:
-    # expected_bbox reports every axis the source actually has, so a file with
-    # both multiple timepoints and multiple (3+) channels fits in a single
-    # layer as (t, c, x, y, z) — "c" is where NormalizedBoundingBox reads
-    # num_channels from, and NDBoundingBox.chunk() keeps it whole. Splitting
-    # channels into separate layers is what allow_multiple_layers=True does
-    # instead — see test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers.
-    ims_path = tmp_upath / "synthetic_multi_t_multi_c.ims"
+    # .ims stores one acquisition channel per channel, so they belong in
+    # separate layers whatever their number and dtype — the uint8 RGB exception
+    # is for image formats that store colour, not for scientific formats. Three
+    # uint8 channels are therefore refused here too, and four channels are not
+    # treated as RGBA either.
+    ims_path = tmp_upath / "synthetic_multi_c.ims"
     create_synthetic_multi_timepoint_ims(
-        ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
+        ims_path,
+        num_timepoints=1,
+        num_channels=num_channels,
+        z=4,
+        y=8,
+        x=10,
+        dtype=dtype,
     )
     ims_chunked_images = importlib.import_module(
         "webknossos.dataset._utils.ims_chunked_images"
@@ -480,26 +492,115 @@ def test_ims_from_images_multi_timepoint_multi_channel_single_layer_keeps_both_a
     monkeypatch.setattr(
         ims_chunked_images,
         "_read_ims_metadata_quietly",
-        lambda _path: ((2, 3, 4, 8, 10), np.dtype("uint16")),
+        lambda _path: ((1, num_channels, 4, 8, 10), np.dtype(dtype)),
     )
-
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
     with SequentialExecutor() as executor:
-        layer = ds.add_layer_from_images(
+        with pytest.raises(wk.UnsupportedImageDataError, match="allow_multiple_layers"):
+            ds.add_layer_from_images(
+                ims_path, layer_name="multi_c", data_format="zarr3", executor=executor
+            )
+
+        first_layer = ds.add_layer_from_images(
             ims_path,
-            layer_name="multi_t_multi_c",
+            layer_name="multi_c",
             data_format="zarr3",
+            allow_multiple_layers=True,
             executor=executor,
         )
 
-    assert layer.bounding_box.axes == ("t", "c", "x", "y", "z")
-    assert layer.bounding_box.size.to_tuple() == (2, 3, 10, 8, 4)
+    assert set(ds.layers.keys()) == {
+        f"multi_c__channel{c}" for c in range(num_channels)
+    }
+    assert first_layer.name == "multi_c__channel0"
+    for c in range(num_channels):
+        layer = ds.layers[f"multi_c__channel{c}"]
+        assert layer.num_channels == 1
+        assert layer.dtype == np.dtype(dtype)
+        assert layer.bounding_box.axes == ("x", "y", "z")
+        assert (layer.get_finest_mag().read()[0] == c).all()
+
+
+@pytest.mark.parametrize(
+    "mode,expected_size",
+    [("RGB", wk.VecInt(c=3, x=16, y=8, z=1)), ("RGBA", wk.VecInt(c=3, x=16, y=8, z=1))],
+)
+def test_rgb_image_stays_a_single_layer(
+    tmp_upath: UPath, mode: str, expected_size: wk.VecInt
+) -> None:
+    # The colour channels of an everyday image format belong together in one
+    # RGB layer, and an alpha channel is dropped rather than becoming a layer
+    # of its own.
+    png_path = tmp_upath / f"{mode.lower()}.png"
+    data = np.zeros((8, 16, len(mode)), dtype="uint8")
+    for channel in range(len(mode)):
+        data[..., channel] = channel + 1
+    Image.fromarray(data, mode=mode).save(str(png_path))
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            png_path, layer_name="color", executor=executor
+        )
+
+    assert set(ds.layers.keys()) == {"color"}
     assert layer.num_channels == 3
-    data = layer.get_finest_mag().read()
-    assert data.shape == (2, 3, 10, 8, 4)
-    for t in range(2):
-        for c in range(3):
-            assert (data[t, c] == t * 100 + c).all()
+    assert layer.normalized_bounding_box.size == expected_size
+    read = layer.get_finest_mag().read()
+    for channel in range(3):
+        assert (read[channel] == channel + 1).all()
+
+
+def test_multi_channel_16bit_tiff_needs_one_layer_per_channel(
+    tmp_upath: UPath,
+) -> None:
+    # TIFF is not an image format that stores colour, so even three channels
+    # are separate acquisitions rather than RGB.
+    tiff_path = tmp_upath / "three_channels.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((3, 8, 16), dtype="uint16"),
+        photometric="minisblack",
+        metadata={"axes": "CYX"},
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        with pytest.raises(wk.UnsupportedImageDataError, match="allow_multiple_layers"):
+            ds.add_layer_from_images(tiff_path, layer_name="color", executor=executor)
+
+        ds.add_layer_from_images(
+            tiff_path,
+            layer_name="color",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {f"color__channel{c}" for c in range(3)}
+
+
+def test_add_layer_from_images_channel_argument_avoids_the_split(
+    tmp_upath: UPath,
+) -> None:
+    # Picking one channel is the other way out of the error above, and has to
+    # keep working without allow_multiple_layers.
+    tiff_path = tmp_upath / "three_channels.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((3, 8, 16), dtype="uint16"),
+        photometric="minisblack",
+        metadata={"axes": "CYX"},
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path, layer_name="color", channel=1, executor=executor
+        )
+
+    assert set(ds.layers.keys()) == {"color"}
+    assert layer.num_channels == 1
 
 
 def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
