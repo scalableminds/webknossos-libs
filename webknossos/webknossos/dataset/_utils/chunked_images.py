@@ -18,7 +18,7 @@ class ChunkedImages(ABC):
     """
     Base class for volumetric, chunk-based input formats (e.g. ims, mrc, zarr, n5).
 
-    Unlike PimsImages, which reads slice-by-slice and can't always know its
+    Unlike SlicedImages, which reads slice-by-slice and can't always know its
     true x/y extent ahead of time (requiring a placeholder bounding box that
     gets corrected after conversion), a ChunkedImages implementation knows
     its exact expected_bbox from metadata alone, and reads/writes whole
@@ -26,7 +26,7 @@ class ChunkedImages(ABC):
     without going through a slice-based writer.
 
     Formats handled by a registered ChunkedImages subclass are read
-    exclusively through that subclass — never through PimsImages/pims.
+    exclusively through that subclass — never through SlicedImages.
     """
 
     dtype: DTypeLike
@@ -78,7 +78,7 @@ class ChunkedImages(ABC):
 
     @abstractmethod
     def get_possible_layers(self) -> dict[str, list[int]] | None:
-        """Same semantics as PimsImages.get_possible_layers(): returns e.g.
+        """Same semantics as SlicedImages.get_possible_layers(): returns e.g.
         {"channel": [0, 1, 2]} when multiple channels could each become
         their own layer, or None if there's nothing to split."""
 
@@ -104,7 +104,7 @@ class ChunkedImages(ABC):
     def expected_bbox(self) -> NDBoundingBox:
         """
         The exact bounding box of the data to convert, in the source's
-        native Mag(1) space. Unlike PimsImages.expected_bbox, this never
+        native Mag(1) space. Unlike SlicedImages.expected_bbox, this never
         needs placeholder inflation, since chunk-based formats know their
         true extents from metadata alone.
 
@@ -147,7 +147,7 @@ class ChunkedImages(ABC):
         """
         Read exactly bbox's worth of data and write it to mag_view directly.
         Returns ((x_size, y_size), max_value), matching the convention
-        established by PimsImages.copy_to_view.
+        established by SlicedImages.copy_to_view.
 
         All axis bookkeeping — mag, swap_xy, flips, channel and timepoint
         placement — lives here, so subclasses only implement _read_source_box.
@@ -193,13 +193,13 @@ class ChunkedImages(ABC):
             )
 
         # Every flip mirrors the *entire* source extent (matching
-        # PimsImages.copy_to_view, which reverses the full image sequence
+        # SlicedImages.copy_to_view, which reverses the full image sequence
         # before slicing per-batch), not just this chunk in isolation. Each one
         # reads a mirrored source range and is reversed back into output order
         # below. Reversing a chunk in place would only mirror within that
         # chunk, which is invisible while the image fits in a single shard but
         # wrong as soon as it spans several.
-        # flip_x/-y follow the PimsImages convention: flip_x mirrors the
+        # flip_x/-y follow the SlicedImages convention: flip_x mirrors the
         # source's y axis and flip_y mirrors its x axis.
         if self._flip_z:
             read_z = slice(self._z - z_end, self._z - z_start)
@@ -235,7 +235,7 @@ class ChunkedImages(ABC):
         )
 
         if dtype is not None:
-            # order="F" matches PimsImages.copy_to_view, which produces
+            # order="F" matches SlicedImages.copy_to_view, which produces
             # Fortran-contiguous slices for the same downstream writers.
             block = block.astype(dtype, order="F")
 
@@ -256,7 +256,7 @@ class ChunkedImages(ABC):
         mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
 
         # Returned as (x_size, y_size) to match the convention established by
-        # PimsImages.copy_to_view.
+        # SlicedImages.copy_to_view.
         return (out_x_end - out_x_start, out_y_end - out_y_start), max_value
 
 
@@ -276,11 +276,6 @@ def get_valid_chunked_image_suffixes() -> set[str]:
 
 
 def try_open_chunked_images(
-    # Deliberately excludes pims.FramesSequence, which callers may also hold:
-    # pims ships no stubs, so that type is Any and a union containing it makes
-    # the annotation accept everything — including the un-normalized str/Path
-    # this signature exists to reject. Callers passing a FramesSequence-typed
-    # value still type-check for exactly that reason.
     images: UPath | list[UPath],
     *,
     channel: int | None,
@@ -293,13 +288,12 @@ def try_open_chunked_images(
     """
     Returns a ChunkedImages instance if `images` is a single path whose
     suffix a registered chunk-based format handles, else None. Chunk-based
-    formats are inherently single-file, so lists of paths and
-    pims.FramesSequence instances always fall back to the generic PimsImages
-    path.
+    formats are inherently single-file, so lists of paths always fall back to
+    the generic SlicedImages path.
     """
     # Callers normalize paths to UPath before getting here (see
-    # _normalize_images_argument), so anything else — a list of paths, a
-    # pims.FramesSequence — is by definition not a single chunk-based file.
+    # _normalize_images_argument), so a list of paths is by definition not a
+    # single chunk-based file.
     # Remote UPaths deliberately do reach the reader, which raises its own
     # "must be a local file path" error via is_remote_path.
     if not isinstance(images, UPath):

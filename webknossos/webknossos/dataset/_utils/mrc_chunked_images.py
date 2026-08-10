@@ -20,7 +20,7 @@ class MrcChunkedImages(ChunkedImages):
     single contiguous array (no internal chunking, unlike HDF5-based
     formats), so shard-sized blocks are read directly via mrcfile's
     memory-mapped array and written to mag_view directly — no
-    slice-by-slice pims reading, no BufferedSliceWriter.
+    slice-by-slice SlicedImages reading, no BufferedSliceWriter.
 
     MRC files have neither channels nor timepoints, so num_channels is
     always 1 and get_possible_layers() always returns None.

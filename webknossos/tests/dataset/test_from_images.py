@@ -18,7 +18,7 @@ from tests.constants import TESTDATA_DIR
 from tests.utils import create_synthetic_multi_timepoint_ims, download_ims_fixture
 from webknossos.dataset import Dataset, RemoteDataset, UnsupportedImageFormatError
 from webknossos.dataset._utils.mrc_chunked_images import MrcChunkedImages
-from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
+from webknossos.dataset._utils.tiff_reader import TiffReader
 from webknossos.geometry import BoundingBox, Vec3Int, VecInt
 
 
@@ -93,7 +93,7 @@ def test_imagej_virtual_stack_tiff(tmp_upath: UPath) -> None:
     assert len(t.pages) == 1, "expected exactly 1 real IFD"
     assert t.series[0].shape == (Z, Y, X)
 
-    reader = PimsTiffReader(tif_path)
+    reader = TiffReader(tif_path)
     reader.bundle_axes = ["y", "x"]
     reader.iter_axes = ["z"]
 
@@ -133,7 +133,7 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
     # Verify that reading z=0 only accesses the C pages for z=0, not pages from other z-slices.
     # With CZYX ordering (C=3, Z=2) pages are laid out as: c=0→[pg0,pg1], c=1→[pg2,pg3], c=2→[pg4,pg5]
     # so z=0 corresponds to pages 0, 2, 4 and z=1 to pages 1, 3, 5.
-    reader = PimsTiffReader(tif_path)
+    reader = TiffReader(tif_path)
     reader.bundle_axes = ["c", "y", "x"]
     reader.iter_axes = ["z"]
 

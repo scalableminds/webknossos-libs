@@ -2,10 +2,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 import numpy as np
-from pims import FramesSequenceND
 from upath import UPath
 
 from ...utils import WkImportError
+from .frame_sequence import NDFrameSequence
+from .image_reader_registry import register_image_reader
 
 try:
     from pylibCZIrw import czi as pyczi
@@ -27,14 +28,14 @@ PIXEL_TYPE_TO_DTYPE = {
 }
 
 
-class PimsCziReader(FramesSequenceND):
+@register_image_reader
+class CziReader(NDFrameSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"czi"}
 
-    # class_priority is used in pims to pick the reader with the highest priority.
-    # Default is 10, and bioformats priority (which is the only other reader supporting czi) is 2.
-    # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
+    # open_images() picks the eligible reader with the highest class_priority.
+    # 10 is the default; nothing else claims czi.
     class_priority = 20
 
     def __init__(self, path: UPath, czi_channel: int = 0) -> None:

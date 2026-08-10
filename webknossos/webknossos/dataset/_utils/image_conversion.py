@@ -1,7 +1,7 @@
 """Implementation of Dataset.from_images() / Dataset.add_layer_from_images(),
 factored out of dataset.py since this functionality (mapping input image
 files to layers, then converting them via either the ChunkedImages or
-PimsImages reader path) is large and self-contained.
+SlicedImages reader path) is large and self-contained.
 
 Dataset.from_images and Dataset.add_layer_from_images are thin wrappers
 around the free functions here, keeping the public API and docstrings on
@@ -54,7 +54,7 @@ from ..layer.abstract_layer import (
     channels_fit_one_layer,
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
-from . import pims_images
+from . import sliced_images
 from .chunked_images import (
     ChunkedImages,
     describe_missing_extras,
@@ -62,14 +62,13 @@ from .chunked_images import (
     get_valid_chunked_image_suffixes,
     try_open_chunked_images,
 )
+from .raster_image_readers import SingleImageReader
 from .segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
 )
 
 if TYPE_CHECKING:
-    import pims
-
     from ..dataset import Dataset
     from ..layer.view import MagView
 
@@ -215,25 +214,11 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 # one layer. Everything else — scientific formats such as TIFF, CZI, DM3/DM4,
 # .ims and MRC — stores one acquisition channel per channel, which users almost
 # always want as separate layers, even when there happen to be three of them.
-_RGB_IMAGE_SUFFIXES = frozenset(
-    {
-        "bmp",
-        "gif",
-        "ico",
-        "j2k",
-        "jp2",
-        "jpeg",
-        "jpg",
-        "pbm",
-        "pcx",
-        "pgm",
-        "png",
-        "ppm",
-        "targa",
-        "tga",
-        "webp",
-    }
-)
+#
+# Taken from the reader rather than restated, so this cannot drift into naming
+# formats that can no longer be read: SingleImageReader handles exactly the
+# everyday raster formats.
+_RGB_IMAGE_SUFFIXES = frozenset(SingleImageReader.class_exts())
 
 
 def _describe_rgb_formats() -> str:
@@ -244,7 +229,7 @@ def _channels_are_one_rgb_layer(
     num_source_channels: int,
     *,
     dtype: np.dtype,
-    images: UPath | pims.FramesSequence | list[UPath],
+    images: UPath | list[UPath],
     truncate_rgba_to_rgb: bool,
 ) -> bool:
     """
@@ -276,7 +261,7 @@ def _has_image_z_dimension(
     is_segmentation: bool,
 ) -> bool:
     # Formats handled by a registered ChunkedImages subclass (e.g. .ims) are
-    # never probed through PimsImages/pims — they know their exact
+    # never probed through SlicedImages — they know their exact
     # expected_bbox directly, and this is the only way such files are read.
     chunked_images = try_open_chunked_images(
         filepath,
@@ -289,13 +274,15 @@ def _has_image_z_dimension(
     )
     if chunked_images is not None:
         return chunked_images.expected_bbox.get_shape("z") > 1
-    return pims_images.has_image_z_dimension(filepath, is_segmentation=is_segmentation)
+    return sliced_images.has_image_z_dimension(
+        filepath, is_segmentation=is_segmentation
+    )
 
 
 class _ImageConversionSetup(NamedTuple):
     """Everything add_layer_from_images needs to actually run the conversion,
-    computed differently for ChunkedImages vs. PimsImages sources by
-    _prepare_chunked_image_conversion / _prepare_pims_image_conversion. This
+    computed differently for ChunkedImages vs. SlicedImages sources by
+    _prepare_chunked_image_conversion / _prepare_sliced_image_conversion. This
     covers the parts of the two paths that differ (bounding box, mag_view,
     per-chunk function, batch_size) — the surrounding layer/mag setup and
     execution machinery stay shared in add_layer_from_images itself.
@@ -343,8 +330,8 @@ def _prepare_chunked_image_conversion(
     )
 
 
-def _prepare_pims_image_conversion(
-    image_source: pims_images.PimsImages,
+def _prepare_sliced_image_conversion(
+    image_source: sliced_images.SlicedImages,
     layer: Layer,
     *,
     mag: Mag,
@@ -430,7 +417,7 @@ def from_images(
     """See Dataset.from_images() for the public docstring."""
     input_upath = UPath(input_path)
 
-    valid_suffixes = pims_images.get_valid_pims_suffixes()
+    valid_suffixes = sliced_images.get_valid_image_suffixes()
     valid_suffixes.update(get_valid_chunked_image_suffixes())
 
     if z_slices_sort_key is None:
@@ -483,12 +470,12 @@ def from_images(
             warnings.filterwarnings(
                 "ignore",
                 category=UserWarning,
-                module="pims",
+                module="raster_image_readers",
             )
             warnings.filterwarnings(
                 "once",
                 category=UserWarning,
-                module="pims_images",
+                module="sliced_images",
             )
             map_filepath_to_layer_name_func = map_filepath_to_layer_name._to_callable(
                 input_upath,
@@ -540,12 +527,12 @@ def from_images(
             warnings.filterwarnings(
                 "ignore",
                 category=UserWarning,
-                module="pims_images",
+                module="sliced_images",
             )
             warnings.filterwarnings(
                 "ignore",
                 category=UserWarning,
-                module="pims",
+                module="raster_image_readers",
             )
             for layer_name, filepaths in filepaths_per_layer.items():
                 filepaths.sort(key=z_slices_sort_key)
@@ -577,20 +564,18 @@ def from_images(
 
 
 def _normalize_images_argument(
-    images: str | PathLike | UPath | pims.FramesSequence | list[str | PathLike | UPath],
-) -> UPath | pims.FramesSequence | list[UPath]:
+    images: str | PathLike | UPath | Sequence[str | PathLike | UPath],
+) -> UPath | list[UPath]:
     """Converts every path-shaped input to UPath, so the readers only ever see
-    one path type. pims.FramesSequence instances are returned unchanged."""
-    if isinstance(images, (str, PathLike, UPath)):
+    one path type."""
+    if isinstance(images, str | PathLike | UPath):
         return UPath(images)
-    if isinstance(images, list):
-        return [UPath(i) for i in images]
-    return images
+    return [UPath(i) for i in images]
 
 
 def add_layer_from_images(
     dataset: Dataset,
-    images: str | PathLike | UPath | pims.FramesSequence | list[str | PathLike | UPath],
+    images: str | PathLike | UPath | Sequence[str | PathLike | UPath],
     ## add_layer arguments
     layer_name: str,
     category: LayerCategoryType | None = "color",
@@ -620,14 +605,14 @@ def add_layer_from_images(
     """See Dataset.add_layer_from_images() for the public docstring."""
     _validate_layer_name(layer_name)
     # Normalize paths to UPath once, here at the boundary, so everything
-    # downstream (PimsImages, ChunkedImages, try_open_chunked_images) deals in
+    # downstream (SlicedImages, ChunkedImages, try_open_chunked_images) deals in
     # a single path type and can use is_remote_path/is_fs_path directly. str
     # round-trips through UPath unchanged, including glob patterns and URLs.
-    # pims.FramesSequence instances are passed through untouched.
-    images = _normalize_images_argument(images)
+    image_paths = _normalize_images_argument(images)
+    del images
     if category is None:
         image_path_for_category_guess = (
-            images if isinstance(images, UPath) else UPath(images[0])
+            image_paths if isinstance(image_paths, UPath) else UPath(image_paths[0])
         )
         category = (
             "segmentation"
@@ -643,7 +628,7 @@ def add_layer_from_images(
         # bounding box from metadata alone and read/write whole
         # shard-sized blocks directly.
         return try_open_chunked_images(
-            images,
+            image_paths,
             channel=open_kwargs.get("channel", channel),
             swap_xy=swap_xy,
             flip_x=flip_x,
@@ -654,12 +639,12 @@ def add_layer_from_images(
 
     def _reopen_image_source(
         open_kwargs: dict,
-    ) -> pims_images.PimsImages | ChunkedImages:
+    ) -> sliced_images.SlicedImages | ChunkedImages:
         chunked = _open_chunked_images(open_kwargs)
         if chunked is not None:
             return chunked
-        return pims_images.PimsImages(
-            images,
+        return sliced_images.SlicedImages(
+            image_paths,
             swap_xy=swap_xy,
             flip_x=flip_x,
             flip_y=flip_y,
@@ -668,13 +653,13 @@ def add_layer_from_images(
             **open_kwargs,
         )
 
-    image_source: pims_images.PimsImages | ChunkedImages
+    image_source: sliced_images.SlicedImages | ChunkedImages
     chunked_image_source = _open_chunked_images({"channel": channel})
     if chunked_image_source is not None:
         image_source = chunked_image_source
     else:
-        image_source = pims_images.PimsImages(
-            images,
+        image_source = sliced_images.SlicedImages(
+            image_paths,
             channel=channel,
             czi_channel=czi_channel,
             swap_xy=swap_xy,
@@ -694,7 +679,7 @@ def add_layer_from_images(
         if _channels_are_one_rgb_layer(
             len(source_channels),
             dtype=layer_dtype,
-            images=images,
+            images=image_paths,
             truncate_rgba_to_rgb=truncate_rgba_to_rgb,
         ):
             # The channels are colour, so they belong in one layer rather than
@@ -710,9 +695,9 @@ def add_layer_from_images(
                 + f"image format that stores colour ({_describe_rgb_formats()}). "
                 + "Set allow_multiple_layers=True to write one layer per channel, "
                 + "or channel=<index> to convert a single channel.",
-                path=images if isinstance(images, UPath) else None,
+                path=image_paths if isinstance(image_paths, UPath) else None,
             )
-    # Further below, we iterate over suffix_with_pims_open_kwargs_per_layer in the for-loop
+    # Further below, we iterate over suffix_with_open_kwargs_per_layer in the for-loop
     # to add one layer per possible_layer if allow_multiple_layers is True.
     # If just a single layer is added, we still add a default value in the dict.
     if possible_layers is not None and len(possible_layers) > 0:
@@ -722,7 +707,7 @@ def add_layer_from_images(
             #    "channel": [0, 1, 2],
             #    "czi_channel": [0, 1],
             # }
-            # suffix_with_pims_open_kwargs_per_layer = {
+            # suffix_with_open_kwargs_per_layer = {
             #    "__channel0_czi_channel0", {"channel": 0, "czi_channel": 0},
             #    "__channel0_czi_channel1", {"channel": 0, "czi_channel": 1},
             #    …,
@@ -731,7 +716,7 @@ def add_layer_from_images(
             # }
             # Timepoints are never split this way: readers that can address
             # them expose all timepoints on a "t" axis within a single layer.
-            suffix_with_pims_open_kwargs_per_layer = {
+            suffix_with_open_kwargs_per_layer = {
                 "__" + "_".join(f"{k}{v}" for k, v in sorted(pairs)): dict(pairs)
                 for pairs in product(
                     *(
@@ -741,8 +726,8 @@ def add_layer_from_images(
                 )
             }
         else:
-            # initialize PimsImages as above, with normal layer name
-            suffix_with_pims_open_kwargs_per_layer = {"": {}}
+            # initialize SlicedImages as above, with normal layer name
+            suffix_with_open_kwargs_per_layer = {"": {}}
             # Channels are already resolved above — either written into this
             # layer as RGB, or refused — so anything left here is a dimension
             # that really does default to its first value.
@@ -753,28 +738,28 @@ def add_layer_from_images(
                 "or set specific values as arguments.",
             )
     else:
-        # initialize PimsImages as above, with normal layer name
-        suffix_with_pims_open_kwargs_per_layer = {"": {}}
+        # initialize SlicedImages as above, with normal layer name
+        suffix_with_open_kwargs_per_layer = {"": {}}
     first_layer = None
     add_layer_kwargs = {}
     if category == "segmentation":
         add_layer_kwargs["largest_segment_id"] = 0
-    if len(suffix_with_pims_open_kwargs_per_layer) > max_layers:
+    if len(suffix_with_open_kwargs_per_layer) > max_layers:
         warnings.warn(
-            f"[INFO] Limiting the number of added layers to {max_layers} out of {len(suffix_with_pims_open_kwargs_per_layer)}. "
+            f"[INFO] Limiting the number of added layers to {max_layers} out of {len(suffix_with_open_kwargs_per_layer)}. "
             + "Please increase `max_layers` if you want more layers to be added.",
         )
     for _, (
         layer_name_suffix,
-        pims_open_kwargs,
-    ) in zip(range(max_layers), suffix_with_pims_open_kwargs_per_layer.items()):
-        # If pims_open_kwargs is empty there's no need to re-open the images:
-        if len(pims_open_kwargs) > 0:
+        reader_open_kwargs,
+    ) in zip(range(max_layers), suffix_with_open_kwargs_per_layer.items()):
+        # If reader_open_kwargs is empty there's no need to re-open the images:
+        if len(reader_open_kwargs) > 0:
             # Set parameters from this method as default
             # if they are not part of the kwargs per layer:
-            pims_open_kwargs.setdefault("channel", channel)  # type: ignore
-            pims_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
-            image_source = _reopen_image_source(pims_open_kwargs)
+            reader_open_kwargs.setdefault("channel", channel)  # type: ignore
+            reader_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
+            image_source = _reopen_image_source(reader_open_kwargs)
         if dtype is None:
             current_dtype = np.dtype(image_source.dtype)
             if current_dtype.byteorder == ">":
@@ -825,7 +810,7 @@ def add_layer_from_images(
         prepare_conversion = (
             _prepare_chunked_image_conversion
             if isinstance(image_source, ChunkedImages)
-            else _prepare_pims_image_conversion
+            else _prepare_sliced_image_conversion
         )
         mag_view, func_per_chunk, batch_size = prepare_conversion(
             image_source,  # type: ignore[arg-type]
@@ -869,7 +854,7 @@ def add_layer_from_images(
                 layer.bounding_box.chunk(chunked_shard_shape, chunked_shard_shape)
             )
         else:
-            # _prepare_pims_image_conversion always resolves batch_size to
+            # _prepare_sliced_image_conversion always resolves batch_size to
             # a concrete int; only the (unused-here) ChunkedImages path
             # leaves it as None.
             assert batch_size is not None
@@ -913,7 +898,7 @@ def add_layer_from_images(
                 # only its own shard-sized chunk, not the full extent.
                 layer.bounding_box = layer.bounding_box.with_size_xyz(
                     Vec3Int(
-                        pims_images.dimwise_max(shapes)
+                        sliced_images.dimwise_max(shapes)
                         + (layer.bounding_box.get_shape("z"),)
                     )
                     * mag.to_vec3_int().with_z(1)
