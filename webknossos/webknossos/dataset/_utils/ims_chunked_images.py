@@ -11,7 +11,7 @@ from upath import UPath
 from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError
 from .chunked_images import ChunkedImages, register_chunked_images
-from .pims_images import compute_channel_selection
+from .sliced_images import compute_channel_selection
 
 try:
     from imaris_ims_file_reader.ims import ims as ImsFile
@@ -43,7 +43,7 @@ class ImsChunkedImages(ChunkedImages):
     """
     ChunkedImages implementation for Imaris .ims files. Reads shard-sized 3D
     blocks directly from the underlying HDF5 file via h5py and writes them
-    to mag_view directly — no slice-by-slice pims reading, no BufferedSliceWriter.
+    to mag_view directly — no slice-by-slice SlicedImages reading, no BufferedSliceWriter.
     This is the only supported way .ims files are read for conversion.
     """
 

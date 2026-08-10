@@ -116,7 +116,7 @@ def test_mrc_from_images_flip_and_swap(
     actual = layer.get_finest_mag().read()[0]
 
     # flips apply in source axis order (z, y, x): flip_z mirrors z, flip_x
-    # mirrors y and flip_y mirrors x (the PimsImages convention).
+    # mirrors y and flip_y mirrors x (the SlicedImages convention).
     expected = data
     if flip_z:
         expected = expected[::-1]
@@ -256,7 +256,7 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     # With an explicit shard_shape smaller than the image extent, conversion
     # must split into multiple shards along x and y. The final bounding box
     # must reflect the *full* image extent, not just a single shard's size —
-    # a per-chunk-shape-based correction (as used for the generic pims path)
+    # a per-chunk-shape-based correction (as used for the SlicedImages path)
     # would be wrong here, since each ChunkedImages job only reports its own
     # shard-sized chunk, not the total extent.
     ims_path = download_ims_fixture(tmp_upath)
@@ -288,7 +288,8 @@ def test_ims_from_images_flip_and_swap(
     tmp_upath: UPath, shard_shape: tuple[int, int, int]
 ) -> None:
     # .ims files are read exclusively through ImsChunkedImages (never through
-    # pims), so there's no separate "slow path" to compare against. Instead,
+    # SlicedImages), so there's no separate "slow path" to compare against.
+    # Instead,
     # this derives the expected flip/swap transform directly from the h5py
     # reference: flip_z/flip_x/flip_y reverse the source's z/y/x axes
     # respectively (in that source-axis order, regardless of swap_xy), and
@@ -381,7 +382,7 @@ def test_add_layer_from_images_corrupt_file(
 
 
 def test_add_layer_from_images_missing_file_is_not_corrupt(tmp_upath: UPath) -> None:
-    # pims.open flattens each handler's exception into a message, so a missing
+    # open_images flattens each reader's exception into a message, so a missing
     # file reaches the same code path as a damaged one. Telling the user their
     # file is damaged when it is simply not there would be worse than the
     # unspecific error they get today.
@@ -408,7 +409,7 @@ def test_add_layer_from_images_names_missing_optional_dependency(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # With webknossos[ims] uninstalled, ImsChunkedImages never registers and the
-    # file falls through to pims, which has no reader for it either. The error
+    # file falls through to SlicedImages, which has no reader for it either. The error
     # must still point at the missing extra instead of calling .ims unsupported.
     # The test env installs every extra, so unregister the reader to reproduce
     # exactly the state a missing dependency leaves behind.
@@ -919,14 +920,6 @@ TEST_IMAGES_ARGS: list[
     (
         "https://static.webknossos.org/data/wklibs-samples/test-gif.zip",
         "scifio-test.gif",
-        {},
-        "uint8",
-        3,
-        (500, 500, 1),
-    ),
-    (
-        "https://static.webknossos.org/data/wklibs-samples/test-jpeg2000.zip",
-        "scifio-test.jp2",
         {},
         "uint8",
         3,

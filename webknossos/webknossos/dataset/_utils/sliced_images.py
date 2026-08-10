@@ -1,12 +1,9 @@
 import warnings
-from collections.abc import Iterable, Iterator, Sequence
-from contextlib import AbstractContextManager, contextmanager, nullcontext
-from itertools import chain
-from os import environ
-from typing import TypeVar, Union, cast
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
+from typing import Any, TypeVar, cast
 
 import numpy as np
-import pims
 from natsort import natsorted
 from numpy.typing import DTypeLike
 from upath import UPath
@@ -20,53 +17,9 @@ from ..errors import (
     UnsupportedImageFormatError,
 )
 from ..layer.view import MagView
-
-# Fix ImageIOReader not handling channels correctly. This might get fixed via
-# https://github.com/soft-matter/pims/pull/430
-pims.ImageIOReader.frame_shape = pims.FramesSequenceND.frame_shape
-
-
-def _pims_imports() -> str | None:
-    import_exceptions = []
-
-    try:
-        from .pims_czi_reader import PimsCziReader  # noqa: F401 unused-import
-    except ImportError as import_error:
-        import_exceptions.append(f"PimsCziReader: {import_error.msg}")
-
-    try:
-        from .pims_dm_readers import (  # noqa: F401 unused-import
-            PimsDm3Reader,
-            PimsDm4Reader,
-        )
-    except ImportError as import_error:
-        import_exceptions.append(f"PimsDmReaders: {import_error.msg}")
-
-    try:
-        from .pims_tiff_reader import PimsTiffReader  # noqa: F401 unused-import
-    except ImportError as import_error:
-        import_exceptions.append(f"PimsTiffReader: {import_error.msg}")
-
-    if import_exceptions:
-        import_exception_string = "".join(
-            f"\t- {import_exception}\n" for import_exception in import_exceptions
-        )
-
-        return import_exception_string
-    return None
-
-
-if (pims_warnings := _pims_imports()) is not None:
-    if environ.get("WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING", "False") == "False":
-        # If the environment variable is not set, we assume that the user has not seen the warning yet.
-        # We set it to True to prevent showing the warning again.
-        environ["WEBKNOSSOS_SHOWED_PIMS_IMPORT_WARNING"] = "True"
-        warnings.warn(
-            f"[WARNING] Not all pims readers could be imported:\n{pims_warnings}Install the readers you need or use 'webknossos[all]' to install all readers.",
-            category=UserWarning,
-            source=None,
-            stacklevel=2,
-        )
+from .frame_sequence import FrameSequence, NDFrameSequence
+from .image_reader_registry import get_valid_image_suffixes, open_images
+from .raster_image_readers import ImageSequenceReader, ReaderSequence
 
 
 def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
@@ -77,7 +30,7 @@ def compute_channel_selection(
     raw_num_channels: int, channel: int | None
 ) -> tuple[int, int | None, int | None, list[int] | None]:
     """
-    Shared channel-selection rule used by both PimsImages and ChunkedImages
+    Shared channel-selection rule used by both SlicedImages and ChunkedImages
     implementations. Returns (num_channels, selected_channel,
     first_n_channels, possible_channels):
     - num_channels: the number of channels that will actually be written
@@ -100,13 +53,18 @@ def compute_channel_selection(
     return raw_num_channels, None, None, None
 
 
-class PimsImages:
+class SlicedImages:
     dtype: DTypeLike
     num_channels: int
+    # Set partway through __init__(); _open_images() uses hasattr() on
+    # _bundle_axes to tell whether that has happened yet, so these must stay
+    # bare annotations rather than assignments.
+    _bundle_axes: list[str]
+    _default_coords: dict[str, int]
 
     def __init__(
         self,
-        images: Union[UPath, "pims.FramesSequence", list[UPath]],
+        image_paths: UPath | list[UPath],
         channel: int | None,
         czi_channel: int | None,
         swap_xy: bool,
@@ -116,7 +74,7 @@ class PimsImages:
         is_segmentation: bool,
     ) -> None:
         """
-        During initialization the pims objects are examined and configured to produce
+        During initialization the readers are examined and configured to produce
         ndarrays that follow the following form:
         (self._iter_axes, *self._bundle_axis)
         self._iter_axes can be a list of different axes or an empty list if the image is 2D.
@@ -126,21 +84,20 @@ class PimsImages:
         at the start or the end, so one of "xy", "yx", "xyc", "yxc", "cxy", "cyx".
 
         The part "IDENTIFY AXIS ORDER" figures out (self._iter_dim, *self._img_dims)
-        from out-of-the-box pims images. Afterwards self._open_images() produces
+        from the opened reader. Afterwards self._open_images() produces
         images consistent with those variables.
 
         The part "IDENTIFY SHAPE & CHANNELS" uses this information and the well-defined
         images to figure out the shape & num_channels.
         """
         try:
-            from .pims_czi_reader import PimsCziReader
+            from .czi_reader import CziReader
         except ImportError:
-            PimsCziReader = type(None)  # type: ignore[misc,assignment]
+            CziReader = type(None)  # type: ignore[misc,assignment]
 
-        ## we use images as the name for the entered contextmanager,
-        ## the `del` prevents any confusion with the passed argument.
-        self._original_images = images
-        del images
+        # `images` below always refers to an opened reader, never to this
+        # argument.
+        self._original_images = image_paths
 
         ## arguments as inner attributes
         self._channel = channel
@@ -159,9 +116,8 @@ class PimsImages:
         self._iter_loop_size = None
         self._possible_layers = {}
 
-        ## attributes only for pims.FramesSequenceND instances:
+        ## attributes only for NDFrameSequence instances:
         # _default_coords
-        # _init_c_axis
 
         ## attributes that will also be set in __init__()
         # dtype
@@ -173,26 +129,15 @@ class PimsImages:
         #######################
 
         with self._open_images() as images:
-            assert isinstance(images, pims.FramesSequence), (
-                f"{type(images)} does not inherit from pims.FramesSequence"
+            assert isinstance(images, FrameSequence), (
+                f"{type(images)} does not inherit from FrameSequence"
             )
             self.dtype = images.dtype
 
-            if isinstance(images, pims.FramesSequenceND):
+            if isinstance(images, NDFrameSequence):
                 self._default_coords = {}
-                self._init_c_axis = False
-                if isinstance(images, pims.imageio_reader.ImageIOReader):
-                    # bugfix for ImageIOReader which misses channel axis sometimes,
-                    # assuming channels come last. This might get fixed via
-                    # https://github.com/soft-matter/pims/pull/430
-                    if (
-                        len(images._shape) >= len(images.sizes)
-                        and "c" not in images.sizes
-                    ):
-                        images._init_axis("c", images._shape[-1])
-                        self._init_c_axis = True
 
-                if isinstance(images, PimsCziReader):
+                if isinstance(images, CziReader):
                     available_czi_channels = images.available_czi_channels()
                     if len(available_czi_channels) > 1:
                         self._possible_layers["czi_channel"] = available_czi_channels
@@ -235,11 +180,11 @@ class PimsImages:
                         )
 
             else:
-                # Fallback for generic pims classes that do not name their
-                # dimensions as pims.FramesSequenceND does:
+                # Fallback for flat readers that do not name their dimensions
+                # as NDFrameSequence does:
 
                 _allow_channels_first = not is_segmentation
-                if isinstance(images, pims.ImageSequence | pims.ReaderSequence):
+                if isinstance(images, ImageSequenceReader | ReaderSequence):
                     _allow_channels_first = False
 
                 if len(images.shape) == 2:
@@ -302,10 +247,10 @@ class PimsImages:
 
         with self._open_images() as images:
             if "c" in self._bundle_axes:
-                if isinstance(images, pims.FramesSequenceND):
+                if isinstance(images, NDFrameSequence):
                     self.num_channels = images.sizes.get("c", 1)
                 elif isinstance(images, list):
-                    self.num_channels = cast(pims.FramesSequence, images[0]).shape[
+                    self.num_channels = cast(FrameSequence, images[0]).shape[
                         self._bundle_axes.index("c")
                     ]
                 else:
@@ -321,27 +266,23 @@ class PimsImages:
 
     def _normalize_original_images(self) -> str | list[str]:
         original_images = self._original_images
-        if isinstance(original_images, str | UPath):
-            original_images_path = UPath(original_images)
-            if original_images_path.is_dir():
-                valid_suffixes = get_valid_pims_suffixes()
-                original_images = natsorted(
-                    str(i)
-                    for i in original_images_path.glob("**/*")
-                    if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
-                )
-                if len(original_images) == 1:
-                    original_images = original_images[0]
-        if isinstance(original_images, str):
-            return original_images
-        elif isinstance(original_images, Iterable):
+        if isinstance(original_images, list):
             return [str(i) for i in original_images]
-        else:
-            return str(original_images)
+        if original_images.is_dir():
+            valid_suffixes = get_valid_image_suffixes()
+            files: list[str] = natsorted(
+                str(i)
+                for i in original_images.glob("**/*")
+                if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
+            )
+            if len(files) == 1:
+                return files[0]
+            return files
+        return str(original_images)
 
     def _error_path(self) -> UPath | None:
         """The single input path to blame when opening fails, or None when
-        there is no such path (a pims.FramesSequence was passed in)."""
+        there is no such path (an empty list of images)."""
         if isinstance(self._original_images, UPath):
             return self._original_images
         if isinstance(self._original_images, list) and self._original_images:
@@ -358,14 +299,14 @@ class PimsImages:
         *is* supported, which must keep surfacing as its original error.
 
         The decision is made on the suffix, not on the exception type:
-        pims.open raises UnknownFormatError both when no handler claims the
-        suffix and when every handler that claimed it errored out, so a
+        open_images raises UnknownFormatError both when no reader claims the
+        suffix and when every reader that claimed it errored out, so a
         corrupt TIFF is indistinguishable from an unreadable format by type.
 
         Classifying afterwards, rather than rejecting unknown suffixes up
-        front, keeps files that pims opens without a recognized suffix (via
-        pims.ImageSequence/skimage) working as before: this only runs once
-        every open strategy has already failed.
+        front, keeps files that open without a recognized suffix (via
+        ImageSequenceReader) working as before: this only runs once every open
+        strategy has already failed.
         """
         # Imported inside the function so that the two reader modules stay
         # independent at import time; this is only needed on the error path.
@@ -385,7 +326,7 @@ class PimsImages:
             else None
         )
 
-        supported_suffixes = get_valid_pims_suffixes()
+        supported_suffixes = get_valid_image_suffixes()
         supported_suffixes.update(get_valid_chunked_image_suffixes())
 
         if suffix is None or suffix in supported_suffixes:
@@ -448,27 +389,29 @@ class PimsImages:
 
         Image.MAX_IMAGE_PIXELS = None
 
-    def _try_open_pims_images(
+    def _try_open_images(
         self, original_images: str | list[str], exceptions: list[Exception]
-    ) -> pims.FramesSequence | None:
-        open_kwargs = {}
+    ) -> FrameSequence | None:
+        open_kwargs: dict[str, Any] = {}
         if self._czi_channel is not None:
             open_kwargs["czi_channel"] = self._czi_channel
 
-        # try normal pims.open
-        def strategy_0() -> pims.FramesSequence:
-            return pims.open(original_images, **open_kwargs)
+        # try the registered reader for this suffix
+        def strategy_0() -> FrameSequence | None:
+            if isinstance(original_images, list):
+                return None
+            return open_images(original_images, **open_kwargs)
 
-        # try pims.ImageSequence, which uses skimage internally but works for multiple images
-        strategy_1 = lambda: pims.ImageSequence(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
+        # try ImageSequenceReader, which handles a directory, glob or list of 2D images
+        strategy_1 = lambda: ImageSequenceReader(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
 
         # for image lists, try to guess the correct reader using only the first image,
-        # and apply that for all images via pims.ReaderSequence
-        def strategy_2() -> pims.FramesSequence | None:
+        # and apply that for all images via ReaderSequence
+        def strategy_2() -> FrameSequence | None:
             if isinstance(original_images, list):
                 # assuming the same reader works for all images:
-                first_image_handler = pims.open(original_images[0], **open_kwargs)
-                return pims.ReaderSequence(
+                first_image_handler = open_images(original_images[0], **open_kwargs)
+                return ReaderSequence(
                     original_images, type(first_image_handler), **open_kwargs
                 )
             else:
@@ -489,70 +432,59 @@ class PimsImages:
     @contextmanager
     def _open_images(
         self,
-    ) -> Iterator[pims.FramesSequence | list[pims.FramesSequence]]:
+    ) -> Iterator[Any]:
         """
         This yields well-defined images of the form (self._iter_axes, *self._bundle_axes),
         after IDENTIFY AXIS ORDER of __init__() has run.
         For a 2D image this is achieved by wrapping it in a list.
+
+        The yielded object is a FrameSequence, a list wrapping one, or — for
+        the 5D fallback that pins a timepoint — a plain ndarray. All three
+        support len(), indexing and iteration, which is all callers use, but
+        they share no common type; hence Any. Callers narrow with isinstance
+        where they need more.
         """
-        images_context_manager: AbstractContextManager | None
-        if isinstance(self._original_images, pims.FramesSequenceND):
-            images_context_manager = nullcontext(enter_result=self._original_images)
-        else:
-            exceptions: list[Exception] = []
-            original_images = self._normalize_original_images()
-            images_context_manager = None
+        exceptions: list[Exception] = []
+        original_images = self._normalize_original_images()
 
-            images_context_manager = self._try_open_pims_images(
-                original_images, exceptions
-            )
+        images_context_manager = self._try_open_images(original_images, exceptions)
 
-            if images_context_manager is None:
-                first_exception = exceptions[0] if exceptions else None
-                if (unsupported_error := self._classify_open_failure()) is not None:
-                    raise unsupported_error from first_exception
-                if (corrupt_error := self._classify_read_failure()) is not None:
-                    raise corrupt_error from first_exception
-                if len(exceptions) == 1:
-                    raise exceptions[0]
-                else:
-                    exceptions_str = "\n".join(
-                        f"{type(e).__name__}: {str(e)}" for e in exceptions
-                    )
-                    raise ValueError(
-                        f"Tried to open the images {self._original_images} with different methods, "
-                        + f"none succeeded. The following errors were raised:\n{exceptions_str}"
-                    )
+        if images_context_manager is None:
+            first_exception = exceptions[0] if exceptions else None
+            if (unsupported_error := self._classify_open_failure()) is not None:
+                raise unsupported_error from first_exception
+            if (corrupt_error := self._classify_read_failure()) is not None:
+                raise corrupt_error from first_exception
+            if len(exceptions) == 1:
+                raise exceptions[0]
+            else:
+                exceptions_str = "\n".join(
+                    f"{type(e).__name__}: {str(e)}" for e in exceptions
+                )
+                raise ValueError(
+                    f"Tried to open the images {self._original_images} with different methods, "
+                    + f"none succeeded. The following errors were raised:\n{exceptions_str}"
+                )
 
-            with images_context_manager as images:
-                if isinstance(images, pims.FramesSequenceND):
-                    if hasattr(self, "_bundle_axes"):
-                        # first part of __init__() has happened
-                        images.default_coords.update(self._default_coords)
-                        if self._init_c_axis and "c" not in images.sizes:
-                            # Bugfix for ImageIOReader which misses channel axis sometimes,
-                            # assuming channels come last. _init_c_axis is set in __init__().
-                            # This might get fixed via https://github.com/soft-matter/pims/pull/430
-                            images._init_axis("c", images._shape[-1])
-                            for key in list(images._get_frame_dict.keys()):
-                                images._get_frame_dict[key + ("c",)] = (
-                                    images._get_frame_dict.pop(key)
-                                )
-                            self._bundle_axes.remove("c")
-                            self._bundle_axes.append("c")
-                        images.bundle_axes = self._bundle_axes
-                        images.iter_axes = self._iter_axes
-                else:
-                    if hasattr(self, "_bundle_axes"):
-                        # first part of __init__() has happened
-                        if self._timepoint is not None:
-                            images = images[self._timepoint]
-                            if "t" in self._iter_axes:
-                                self._iter_axes.remove("t")
-                        if not self._iter_axes:
-                            # add outer list to wrap 2D images as 3D-like structure
-                            images = [images]
-                yield images
+        with images_context_manager as opened_images:
+            images: Any = opened_images
+            if isinstance(images, NDFrameSequence):
+                if hasattr(self, "_bundle_axes"):
+                    # first part of __init__() has happened
+                    images.default_coords.update(self._default_coords)
+                    images.bundle_axes = self._bundle_axes
+                    images.iter_axes = self._iter_axes
+            else:
+                if hasattr(self, "_bundle_axes"):
+                    # first part of __init__() has happened
+                    if self._timepoint is not None:
+                        images = images[self._timepoint]
+                        if "t" in self._iter_axes:
+                            self._iter_axes.remove("t")
+                    if not self._iter_axes:
+                        # add outer list to wrap 2D images as 3D-like structure
+                        images = [images]
+            yield images
 
     def copy_to_view(
         self,
@@ -613,11 +545,6 @@ class PimsImages:
                         image_slice = np.array(image_slice)
                         # place channels first
                         if "c" in self._bundle_axes:
-                            if hasattr(self, "_init_c_axis") and self._init_c_axis:
-                                # Bugfix for ImageIOReader which misses channel axis sometimes,
-                                # assuming channels come last. _init_c_axis is set in __init__().
-                                # This might get fixed via
-                                image_slice = image_slice[0]
                             image_slice = np.moveaxis(
                                 image_slice,
                                 source=self._bundle_axes.index("c"),
@@ -670,14 +597,13 @@ class PimsImages:
     def expected_bbox(self) -> NDBoundingBox:
         # replaces the previous expected_shape to enable n-dimensional input files
         with self._open_images() as images:
-            if isinstance(images, pims.FramesSequenceND):
+            axes: Sequence[str]
+            if isinstance(images, NDFrameSequence):
                 axes = images.axes
                 images_shape = tuple(images.sizes[axis] for axis in axes)
             else:
                 if isinstance(images, list):
-                    images_shape = (len(images),) + cast(
-                        pims.FramesSequence, images[0]
-                    ).shape
+                    images_shape = (len(images),) + cast(FrameSequence, images[0]).shape
 
                 else:
                     images_shape = images.shape
@@ -709,7 +635,7 @@ class PimsImages:
                     (images_shape[x_index], images_shape[y_index], z_shape),
                 )
             else:
-                if isinstance(images, pims.FramesSequenceND):
+                if isinstance(images, NDFrameSequence):
                     axes_names = (self._iter_axes or []) + [
                         axis for axis in self._bundle_axes
                     ]
@@ -756,38 +682,11 @@ def dimwise_max(vectors: Sequence[T]) -> T:
         return cast(T, tuple(map(max, *vectors)))
 
 
-C = TypeVar("C", bound=type)
-
-
-def _recursive_subclasses(cls: C) -> list[C]:
-    "Return all subclasses (and their subclasses, etc.)."
-    # Source: http://stackoverflow.com/a/3862957/1221924
-    return cls.__subclasses__() + [
-        g for s in cls.__subclasses__() for g in _recursive_subclasses(s)
-    ]
-
-
-def _get_all_pims_handlers() -> Iterable[
-    type[pims.FramesSequence | pims.FramesSequenceND]
-]:
-    return chain(
-        _recursive_subclasses(pims.FramesSequence),
-        _recursive_subclasses(pims.FramesSequenceND),
-    )
-
-
-def get_valid_pims_suffixes() -> set[str]:
-    valid_suffixes = set()
-    for pims_handler in _get_all_pims_handlers():
-        valid_suffixes.update(pims_handler.class_exts())
-    return valid_suffixes
-
-
 def has_image_z_dimension(
     filepath: UPath,
     is_segmentation: bool,
 ) -> bool:
-    pims_images = PimsImages(
+    sliced_images = SlicedImages(
         filepath,
         is_segmentation=is_segmentation,
         # the following arguments shouldn't matter much for the Dataset.from_images method:
@@ -799,4 +698,4 @@ def has_image_z_dimension(
         flip_z=False,
     )
 
-    return pims_images.expected_bbox.get_shape("z") > 1
+    return sliced_images.expected_bbox.get_shape("z") > 1

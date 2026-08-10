@@ -3229,24 +3229,6 @@ wheels = [
 ]
 
 [[package]]
-name = "scm-pims"
-version = "0.7.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "imageio" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "packaging" },
-    { name = "slicerator" },
-    { name = "tifffile", version = "2025.5.10", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "tifffile", version = "2026.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f0/58/621282b94f6c04a28f042921f71cfe15dedcc431b63f16294a3c2d61af3f/scm_pims-0.7.1.tar.gz", hash = "sha256:8bd26c9ec78aba770569314b2480077a74ef79267a4c04505b69615314c3f684", size = 89827, upload-time = "2026-03-30T16:27:53.426Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/43/9c5d6df0f420928a70ee29b934872bd023bf738a4ab9dbdab8ff61f27eac/scm_pims-0.7.1-py3-none-any.whl", hash = "sha256:f4f25d7768bfa2d3939de8df832623db5bffa4a14bd6b78376c7ba7e7f65f116", size = 84785, upload-time = "2026-03-30T16:27:52.155Z" },
-]
-
-[[package]]
 name = "shellingham"
 version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -3262,15 +3244,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
-]
-
-[[package]]
-name = "slicerator"
-version = "1.1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/0c/52/f38586b82b2935f8b59a09b0a79c545a22ed062e728c9418bafeb51f61e0/slicerator-1.1.0.tar.gz", hash = "sha256:44010a7f5cd87680c07213b5cabe81d1fb71252962943e5373ee7d14605d6046", size = 38283, upload-time = "2022-04-07T18:54:08.17Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e8/ae/fa6cd331b364ad2bbc31652d025f5747d89cbb75576733dfdf8efe3e4d62/slicerator-1.1.0-py3-none-any.whl", hash = "sha256:167668d48c6d3a5ba0bd3d54b2688e81ee267dc20aef299e547d711e6f3c441a", size = 10274, upload-time = "2022-04-07T18:54:07.029Z" },
 ]
 
 [[package]]
@@ -3590,6 +3563,7 @@ dependencies = [
     { name = "cluster-tools" },
     { name = "google-api-python-client" },
     { name = "httpx" },
+    { name = "imageio" },
     { name = "loxun" },
     { name = "lz4" },
     { name = "natsort" },
@@ -3604,7 +3578,6 @@ dependencies = [
     { name = "rich" },
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.16.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "scm-pims" },
     { name = "tensorstore", version = "0.1.76", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'win32'" },
     { name = "tensorstore", version = "0.1.78", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' and sys_platform != 'win32'" },
     { name = "tensorstore", version = "0.1.79", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' and sys_platform != 'win32'" },
@@ -3697,6 +3670,7 @@ requires-dist = [
     { name = "google-api-python-client", specifier = ">=2.0.0" },
     { name = "httpx", specifier = "~=0.27.0" },
     { name = "imagecodecs", marker = "extra == 'imagecodecs'", specifier = ">=2021.11.20" },
+    { name = "imageio", specifier = ">=2.37.0" },
     { name = "imaris-ims-file-reader", marker = "extra == 'ims'", specifier = ">=0.1.8" },
     { name = "loxun", specifier = "~=2.0.0" },
     { name = "lz4", specifier = ">=4.0.0" },
@@ -3717,7 +3691,6 @@ requires-dist = [
     { name = "scikit-image", marker = "python_full_version >= '3.11' and extra == 'examples'", specifier = "~=0.26.0" },
     { name = "scikit-learn", marker = "python_full_version >= '3.11' and extra == 'examples'", specifier = "~=1.9.0" },
     { name = "scipy", specifier = ">=1.13" },
-    { name = "scm-pims", specifier = "~=0.7.1" },
     { name = "tabulate", marker = "extra == 'examples'", specifier = ">=0.9.0" },
     { name = "tensorstore", marker = "sys_platform != 'win32'", specifier = "~=0.1.78" },
     { name = "tensorstore", marker = "sys_platform == 'win32'", specifier = "==0.1.76" },

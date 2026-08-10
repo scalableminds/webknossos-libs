@@ -2,22 +2,23 @@ from collections.abc import Iterator
 from contextlib import closing, contextmanager
 
 import numpy as np
-from pims import FramesSequenceND
 from upath import UPath
 
+from .frame_sequence import NDFrameSequence
+from .image_reader_registry import register_image_reader
 from .vendor.dm3 import DM3  # type: ignore[attr-defined]
 from .vendor.dm3 import dT_str as DM3_DTYPE_MAPPING  # type: ignore[attr-defined]
 from .vendor.dm4 import DM4File  # type: ignore[attr-defined]
 
 
-class PimsDm3Reader(FramesSequenceND):
+@register_image_reader
+class Dm3Reader(NDFrameSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"dm3"}
 
-    # class_priority is used in pims to pick the reader with the highest priority.
-    # Default is 10, and bioformats priority is 2.
-    # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
+    # open_images() picks the eligible reader with the highest class_priority.
+    # 10 is the default; nothing else claims dm3.
     class_priority = 20
 
     def __init__(self, path: UPath) -> None:
@@ -42,14 +43,14 @@ class PimsDm3Reader(FramesSequenceND):
         return DM3(self.path).imagedata
 
 
-class PimsDm4Reader(FramesSequenceND):
+@register_image_reader
+class Dm4Reader(NDFrameSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"dm4"}
 
-    # class_priority is used in pims to pick the reader with the highest priority.
-    # Default is 10, and bioformats priority is 2.
-    # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
+    # open_images() picks the eligible reader with the highest class_priority.
+    # 10 is the default; nothing else claims dm4.
     class_priority = 20
 
     def __init__(self, path: UPath) -> None:

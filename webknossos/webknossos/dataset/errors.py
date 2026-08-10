@@ -20,8 +20,8 @@ class ImageConversionError(ValueError):
 
     Attributes:
         path: The offending input path, if there is a single one. `None` when
-            the images were passed as a list or as a `pims.FramesSequence`, or
-            when the failure is not tied to one file.
+            the images were passed as a list, or when the failure is not tied
+            to one file.
     """
 
     def __init__(self, message: str, *, path: UPath | None = None) -> None:
@@ -37,7 +37,7 @@ class UnsupportedImageFormatError(ImageConversionError):
 
     Attributes:
         path: The offending input path, if there is a single one. `None` when
-            the images were passed as a list or as a `pims.FramesSequence`.
+            the images were passed as a list.
         suffix: The offending file's suffix, lowercase and without the leading
             dot (e.g. `"dcm"`). `None` when `path` is a directory or unknown.
         supported_suffixes: The suffixes that can currently be converted, in
