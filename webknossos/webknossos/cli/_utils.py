@@ -249,7 +249,7 @@ def parse_mag(mag_str: str) -> Mag:
     return Mag(mag_str)
 
 
-def parse_voxel_size(voxel_size_str: str) -> tuple[float, float, float]:
+def parse_voxel_size(voxel_size_str: str) -> VoxelSizeTuple:
     """Parses str input to tuple of three floats."""
     try:
         result = tuple(float(x) for x in voxel_size_str.split(","))

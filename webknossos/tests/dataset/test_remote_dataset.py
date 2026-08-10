@@ -10,6 +10,7 @@ from upath import UPath
 from tests.constants import TESTOUTPUT_DIR
 from webknossos import (
     COLOR_CATEGORY,
+    AffineCoordinateTransformation,
     AgglomerateAttachment,
     AgglomerateGraph,
     BoundingBox,
@@ -22,6 +23,7 @@ from webknossos import (
     RemoteFolder,
     SegmentationLayer,
     Team,
+    ThinPlateSplineCoordinateTransformation,
     TransferMode,
     Vec3Int,
     webknossos_context,
@@ -324,6 +326,50 @@ def test_remote_layer_view_configuration() -> None:
     # config values are readyonly
     with pytest.raises(AttributeError):
         layer.view_configuration = LayerViewConfiguration(alpha=50.0)
+
+
+def test_remote_layer_coordinate_transformations(tmp_upath: UPath) -> None:
+    local_dataset = get_sample_dataset(tmp_upath / "source", layers=["color"])
+    remote_dataset = reopen_dataset(
+        local_dataset.upload(new_dataset_name="test_coordinate_transformations")
+    )
+
+    layer = remote_dataset.get_layer("color")
+    assert layer.coordinate_transformations == ()
+
+    affine = AffineCoordinateTransformation.from_translation((10, 20, 30))
+    thin_plate_spline = ThinPlateSplineCoordinateTransformation(
+        source=[[0, 0, 0], [1, 2, 3], [4, 5, 6]],
+        target=[[1, 1, 1], [2, 4, 6], [8, 10, 12]],
+    )
+    layer.coordinate_transformations = [affine, thin_plate_spline]
+    assert layer.coordinate_transformations == (affine, thin_plate_spline)
+
+    # Test if the transformations are persisted on the server
+    assert reopen_dataset(remote_dataset).get_layer(
+        "color"
+    ).coordinate_transformations == (affine, thin_plate_spline)
+
+    layer.coordinate_transformations = []
+    assert layer.coordinate_transformations == ()
+    assert (
+        reopen_dataset(remote_dataset).get_layer("color").coordinate_transformations
+        == ()
+    )
+
+
+def test_changing_properties_on_remote_layer_with_zarr_streaming() -> None:
+    remote_dataset = RemoteDataset.open(dataset_id="59e9cfbdba632ac2ab8b23b5")
+    layer = remote_dataset.get_layer("color")
+    coordinate_transformations_before_change_attempt = layer.coordinate_transformations
+    with pytest.raises(RuntimeError):
+        layer.coordinate_transformations = [
+            AffineCoordinateTransformation.from_translation((10, 20, 30))
+        ]
+    assert (
+        layer.coordinate_transformations
+        == coordinate_transformations_before_change_attempt
+    )
 
 
 def test_changing_properties_on_read_only_remote_dataset() -> None:

@@ -1,4 +1,9 @@
 # ruff: noqa: F401 imported but unused
+from .coordinate_transformations import (
+    AffineCoordinateTransformation,
+    CoordinateTransformation,
+    ThinPlateSplineCoordinateTransformation,
+)
 from .data_format import AttachmentDataFormat, DataFormat
 from .dataset_properties import (
     AttachmentProperties,
