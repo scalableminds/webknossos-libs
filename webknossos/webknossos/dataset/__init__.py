@@ -7,6 +7,7 @@ from .defaults import (
     DEFAULT_DATA_FORMAT,
     DEFAULT_SHARD_SHAPE,
 )
+from .errors import UnsupportedImageFormatError
 from .layer import (
     AgglomerateAttachment,
     AgglomerateGraph,

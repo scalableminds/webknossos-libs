@@ -14,6 +14,7 @@ from upath import UPath
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
+from ..errors import UnsupportedImageFormatError
 from ..layer.view import MagView
 
 # Fix ImageIOReader not handling channels correctly. This might get fixed via
@@ -333,6 +334,69 @@ class PimsImages:
         else:
             return str(original_images)
 
+    def _classify_open_failure(self) -> UnsupportedImageFormatError | None:
+        """
+        Decides whether a failure to open the images means "no reader supports
+        this format" — in which case the returned exception should be raised —
+        or something else, e.g. a corrupt file or an IO error of a format that
+        *is* supported, which must keep surfacing as its original error.
+
+        The decision is made on the suffix, not on the exception type:
+        pims.open raises UnknownFormatError both when no handler claims the
+        suffix and when every handler that claimed it errored out, so a
+        corrupt TIFF is indistinguishable from an unreadable format by type.
+
+        Classifying afterwards, rather than rejecting unknown suffixes up
+        front, keeps files that pims opens without a recognized suffix (via
+        pims.ImageSequence/skimage) working as before: this only runs once
+        every open strategy has already failed.
+        """
+        # Imported inside the function so that the two reader modules stay
+        # independent at import time; this is only needed on the error path.
+        from .chunked_images import (
+            describe_missing_extras,
+            get_unavailable_chunked_image_suffixes,
+            get_valid_chunked_image_suffixes,
+        )
+
+        path: UPath | None = None
+        if isinstance(self._original_images, UPath):
+            path = self._original_images
+        elif isinstance(self._original_images, list) and self._original_images:
+            # A list is opened with a single reader, chosen from the first
+            # image, so its suffix is the one that decides support.
+            path = UPath(self._original_images[0])
+        # Only a file's suffix says anything about which readers apply: a
+        # directory of images has none (or, worse, a dot in its name), and
+        # neither has a path that does not exist at all.
+        suffix = (
+            (path.suffix.lstrip(".").lower() or None)
+            if path is not None and not path.is_dir()
+            else None
+        )
+
+        supported_suffixes = get_valid_pims_suffixes()
+        supported_suffixes.update(get_valid_chunked_image_suffixes())
+
+        if suffix is None or suffix in supported_suffixes:
+            return None
+
+        unavailable = get_unavailable_chunked_image_suffixes()
+        missing = {suffix: unavailable[suffix]} if suffix in unavailable else {}
+        message = (
+            f"Could not convert {path}: no reader supports the .{suffix} format. "
+            + f"The following suffixes are supported: {sorted(supported_suffixes)}"
+        )
+        if missing:
+            message += describe_missing_extras(missing)
+        return UnsupportedImageFormatError(
+            message,
+            path=path,
+            suffix=suffix,
+            supported_suffixes=tuple(sorted(supported_suffixes)),
+            missing_extras=tuple(sorted(set(missing.values()))),
+        )
+
     def _disable_pil_image_size_limit(self) -> None:
         from PIL import Image
 
@@ -398,6 +462,8 @@ class PimsImages:
             )
 
             if images_context_manager is None:
+                if (unsupported_error := self._classify_open_failure()) is not None:
+                    raise unsupported_error from (exceptions[0] if exceptions else None)
                 if len(exceptions) == 1:
                     raise exceptions[0]
                 else:

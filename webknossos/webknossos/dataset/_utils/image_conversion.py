@@ -46,12 +46,14 @@ from ...geometry import (
 from ...geometry.mag import MagLike
 from ...utils import named_partial, wait_and_ensure_success, wrap_executor
 from ..defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
+from ..errors import UnsupportedImageFormatError
 from ..layer import Layer, SegmentationLayer
 from ..layer.abstract_layer import _UNALLOWED_LAYER_NAME_CHARS, _validate_layer_name
 from ..layer.layer import _get_shard_and_chunk_shapes
 from . import pims_images
 from .chunked_images import (
     ChunkedImages,
+    describe_missing_extras,
     get_unavailable_chunked_image_suffixes,
     get_valid_chunked_image_suffixes,
     try_open_chunked_images,
@@ -178,18 +180,18 @@ class ConversionLayerMapping(Enum):
             raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
 
 
-def _find_unavailable_input_formats(input_upath: UPath) -> str | None:
+def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
     """
     Looks for files whose format a chunk-based reader would handle if its
-    optional dependency were installed, and describes them for the
-    "no supported image data" error. Returns None if there are none.
+    optional dependency were installed, and maps their suffix to the extra
+    that provides it. Empty if there are none.
 
-    Only runs on that error path, so the extra directory scan costs nothing in
-    the normal case.
+    Only runs on the "no supported image data" error path, so the extra
+    directory scan costs nothing in the normal case.
     """
     unavailable = get_unavailable_chunked_image_suffixes()
     if not unavailable:
-        return None
+        return {}
 
     if input_upath.is_file():
         candidates = [input_upath]
@@ -201,15 +203,7 @@ def _find_unavailable_input_formats(input_upath: UPath) -> str | None:
         suffix = path.suffix.lstrip(".").lower()
         if suffix in unavailable:
             found[suffix] = unavailable[suffix]
-    if not found:
-        return None
-
-    extras = sorted({extra for extra in found.values()})
-    return (
-        f". Found {', '.join('.' + s for s in sorted(found))} files, which need an "
-        + "optional dependency that is not installed — install it with "
-        + f"`pip install {' '.join(f'webknossos[{extra}]' for extra in extras)}`"
-    )
+    return found
 
 
 def _has_image_z_dimension(
@@ -377,10 +371,18 @@ def from_images(
     if z_slices_sort_key is None:
         z_slices_sort_key = natsort_keygen()
 
-    if input_upath.is_file():
+    # Kept around for the error below, since input_upath moves to the parent
+    # directory for a single file that can be converted.
+    original_input_upath = input_upath
+    input_is_file = input_upath.is_file()
+    if input_is_file:
         if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
             input_files = [UPath(input_upath.name)]
             input_upath = input_upath.parent
+        else:
+            # No reader handles this file. Leaving input_files unassigned here
+            # used to raise an UnboundLocalError instead of the error below.
+            input_files = []
     else:
         input_files = [
             i.relative_to(input_upath)
@@ -396,9 +398,20 @@ def from_images(
         # A reader whose optional dependency is missing never registers, so its
         # formats are simply absent from the list above. Without this the only
         # clue is an import warning emitted much earlier, far from the failure.
-        if (missing := _find_unavailable_input_formats(input_upath)) is not None:
-            message += missing
-        raise ValueError(message)
+        missing = _find_unavailable_input_formats(original_input_upath)
+        if missing:
+            message += describe_missing_extras(missing)
+        raise UnsupportedImageFormatError(
+            message,
+            path=original_input_upath,
+            suffix=(
+                original_input_upath.suffix.lstrip(".").lower() or None
+                if input_is_file
+                else None
+            ),
+            supported_suffixes=tuple(sorted(valid_suffixes)),
+            missing_extras=tuple(sorted(set(missing.values()))),
+        )
 
     if isinstance(map_filepath_to_layer_name, ConversionLayerMapping):
         with warnings.catch_warnings():

@@ -348,6 +348,20 @@ def get_unavailable_chunked_image_suffixes() -> dict[str, str]:
     return dict(_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES)
 
 
+def describe_missing_extras(found: dict[str, str]) -> str:
+    """
+    Turns a suffix -> extra mapping, as returned for the files at hand by
+    get_unavailable_chunked_image_suffixes(), into a sentence naming the
+    extras to install. Meant to be appended to an error message.
+    """
+    extras = sorted(set(found.values()))
+    return (
+        f". Found {', '.join('.' + s for s in sorted(found))} files, which need an "
+        + "optional dependency that is not installed — install it with "
+        + f"`pip install {' '.join(f'webknossos[{extra}]' for extra in extras)}`"
+    )
+
+
 def _chunked_images_imports() -> str | None:
     import_exceptions = []
 

@@ -15,7 +15,7 @@ from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from tests.utils import create_synthetic_multi_timepoint_ims, download_ims_fixture
-from webknossos.dataset import Dataset, RemoteDataset
+from webknossos.dataset import Dataset, RemoteDataset, UnsupportedImageFormatError
 from webknossos.dataset._utils.mrc_chunked_images import MrcChunkedImages
 from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
 from webknossos.geometry import BoundingBox, Vec3Int, VecInt
@@ -449,9 +449,14 @@ def test_from_images_names_missing_optional_dependency(
     )
     (tmp_upath / "a.ims").write_bytes(b"stand-in for an ims file")
 
-    with pytest.raises(ValueError, match=r"pip install webknossos\[ims\]") as excinfo:
+    with pytest.raises(
+        UnsupportedImageFormatError, match=r"pip install webknossos\[ims\]"
+    ) as excinfo:
         Dataset.from_images(tmp_upath, tmp_upath / "ds", voxel_size=(1, 1, 1))
     assert ".ims" in str(excinfo.value)
+    # A non-empty missing_extras is how downstream tells "install this" apart
+    # from "this format cannot be converted at all".
+    assert excinfo.value.missing_extras == ("ims",)
 
 
 def test_from_images_error_unchanged_when_nothing_is_missing(
@@ -459,5 +464,32 @@ def test_from_images_error_unchanged_when_nothing_is_missing(
 ) -> None:
     # The hint must not appear when every reader imported fine.
     (tmp_upath / "a.unsupported").write_bytes(b"x")
-    with pytest.raises(ValueError, match="Could not find any supported image data"):
+    with pytest.raises(
+        UnsupportedImageFormatError, match="Could not find any supported image data"
+    ) as excinfo:
         Dataset.from_images(tmp_upath, tmp_upath / "ds", voxel_size=(1, 1, 1))
+    error = excinfo.value
+    assert error.missing_extras == ()
+    # The input is a directory, so there is no single offending suffix.
+    assert error.suffix is None
+    assert error.path == tmp_upath
+    assert "tif" in error.supported_suffixes
+
+
+def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
+    # Passing a single file that no reader handles used to raise an
+    # UnboundLocalError, because input_files was only assigned for files with a
+    # supported suffix.
+    unsupported = tmp_upath / "scan.dcm"
+    unsupported.write_bytes(b"\x00" * 132)
+
+    with pytest.raises(
+        UnsupportedImageFormatError, match="Could not find any supported image data"
+    ) as excinfo:
+        Dataset.from_images(unsupported, tmp_upath / "ds", voxel_size=(1, 1, 1))
+    error = excinfo.value
+    assert error.suffix == "dcm"
+    assert error.path == unsupported
+    assert error.missing_extras == ()
+    # Subclassing ValueError keeps `except ValueError` callers working.
+    assert isinstance(error, ValueError)

@@ -759,6 +759,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Returns:
             Dataset: The created dataset instance
 
+        Raises:
+            UnsupportedImageFormatError: If the input contains no file that any
+                reader can convert. Its `missing_extras` attribute names the
+                extras to install when the format would be supported by an
+                optional dependency that is not installed.
+
         Examples:
             ```
             ds = Dataset.from_images("path/to/images/",
@@ -1162,6 +1168,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
+
+        Raises:
+            UnsupportedImageFormatError: If no reader can convert `images`. Its
+                `missing_extras` attribute names the extras to install when the
+                format would be supported by an optional dependency that is not
+                installed.
         """
 
         return image_conversion.add_layer_from_images(

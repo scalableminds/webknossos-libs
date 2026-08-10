@@ -328,6 +328,63 @@ def test_timepoint_argument_is_removed(tmp_upath: UPath) -> None:
         )
 
 
+def test_add_layer_from_images_unsupported_format(tmp_upath: UPath) -> None:
+    # No reader handles .dcm since Bio-Formats was removed. Downstream code
+    # needs to recognize this without matching on an error message.
+    unsupported = tmp_upath / "scan.dcm"
+    unsupported.write_bytes(b"\x00" * 132)
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(wk.UnsupportedImageFormatError) as excinfo:
+        ds.add_layer_from_images(unsupported, layer_name="color")
+    error = excinfo.value
+    assert error.suffix == "dcm"
+    assert error.path == unsupported
+    assert error.missing_extras == ()
+    assert "dcm" not in error.supported_suffixes
+    # Subclassing ValueError keeps `except ValueError` callers working.
+    assert isinstance(error, ValueError)
+
+
+def test_add_layer_from_images_keeps_error_for_corrupt_supported_format(
+    tmp_upath: UPath,
+) -> None:
+    # pims.open raises UnknownFormatError both for an unreadable format and for
+    # a file every handler choked on, so the format check must go by suffix —
+    # a broken file of a supported format has to keep its original error.
+    corrupt = tmp_upath / "broken.tif"
+    corrupt.write_bytes(b"not a tiff at all")
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(ValueError) as excinfo:
+        ds.add_layer_from_images(corrupt, layer_name="color")
+    assert not isinstance(excinfo.value, wk.UnsupportedImageFormatError)
+
+
+def test_add_layer_from_images_names_missing_optional_dependency(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # With webknossos[ims] uninstalled, ImsChunkedImages never registers and the
+    # file falls through to pims, which has no reader for it either. The error
+    # must still point at the missing extra instead of calling .ims unsupported.
+    # The test env installs every extra, so unregister the reader to reproduce
+    # exactly the state a missing dependency leaves behind.
+    chunked_images = importlib.import_module("webknossos.dataset._utils.chunked_images")
+    monkeypatch.setattr(chunked_images, "_CHUNKED_IMAGE_CLASSES", [])
+    monkeypatch.setattr(
+        chunked_images, "_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES", {"ims": "ims"}
+    )
+    ims_path = tmp_upath / "a.ims"
+    ims_path.write_bytes(b"stand-in for an ims file")
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(
+        wk.UnsupportedImageFormatError, match=r"pip install webknossos\[ims\]"
+    ) as excinfo:
+        ds.add_layer_from_images(ims_path, layer_name="color")
+    assert excinfo.value.missing_extras == ("ims",)
+
+
 def test_ims_from_images_multi_timepoint(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
