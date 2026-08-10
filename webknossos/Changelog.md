@@ -10,20 +10,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
-- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
-
 
 ### Changed
 
 ### Fixed
-- Restored the ordering of `VecInt` and `Vec3Int`, which was lost when they stopped subclassing `tuple` in [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419). `sorted()` over vectors, and `Tree.__eq__` / `sorted(tree.nodes)` for any tree whose nodes differ in position, raised `TypeError: '<' not supported`. Vectors are ordered lexicographically again, matching the equivalent plain tuples. [#1493](https://github.com/scalableminds/webknossos-libs/pull/1493)
+- Restored the ordering of `VecInt` and `Vec3Int`, which was lost when they stopped subclassing `tuple` in [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419). [#1493](https://github.com/scalableminds/webknossos-libs/pull/1493)
+
+
+## [3.6.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.6.0) - 2026-08-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...v3.6.0)
+
+### Added
+- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
+- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
+- Added `BoundingBox.iter_chunk_toplefts()`, a fast, allocation-free variant of `BoundingBox.chunk()` that yields chunk toplefts as plain int tuples instead of `BoundingBox` instances, and accepts an optional `clip_to` bounding box. [#1494](https://github.com/scalableminds/webknossos-libs/pull/1494)
+
+
+### Fixed
 - Fixed a storage leak where downloading annotations and editing volume layers wrote zip data to temporary files on disk instead of keeping it in memory. [#1485](https://github.com/scalableminds/webknossos-libs/pull/1485)
+
 
 
 ## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20
