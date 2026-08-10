@@ -52,10 +52,7 @@ def test_compare_tifffile(tmp_upath: UPath) -> None:
         np.testing.assert_array_equal(data[:, :, z_index], comparison_slice)
 
 
-# Chunk-based formats have no pims reader to fall back on, so a path type that
-# try_open_chunked_images fails to recognize doesn't degrade — it fails outright
-# with "could not autodetect how to load a file of type mrc". pathlib.Path is
-# the easy one to miss, since it is not a UPath subclass.
+# Testing different path types in addition to the mrc conversion
 @pytest.mark.parametrize("path_type", [str, Path, UPath])
 def test_mrc_from_images(tmp_upath: UPath, path_type: Callable[[UPath], Any]) -> None:
     Z, Y, X = 6, 24, 32
