@@ -1,8 +1,6 @@
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
-from shutil import copy
-from tempfile import NamedTemporaryFile
 
 import h5py
 import httpx
@@ -27,15 +25,16 @@ IMS_FIXTURE_URL = "https://static.webknossos.org/data/wklibs-samples/brain_crop3
 def download_ims_fixture(tmp_upath: UPath) -> UPath:
     """Downloads the brain_crop3.ims test fixture (2 channels, single
     timepoint, uint16) to tmp_upath and returns its path."""
+    # Streamed straight to the destination rather than via a NamedTemporaryFile:
+    # on Windows that keeps the file open exclusively, so copying it by name
+    # fails with PermissionError.
     ims_path = tmp_upath / "brain_crop3.ims"
-    with NamedTemporaryFile() as download_file:
-        with httpx.stream("GET", IMS_FIXTURE_URL, follow_redirects=True) as response:
-            for chunk in response.iter_bytes():
-                download_file.write(chunk)
-        # copy() reopens the file by name, so pending writes must be flushed
-        # to disk first, or the copy would see a truncated file.
-        download_file.flush()
-        copy(download_file.name, str(ims_path))
+    with (
+        httpx.stream("GET", IMS_FIXTURE_URL, follow_redirects=True) as response,
+        ims_path.open("wb") as out_file,
+    ):
+        for chunk in response.iter_bytes():
+            out_file.write(chunk)
     return ims_path
 
 
