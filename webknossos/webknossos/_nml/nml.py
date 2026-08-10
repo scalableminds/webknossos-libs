@@ -155,7 +155,7 @@ class Nml(NamedTuple):
                         volumes[-1].segments[-1].metadata.append(metadata_entry)
                     else:
                         raise ValueError(
-                            f"Metadata entry found in unexpected location: {elem.element_stack[-3].tag}"
+                            f"Metadata entry found in unexpected location: {element_stack[-3].tag}"
                         )
             elif event == "end":
                 if elem.tag == "parameters":

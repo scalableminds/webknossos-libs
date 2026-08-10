@@ -38,6 +38,7 @@ from ...geometry import (
     BoundingBox,
     Mag,
     NDBoundingBox,
+    Vec3FloatLike,
     Vec3Int,
     Vec3IntLike,
     VecIntLike,
@@ -345,7 +346,7 @@ def from_images(
     dataset_cls: type[Dataset],
     input_path: str | PathLike | UPath,
     output_path: str | PathLike | UPath,
-    voxel_size: tuple[float, float, float] | None = None,
+    voxel_size: Vec3FloatLike | None = None,
     name: str | None = None,
     *,
     map_filepath_to_layer_name: ConversionLayerMapping

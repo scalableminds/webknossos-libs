@@ -1,6 +1,6 @@
 import re
 from collections.abc import Iterable
-from typing import TypeAlias, Union, cast
+from typing import Any, TypeAlias, Union, cast
 
 import numpy as np
 
@@ -10,6 +10,10 @@ _VALUE_ERROR = "Vector components must be three integers or a Vec3IntLike object
 
 
 class Vec3Int(VecInt):
+    # Adds no attributes of its own, but has to declare this for `VecInt.__slots__` to
+    # have an effect: a subclass without `__slots__` gets a `__dict__` again.
+    __slots__ = ()
+
     def __new__(
         cls,
         *args: Union["Vec3IntLike", Iterable[str], int],
@@ -30,6 +34,23 @@ class Vec3Int(VecInt):
             assert vector_1 + vector_2 == (2, 3, 4)
             ```
         """
+
+        # Fast paths for the two common shapes, `Vec3Int(1, 2, 3)` and
+        # `Vec3Int((1, 2, 3))` with the default axes. The general path below sorts the
+        # arguments by axis name and then runs a second `isinstance` ladder in
+        # `VecInt.__new__`, which together cost about seven times as much.
+        # `type(...) is int` rather than `isinstance` deliberately leaves `bool` and the
+        # numpy integer types on the general path, where `int()` converts them as before.
+        if cls is Vec3Int and not kwargs and axes == ("x", "y", "z"):
+            values: tuple[Any, ...] | None = None
+            if len(args) == 3:
+                values = args
+            elif len(args) == 1 and type(args[0]) is tuple and len(args[0]) == 3:
+                values = args[0]
+            if values is not None:
+                first, second, third = values
+                if type(first) is int and type(second) is int and type(third) is int:
+                    return Vec3Int.from_xyz(first, second, third)
 
         if args:
             if isinstance(args[0], Vec3Int):
@@ -151,3 +172,13 @@ class Vec3Int(VecInt):
 
 
 Vec3IntLike: TypeAlias = Vec3Int | tuple[int, int, int] | np.ndarray | Iterable[int]
+
+
+def as_vec3_int_or_none(vec3_int_like: "Vec3IntLike | None") -> Vec3Int | None:
+    """Like the `Vec3Int` constructor, but passes `None` through.
+
+    Useful as an attrs converter for optional fields.
+    """
+    if vec3_int_like is None:
+        return None
+    return Vec3Int(vec3_int_like)

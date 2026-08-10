@@ -1,5 +1,6 @@
 import atexit
 import logging
+import math
 import os
 import signal
 import sys
@@ -37,6 +38,9 @@ NOT_YET_SUBMITTED_STATE: NOT_YET_SUBMITTED_STATE_TYPE = "NOT_YET_SUBMITTED"
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
 _S = TypeVar("_S")
+
+LOG_FILE_POLLING_INTERVAL_SECONDS = 2
+MAX_LOG_FILE_POLLING_DURATION_SECONDS = 120
 
 
 def join_messages(strings: list[str]) -> str:
@@ -776,13 +780,27 @@ class ClusterExecutor(futures.Executor):
         tailer = Tail(log_path, log_callback)
         fut.add_done_callback(lambda _: tailer.cancel())
 
-        # Poll until the log file exists
-        while not (os.path.exists(log_path) or tailer.is_cancelled):
-            time.sleep(2)
+        # Wait until the log file exists or the job is completed/cancelled
+        log_file_exists = False
+        while not (
+            (log_file_exists := os.path.exists(log_path)) or tailer.is_cancelled
+        ):
+            time.sleep(LOG_FILE_POLLING_INTERVAL_SECONDS)
 
-        # Log the output of the log file until future is resolved
-        # by the done_callback we attached earlier.
-        tailer.follow(2)
+        # The job might be done/cancelled but the log file might still not exist (e.g. slow/inconsistent NFS)
+        # In this case, we keep polling but with an upper limit to not run into a deadlock.
+        retries = 0
+        max_retries = math.ceil(
+            MAX_LOG_FILE_POLLING_DURATION_SECONDS / LOG_FILE_POLLING_INTERVAL_SECONDS
+        )
+        while not log_file_exists and retries < max_retries:
+            log_file_exists = os.path.exists(log_path)
+            retries += 1
+            sys.stdout.write(
+                f"Job with id {fut.cluster_jobid} is finished but log file couldn't be found at {log_path}. Retrying {retries}/{max_retries}"  # type: ignore[attr-defined]
+            )
+            time.sleep(LOG_FILE_POLLING_INTERVAL_SECONDS)
+        tailer.follow(LOG_FILE_POLLING_INTERVAL_SECONDS)
         return fut.result()
 
     @abstractmethod

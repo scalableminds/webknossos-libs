@@ -41,7 +41,18 @@
         }
       ],
       "elementClass": "uint8",
-      "dataFormat": "wkw"
+      "dataFormat": "wkw",
+      "coordinateTransformations": [
+        {
+          "type": "affine",
+          "matrix": [
+            [1.0, 0.0, 0.0, 10.0],
+            [0.0, 1.0, 0.0, 20.0],
+            [0.0, 0.0, 1.0, 30.0],
+            [0.0, 0.0, 0.0, 1.0]
+          ]
+        }
+      ]
     },
     {
       "name": "segmentation",
@@ -88,7 +99,16 @@
       ],
       "largestSegmentId": 1000000000,
       "category": "segmentation",
-      "dataFormat": "wkw"
+      "dataFormat": "wkw",
+      "coordinateTransformations": [
+        {
+          "type": "thin_plate_spline",
+          "correspondences": {
+            "source": [[0.0, 0.0, 0.0], [1.0, 2.0, 3.0], [4.0, 5.0, 6.0]],
+            "target": [[1.0, 1.0, 1.0], [2.0, 4.0, 6.0], [8.0, 10.0, 12.0]]
+          }
+        }
+      ]
     }
   ],
   "scale": {

@@ -38,7 +38,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: [ "3.14", "3.13", "3.12", "3.11", "3.10" ]
+        python-version: ["3.14", "3.13", "3.12", "3.11", "3.10"]
     defaults:
       run:
         working-directory: cluster_tools
@@ -96,7 +96,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        python-version: [ "3.14", "3.13", "3.12", "3.11", "3.10" ]
+        python-version: ["3.14", "3.13", "3.12", "3.11", "3.10"]
     defaults:
       run:
         working-directory: cluster_tools
@@ -138,8 +138,8 @@ jobs:
     runs-on: ubicloud-standard-8
     strategy:
       matrix:
-        python-version: [ "3.14", "3.13", "3.12", "3.11", "3.10" ]
-        group: [ 1, 2, 3 ]
+        python-version: ["3.14", "3.13", "3.12", "3.11", "3.10"]
+        group: [1, 2, 3]
       fail-fast: false
     defaults:
       run:
@@ -179,7 +179,8 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+        run:
+          uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
           least_duration --cov=webknossos --cov-report=
 
       - name: Python tests
@@ -187,7 +188,8 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+        run:
+          uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
           least_duration
 
       - name: Persist coverage reports
@@ -211,8 +213,8 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [ "3.12" ]
-        group: [ 1, 2, 3 ]
+        python-version: ["3.12"]
+        group: [1, 2, 3]
       fail-fast: false
     defaults:
       run:
@@ -240,11 +242,12 @@ jobs:
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
           MULTIPROCESSING_DEFAULT_START_METHOD: spawn
-        run: uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
+        run:
+          uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
           least_duration
 
   coverage_report:
-    needs: [ webknossos_linux ]
+    needs: [webknossos_linux]
     if: success()
     runs-on: ubuntu-latest
     defaults:
@@ -312,7 +315,7 @@ jobs:
         run: |
           CI_BRANCH=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}
           NORMALIZED_CI_BRANCH=${CI_BRANCH//[\/-]/_}
-          uvx --from awscli aws s3 cp --recursive --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
+          uvx --from awscli aws s3 cp --recursive --endpoint-url https://eu-central-2.storage.impossibleapi.net docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
 
       - name: Push docs (for tag)
         if: github.ref_type == 'tag'
@@ -325,7 +328,7 @@ jobs:
           CI_TAG=$(git describe --tags)
           set -e
 
-          uvx --from awscli aws s3 cp --recursive --endpoint-url https://hel1.your-objectstorage.com docs/out s3://webknossos-www/docs/${CI_TAG}
+          uvx --from awscli aws s3 cp --recursive --endpoint-url https://eu-central-2.storage.impossibleapi.net docs/out s3://webknossos-www/docs/${CI_TAG}
           curl --basic -u "${N8N_TOKEN}:${N8N_USERNAME}" https://docs.webknossos.org/webhooks/index-docs
 
       - name: Check links (on master)

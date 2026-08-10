@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...HEAD)
 
 ### Breaking Changes
 - Removed Bio-Formats support, including the `use_bioformats` argument of `Dataset.from_images`/`add_layer_from_images`/`RemoteDataset.from_images`, the `webknossos[bioformats]` extra (and its `JPype1`/JVM dependency), and the DICOM upload example. Formats that were only readable through Bio-Formats — among them `.dcm`/`.dicom`, `.nd2`, `.lif`, `.lsm`, `.zvi`, `.nii`, `.nrrd` and `.stk` — can no longer be converted. Formats with a dedicated reader (TIFF, CZI, DM3/DM4, `.ims`, MRC, and the common 2D image formats) are unaffected. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
@@ -18,10 +18,16 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added support for converting Imaris (`.ims`) files via `Dataset.from_images`/`add_layer_from_images`, including multi-channel and multi-timepoint files. Converting a file that is both multi-channel and multi-timepoint yields one layer per channel, each keeping all of its timepoints. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
+- Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Added `Vec3Float` and `Vec3FloatLike` to `webknossos.geometry`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 
 ### Changed
 - `.ims` and MRC file conversion now reads shard-sized blocks directly instead of slice-by-slice, improving conversion performance for large files. These formats are always read through a dedicated reader. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Timepoints are no longer split into separate layers by `allow_multiple_layers=True`; readers that can address them expose all timepoints on a `t` axis within one layer instead. Readers that cannot (images without dimension metadata) now warn that only the first timepoint is converted. `allow_multiple_layers` still splits channels. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
+- `Dataset.voxel_size`, `Skeleton.voxel_size`, `Annotation.edit_position`/`edit_rotation` and `Node.rotation` now return `Vec3Float` instead of a plain tuple. Since `Vec3Float` compares and hashes equal to the corresponding tuple, runtime code keeps working unchanged; type annotations that spell out `tuple[float, float, float]` for these values should be widened to `Vec3FloatLike`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- `Node.rotation`, `Annotation.edit_position` and `Annotation.edit_rotation` now reject a value that is not three numbers with a `ValueError` when it is set. Previously such a value was stored as given and only failed later, while writing the annotation. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- The private `Vector3` aliases of `webknossos.annotation.annotation`, `webknossos.annotation.volume_layer`, `webknossos.skeleton.group`, `webknossos.skeleton.skeleton` and `webknossos.skeleton.tree` were replaced by the shared `Vec3Float`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Micro-optimizations done for `Vec3Float`, `Vec3Int` and `VecInt`, e.g using `__slots__` and fast-paths for common object construction patterns. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 
 ### Fixed
 - `Dataset.from_images` now names the missing optional dependency when the input contains a format whose reader could not be imported (e.g. `.ims` without `webknossos[ims]`), instead of only reporting that no supported image data was found. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
@@ -29,6 +35,57 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed `.ims` and MRC conversion failing with "Could not autodetect how to load a file" when the path was passed as a `pathlib.Path` rather than a `str` or `UPath`. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Fixed `flip_x`/`flip_y` mirroring each shard individually instead of the whole image when converting `.ims` or MRC files that span more than one shard in x or y, which scrambled the output into mirrored tiles. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Fixed the bounding box reported for multi-channel n-dimensional images (e.g. a multi-channel, multi-timepoint file) contradicting the layer's channel count, which caused a spurious "Some images are larger than expected" warning and a bounding box that disagreed with the written data. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
+- `Dataset.add_layer_as_copy` and `Dataset.copy_dataset` now carry over the `default_view_configuration` and the `coordinate_transformations` of the copied layers, which were previously lost. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- `Dataset.add_layer_like` no longer shares the `default_view_configuration` with the layer it copies from, so changing it on one of the two layers no longer changes it on the other as well. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Restored the ordering of `VecInt` and `Vec3Int`, which was lost when they stopped subclassing `tuple` in [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419). [#1493](https://github.com/scalableminds/webknossos-libs/pull/1493)
+
+## [3.6.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.6.0) - 2026-08-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...v3.6.0)
+
+### Added
+- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
+- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
+- Added `BoundingBox.iter_chunk_toplefts()`, a fast, allocation-free variant of `BoundingBox.chunk()` that yields chunk toplefts as plain int tuples instead of `BoundingBox` instances, and accepts an optional `clip_to` bounding box. [#1494](https://github.com/scalableminds/webknossos-libs/pull/1494)
+
+
+### Fixed
+- Fixed a storage leak where downloading annotations and editing volume layers wrote zip data to temporary files on disk instead of keeping it in memory. [#1485](https://github.com/scalableminds/webknossos-libs/pull/1485)
+
+
+
+## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.5...v3.5.6)
+
+### Added
+- `RemoteDataset.explore_and_add_remote` can now take optional remote storage credentials. [#1488](https://github.com/scalableminds/webknossos-libs/pull/1488)
+
+
+## [3.5.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.5) - 2026-07-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.4...v3.5.5)
+
+### Fixed
+- Fix SlurmExecutor on certain slurm clusters: explicitly state `--ntasks=1` in srun calls. [#1487](https://github.com/scalableminds/webknossos-libs/pull/1487)
+
+
+
+## [3.5.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.4) - 2026-07-08
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.3...v3.5.4)
+
+### Fixed
+- Fix SlurmExecutor on certain slurm clusters: explicitly repeat srun options that might not be inherited from sbatch. [#1483](https://github.com/scalableminds/webknossos-libs/pull/1483)
+
+
+## [3.5.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.3) - 2026-06-24
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.2...v3.5.3)
+
+### Changed
+- `MagView.read_cxyz` and `MagView.write_cxyz` are more robust for datasets that have only `xyz` axes or additional axes (e.g. `t`) of length 1. [#1478](https://github.com/scalableminds/webknossos-libs/pull/1478)
+- Upgraded `mypy` to `2.1.0`. [#1482](https://github.com/scalableminds/webknossos-libs/pull/1482)
+
+
+### Fixed
+- Fixed a conversion issue with Tiff files produced by ImageJ virtual stacks. [#1481](https://github.com/scalableminds/webknossos-libs/pull/1481)
+
 
 
 ## [3.5.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.2) - 2026-06-18
@@ -45,6 +102,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - Fixed unwarrented PermissionError when using Annotation.open_remote(...). [#1470](https://github.com/scalableminds/webknossos-libs/pull/1470)
 - Make `MultiprocessExecutor` safe to be use from multiple threads simultaneously [#1464](https://github.com/scalableminds/webknossos-libs/pull/1464)
+- Broader s3fs retries for `Not enough data...` errors. [#1479](https://github.com/scalableminds/webknossos-libs/pull/1479)
 
 
 

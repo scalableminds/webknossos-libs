@@ -59,6 +59,11 @@ class VecInt(Sequence[int]):
         ```
     """
 
+    # Instances are created in large numbers, e.g. one per chunk of a dataset, so they
+    # do without the per-instance `__dict__` that a plain class would carry. Subclasses
+    # have to declare `__slots__` as well for this to have an effect.
+    __slots__ = ("_data", "axes", "_c_pos", "_x_pos", "_y_pos", "_z_pos")
+
     _data: tuple[int, ...]
     axes: tuple[str, ...]
     _c_pos: int | None
@@ -145,6 +150,39 @@ class VecInt(Sequence[int]):
         if isinstance(other, tuple):
             return self._data == other
         return NotImplemented
+
+    def _comparable_data(self, other: object) -> tuple[int, ...] | None:
+        """Returns the data of `other` to compare against, or None if it is not comparable."""
+        if isinstance(other, VecInt):
+            return other._data
+        if isinstance(other, tuple):
+            return other
+        return None
+
+    # The vectors are ordered lexicographically, just like the equivalent plain tuples.
+    def __lt__(self, other: object) -> bool:
+        other_data = self._comparable_data(other)
+        if other_data is None:
+            return NotImplemented
+        return self._data < other_data
+
+    def __le__(self, other: object) -> bool:
+        other_data = self._comparable_data(other)
+        if other_data is None:
+            return NotImplemented
+        return self._data <= other_data
+
+    def __gt__(self, other: object) -> bool:
+        other_data = self._comparable_data(other)
+        if other_data is None:
+            return NotImplemented
+        return self._data > other_data
+
+    def __ge__(self, other: object) -> bool:
+        other_data = self._comparable_data(other)
+        if other_data is None:
+            return NotImplemented
+        return self._data >= other_data
 
     def __contains__(self, item: object) -> bool:
         return item in self._data

@@ -47,7 +47,7 @@ from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory
 from typing import IO, Literal, Union, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
@@ -77,11 +77,17 @@ from ..dataset_properties import (
     DataFormat,
     VoxelSize,
 )
-from ..geometry import NDBoundingBox, Vec3Int, Vec3IntLike
+from ..geometry import (
+    NDBoundingBox,
+    Vec3Float,
+    Vec3FloatLike,
+    Vec3Int,
+    Vec3IntLike,
+)
+from ..geometry.vec3_float import as_vec3_float_or_none
 from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import (
-    is_fs_path,
     time_since_epoch_in_ms,
     warn_deprecated,
     wrap_executor,
@@ -90,8 +96,6 @@ from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 from .volume_layer import SegmentInformation, VolumeLayer
 
 logger = logging.getLogger(__name__)
-
-Vector3 = tuple[float, float, float]
 
 
 @attr.define
@@ -157,14 +161,18 @@ class Annotation:
     # The following underscored attributes are just for initialization
     # in case the skeleton is not given. They are always None as attributes.
     _dataset_name: str | None = None
-    _voxel_size: VoxelSize | Vector3 | None = None
+    _voxel_size: VoxelSize | Vec3FloatLike | None = None
     _organization_id: str | None = None
     _description: str | None = None
     owner_name: str | None = None
     annotation_id: str | None = None
     time: int | None = attr.ib(factory=time_since_epoch_in_ms)
-    edit_position: Vector3 | None = None
-    edit_rotation: Vector3 | None = None
+    edit_position: Vec3Float | None = attr.ib(
+        default=None, converter=as_vec3_float_or_none
+    )
+    edit_rotation: Vec3Float | None = attr.ib(
+        default=None, converter=as_vec3_float_or_none
+    )
     zoom_level: float | None = None
     metadata: dict[str, str] = attr.Factory(dict)
     task_bounding_box: NDBoundingBox | None = None
@@ -260,7 +268,7 @@ class Annotation:
         self.skeleton.dataset_id = dataset_id
 
     @property
-    def voxel_size(self) -> tuple[float, float, float]:
+    def voxel_size(self) -> Vec3Float:
         """Voxel dimensions in nanometers (x, y, z).
 
         Proxies to skeleton.voxel_size.
@@ -268,7 +276,7 @@ class Annotation:
         return self.skeleton.voxel_size
 
     @voxel_size.setter
-    def voxel_size(self, voxel_size: tuple[float, float, float]) -> None:
+    def voxel_size(self, voxel_size: Vec3FloatLike) -> None:
         self.skeleton.voxel_size = voxel_size
 
     @property
@@ -446,11 +454,6 @@ class Annotation:
                 f"Downloaded annotation should have the suffix .zip or .nml, but has filename {filename}"
             )
             annotation = Annotation._load_from_zip(BytesIO(file_body))
-
-        volume_zip_root = NamedTemporaryFile(suffix=".zip").name
-        with ZipFile(volume_zip_root, "w"):
-            pass
-        annotation._write_volume_layers(UPath(volume_zip_root))
 
         if _return_context:
             return annotation, context
@@ -668,32 +671,6 @@ class Annotation:
             return cls._load_from_nml(
                 nml_paths[0].stem, nml_f, possible_volume_paths=paths
             )
-
-    def _write_volume_layers(self, path: UPath) -> None:
-        """
-        Writes all volume layers with zip data to a single zip file at the specified location.
-        """
-
-        assert is_fs_path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-
-        with (
-            path.open(mode="wb") as f,
-            ZipFile(
-                f,
-                mode="w",
-                compression=ZIP_DEFLATED,
-                compresslevel=Z_BEST_SPEED,
-            ) as zf,
-        ):
-            for layer in self._volume_layers:
-                if layer.zip is not None:
-                    with layer.zip.open(mode="rb") as f:
-                        zf.writestr(layer.zip.at, f.read())
-
-        for layer in self._volume_layers:
-            if layer.zip is not None:
-                layer.zip = ZipPath(path, layer.zip.at)
 
     def save(self, path: str | PathLike | UPath) -> None:
         """Saves the annotation to a file.
@@ -1070,10 +1047,10 @@ class Annotation:
             annotation.add_volume_layer("segmentation", fallback_layer="base_segmentation", dtype=np.uint32)
             ```
         """
-        volume_zip_root = NamedTemporaryFile(suffix=".zip").name
-        with ZipFile(volume_zip_root, "w"):
+        volume_zip_buffer = BytesIO()
+        with ZipFile(volume_zip_buffer, mode="w"):
             pass
-        volume_zip_path = ZipPath(volume_zip_root, f"{name}.zip")
+        volume_zip_path = ZipPath(ZipFile(volume_zip_buffer), f"{name}.zip")
 
         if volume_layer_id is None:
             volume_layer_id = max((i.id for i in self._volume_layers), default=-1) + 1
@@ -1393,8 +1370,8 @@ class RemoteAnnotation(Annotation):
         skeleton: Skeleton,
         owner_name: str,
         time: int | None = None,
-        edit_position: Vector3 | None = None,
-        edit_rotation: Vector3 | None = None,
+        edit_position: Vec3FloatLike | None = None,
+        edit_rotation: Vec3FloatLike | None = None,
         zoom_level: float | None = None,
         task_bounding_box: NDBoundingBox | None = None,
         user_bounding_boxes: list[NDBoundingBox] | None = None,
@@ -1408,8 +1385,8 @@ class RemoteAnnotation(Annotation):
         self.organization_id = organization_id
         self.owner_name = owner_name
         self.time = time
-        self.edit_position = edit_position
-        self.edit_rotation = edit_rotation
+        self.edit_position = as_vec3_float_or_none(edit_position)
+        self.edit_rotation = as_vec3_float_or_none(edit_rotation)
         self.zoom_level = zoom_level
         self.task_bounding_box = task_bounding_box
         self.user_bounding_boxes = user_bounding_boxes or []
@@ -1438,8 +1415,7 @@ class RemoteAnnotation(Annotation):
         return self._get_annotation_info().description
 
     @description.setter
-    def description(self, value: str) -> None:
-        assert isinstance(value, str), "Description must be a string."
+    def description(self, value: str | None) -> None:
         self._set_annotation_info(description=value)
 
     def _get_annotation_info(self) -> ApiAnnotation:

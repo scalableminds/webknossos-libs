@@ -175,6 +175,10 @@ class WkApiClient(AbstractApiClient):
         route = "/datasets/exploreAndAddRemote"
         return self._post_json_with_json_response(route, dataset, str)
 
+    def dataset_delete(self, *, dataset_id: str) -> None:
+        route = f"/datasets/{dataset_id}"
+        self._delete(route)
+
     def annotation_list(self, *, is_finished: bool | None) -> list[ApiAnnotation]:
         route = "/annotations/readable"
         return self._get_json(

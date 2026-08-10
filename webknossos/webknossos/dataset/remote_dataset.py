@@ -49,7 +49,13 @@ from webknossos.dataset_properties import (
     SegmentationLayerProperties,
     VoxelSize,
 )
-from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int, Vec3IntLike
+from webknossos.geometry import (
+    BoundingBox,
+    NDBoundingBox,
+    Vec3FloatLike,
+    Vec3Int,
+    Vec3IntLike,
+)
 from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
@@ -80,6 +86,16 @@ def _assert_same_webknossos_instance(
             f"Cannot {action} from a different WEBKNOSSOS instance. "
             + f"Got {dataset2._context._url}, expected {dataset1._context._url}."
         )
+
+
+@attr.frozen
+class StorageCredentials:
+    """Credentials for accessing remote storage when exploring and adding a dataset."""
+
+    credential_identifier: str
+    """Remote storage credential identifier (e.g. aws access key id)."""
+    credential_secret: str
+    """Remote storage credential secret (e.g. aws secret access key)."""
 
 
 class RemoteAccessMode(Enum):
@@ -969,6 +985,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 bounding_box=foreign_layer.bounding_box,
             )
 
+        layer._copy_metadata_from(foreign_layer)
+
         for mag_view in foreign_layer.mags.values():
             layer.add_mag_as_copy(
                 mag_view,
@@ -1146,6 +1164,24 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         self._save_dataset_properties()
         return self.layers[layer_name]
+
+    def delete(self) -> None:
+        """Deletes the dataset from the WEBKNOSSOS server. Use with caution: This action is irreversible.
+
+        Raises:
+            RuntimeError: If dataset is read-only, or if this instance was opened as
+                an annotation view of another dataset.
+        """
+        from ..client.context import _get_api_client
+
+        self._ensure_writable()
+        if self.annotation_id is not None:
+            raise RuntimeError("Cannot delete a dataset from an annotation view.")
+
+        with self._context:
+            client = _get_api_client()
+            client.dataset_delete(dataset_id=self.dataset_id)
+        self._read_only = True
 
     @classmethod
     def list(
@@ -1430,6 +1466,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         *,
         folder: str | RemoteFolder | None = None,
         folder_path: str | None = None,
+        credentials: StorageCredentials | None = None,
     ) -> "RemoteDataset":
         """Explore and add an external dataset as a remote dataset.
 
@@ -1441,6 +1478,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             dataset_name: Name to register dataset under in WEBKNOSSOS
             folder: Path in WEBKNOSSOS folder structure where dataset should appear
             folder_path: Deprecated, use folder instead.
+            credentials: Credentials for accessing remote storage
 
         Returns:
             RemoteDataset: The newly added dataset accessible via WEBKNOSSOS
@@ -1475,9 +1513,16 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         client = _get_api_client()
         dataset = ApiDatasetExploreAndAddRemote(
-            UPath(dataset_uri).resolve().as_uri(),
-            dataset_name,
-            None if folder_obj is None else folder_obj.id,
+            remote_uri=str(dataset_uri),
+            dataset_name=dataset_name,
+            folder_id=None if folder_obj is None else folder_obj.id,
+            data_store_name=None,
+            credential_identifier=(
+                None if credentials is None else credentials.credential_identifier
+            ),
+            credential_secret=(
+                None if credentials is None else credentials.credential_secret
+            ),
         )
         dataset_id = client.dataset_explore_and_add_remote(dataset=dataset)
 
@@ -1487,7 +1532,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def from_images(
         cls,
         input_path: str | PathLike | UPath,
-        voxel_size: tuple[float, float, float] | None = None,
+        voxel_size: Vec3FloatLike | None = None,
         name: str | None = None,
         *,
         map_filepath_to_layer_name: Any = None,

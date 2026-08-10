@@ -2,12 +2,11 @@ from typing import TYPE_CHECKING, Any
 
 import attr
 
-from ..geometry import Vec3Int
+from ..geometry import Vec3Float, Vec3Int
+from ..geometry.vec3_float import as_vec3_float_or_none
 
 if TYPE_CHECKING:
     from .skeleton import Skeleton
-
-Vec3Float = tuple[float, float, float]
 
 
 # Defining an order on nodes is necessary to allow to sort them,
@@ -53,12 +52,14 @@ class Node:
         ```
     """
 
-    position: Vec3Int
+    position: Vec3Int = attr.field(converter=Vec3Int)
     _skeleton: "Skeleton" = attr.ib(eq=False, repr=False, order=False)
     _id: int = attr.ib(init=False)
     comment: str | None = None
     radius: float | None = None
-    rotation: Vec3Float | None = None
+    rotation: Vec3Float | None = attr.field(
+        default=None, converter=as_vec3_float_or_none
+    )
     inVp: int | None = None
     inMag: int | None = None
     bitDepth: int | None = None
