@@ -46,7 +46,7 @@ from ...geometry import (
 from ...geometry.mag import MagLike
 from ...utils import named_partial, wait_and_ensure_success, wrap_executor
 from ..defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
-from ..errors import UnsupportedImageFormatError
+from ..errors import UnsupportedImageDataError, UnsupportedImageFormatError
 from ..layer import Layer, SegmentationLayer
 from ..layer.abstract_layer import _UNALLOWED_LAYER_NAME_CHARS, _validate_layer_name
 from ..layer.layer import _get_shard_and_chunk_shapes
@@ -694,14 +694,21 @@ def add_layer_from_images(
         else:
             current_dtype = np.dtype(dtype)
 
-        layer = dataset.add_layer(
-            layer_name=layer_name + layer_name_suffix,
-            category=category,
-            data_format=data_format,
-            dtype=current_dtype,
-            num_channels=image_source.num_channels,
-            **add_layer_kwargs,  # type: ignore[arg-type]
-        )
+        try:
+            layer = dataset.add_layer(
+                layer_name=layer_name + layer_name_suffix,
+                category=category,
+                data_format=data_format,
+                dtype=current_dtype,
+                num_channels=image_source.num_channels,
+                **add_layer_kwargs,  # type: ignore[arg-type]
+            )
+        except ValueError as e:
+            # add_layer rejects dtypes WEBKNOSSOS cannot store (e.g. float data
+            # for a segmentation layer). Here that dtype comes from the images
+            # themselves, or from the caller's `dtype` argument, so it is a
+            # problem with the input rather than a programming error.
+            raise UnsupportedImageDataError(str(e)) from e
 
         expected_bbox = image_source.expected_bbox
 
@@ -756,7 +763,7 @@ def add_layer_from_images(
                 )
                 layer.bounding_box = BoundingBox.from_ndbbox(layer.bounding_box)
             else:
-                raise RuntimeError(
+                raise UnsupportedImageDataError(
                     f"WKW datasets only support x, y, z axes, got {additional_axes}. Please use `data_format='zarr3'` instead."
                 )
 

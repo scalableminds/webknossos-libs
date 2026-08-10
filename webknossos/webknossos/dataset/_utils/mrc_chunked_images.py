@@ -4,6 +4,7 @@ import numpy as np
 from upath import UPath
 
 from ...utils import WkImportError, is_remote_path
+from ..errors import CorruptImageError, UnsupportedImageDataError
 from .chunked_images import ChunkedImages, register_chunked_images
 
 try:
@@ -54,11 +55,23 @@ class MrcChunkedImages(ChunkedImages):
                 f"Cannot open MRC file from {path}. The path must be a local file path."
             )
 
-        with mrcfile.mmap(str(path), mode="r", permissive=True) as mrc:
+        try:
+            mrc_context = mrcfile.mmap(str(path), mode="r", permissive=True)
+        except Exception as e:
+            # Even in permissive mode mrcfile raises on a header it cannot make
+            # sense of at all, with a multi-line message aimed at developers.
+            raise CorruptImageError(
+                f"Cannot open MRC file {path}. "
+                + "The file is likely corrupted or not a valid MRC file.",
+                path=path,
+            ) from e
+
+        with mrc_context as mrc:
             if mrc.data is None:
-                raise ValueError(
+                raise CorruptImageError(
                     f"Cannot open MRC file {path}. "
-                    + "The file is likely corrupted or not a valid MRC file."
+                    + "The file is likely corrupted or not a valid MRC file.",
+                    path=path,
                 )
             self.dtype: np.dtype = mrc.data.dtype
             ndim = mrc.data.ndim
@@ -68,10 +81,22 @@ class MrcChunkedImages(ChunkedImages):
                 self._z = 1
                 self._y, self._x = mrc.data.shape
             else:
-                raise ValueError(
+                raise UnsupportedImageDataError(
                     f"Unsupported MRC data dimensionality: {ndim}. "
-                    "Only 2D and 3D MRC files are supported."
+                    "Only 2D and 3D MRC files are supported.",
+                    path=path,
                 )
+
+        if 0 in (self._z, self._y, self._x):
+            # In permissive mode mrcfile only warns about a header it cannot
+            # parse and reports an empty extent, which would otherwise convert
+            # into an empty layer or fail much later with an unrelated error.
+            raise CorruptImageError(
+                f"Cannot open MRC file {path}. It describes an empty image "
+                + f"({self._x}×{self._y}×{self._z}), so the file is likely "
+                + "corrupted or not a valid MRC file.",
+                path=path,
+            )
 
         self.num_channels = 1
 

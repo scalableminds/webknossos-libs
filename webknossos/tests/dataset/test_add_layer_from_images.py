@@ -16,7 +16,7 @@ import mrcfile
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor, get_executor
-from tifffile import TiffFile
+from tifffile import TiffFile, imwrite
 from upath import UPath
 
 import webknossos as wk
@@ -346,19 +346,60 @@ def test_add_layer_from_images_unsupported_format(tmp_upath: UPath) -> None:
     assert isinstance(error, ValueError)
 
 
-def test_add_layer_from_images_keeps_error_for_corrupt_supported_format(
-    tmp_upath: UPath,
+@pytest.mark.parametrize(
+    "filename,contents,wraps_reader_error",
+    [
+        ("broken.tif", b"not a tiff at all", True),
+        # mrcfile parses this permissively and reports an empty extent instead
+        # of raising, so there is no reader error to wrap — and without the
+        # check the file would convert into an empty layer.
+        ("broken.mrc", b"\x00" * 2048, False),
+        # An HDF5 signature with nothing behind it: the .ims reader gets far
+        # enough to fail deep inside h5py.
+        ("broken.ims", b"\x89HDF\r\n\x1a\n" + b"\x00" * 100, True),
+    ],
+)
+def test_add_layer_from_images_corrupt_file(
+    tmp_upath: UPath, filename: str, contents: bytes, wraps_reader_error: bool
 ) -> None:
-    # pims.open raises UnknownFormatError both for an unreadable format and for
-    # a file every handler choked on, so the format check must go by suffix —
-    # a broken file of a supported format has to keep its original error.
-    corrupt = tmp_upath / "broken.tif"
-    corrupt.write_bytes(b"not a tiff at all")
+    # A damaged file of a *supported* format is the most common upload
+    # failure, and needs a different message than an unsupported format.
+    corrupt = tmp_upath / filename
+    corrupt.write_bytes(contents)
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(wk.CorruptImageError) as excinfo:
+        ds.add_layer_from_images(corrupt, layer_name="color")
+    error = excinfo.value
+    assert error.path == corrupt
+    assert not isinstance(error, wk.UnsupportedImageFormatError)
+    if wraps_reader_error:
+        # The reader's own error stays available for the log.
+        assert error.__cause__ is not None
+
+
+def test_add_layer_from_images_missing_file_is_not_corrupt(tmp_upath: UPath) -> None:
+    # pims.open flattens each handler's exception into a message, so a missing
+    # file reaches the same code path as a damaged one. Telling the user their
+    # file is damaged when it is simply not there would be worse than the
+    # unspecific error they get today.
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
 
     with pytest.raises(ValueError) as excinfo:
-        ds.add_layer_from_images(corrupt, layer_name="color")
-    assert not isinstance(excinfo.value, wk.UnsupportedImageFormatError)
+        ds.add_layer_from_images(tmp_upath / "does_not_exist.tif", layer_name="color")
+    assert not isinstance(excinfo.value, wk.ImageConversionError)
+
+
+def test_add_layer_from_images_rejects_unstorable_dtype(tmp_upath: UPath) -> None:
+    # Float images cannot become a segmentation layer. The dtype comes from the
+    # image, so this is an input problem the user can act on.
+    float_image = tmp_upath / "float.tif"
+    imwrite(str(float_image), np.zeros((8, 8), dtype="float32"))
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(wk.UnsupportedImageDataError, match="float32") as excinfo:
+        ds.add_layer_from_images(float_image, layer_name="seg", category="segmentation")
+    assert isinstance(excinfo.value, ValueError)
 
 
 def test_add_layer_from_images_names_missing_optional_dependency(

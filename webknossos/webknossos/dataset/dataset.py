@@ -764,6 +764,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 reader can convert. Its `missing_extras` attribute names the
                 extras to install when the format would be supported by an
                 optional dependency that is not installed.
+            CorruptImageError: If a file of a supported format could not be
+                read, which usually means it is damaged or incomplete.
+            UnsupportedImageDataError: If the images were read, but their data
+                cannot be stored as requested.
 
         Examples:
             ```
@@ -1174,6 +1178,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 `missing_extras` attribute names the extras to install when the
                 format would be supported by an optional dependency that is not
                 installed.
+            CorruptImageError: If a file of a supported format could not be
+                read, which usually means it is damaged or incomplete.
+            UnsupportedImageDataError: If the images were read, but their data
+                cannot be stored as requested, e.g. a float image converted
+                into a segmentation layer.
         """
 
         return image_conversion.add_layer_from_images(

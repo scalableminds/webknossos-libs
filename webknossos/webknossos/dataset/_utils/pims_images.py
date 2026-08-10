@@ -14,7 +14,11 @@ from upath import UPath
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
-from ..errors import UnsupportedImageFormatError
+from ..errors import (
+    CorruptImageError,
+    UnsupportedImageDataError,
+    UnsupportedImageFormatError,
+)
 from ..layer.view import MagView
 
 # Fix ImageIOReader not handling channels correctly. This might get fixed via
@@ -286,9 +290,10 @@ class PimsImages:
                             UserWarning,
                         )
                 else:
-                    raise RuntimeError(
+                    raise UnsupportedImageDataError(
                         f"Got {len(images.shape)} axes for the images, "
-                        + "but don't have axes information."
+                        + "but don't have axes information.",
+                        path=self._error_path(),
                     )
 
         #########################
@@ -334,6 +339,17 @@ class PimsImages:
         else:
             return str(original_images)
 
+    def _error_path(self) -> UPath | None:
+        """The single input path to blame when opening fails, or None when
+        there is no such path (a pims.FramesSequence was passed in)."""
+        if isinstance(self._original_images, UPath):
+            return self._original_images
+        if isinstance(self._original_images, list) and self._original_images:
+            # A list is opened with a single reader, chosen from the first
+            # image, so that one decides how the whole list is treated.
+            return UPath(self._original_images[0])
+        return None
+
     def _classify_open_failure(self) -> UnsupportedImageFormatError | None:
         """
         Decides whether a failure to open the images means "no reader supports
@@ -359,13 +375,7 @@ class PimsImages:
             get_valid_chunked_image_suffixes,
         )
 
-        path: UPath | None = None
-        if isinstance(self._original_images, UPath):
-            path = self._original_images
-        elif isinstance(self._original_images, list) and self._original_images:
-            # A list is opened with a single reader, chosen from the first
-            # image, so its suffix is the one that decides support.
-            path = UPath(self._original_images[0])
+        path = self._error_path()
         # Only a file's suffix says anything about which readers apply: a
         # directory of images has none (or, worse, a dot in its name), and
         # neither has a path that does not exist at all.
@@ -395,6 +405,42 @@ class PimsImages:
             suffix=suffix,
             supported_suffixes=tuple(sorted(supported_suffixes)),
             missing_extras=tuple(sorted(set(missing.values()))),
+        )
+
+    def _classify_read_failure(self) -> CorruptImageError | None:
+        """
+        Decides whether a failure to open a file of a *supported* format means
+        the file itself is unreadable — damaged or incompletely uploaded, by
+        far the most common cause — as opposed to a problem this class should
+        not put words in the user's mouth about.
+
+        Only runs once _classify_open_failure has ruled out an unsupported
+        format, so reaching here means readers exist for this suffix and none
+        of them could make sense of the contents.
+        """
+        path = self._error_path()
+        if path is None:
+            return None
+        if any(char in str(path) for char in "*?["):
+            # A glob pattern rather than a file: no single file's contents to
+            # blame, and the pattern may not have matched anything at all.
+            return None
+        if not path.is_file():
+            # A missing path keeps its FileNotFoundError-shaped error, and a
+            # directory that yielded nothing readable is not a corrupt file.
+            return None
+        try:
+            with path.open("rb") as file:
+                file.read(1)
+        except OSError:
+            # Not readable at all (permissions, IO error, …). That error is
+            # the honest one and is already among the collected exceptions.
+            return None
+
+        return CorruptImageError(
+            f"Could not read {path}. Its format is supported, so the file is "
+            + "likely damaged or was not written completely.",
+            path=path,
         )
 
     def _disable_pil_image_size_limit(self) -> None:
@@ -462,8 +508,11 @@ class PimsImages:
             )
 
             if images_context_manager is None:
+                first_exception = exceptions[0] if exceptions else None
                 if (unsupported_error := self._classify_open_failure()) is not None:
-                    raise unsupported_error from (exceptions[0] if exceptions else None)
+                    raise unsupported_error from first_exception
+                if (corrupt_error := self._classify_read_failure()) is not None:
+                    raise corrupt_error from first_exception
                 if len(exceptions) == 1:
                     raise exceptions[0]
                 else:
@@ -692,7 +741,7 @@ class PimsImages:
                         VecInt(axes_index, axes=axes_names),
                     )
 
-                raise ValueError(
+                raise UnsupportedImageDataError(
                     "It seems as if you try to load an N-dimensional image from 2D images. This is currently not supported."
                 )
 

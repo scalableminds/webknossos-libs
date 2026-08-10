@@ -9,6 +9,7 @@ import numpy as np
 from upath import UPath
 
 from ...utils import WkImportError, is_remote_path
+from ..errors import CorruptImageError
 from .chunked_images import ChunkedImages, register_chunked_images
 from .pims_images import compute_channel_selection
 
@@ -75,7 +76,17 @@ class ImsChunkedImages(ChunkedImages):
                 f"Cannot open IMS file from {path}. The path must be a local file path."
             )
 
-        file_shape, self.dtype = _read_ims_metadata_quietly(str(path))
+        try:
+            file_shape, self.dtype = _read_ims_metadata_quietly(str(path))
+        except Exception as e:
+            # The reader speaks HDF5, so a damaged or truncated file surfaces
+            # as an OSError/KeyError from h5py deep inside it, which says
+            # nothing useful to whoever uploaded the file.
+            raise CorruptImageError(
+                f"Cannot open IMS file {path}. "
+                + "The file is likely corrupted or not a valid IMS file.",
+                path=path,
+            ) from e
         t, raw_num_channels, self._z, self._y, self._x = file_shape
         self._t = t
 
