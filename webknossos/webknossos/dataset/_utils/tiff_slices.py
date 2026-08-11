@@ -53,9 +53,9 @@ class TiffSlices(NDSliceSequence):
             )
 
             if "c" in self._tiff_axes:
-                self._register_get_slice(self.get_slice_2d, "cyx")
+                self._set_get_slice(self.get_slice_2d, "cyx")
             else:
-                self._register_get_slice(self.get_slice_2d, "yx")
+                self._set_get_slice(self.get_slice_2d, "yx")
 
     def get_slice_2d(self, **ind: int) -> np.ndarray:
         out_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)

@@ -11,7 +11,7 @@ from upath import UPath
 from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError
 from .chunked_image_source import ChunkedImageSource
-from .image_source import compute_channel_selection
+from .image_source import ReadOptions, compute_channel_selection
 from .image_source_registry import register_chunked_image_source
 
 try:
@@ -51,26 +51,8 @@ class ImsImageSource(ChunkedImageSource):
     def class_exts(cls) -> set[str]:
         return {"ims"}
 
-    def __init__(
-        self,
-        path: UPath,
-        *,
-        channel: int | None,
-        swap_xy: bool,
-        flip_x: bool,
-        flip_y: bool,
-        flip_z: bool,
-        is_segmentation: bool,
-    ) -> None:
-        super().__init__(
-            path,
-            channel=channel,
-            swap_xy=swap_xy,
-            flip_x=flip_x,
-            flip_y=flip_y,
-            flip_z=flip_z,
-            is_segmentation=is_segmentation,
-        )
+    def __init__(self, path: UPath, options: ReadOptions) -> None:
+        super().__init__(path, options)
         if is_remote_path(path):
             raise ValueError(
                 f"Cannot open IMS file from {path}. The path must be a local file path."
@@ -91,7 +73,7 @@ class ImsImageSource(ChunkedImageSource):
         self._t = t
 
         self.num_channels, self._channel, self._first_n_channels, possible_channels = (
-            compute_channel_selection(raw_num_channels, channel)
+            compute_channel_selection(raw_num_channels, options.channel)
         )
         self._possible_layers: dict[str, list[int]] = {}
         if possible_channels is not None:

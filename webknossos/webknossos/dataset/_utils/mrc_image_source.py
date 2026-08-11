@@ -6,6 +6,7 @@ from upath import UPath
 from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError, UnsupportedImageDataError
 from .chunked_image_source import ChunkedImageSource
+from .image_source import ReadOptions
 from .image_source_registry import register_chunked_image_source
 
 try:
@@ -30,26 +31,8 @@ class MrcImageSource(ChunkedImageSource):
     def class_exts(cls) -> set[str]:
         return {"mrc", "rec", "st", "map", "ali"}
 
-    def __init__(
-        self,
-        path: UPath,
-        *,
-        channel: int | None,
-        swap_xy: bool,
-        flip_x: bool,
-        flip_y: bool,
-        flip_z: bool,
-        is_segmentation: bool,
-    ) -> None:
-        super().__init__(
-            path,
-            channel=channel,
-            swap_xy=swap_xy,
-            flip_x=flip_x,
-            flip_y=flip_y,
-            flip_z=flip_z,
-            is_segmentation=is_segmentation,
-        )
+    def __init__(self, path: UPath, options: ReadOptions) -> None:
+        super().__init__(path, options)
         if is_remote_path(path):
             raise ValueError(
                 f"Cannot open MRC file from {path}. The path must be a local file path."

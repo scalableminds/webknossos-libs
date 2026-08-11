@@ -1,15 +1,13 @@
-"""Which reader handles which file suffix, for both reading strategies.
+"""Which reader handles which file suffix, and the one way a source is opened.
 
-Two kinds of class register here:
+`open_image_source()` is the single entry point: it picks the reading strategy
+from the suffix and hands back an `ImageSource`, so callers never have to know
+which of the two exists. Two kinds of class register here for it to choose
+between:
 
-* slice readers (`SliceSequence` subclasses), opened by `open_images()` and
-  driven by `SlicedImageSource`;
-* `ChunkedImageSource` subclasses, opened directly by
-  `try_open_chunked_image_source()`.
-
-They are separate mechanisms — a suffix belongs to one or the other — but every
-caller has to consult both, and both handle a reader whose optional dependency
-is missing the same way, so they live together.
+* slice readers (`SliceSequence` subclasses), which `SlicedImageSource` drives
+  slice by slice;
+* `ChunkedImageSource` subclasses, which read shard-sized blocks themselves.
 
 A reader with a missing dependency never imports and so never registers. That
 would leave its formats silently absent from the supported list, which is why
@@ -27,6 +25,7 @@ from os import environ
 from upath import UPath
 
 from .chunked_image_source import ChunkedImageSource
+from .image_source import ImageSource, ReadOptions
 from .slice_sequence import SliceSequence
 
 
@@ -116,53 +115,30 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     )
 
 
-def try_open_chunked_image_source(
-    images: UPath | list[UPath],
-    *,
-    channel: int | None,
-    swap_xy: bool,
-    flip_x: bool,
-    flip_y: bool,
-    flip_z: bool,
-    is_segmentation: bool,
-    **format_kwargs: int | None,
-) -> ChunkedImageSource | None:
-    """
-    Returns a ChunkedImageSource if `images` is a single path whose suffix a
-    registered chunk-based format handles, else None — leaving the caller to
-    fall back to the other strategy. Chunk-based formats are inherently
-    single-file, so a list of paths is never one.
+def open_image_source(
+    images: UPath | list[UPath], options: ReadOptions
+) -> ImageSource:
+    """Opens `images` as an `ImageSource`, choosing the reading strategy itself.
 
-    `format_kwargs` may carry knobs only some formats understand (e.g.
-    czi_channel); each is passed on only to a class that declares it in
-    class_open_kwargs, so callers can pass all of them unconditionally.
+    A single file whose suffix a chunk-based format claims is read that way.
+    Everything else is read slice by slice — including every list of paths,
+    since chunk-based formats are inherently single-file, and callers normalize
+    to UPath before getting here (see `_normalize_images_argument`).
+
+    This is the only place the two strategies are told apart, so no caller has
+    to ask which kind of source it is holding.
     """
-    # Callers normalize paths to UPath before getting here (see
-    # _normalize_images_argument), so a list of paths is by definition not a
-    # single chunk-based file.
-    # Remote UPaths deliberately do reach the reader, which raises its own
-    # "must be a local file path" error via is_remote_path.
-    if not isinstance(images, UPath):
-        return None
-    path = images
-    suffix = path.suffix.lstrip(".").lower()
-    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
-        if suffix in cls.class_exts():
-            return cls(
-                path,
-                **{
-                    name: value
-                    for name, value in format_kwargs.items()
-                    if name in cls.class_open_kwargs
-                },
-                channel=channel,
-                swap_xy=swap_xy,
-                flip_x=flip_x,
-                flip_y=flip_y,
-                flip_z=flip_z,
-                is_segmentation=is_segmentation,
-            )
-    return None
+    # Deferred to avoid a cycle: SlicedImageSource consults this registry.
+    from .sliced_image_source import SlicedImageSource
+
+    if isinstance(images, UPath):
+        suffix = images.suffix.lstrip(".").lower()
+        for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
+            if suffix in cls.class_exts():
+                # Remote UPaths deliberately do reach the reader, which raises
+                # its own "must be a local file path" error via is_remote_path.
+                return cls(images, options)
+    return SlicedImageSource(images, options)
 
 
 # The extra and suffixes each optional reader is responsible for, for both

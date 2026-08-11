@@ -32,7 +32,7 @@ class _ZcyxReader(NDSliceSequence):
         super().__init__()
         for axis, size in zip("zcyx", _VOLUME.shape):
             self._init_axis(axis, size)
-        self._register_get_slice(self._get_slice, "zcyx")
+        self._set_get_slice(self._get_slice, "zcyx")
 
     def _get_slice(self, **ind: int) -> np.ndarray:
         del ind
@@ -52,7 +52,7 @@ class _YxcReader(NDSliceSequence):
         self._init_axis("y", _VOLUME.shape[2])
         self._init_axis("x", _VOLUME.shape[3])
         self._init_axis("c", _VOLUME.shape[1])
-        self._register_get_slice(self._get_slice, "yxc")
+        self._set_get_slice(self._get_slice, "yxc")
 
     def _get_slice(self, **ind: int) -> np.ndarray:
         # (c, y, x) -> (y, x, c) for the requested z
@@ -119,8 +119,8 @@ def test_iter_axes_last_axis_varies_fastest() -> None:
         np.testing.assert_array_equal(reader.get_slice(i), _VOLUME[i // 3, i % 3])
 
 
-def test_resolver_drops_surplus_axes() -> None:
-    # "zcyx" registered, "yx" requested: z and c must be indexed away using
+def test_adapter_drops_surplus_axes() -> None:
+    # "zcyx" declared, "yx" requested: z and c must be indexed away using
     # the iter coordinate and default_coords respectively. This is the path
     # the DM3/DM4 readers rely on.
     reader = _ZcyxReader()
@@ -132,8 +132,8 @@ def test_resolver_drops_surplus_axes() -> None:
         np.testing.assert_array_equal(reader.get_slice(z), _VOLUME[z, 2])
 
 
-def test_resolver_transposes_to_requested_order() -> None:
-    # "yxc" registered, "cyx" requested — the CZI reader's case.
+def test_adapter_transposes_to_requested_order() -> None:
+    # "yxc" declared, "cyx" requested.
     reader = _YxcReader()
     reader.bundle_axes = ["c", "y", "x"]
     reader.iter_axes = ["z"]
@@ -142,14 +142,14 @@ def test_resolver_transposes_to_requested_order() -> None:
         np.testing.assert_array_equal(reader.get_slice(z), _VOLUME[z])
 
 
-def test_resolver_bundles_missing_axes() -> None:
-    # "yxc" registered, but "z" is requested as part of the slice, so the
-    # resolver has to loop over z and stack the results.
+def test_adapter_rejects_axes_the_reader_cannot_produce() -> None:
+    # "yxc" declared, but "z" is asked for as part of the slice. A reader
+    # declares one method covering every axis it can produce, so this is a
+    # reader bug rather than something to paper over by looping — refusing
+    # keeps it from surfacing later as a silently mis-shaped array.
     reader = _YxcReader()
-    reader.bundle_axes = ["z", "c", "y", "x"]
-    reader.iter_axes = []
-
-    np.testing.assert_array_equal(reader.get_slice(0), _VOLUME)
+    with pytest.raises(ValueError, match=r"\['z'\] were requested"):
+        reader.bundle_axes = ["z", "c", "y", "x"]
 
 
 def test_get_slice_rejects_out_of_range_index() -> None:

@@ -198,8 +198,8 @@ class StackedFileSlices(NDSliceSequence):
 
     @bundle_axes.setter
     def bundle_axes(self, value: Iterable[str]) -> None:
-        """Overrides the base class' resolver, because `_get_seq_slice` defers
-        the axis bundling to the per-file reader."""
+        """Overrides the base class' adapter, because `_get_seq_slice` defers
+        the axis handling to the per-file reader."""
         value = list(value)
         if invalid := [k for k in value if k not in self._sizes]:
             raise ValueError(f"axes {invalid!r} do not exist")

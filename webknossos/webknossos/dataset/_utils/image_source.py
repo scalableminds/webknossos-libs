@@ -24,7 +24,8 @@ should point at this file rather than at each other.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field, replace
 from typing import NamedTuple
 
 from numpy.typing import DTypeLike
@@ -32,6 +33,56 @@ from numpy.typing import DTypeLike
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ..layer.view import MagView
+
+
+@dataclass(frozen=True)
+class ReadOptions:
+    """Everything the caller chose about how to read a source.
+
+    Passed through as one value rather than as seven arguments, because every
+    layer between `add_layer_from_images` and a reader's constructor has to
+    carry all of them unchanged.
+    """
+
+    channel: int | None = None
+    """The channel to convert, or None for all of them. What a source ends up
+    doing with it is `compute_channel_selection`'s business — see
+    `ImageSource.channel`."""
+
+    swap_xy: bool = False
+    flip_x: bool = False
+    flip_y: bool = False
+    flip_z: bool = False
+    """See `ImageSource.copy_chunk_to_view` for what these mean exactly; the
+    flips are named for the *output* axis they mirror."""
+
+    is_segmentation: bool = False
+    """Only affects how ambiguous axis orders are guessed (a leading axis of
+    length 3 is colour in an image, but z in a segmentation)."""
+
+    format_options: Mapping[str, int | None] = field(default_factory=dict)
+    """Knobs only some formats understand, e.g. `czi_channel`. Sources read
+    the ones they know by name and ignore the rest, so callers can pass all of
+    them unconditionally."""
+
+    def format_option(self, name: str) -> int | None:
+        return self.format_options.get(name)
+
+    def with_layer_selection(self, selection: Mapping[str, int]) -> ReadOptions:
+        """The same options with one combination from `get_possible_layers()`
+        applied, for re-opening the source as a layer of its own.
+
+        `channel` is a standard option; every other key is format-specific and
+        goes to whichever source declared it.
+        """
+        return replace(
+            self,
+            channel=selection.get("channel", self.channel),
+            format_options={
+                **self.format_options,
+                **{k: v for k, v in selection.items() if k != "channel"},
+            },
+        )
 
 
 class ChannelSelection(NamedTuple):
@@ -114,8 +165,8 @@ class ImageSource(ABC):
         `{"channel": [0, 1, 2]}`, or None when there is nothing to split.
 
         `add_layer_from_images` re-opens the source once per combination when
-        `allow_multiple_layers=True`, passing the value back as the matching
-        keyword argument.
+        `allow_multiple_layers=True`, passing the value back under the same
+        name via `ReadOptions.with_layer_selection()`.
         """
 
     @property

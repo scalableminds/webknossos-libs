@@ -20,7 +20,12 @@ from ..errors import (
     UnsupportedImageFormatError,
 )
 from ..layer.view import MagView
-from .image_source import ChunkResult, ImageSource, compute_channel_selection
+from .image_source import (
+    ChunkResult,
+    ImageSource,
+    ReadOptions,
+    compute_channel_selection,
+)
 from .image_source_registry import (
     describe_missing_extras,
     get_unavailable_suffixes,
@@ -50,12 +55,7 @@ class SlicedImageSource(ImageSource):
     def __init__(
         self,
         image_paths: UPath | list[UPath],
-        channel: int | None,
-        swap_xy: bool,
-        flip_x: bool,
-        flip_y: bool,
-        flip_z: bool,
-        is_segmentation: bool,
+        options: ReadOptions,
     ) -> None:
         """
         During initialization the readers are examined and configured to produce
@@ -77,17 +77,14 @@ class SlicedImageSource(ImageSource):
         # `images` below always refers to an opened reader, never to this
         # argument.
         self._original_images = image_paths
+        self._options = options
 
-        ## arguments as inner attributes
-        self._channel = channel
+        ## the requested channel; replaced below by the resolved one
+        self._channel = options.channel
         # Only ever set by the 5D fallback below, which cannot expose a "t"
         # axis and therefore pins the first timepoint. Readers that name
         # their dimensions leave this None and keep "t" as an iter axis.
         self._timepoint: int | None = None
-        self._swap_xy = swap_xy
-        self._flip_x = flip_x
-        self._flip_y = flip_y
-        self._flip_z = flip_z
 
         ## attributes that will be set in __init__()
         self._iter_axes: list[str] = []
@@ -156,7 +153,7 @@ class SlicedImageSource(ImageSource):
                 # Fallback for flat readers that do not name their dimensions
                 # as NDSliceSequence does:
 
-                _allow_channels_first = not is_segmentation
+                _allow_channels_first = not options.is_segmentation
                 if isinstance(images, MultiImageSlices | StackedFileSlices):
                     _allow_channels_first = False
 
@@ -492,7 +489,7 @@ class SlicedImageSource(ImageSource):
                     )
                     upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
                     images = images[lower_bounds:upper_bounds]
-                if self._flip_z:
+                if self._options.flip_z:
                     images = images[::-1]
 
                 with mag_view.get_buffered_slice_writer(
@@ -522,16 +519,16 @@ class SlicedImageSource(ImageSource):
                                 + f"{self.num_channels} which are expected in the first axis."
                             )
 
-                        if self._flip_x:
+                        if self._options.flip_x:
                             image_slice = np.flip(image_slice, -2)
-                        if self._flip_y:
+                        if self._options.flip_y:
                             image_slice = np.flip(image_slice, -1)
 
                         if dtype is not None:
                             image_slice = image_slice.astype(dtype, order="F")
 
                         max_value = max(max_value, image_slice.max())
-                        if self._swap_xy is False:
+                        if self._options.swap_xy is False:
                             image_slice = np.moveaxis(image_slice, -1, -2)
 
                         shapes.append(image_slice.shape[-2:])
@@ -589,7 +586,7 @@ class SlicedImageSource(ImageSource):
                     z_shape = images_shape[z_index]
                 else:
                     z_shape = 1
-                if self._swap_xy:
+                if self._options.swap_xy:
                     x_index, y_index = y_index, x_index
                 return BoundingBox(
                     (0, 0, 0),
@@ -614,7 +611,7 @@ class SlicedImageSource(ImageSource):
                     axes_index = list(range(0, len(axes_names)))
                     topleft = VecInt.zeros(tuple(axes_names))
 
-                    if self._swap_xy:
+                    if self._options.swap_xy:
                         x_index, y_index = axes_names.index("x"), axes_names.index("y")
                         axes_sizes[x_index], axes_sizes[y_index] = (
                             axes_sizes[y_index],
@@ -710,21 +707,3 @@ def dimwise_max(vectors: Sequence[T]) -> T:
         return vectors[0]
     else:
         return cast(T, tuple(map(max, *vectors)))
-
-
-def has_image_z_dimension(
-    filepath: UPath,
-    is_segmentation: bool,
-) -> bool:
-    sliced_image_source = SlicedImageSource(
-        filepath,
-        is_segmentation=is_segmentation,
-        # the following arguments shouldn't matter much for the Dataset.from_images method:
-        channel=None,
-        swap_xy=False,
-        flip_x=False,
-        flip_y=False,
-        flip_z=False,
-    )
-
-    return sliced_image_source.expected_bbox.get_shape("z") > 1
