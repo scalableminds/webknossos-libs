@@ -1,7 +1,5 @@
 """Base classes for slice-by-slice image readers.
 
-These replace the parts of `pims` that this library used to depend on
-(`pims.FramesSequence`, `pims.FramesSequenceND` and `slicerator.Slicerator`).
 Only the behavior the conversion path actually relies on is implemented:
 
 * random access to numbered slices, plus lazy slicing of a reader,
@@ -9,8 +7,8 @@ Only the behavior the conversion path actually relies on is implemented:
   resolver that maps a reader's registered `get_slice` onto whatever axes the
   caller asked for.
 
-Unlike pims, slices are plain `np.ndarray`s — there is no `pims.Frame` wrapper
-and no per-slice metadata, because nothing downstream reads it.
+Slices are plain `np.ndarray`s, with no wrapper type and no per-slice
+metadata, because nothing downstream reads any.
 """
 
 from __future__ import annotations
@@ -34,8 +32,8 @@ class SliceSequence(ABC):
     """
 
     # Consulted by `open_images()` to pick between readers that claim the same
-    # suffix; higher wins. The value mirrors pims' convention, where 10 was the
-    # default for its built-in readers.
+    # suffix; higher wins. 10 is the baseline, so a reader meant to take
+    # precedence over the general-purpose ones sets something above it.
     class_priority: int = 10
 
     @classmethod
@@ -110,10 +108,9 @@ def _resolve_indices(key: slice | Sequence[int] | np.ndarray, length: int) -> li
 class _SlicedView:
     """A lazy view on a subset of a `SliceSequence`'s slices.
 
-    Replaces `slicerator.Slicerator`: it only has to support what
-    `SlicedImageSource.copy_chunk_to_view` does — slicing, reversal (`[::-1]`), chained
-    slicing of the result, `len()` and iteration — so no slice is read until it
-    is actually iterated over.
+    Supports exactly what `SlicedImageSource.copy_chunk_to_view` needs —
+    slicing, reversal (`[::-1]`), chained slicing of the result, `len()` and
+    iteration — and reads no slice until it is actually iterated over.
     """
 
     def __init__(self, source: SliceSequence, indices: Sequence[int]) -> None:
@@ -206,9 +203,9 @@ def _make_get_slice(
     """Builds a function returning slices with exactly `result_axes`, out of
     the reader methods registered for other axis combinations.
 
-    Preference order, matching pims: an exact match (possibly transposed), then
-    reading no more data than needed (bundling extra axes), then avoiding
-    iteration (dropping surplus axes), then the cheapest combination of both.
+    Preference order: an exact match (possibly transposed), then reading no
+    more data than needed (bundling extra axes), then avoiding iteration
+    (dropping surplus axes), then the cheapest combination of both.
     """
     methods = list(get_slice_dict.keys())
     result_axes = list(result_axes)

@@ -1,8 +1,7 @@
 """Readers for common 2D raster images, and for sequences of image files.
 
-These replace `pims.ImageReader`, `pims.ImageSequence` and
-`pims.StackedFileSlices`. Decoding is delegated to `imageio`, which is what pims
-used as well, so the resulting arrays are unchanged.
+Decoding is delegated to `imageio`; these classes only handle which files to
+read, in what order, and how to present them as one sequence of slices.
 """
 
 from __future__ import annotations
@@ -73,11 +72,11 @@ def _collect_files(
     into the list of files to read, in the order they should be read."""
     if not isinstance(path_spec, str):
         filepaths = [str(i) for i in path_spec]
-        # Inherited asymmetry: pims' StackedFileSlices re-sorted an explicitly
-        # passed list, its ImageSequence did not. Kept as-is so no existing
-        # conversion changes its z order — note that for StackedFileSlices this
-        # means a custom `z_slices_sort_key` given to `Dataset.from_images`
-        # does not survive.
+        # Deliberate asymmetry: StackedFileSlices re-sorts an explicitly
+        # passed list, MultiImageSlices does not. Both orders are long-standing,
+        # and changing either would silently reorder z in existing conversions.
+        # The cost is that for StackedFileSlices a custom `z_slices_sort_key`
+        # given to `Dataset.from_images` does not survive.
         if sort_explicit_lists:
             filepaths.sort(key=_natsort_key)
         return filepaths, None

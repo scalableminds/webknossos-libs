@@ -1,8 +1,7 @@
 """Registry mapping file suffixes to slice-by-slice image readers.
 
-Replaces `pims.open()`. Readers opt in with `@register_image_reader` instead of
-being discovered by walking subclasses, mirroring the `register_chunked_image_source`
-pattern in `chunked_image_source.py`.
+Readers opt in with `@register_image_reader`, mirroring the
+`register_chunked_image_source` pattern in `chunked_image_source.py`.
 """
 
 from __future__ import annotations
