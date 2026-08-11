@@ -53,13 +53,12 @@ from ..layer.abstract_layer import (
     channels_fit_one_layer,
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
-from . import sliced_image_source
-from .chunked_image_source import ChunkedImageSource
+from .image_source import ImageSource, ReadOptions
 from .image_source_registry import (
     describe_missing_extras,
     get_unavailable_suffixes,
     get_valid_suffixes,
-    try_open_chunked_image_source,
+    open_image_source,
 )
 from .raster_slices import SingleImageSlices
 from .segmentation_recognition import (
@@ -258,23 +257,13 @@ def _has_image_z_dimension(
     filepath: UPath,
     is_segmentation: bool,
 ) -> bool:
-    # Formats handled by a registered ChunkedImageSource subclass (e.g. .ims) are
-    # never probed through SlicedImageSource — they know their exact
-    # expected_bbox directly, and this is the only way such files are read.
-    chunked_image_source = try_open_chunked_image_source(
-        filepath,
-        channel=None,
-        swap_xy=False,
-        flip_x=False,
-        flip_y=False,
-        flip_z=False,
-        is_segmentation=is_segmentation,
+    # Only is_segmentation matters here: it decides how an ambiguous leading
+    # axis is read, and so whether the file looks 3D at all. The remaining
+    # options do not affect the z extent.
+    image_source = open_image_source(
+        filepath, ReadOptions(is_segmentation=is_segmentation)
     )
-    if chunked_image_source is not None:
-        return chunked_image_source.expected_bbox.get_shape("z") > 1
-    return sliced_image_source.has_image_z_dimension(
-        filepath, is_segmentation=is_segmentation
-    )
+    return image_source.expected_bbox.get_shape("z") > 1
 
 
 def from_images(
@@ -511,54 +500,19 @@ def add_layer_from_images(
     else:
         user_set_category = True
 
-    def _open_chunked_images(open_kwargs: dict) -> ChunkedImageSource | None:
-        # Chunk-based formats know their exact bounding box from metadata
-        # alone and read/write whole shard-sized blocks directly. czi_channel
-        # is only meaningful to one of them, and is dropped for the rest by
-        # try_open_chunked_image_source itself.
-        return try_open_chunked_image_source(
-            image_paths,
-            channel=open_kwargs.get("channel", channel),
-            czi_channel=open_kwargs.get("czi_channel", czi_channel),
-            swap_xy=swap_xy,
-            flip_x=flip_x,
-            flip_y=flip_y,
-            flip_z=flip_z,
-            is_segmentation=category == "segmentation",
-        )
+    # czi_channel is meaningful to one reader only; sources that do not know
+    # the name simply ignore it, so it needs no special handling here.
+    read_options = ReadOptions(
+        channel=channel,
+        swap_xy=swap_xy,
+        flip_x=flip_x,
+        flip_y=flip_y,
+        flip_z=flip_z,
+        is_segmentation=category == "segmentation",
+        format_options={"czi_channel": czi_channel},
+    )
 
-    def _reopen_image_source(
-        open_kwargs: dict,
-    ) -> sliced_image_source.SlicedImageSource | ChunkedImageSource:
-        chunked = _open_chunked_images(open_kwargs)
-        if chunked is not None:
-            return chunked
-        # `channel` is the only split a sliced source can offer, so the other
-        # keys in open_kwargs (czi_channel) are for the chunked path above.
-        return sliced_image_source.SlicedImageSource(
-            image_paths,
-            channel=open_kwargs.get("channel", channel),
-            swap_xy=swap_xy,
-            flip_x=flip_x,
-            flip_y=flip_y,
-            flip_z=flip_z,
-            is_segmentation=category == "segmentation",
-        )
-
-    image_source: sliced_image_source.SlicedImageSource | ChunkedImageSource
-    chunked_image_source = _open_chunked_images({"channel": channel})
-    if chunked_image_source is not None:
-        image_source = chunked_image_source
-    else:
-        image_source = sliced_image_source.SlicedImageSource(
-            image_paths,
-            channel=channel,
-            swap_xy=swap_xy,
-            flip_x=flip_x,
-            flip_y=flip_y,
-            flip_z=flip_z,
-            is_segmentation=category == "segmentation",
-        )
+    image_source: ImageSource = open_image_source(image_paths, read_options)
     possible_layers = image_source.get_possible_layers()
     # The dtype the layer will be written with decides whether its channels can
     # share one layer, so an explicit `dtype` argument counts here too.
@@ -642,15 +596,13 @@ def add_layer_from_images(
         )
     for _, (
         layer_name_suffix,
-        reader_open_kwargs,
+        layer_selection,
     ) in zip(range(max_layers), suffix_with_open_kwargs_per_layer.items()):
-        # If reader_open_kwargs is empty there's no need to re-open the images:
-        if len(reader_open_kwargs) > 0:
-            # Set parameters from this method as default
-            # if they are not part of the kwargs per layer:
-            reader_open_kwargs.setdefault("channel", channel)  # type: ignore
-            reader_open_kwargs.setdefault("czi_channel", czi_channel)  # type: ignore
-            image_source = _reopen_image_source(reader_open_kwargs)
+        # If layer_selection is empty there's no need to re-open the images:
+        if len(layer_selection) > 0:
+            image_source = open_image_source(
+                image_paths, read_options.with_layer_selection(layer_selection)
+            )
         if dtype is None:
             current_dtype = np.dtype(image_source.dtype)
             if current_dtype.byteorder == ">":

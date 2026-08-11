@@ -29,9 +29,9 @@ class Dm3Slices(NDSliceSequence):
         self._init_axis("y", dm3_file.height)
         if dm3_file.depth > 1:
             self._init_axis("z", dm3_file.depth)
-            self._register_get_slice(self._get_slice, "zyx")
+            self._set_get_slice(self._get_slice, "zyx")
         else:
-            self._register_get_slice(self._get_slice, "yx")
+            self._set_get_slice(self._get_slice, "yx")
 
     @property  # potential @cached_property for py3.8+
     def pixel_type(self) -> np.dtype:
@@ -76,10 +76,10 @@ class Dm4Slices(NDSliceSequence):
             self._init_axis("x", self._shape[0])
             self._init_axis("y", self._shape[1])
             if len(self._shape) == 2:
-                self._register_get_slice(self._get_slice, "yx")
+                self._set_get_slice(self._get_slice, "yx")
             else:
                 self._init_axis("z", self._shape[2])
-                self._register_get_slice(self._get_slice, "zyx")
+                self._set_get_slice(self._get_slice, "zyx")
 
     @contextmanager
     def dm4_file(self) -> Iterator[DM4File]:

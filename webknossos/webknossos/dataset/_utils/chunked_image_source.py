@@ -12,7 +12,7 @@ from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
-from .image_source import ChunkResult, ImageSource
+from .image_source import ChunkResult, ImageSource, ReadOptions
 
 
 class ChunkedImageSource(ImageSource):
@@ -47,31 +47,12 @@ class ChunkedImageSource(ImageSource):
     _include_t_axis: bool = False
     _fixed_timepoint: int | None = 0
 
-    def __init__(
-        self,
-        path: UPath,
-        *,
-        channel: int | None,
-        swap_xy: bool,
-        flip_x: bool,
-        flip_y: bool,
-        flip_z: bool,
-        is_segmentation: bool,
-    ) -> None:
+    def __init__(self, path: UPath, options: ReadOptions) -> None:
         self.path = path
-        self._channel = channel
-        self._swap_xy = swap_xy
-        self._flip_x = flip_x
-        self._flip_y = flip_y
-        self._flip_z = flip_z
-        self._is_segmentation = is_segmentation
-
-    class_open_kwargs: frozenset[str] = frozenset()
-    """Format-specific keyword arguments this class accepts in addition to the
-    standard ones, e.g. {"czi_channel"}. These are the names a subclass may
-    return from get_possible_layers(): add_layer_from_images re-opens the
-    source with each value in turn, passing it back under the same name, and
-    try_open_chunked_image_source() forwards only the names declared here."""
+        self._options = options
+        # The requested channel; subclasses replace it with the resolved one
+        # from compute_channel_selection().
+        self._channel = options.channel
 
     @classmethod
     @abstractmethod
@@ -121,7 +102,7 @@ class ChunkedImageSource(ImageSource):
         Always well-defined — it never has to reject an axis combination.
         """
         x_size, y_size = self._x, self._y
-        if self._swap_xy:
+        if self._options.swap_xy:
             x_size, y_size = y_size, x_size
 
         if not self._include_t_axis and self.num_channels == 1:
@@ -159,6 +140,7 @@ class ChunkedImageSource(ImageSource):
         All axis bookkeeping — mag, swap_xy, flips, channel and timepoint
         placement — lives here, so subclasses only implement _read_source_box.
         """
+        options = self._options
         relative_bbox = bbox.offset(-mag_view.bounding_box.topleft)
 
         if "t" in relative_bbox.axes:
@@ -180,7 +162,7 @@ class ChunkedImageSource(ImageSource):
         out_y_start, out_y_end = relative_bbox.get_bounds("y")
         z_start, z_end = relative_bbox.get_bounds("z")
         z_start, z_end = z_start // mag_vec.z, z_end // mag_vec.z
-        if self._swap_xy:
+        if options.swap_xy:
             source_y_start, source_y_end = (
                 out_x_start // mag_vec.x,
                 out_x_end // mag_vec.x,
@@ -207,15 +189,15 @@ class ChunkedImageSource(ImageSource):
         # wrong as soon as it spans several.
         # flip_x/-y are named for the output axis they mirror, so flip_x
         # mirrors the source's y axis and flip_y mirrors its x axis.
-        if self._flip_z:
+        if options.flip_z:
             read_z = slice(self._z - z_end, self._z - z_start)
         else:
             read_z = slice(z_start, z_end)
-        if self._flip_x:
+        if options.flip_x:
             read_y = slice(self._y - source_y_end, self._y - source_y_start)
         else:
             read_y = slice(source_y_start, source_y_end)
-        if self._flip_y:
+        if options.flip_y:
             read_x = slice(self._x - source_x_end, self._x - source_x_start)
         else:
             read_x = slice(source_x_start, source_x_end)
@@ -224,11 +206,11 @@ class ChunkedImageSource(ImageSource):
 
         # Mirrored read ranges -> correct output order, in source axis order
         # (c, z, y, x).
-        if self._flip_z:
+        if options.flip_z:
             block = block[:, ::-1]
-        if self._flip_x:
+        if options.flip_x:
             block = block[:, :, ::-1]
-        if self._flip_y:
+        if options.flip_y:
             block = block[:, :, :, ::-1]
 
         # Transpose to mag_view.write() convention (c, x, y, z).
@@ -236,7 +218,7 @@ class ChunkedImageSource(ImageSource):
         # swap_xy=True:            (c, z, y, x) → (c, y, x, z)
         block = (
             block.transpose(0, 3, 2, 1)
-            if not self._swap_xy
+            if not options.swap_xy
             else block.transpose(0, 2, 3, 1)
         )
 

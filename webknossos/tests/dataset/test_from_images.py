@@ -27,6 +27,7 @@ from webknossos.dataset import (
     UnsupportedImageFormatError,
 )
 from webknossos.dataset._utils.czi_image_source import CziImageSource
+from webknossos.dataset._utils.image_source import ReadOptions
 from webknossos.dataset._utils.mrc_image_source import MrcImageSource
 from webknossos.dataset._utils.tiff_slices import TiffSlices
 from webknossos.geometry import BoundingBox, Vec3Int, VecInt
@@ -331,15 +332,7 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
 
 
 def _open_mrc_chunked_images(mrc_path: UPath) -> MrcImageSource:
-    return MrcImageSource(
-        mrc_path,
-        channel=None,
-        swap_xy=False,
-        flip_x=False,
-        flip_y=False,
-        flip_z=False,
-        is_segmentation=False,
-    )
+    return MrcImageSource(mrc_path, ReadOptions())
 
 
 def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
@@ -542,17 +535,8 @@ def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
     assert isinstance(error, ValueError)
 
 
-def _open_czi_image_source(path: UPath, **kwargs: Any) -> CziImageSource:
-    return CziImageSource(
-        path,
-        channel=kwargs.pop("channel", None),
-        swap_xy=kwargs.pop("swap_xy", False),
-        flip_x=kwargs.pop("flip_x", False),
-        flip_y=kwargs.pop("flip_y", False),
-        flip_z=kwargs.pop("flip_z", False),
-        is_segmentation=False,
-        **kwargs,
-    )
+def _open_czi_image_source(path: UPath, **options: Any) -> CziImageSource:
+    return CziImageSource(path, ReadOptions(**options))
 
 
 def test_czi_image_source_metadata(tmp_upath: UPath) -> None:

@@ -4,8 +4,8 @@ Only the behavior the conversion path actually relies on is implemented:
 
 * random access to numbered slices, plus lazy slicing of a reader,
 * named axes with `bundle_axes` / `iter_axes` / `default_coords`, and the
-  resolver that maps a reader's registered `get_slice` onto whatever axes the
-  caller asked for.
+  adapter that narrows a reader's `get_slice` to whatever axes the caller
+  asked for.
 
 Slices are plain `np.ndarray`s, with no wrapper type and no per-slice
 metadata, because nothing downstream reads any.
@@ -13,7 +13,6 @@ metadata, because nothing downstream reads any.
 
 from __future__ import annotations
 
-import itertools
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Any
@@ -149,29 +148,6 @@ def _transpose(
     return get_slice_transposed
 
 
-def _bundle(
-    get_slice: GetSlice,
-    expected_axes: Sequence[str],
-    to_iter: Sequence[str],
-    sizes: dict[str, int],
-    dtype: DTypeLike,
-) -> tuple[GetSlice, list[str]]:
-    """Wraps `get_slice` so it also covers `to_iter`, by looping over those
-    axes and stacking the results into one array."""
-    bundled_axes = list(to_iter) + list(expected_axes)
-    shape = [sizes[a] for a in bundled_axes]
-    iter_shape = shape[: len(to_iter)]
-
-    def get_slice_bundled(**ind: int) -> np.ndarray:
-        result = np.empty(shape, dtype=dtype)
-        for indices in itertools.product(*[range(s) for s in iter_shape]):
-            ind.update(dict(zip(to_iter, indices)))
-            result[indices] = get_slice(**ind)
-        return result
-
-    return get_slice_bundled, bundled_axes
-
-
 def _drop(
     get_slice: GetSlice, expected_axes: Sequence[str], to_drop: Sequence[str]
 ) -> tuple[GetSlice, list[str]]:
@@ -194,65 +170,29 @@ def _drop(
     return get_slice_dropped, result_axes
 
 
-def _make_get_slice(
+def _adapt_get_slice(
+    get_slice: GetSlice,
+    source_axes: Sequence[str],
     result_axes: Sequence[str],
-    get_slice_dict: dict[tuple[str, ...], GetSlice],
-    sizes: dict[str, int],
-    dtype: DTypeLike,
 ) -> GetSlice:
-    """Builds a function returning slices with exactly `result_axes`, out of
-    the reader methods registered for other axis combinations.
+    """Adapts a reader's `get_slice` to return exactly `result_axes`.
 
-    Preference order: an exact match (possibly transposed), then reading no
-    more data than needed (bundling extra axes), then avoiding iteration
-    (dropping surplus axes), then the cheapest combination of both.
+    A reader declares one method covering every axis it can produce, and
+    callers only ever ask for a subset of those, so this is: index away the
+    axes that were not asked for — using the coordinate the caller passed for
+    each — then transpose what is left into the requested order.
     """
-    methods = list(get_slice_dict.keys())
+    source_axes = list(source_axes)
     result_axes = list(result_axes)
-    result_axes_set = set(result_axes)
-
-    # A method that already returns the right axes, up to a transposition.
-    for axes in methods:
-        if len(set(axes) ^ result_axes_set) == 0:
-            return _transpose(get_slice_dict[axes], axes, result_axes)
-
-    # Otherwise axes have to be dropped or iterated over. Collect the cost of
-    # both for every registered method.
-    candidates = []
-    for method in methods:
-        axes_set = set(method)
-        to_iter_set = result_axes_set - axes_set
-        to_iter = [x for x in result_axes if x in to_iter_set]  # fix the order
-        n_iter = int(np.prod([sizes[ax] for ax in to_iter]))
-        to_drop = list(axes_set - result_axes_set)
-        n_drop = int(np.prod([sizes[ax] for ax in to_drop]))
-        candidates.append((method, to_iter, n_iter, to_drop, n_drop))
-
-    # Prefer reading no superfluous data (n_drop == 0), fewest iterations first.
-    candidates.sort(key=lambda x: x[2])
-    for method, to_iter, _n_iter, _to_drop, n_drop in candidates:
-        if n_drop > 0:
-            continue
-        get_slice, bundled_axes = _bundle(
-            get_slice_dict[method], method, to_iter, sizes, dtype
+    if missing := [axis for axis in result_axes if axis not in source_axes]:
+        raise ValueError(
+            f"axes {missing!r} were requested but the reader's get_slice only "
+            f"produces {source_axes!r}"
         )
-        return _transpose(get_slice, bundled_axes, result_axes)
-
-    # Then prefer not iterating at all, dropping as few slices as possible.
-    candidates.sort(key=lambda x: x[4])
-    for method, _to_iter, n_iter, to_drop, _n_drop in candidates:
-        if n_iter > 0:
-            continue
-        get_slice, after_drop = _drop(get_slice_dict[method], method, to_drop)
-        return _transpose(get_slice, after_drop, result_axes)
-
-    # Worst case: every method needs both. Take the fewest dropped slices, and
-    # among those the fewest iterations.
-    candidates.sort(key=lambda x: (x[2], x[4]))
-    method, to_iter, _n_iter, to_drop, _n_drop = candidates[0]
-    get_slice, after_drop = _drop(get_slice_dict[method], method, to_drop)
-    get_slice, after_bundle = _bundle(get_slice, after_drop, to_iter, sizes, dtype)
-    return _transpose(get_slice, after_bundle, result_axes)
+    to_drop = [axis for axis in source_axes if axis not in result_axes]
+    if to_drop:
+        get_slice, source_axes = _drop(get_slice, source_axes, to_drop)
+    return _transpose(get_slice, source_axes, result_axes)
 
 
 class DefaultCoordsDict(dict[str, int]):
@@ -276,9 +216,9 @@ class DefaultCoordsDict(dict[str, int]):
 class NDSliceSequence(SliceSequence):
     """A `SliceSequence` whose data has arbitrary named axes.
 
-    Subclasses declare their axes with `_init_axis(name, size)` and register at
-    least one reader method with `_register_get_slice(method, axes)`; they only
-    need to additionally define `pixel_type`. Everything below — `__len__`,
+    Subclasses declare their axes with `_init_axis(name, size)` and their one
+    reader method with `_set_get_slice(method, axes)`; they only need to
+    additionally define `pixel_type`. Everything below — `__len__`,
     `slice_shape`, `get_slice` — is derived from three attributes the caller
     sets:
 
@@ -291,7 +231,10 @@ class NDSliceSequence(SliceSequence):
 
     def __init__(self) -> None:
         self._clear_axes()
-        self._get_slice_dict: dict[tuple[str, ...], GetSlice] = {}
+        # The reader's own get_slice, and the axes it returns. A reader
+        # declares one covering every axis it can produce; `bundle_axes`
+        # narrows it to whatever the caller asked for.
+        self._get_slice_source: tuple[GetSlice, tuple[str, ...]] | None = None
 
     def _clear_axes(self) -> None:
         self._sizes: dict[str, int] = {}
@@ -307,8 +250,9 @@ class NDSliceSequence(SliceSequence):
         self._default_coords.axes = self.axes
         self._default_coords[name] = int(default)
 
-    def _register_get_slice(self, method: GetSlice, axes: Iterable[str]) -> None:
-        self._get_slice_dict[tuple(axes)] = method
+    def _set_get_slice(self, method: GetSlice, axes: Iterable[str]) -> None:
+        """Declares the reader method and the axes it returns."""
+        self._get_slice_source = (method, tuple(axes))
 
     def __len__(self) -> int:
         return int(np.prod([self._sizes[d] for d in self._iter_axes]))
@@ -344,13 +288,13 @@ class NDSliceSequence(SliceSequence):
                 self._iter_axes.remove(k)
 
         self._bundle_axes = value
-        if not self._get_slice_dict:
+        if self._get_slice_source is None:
             raise RuntimeError(
-                "No reader methods found. Register a reader method with "
-                "_register_get_slice"
+                "No reader method found. Declare one with _set_get_slice"
             )
-        self._get_slice_wrapped = _make_get_slice(
-            self._bundle_axes, self._get_slice_dict, self.sizes, self.pixel_type
+        get_slice, source_axes = self._get_slice_source
+        self._get_slice_wrapped = _adapt_get_slice(
+            get_slice, source_axes, self._bundle_axes
         )
 
     @property
