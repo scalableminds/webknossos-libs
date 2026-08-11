@@ -86,19 +86,19 @@ def _image_reader_imports() -> str | None:
     # No optional dependency of its own beyond imageio, which is a hard
     # requirement — but keep it here so every reader registers in one place.
     from . import (
-        dm_readers,  # noqa: F401 unused-import
+        dm_sequence_readers,  # noqa: F401 unused-import
         raster_image_readers,  # noqa: F401 unused-import
     )
 
     try:
-        from .czi_reader import CziReader  # noqa: F401 unused-import
+        from .czi_sequence_reader import CziSequenceReader  # noqa: F401 unused-import
     except ImportError as import_error:
-        import_exceptions.append(f"CziReader: {import_error.msg}")
+        import_exceptions.append(f"CziSequenceReader: {import_error.msg}")
 
     try:
-        from .tiff_reader import TiffReader  # noqa: F401 unused-import
+        from .tiff_sequence_reader import TiffSequenceReader  # noqa: F401 unused-import
     except ImportError as import_error:
-        import_exceptions.append(f"TiffReader: {import_error.msg}")
+        import_exceptions.append(f"TiffSequenceReader: {import_error.msg}")
 
     if import_exceptions:
         return "".join(

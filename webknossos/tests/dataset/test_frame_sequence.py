@@ -1,10 +1,3 @@
-"""Tests for the in-library replacement of pims' reader base classes.
-
-These cover behavior that used to come from `pims.FramesSequence` /
-`pims.FramesSequenceND` / `slicerator.Slicerator`, so it is worth testing
-directly rather than only through image conversion.
-"""
-
 from typing import Any
 
 import numpy as np
@@ -25,7 +18,7 @@ from webknossos.dataset._utils.raster_image_readers import (
     ImageSequenceReader,
     SingleImageReader,
 )
-from webknossos.dataset._utils.tiff_reader import TiffReader
+from webknossos.dataset._utils.tiff_sequence_reader import TiffSequenceReader
 
 # A volume with distinct values everywhere, so a wrong axis order or a wrong
 # index cannot accidentally produce the expected result.
@@ -254,11 +247,11 @@ def test_open_images_dispatches_on_suffix(tmp_upath: UPath) -> None:
 
 
 def test_open_images_prefers_higher_class_priority(tmp_upath: UPath) -> None:
-    # Both TiffReader (19) and, in principle, any lower-priority reader claim
+    # Both TiffSequenceReader (19) and, in principle, any lower-priority reader claim
     # .tif; the dedicated one has to win because it understands axis metadata.
     tif_path = tmp_upath / "single.tif"
     Image.fromarray(np.zeros((4, 6), dtype="uint8")).save(str(tif_path))
-    assert isinstance(open_images(str(tif_path)), TiffReader)
+    assert isinstance(open_images(str(tif_path)), TiffSequenceReader)
 
 
 def test_open_images_rejects_unknown_suffix(tmp_upath: UPath) -> None:

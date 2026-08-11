@@ -29,7 +29,7 @@ PIXEL_TYPE_TO_DTYPE = {
 
 
 @register_image_reader
-class CziReader(NDFrameSequence):
+class CziSequenceReader(NDFrameSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"czi"}

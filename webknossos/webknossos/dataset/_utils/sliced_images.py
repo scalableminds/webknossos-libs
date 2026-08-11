@@ -91,9 +91,9 @@ class SlicedImages:
         images to figure out the shape & num_channels.
         """
         try:
-            from .czi_reader import CziReader
+            from .czi_sequence_reader import CziSequenceReader
         except ImportError:
-            CziReader = type(None)  # type: ignore[misc,assignment]
+            CziSequenceReader = type(None)  # type: ignore[misc,assignment]
 
         # `images` below always refers to an opened reader, never to this
         # argument.
@@ -137,7 +137,7 @@ class SlicedImages:
             if isinstance(images, NDFrameSequence):
                 self._default_coords = {}
 
-                if isinstance(images, CziReader):
+                if isinstance(images, CziSequenceReader):
                     available_czi_channels = images.available_czi_channels()
                     if len(available_czi_channels) > 1:
                         self._possible_layers["czi_channel"] = available_czi_channels

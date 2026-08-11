@@ -14,7 +14,7 @@ except ImportError as e:
 
 
 @register_image_reader
-class TiffReader(NDFrameSequence):
+class TiffSequenceReader(NDFrameSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"tif", "tiff"}

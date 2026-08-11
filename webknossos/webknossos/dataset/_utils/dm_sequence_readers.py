@@ -12,7 +12,7 @@ from .vendor.dm4 import DM4File  # type: ignore[attr-defined]
 
 
 @register_image_reader
-class Dm3Reader(NDFrameSequence):
+class Dm3SequenceReader(NDFrameSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"dm3"}
@@ -44,7 +44,7 @@ class Dm3Reader(NDFrameSequence):
 
 
 @register_image_reader
-class Dm4Reader(NDFrameSequence):
+class Dm4SequenceReader(NDFrameSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"dm4"}
