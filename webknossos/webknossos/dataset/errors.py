@@ -13,15 +13,7 @@ from upath import UPath
 class ImageConversionError(ValueError):
     """Base class for the ways image conversion can fail because of its input.
 
-    Raised by `Dataset.from_images` and `Dataset.add_layer_from_images`. Catch
-    this to handle every such failure at once, or one of its subclasses to tell
-    them apart — they map to different instructions for the user:
-
-    * `UnsupportedImageFormatError`: no reader handles this format at all.
-    * `CorruptImageError`: the format is supported, but the file could not be
-      read — typically damaged or incompletely uploaded.
-    * `UnsupportedImageDataError`: the file was read fine, but its data cannot
-      be stored as requested.
+    Raised by `Dataset.from_images` and `Dataset.add_layer_from_images`.
 
     Subclasses `ValueError`, which the call sites raised before these exceptions
     existed, so `except ValueError` keeps working.
