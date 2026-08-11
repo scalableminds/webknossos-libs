@@ -91,11 +91,6 @@ def _image_reader_imports() -> str | None:
     )
 
     try:
-        from .czi_slices import CziSlices  # noqa: F401 unused-import
-    except ImportError as import_error:
-        import_exceptions.append(f"CziSlices: {import_error.msg}")
-
-    try:
         from .tiff_slices import TiffSlices  # noqa: F401 unused-import
     except ImportError as import_error:
         import_exceptions.append(f"TiffSlices: {import_error.msg}")

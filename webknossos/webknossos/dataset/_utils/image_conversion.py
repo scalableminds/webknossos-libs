@@ -624,12 +624,14 @@ def add_layer_from_images(
         user_set_category = True
 
     def _open_chunked_images(open_kwargs: dict) -> ChunkedImageSource | None:
-        # Chunk-based formats (currently only .ims) know their exact
-        # bounding box from metadata alone and read/write whole
-        # shard-sized blocks directly.
+        # Chunk-based formats know their exact bounding box from metadata
+        # alone and read/write whole shard-sized blocks directly. czi_channel
+        # is only meaningful to one of them, and is dropped for the rest by
+        # try_open_chunked_image_source itself.
         return try_open_chunked_image_source(
             image_paths,
             channel=open_kwargs.get("channel", channel),
+            czi_channel=open_kwargs.get("czi_channel", czi_channel),
             swap_xy=swap_xy,
             flip_x=flip_x,
             flip_y=flip_y,
@@ -643,14 +645,16 @@ def add_layer_from_images(
         chunked = _open_chunked_images(open_kwargs)
         if chunked is not None:
             return chunked
+        # `channel` is the only split a sliced source can offer, so the other
+        # keys in open_kwargs (czi_channel) are for the chunked path above.
         return sliced_image_source.SlicedImageSource(
             image_paths,
+            channel=open_kwargs.get("channel", channel),
             swap_xy=swap_xy,
             flip_x=flip_x,
             flip_y=flip_y,
             flip_z=flip_z,
             is_segmentation=category == "segmentation",
-            **open_kwargs,
         )
 
     image_source: sliced_image_source.SlicedImageSource | ChunkedImageSource
@@ -661,7 +665,6 @@ def add_layer_from_images(
         image_source = sliced_image_source.SlicedImageSource(
             image_paths,
             channel=channel,
-            czi_channel=czi_channel,
             swap_xy=swap_xy,
             flip_x=flip_x,
             flip_y=flip_y,

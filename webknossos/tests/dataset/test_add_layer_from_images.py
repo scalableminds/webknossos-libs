@@ -23,7 +23,11 @@ from upath import UPath
 
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
-from tests.utils import create_synthetic_multi_timepoint_ims, download_ims_fixture
+from tests.utils import (
+    create_synthetic_czi,
+    create_synthetic_multi_timepoint_ims,
+    download_ims_fixture,
+)
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -647,6 +651,119 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
         data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
         for t in range(2):
             assert (data[t] == t * 100 + c).all()
+
+
+# A single shard hides both the multi-shard flip bug and the mag/shard
+# conversion, so every combination is checked at two shard shapes.
+@pytest.mark.parametrize("shard_shape", [(32, 32, 32), (64, 64, 64)])
+@pytest.mark.parametrize("swap_xy", [False, True])
+@pytest.mark.parametrize("flip_x", [False, True])
+@pytest.mark.parametrize("flip_y", [False, True])
+@pytest.mark.parametrize("flip_z", [False, True])
+def test_czi_from_images_flip_and_swap(
+    tmp_upath: UPath,
+    shard_shape: tuple[int, int, int],
+    swap_xy: bool,
+    flip_x: bool,
+    flip_y: bool,
+    flip_z: bool,
+) -> None:
+    # x != y != z so a transposed axis cannot pass by coincidence.
+    czi_path = tmp_upath / "flip.czi"
+    data = create_synthetic_czi(czi_path, z=6, y=40, x=48)[0, 0]  # (z, y, x)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            czi_path,
+            layer_name="czi_layer",
+            flip_x=flip_x,
+            flip_y=flip_y,
+            flip_z=flip_z,
+            swap_xy=swap_xy,
+            data_format="zarr3",
+            chunk_shape=(8, 8, 8),
+            shard_shape=shard_shape,
+            executor=executor,
+        )
+    actual = layer.get_finest_mag().read()[0]
+
+    # flips apply in source axis order (z, y, x): flip_z mirrors z, flip_x
+    # mirrors y and flip_y mirrors x (the ImageSource convention).
+    expected = data
+    if flip_z:
+        expected = expected[::-1]
+    if flip_x:
+        expected = expected[:, ::-1]
+    if flip_y:
+        expected = expected[:, :, ::-1]
+    expected = expected.transpose(1, 2, 0) if swap_xy else expected.transpose(2, 1, 0)
+    np.testing.assert_array_equal(actual, expected)
+
+
+def test_czi_from_images_multi_timepoint(tmp_upath: UPath) -> None:
+    # Timepoints land on a "t" axis within one layer rather than being pinned.
+    czi_path = tmp_upath / "multi_t.czi"
+    data = create_synthetic_czi(czi_path, num_timepoints=3, z=2, y=8, x=10)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            czi_path,
+            layer_name="czi_layer",
+            data_format="zarr3",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.axes == ("t", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (3, 10, 8, 2)
+    actual = layer.get_finest_mag().read()
+    for t in range(3):
+        np.testing.assert_array_equal(actual[t], data[t, 0].transpose(2, 1, 0))
+
+
+def test_czi_from_images_splits_czi_channels_into_layers(tmp_upath: UPath) -> None:
+    # A CZI "C" is a separate acquisition, not a colour channel, so each one
+    # becomes its own layer — and each must carry its own data.
+    czi_path = tmp_upath / "multi_c.czi"
+    data = create_synthetic_czi(czi_path, num_czi_channels=3, z=2, y=8, x=10)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            czi_path,
+            layer_name="czi_layer",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers) == {
+        "czi_layer__czi_channel0",
+        "czi_layer__czi_channel1",
+        "czi_layer__czi_channel2",
+    }
+    for c in range(3):
+        layer = ds.layers[f"czi_layer__czi_channel{c}"]
+        assert layer.num_channels == 1
+        np.testing.assert_array_equal(
+            layer.get_finest_mag().read()[0], data[0, c].transpose(2, 1, 0)
+        )
+
+
+def test_czi_from_images_selects_a_single_czi_channel(tmp_upath: UPath) -> None:
+    czi_path = tmp_upath / "pick_c.czi"
+    data = create_synthetic_czi(czi_path, num_czi_channels=3, z=2, y=8, x=10)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            czi_path, layer_name="czi_layer", czi_channel=2, executor=executor
+        )
+
+    assert len(ds.layers) == 1
+    np.testing.assert_array_equal(
+        layer.get_finest_mag().read()[0], data[0, 2].transpose(2, 1, 0)
+    )
 
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
