@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import DTypeLike
 from upath import UPath
 
 from ...geometry.bounding_box import BoundingBox
+from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
@@ -262,3 +264,37 @@ class ChunkedImageSource(ImageSource):
         return ChunkResult(
             (out_x_end - out_x_start, out_y_end - out_y_start), max_value
         )
+
+    def initial_layer_bounding_box(
+        self, mag1_expected_bbox: NDBoundingBox
+    ) -> NDBoundingBox:
+        """Exact from the start: these formats state their extents in metadata,
+        so there is no placeholder to inflate and nothing to correct later."""
+        return mag1_expected_bbox
+
+    def chunk_grid(
+        self,
+        layer_bounding_box: NDBoundingBox,
+        *,
+        mag_view: MagView,
+        mag: Mag,
+        batch_size: int | None,
+    ) -> list[NDBoundingBox]:
+        """Full 3D shard-aligned chunks, so each job reads exactly one shard's
+        worth of data and writes it directly. Safe to chunk the layer's box
+        because it is the exact one. `batch_size` does not apply."""
+        del batch_size
+        chunked_shard_shape = mag_view.info.shard_shape * mag.to_vec3_int()
+        return list(layer_bounding_box.chunk(chunked_shard_shape, chunked_shard_shape))
+
+    def final_bounding_box(
+        self,
+        layer_bounding_box: NDBoundingBox,
+        *,
+        chunk_sizes: Sequence[tuple[int, int]],
+        mag: Mag,
+    ) -> NDBoundingBox:
+        """Unchanged. Correcting from per-chunk sizes would be actively wrong
+        here: each job reports only its own shard, not the full extent."""
+        del chunk_sizes, mag
+        return layer_bounding_box
