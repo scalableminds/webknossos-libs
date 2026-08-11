@@ -1,7 +1,7 @@
 """Readers for common 2D raster images, and for sequences of image files.
 
 These replace `pims.ImageReader`, `pims.ImageSequence` and
-`pims.ReaderSequence`. Decoding is delegated to `imageio`, which is what pims
+`pims.StackedFileSlices`. Decoding is delegated to `imageio`, which is what pims
 used as well, so the resulting arrays are unchanged.
 """
 
@@ -21,8 +21,8 @@ from imageio import v2 as iio
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 
-from .frame_sequence import FrameSequence, NDFrameSequence
 from .image_reader_registry import register_image_reader
+from .slice_sequence import NDSliceSequence, SliceSequence
 
 _natsort_key = natsort_keygen()
 
@@ -33,11 +33,11 @@ def imread(uri: Any, **kwargs: Any) -> np.ndarray:
 
 
 @register_image_reader
-class SingleImageReader(FrameSequence):
+class SingleImageSlices(SliceSequence):
     """Reads a single 2D raster image into a length-1 sequence.
 
-    Deliberately a flat `FrameSequence` rather than an `NDFrameSequence`:
-    `SlicedImages` derives the axis order of such images from the shape alone,
+    Deliberately a flat `SliceSequence` rather than an `NDSliceSequence`:
+    `SlicedImageSource` derives the axis order of such images from the shape alone,
     which is how these formats have always been handled.
     """
 
@@ -53,8 +53,8 @@ class SingleImageReader(FrameSequence):
     def __len__(self) -> int:
         return 1
 
-    def get_frame(self, i: int) -> np.ndarray:
-        del i  # there is only one frame
+    def get_slice(self, i: int) -> np.ndarray:
+        del i  # there is only one slice
         return self._data
 
     @property
@@ -62,7 +62,7 @@ class SingleImageReader(FrameSequence):
         return self._data.dtype
 
     @property
-    def frame_shape(self) -> tuple[int, ...]:
+    def slice_shape(self) -> tuple[int, ...]:
         return self._data.shape
 
 
@@ -73,9 +73,9 @@ def _collect_files(
     into the list of files to read, in the order they should be read."""
     if not isinstance(path_spec, str):
         filepaths = [str(i) for i in path_spec]
-        # Inherited asymmetry: pims' ReaderSequence re-sorted an explicitly
+        # Inherited asymmetry: pims' StackedFileSlices re-sorted an explicitly
         # passed list, its ImageSequence did not. Kept as-is so no existing
-        # conversion changes its z order — note that for ReaderSequence this
+        # conversion changes its z order — note that for StackedFileSlices this
         # means a custom `z_slices_sort_key` given to `Dataset.from_images`
         # does not survive.
         if sort_explicit_lists:
@@ -108,9 +108,9 @@ def _collect_files(
     return filepaths, None
 
 
-class ImageSequenceReader(FrameSequence):
+class MultiImageSlices(SliceSequence):
     """Reads a directory, glob pattern, zip archive or list of 2D image files
-    as one sequence, with each file contributing one frame."""
+    as one sequence, with each file contributing one slice."""
 
     def __init__(self, path_spec: str | Iterable[str], **kwargs: Any) -> None:
         self.kwargs = kwargs
@@ -120,9 +120,9 @@ class ImageSequenceReader(FrameSequence):
         self._filepaths, self._zipfile = _collect_files(
             path_spec, sort_explicit_lists=False
         )
-        first_frame = self.imread(self._filepaths[0], **self.kwargs)
-        self._first_frame_shape = first_frame.shape
-        self._dtype = first_frame.dtype
+        first_slice = self.imread(self._filepaths[0], **self.kwargs)
+        self._first_slice_shape = first_slice.shape
+        self._dtype = first_slice.dtype
 
     def imread(self, filename: str, **kwargs: Any) -> np.ndarray:
         if self._zipfile is not None:
@@ -141,19 +141,19 @@ class ImageSequenceReader(FrameSequence):
     def __len__(self) -> int:
         return len(self._filepaths)
 
-    def get_frame(self, i: int) -> np.ndarray:
+    def get_slice(self, i: int) -> np.ndarray:
         return self.imread(self._filepaths[i], **self.kwargs)
 
     @property
-    def frame_shape(self) -> tuple[int, ...]:
-        return self._first_frame_shape
+    def slice_shape(self) -> tuple[int, ...]:
+        return self._first_slice_shape
 
     @property
     def pixel_type(self) -> DTypeLike:
         return self._dtype
 
 
-class ReaderSequence(NDFrameSequence):
+class StackedFileSlices(NDSliceSequence):
     """Stacks several n-dimensional image files along one added axis.
 
     Each file is opened with the same reader class and must expose identical
@@ -163,8 +163,8 @@ class ReaderSequence(NDFrameSequence):
     def __init__(
         self,
         path_spec: str | Iterable[str],
-        # Any rather than NDFrameSequence: callers pass the class that opened
-        # the first file, which is only known to be a FrameSequence. The
+        # Any rather than NDSliceSequence: callers pass the class that opened
+        # the first file, which is only known to be a SliceSequence. The
         # isinstance check below is what actually enforces the requirement.
         reader_cls: Callable[..., Any] | None = None,
         axis_name: str = "t",
@@ -184,8 +184,8 @@ class ReaderSequence(NDFrameSequence):
         )
 
         with self.reader_cls(self._filepaths[0], **self.kwargs) as reader:
-            if not isinstance(reader, NDFrameSequence):
-                raise ValueError("Reader is not a subclass of NDFrameSequence")
+            if not isinstance(reader, NDSliceSequence):
+                raise ValueError("Reader is not a subclass of NDSliceSequence")
             for ax in reader.axes:
                 self._init_axis(ax, reader.sizes[ax])
             self._pixel_type = reader.pixel_type
@@ -199,7 +199,7 @@ class ReaderSequence(NDFrameSequence):
 
     @bundle_axes.setter
     def bundle_axes(self, value: Iterable[str]) -> None:
-        """Overrides the base class' resolver, because `_get_seq_frame` defers
+        """Overrides the base class' resolver, because `_get_seq_slice` defers
         the axis bundling to the per-file reader."""
         value = list(value)
         if invalid := [k for k in value if k not in self._sizes]:
@@ -211,9 +211,9 @@ class ReaderSequence(NDFrameSequence):
             if k in self._iter_axes:
                 self._iter_axes.remove(k)
         self._bundle_axes = value
-        self._get_frame_wrapped = self._get_seq_frame
+        self._get_slice_wrapped = self._get_seq_slice
 
-    def _get_seq_frame(self, **coords: int) -> np.ndarray:
+    def _get_seq_slice(self, **coords: int) -> np.ndarray:
         i = coords.pop(self._imseq_axis)
         with self.reader_cls(self._filepaths[i], **self.kwargs) as reader:
             # Check whether this file matches the shape of the first one.
@@ -227,7 +227,7 @@ class ReaderSequence(NDFrameSequence):
                         f"In {self._filepaths[i]}, the size of axis {ax} was unexpected"
                     )
             reader.bundle_axes = self.bundle_axes
-            return reader._get_frame_wrapped(**coords)
+            return reader._get_slice_wrapped(**coords)
 
     def close(self) -> None:
         if self._zipfile is not None:

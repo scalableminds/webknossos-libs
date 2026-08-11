@@ -17,45 +17,17 @@ from ..errors import (
     UnsupportedImageFormatError,
 )
 from ..layer.view import MagView
-from .frame_sequence import FrameSequence, NDFrameSequence
 from .image_reader_registry import get_valid_image_suffixes, open_images
-from .raster_image_readers import ImageSequenceReader, ReaderSequence
+from .image_source import ImageSource, compute_channel_selection
+from .raster_slices import MultiImageSlices, StackedFileSlices
+from .slice_sequence import NDSliceSequence, SliceSequence
 
 
 def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
     return dim_size == 1 or (dim_size == 3 and dtype == np.dtype("uint8"))
 
 
-def compute_channel_selection(
-    raw_num_channels: int, channel: int | None
-) -> tuple[int, int | None, int | None, list[int] | None]:
-    """
-    Shared channel-selection rule used by both SlicedImages and ChunkedImages
-    implementations. Returns (num_channels, selected_channel,
-    first_n_channels, possible_channels):
-    - num_channels: the number of channels that will actually be written
-    - selected_channel: a single pinned channel index, or None if all
-      (up to first_n_channels) channels are used
-    - first_n_channels: set when raw_num_channels >= 3, truncating to the
-      first 3 channels (e.g. RGB out of RGBA)
-    - possible_channels: channel indices that could each become their own
-      layer (see get_possible_layers()), or None if not applicable
-    """
-    if channel is not None:
-        assert channel < raw_num_channels, (
-            f"Selected channel {channel} (0-indexed), but only {raw_num_channels} channels are available."
-        )
-        return 1, channel, None, None
-    if raw_num_channels == 2:
-        return 1, 0, None, [0, 1]
-    if raw_num_channels >= 3:
-        return 3, None, 3, list(range(raw_num_channels))
-    return raw_num_channels, None, None, None
-
-
-class SlicedImages:
-    dtype: DTypeLike
-    num_channels: int
+class SlicedImageSource(ImageSource):
     # Set partway through __init__(); _open_images() uses hasattr() on
     # _bundle_axes to tell whether that has happened yet, so these must stay
     # bare annotations rather than assignments.
@@ -91,9 +63,9 @@ class SlicedImages:
         images to figure out the shape & num_channels.
         """
         try:
-            from .czi_sequence_reader import CziSequenceReader
+            from .czi_slices import CziSlices
         except ImportError:
-            CziSequenceReader = type(None)  # type: ignore[misc,assignment]
+            CziSlices = type(None)  # type: ignore[misc,assignment]
 
         # `images` below always refers to an opened reader, never to this
         # argument.
@@ -116,7 +88,7 @@ class SlicedImages:
         self._iter_loop_size = None
         self._possible_layers = {}
 
-        ## attributes only for NDFrameSequence instances:
+        ## attributes only for NDSliceSequence instances:
         # _default_coords
 
         ## attributes that will also be set in __init__()
@@ -129,15 +101,15 @@ class SlicedImages:
         #######################
 
         with self._open_images() as images:
-            assert isinstance(images, FrameSequence), (
-                f"{type(images)} does not inherit from FrameSequence"
+            assert isinstance(images, SliceSequence), (
+                f"{type(images)} does not inherit from SliceSequence"
             )
             self.dtype = images.dtype
 
-            if isinstance(images, NDFrameSequence):
+            if isinstance(images, NDSliceSequence):
                 self._default_coords = {}
 
-                if isinstance(images, CziSequenceReader):
+                if isinstance(images, CziSlices):
                     available_czi_channels = images.available_czi_channels()
                     if len(available_czi_channels) > 1:
                         self._possible_layers["czi_channel"] = available_czi_channels
@@ -181,10 +153,10 @@ class SlicedImages:
 
             else:
                 # Fallback for flat readers that do not name their dimensions
-                # as NDFrameSequence does:
+                # as NDSliceSequence does:
 
                 _allow_channels_first = not is_segmentation
-                if isinstance(images, ImageSequenceReader | ReaderSequence):
+                if isinstance(images, MultiImageSlices | StackedFileSlices):
                     _allow_channels_first = False
 
                 if len(images.shape) == 2:
@@ -247,10 +219,10 @@ class SlicedImages:
 
         with self._open_images() as images:
             if "c" in self._bundle_axes:
-                if isinstance(images, NDFrameSequence):
+                if isinstance(images, NDSliceSequence):
                     self.num_channels = images.sizes.get("c", 1)
                 elif isinstance(images, list):
-                    self.num_channels = cast(FrameSequence, images[0]).shape[
+                    self.num_channels = cast(SliceSequence, images[0]).shape[
                         self._bundle_axes.index("c")
                     ]
                 else:
@@ -305,12 +277,12 @@ class SlicedImages:
 
         Classifying afterwards, rather than rejecting unknown suffixes up
         front, keeps files that open without a recognized suffix (via
-        ImageSequenceReader) working as before: this only runs once every open
+        MultiImageSlices) working as before: this only runs once every open
         strategy has already failed.
         """
         # Imported inside the function so that the two reader modules stay
         # independent at import time; this is only needed on the error path.
-        from .chunked_images import (
+        from .chunked_image_source import (
             describe_missing_extras,
             get_unavailable_chunked_image_suffixes,
             get_valid_chunked_image_suffixes,
@@ -391,27 +363,27 @@ class SlicedImages:
 
     def _try_open_images(
         self, original_images: str | list[str], exceptions: list[Exception]
-    ) -> FrameSequence | None:
+    ) -> SliceSequence | None:
         open_kwargs: dict[str, Any] = {}
         if self._czi_channel is not None:
             open_kwargs["czi_channel"] = self._czi_channel
 
         # try the registered reader for this suffix
-        def strategy_0() -> FrameSequence | None:
+        def strategy_0() -> SliceSequence | None:
             if isinstance(original_images, list):
                 return None
             return open_images(original_images, **open_kwargs)
 
-        # try ImageSequenceReader, which handles a directory, glob or list of 2D images
-        strategy_1 = lambda: ImageSequenceReader(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
+        # try MultiImageSlices, which handles a directory, glob or list of 2D images
+        strategy_1 = lambda: MultiImageSlices(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
 
         # for image lists, try to guess the correct reader using only the first image,
-        # and apply that for all images via ReaderSequence
-        def strategy_2() -> FrameSequence | None:
+        # and apply that for all images via StackedFileSlices
+        def strategy_2() -> SliceSequence | None:
             if isinstance(original_images, list):
                 # assuming the same reader works for all images:
                 first_image_handler = open_images(original_images[0], **open_kwargs)
-                return ReaderSequence(
+                return StackedFileSlices(
                     original_images, type(first_image_handler), **open_kwargs
                 )
             else:
@@ -438,7 +410,7 @@ class SlicedImages:
         after IDENTIFY AXIS ORDER of __init__() has run.
         For a 2D image this is achieved by wrapping it in a list.
 
-        The yielded object is a FrameSequence, a list wrapping one, or — for
+        The yielded object is a SliceSequence, a list wrapping one, or — for
         the 5D fallback that pins a timepoint — a plain ndarray. All three
         support len(), indexing and iteration, which is all callers use, but
         they share no common type; hence Any. Callers narrow with isinstance
@@ -468,7 +440,7 @@ class SlicedImages:
 
         with images_context_manager as opened_images:
             images: Any = opened_images
-            if isinstance(images, NDFrameSequence):
+            if isinstance(images, NDSliceSequence):
                 if hasattr(self, "_bundle_axes"):
                     # first part of __init__() has happened
                     images.default_coords.update(self._default_coords)
@@ -486,16 +458,19 @@ class SlicedImages:
                         images = [images]
             yield images
 
-    def copy_to_view(
+    def copy_chunk_to_view(
         self,
-        args: BoundingBox | NDBoundingBox,
+        bbox: BoundingBox | NDBoundingBox,
         mag_view: MagView,
         dtype: DTypeLike | None = None,
     ) -> tuple[tuple[int, int], int | None]:
-        """Copies the images according to the passed arguments to the given mag_view.
-        args is expected to be a (ND)BoundingBox the start and end of the z-range, meant for usage with an executor.
-        copy_to_view returns an iterable of image shapes and largest segment ids. When using this
-        method a manual update of the bounding box and the largest segment id might be necessary.
+        """Copies the slices covering `bbox` into `mag_view`, one batch of
+        z-slices per call, meant for usage with an executor.
+
+        Return value and axis conventions are ImageSource.copy_chunk_to_view's.
+        Because expected_bbox is a placeholder for this strategy, the x/y
+        extent returned here is the *observed* one, so the caller must correct
+        the layer's bounding box (and largest_segment_id) afterwards.
         """
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -504,7 +479,7 @@ class SlicedImages:
                 category=UserWarning,
                 module="webknossos",
             )
-            absolute_bbox = args
+            absolute_bbox = bbox
             relative_bbox = absolute_bbox.offset(-mag_view.bounding_box.topleft)
 
             assert all(
@@ -598,12 +573,12 @@ class SlicedImages:
         # replaces the previous expected_shape to enable n-dimensional input files
         with self._open_images() as images:
             axes: Sequence[str]
-            if isinstance(images, NDFrameSequence):
+            if isinstance(images, NDSliceSequence):
                 axes = images.axes
                 images_shape = tuple(images.sizes[axis] for axis in axes)
             else:
                 if isinstance(images, list):
-                    images_shape = (len(images),) + cast(FrameSequence, images[0]).shape
+                    images_shape = (len(images),) + cast(SliceSequence, images[0]).shape
 
                 else:
                     images_shape = images.shape
@@ -635,7 +610,7 @@ class SlicedImages:
                     (images_shape[x_index], images_shape[y_index], z_shape),
                 )
             else:
-                if isinstance(images, NDFrameSequence):
+                if isinstance(images, NDSliceSequence):
                     axes_names = (self._iter_axes or []) + [
                         axis for axis in self._bundle_axes
                     ]
@@ -686,7 +661,7 @@ def has_image_z_dimension(
     filepath: UPath,
     is_segmentation: bool,
 ) -> bool:
-    sliced_images = SlicedImages(
+    sliced_image_source = SlicedImageSource(
         filepath,
         is_segmentation=is_segmentation,
         # the following arguments shouldn't matter much for the Dataset.from_images method:
@@ -698,4 +673,4 @@ def has_image_z_dimension(
         flip_z=False,
     )
 
-    return sliced_images.expected_bbox.get_shape("z") > 1
+    return sliced_image_source.expected_bbox.get_shape("z") > 1

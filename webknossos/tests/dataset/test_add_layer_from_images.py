@@ -116,7 +116,7 @@ def test_mrc_from_images_flip_and_swap(
     actual = layer.get_finest_mag().read()[0]
 
     # flips apply in source axis order (z, y, x): flip_z mirrors z, flip_x
-    # mirrors y and flip_y mirrors x (the SlicedImages convention).
+    # mirrors y and flip_y mirrors x (the SlicedImageSource convention).
     expected = data
     if flip_z:
         expected = expected[::-1]
@@ -217,7 +217,7 @@ def test_mrc_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
 
 def _read_ims_reference(ims_path: UPath, channel: int) -> np.ndarray:
     # Read independently via h5py/imaris_ims_file_reader rather than through
-    # ImsChunkedImages, to get a reference unrelated to the code under test.
+    # ImsImageSource, to get a reference unrelated to the code under test.
     from imaris_ims_file_reader.ims import ims as ImsFile
 
     ims_obj = ImsFile(str(ims_path), squeeze_output=False)
@@ -256,8 +256,8 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     # With an explicit shard_shape smaller than the image extent, conversion
     # must split into multiple shards along x and y. The final bounding box
     # must reflect the *full* image extent, not just a single shard's size —
-    # a per-chunk-shape-based correction (as used for the SlicedImages path)
-    # would be wrong here, since each ChunkedImages job only reports its own
+    # a per-chunk-shape-based correction (as used for the SlicedImageSource path)
+    # would be wrong here, since each ChunkedImageSource job only reports its own
     # shard-sized chunk, not the total extent.
     ims_path = download_ims_fixture(tmp_upath)
 
@@ -287,8 +287,8 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
 def test_ims_from_images_flip_and_swap(
     tmp_upath: UPath, shard_shape: tuple[int, int, int]
 ) -> None:
-    # .ims files are read exclusively through ImsChunkedImages (never through
-    # SlicedImages), so there's no separate "slow path" to compare against.
+    # .ims files are read exclusively through ImsImageSource (never through
+    # SlicedImageSource), so there's no separate "slow path" to compare against.
     # Instead,
     # this derives the expected flip/swap transform directly from the h5py
     # reference: flip_z/flip_x/flip_y reverse the source's z/y/x axes
@@ -408,15 +408,17 @@ def test_add_layer_from_images_rejects_unstorable_dtype(tmp_upath: UPath) -> Non
 def test_add_layer_from_images_names_missing_optional_dependency(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # With webknossos[ims] uninstalled, ImsChunkedImages never registers and the
-    # file falls through to SlicedImages, which has no reader for it either. The error
+    # With webknossos[ims] uninstalled, ImsImageSource never registers and the
+    # file falls through to SlicedImageSource, which has no reader for it either. The error
     # must still point at the missing extra instead of calling .ims unsupported.
     # The test env installs every extra, so unregister the reader to reproduce
     # exactly the state a missing dependency leaves behind.
-    chunked_images = importlib.import_module("webknossos.dataset._utils.chunked_images")
-    monkeypatch.setattr(chunked_images, "_CHUNKED_IMAGE_CLASSES", [])
+    chunked_image_source = importlib.import_module(
+        "webknossos.dataset._utils.chunked_image_source"
+    )
+    monkeypatch.setattr(chunked_image_source, "_CHUNKED_IMAGE_SOURCE_CLASSES", [])
     monkeypatch.setattr(
-        chunked_images, "_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES", {"ims": "ims"}
+        chunked_image_source, "_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES", {"ims": "ims"}
     )
     ims_path = tmp_upath / "a.ims"
     ims_path.write_bytes(b"stand-in for an ims file")
@@ -433,17 +435,17 @@ def test_ims_from_images_multi_timepoint(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Multi-timepoint .ims files (without an explicit `timepoint=`) are a new
-    # capability of the ChunkedImages abstraction: the bounding box gets a "t"
+    # capability of the ChunkedImageSource abstraction: the bounding box gets a "t"
     # axis, and each chunk along it reads its own timepoint.
     ims_path = tmp_upath / "synthetic_multi_t.ims"
     create_synthetic_multi_timepoint_ims(
         ims_path, num_timepoints=3, num_channels=1, z=4, y=8, x=10
     )
-    ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._utils.ims_chunked_images"
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._utils.ims_image_source"
     )
     monkeypatch.setattr(
-        ims_chunked_images,
+        ims_image_source,
         "_read_ims_metadata_quietly",
         lambda _path: ((3, 1, 4, 8, 10), np.dtype("uint16")),
     )
@@ -487,11 +489,11 @@ def test_ims_multi_channel_needs_one_layer_per_channel(
         x=10,
         dtype=dtype,
     )
-    ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._utils.ims_chunked_images"
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._utils.ims_image_source"
     )
     monkeypatch.setattr(
-        ims_chunked_images,
+        ims_image_source,
         "_read_ims_metadata_quietly",
         lambda _path: ((1, num_channels, 4, 8, 10), np.dtype(dtype)),
     )
@@ -614,11 +616,11 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
     create_synthetic_multi_timepoint_ims(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
-    ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._utils.ims_chunked_images"
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._utils.ims_image_source"
     )
     monkeypatch.setattr(
-        ims_chunked_images,
+        ims_image_source,
         "_read_ims_metadata_quietly",
         lambda _path: ((2, 3, 4, 8, 10), np.dtype("uint16")),
     )

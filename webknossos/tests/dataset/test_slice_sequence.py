@@ -5,36 +5,36 @@ import pytest
 from PIL import Image
 from upath import UPath
 
-from webknossos.dataset._utils.frame_sequence import (
-    FrameSequence,
-    NDFrameSequence,
-    _SlicedView,
-)
 from webknossos.dataset._utils.image_reader_registry import (
     UnknownFormatError,
     open_images,
 )
-from webknossos.dataset._utils.raster_image_readers import (
-    ImageSequenceReader,
-    SingleImageReader,
+from webknossos.dataset._utils.raster_slices import (
+    MultiImageSlices,
+    SingleImageSlices,
 )
-from webknossos.dataset._utils.tiff_sequence_reader import TiffSequenceReader
+from webknossos.dataset._utils.slice_sequence import (
+    NDSliceSequence,
+    SliceSequence,
+    _SlicedView,
+)
+from webknossos.dataset._utils.tiff_slices import TiffSlices
 
 # A volume with distinct values everywhere, so a wrong axis order or a wrong
 # index cannot accidentally produce the expected result.
 _VOLUME = np.arange(2 * 3 * 4 * 5, dtype="uint16").reshape(2, 3, 4, 5)  # z, c, y, x
 
 
-class _ZcyxReader(NDFrameSequence):
+class _ZcyxReader(NDSliceSequence):
     """Registers a single reader method returning all four axes at once."""
 
     def __init__(self) -> None:
         super().__init__()
         for axis, size in zip("zcyx", _VOLUME.shape):
             self._init_axis(axis, size)
-        self._register_get_frame(self._get_frame, "zcyx")
+        self._register_get_slice(self._get_slice, "zcyx")
 
-    def _get_frame(self, **ind: int) -> np.ndarray:
+    def _get_slice(self, **ind: int) -> np.ndarray:
         del ind
         return _VOLUME
 
@@ -43,7 +43,7 @@ class _ZcyxReader(NDFrameSequence):
         return _VOLUME.dtype
 
 
-class _YxcReader(NDFrameSequence):
+class _YxcReader(NDSliceSequence):
     """Registers a 2D+channel method, as the CZI reader does."""
 
     def __init__(self) -> None:
@@ -52,9 +52,9 @@ class _YxcReader(NDFrameSequence):
         self._init_axis("y", _VOLUME.shape[2])
         self._init_axis("x", _VOLUME.shape[3])
         self._init_axis("c", _VOLUME.shape[1])
-        self._register_get_frame(self._get_frame, "yxc")
+        self._register_get_slice(self._get_slice, "yxc")
 
-    def _get_frame(self, **ind: int) -> np.ndarray:
+    def _get_slice(self, **ind: int) -> np.ndarray:
         # (c, y, x) -> (y, x, c) for the requested z
         return np.moveaxis(_VOLUME[ind["z"]], 0, -1)
 
@@ -71,13 +71,13 @@ def test_axis_bookkeeping() -> None:
     assert reader.ndim == 4
     assert reader.dtype == np.dtype("uint16")
 
-    # Without iter axes the sequence has exactly one frame.
+    # Without iter axes the sequence has exactly one slice.
     assert len(reader) == 1
 
     reader.bundle_axes = ["c", "y", "x"]
     reader.iter_axes = ["z"]
     assert len(reader) == 2
-    assert reader.frame_shape == (3, 4, 5)
+    assert reader.slice_shape == (3, 4, 5)
     assert reader.shape == (2, 3, 4, 5)
 
 
@@ -116,7 +116,7 @@ def test_iter_axes_last_axis_varies_fastest() -> None:
     assert len(reader) == 2 * 3
     # index i maps to (z, c) = (i // 3, i % 3)
     for i in range(6):
-        np.testing.assert_array_equal(reader.get_frame(i), _VOLUME[i // 3, i % 3])
+        np.testing.assert_array_equal(reader.get_slice(i), _VOLUME[i // 3, i % 3])
 
 
 def test_resolver_drops_surplus_axes() -> None:
@@ -129,7 +129,7 @@ def test_resolver_drops_surplus_axes() -> None:
     reader.default_coords["c"] = 2
 
     for z in range(2):
-        np.testing.assert_array_equal(reader.get_frame(z), _VOLUME[z, 2])
+        np.testing.assert_array_equal(reader.get_slice(z), _VOLUME[z, 2])
 
 
 def test_resolver_transposes_to_requested_order() -> None:
@@ -139,29 +139,29 @@ def test_resolver_transposes_to_requested_order() -> None:
     reader.iter_axes = ["z"]
 
     for z in range(2):
-        np.testing.assert_array_equal(reader.get_frame(z), _VOLUME[z])
+        np.testing.assert_array_equal(reader.get_slice(z), _VOLUME[z])
 
 
 def test_resolver_bundles_missing_axes() -> None:
-    # "yxc" registered, but "z" is requested as part of the frame, so the
+    # "yxc" registered, but "z" is requested as part of the slice, so the
     # resolver has to loop over z and stack the results.
     reader = _YxcReader()
     reader.bundle_axes = ["z", "c", "y", "x"]
     reader.iter_axes = []
 
-    np.testing.assert_array_equal(reader.get_frame(0), _VOLUME)
+    np.testing.assert_array_equal(reader.get_slice(0), _VOLUME)
 
 
-def test_get_frame_rejects_out_of_range_index() -> None:
+def test_get_slice_rejects_out_of_range_index() -> None:
     reader = _ZcyxReader()
     reader.bundle_axes = ["c", "y", "x"]
     reader.iter_axes = ["z"]
     with pytest.raises(IndexError):
-        reader.get_frame(2)
+        reader.get_slice(2)
 
 
-class _RangeSequence(FrameSequence):
-    """A flat sequence whose frame i is a 1x1 array holding i."""
+class _RangeSequence(SliceSequence):
+    """A flat sequence whose slice i is a 1x1 array holding i."""
 
     def __init__(self, length: int = 6) -> None:
         self._length = length
@@ -169,11 +169,11 @@ class _RangeSequence(FrameSequence):
     def __len__(self) -> int:
         return self._length
 
-    def get_frame(self, i: int) -> np.ndarray:
+    def get_slice(self, i: int) -> np.ndarray:
         return np.full((1, 1), i, dtype="uint8")
 
     @property
-    def frame_shape(self) -> tuple[int, ...]:
+    def slice_shape(self) -> tuple[int, ...]:
         return (1, 1)
 
     @property
@@ -182,7 +182,7 @@ class _RangeSequence(FrameSequence):
 
 
 def _values(view: Any) -> list[int]:
-    return [int(np.asarray(frame).ravel()[0]) for frame in view]
+    return [int(np.asarray(s).ravel()[0]) for s in view]
 
 
 def test_flat_sequence_shape_and_iteration() -> None:
@@ -199,7 +199,7 @@ def test_sliced_view_slicing_and_reversal() -> None:
     assert _values(seq[::-1]) == [5, 4, 3, 2, 1, 0]
     assert len(seq[1:4]) == 3
 
-    # Chained slicing, as copy_to_view does: select a range, reverse it, then
+    # Chained slicing, as copy_chunk_to_view does: select a range, reverse it, then
     # take a sub-range of that.
     assert _values(seq[1:5][::-1][0:2]) == [4, 3]
 
@@ -225,13 +225,13 @@ def test_sliced_view_is_lazy() -> None:
     reads: list[int] = []
 
     class _CountingSequence(_RangeSequence):
-        def get_frame(self, i: int) -> np.ndarray:
+        def get_slice(self, i: int) -> np.ndarray:
             reads.append(i)
-            return super().get_frame(i)
+            return super().get_slice(i)
 
     seq = _CountingSequence()
     view = seq[1:4][::-1]
-    assert reads == [], "slicing must not read any frame"
+    assert reads == [], "slicing must not read any slice"
     assert _values(view) == [3, 2, 1]
     assert reads == [3, 2, 1]
 
@@ -243,15 +243,15 @@ def _write_png(path: UPath, value: int) -> None:
 def test_open_images_dispatches_on_suffix(tmp_upath: UPath) -> None:
     png_path = tmp_upath / "single.png"
     _write_png(png_path, 7)
-    assert isinstance(open_images(str(png_path)), SingleImageReader)
+    assert isinstance(open_images(str(png_path)), SingleImageSlices)
 
 
 def test_open_images_prefers_higher_class_priority(tmp_upath: UPath) -> None:
-    # Both TiffSequenceReader (19) and, in principle, any lower-priority reader claim
+    # Both TiffSlices (19) and, in principle, any lower-priority reader claim
     # .tif; the dedicated one has to win because it understands axis metadata.
     tif_path = tmp_upath / "single.tif"
     Image.fromarray(np.zeros((4, 6), dtype="uint8")).save(str(tif_path))
-    assert isinstance(open_images(str(tif_path)), TiffSequenceReader)
+    assert isinstance(open_images(str(tif_path)), TiffSlices)
 
 
 def test_open_images_rejects_unknown_suffix(tmp_upath: UPath) -> None:
@@ -272,7 +272,7 @@ def test_open_images_glob_with_multiple_matches(tmp_upath: UPath) -> None:
     for i in range(3):
         _write_png(tmp_upath / f"img_{i}.png", i)
     reader = open_images(str(tmp_upath / "img_*.png"))
-    assert isinstance(reader, ImageSequenceReader)
+    assert isinstance(reader, MultiImageSlices)
     assert len(reader) == 3
 
 
@@ -282,7 +282,7 @@ def test_image_sequence_orders_glob_naturally(tmp_upath: UPath) -> None:
     for i in [1, 2, 10]:
         _write_png(tmp_upath / f"img_{i}.png", i)
 
-    reader = ImageSequenceReader(str(tmp_upath / "img_*.png"))
+    reader = MultiImageSlices(str(tmp_upath / "img_*.png"))
     assert _values(reader) == [1, 2, 10]
 
 
@@ -293,7 +293,7 @@ def test_image_sequence_keeps_explicit_list_order(tmp_upath: UPath) -> None:
         _write_png(tmp_upath / f"img_{i}.png", i)
 
     paths = [str(tmp_upath / f"img_{i}.png") for i in [10, 1, 2]]
-    assert _values(ImageSequenceReader(paths)) == [10, 1, 2]
+    assert _values(MultiImageSlices(paths)) == [10, 1, 2]
 
 
 def test_image_sequence_reads_zip_archive(tmp_upath: UPath) -> None:
@@ -306,12 +306,12 @@ def test_image_sequence_reads_zip_archive(tmp_upath: UPath) -> None:
         for i in [1, 2, 10]:
             zf.write(str(tmp_upath / f"img_{i}.png"), f"img_{i}.png")
 
-    reader = ImageSequenceReader(str(archive))
-    assert reader.frame_shape == (4, 6)
+    reader = MultiImageSlices(str(archive))
+    assert reader.slice_shape == (4, 6)
     assert _values(reader) == [1, 2, 10]
     reader.close()
 
 
 def test_image_sequence_reports_missing_files(tmp_upath: UPath) -> None:
     with pytest.raises(OSError, match="No files were found"):
-        ImageSequenceReader(str(tmp_upath / "nothing_*.png"))
+        MultiImageSlices(str(tmp_upath / "nothing_*.png"))

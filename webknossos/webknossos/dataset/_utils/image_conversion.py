@@ -1,7 +1,7 @@
 """Implementation of Dataset.from_images() / Dataset.add_layer_from_images(),
 factored out of dataset.py since this functionality (mapping input image
-files to layers, then converting them via either the ChunkedImages or
-SlicedImages reader path) is large and self-contained.
+files to layers, then converting them via either the ChunkedImageSource or
+SlicedImageSource reader path) is large and self-contained.
 
 Dataset.from_images and Dataset.add_layer_from_images are thin wrappers
 around the free functions here, keeping the public API and docstrings on
@@ -54,15 +54,15 @@ from ..layer.abstract_layer import (
     channels_fit_one_layer,
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
-from . import sliced_images
-from .chunked_images import (
-    ChunkedImages,
+from . import sliced_image_source
+from .chunked_image_source import (
+    ChunkedImageSource,
     describe_missing_extras,
     get_unavailable_chunked_image_suffixes,
     get_valid_chunked_image_suffixes,
-    try_open_chunked_images,
+    try_open_chunked_image_source,
 )
-from .raster_image_readers import SingleImageReader
+from .raster_slices import SingleImageSlices
 from .segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
@@ -216,9 +216,9 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 # always want as separate layers, even when there happen to be three of them.
 #
 # Taken from the reader rather than restated, so this cannot drift into naming
-# formats that can no longer be read: SingleImageReader handles exactly the
+# formats that can no longer be read: SingleImageSlices handles exactly the
 # everyday raster formats.
-_RGB_IMAGE_SUFFIXES = frozenset(SingleImageReader.class_exts())
+_RGB_IMAGE_SUFFIXES = frozenset(SingleImageSlices.class_exts())
 
 
 def _describe_rgb_formats() -> str:
@@ -260,10 +260,10 @@ def _has_image_z_dimension(
     filepath: UPath,
     is_segmentation: bool,
 ) -> bool:
-    # Formats handled by a registered ChunkedImages subclass (e.g. .ims) are
-    # never probed through SlicedImages — they know their exact
+    # Formats handled by a registered ChunkedImageSource subclass (e.g. .ims) are
+    # never probed through SlicedImageSource — they know their exact
     # expected_bbox directly, and this is the only way such files are read.
-    chunked_images = try_open_chunked_images(
+    chunked_image_source = try_open_chunked_image_source(
         filepath,
         channel=None,
         swap_xy=False,
@@ -272,16 +272,16 @@ def _has_image_z_dimension(
         flip_z=False,
         is_segmentation=is_segmentation,
     )
-    if chunked_images is not None:
-        return chunked_images.expected_bbox.get_shape("z") > 1
-    return sliced_images.has_image_z_dimension(
+    if chunked_image_source is not None:
+        return chunked_image_source.expected_bbox.get_shape("z") > 1
+    return sliced_image_source.has_image_z_dimension(
         filepath, is_segmentation=is_segmentation
     )
 
 
 class _ImageConversionSetup(NamedTuple):
     """Everything add_layer_from_images needs to actually run the conversion,
-    computed differently for ChunkedImages vs. SlicedImages sources by
+    computed differently for ChunkedImageSource vs. SlicedImageSource sources by
     _prepare_chunked_image_conversion / _prepare_sliced_image_conversion. This
     covers the parts of the two paths that differ (bounding box, mag_view,
     per-chunk function, batch_size) — the surrounding layer/mag setup and
@@ -294,7 +294,7 @@ class _ImageConversionSetup(NamedTuple):
 
 
 def _prepare_chunked_image_conversion(
-    image_source: ChunkedImages,
+    image_source: ChunkedImageSource,
     layer: Layer,
     *,
     mag: Mag,
@@ -305,7 +305,7 @@ def _prepare_chunked_image_conversion(
     current_dtype: np.dtype,
     batch_size: int | None,
 ) -> _ImageConversionSetup:
-    # ChunkedImages formats know their exact bounding box from metadata
+    # ChunkedImageSource formats know their exact bounding box from metadata
     # alone, so no placeholder inflation (and no post-hoc correction
     # afterward) is needed.
     layer.bounding_box = mag1_expected_bbox
@@ -318,7 +318,7 @@ def _prepare_chunked_image_conversion(
     )
 
     func_per_chunk = named_partial(
-        image_source.read_chunk,
+        image_source.copy_chunk_to_view,
         mag_view=mag_view,
         dtype=current_dtype,
     )
@@ -331,7 +331,7 @@ def _prepare_chunked_image_conversion(
 
 
 def _prepare_sliced_image_conversion(
-    image_source: sliced_images.SlicedImages,
+    image_source: sliced_image_source.SlicedImageSource,
     layer: Layer,
     *,
     mag: Mag,
@@ -376,7 +376,7 @@ def _prepare_sliced_image_conversion(
         )
 
     func_per_chunk = named_partial(
-        image_source.copy_to_view,
+        image_source.copy_chunk_to_view,
         mag_view=mag_view,
         dtype=current_dtype,
     )
@@ -417,7 +417,7 @@ def from_images(
     """See Dataset.from_images() for the public docstring."""
     input_upath = UPath(input_path)
 
-    valid_suffixes = sliced_images.get_valid_image_suffixes()
+    valid_suffixes = sliced_image_source.get_valid_image_suffixes()
     valid_suffixes.update(get_valid_chunked_image_suffixes())
 
     if z_slices_sort_key is None:
@@ -470,12 +470,12 @@ def from_images(
             warnings.filterwarnings(
                 "ignore",
                 category=UserWarning,
-                module="raster_image_readers",
+                module="raster_slices",
             )
             warnings.filterwarnings(
                 "once",
                 category=UserWarning,
-                module="sliced_images",
+                module="sliced_image_source",
             )
             map_filepath_to_layer_name_func = map_filepath_to_layer_name._to_callable(
                 input_upath,
@@ -527,12 +527,12 @@ def from_images(
             warnings.filterwarnings(
                 "ignore",
                 category=UserWarning,
-                module="sliced_images",
+                module="sliced_image_source",
             )
             warnings.filterwarnings(
                 "ignore",
                 category=UserWarning,
-                module="raster_image_readers",
+                module="raster_slices",
             )
             for layer_name, filepaths in filepaths_per_layer.items():
                 filepaths.sort(key=z_slices_sort_key)
@@ -605,7 +605,7 @@ def add_layer_from_images(
     """See Dataset.add_layer_from_images() for the public docstring."""
     _validate_layer_name(layer_name)
     # Normalize paths to UPath once, here at the boundary, so everything
-    # downstream (SlicedImages, ChunkedImages, try_open_chunked_images) deals in
+    # downstream (SlicedImageSource, ChunkedImageSource, try_open_chunked_image_source) deals in
     # a single path type and can use is_remote_path/is_fs_path directly. str
     # round-trips through UPath unchanged, including glob patterns and URLs.
     image_paths = _normalize_images_argument(images)
@@ -623,11 +623,11 @@ def add_layer_from_images(
     else:
         user_set_category = True
 
-    def _open_chunked_images(open_kwargs: dict) -> ChunkedImages | None:
+    def _open_chunked_images(open_kwargs: dict) -> ChunkedImageSource | None:
         # Chunk-based formats (currently only .ims) know their exact
         # bounding box from metadata alone and read/write whole
         # shard-sized blocks directly.
-        return try_open_chunked_images(
+        return try_open_chunked_image_source(
             image_paths,
             channel=open_kwargs.get("channel", channel),
             swap_xy=swap_xy,
@@ -639,11 +639,11 @@ def add_layer_from_images(
 
     def _reopen_image_source(
         open_kwargs: dict,
-    ) -> sliced_images.SlicedImages | ChunkedImages:
+    ) -> sliced_image_source.SlicedImageSource | ChunkedImageSource:
         chunked = _open_chunked_images(open_kwargs)
         if chunked is not None:
             return chunked
-        return sliced_images.SlicedImages(
+        return sliced_image_source.SlicedImageSource(
             image_paths,
             swap_xy=swap_xy,
             flip_x=flip_x,
@@ -653,12 +653,12 @@ def add_layer_from_images(
             **open_kwargs,
         )
 
-    image_source: sliced_images.SlicedImages | ChunkedImages
+    image_source: sliced_image_source.SlicedImageSource | ChunkedImageSource
     chunked_image_source = _open_chunked_images({"channel": channel})
     if chunked_image_source is not None:
         image_source = chunked_image_source
     else:
-        image_source = sliced_images.SlicedImages(
+        image_source = sliced_image_source.SlicedImageSource(
             image_paths,
             channel=channel,
             czi_channel=czi_channel,
@@ -726,7 +726,7 @@ def add_layer_from_images(
                 )
             }
         else:
-            # initialize SlicedImages as above, with normal layer name
+            # initialize SlicedImageSource as above, with normal layer name
             suffix_with_open_kwargs_per_layer = {"": {}}
             # Channels are already resolved above — either written into this
             # layer as RGB, or refused — so anything left here is a dimension
@@ -738,7 +738,7 @@ def add_layer_from_images(
                 "or set specific values as arguments.",
             )
     else:
-        # initialize SlicedImages as above, with normal layer name
+        # initialize SlicedImageSource as above, with normal layer name
         suffix_with_open_kwargs_per_layer = {"": {}}
     first_layer = None
     add_layer_kwargs = {}
@@ -809,7 +809,7 @@ def add_layer_from_images(
 
         prepare_conversion = (
             _prepare_chunked_image_conversion
-            if isinstance(image_source, ChunkedImages)
+            if isinstance(image_source, ChunkedImageSource)
             else _prepare_sliced_image_conversion
         )
         mag_view, func_per_chunk, batch_size = prepare_conversion(
@@ -840,14 +840,14 @@ def add_layer_from_images(
                     f"WKW datasets only support x, y, z axes, got {additional_axes}. Please use `data_format='zarr3'` instead."
                 )
 
-        if isinstance(image_source, ChunkedImages):
+        if isinstance(image_source, ChunkedImageSource):
             # Split into full 3D shard-aligned chunks so each job reads
             # exactly one shard's worth of data and writes it directly.
             # layer.bounding_box is already the exact bbox (no placeholder
-            # inflation) for ChunkedImages, so chunking it directly is safe.
+            # inflation) for ChunkedImageSource, so chunking it directly is safe.
             # It is in Mag(1) while shard_shape is in mag space, so the shard
             # shape is scaled up to match; otherwise mag > 1 produces chunks a
-            # factor of `mag` too small and read_chunk is handed bounds that
+            # factor of `mag` too small and copy_chunk_to_view is handed bounds that
             # run past the end of the source.
             chunked_shard_shape = mag_view.info.shard_shape * mag.to_vec3_int()
             args = list(
@@ -855,7 +855,7 @@ def add_layer_from_images(
             )
         else:
             # _prepare_sliced_image_conversion always resolves batch_size to
-            # a concrete int; only the (unused-here) ChunkedImages path
+            # a concrete int; only the (unused-here) ChunkedImageSource path
             # leaves it as None.
             assert batch_size is not None
             buffered_slice_writer_shape = layer.bounding_box.size_xyz.with_z(batch_size)
@@ -891,14 +891,14 @@ def add_layer_from_images(
             if category == "segmentation":
                 max_id = max(max_ids)
                 cast(SegmentationLayer, layer).largest_segment_id = max_id
-            if not isinstance(image_source, ChunkedImages):
-                # ChunkedImages formats already have the exact bbox set
+            if not isinstance(image_source, ChunkedImageSource):
+                # ChunkedImageSource formats already have the exact bbox set
                 # above; correcting it from per-chunk shapes here would be
                 # wrong for them anyway, since each job's shape reflects
                 # only its own shard-sized chunk, not the full extent.
                 layer.bounding_box = layer.bounding_box.with_size_xyz(
                     Vec3Int(
-                        sliced_images.dimwise_max(shapes)
+                        sliced_image_source.dimwise_max(shapes)
                         + (layer.bounding_box.get_shape("z"),)
                     )
                     * mag.to_vec3_int().with_z(1)

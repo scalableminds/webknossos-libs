@@ -5,8 +5,8 @@ import numpy as np
 from upath import UPath
 
 from ...utils import WkImportError
-from .frame_sequence import NDFrameSequence
 from .image_reader_registry import register_image_reader
+from .slice_sequence import NDSliceSequence
 
 try:
     from pylibCZIrw import czi as pyczi
@@ -29,7 +29,7 @@ PIXEL_TYPE_TO_DTYPE = {
 
 
 @register_image_reader
-class CziSequenceReader(NDFrameSequence):
+class CziSlices(NDSliceSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"czi"}
@@ -74,7 +74,7 @@ class CziSequenceReader(NDFrameSequence):
                     f"Got unsupported czi pixel-type {self._czi_pixel_type} in {self.path}"
                 )
 
-        self._register_get_frame(self.get_frame_2D, "yxc")
+        self._register_get_slice(self.get_slice_2d, "yxc")
 
     @contextmanager
     def czi_file(self) -> Iterator[pyczi.CziReader]:
@@ -89,7 +89,7 @@ class CziSequenceReader(NDFrameSequence):
     def pixel_type(self) -> np.dtype:
         return np.dtype(PIXEL_TYPE_TO_DTYPE[self._czi_pixel_type])
 
-    def get_frame_2D(self, **ind: int) -> np.ndarray:
+    def get_slice_2d(self, **ind: int) -> np.ndarray:
         plane = {k.upper(): v for k, v in ind.items()}
         for axis in plane.keys():
             if axis in self.axis_offsets:

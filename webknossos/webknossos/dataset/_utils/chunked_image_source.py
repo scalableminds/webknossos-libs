@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from os import environ
 
 import numpy as np
@@ -12,25 +12,25 @@ from ...geometry.bounding_box import BoundingBox
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
+from .image_source import ImageSource
 
 
-class ChunkedImages(ABC):
+class ChunkedImageSource(ImageSource):
     """
-    Base class for volumetric, chunk-based input formats (e.g. ims, mrc, zarr, n5).
+    ImageSource for volumetric, chunk-based input formats (e.g. ims, mrc,
+    zarr, n5): formats that state their exact extents in metadata and support
+    reading an arbitrary box of voxels.
 
-    Unlike SlicedImages, which reads slice-by-slice and can't always know its
-    true x/y extent ahead of time (requiring a placeholder bounding box that
-    gets corrected after conversion), a ChunkedImages implementation knows
-    its exact expected_bbox from metadata alone, and reads/writes whole
-    shard-sized 3D/4D blocks aligned to the output shard grid directly,
-    without going through a slice-based writer.
+    That makes expected_bbox exact, and lets each chunk read and write a whole
+    shard-sized 3D/4D block aligned to the output shard grid, with no
+    slice-based writer in between.
 
-    Formats handled by a registered ChunkedImages subclass are read
-    exclusively through that subclass — never through SlicedImages.
+    Subclasses implement only _read_source_box; this class owns all the axis
+    bookkeeping needed to honour the ImageSource contract.
+
+    Registering a subclass for a suffix makes it the only way files with that
+    suffix are read.
     """
-
-    dtype: DTypeLike
-    num_channels: int
 
     # Source extents in the file's own axis order, which subclasses must set
     # from metadata in __init__. The base class derives expected_bbox and every
@@ -78,9 +78,9 @@ class ChunkedImages(ABC):
 
     @abstractmethod
     def get_possible_layers(self) -> dict[str, list[int]] | None:
-        """Same semantics as SlicedImages.get_possible_layers(): returns e.g.
-        {"channel": [0, 1, 2]} when multiple channels could each become
-        their own layer, or None if there's nothing to split."""
+        """See ImageSource.get_possible_layers(). Chunk-based formats report
+        {"channel": [0, 1, 2]} when several channels could each become their
+        own layer, and None when there is nothing to split."""
 
     @abstractmethod
     def _read_source_box(
@@ -103,10 +103,10 @@ class ChunkedImages(ABC):
     @property
     def expected_bbox(self) -> NDBoundingBox:
         """
-        The exact bounding box of the data to convert, in the source's
-        native Mag(1) space. Unlike SlicedImages.expected_bbox, this never
-        needs placeholder inflation, since chunk-based formats know their
-        true extents from metadata alone.
+        The exact bounding box of the data to convert, in the source's native
+        Mag(1) space. Never the placeholder ImageSource.expected_bbox allows,
+        because these formats know their true extents from metadata alone, so
+        the caller has nothing to correct afterwards.
 
         Reports every axis the source actually has, including "c" when more
         than one channel is written (which is where NormalizedBoundingBox
@@ -121,7 +121,7 @@ class ChunkedImages(ABC):
             return BoundingBox((0, 0, 0), (x_size, y_size, self._z))
 
         # NDBoundingBox.chunk() keeps "c" whole rather than splitting it, so
-        # read_chunk still receives the full channel extent per chunk.
+        # copy_chunk_to_view still receives the full channel extent per chunk.
         axes = ["x", "y", "z"]
         sizes = [x_size, y_size, self._z]
         if self.num_channels > 1:
@@ -137,17 +137,17 @@ class ChunkedImages(ABC):
             VecInt(list(range(len(axes))), axes=axes),
         )
 
-    def read_chunk(
+    def copy_chunk_to_view(
         self,
         bbox: NDBoundingBox,
-        *,
         mag_view: MagView,
-        dtype: DTypeLike | None,
+        dtype: DTypeLike | None = None,
     ) -> tuple[tuple[int, int], int]:
         """
-        Read exactly bbox's worth of data and write it to mag_view directly.
-        Returns ((x_size, y_size), max_value), matching the convention
-        established by SlicedImages.copy_to_view.
+        Reads exactly bbox's worth of data and writes it to mag_view directly.
+        Return value and axis conventions are ImageSource.copy_chunk_to_view's;
+        the x/y extent returned is always bbox's, since expected_bbox was exact
+        to begin with.
 
         All axis bookkeeping — mag, swap_xy, flips, channel and timepoint
         placement — lives here, so subclasses only implement _read_source_box.
@@ -192,15 +192,14 @@ class ChunkedImages(ABC):
                 out_y_end // mag_vec.y,
             )
 
-        # Every flip mirrors the *entire* source extent (matching
-        # SlicedImages.copy_to_view, which reverses the full image sequence
-        # before slicing per-batch), not just this chunk in isolation. Each one
+        # Every flip mirrors the *entire* source extent, as the ImageSource
+        # contract requires, not just this chunk in isolation. Each one
         # reads a mirrored source range and is reversed back into output order
         # below. Reversing a chunk in place would only mirror within that
         # chunk, which is invisible while the image fits in a single shard but
         # wrong as soon as it spans several.
-        # flip_x/-y follow the SlicedImages convention: flip_x mirrors the
-        # source's y axis and flip_y mirrors its x axis.
+        # flip_x/-y are named for the output axis they mirror, so flip_x
+        # mirrors the source's y axis and flip_y mirrors its x axis.
         if self._flip_z:
             read_z = slice(self._z - z_end, self._z - z_start)
         else:
@@ -235,8 +234,8 @@ class ChunkedImages(ABC):
         )
 
         if dtype is not None:
-            # order="F" matches SlicedImages.copy_to_view, which produces
-            # Fortran-contiguous slices for the same downstream writers.
+            # order="F" as the ImageSource contract requires: the downstream
+            # writers expect Fortran-contiguous data.
             block = block.astype(dtype, order="F")
 
         max_value = int(block.max())
@@ -255,27 +254,28 @@ class ChunkedImages(ABC):
         # overlapping data.
         mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
 
-        # Returned as (x_size, y_size) to match the convention established by
-        # SlicedImages.copy_to_view.
+        # Returned as (x_size, y_size), per the ImageSource contract.
         return (out_x_end - out_x_start, out_y_end - out_y_start), max_value
 
 
-_CHUNKED_IMAGE_CLASSES: list[type[ChunkedImages]] = []
+_CHUNKED_IMAGE_SOURCE_CLASSES: list[type[ChunkedImageSource]] = []
 
 
-def register_chunked_images(cls: type[ChunkedImages]) -> type[ChunkedImages]:
-    _CHUNKED_IMAGE_CLASSES.append(cls)
+def register_chunked_image_source(
+    cls: type[ChunkedImageSource],
+) -> type[ChunkedImageSource]:
+    _CHUNKED_IMAGE_SOURCE_CLASSES.append(cls)
     return cls
 
 
 def get_valid_chunked_image_suffixes() -> set[str]:
     valid_suffixes: set[str] = set()
-    for cls in _CHUNKED_IMAGE_CLASSES:
+    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
         valid_suffixes.update(cls.class_exts())
     return valid_suffixes
 
 
-def try_open_chunked_images(
+def try_open_chunked_image_source(
     images: UPath | list[UPath],
     *,
     channel: int | None,
@@ -284,12 +284,12 @@ def try_open_chunked_images(
     flip_y: bool,
     flip_z: bool,
     is_segmentation: bool,
-) -> ChunkedImages | None:
+) -> ChunkedImageSource | None:
     """
-    Returns a ChunkedImages instance if `images` is a single path whose
-    suffix a registered chunk-based format handles, else None. Chunk-based
-    formats are inherently single-file, so lists of paths always fall back to
-    the generic SlicedImages path.
+    Returns a ChunkedImageSource if `images` is a single path whose suffix a
+    registered chunk-based format handles, else None — leaving the caller to
+    fall back to the other strategy. Chunk-based formats are inherently
+    single-file, so a list of paths is never one.
     """
     # Callers normalize paths to UPath before getting here (see
     # _normalize_images_argument), so a list of paths is by definition not a
@@ -300,7 +300,7 @@ def try_open_chunked_images(
         return None
     path = images
     suffix = path.suffix.lstrip(".").lower()
-    for cls in _CHUNKED_IMAGE_CLASSES:
+    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
         if suffix in cls.class_exts():
             return cls(
                 path,
@@ -319,9 +319,9 @@ def try_open_chunked_images(
 # report its own class_exts() — these have to be declared out here for the
 # "you are missing an optional dependency" hint to be possible at all.
 # test_optional_reader_suffixes_match_class_exts keeps them in sync.
-_OPTIONAL_CHUNKED_IMAGE_READERS: dict[str, tuple[str, frozenset[str]]] = {
-    "ImsChunkedImages": ("ims", frozenset({"ims"})),
-    "MrcChunkedImages": ("mrcfile", frozenset({"mrc", "rec", "st", "map", "ali"})),
+_OPTIONAL_CHUNKED_IMAGE_SOURCES: dict[str, tuple[str, frozenset[str]]] = {
+    "ImsImageSource": ("ims", frozenset({"ims"})),
+    "MrcImageSource": ("mrcfile", frozenset({"mrc", "rec", "st", "map", "ali"})),
 }
 
 # suffix -> extra, for readers that failed to import. Populated at import time
@@ -360,17 +360,17 @@ def _chunked_images_imports() -> str | None:
     import_exceptions = []
 
     try:
-        from .ims_chunked_images import ImsChunkedImages  # noqa: F401 unused-import
+        from .ims_image_source import ImsImageSource  # noqa: F401 unused-import
     except ImportError as import_error:
-        import_exceptions.append(f"ImsChunkedImages: {import_error.msg}")
+        import_exceptions.append(f"ImsImageSource: {import_error.msg}")
 
     try:
-        from .mrc_chunked_images import MrcChunkedImages  # noqa: F401 unused-import
+        from .mrc_image_source import MrcImageSource  # noqa: F401 unused-import
     except ImportError as import_error:
-        import_exceptions.append(f"MrcChunkedImages: {import_error.msg}")
+        import_exceptions.append(f"MrcImageSource: {import_error.msg}")
 
-    registered = {cls.__name__ for cls in _CHUNKED_IMAGE_CLASSES}
-    for name, (extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
+    registered = {cls.__name__ for cls in _CHUNKED_IMAGE_SOURCE_CLASSES}
+    for name, (extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_SOURCES.items():
         if name not in registered:
             for suffix in suffixes:
                 _UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES[suffix] = extra

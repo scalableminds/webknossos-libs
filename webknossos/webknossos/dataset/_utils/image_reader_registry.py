@@ -1,8 +1,8 @@
 """Registry mapping file suffixes to slice-by-slice image readers.
 
 Replaces `pims.open()`. Readers opt in with `@register_image_reader` instead of
-being discovered by walking subclasses, mirroring the `register_chunked_images`
-pattern in `chunked_images.py`.
+being discovered by walking subclasses, mirroring the `register_chunked_image_source`
+pattern in `chunked_image_source.py`.
 """
 
 from __future__ import annotations
@@ -12,17 +12,17 @@ import os
 import warnings
 from os import environ
 
-from .frame_sequence import FrameSequence
+from .slice_sequence import SliceSequence
 
 
 class UnknownFormatError(Exception):
     """Raised when no registered reader can open a file."""
 
 
-_IMAGE_READER_CLASSES: list[type[FrameSequence]] = []
+_IMAGE_READER_CLASSES: list[type[SliceSequence]] = []
 
 
-def register_image_reader(cls: type[FrameSequence]) -> type[FrameSequence]:
+def register_image_reader(cls: type[SliceSequence]) -> type[SliceSequence]:
     _IMAGE_READER_CLASSES.append(cls)
     return cls
 
@@ -35,18 +35,18 @@ def get_valid_image_suffixes() -> set[str]:
     return valid_suffixes
 
 
-def open_images(path_spec: str, **kwargs: object) -> FrameSequence:
-    """Opens a path, glob pattern or directory as a sequence of frames.
+def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
+    """Opens a path, glob pattern or directory as a sequence of slices.
 
     A pattern matching more than one file becomes an image sequence; a single
     file is handed to the registered reader with the highest `class_priority`
     that claims its suffix, falling back to the next one if that reader raises.
     """
     # Deferred to avoid a cycle: the raster readers register themselves here.
-    from .raster_image_readers import ImageSequenceReader
+    from .raster_slices import MultiImageSlices
 
     if len(glob.glob(path_spec)) > 1:
-        return ImageSequenceReader(path_spec, **kwargs)
+        return MultiImageSlices(path_spec, **kwargs)
 
     _, ext = os.path.splitext(path_spec)
     if len(ext) < 2:
@@ -86,19 +86,19 @@ def _image_reader_imports() -> str | None:
     # No optional dependency of its own beyond imageio, which is a hard
     # requirement — but keep it here so every reader registers in one place.
     from . import (
-        dm_sequence_readers,  # noqa: F401 unused-import
-        raster_image_readers,  # noqa: F401 unused-import
+        dm_slices,  # noqa: F401 unused-import
+        raster_slices,  # noqa: F401 unused-import
     )
 
     try:
-        from .czi_sequence_reader import CziSequenceReader  # noqa: F401 unused-import
+        from .czi_slices import CziSlices  # noqa: F401 unused-import
     except ImportError as import_error:
-        import_exceptions.append(f"CziSequenceReader: {import_error.msg}")
+        import_exceptions.append(f"CziSlices: {import_error.msg}")
 
     try:
-        from .tiff_sequence_reader import TiffSequenceReader  # noqa: F401 unused-import
+        from .tiff_slices import TiffSlices  # noqa: F401 unused-import
     except ImportError as import_error:
-        import_exceptions.append(f"TiffSequenceReader: {import_error.msg}")
+        import_exceptions.append(f"TiffSlices: {import_error.msg}")
 
     if import_exceptions:
         return "".join(

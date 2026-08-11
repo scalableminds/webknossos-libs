@@ -49,11 +49,11 @@ def create_synthetic_multi_timepoint_ims(
     x: int,
     dtype: DTypeLike = np.uint16,
 ) -> None:
-    """Writes a minimal HDF5 structure matching what ImsChunkedImages actually
+    """Writes a minimal HDF5 structure matching what ImsImageSource actually
     reads (DataSet/ResolutionLevel 0/TimePoint {t}/Channel {c}/Data). This
     intentionally skips the DataSetInfo attributes that the full
     imaris_ims_file_reader library needs, since callers monkeypatch
-    ims_chunked_images._read_ims_metadata_quietly instead of relying on a
+    ims_image_source._read_ims_metadata_quietly instead of relying on a
     byte-perfect Imaris file.
 
     `dtype` matters for multi-channel files: only three uint8 channels are
