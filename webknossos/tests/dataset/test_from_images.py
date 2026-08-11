@@ -17,8 +17,8 @@ from upath import UPath
 from tests.constants import TESTDATA_DIR
 from tests.utils import create_synthetic_multi_timepoint_ims, download_ims_fixture
 from webknossos.dataset import Dataset, RemoteDataset, UnsupportedImageFormatError
-from webknossos.dataset._utils.mrc_chunked_images import MrcChunkedImages
-from webknossos.dataset._utils.tiff_sequence_reader import TiffSequenceReader
+from webknossos.dataset._utils.mrc_image_source import MrcImageSource
+from webknossos.dataset._utils.tiff_slices import TiffSlices
 from webknossos.geometry import BoundingBox, Vec3Int, VecInt
 
 
@@ -93,12 +93,12 @@ def test_imagej_virtual_stack_tiff(tmp_upath: UPath) -> None:
     assert len(t.pages) == 1, "expected exactly 1 real IFD"
     assert t.series[0].shape == (Z, Y, X)
 
-    reader = TiffSequenceReader(tif_path)
+    reader = TiffSlices(tif_path)
     reader.bundle_axes = ["y", "x"]
     reader.iter_axes = ["z"]
 
     assert reader.shape == (Z, Y, X)
-    assert reader.frame_shape == (Y, X)
+    assert reader.slice_shape == (Y, X)
 
     for z in range(Z):
         np.testing.assert_array_equal(np.array(reader[z]), data[z])
@@ -133,7 +133,7 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
     # Verify that reading z=0 only accesses the C pages for z=0, not pages from other z-slices.
     # With CZYX ordering (C=3, Z=2) pages are laid out as: c=0→[pg0,pg1], c=1→[pg2,pg3], c=2→[pg4,pg5]
     # so z=0 corresponds to pages 0, 2, 4 and z=1 to pages 1, 3, 5.
-    reader = TiffSequenceReader(tif_path)
+    reader = TiffSlices(tif_path)
     reader.bundle_axes = ["c", "y", "x"]
     reader.iter_axes = ["z"]
 
@@ -145,13 +145,13 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
         return original_asarray(self, **kwargs)
 
     with patch.object(tifffile_module.TiffPage, "asarray", tracking_asarray):
-        frame_z0 = np.array(reader[0])
+        slice_z0 = np.array(reader[0])
 
     assert pages_read == [0, 2, 4], (
         f"Expected pages [0, 2, 4] for z=0, got {pages_read}"
     )
-    assert frame_z0.shape == (C, Y, X)
-    np.testing.assert_array_equal(frame_z0, data[:, 0, :, :])
+    assert slice_z0.shape == (C, Y, X)
+    np.testing.assert_array_equal(slice_z0, data[:, 0, :, :])
 
 
 def test_multiple_multitiffs(tmp_upath: UPath) -> None:
@@ -245,7 +245,7 @@ def test_rgb_image_creates_a_single_rgb_layer(tmp_upath: UPath, mode: str) -> No
 
 def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     # brain_crop3.ims has 2 channels and no explicit channel is selected, so
-    # ImsChunkedImages.get_possible_layers() reports {"channel": [0, 1]} and
+    # ImsImageSource.get_possible_layers() reports {"channel": [0, 1]} and
     # from_images() (which always passes allow_multiple_layers=True) should
     # split it into one layer per channel instead of picking just the first.
     ims_path = download_ims_fixture(tmp_upath)
@@ -288,11 +288,11 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
     create_synthetic_multi_timepoint_ims(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
-    ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._utils.ims_chunked_images"
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._utils.ims_image_source"
     )
     monkeypatch.setattr(
-        ims_chunked_images,
+        ims_image_source,
         "_read_ims_metadata_quietly",
         lambda _path: ((2, 3, 4, 8, 10), np.dtype("uint16")),
     )
@@ -320,8 +320,8 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
             assert (data[t] == t * 100 + c).all()
 
 
-def _open_mrc_chunked_images(mrc_path: UPath) -> MrcChunkedImages:
-    return MrcChunkedImages(
+def _open_mrc_chunked_images(mrc_path: UPath) -> MrcImageSource:
+    return MrcImageSource(
         mrc_path,
         channel=None,
         swap_xy=False,
@@ -349,7 +349,7 @@ def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
 
 
 def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
-    # MRC data is read via a memory-mapped array; each read_chunk() call must
+    # MRC data is read via a memory-mapped array; each copy_chunk_to_view() call must
     # reopen its own mmap (rather than reusing a shared/cached one), so no
     # mmap handle crosses a multiprocessing boundary between parallel jobs.
     Z, Y, X = 4, 8, 8
@@ -376,7 +376,7 @@ def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
     with patch("mrcfile.mmap", counting_mmap):
         for z in range(Z):
             bbox = BoundingBox((0, 0, z), (X, Y, 1))
-            reader.read_chunk(bbox, mag_view=mag_view, dtype=None)
+            reader.copy_chunk_to_view(bbox, mag_view=mag_view, dtype=None)
 
     assert open_count == Z, (
         f"Expected mrcfile.mmap to be called {Z} times (once per chunk), got {open_count}"
@@ -432,20 +432,20 @@ def test_remote_dataset_from_images() -> None:
 
 
 def test_optional_reader_suffixes_match_class_exts() -> None:
-    # _OPTIONAL_CHUNKED_IMAGE_READERS has to restate each reader's suffixes,
+    # _OPTIONAL_CHUNKED_IMAGE_SOURCES has to restate each reader's suffixes,
     # because a reader whose dependency is missing never imports and so cannot
     # report its own class_exts(). Whenever a reader *is* importable, the two
     # must agree — otherwise the missing-dependency hint names the wrong
     # formats, or silently stops covering one.
-    from webknossos.dataset._utils.chunked_images import (
-        _CHUNKED_IMAGE_CLASSES,
-        _OPTIONAL_CHUNKED_IMAGE_READERS,
+    from webknossos.dataset._utils.chunked_image_source import (
+        _CHUNKED_IMAGE_SOURCE_CLASSES,
+        _OPTIONAL_CHUNKED_IMAGE_SOURCES,
     )
 
-    registered = {cls.__name__: cls for cls in _CHUNKED_IMAGE_CLASSES}
+    registered = {cls.__name__: cls for cls in _CHUNKED_IMAGE_SOURCE_CLASSES}
     # The test env installs all extras, so every reader should be registered.
-    assert set(registered) == set(_OPTIONAL_CHUNKED_IMAGE_READERS)
-    for name, (_extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
+    assert set(registered) == set(_OPTIONAL_CHUNKED_IMAGE_SOURCES)
+    for name, (_extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_SOURCES.items():
         assert registered[name].class_exts() == set(suffixes), (
             f"declared suffixes for {name} are out of sync with its class_exts()"
         )

@@ -10,8 +10,8 @@ from upath import UPath
 
 from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError
-from .chunked_images import ChunkedImages, register_chunked_images
-from .sliced_images import compute_channel_selection
+from .chunked_image_source import ChunkedImageSource, register_chunked_image_source
+from .image_source import compute_channel_selection
 
 try:
     from imaris_ims_file_reader.ims import ims as ImsFile
@@ -38,13 +38,12 @@ def _read_ims_metadata_quietly(
     return shape, dtype  # type: ignore[return-value]
 
 
-@register_chunked_images
-class ImsChunkedImages(ChunkedImages):
+@register_chunked_image_source
+class ImsImageSource(ChunkedImageSource):
     """
-    ChunkedImages implementation for Imaris .ims files. Reads shard-sized 3D
-    blocks directly from the underlying HDF5 file via h5py and writes them
-    to mag_view directly — no slice-by-slice SlicedImages reading, no BufferedSliceWriter.
-    This is the only supported way .ims files are read for conversion.
+    ChunkedImageSource for Imaris .ims files. Reads shard-sized 3D blocks
+    straight out of the underlying HDF5 file via h5py and writes them to
+    mag_view. This is the only supported way .ims files are read.
     """
 
     @classmethod
@@ -99,7 +98,7 @@ class ImsChunkedImages(ChunkedImages):
 
         # A "t" axis is only added to the bounding box when there actually are
         # multiple timepoints; each chunk along that axis then carries its own
-        # timepoint (chunk size 1), read per chunk in read_chunk() below. A
+        # timepoint (chunk size 1), read per chunk in copy_chunk_to_view() below. A
         # single-timepoint file stays 3D and always reads timepoint 0.
         self._include_t_axis = t > 1
         self._fixed_timepoint: int | None = None if self._include_t_axis else 0

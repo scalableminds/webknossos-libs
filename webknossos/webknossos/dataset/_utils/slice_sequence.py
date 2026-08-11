@@ -4,13 +4,13 @@ These replace the parts of `pims` that this library used to depend on
 (`pims.FramesSequence`, `pims.FramesSequenceND` and `slicerator.Slicerator`).
 Only the behavior the conversion path actually relies on is implemented:
 
-* random access to numbered frames, plus lazy slicing of a reader,
+* random access to numbered slices, plus lazy slicing of a reader,
 * named axes with `bundle_axes` / `iter_axes` / `default_coords`, and the
-  resolver that maps a reader's registered `get_frame` onto whatever axes the
+  resolver that maps a reader's registered `get_slice` onto whatever axes the
   caller asked for.
 
-Unlike pims, frames are plain `np.ndarray`s — there is no `Frame` subclass and
-no per-frame metadata, because nothing downstream reads it.
+Unlike pims, slices are plain `np.ndarray`s — there is no `pims.Frame` wrapper
+and no per-slice metadata, because nothing downstream reads it.
 """
 
 from __future__ import annotations
@@ -23,13 +23,13 @@ from typing import Any
 import numpy as np
 from numpy.typing import DTypeLike
 
-GetFrame = Callable[..., np.ndarray]
+GetSlice = Callable[..., np.ndarray]
 
 
-class FrameSequence(ABC):
-    """A finite, randomly accessible sequence of frames.
+class SliceSequence(ABC):
+    """A finite, randomly accessible sequence of slices.
 
-    Subclasses implement `__len__`, `get_frame` and the two shape/dtype
+    Subclasses implement `__len__`, `get_slice` and the two shape/dtype
     properties. Slicing returns a lazy view rather than reading anything.
     """
 
@@ -47,12 +47,12 @@ class FrameSequence(ABC):
     def __len__(self) -> int: ...
 
     @abstractmethod
-    def get_frame(self, i: int) -> np.ndarray: ...
+    def get_slice(self, i: int) -> np.ndarray: ...
 
     @property
     @abstractmethod
-    def frame_shape(self) -> tuple[int, ...]:
-        """The shape of a single frame, as returned by `get_frame`."""
+    def slice_shape(self) -> tuple[int, ...]:
+        """The shape of a single slice, as returned by `get_slice`."""
 
     @property
     @abstractmethod
@@ -65,21 +65,21 @@ class FrameSequence(ABC):
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return (len(self), *self.frame_shape)
+        return (len(self), *self.slice_shape)
 
     def __getitem__(self, key: int | slice | Sequence[int]) -> Any:
         if isinstance(key, slice | Sequence | np.ndarray):
             return _SlicedView(self, _resolve_indices(key, len(self)))
-        return self.get_frame(_resolve_index(key, len(self)))
+        return self.get_slice(_resolve_index(key, len(self)))
 
     def __iter__(self) -> Iterator[np.ndarray]:
         for i in range(len(self)):
-            yield self.get_frame(i)
+            yield self.get_slice(i)
 
     def close(self) -> None:
         """Release any resources held. Subclasses should call super()."""
 
-    def __enter__(self) -> FrameSequence:
+    def __enter__(self) -> SliceSequence:
         return self
 
     def __exit__(self, *args: object) -> None:
@@ -87,8 +87,8 @@ class FrameSequence(ABC):
 
     def __repr__(self) -> str:
         return (
-            f"<{type(self).__name__}>\nLength: {len(self)} frames\n"
-            f"Frame Shape: {self.frame_shape!r}\nPixel Datatype: {self.dtype}"
+            f"<{type(self).__name__}>\nLength: {len(self)} slices\n"
+            f"Slice Shape: {self.slice_shape!r}\nPixel Datatype: {self.dtype}"
         )
 
 
@@ -97,7 +97,7 @@ def _resolve_index(index: int, length: int) -> int:
     if i < 0:
         i += length
     if not 0 <= i < length:
-        raise IndexError(f"index {index} out of range for {length} frames")
+        raise IndexError(f"index {index} out of range for {length} slices")
     return i
 
 
@@ -108,15 +108,15 @@ def _resolve_indices(key: slice | Sequence[int] | np.ndarray, length: int) -> li
 
 
 class _SlicedView:
-    """A lazy view on a subset of a `FrameSequence`'s frames.
+    """A lazy view on a subset of a `SliceSequence`'s slices.
 
     Replaces `slicerator.Slicerator`: it only has to support what
-    `SlicedImages.copy_to_view` does — slicing, reversal (`[::-1]`), chained
-    slicing of the result, `len()` and iteration — so no frame is read until it
+    `SlicedImageSource.copy_chunk_to_view` does — slicing, reversal (`[::-1]`), chained
+    slicing of the result, `len()` and iteration — so no slice is read until it
     is actually iterated over.
     """
 
-    def __init__(self, source: FrameSequence, indices: Sequence[int]) -> None:
+    def __init__(self, source: SliceSequence, indices: Sequence[int]) -> None:
         self._source = source
         self._indices = list(indices)
 
@@ -127,58 +127,58 @@ class _SlicedView:
         if isinstance(key, slice | Sequence | np.ndarray):
             selected = _resolve_indices(key, len(self._indices))
             return _SlicedView(self._source, [self._indices[i] for i in selected])
-        return self._source.get_frame(
+        return self._source.get_slice(
             self._indices[_resolve_index(key, len(self._indices))]
         )
 
     def __iter__(self) -> Iterator[np.ndarray]:
         for i in self._indices:
-            yield self._source.get_frame(i)
+            yield self._source.get_slice(i)
 
     def __repr__(self) -> str:
-        return f"<_SlicedView of {self._source!r} with {len(self)} frames>"
+        return f"<_SlicedView of {self._source!r} with {len(self)} slices>"
 
 
 def _transpose(
-    get_frame: GetFrame, expected_axes: Sequence[str], desired_axes: Sequence[str]
-) -> GetFrame:
+    get_slice: GetSlice, expected_axes: Sequence[str], desired_axes: Sequence[str]
+) -> GetSlice:
     if list(expected_axes) == list(desired_axes):
-        return get_frame
+        return get_slice
     transposition = [list(expected_axes).index(a) for a in desired_axes]
 
-    def get_frame_transposed(**ind: int) -> np.ndarray:
-        return get_frame(**ind).transpose(transposition)
+    def get_slice_transposed(**ind: int) -> np.ndarray:
+        return get_slice(**ind).transpose(transposition)
 
-    return get_frame_transposed
+    return get_slice_transposed
 
 
 def _bundle(
-    get_frame: GetFrame,
+    get_slice: GetSlice,
     expected_axes: Sequence[str],
     to_iter: Sequence[str],
     sizes: dict[str, int],
     dtype: DTypeLike,
-) -> tuple[GetFrame, list[str]]:
-    """Wraps `get_frame` so it also covers `to_iter`, by looping over those
+) -> tuple[GetSlice, list[str]]:
+    """Wraps `get_slice` so it also covers `to_iter`, by looping over those
     axes and stacking the results into one array."""
     bundled_axes = list(to_iter) + list(expected_axes)
     shape = [sizes[a] for a in bundled_axes]
     iter_shape = shape[: len(to_iter)]
 
-    def get_frame_bundled(**ind: int) -> np.ndarray:
+    def get_slice_bundled(**ind: int) -> np.ndarray:
         result = np.empty(shape, dtype=dtype)
         for indices in itertools.product(*[range(s) for s in iter_shape]):
             ind.update(dict(zip(to_iter, indices)))
-            result[indices] = get_frame(**ind)
+            result[indices] = get_slice(**ind)
         return result
 
-    return get_frame_bundled, bundled_axes
+    return get_slice_bundled, bundled_axes
 
 
 def _drop(
-    get_frame: GetFrame, expected_axes: Sequence[str], to_drop: Sequence[str]
-) -> tuple[GetFrame, list[str]]:
-    """Wraps `get_frame` so the axes in `to_drop` are indexed away, using the
+    get_slice: GetSlice, expected_axes: Sequence[str], to_drop: Sequence[str]
+) -> tuple[GetSlice, list[str]]:
+    """Wraps `get_slice` so the axes in `to_drop` are indexed away, using the
     coordinate the caller passed for each of them."""
     # Sort axes in descending order so each np.take does not shift the
     # remaining axis positions.
@@ -188,36 +188,36 @@ def _drop(
     dropped = [to_drop[i] for i in reversed(order)]
     result_axes = [a for a in expected_axes if a not in to_drop]
 
-    def get_frame_dropped(**ind: int) -> np.ndarray:
-        result = get_frame(**ind)
+    def get_slice_dropped(**ind: int) -> np.ndarray:
+        result = get_slice(**ind)
         for axis, name in zip(axes, dropped):
             result = np.take(result, ind[name], axis=axis)
         return result
 
-    return get_frame_dropped, result_axes
+    return get_slice_dropped, result_axes
 
 
-def _make_get_frame(
+def _make_get_slice(
     result_axes: Sequence[str],
-    get_frame_dict: dict[tuple[str, ...], GetFrame],
+    get_slice_dict: dict[tuple[str, ...], GetSlice],
     sizes: dict[str, int],
     dtype: DTypeLike,
-) -> GetFrame:
-    """Builds a function returning frames with exactly `result_axes`, out of
+) -> GetSlice:
+    """Builds a function returning slices with exactly `result_axes`, out of
     the reader methods registered for other axis combinations.
 
     Preference order, matching pims: an exact match (possibly transposed), then
     reading no more data than needed (bundling extra axes), then avoiding
     iteration (dropping surplus axes), then the cheapest combination of both.
     """
-    methods = list(get_frame_dict.keys())
+    methods = list(get_slice_dict.keys())
     result_axes = list(result_axes)
     result_axes_set = set(result_axes)
 
     # A method that already returns the right axes, up to a transposition.
     for axes in methods:
         if len(set(axes) ^ result_axes_set) == 0:
-            return _transpose(get_frame_dict[axes], axes, result_axes)
+            return _transpose(get_slice_dict[axes], axes, result_axes)
 
     # Otherwise axes have to be dropped or iterated over. Collect the cost of
     # both for every registered method.
@@ -236,26 +236,26 @@ def _make_get_frame(
     for method, to_iter, _n_iter, _to_drop, n_drop in candidates:
         if n_drop > 0:
             continue
-        get_frame, bundled_axes = _bundle(
-            get_frame_dict[method], method, to_iter, sizes, dtype
+        get_slice, bundled_axes = _bundle(
+            get_slice_dict[method], method, to_iter, sizes, dtype
         )
-        return _transpose(get_frame, bundled_axes, result_axes)
+        return _transpose(get_slice, bundled_axes, result_axes)
 
-    # Then prefer not iterating at all, dropping as few frames as possible.
+    # Then prefer not iterating at all, dropping as few slices as possible.
     candidates.sort(key=lambda x: x[4])
     for method, _to_iter, n_iter, to_drop, _n_drop in candidates:
         if n_iter > 0:
             continue
-        get_frame, after_drop = _drop(get_frame_dict[method], method, to_drop)
-        return _transpose(get_frame, after_drop, result_axes)
+        get_slice, after_drop = _drop(get_slice_dict[method], method, to_drop)
+        return _transpose(get_slice, after_drop, result_axes)
 
-    # Worst case: every method needs both. Take the fewest dropped frames, and
+    # Worst case: every method needs both. Take the fewest dropped slices, and
     # among those the fewest iterations.
     candidates.sort(key=lambda x: (x[2], x[4]))
     method, to_iter, _n_iter, to_drop, _n_drop = candidates[0]
-    get_frame, after_drop = _drop(get_frame_dict[method], method, to_drop)
-    get_frame, after_bundle = _bundle(get_frame, after_drop, to_iter, sizes, dtype)
-    return _transpose(get_frame, after_bundle, result_axes)
+    get_slice, after_drop = _drop(get_slice_dict[method], method, to_drop)
+    get_slice, after_bundle = _bundle(get_slice, after_drop, to_iter, sizes, dtype)
+    return _transpose(get_slice, after_bundle, result_axes)
 
 
 class DefaultCoordsDict(dict[str, int]):
@@ -276,16 +276,16 @@ class DefaultCoordsDict(dict[str, int]):
             self[k] = v
 
 
-class NDFrameSequence(FrameSequence):
-    """A `FrameSequence` whose data has arbitrary named axes.
+class NDSliceSequence(SliceSequence):
+    """A `SliceSequence` whose data has arbitrary named axes.
 
     Subclasses declare their axes with `_init_axis(name, size)` and register at
-    least one reader method with `_register_get_frame(method, axes)`; they only
+    least one reader method with `_register_get_slice(method, axes)`; they only
     need to additionally define `pixel_type`. Everything below — `__len__`,
-    `frame_shape`, `get_frame` — is derived from three attributes the caller
+    `slice_shape`, `get_slice` — is derived from three attributes the caller
     sets:
 
-    * `bundle_axes`: the axes making up one frame, in the order the returned
+    * `bundle_axes`: the axes making up one slice, in the order the returned
       array has them. Defaults to `["y", "x"]`.
     * `iter_axes`: the axes iterated over by the sequence; the last one varies
       fastest. Defaults to `[]`.
@@ -294,14 +294,14 @@ class NDFrameSequence(FrameSequence):
 
     def __init__(self) -> None:
         self._clear_axes()
-        self._get_frame_dict: dict[tuple[str, ...], GetFrame] = {}
+        self._get_slice_dict: dict[tuple[str, ...], GetSlice] = {}
 
     def _clear_axes(self) -> None:
         self._sizes: dict[str, int] = {}
         self._default_coords = DefaultCoordsDict()
         self._iter_axes: list[str] = []
         self._bundle_axes: list[str] = ["y", "x"]
-        self._get_frame_wrapped: GetFrame | None = None
+        self._get_slice_wrapped: GetSlice | None = None
 
     def _init_axis(self, name: str, size: int, default: int = 0) -> None:
         if name in self._sizes:
@@ -310,14 +310,14 @@ class NDFrameSequence(FrameSequence):
         self._default_coords.axes = self.axes
         self._default_coords[name] = int(default)
 
-    def _register_get_frame(self, method: GetFrame, axes: Iterable[str]) -> None:
-        self._get_frame_dict[tuple(axes)] = method
+    def _register_get_slice(self, method: GetSlice, axes: Iterable[str]) -> None:
+        self._get_slice_dict[tuple(axes)] = method
 
     def __len__(self) -> int:
         return int(np.prod([self._sizes[d] for d in self._iter_axes]))
 
     @property
-    def frame_shape(self) -> tuple[int, ...]:
+    def slice_shape(self) -> tuple[int, ...]:
         return tuple(self._sizes[d] for d in self._bundle_axes)
 
     @property
@@ -347,13 +347,13 @@ class NDFrameSequence(FrameSequence):
                 self._iter_axes.remove(k)
 
         self._bundle_axes = value
-        if not self._get_frame_dict:
+        if not self._get_slice_dict:
             raise RuntimeError(
                 "No reader methods found. Register a reader method with "
-                "_register_get_frame"
+                "_register_get_slice"
             )
-        self._get_frame_wrapped = _make_get_frame(
-            self._bundle_axes, self._get_frame_dict, self.sizes, self.pixel_type
+        self._get_slice_wrapped = _make_get_slice(
+            self._bundle_axes, self._get_slice_dict, self.sizes, self.pixel_type
         )
 
     @property
@@ -380,16 +380,16 @@ class NDFrameSequence(FrameSequence):
     def default_coords(self, value: dict[str, int]) -> None:
         self._default_coords.update(**value)
 
-    def get_frame(self, i: int) -> np.ndarray:
-        """Returns the frame at index `i`, shaped according to `bundle_axes`.
+    def get_slice(self, i: int) -> np.ndarray:
+        """Returns the slice at index `i`, shaped according to `bundle_axes`.
 
         `i` is interpreted as a flat index into `iter_axes`; axes in neither
         `iter_axes` nor `bundle_axes` use their `default_coords` value.
         """
         if i >= len(self):
             raise IndexError("index out of range")
-        if self._get_frame_wrapped is None:
-            self.bundle_axes = self.bundle_axes  # builds _get_frame_wrapped
+        if self._get_slice_wrapped is None:
+            self.bundle_axes = self.bundle_axes  # builds _get_slice_wrapped
 
         coords = dict(self.default_coords)
 
@@ -400,8 +400,8 @@ class NDFrameSequence(FrameSequence):
         iter_coords = (i // iter_cumsizes) % iter_sizes
         coords.update(dict(zip(self.iter_axes, (int(c) for c in iter_coords))))
 
-        assert self._get_frame_wrapped is not None
-        return np.asarray(self._get_frame_wrapped(**coords))
+        assert self._get_slice_wrapped is not None
+        return np.asarray(self._get_slice_wrapped(**coords))
 
     def __repr__(self) -> str:
         sizes = "".join(f"Axis '{a}' size: {s}\n" for a, s in self._sizes.items())

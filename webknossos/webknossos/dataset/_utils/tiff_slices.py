@@ -4,8 +4,8 @@ import numpy as np
 from upath import UPath
 
 from ...utils import WkImportError
-from .frame_sequence import NDFrameSequence
 from .image_reader_registry import register_image_reader
+from .slice_sequence import NDSliceSequence
 
 try:
     import tifffile
@@ -14,7 +14,7 @@ except ImportError as e:
 
 
 @register_image_reader
-class TiffSequenceReader(NDFrameSequence):
+class TiffSlices(NDSliceSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"tif", "tiff"}
@@ -53,11 +53,11 @@ class TiffSequenceReader(NDFrameSequence):
             )
 
             if "c" in self._tiff_axes:
-                self._register_get_frame(self.get_frame_2D, "cyx")
+                self._register_get_slice(self.get_slice_2d, "cyx")
             else:
-                self._register_get_frame(self.get_frame_2D, "yx")
+                self._register_get_slice(self.get_slice_2d, "yx")
 
-    def get_frame_2D(self, **ind: int) -> np.ndarray:
+    def get_slice_2d(self, **ind: int) -> np.ndarray:
         out_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)
         out = np.zeros(out_shape, dtype=self._dtype)
 
@@ -161,5 +161,5 @@ class TiffSequenceReader(NDFrameSequence):
         return self._tiff_shape
 
     @property
-    def frame_shape(self) -> tuple[int, ...]:
+    def slice_shape(self) -> tuple[int, ...]:
         return self._shape
