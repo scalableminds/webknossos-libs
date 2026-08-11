@@ -24,6 +24,7 @@ should point at this file rather than at each other.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import NamedTuple
 
 from numpy.typing import DTypeLike
 
@@ -31,31 +32,53 @@ from ...geometry.nd_bounding_box import NDBoundingBox
 from ..layer.view import MagView
 
 
+class ChannelSelection(NamedTuple):
+    """How a source's raw channels map onto what actually gets written."""
+
+    num_channels: int
+    """The number of channels that will actually be written."""
+
+    selected_channel: int | None
+    """A single pinned channel index, or None if all (up to
+    `first_n_channels`) channels are used."""
+
+    first_n_channels: int | None
+    """Set when the source has 3 or more channels, truncating to the first 3
+    (e.g. RGB out of RGBA). None when no truncation applies."""
+
+    possible_channels: list[int] | None
+    """Channel indices that could each become their own layer (see
+    `ImageSource.get_possible_layers()`), or None if not applicable."""
+
+
 def compute_channel_selection(
     raw_num_channels: int, channel: int | None
-) -> tuple[int, int | None, int | None, list[int] | None]:
-    """
-    The channel-selection rule, shared by every `ImageSource` implementation.
-    Returns (num_channels, selected_channel, first_n_channels,
-    possible_channels):
-    - num_channels: the number of channels that will actually be written
-    - selected_channel: a single pinned channel index, or None if all
-      (up to first_n_channels) channels are used
-    - first_n_channels: set when raw_num_channels >= 3, truncating to the
-      first 3 channels (e.g. RGB out of RGBA)
-    - possible_channels: channel indices that could each become their own
-      layer (see get_possible_layers()), or None if not applicable
-    """
+) -> ChannelSelection:
+    """The channel-selection rule, shared by every `ImageSource`
+    implementation."""
     if channel is not None:
         assert channel < raw_num_channels, (
             f"Selected channel {channel} (0-indexed), but only {raw_num_channels} channels are available."
         )
-        return 1, channel, None, None
+        return ChannelSelection(1, channel, None, None)
     if raw_num_channels == 2:
-        return 1, 0, None, [0, 1]
+        return ChannelSelection(1, 0, None, [0, 1])
     if raw_num_channels >= 3:
-        return 3, None, 3, list(range(raw_num_channels))
-    return raw_num_channels, None, None, None
+        return ChannelSelection(3, None, 3, list(range(raw_num_channels)))
+    return ChannelSelection(raw_num_channels, None, None, None)
+
+
+class ChunkResult(NamedTuple):
+    """What copying one chunk reported back."""
+
+    xy_size: tuple[int, int]
+    """The x/y extent actually written. This is how a placeholder
+    `expected_bbox` gets corrected — it is the true size, not the requested
+    chunk's."""
+
+    max_value: int | None
+    """The largest value seen, used to set `largest_segment_id` on
+    segmentation layers. None when the source cannot report one."""
 
 
 class ImageSource(ABC):
@@ -110,19 +133,14 @@ class ImageSource(ABC):
         bbox: NDBoundingBox,
         mag_view: MagView,
         dtype: DTypeLike | None = None,
-    ) -> tuple[tuple[int, int], int | None]:
+    ) -> ChunkResult:
         """Read the data for `bbox` and write it into `mag_view`.
 
         Called once per chunk, potentially in parallel across processes, so
         implementations must not carry open file handles across the call
         boundary. `bbox` is absolute and in Mag(1).
 
-        Returns `((x_size, y_size), max_value)`:
-
-        * the x/y extent actually written, which is how a placeholder
-          `expected_bbox` gets corrected — it is the true size, not `bbox`'s;
-        * the largest value seen, used to set `largest_segment_id` on
-          segmentation layers. None when the source cannot report one.
+        See `ChunkResult` for what comes back.
 
         Conventions every implementation shares, so that output is
         interchangeable:

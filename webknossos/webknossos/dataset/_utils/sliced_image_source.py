@@ -17,8 +17,14 @@ from ..errors import (
     UnsupportedImageFormatError,
 )
 from ..layer.view import MagView
-from .image_reader_registry import get_valid_image_suffixes, open_images
-from .image_source import ImageSource, compute_channel_selection
+from .image_source import ChunkResult, ImageSource, compute_channel_selection
+from .image_source_registry import (
+    describe_missing_extras,
+    get_unavailable_suffixes,
+    get_valid_slice_reader_suffixes,
+    get_valid_suffixes,
+    open_images,
+)
 from .raster_slices import MultiImageSlices, StackedFileSlices
 from .slice_sequence import NDSliceSequence, SliceSequence
 
@@ -229,7 +235,7 @@ class SlicedImageSource(ImageSource):
         if isinstance(original_images, list):
             return [str(i) for i in original_images]
         if original_images.is_dir():
-            valid_suffixes = get_valid_image_suffixes()
+            valid_suffixes = get_valid_slice_reader_suffixes()
             files: list[str] = natsorted(
                 str(i)
                 for i in original_images.glob("**/*")
@@ -268,14 +274,6 @@ class SlicedImageSource(ImageSource):
         MultiImageSlices) working as before: this only runs once every open
         strategy has already failed.
         """
-        # Imported inside the function so that the two reader modules stay
-        # independent at import time; this is only needed on the error path.
-        from .chunked_image_source import (
-            describe_missing_extras,
-            get_unavailable_chunked_image_suffixes,
-            get_valid_chunked_image_suffixes,
-        )
-
         path = self._error_path()
         # Only a file's suffix says anything about which readers apply: a
         # directory of images has none (or, worse, a dot in its name), and
@@ -286,13 +284,12 @@ class SlicedImageSource(ImageSource):
             else None
         )
 
-        supported_suffixes = get_valid_image_suffixes()
-        supported_suffixes.update(get_valid_chunked_image_suffixes())
+        supported_suffixes = get_valid_suffixes()
 
         if suffix is None or suffix in supported_suffixes:
             return None
 
-        unavailable = get_unavailable_chunked_image_suffixes()
+        unavailable = get_unavailable_suffixes()
         missing = {suffix: unavailable[suffix]} if suffix in unavailable else {}
         message = (
             f"Could not convert {path}: no reader supports the .{suffix} format. "
@@ -445,7 +442,7 @@ class SlicedImageSource(ImageSource):
         bbox: BoundingBox | NDBoundingBox,
         mag_view: MagView,
         dtype: DTypeLike | None = None,
-    ) -> tuple[tuple[int, int], int | None]:
+    ) -> ChunkResult:
         """Copies the slices covering `bbox` into `mag_view`, one batch of
         z-slices per call, meant for usage with an executor.
 
@@ -533,7 +530,7 @@ class SlicedImageSource(ImageSource):
                         shapes.append(image_slice.shape[-2:])
                         writer.send(image_slice)
 
-                return dimwise_max(shapes), max_value
+                return ChunkResult(dimwise_max(shapes), max_value)
 
     def get_possible_layers(self) -> dict["str", list[int]] | None:
         if len(self._possible_layers) == 0:

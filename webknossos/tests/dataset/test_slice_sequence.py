@@ -5,7 +5,7 @@ import pytest
 from PIL import Image
 from upath import UPath
 
-from webknossos.dataset._utils.image_reader_registry import (
+from webknossos.dataset._utils.image_source_registry import (
     UnknownFormatError,
     open_images,
 )

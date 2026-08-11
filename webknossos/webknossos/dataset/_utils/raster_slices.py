@@ -20,7 +20,7 @@ from imageio import v2 as iio
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 
-from .image_reader_registry import register_image_reader
+from .image_source_registry import register_slice_reader
 from .slice_sequence import NDSliceSequence, SliceSequence
 
 _natsort_key = natsort_keygen()
@@ -31,7 +31,7 @@ def imread(uri: Any, **kwargs: Any) -> np.ndarray:
     return np.asarray(iio.imread(uri, **kwargs))
 
 
-@register_image_reader
+@register_slice_reader
 class SingleImageSlices(SliceSequence):
     """Reads a single 2D raster image into a length-1 sequence.
 
@@ -173,7 +173,7 @@ class StackedFileSlices(NDSliceSequence):
         self.kwargs = kwargs
         self._zipfile: zipfile.ZipFile | None = None
         if reader_cls is None:
-            from .image_reader_registry import open_images
+            from .image_source_registry import open_images
 
             self.reader_cls: Callable[..., Any] = open_images
         else:

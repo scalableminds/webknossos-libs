@@ -442,20 +442,30 @@ def test_remote_dataset_from_images() -> None:
 
 
 def test_optional_reader_suffixes_match_class_exts() -> None:
-    # _OPTIONAL_CHUNKED_IMAGE_SOURCES has to restate each reader's suffixes,
-    # because a reader whose dependency is missing never imports and so cannot
-    # report its own class_exts(). Whenever a reader *is* importable, the two
-    # must agree — otherwise the missing-dependency hint names the wrong
-    # formats, or silently stops covering one.
-    from webknossos.dataset._utils.chunked_image_source import (
+    # _OPTIONAL_READERS has to restate each reader's suffixes, because a
+    # reader whose dependency is missing never imports and so cannot report its
+    # own class_exts(). Whenever a reader *is* importable, the two must agree —
+    # otherwise the missing-dependency hint names the wrong formats, or
+    # silently stops covering one. Covers both strategies: slice readers are
+    # just as optional as chunked ones now that tifffile is not in the base
+    # install.
+    from webknossos.dataset._utils.chunked_image_source import ChunkedImageSource
+    from webknossos.dataset._utils.image_source_registry import (
         _CHUNKED_IMAGE_SOURCE_CLASSES,
-        _OPTIONAL_CHUNKED_IMAGE_SOURCES,
+        _OPTIONAL_READERS,
+        _SLICE_READER_CLASSES,
     )
+    from webknossos.dataset._utils.slice_sequence import SliceSequence
 
-    registered = {cls.__name__: cls for cls in _CHUNKED_IMAGE_SOURCE_CLASSES}
-    # The test env installs all extras, so every reader should be registered.
-    assert set(registered) == set(_OPTIONAL_CHUNKED_IMAGE_SOURCES)
-    for name, (_extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_SOURCES.items():
+    # Annotated because the two lists' only common base is ABC, which does
+    # not declare class_exts(); the union does.
+    registered: dict[str, type[SliceSequence] | type[ChunkedImageSource]] = {
+        cls.__name__: cls for cls in _SLICE_READER_CLASSES
+    }
+    registered.update({cls.__name__: cls for cls in _CHUNKED_IMAGE_SOURCE_CLASSES})
+    # The test env installs all extras, so every optional reader is registered.
+    assert set(_OPTIONAL_READERS) <= set(registered)
+    for name, (_extra, suffixes) in _OPTIONAL_READERS.items():
         assert registered[name].class_exts() == set(suffixes), (
             f"declared suffixes for {name} are out of sync with its class_exts()"
         )
@@ -473,15 +483,15 @@ def test_from_images_names_missing_optional_dependency(
     image_conversion = importlib.import_module(
         "webknossos.dataset._utils.image_conversion"
     )
-    available = image_conversion.get_valid_chunked_image_suffixes()
+    available = image_conversion.get_valid_suffixes()
     monkeypatch.setattr(
         image_conversion,
-        "get_valid_chunked_image_suffixes",
+        "get_valid_suffixes",
         lambda: available - {"ims"},
     )
     monkeypatch.setattr(
         image_conversion,
-        "get_unavailable_chunked_image_suffixes",
+        "get_unavailable_suffixes",
         lambda: {"ims": "ims"},
     )
     (tmp_upath / "a.ims").write_bytes(b"stand-in for an ims file")
