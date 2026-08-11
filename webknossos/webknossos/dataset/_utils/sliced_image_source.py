@@ -8,8 +8,11 @@ from natsort import natsorted
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from ...dataset_properties import DataFormat
 from ...geometry.bounding_box import BoundingBox
+from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
+from ...geometry.vec3_int import Vec3Int
 from ...geometry.vec_int import VecInt
 from ..errors import (
     CorruptImageError,
@@ -27,6 +30,10 @@ from .image_source_registry import (
 )
 from .raster_slices import MultiImageSlices, StackedFileSlices
 from .slice_sequence import NDSliceSequence, SliceSequence
+
+# The x/y extent is only discovered while reading, so the layer starts out
+# deliberately oversized and is cut back down by final_bounding_box().
+SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
 def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
@@ -624,6 +631,75 @@ class SlicedImageSource(ImageSource):
                 raise UnsupportedImageDataError(
                     "It seems as if you try to load an N-dimensional image from 2D images. This is currently not supported."
                 )
+
+    def initial_layer_bounding_box(
+        self, mag1_expected_bbox: NDBoundingBox
+    ) -> NDBoundingBox:
+        """Deliberately oversized in x/y. Reading slice by slice cannot know
+        the true extent up front, and a write outside the layer's box would be
+        rejected, so the box starts far too large and final_bounding_box()
+        shrinks it to what was actually written."""
+        safe_size = mag1_expected_bbox.size.with_replaced(
+            mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
+        ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
+        return mag1_expected_bbox.with_size(safe_size)
+
+    def chunk_grid(
+        self,
+        layer_bounding_box: NDBoundingBox,
+        *,
+        mag_view: MagView,
+        mag: Mag,
+        batch_size: int | None,
+    ) -> list[NDBoundingBox]:
+        """Batches of z-slices spanning the full x/y extent. x/y cannot be
+        split, since at this point it is still the placeholder rather than a
+        real size."""
+        del mag
+        batch_size = self._resolve_batch_size(mag_view, batch_size)
+        return list(
+            layer_bounding_box.chunk(
+                layer_bounding_box.size_xyz.with_z(batch_size),
+                Vec3Int(1, 1, batch_size),
+            )
+        )
+
+    @staticmethod
+    def _resolve_batch_size(mag_view: MagView, batch_size: int | None) -> int:
+        """Batches must not straddle whatever unit two jobs could write at
+        once, or parallel writes corrupt each other: a whole shard when the
+        data is compressed or zarr, a chunk otherwise."""
+        shard_aligned = mag_view.info.compression_mode or mag_view.info.data_format in (
+            DataFormat.Zarr3,
+            DataFormat.Zarr,
+        )
+        unit = (
+            mag_view.info.shard_shape.z
+            if shard_aligned
+            else mag_view.info.chunk_shape.z
+        )
+        if batch_size is None:
+            return unit
+        assert batch_size % unit == 0, (
+            f"batch_size {batch_size} must be divisible by z "
+            + f"{'shard' if shard_aligned else 'chunk'}-size {unit}"
+            + (" when creating compressed layers" if shard_aligned else "")
+        )
+        return batch_size
+
+    def final_bounding_box(
+        self,
+        layer_bounding_box: NDBoundingBox,
+        *,
+        chunk_sizes: Sequence[tuple[int, int]],
+        mag: Mag,
+    ) -> NDBoundingBox:
+        """Replaces the placeholder x/y with the largest extent any chunk
+        actually wrote."""
+        return layer_bounding_box.with_size_xyz(
+            Vec3Int(dimwise_max(chunk_sizes) + (layer_bounding_box.get_shape("z"),))
+            * mag.to_vec3_int().with_z(1)
+        )
 
 
 T = TypeVar("T", bound=tuple[int, ...])

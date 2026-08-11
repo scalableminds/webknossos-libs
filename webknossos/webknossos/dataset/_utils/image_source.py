@@ -24,10 +24,12 @@ should point at this file rather than at each other.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from typing import NamedTuple
 
 from numpy.typing import DTypeLike
 
+from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ..layer.view import MagView
 
@@ -151,4 +153,59 @@ class ImageSource(ABC):
           mirrors the whole extent, never one chunk in isolation.
         * When `dtype` is given, data is converted with `order="F"`, which is
           what the downstream writers expect.
+        """
+
+    # ------------------------------------------------------------------
+    # How the conversion is driven.
+    #
+    # These three follow from one fact, which is the real difference between
+    # the strategies: whether the source knows its x/y extent before reading.
+    # A source that does gets an exact bounding box, can be split into 3D
+    # shard-aligned chunks, and needs no correction afterwards. A source that
+    # does not gets a placeholder, can only be split along z (there is no known
+    # x/y to split), and has to be shrunk once the real extent is known.
+    #
+    # They live here rather than as branches in image_conversion.py so that the
+    # caller never has to ask which kind of source it is holding.
+    # ------------------------------------------------------------------
+
+    @abstractmethod
+    def initial_layer_bounding_box(
+        self, mag1_expected_bbox: NDBoundingBox
+    ) -> NDBoundingBox:
+        """The bounding box to give the layer before conversion starts.
+
+        Exact when the extent is known; deliberately oversized otherwise, so
+        that writes are never rejected as out of bounds. `final_bounding_box`
+        cuts it back down.
+        """
+
+    @abstractmethod
+    def chunk_grid(
+        self,
+        layer_bounding_box: NDBoundingBox,
+        *,
+        mag_view: MagView,
+        mag: Mag,
+        batch_size: int | None,
+    ) -> list[NDBoundingBox]:
+        """The units of work, one per `copy_chunk_to_view` call.
+
+        `batch_size` is the caller's request, honoured only by strategies that
+        chunk along z; others ignore it.
+        """
+
+    @abstractmethod
+    def final_bounding_box(
+        self,
+        layer_bounding_box: NDBoundingBox,
+        *,
+        chunk_sizes: Sequence[tuple[int, int]],
+        mag: Mag,
+    ) -> NDBoundingBox:
+        """The layer's bounding box once every chunk has been written.
+
+        `chunk_sizes` are the `ChunkResult.xy_size` values the chunks reported,
+        which is how a placeholder box learns its real x/y extent. Sources that
+        started out exact return the box unchanged.
         """
