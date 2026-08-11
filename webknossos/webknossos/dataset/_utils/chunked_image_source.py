@@ -66,6 +66,13 @@ class ChunkedImageSource(ImageSource):
         self._flip_z = flip_z
         self._is_segmentation = is_segmentation
 
+    class_open_kwargs: frozenset[str] = frozenset()
+    """Format-specific keyword arguments this class accepts in addition to the
+    standard ones, e.g. {"czi_channel"}. These are the names a subclass may
+    return from get_possible_layers(): add_layer_from_images re-opens the
+    source with each value in turn, passing it back under the same name, and
+    try_open_chunked_image_source() forwards only the names declared here."""
+
     @classmethod
     @abstractmethod
     def class_exts(cls) -> set[str]:
@@ -284,12 +291,17 @@ def try_open_chunked_image_source(
     flip_y: bool,
     flip_z: bool,
     is_segmentation: bool,
+    **format_kwargs: int | None,
 ) -> ChunkedImageSource | None:
     """
     Returns a ChunkedImageSource if `images` is a single path whose suffix a
     registered chunk-based format handles, else None — leaving the caller to
     fall back to the other strategy. Chunk-based formats are inherently
     single-file, so a list of paths is never one.
+
+    `format_kwargs` may carry knobs only some formats understand (e.g.
+    czi_channel); each is passed on only to a class that declares it in
+    class_open_kwargs, so callers can pass all of them unconditionally.
     """
     # Callers normalize paths to UPath before getting here (see
     # _normalize_images_argument), so a list of paths is by definition not a
@@ -304,6 +316,11 @@ def try_open_chunked_image_source(
         if suffix in cls.class_exts():
             return cls(
                 path,
+                **{
+                    name: value
+                    for name, value in format_kwargs.items()
+                    if name in cls.class_open_kwargs
+                },
                 channel=channel,
                 swap_xy=swap_xy,
                 flip_x=flip_x,
@@ -322,6 +339,7 @@ def try_open_chunked_image_source(
 _OPTIONAL_CHUNKED_IMAGE_SOURCES: dict[str, tuple[str, frozenset[str]]] = {
     "ImsImageSource": ("ims", frozenset({"ims"})),
     "MrcImageSource": ("mrcfile", frozenset({"mrc", "rec", "st", "map", "ali"})),
+    "CziImageSource": ("czi", frozenset({"czi"})),
 }
 
 # suffix -> extra, for readers that failed to import. Populated at import time
@@ -368,6 +386,11 @@ def _chunked_images_imports() -> str | None:
         from .mrc_image_source import MrcImageSource  # noqa: F401 unused-import
     except ImportError as import_error:
         import_exceptions.append(f"MrcImageSource: {import_error.msg}")
+
+    try:
+        from .czi_image_source import CziImageSource  # noqa: F401 unused-import
+    except ImportError as import_error:
+        import_exceptions.append(f"CziImageSource: {import_error.msg}")
 
     registered = {cls.__name__ for cls in _CHUNKED_IMAGE_SOURCE_CLASSES}
     for name, (extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_SOURCES.items():

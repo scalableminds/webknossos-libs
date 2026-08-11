@@ -38,7 +38,6 @@ class SlicedImageSource(ImageSource):
         self,
         image_paths: UPath | list[UPath],
         channel: int | None,
-        czi_channel: int | None,
         swap_xy: bool,
         flip_x: bool,
         flip_y: bool,
@@ -62,11 +61,6 @@ class SlicedImageSource(ImageSource):
         The part "IDENTIFY SHAPE & CHANNELS" uses this information and the well-defined
         images to figure out the shape & num_channels.
         """
-        try:
-            from .czi_slices import CziSlices
-        except ImportError:
-            CziSlices = type(None)  # type: ignore[misc,assignment]
-
         # `images` below always refers to an opened reader, never to this
         # argument.
         self._original_images = image_paths
@@ -77,7 +71,6 @@ class SlicedImageSource(ImageSource):
         # axis and therefore pins the first timepoint. Readers that name
         # their dimensions leave this None and keep "t" as an iter axis.
         self._timepoint: int | None = None
-        self._czi_channel = czi_channel
         self._swap_xy = swap_xy
         self._flip_x = flip_x
         self._flip_y = flip_y
@@ -108,11 +101,6 @@ class SlicedImageSource(ImageSource):
 
             if isinstance(images, NDSliceSequence):
                 self._default_coords = {}
-
-                if isinstance(images, CziSlices):
-                    available_czi_channels = images.available_czi_channels()
-                    if len(available_czi_channels) > 1:
-                        self._possible_layers["czi_channel"] = available_czi_channels
 
                 # An image slice should always consist of a 2D image. If there are multiple channels
                 # the data of each channel is part of the image slices. Possible shapes of an image
@@ -364,15 +352,11 @@ class SlicedImageSource(ImageSource):
     def _try_open_images(
         self, original_images: str | list[str], exceptions: list[Exception]
     ) -> SliceSequence | None:
-        open_kwargs: dict[str, Any] = {}
-        if self._czi_channel is not None:
-            open_kwargs["czi_channel"] = self._czi_channel
-
         # try the registered reader for this suffix
         def strategy_0() -> SliceSequence | None:
             if isinstance(original_images, list):
                 return None
-            return open_images(original_images, **open_kwargs)
+            return open_images(original_images)
 
         # try MultiImageSlices, which handles a directory, glob or list of 2D images
         strategy_1 = lambda: MultiImageSlices(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
@@ -382,10 +366,8 @@ class SlicedImageSource(ImageSource):
         def strategy_2() -> SliceSequence | None:
             if isinstance(original_images, list):
                 # assuming the same reader works for all images:
-                first_image_handler = open_images(original_images[0], **open_kwargs)
-                return StackedFileSlices(
-                    original_images, type(first_image_handler), **open_kwargs
-                )
+                first_image_handler = open_images(original_images[0])
+                return StackedFileSlices(original_images, type(first_image_handler))
             else:
                 return None
 
@@ -666,7 +648,6 @@ def has_image_z_dimension(
         is_segmentation=is_segmentation,
         # the following arguments shouldn't matter much for the Dataset.from_images method:
         channel=None,
-        czi_channel=None,
         swap_xy=False,
         flip_x=False,
         flip_y=False,
