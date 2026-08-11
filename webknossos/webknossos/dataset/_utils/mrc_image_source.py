@@ -5,7 +5,8 @@ from upath import UPath
 
 from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError, UnsupportedImageDataError
-from .chunked_image_source import ChunkedImageSource, register_chunked_image_source
+from .chunked_image_source import ChunkedImageSource
+from .image_source_registry import register_chunked_image_source
 
 try:
     import mrcfile

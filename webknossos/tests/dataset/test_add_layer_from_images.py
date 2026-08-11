@@ -417,13 +417,11 @@ def test_add_layer_from_images_names_missing_optional_dependency(
     # must still point at the missing extra instead of calling .ims unsupported.
     # The test env installs every extra, so unregister the reader to reproduce
     # exactly the state a missing dependency leaves behind.
-    chunked_image_source = importlib.import_module(
-        "webknossos.dataset._utils.chunked_image_source"
+    registry = importlib.import_module(
+        "webknossos.dataset._utils.image_source_registry"
     )
-    monkeypatch.setattr(chunked_image_source, "_CHUNKED_IMAGE_SOURCE_CLASSES", [])
-    monkeypatch.setattr(
-        chunked_image_source, "_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES", {"ims": "ims"}
-    )
+    monkeypatch.setattr(registry, "_CHUNKED_IMAGE_SOURCE_CLASSES", [])
+    monkeypatch.setattr(registry, "_UNAVAILABLE_SUFFIXES", {"ims": "ims"})
     ims_path = tmp_upath / "a.ims"
     ims_path.write_bytes(b"stand-in for an ims file")
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import warnings
 from abc import abstractmethod
-from os import environ
 
 import numpy as np
 from numpy.typing import DTypeLike
@@ -12,7 +10,7 @@ from ...geometry.bounding_box import BoundingBox
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
-from .image_source import ImageSource
+from .image_source import ChunkResult, ImageSource
 
 
 class ChunkedImageSource(ImageSource):
@@ -149,7 +147,7 @@ class ChunkedImageSource(ImageSource):
         bbox: NDBoundingBox,
         mag_view: MagView,
         dtype: DTypeLike | None = None,
-    ) -> tuple[tuple[int, int], int]:
+    ) -> ChunkResult:
         """
         Reads exactly bbox's worth of data and writes it to mag_view directly.
         Return value and axis conventions are ImageSource.copy_chunk_to_view's;
@@ -261,162 +259,6 @@ class ChunkedImageSource(ImageSource):
         # overlapping data.
         mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
 
-        # Returned as (x_size, y_size), per the ImageSource contract.
-        return (out_x_end - out_x_start, out_y_end - out_y_start), max_value
-
-
-_CHUNKED_IMAGE_SOURCE_CLASSES: list[type[ChunkedImageSource]] = []
-
-
-def register_chunked_image_source(
-    cls: type[ChunkedImageSource],
-) -> type[ChunkedImageSource]:
-    _CHUNKED_IMAGE_SOURCE_CLASSES.append(cls)
-    return cls
-
-
-def get_valid_chunked_image_suffixes() -> set[str]:
-    valid_suffixes: set[str] = set()
-    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
-        valid_suffixes.update(cls.class_exts())
-    return valid_suffixes
-
-
-def try_open_chunked_image_source(
-    images: UPath | list[UPath],
-    *,
-    channel: int | None,
-    swap_xy: bool,
-    flip_x: bool,
-    flip_y: bool,
-    flip_z: bool,
-    is_segmentation: bool,
-    **format_kwargs: int | None,
-) -> ChunkedImageSource | None:
-    """
-    Returns a ChunkedImageSource if `images` is a single path whose suffix a
-    registered chunk-based format handles, else None — leaving the caller to
-    fall back to the other strategy. Chunk-based formats are inherently
-    single-file, so a list of paths is never one.
-
-    `format_kwargs` may carry knobs only some formats understand (e.g.
-    czi_channel); each is passed on only to a class that declares it in
-    class_open_kwargs, so callers can pass all of them unconditionally.
-    """
-    # Callers normalize paths to UPath before getting here (see
-    # _normalize_images_argument), so a list of paths is by definition not a
-    # single chunk-based file.
-    # Remote UPaths deliberately do reach the reader, which raises its own
-    # "must be a local file path" error via is_remote_path.
-    if not isinstance(images, UPath):
-        return None
-    path = images
-    suffix = path.suffix.lstrip(".").lower()
-    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
-        if suffix in cls.class_exts():
-            return cls(
-                path,
-                **{
-                    name: value
-                    for name, value in format_kwargs.items()
-                    if name in cls.class_open_kwargs
-                },
-                channel=channel,
-                swap_xy=swap_xy,
-                flip_x=flip_x,
-                flip_y=flip_y,
-                flip_z=flip_z,
-                is_segmentation=is_segmentation,
-            )
-    return None
-
-
-# The suffixes and extra each optional reader is responsible for. A reader
-# whose dependency is missing never imports, so it never registers and cannot
-# report its own class_exts() — these have to be declared out here for the
-# "you are missing an optional dependency" hint to be possible at all.
-# test_optional_reader_suffixes_match_class_exts keeps them in sync.
-_OPTIONAL_CHUNKED_IMAGE_SOURCES: dict[str, tuple[str, frozenset[str]]] = {
-    "ImsImageSource": ("ims", frozenset({"ims"})),
-    "MrcImageSource": ("mrcfile", frozenset({"mrc", "rec", "st", "map", "ali"})),
-    "CziImageSource": ("czi", frozenset({"czi"})),
-}
-
-# suffix -> extra, for readers that failed to import. Populated at import time
-# below and consumed by get_unavailable_chunked_image_suffixes().
-_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES: dict[str, str] = {}
-
-
-def get_unavailable_chunked_image_suffixes() -> dict[str, str]:
-    """
-    Maps each suffix that a chunk-based reader *would* handle, but cannot
-    because its optional dependency is missing, to the extra that provides it
-    (e.g. {"ims": "ims"}). Empty when every reader imported successfully.
-
-    Lets callers turn "no supported image data found" into a message that
-    names the missing dependency, rather than silently omitting the format
-    from the supported list.
-    """
-    return dict(_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES)
-
-
-def describe_missing_extras(found: dict[str, str]) -> str:
-    """
-    Turns a suffix -> extra mapping, as returned for the files at hand by
-    get_unavailable_chunked_image_suffixes(), into a sentence naming the
-    extras to install. Meant to be appended to an error message.
-    """
-    extras = sorted(set(found.values()))
-    return (
-        f". Found {', '.join('.' + s for s in sorted(found))} files, which need an "
-        + "optional dependency that is not installed — install it with "
-        + f"`pip install {' '.join(f'webknossos[{extra}]' for extra in extras)}`"
-    )
-
-
-def _chunked_images_imports() -> str | None:
-    import_exceptions = []
-
-    try:
-        from .ims_image_source import ImsImageSource  # noqa: F401 unused-import
-    except ImportError as import_error:
-        import_exceptions.append(f"ImsImageSource: {import_error.msg}")
-
-    try:
-        from .mrc_image_source import MrcImageSource  # noqa: F401 unused-import
-    except ImportError as import_error:
-        import_exceptions.append(f"MrcImageSource: {import_error.msg}")
-
-    try:
-        from .czi_image_source import CziImageSource  # noqa: F401 unused-import
-    except ImportError as import_error:
-        import_exceptions.append(f"CziImageSource: {import_error.msg}")
-
-    registered = {cls.__name__ for cls in _CHUNKED_IMAGE_SOURCE_CLASSES}
-    for name, (extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_SOURCES.items():
-        if name not in registered:
-            for suffix in suffixes:
-                _UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES[suffix] = extra
-
-    if import_exceptions:
-        import_exception_string = "".join(
-            f"\t- {import_exception}\n" for import_exception in import_exceptions
-        )
-        return import_exception_string
-    return None
-
-
-if (chunked_images_warnings := _chunked_images_imports()) is not None:
-    if (
-        environ.get("WEBKNOSSOS_SHOWED_CHUNKED_IMAGES_IMPORT_WARNING", "False")
-        == "False"
-    ):
-        # If the environment variable is not set, we assume that the user has not seen the warning yet.
-        # We set it to True to prevent showing the warning again.
-        environ["WEBKNOSSOS_SHOWED_CHUNKED_IMAGES_IMPORT_WARNING"] = "True"
-        warnings.warn(
-            f"[WARNING] Not all chunk-based image readers could be imported:\n{chunked_images_warnings}Install the readers you need or use 'webknossos[all]' to install all readers.",
-            category=UserWarning,
-            source=None,
-            stacklevel=2,
+        return ChunkResult(
+            (out_x_end - out_x_start, out_y_end - out_y_start), max_value
         )

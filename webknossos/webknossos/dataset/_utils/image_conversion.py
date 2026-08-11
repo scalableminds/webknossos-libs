@@ -55,11 +55,12 @@ from ..layer.abstract_layer import (
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
 from . import sliced_image_source
-from .chunked_image_source import (
-    ChunkedImageSource,
+from .chunked_image_source import ChunkedImageSource
+from .image_source import ChunkResult
+from .image_source_registry import (
     describe_missing_extras,
-    get_unavailable_chunked_image_suffixes,
-    get_valid_chunked_image_suffixes,
+    get_unavailable_suffixes,
+    get_valid_suffixes,
     try_open_chunked_image_source,
 )
 from .raster_slices import SingleImageSlices
@@ -192,7 +193,7 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
     Only runs on the "no supported image data" error path, so the extra
     directory scan costs nothing in the normal case.
     """
-    unavailable = get_unavailable_chunked_image_suffixes()
+    unavailable = get_unavailable_suffixes()
     if not unavailable:
         return {}
 
@@ -289,7 +290,7 @@ class _ImageConversionSetup(NamedTuple):
     """
 
     mag_view: MagView
-    func_per_chunk: Callable[..., tuple[tuple[int, int], int | None]]
+    func_per_chunk: Callable[..., ChunkResult]
     batch_size: int | None
 
 
@@ -417,8 +418,7 @@ def from_images(
     """See Dataset.from_images() for the public docstring."""
     input_upath = UPath(input_path)
 
-    valid_suffixes = sliced_image_source.get_valid_image_suffixes()
-    valid_suffixes.update(get_valid_chunked_image_suffixes())
+    valid_suffixes = get_valid_suffixes()
 
     if z_slices_sort_key is None:
         z_slices_sort_key = natsort_keygen()
@@ -885,12 +885,13 @@ def add_layer_from_images(
                 module="webknossos",
             )
             with wrap_executor(executor) as executor:
-                shapes_and_max_ids = wait_and_ensure_success(
+                chunk_results = wait_and_ensure_success(
                     executor.map_to_futures(func_per_chunk, args),
                     executor=executor,
                     progress_desc=f"Creating layer [bold blue]{layer.name}[/bold blue] from images",
                 )
-            shapes, max_ids = zip(*shapes_and_max_ids)
+            shapes = [result.xy_size for result in chunk_results]
+            max_ids = [result.max_value for result in chunk_results]
             if category == "segmentation":
                 max_id = max(max_ids)
                 cast(SegmentationLayer, layer).largest_segment_id = max_id

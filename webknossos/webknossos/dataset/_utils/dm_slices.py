@@ -4,14 +4,14 @@ from contextlib import closing, contextmanager
 import numpy as np
 from upath import UPath
 
-from .image_reader_registry import register_image_reader
+from .image_source_registry import register_slice_reader
 from .slice_sequence import NDSliceSequence
 from .vendor.dm3 import DM3  # type: ignore[attr-defined]
 from .vendor.dm3 import dT_str as DM3_DTYPE_MAPPING  # type: ignore[attr-defined]
 from .vendor.dm4 import DM4File  # type: ignore[attr-defined]
 
 
-@register_image_reader
+@register_slice_reader
 class Dm3Slices(NDSliceSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
@@ -43,7 +43,7 @@ class Dm3Slices(NDSliceSequence):
         return DM3(self.path).imagedata
 
 
-@register_image_reader
+@register_slice_reader
 class Dm4Slices(NDSliceSequence):
     @classmethod
     def class_exts(cls) -> set[str]:

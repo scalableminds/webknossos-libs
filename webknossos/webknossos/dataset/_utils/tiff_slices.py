@@ -4,7 +4,7 @@ import numpy as np
 from upath import UPath
 
 from ...utils import WkImportError
-from .image_reader_registry import register_image_reader
+from .image_source_registry import register_slice_reader
 from .slice_sequence import NDSliceSequence
 
 try:
@@ -13,7 +13,7 @@ except ImportError as e:
     raise WkImportError("tifffile", "tifffile") from e
 
 
-@register_image_reader
+@register_slice_reader
 class TiffSlices(NDSliceSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
