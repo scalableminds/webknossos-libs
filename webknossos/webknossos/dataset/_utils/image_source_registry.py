@@ -116,9 +116,7 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     )
 
 
-def open_image_source(
-    images: UPath | list[UPath], options: ReadOptions
-) -> ImageSource:
+def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> ImageSource:
     """Opens `images` as an `ImageSource`, choosing the reading strategy itself.
 
     A single file whose suffix a chunk-based format claims is read that way.
@@ -166,7 +164,9 @@ class _OptionalReader(NamedTuple):
 # are just as optional as chunked ones now that tifffile is not in the base
 # install.
 _OPTIONAL_READERS: tuple[_OptionalReader, ...] = (
-    _OptionalReader("tiff_slices", "TiffSlices", "tifffile", frozenset({"tif", "tiff"})),
+    _OptionalReader(
+        "tiff_slices", "TiffSlices", "tifffile", frozenset({"tif", "tiff"})
+    ),
     _OptionalReader("ims_image_source", "ImsImageSource", "ims", frozenset({"ims"})),
     _OptionalReader(
         "mrc_image_source",
