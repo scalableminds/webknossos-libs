@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.7.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...v3.7.0)
 
 ### Added
 - Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
@@ -29,6 +39,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - `Dataset.add_layer_as_copy` and `Dataset.copy_dataset` now carry over the `default_view_configuration` and the `coordinate_transformations` of the copied layers, which were previously lost. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 - `Dataset.add_layer_like` no longer shares the `default_view_configuration` with the layer it copies from, so changing it on one of the two layers no longer changes it on the other as well. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 - Restored the ordering of `VecInt` and `Vec3Int`, which was lost when they stopped subclassing `tuple` in [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419). [#1493](https://github.com/scalableminds/webknossos-libs/pull/1493)
+
 
 
 ## [3.6.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.6.0) - 2026-08-07
