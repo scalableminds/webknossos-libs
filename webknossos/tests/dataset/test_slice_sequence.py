@@ -14,7 +14,6 @@ from webknossos.dataset._utils.raster_slices import (
     SingleImageSlices,
 )
 from webknossos.dataset._utils.slice_sequence import (
-    NDSliceSequence,
     SliceSequence,
     _SlicedView,
 )
@@ -25,8 +24,8 @@ from webknossos.dataset._utils.tiff_slices import TiffSlices
 _VOLUME = np.arange(2 * 3 * 4 * 5, dtype="uint16").reshape(2, 3, 4, 5)  # z, c, y, x
 
 
-class _ZcyxReader(NDSliceSequence):
-    """Registers a single reader method returning all four axes at once."""
+class _ZcyxReader(SliceSequence):
+    """Declares a single reader method returning all four axes at once."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -43,8 +42,8 @@ class _ZcyxReader(NDSliceSequence):
         return _VOLUME.dtype
 
 
-class _YxcReader(NDSliceSequence):
-    """Registers a 2D+channel method, as the CZI reader does."""
+class _YxcReader(SliceSequence):
+    """Declares a 2D+channel method."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -161,20 +160,18 @@ def test_get_slice_rejects_out_of_range_index() -> None:
 
 
 class _RangeSequence(SliceSequence):
-    """A flat sequence whose slice i is a 1x1 array holding i."""
+    """A sequence whose slice i is a 1x1 array holding i."""
 
     def __init__(self, length: int = 6) -> None:
-        self._length = length
+        super().__init__()
+        self._init_axis("z", length)
+        self._init_axis("y", 1)
+        self._init_axis("x", 1)
+        self._set_get_slice(self._read, "yx")
+        self.iter_axes = ["z"]
 
-    def __len__(self) -> int:
-        return self._length
-
-    def get_slice(self, i: int) -> np.ndarray:
-        return np.full((1, 1), i, dtype="uint8")
-
-    @property
-    def slice_shape(self) -> tuple[int, ...]:
-        return (1, 1)
+    def _read(self, **coords: int) -> np.ndarray:
+        return np.full((1, 1), coords["z"], dtype="uint8")
 
     @property
     def pixel_type(self) -> Any:
@@ -185,7 +182,7 @@ def _values(view: Any) -> list[int]:
     return [int(np.asarray(s).ravel()[0]) for s in view]
 
 
-def test_flat_sequence_shape_and_iteration() -> None:
+def test_sequence_shape_and_iteration() -> None:
     seq = _RangeSequence()
     assert seq.shape == (6, 1, 1)
     assert _values(seq) == [0, 1, 2, 3, 4, 5]
@@ -214,7 +211,7 @@ def test_sliced_view_indexing() -> None:
         view[3]
 
 
-def test_flat_sequence_negative_index() -> None:
+def test_sequence_negative_index() -> None:
     seq = _RangeSequence()
     assert int(seq[-1].ravel()[0]) == 5
     with pytest.raises(IndexError):

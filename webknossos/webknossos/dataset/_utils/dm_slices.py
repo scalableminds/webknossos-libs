@@ -5,14 +5,14 @@ import numpy as np
 from upath import UPath
 
 from .image_source_registry import register_slice_reader
-from .slice_sequence import NDSliceSequence
+from .slice_sequence import SliceSequence
 from .vendor.dm3 import DM3  # type: ignore[attr-defined]
 from .vendor.dm3 import dT_str as DM3_DTYPE_MAPPING  # type: ignore[attr-defined]
 from .vendor.dm4 import DM4File  # type: ignore[attr-defined]
 
 
 @register_slice_reader
-class Dm3Slices(NDSliceSequence):
+class Dm3Slices(SliceSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"dm3"}
@@ -44,7 +44,7 @@ class Dm3Slices(NDSliceSequence):
 
 
 @register_slice_reader
-class Dm4Slices(NDSliceSequence):
+class Dm4Slices(SliceSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"dm4"}

@@ -56,10 +56,6 @@ class ReadOptions:
     """See `ImageSource.copy_chunk_to_view` for what these mean exactly; the
     flips are named for the *output* axis they mirror."""
 
-    is_segmentation: bool = False
-    """Only affects how ambiguous axis orders are guessed (a leading axis of
-    length 3 is colour in an image, but z in a segmentation)."""
-
     format_options: Mapping[str, int | None] = field(default_factory=dict)
     """Knobs only some formats understand, e.g. `czi_channel`. Sources read
     the ones they know by name and ignore the rest, so callers can pass all of

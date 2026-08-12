@@ -1,7 +1,7 @@
 import warnings
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from typing import Any, TypeVar, cast
+from typing import TypeVar, cast
 
 import numpy as np
 from natsort import natsorted
@@ -16,7 +16,6 @@ from ...geometry.vec3_int import Vec3Int
 from ...geometry.vec_int import VecInt
 from ..errors import (
     CorruptImageError,
-    UnsupportedImageDataError,
     UnsupportedImageFormatError,
 )
 from ..layer.view import MagView
@@ -34,19 +33,15 @@ from .image_source_registry import (
     open_images,
 )
 from .raster_slices import MultiImageSlices, StackedFileSlices
-from .slice_sequence import NDSliceSequence, SliceSequence
+from .slice_sequence import SliceSequence, _SlicedView
 
 # The x/y extent is only discovered while reading, so the layer starts out
 # deliberately oversized and is cut back down by final_bounding_box().
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
-def _assume_color_channel(dim_size: int, dtype: np.dtype) -> bool:
-    return dim_size == 1 or (dim_size == 3 and dtype == np.dtype("uint8"))
-
-
 class SlicedImageSource(ImageSource):
-    # Set partway through __init__(); _open_images() uses hasattr() on
+    # Set at the end of __init__(); _open_images() uses hasattr() on
     # _bundle_axes to tell whether that has happened yet, so these must stay
     # bare annotations rather than assignments.
     _bundle_axes: list[str]
@@ -58,21 +53,17 @@ class SlicedImageSource(ImageSource):
         options: ReadOptions,
     ) -> None:
         """
-        During initialization the readers are examined and configured to produce
-        ndarrays that follow the following form:
-        (self._iter_axes, *self._bundle_axis)
-        self._iter_axes can be a list of different axes or an empty list if the image is 2D.
-        In the latter case, the inner 2D image is still wrapped in a single-element list
-        by _open_images() to be consistent with 3D images.
-        self._bundle_axis can consist of "x", "y" and "c", where "c" is optional and must be
-        at the start or the end, so one of "xy", "yx", "xyc", "yxc", "cxy", "cyx".
+        Configures the reader to produce ndarrays of the form
+        (self._iter_axes, *self._bundle_axes).
 
-        The part "IDENTIFY AXIS ORDER" figures out (self._iter_dim, *self._img_dims)
-        from the opened reader. Afterwards self._open_images() produces
-        images consistent with those variables.
+        self._iter_axes is the list of axes the sequence steps through, which
+        is empty for a single 2D image. self._bundle_axes is what one slice
+        consists of: "y" and "x", preceded by "c" when several channels are
+        written.
 
-        The part "IDENTIFY SHAPE & CHANNELS" uses this information and the well-defined
-        images to figure out the shape & num_channels.
+        Every reader names its own axes, so this is a matter of sorting the
+        reader's axes into the two lists — not of guessing an axis order from
+        a raw shape, which cannot be done reliably.
         """
         # `images` below always refers to an opened reader, never to this
         # argument.
@@ -81,155 +72,43 @@ class SlicedImageSource(ImageSource):
 
         ## the requested channel; replaced below by the resolved one
         self._channel = options.channel
-        # Only ever set by the 5D fallback below, which cannot expose a "t"
-        # axis and therefore pins the first timepoint. Readers that name
-        # their dimensions leave this None and keep "t" as an iter axis.
-        self._timepoint: int | None = None
 
         ## attributes that will be set in __init__()
         self._iter_axes: list[str] = []
-        self._iter_loop_size = None
         self._possible_layers = {}
-
-        ## attributes only for NDSliceSequence instances:
-        # _default_coords
 
         ## attributes that will also be set in __init__()
         # dtype
         # num_channels
         # _first_n_channels
 
-        #######################
-        # IDENTIFY AXIS ORDER #
-        #######################
-
         with self._open_images() as images:
-            assert isinstance(images, SliceSequence), (
-                f"{type(images)} does not inherit from SliceSequence"
-            )
             self.dtype = images.dtype
+            self._default_coords = {}
 
-            if isinstance(images, NDSliceSequence):
-                self._default_coords = {}
-
-                # An image slice should always consist of a 2D image. If there are multiple channels
-                # the data of each channel is part of the image slices. Possible shapes of an image
-                # slice are (#y_shape, #x_shape), (1, #y_shape, #x_shape) or (3, #y_shape, #x_shape).
-                if images.sizes.get("c", 1) > 1:
-                    self._bundle_axes = ["c", "y", "x"]
-                else:
-                    if "c" in images.axes:
-                        # When c-axis is not in _bundle_axes and _iter_axes its value at coordinate 0
-                        # should be returned
-                        self._default_coords["c"] = 0
-                    self._bundle_axes = ["y", "x"]
-
-                # All other axes are used to iterate over them. The last one is iterated the fastest.
-                self._iter_axes = list(
-                    set(images.axes).difference({*self._bundle_axes, "c", "z"})
-                )
-                if "z" in images.axes:
-                    self._iter_axes.append("z")
-
-                if len(self._iter_axes) > 1:
-                    iter_size = 1
-                    self._iter_loop_size = dict()
-                    for axis, other_axis in zip(
-                        self._iter_axes[-1:0:-1], self._iter_axes[-2::-1]
-                    ):
-                        # Creates a dict that contains the size of the loop for each axis
-                        # the axes are identified by their index in the _iter_axes list
-                        # the last axis is the fastest iterating axis, therefore the size of the loop
-                        # for the last axis is 1. For all other axes it is the product of all previous axes sizes.
-                        # self._iter_axes[-1:0:-1] is a reversed copy of self._iter_axes without the last element
-                        # e.g. [1,2,3,4] -> [4,3,2]
-                        # self._iter_axes[-2::-1] is a reversed copy of self._iter_axes without the first element
-                        # e.g. [1,2,3,4] -> [3,2,1]
-                        self._iter_loop_size[other_axis] = (
-                            iter_size := iter_size * images.sizes[axis]
-                        )
-
+            # One slice is always a 2D image, with the channels of that image
+            # in front of it when there is more than one.
+            raw_num_channels = images.sizes.get("c", 1)
+            if raw_num_channels > 1:
+                bundle_axes = ["c", "y", "x"]
             else:
-                # Fallback for flat readers that do not name their dimensions
-                # as NDSliceSequence does:
+                if "c" in images.axes:
+                    # With "c" in neither bundle_axes nor iter_axes, its value
+                    # at coordinate 0 is what gets returned.
+                    self._default_coords["c"] = 0
+                bundle_axes = ["y", "x"]
 
-                _allow_channels_first = not options.is_segmentation
-                if isinstance(images, MultiImageSlices | StackedFileSlices):
-                    _allow_channels_first = False
-
-                if len(images.shape) == 2:
-                    # Assume yx
-                    self._bundle_axes = ["y", "x"]
-                elif len(images.shape) == 3:
-                    # Assume yxc, cyx or zyx
-                    if _assume_color_channel(images.shape[2], images.dtype):
-                        self._bundle_axes = ["y", "x", "c"]
-                    elif images.shape[0] == 1 or (
-                        _allow_channels_first
-                        and _assume_color_channel(images.shape[0], images.dtype)
-                    ):
-                        self._bundle_axes = ["c", "y", "x"]
-                    else:
-                        self._bundle_axes = ["y", "x"]
-                        self._iter_axes = ["z"]
-                elif len(images.shape) == 4:
-                    # Assume zcyx or zyxc
-                    if images.shape[1] == 1 or _assume_color_channel(
-                        images.shape[1], images.dtype
-                    ):
-                        self._bundle_axes = ["c", "y", "x"]
-                    else:
-                        self._bundle_axes = ["y", "x", "c"]
-                    self._iter_axes = ["z"]
-                elif len(images.shape) == 5:
-                    # Assume tzcyx or tzyxc. This reader addresses t
-                    # positionally (images[t]) and can only produce a 4D
-                    # image, so t is held constant at the first timepoint.
-                    if _assume_color_channel(images.shape[2], images.dtype):
-                        self._bundle_axes = ["c", "y", "x"]
-                    else:
-                        self._bundle_axes = ["y", "x", "c"]
-                    self._iter_axes = ["z"]
-                    self._timepoint = 0
-                    if images.shape[0] > 1:
-                        # This fallback addresses the time dimension positionally
-                        # (images[t] below) and cannot expose it as a "t" axis,
-                        # so only the first timepoint is converted. Timepoints
-                        # are no longer offered as a layer split — readers that
-                        # name their dimensions produce a real "t" axis covering
-                        # all of them in a single layer instead.
-                        warnings.warn(
-                            "[WARNING] The image has multiple timepoints, but this reader "
-                            + "cannot address them individually, so only the first one is "
-                            + "converted.",
-                            UserWarning,
-                        )
-                else:
-                    raise UnsupportedImageDataError(
-                        f"Got {len(images.shape)} axes for the images, "
-                        + "but don't have axes information.",
-                        path=self._error_path(),
-                    )
-
-        #########################
-        # IDENTIFY NUM_CHANNELS #
-        #########################
-
-        with self._open_images() as images:
-            if "c" in self._bundle_axes:
-                if isinstance(images, NDSliceSequence):
-                    self.num_channels = images.sizes.get("c", 1)
-                elif isinstance(images, list):
-                    self.num_channels = cast(SliceSequence, images[0]).shape[
-                        self._bundle_axes.index("c")
-                    ]
-                else:
-                    self.num_channels = images.shape[self._bundle_axes.index("c") + 1]
-            else:
-                self.num_channels = 1
+            # Every remaining axis is iterated over. "z" goes last, so it is
+            # the fastest-varying one.
+            self._iter_axes = sorted(
+                set(images.axes).difference({*bundle_axes, "c", "z"})
+            )
+            if "z" in images.axes:
+                self._iter_axes.append("z")
+            self._bundle_axes = bundle_axes
 
         self.num_channels, self._channel, self._first_n_channels, possible_channels = (
-            compute_channel_selection(self.num_channels, self._channel)
+            compute_channel_selection(raw_num_channels, self._channel)
         )
         if possible_channels is not None:
             self._possible_layers["channel"] = possible_channels
@@ -385,19 +264,12 @@ class SlicedImageSource(ImageSource):
         return None
 
     @contextmanager
-    def _open_images(
-        self,
-    ) -> Iterator[Any]:
+    def _open_images(self) -> Iterator[SliceSequence]:
         """
-        This yields well-defined images of the form (self._iter_axes, *self._bundle_axes),
-        after IDENTIFY AXIS ORDER of __init__() has run.
-        For a 2D image this is achieved by wrapping it in a list.
-
-        The yielded object is a SliceSequence, a list wrapping one, or — for
-        the 5D fallback that pins a timepoint — a plain ndarray. All three
-        support len(), indexing and iteration, which is all callers use, but
-        they share no common type; hence Any. Callers narrow with isinstance
-        where they need more.
+        Yields the opened reader, configured to produce slices of the form
+        (self._iter_axes, *self._bundle_axes) once __init__() has worked those
+        out. Before that — on the one call __init__() itself makes — the reader
+        is yielded with its own defaults, which is how those axes are found.
         """
         exceptions: list[Exception] = []
         original_images = self._normalize_original_images()
@@ -421,24 +293,12 @@ class SlicedImageSource(ImageSource):
                     + f"none succeeded. The following errors were raised:\n{exceptions_str}"
                 )
 
-        with images_context_manager as opened_images:
-            images: Any = opened_images
-            if isinstance(images, NDSliceSequence):
-                if hasattr(self, "_bundle_axes"):
-                    # first part of __init__() has happened
-                    images.default_coords.update(self._default_coords)
-                    images.bundle_axes = self._bundle_axes
-                    images.iter_axes = self._iter_axes
-            else:
-                if hasattr(self, "_bundle_axes"):
-                    # first part of __init__() has happened
-                    if self._timepoint is not None:
-                        images = images[self._timepoint]
-                        if "t" in self._iter_axes:
-                            self._iter_axes.remove("t")
-                    if not self._iter_axes:
-                        # add outer list to wrap 2D images as 3D-like structure
-                        images = [images]
+        with images_context_manager as images:
+            if hasattr(self, "_bundle_axes"):
+                # __init__() has worked out the axes
+                images.default_coords.update(self._default_coords)
+                images.bundle_axes = self._bundle_axes
+                images.iter_axes = self._iter_axes
             yield images
 
     def copy_chunk_to_view(
@@ -480,17 +340,21 @@ class SlicedImageSource(ImageSource):
             max_value = 0
 
             with self._open_images() as images:
-                if self._iter_axes and self._iter_loop_size is not None:
-                    # select the range of images that represents one xyz combination in the mag_view
-                    lower_bounds = sum(
-                        self._iter_loop_size[axis_name]
-                        * relative_bbox.get_bounds(axis_name)[0]
-                        for axis_name in self._iter_axes[:-1]
+                slices: SliceSequence | _SlicedView = images
+                if len(self._iter_axes) > 1:
+                    # More than one iter axis: the sequence is a flat run over
+                    # all of them, so narrow it to the stretch this chunk's
+                    # non-z coordinates select before indexing z within it.
+                    lower_bounds = images.flat_index(
+                        {
+                            axis: relative_bbox.get_bounds(axis)[0]
+                            for axis in self._iter_axes[:-1]
+                        }
                     )
                     upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
-                    images = images[lower_bounds:upper_bounds]
+                    slices = images[lower_bounds:upper_bounds]
                 if self._options.flip_z:
-                    images = images[::-1]
+                    slices = slices[::-1]
 
                 with mag_view.get_buffered_slice_writer(
                     # Previously only z_start and its end were important, now the slice writer needs to know
@@ -499,7 +363,7 @@ class SlicedImageSource(ImageSource):
                     buffer_size=absolute_bbox.get_shape("z"),
                     allow_unaligned=True,
                 ) as writer:
-                    for image_slice in images[z_start:z_end]:
+                    for image_slice in slices[z_start:z_end]:
                         image_slice = np.array(image_slice)
                         # place channels first
                         if "c" in self._bundle_axes:
@@ -553,81 +417,44 @@ class SlicedImageSource(ImageSource):
 
     @property
     def expected_bbox(self) -> NDBoundingBox:
-        # replaces the previous expected_shape to enable n-dimensional input files
+        """The extents the reader reports, in the axis order this source
+        produces. Only x/y is a placeholder — those are the extents of one
+        slice, which every later slice may exceed (see
+        `initial_layer_bounding_box`); the axes stepped through are exact,
+        since the reader counted them."""
         with self._open_images() as images:
-            axes: Sequence[str]
-            if isinstance(images, NDSliceSequence):
-                axes = images.axes
-                images_shape = tuple(images.sizes[axis] for axis in axes)
-            else:
-                if isinstance(images, list):
-                    images_shape = (len(images),) + cast(SliceSequence, images[0]).shape
+            sizes = images.sizes
+            x_size, y_size = sizes["x"], sizes["y"]
+            if self._options.swap_xy:
+                x_size, y_size = y_size, x_size
 
-                else:
-                    images_shape = images.shape
-                if len(images_shape) == 3:
-                    axes = ("z", "y", "x")
-                else:
-                    axes = ("z", "c", "y", "x")
+            if len(self._iter_axes) <= 1:
+                # At most one axis is stepped through, so it is the z axis of a
+                # plain 3D box — whatever the reader happens to call it.
+                z_size = sizes[self._iter_axes[0]] if self._iter_axes else 1
+                return BoundingBox((0, 0, 0), (x_size, y_size, z_size))
 
-            if self._iter_loop_size is None:
-                # There is no or only one element in self._iter_axes, so a 3D bounding box is sufficient.
-                x_index, y_index = (
-                    axes.index("x"),
-                    axes.index("y"),
-                )
-                if self._iter_axes:
-                    try:
-                        # In case the naming of the third axis is not "z",
-                        # it is still considered as the z-axis.
-                        z_index = axes.index(self._iter_axes[0])
-                    except ValueError:
-                        z_index = axes.index("z")
-                    z_shape = images_shape[z_index]
-                else:
-                    z_shape = 1
-                if self._options.swap_xy:
-                    x_index, y_index = y_index, x_index
-                return BoundingBox(
-                    (0, 0, 0),
-                    (images_shape[x_index], images_shape[y_index], z_shape),
-                )
-            else:
-                if isinstance(images, NDSliceSequence):
-                    axes_names = (self._iter_axes or []) + [
-                        axis for axis in self._bundle_axes
-                    ]
-                    axes_sizes = [images.sizes[axis] for axis in axes_names]
-                    if "c" in axes_names:
-                        # images.sizes["c"] is the source's raw channel count,
-                        # but only self.num_channels of them are actually
-                        # written (a pinned `channel` selects one, and
-                        # _first_n_channels truncates to the first three).
-                        # Reporting the raw count here would contradict the
-                        # num_channels passed to add_layer(), which surfaces as
-                        # a spurious "images are larger than expected" warning
-                        # and a bounding box that disagrees with the data.
-                        axes_sizes[axes_names.index("c")] = self.num_channels
-                    axes_index = list(range(0, len(axes_names)))
-                    topleft = VecInt.zeros(tuple(axes_names))
-
-                    if self._options.swap_xy:
-                        x_index, y_index = axes_names.index("x"), axes_names.index("y")
-                        axes_sizes[x_index], axes_sizes[y_index] = (
-                            axes_sizes[y_index],
-                            axes_sizes[x_index],
-                        )
-
-                    return NDBoundingBox(
-                        topleft,
-                        VecInt(axes_sizes, axes=axes_names),
-                        axes_names,
-                        VecInt(axes_index, axes=axes_names),
-                    )
-
-                raise UnsupportedImageDataError(
-                    "It seems as if you try to load an N-dimensional image from 2D images. This is currently not supported."
-                )
+            # Several axes are stepped through (e.g. "t" and "z"), so each one
+            # has to be named in the box.
+            axes_names = self._iter_axes + self._bundle_axes
+            axes_sizes = [sizes[axis] for axis in axes_names]
+            axes_sizes[axes_names.index("x")] = x_size
+            axes_sizes[axes_names.index("y")] = y_size
+            if "c" in axes_names:
+                # sizes["c"] is the source's raw channel count, but only
+                # self.num_channels of them are actually written (a pinned
+                # `channel` selects one, and _first_n_channels truncates to the
+                # first three). Reporting the raw count here would contradict
+                # the num_channels passed to add_layer(), which surfaces as a
+                # spurious "images are larger than expected" warning and a
+                # bounding box that disagrees with the data.
+                axes_sizes[axes_names.index("c")] = self.num_channels
+            return NDBoundingBox(
+                VecInt.zeros(tuple(axes_names)),
+                VecInt(axes_sizes, axes=axes_names),
+                axes_names,
+                VecInt(list(range(len(axes_names))), axes=axes_names),
+            )
 
     def initial_layer_bounding_box(
         self, mag1_expected_bbox: NDBoundingBox
