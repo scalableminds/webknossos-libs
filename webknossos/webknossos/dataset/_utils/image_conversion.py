@@ -157,10 +157,7 @@ class ConversionLayerMapping(Enum):
             # if it's 2D, the folder becomes a layer.
             return lambda p: (
                 str(p)
-                if _has_image_z_dimension(
-                    input_path / p,
-                    is_segmentation=guess_if_segmentation_path(p),
-                )
+                if _has_image_z_dimension(input_path / p)
                 else (
                     input_path.name
                     if p.parent == UPath()
@@ -169,10 +166,7 @@ class ConversionLayerMapping(Enum):
             )
         elif self == ConversionLayerMapping.INSPECT_SINGLE_FILE:
             # As before, but only a single image is inspected to determine 2D vs 3D.
-            if _has_image_z_dimension(
-                input_path / input_files[0],
-                is_segmentation=guess_if_segmentation_path(input_files[0]),
-            ):
+            if _has_image_z_dimension(input_path / input_files[0]):
                 return str
             else:
                 return lambda p: input_path.name if p.parent == UPath() else p.parts[-2]
@@ -253,17 +247,10 @@ def _channels_are_one_rgb_layer(
     return channels_fit_one_layer(written_channels, dtype)
 
 
-def _has_image_z_dimension(
-    filepath: UPath,
-    is_segmentation: bool,
-) -> bool:
-    # Only is_segmentation matters here: it decides how an ambiguous leading
-    # axis is read, and so whether the file looks 3D at all. The remaining
-    # options do not affect the z extent.
-    image_source = open_image_source(
-        filepath, ReadOptions(is_segmentation=is_segmentation)
-    )
-    return image_source.expected_bbox.get_shape("z") > 1
+def _has_image_z_dimension(filepath: UPath) -> bool:
+    # No option affects the z extent: the reader names its own axes, so how
+    # many slices there are does not depend on how they are to be written.
+    return open_image_source(filepath, ReadOptions()).expected_bbox.get_shape("z") > 1
 
 
 def from_images(
@@ -508,7 +495,6 @@ def add_layer_from_images(
         flip_x=flip_x,
         flip_y=flip_y,
         flip_z=flip_z,
-        is_segmentation=category == "segmentation",
         format_options={"czi_channel": czi_channel},
     )
 

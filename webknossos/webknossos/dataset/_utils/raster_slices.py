@@ -20,8 +20,9 @@ from imageio import v2 as iio
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 
+from ..errors import UnsupportedImageDataError
 from .image_source_registry import register_slice_reader
-from .slice_sequence import NDSliceSequence, SliceSequence
+from .slice_sequence import SliceSequence
 
 _natsort_key = natsort_keygen()
 
@@ -31,14 +32,27 @@ def imread(uri: Any, **kwargs: Any) -> np.ndarray:
     return np.asarray(iio.imread(uri, **kwargs))
 
 
+def _plane_axes(plane: np.ndarray, source: object) -> str:
+    """The axes of one decoded raster image.
+
+    These formats decode to `(y, x)` or `(y, x, c)` — the everyday image
+    layout, which is what makes it safe to state outright rather than guess:
+    the only axis that could be mistaken for another is the file index, and
+    that one belongs to the reader, not to the decoded array.
+    """
+    if plane.ndim == 2:
+        return "yx"
+    if plane.ndim == 3:
+        return "yxc"
+    raise UnsupportedImageDataError(
+        f"Got a {plane.ndim}-dimensional image from {source}, but a raster "
+        + "image must decode to (y, x) or (y, x, channels)."
+    )
+
+
 @register_slice_reader
 class SingleImageSlices(SliceSequence):
-    """Reads a single 2D raster image into a length-1 sequence.
-
-    Deliberately a flat `SliceSequence` rather than an `NDSliceSequence`:
-    `SlicedImageSource` derives the axis order of such images from the shape alone,
-    which is how these formats have always been handled.
-    """
+    """Reads a single 2D raster image into a length-1 sequence."""
 
     @classmethod
     def class_exts(cls) -> set[str]:
@@ -47,22 +61,20 @@ class SingleImageSlices(SliceSequence):
     class_priority = 12
 
     def __init__(self, filename: str, **kwargs: Any) -> None:
+        super().__init__()
         self._data = imread(filename, **kwargs)
+        axes = _plane_axes(self._data, filename)
+        for axis, size in zip(axes, self._data.shape):
+            self._init_axis(axis, size)
+        self._set_get_slice(self._read_image, axes)
 
-    def __len__(self) -> int:
-        return 1
-
-    def get_slice(self, i: int) -> np.ndarray:
-        del i  # there is only one slice
+    def _read_image(self, **coords: int) -> np.ndarray:
+        del coords  # there is only one image
         return self._data
 
     @property
     def pixel_type(self) -> DTypeLike:
         return self._data.dtype
-
-    @property
-    def slice_shape(self) -> tuple[int, ...]:
-        return self._data.shape
 
 
 def _collect_files(
@@ -109,9 +121,14 @@ def _collect_files(
 
 class MultiImageSlices(SliceSequence):
     """Reads a directory, glob pattern, zip archive or list of 2D image files
-    as one sequence, with each file contributing one slice."""
+    as one sequence, with each file contributing one slice along `z`.
+
+    Every file must decode to the same shape as the first one, which is the
+    only one read up front.
+    """
 
     def __init__(self, path_spec: str | Iterable[str], **kwargs: Any) -> None:
+        super().__init__()
         self.kwargs = kwargs
         # Set before anything that can raise, so __del__ -> close() does not
         # fail with AttributeError when __init__ aborts.
@@ -120,13 +137,24 @@ class MultiImageSlices(SliceSequence):
             path_spec, sort_explicit_lists=False
         )
         first_slice = self.imread(self._filepaths[0], **self.kwargs)
-        self._first_slice_shape = first_slice.shape
         self._dtype = first_slice.dtype
+
+        self._init_axis("z", len(self._filepaths))
+        plane_axes = _plane_axes(first_slice, self._filepaths[0])
+        for axis, size in zip(plane_axes, first_slice.shape):
+            self._init_axis(axis, size)
+        # The declared axes are one file's; `z` picks which file, and reaches
+        # _read_file through the coords every get_slice call carries.
+        self._set_get_slice(self._read_file, plane_axes)
+        self.iter_axes = ["z"]
 
     def imread(self, filename: str, **kwargs: Any) -> np.ndarray:
         if self._zipfile is not None:
             return imread(BytesIO(self._zipfile.read(filename)), **kwargs)
         return imread(filename, **kwargs)
+
+    def _read_file(self, **coords: int) -> np.ndarray:
+        return self.imread(self._filepaths[coords["z"]], **self.kwargs)
 
     def close(self) -> None:
         if self._zipfile is not None:
@@ -137,22 +165,12 @@ class MultiImageSlices(SliceSequence):
     def __del__(self) -> None:
         self.close()
 
-    def __len__(self) -> int:
-        return len(self._filepaths)
-
-    def get_slice(self, i: int) -> np.ndarray:
-        return self.imread(self._filepaths[i], **self.kwargs)
-
-    @property
-    def slice_shape(self) -> tuple[int, ...]:
-        return self._first_slice_shape
-
     @property
     def pixel_type(self) -> DTypeLike:
         return self._dtype
 
 
-class StackedFileSlices(NDSliceSequence):
+class StackedFileSlices(SliceSequence):
     """Stacks several n-dimensional image files along one added axis.
 
     Each file is opened with the same reader class and must expose identical
@@ -162,9 +180,8 @@ class StackedFileSlices(NDSliceSequence):
     def __init__(
         self,
         path_spec: str | Iterable[str],
-        # Any rather than NDSliceSequence: callers pass the class that opened
-        # the first file, which is only known to be a SliceSequence. The
-        # isinstance check below is what actually enforces the requirement.
+        # Any rather than SliceSequence: callers pass the class that opened the
+        # first file, or open_images itself, neither of which is a fixed type.
         reader_cls: Callable[..., Any] | None = None,
         axis_name: str = "t",
         **kwargs: Any,
@@ -183,8 +200,6 @@ class StackedFileSlices(NDSliceSequence):
         )
 
         with self.reader_cls(self._filepaths[0], **self.kwargs) as reader:
-            if not isinstance(reader, NDSliceSequence):
-                raise ValueError("Reader is not a subclass of NDSliceSequence")
             for ax in reader.axes:
                 self._init_axis(ax, reader.sizes[ax])
             self._pixel_type = reader.pixel_type

@@ -1,11 +1,15 @@
-"""Base classes for slice-by-slice image readers.
+"""The base class for slice-by-slice image readers.
 
 Only the behavior the conversion path actually relies on is implemented:
 
-* random access to numbered slices, plus lazy slicing of a reader,
-* named axes with `bundle_axes` / `iter_axes` / `default_coords`, and the
-  adapter that narrows a reader's `get_slice` to whatever axes the caller
-  asked for.
+* named axes, declared by the reader, with `bundle_axes` / `iter_axes` /
+  `default_coords` selecting how they are presented,
+* random access to numbered slices, plus lazy slicing of a reader.
+
+Every reader names its own axes. That is what lets `SlicedImageSource` stay a
+single code path: the alternative — inferring axis order from the raw shape of
+an unlabelled array — cannot tell a leading sequence axis from a leading
+channel axis, which only the reader knows.
 
 Slices are plain `np.ndarray`s, with no wrapper type and no per-slice
 metadata, because nothing downstream reads any.
@@ -21,72 +25,6 @@ import numpy as np
 from numpy.typing import DTypeLike
 
 GetSlice = Callable[..., np.ndarray]
-
-
-class SliceSequence(ABC):
-    """A finite, randomly accessible sequence of slices.
-
-    Subclasses implement `__len__`, `get_slice` and the two shape/dtype
-    properties. Slicing returns a lazy view rather than reading anything.
-    """
-
-    # Consulted by `open_images()` to pick between readers that claim the same
-    # suffix; higher wins. 10 is the baseline, so a reader meant to take
-    # precedence over the general-purpose ones sets something above it.
-    class_priority: int = 10
-
-    @classmethod
-    def class_exts(cls) -> set[str]:
-        """The file extensions (without dot) this reader can open."""
-        return set()
-
-    @abstractmethod
-    def __len__(self) -> int: ...
-
-    @abstractmethod
-    def get_slice(self, i: int) -> np.ndarray: ...
-
-    @property
-    @abstractmethod
-    def slice_shape(self) -> tuple[int, ...]:
-        """The shape of a single slice, as returned by `get_slice`."""
-
-    @property
-    @abstractmethod
-    def pixel_type(self) -> DTypeLike:
-        """The dtype of the pixel values."""
-
-    @property
-    def dtype(self) -> np.dtype:
-        return np.dtype(self.pixel_type)
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        return (len(self), *self.slice_shape)
-
-    def __getitem__(self, key: int | slice | Sequence[int]) -> Any:
-        if isinstance(key, slice | Sequence | np.ndarray):
-            return _SlicedView(self, _resolve_indices(key, len(self)))
-        return self.get_slice(_resolve_index(key, len(self)))
-
-    def __iter__(self) -> Iterator[np.ndarray]:
-        for i in range(len(self)):
-            yield self.get_slice(i)
-
-    def close(self) -> None:
-        """Release any resources held. Subclasses should call super()."""
-
-    def __enter__(self) -> SliceSequence:
-        return self
-
-    def __exit__(self, *args: object) -> None:
-        self.close()
-
-    def __repr__(self) -> str:
-        return (
-            f"<{type(self).__name__}>\nLength: {len(self)} slices\n"
-            f"Slice Shape: {self.slice_shape!r}\nPixel Datatype: {self.dtype}"
-        )
 
 
 def _resolve_index(index: int, length: int) -> int:
@@ -213,8 +151,8 @@ class DefaultCoordsDict(dict[str, int]):
             self[k] = v
 
 
-class NDSliceSequence(SliceSequence):
-    """A `SliceSequence` whose data has arbitrary named axes.
+class SliceSequence(ABC):
+    """A finite, randomly accessible sequence of slices over named axes.
 
     Subclasses declare their axes with `_init_axis(name, size)` and their one
     reader method with `_set_get_slice(method, axes)`; they only need to
@@ -227,7 +165,19 @@ class NDSliceSequence(SliceSequence):
     * `iter_axes`: the axes iterated over by the sequence; the last one varies
       fastest. Defaults to `[]`.
     * `default_coords`: the coordinate used for any axis in neither list.
+
+    Slicing (`reader[1:4]`) returns a lazy view rather than reading anything.
     """
+
+    # Consulted by `open_images()` to pick between readers that claim the same
+    # suffix; higher wins. 10 is the baseline, so a reader meant to take
+    # precedence over the general-purpose ones sets something above it.
+    class_priority: int = 10
+
+    @classmethod
+    def class_exts(cls) -> set[str]:
+        """The file extensions (without dot) this reader can open."""
+        return set()
 
     def __init__(self) -> None:
         self._clear_axes()
@@ -254,12 +204,26 @@ class NDSliceSequence(SliceSequence):
         """Declares the reader method and the axes it returns."""
         self._get_slice_source = (method, tuple(axes))
 
+    @property
+    @abstractmethod
+    def pixel_type(self) -> DTypeLike:
+        """The dtype of the pixel values."""
+
+    @property
+    def dtype(self) -> np.dtype:
+        return np.dtype(self.pixel_type)
+
     def __len__(self) -> int:
         return int(np.prod([self._sizes[d] for d in self._iter_axes]))
 
     @property
     def slice_shape(self) -> tuple[int, ...]:
+        """The shape of a single slice, as returned by `get_slice`."""
         return tuple(self._sizes[d] for d in self._bundle_axes)
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return (len(self), *self.slice_shape)
 
     @property
     def axes(self) -> list[str]:
@@ -333,16 +297,48 @@ class NDSliceSequence(SliceSequence):
             self.bundle_axes = self.bundle_axes  # builds _get_slice_wrapped
 
         coords = dict(self.default_coords)
-
-        # How much `i` has to increase for each iter axis' coordinate to
-        # increase by one; the last axis varies fastest.
-        iter_sizes = [self._sizes[k] for k in self.iter_axes]
-        iter_cumsizes = np.append(np.cumprod(iter_sizes[::-1])[-2::-1], 1)
-        iter_coords = (i // iter_cumsizes) % iter_sizes
-        coords.update(dict(zip(self.iter_axes, (int(c) for c in iter_coords))))
+        coords.update(self.iter_coords(i))
 
         assert self._get_slice_wrapped is not None
         return np.asarray(self._get_slice_wrapped(**coords))
+
+    def iter_coords(self, i: int) -> dict[str, int]:
+        """Splits the flat index `i` into one coordinate per iter axis; the
+        last axis varies fastest."""
+        iter_sizes = [self._sizes[k] for k in self.iter_axes]
+        # How much `i` has to increase for each iter axis' coordinate to
+        # increase by one.
+        iter_cumsizes = np.append(np.cumprod(iter_sizes[::-1])[-2::-1], 1)
+        iter_coords = (i // iter_cumsizes) % iter_sizes
+        return dict(zip(self.iter_axes, (int(c) for c in iter_coords)))
+
+    def flat_index(self, coords: dict[str, int]) -> int:
+        """The inverse of `iter_coords`: the index of the slice at the given
+        iter-axis coordinates. Axes left out are taken to be at 0."""
+        index = 0
+        stride = 1
+        for axis in reversed(self.iter_axes):
+            index += coords.get(axis, 0) * stride
+            stride *= self._sizes[axis]
+        return index
+
+    def __getitem__(self, key: int | slice | Sequence[int]) -> Any:
+        if isinstance(key, slice | Sequence | np.ndarray):
+            return _SlicedView(self, _resolve_indices(key, len(self)))
+        return self.get_slice(_resolve_index(key, len(self)))
+
+    def __iter__(self) -> Iterator[np.ndarray]:
+        for i in range(len(self)):
+            yield self.get_slice(i)
+
+    def close(self) -> None:
+        """Release any resources held. Subclasses should call super()."""
+
+    def __enter__(self) -> SliceSequence:
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self.close()
 
     def __repr__(self) -> str:
         sizes = "".join(f"Axis '{a}' size: {s}\n" for a, s in self._sizes.items())

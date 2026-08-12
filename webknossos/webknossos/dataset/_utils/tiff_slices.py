@@ -5,7 +5,7 @@ from upath import UPath
 
 from ...utils import WkImportError
 from .image_source_registry import register_slice_reader
-from .slice_sequence import NDSliceSequence
+from .slice_sequence import SliceSequence
 
 try:
     import tifffile
@@ -14,7 +14,7 @@ except ImportError as e:
 
 
 @register_slice_reader
-class TiffSlices(NDSliceSequence):
+class TiffSlices(SliceSequence):
     @classmethod
     def class_exts(cls) -> set[str]:
         return {"tif", "tiff"}
@@ -34,8 +34,6 @@ class TiffSlices(NDSliceSequence):
             self._tiff_axes = tuple(_tiff.axes.lower())  # All the axes in the tiff file
             for axis, shape in zip(self._tiff_axes, _tiff.shape):
                 self._init_axis(axis, shape)
-
-            self._tiff_shape = _tiff.shape
 
             # Selecting the first page to get the dtype and shape
             if hasattr(_tiff, "pages"):
@@ -155,11 +153,3 @@ class TiffSlices(NDSliceSequence):
     @property
     def pixel_type(self) -> np.dtype:
         return self._dtype
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        return self._tiff_shape
-
-    @property
-    def slice_shape(self) -> tuple[int, ...]:
-        return self._shape
