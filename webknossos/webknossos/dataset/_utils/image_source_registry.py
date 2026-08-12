@@ -21,6 +21,7 @@ import glob
 import os
 import warnings
 from os import environ
+from typing import NamedTuple
 
 from upath import UPath
 
@@ -141,17 +142,40 @@ def open_image_source(
     return SlicedImageSource(images, options)
 
 
-# The extra and suffixes each optional reader is responsible for, for both
-# strategies. A reader whose dependency is missing never imports, so it never
-# registers and cannot report its own class_exts() — these have to be declared
-# out here for the "you are missing an optional dependency" hint to exist at
-# all. test_optional_reader_suffixes_match_class_exts keeps them in sync.
-_OPTIONAL_READERS: dict[str, tuple[str, frozenset[str]]] = {
-    "TiffSlices": ("tifffile", frozenset({"tif", "tiff"})),
-    "ImsImageSource": ("ims", frozenset({"ims"})),
-    "MrcImageSource": ("mrcfile", frozenset({"mrc", "rec", "st", "map", "ali"})),
-    "CziImageSource": ("czi", frozenset({"czi"})),
-}
+class _OptionalReader(NamedTuple):
+    """One reader that only exists when its extra is installed."""
+
+    module: str
+    """The module under this package that defines it."""
+
+    class_name: str
+    """Only used to name it in the import warning."""
+
+    extra: str
+    """The `webknossos[...]` extra that provides its dependency."""
+
+    suffixes: frozenset[str]
+    """What its class_exts() returns. Restated here because a reader whose
+    dependency is missing never imports, and so cannot be asked — which is
+    exactly when this is needed, to turn "unsupported format" into "install
+    `webknossos[czi]`". test_optional_reader_suffixes_match_class_exts keeps
+    the two in sync."""
+
+
+# Every optional reader, declared once. Covers both strategies: slice readers
+# are just as optional as chunked ones now that tifffile is not in the base
+# install.
+_OPTIONAL_READERS: tuple[_OptionalReader, ...] = (
+    _OptionalReader("tiff_slices", "TiffSlices", "tifffile", frozenset({"tif", "tiff"})),
+    _OptionalReader("ims_image_source", "ImsImageSource", "ims", frozenset({"ims"})),
+    _OptionalReader(
+        "mrc_image_source",
+        "MrcImageSource",
+        "mrcfile",
+        frozenset({"mrc", "rec", "st", "map", "ali"}),
+    ),
+    _OptionalReader("czi_image_source", "CziImageSource", "czi", frozenset({"czi"})),
+)
 
 # suffix -> extra, for readers that failed to import. Populated at import time
 # below and consumed by get_unavailable_suffixes().
@@ -197,24 +221,15 @@ def _import_readers() -> str | None:
         raster_slices,  # noqa: F401 unused-import
     )
 
-    for module_name, class_name in (
-        ("tiff_slices", "TiffSlices"),
-        ("ims_image_source", "ImsImageSource"),
-        ("mrc_image_source", "MrcImageSource"),
-        ("czi_image_source", "CziImageSource"),
-    ):
+    for reader in _OPTIONAL_READERS:
         try:
-            __import__(f"{__package__}.{module_name}", fromlist=[class_name])
+            __import__(f"{__package__}.{reader.module}", fromlist=[reader.class_name])
         except ImportError as import_error:  # noqa: PERF203
-            import_exceptions.append(f"{class_name}: {import_error.msg}")
-
-    registered = {cls.__name__ for cls in _SLICE_READER_CLASSES} | {
-        cls.__name__ for cls in _CHUNKED_IMAGE_SOURCE_CLASSES
-    }
-    for name, (extra, suffixes) in _OPTIONAL_READERS.items():
-        if name not in registered:
-            for suffix in suffixes:
-                _UNAVAILABLE_SUFFIXES[suffix] = extra
+            import_exceptions.append(f"{reader.class_name}: {import_error.msg}")
+            # The reader never registered, so its formats would silently drop
+            # out of the supported list; this is what names the extra instead.
+            for suffix in reader.suffixes:
+                _UNAVAILABLE_SUFFIXES[suffix] = reader.extra
 
     if import_exceptions:
         return "".join(
