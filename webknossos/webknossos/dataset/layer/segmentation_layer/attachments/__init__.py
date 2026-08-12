@@ -6,5 +6,6 @@ from .attachment import (
     CumsumAttachment,
     MeshAttachment,
     SegmentIndexAttachment,
+    SegmentStatisticsAttachment,
 )
 from .attachments import AbstractAttachments, Attachments, RemoteAttachments

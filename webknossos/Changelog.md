@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.7.0...HEAD)
 
 ### Breaking Changes
 - Removed Bio-Formats support, including the `use_bioformats` argument of `Dataset.from_images`/`add_layer_from_images`/`RemoteDataset.from_images`, the `webknossos[bioformats]` extra (and its `JPype1`/JVM dependency), and the DICOM upload example. Formats that were only readable through Bio-Formats — among them `.dcm`/`.dicom`, `.nd2`, `.lif`, `.lsm`, `.zvi`, `.nii`, `.nrrd` and `.stk` — can no longer be converted. Formats with a dedicated reader (TIFF, CZI, DM3/DM4, `.ims`, MRC, and the common 2D image formats) are unaffected. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
@@ -18,16 +18,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added support for converting Imaris (`.ims`) files via `Dataset.from_images`/`add_layer_from_images`, including multi-channel and multi-timepoint files. Converting a file that is both multi-channel and multi-timepoint yields one layer per channel, each keeping all of its timepoints. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
-- Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
-- Added `Vec3Float` and `Vec3FloatLike` to `webknossos.geometry`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 
 ### Changed
 - `.ims` and MRC file conversion now reads shard-sized blocks directly instead of slice-by-slice, improving conversion performance for large files. These formats are always read through a dedicated reader. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Timepoints are no longer split into separate layers by `allow_multiple_layers=True`; readers that can address them expose all timepoints on a `t` axis within one layer instead. Readers that cannot (images without dimension metadata) now warn that only the first timepoint is converted. `allow_multiple_layers` still splits channels. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
-- `Dataset.voxel_size`, `Skeleton.voxel_size`, `Annotation.edit_position`/`edit_rotation` and `Node.rotation` now return `Vec3Float` instead of a plain tuple. Since `Vec3Float` compares and hashes equal to the corresponding tuple, runtime code keeps working unchanged; type annotations that spell out `tuple[float, float, float]` for these values should be widened to `Vec3FloatLike`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
-- `Node.rotation`, `Annotation.edit_position` and `Annotation.edit_rotation` now reject a value that is not three numbers with a `ValueError` when it is set. Previously such a value was stored as given and only failed later, while writing the annotation. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
-- The private `Vector3` aliases of `webknossos.annotation.annotation`, `webknossos.annotation.volume_layer`, `webknossos.skeleton.group`, `webknossos.skeleton.skeleton` and `webknossos.skeleton.tree` were replaced by the shared `Vec3Float`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
-- Micro-optimizations done for `Vec3Float`, `Vec3Int` and `VecInt`, e.g using `__slots__` and fast-paths for common object construction patterns. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 
 ### Fixed
 - `Dataset.from_images` now names the missing optional dependency when the input contains a format whose reader could not be imported (e.g. `.ims` without `webknossos[ims]`), instead of only reporting that no supported image data was found. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
@@ -35,9 +29,28 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed `.ims` and MRC conversion failing with "Could not autodetect how to load a file" when the path was passed as a `pathlib.Path` rather than a `str` or `UPath`. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Fixed `flip_x`/`flip_y` mirroring each shard individually instead of the whole image when converting `.ims` or MRC files that span more than one shard in x or y, which scrambled the output into mirrored tiles. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Fixed the bounding box reported for multi-channel n-dimensional images (e.g. a multi-channel, multi-timepoint file) contradicting the layer's channel count, which caused a spurious "Some images are larger than expected" warning and a bounding box that disagreed with the written data. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
+
+
+## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...v3.7.0)
+
+### Added
+- Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Added `Vec3Float` and `Vec3FloatLike` to `webknossos.geometry`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Added support for the new attachment type `SegmentStatisticsAttachment` for segmentation layers. [#1490](https://github.com/scalableminds/webknossos-libs/pull/1490)
+
+### Changed
+- `Dataset.voxel_size`, `Skeleton.voxel_size`, `Annotation.edit_position`/`edit_rotation` and `Node.rotation` now return `Vec3Float` instead of a plain tuple. Since `Vec3Float` compares and hashes equal to the corresponding tuple, runtime code keeps working unchanged; type annotations that spell out `tuple[float, float, float]` for these values should be widened to `Vec3FloatLike`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- `Node.rotation`, `Annotation.edit_position` and `Annotation.edit_rotation` now reject a value that is not three numbers with a `ValueError` when it is set. Previously such a value was stored as given and only failed later, while writing the annotation. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- The private `Vector3` aliases of `webknossos.annotation.annotation`, `webknossos.annotation.volume_layer`, `webknossos.skeleton.group`, `webknossos.skeleton.skeleton` and `webknossos.skeleton.tree` were replaced by the shared `Vec3Float`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Micro-optimizations done for `Vec3Float`, `Vec3Int` and `VecInt`, e.g using `__slots__` and fast-paths for common object construction patterns. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+
+### Fixed
 - `Dataset.add_layer_as_copy` and `Dataset.copy_dataset` now carry over the `default_view_configuration` and the `coordinate_transformations` of the copied layers, which were previously lost. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 - `Dataset.add_layer_like` no longer shares the `default_view_configuration` with the layer it copies from, so changing it on one of the two layers no longer changes it on the other as well. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 - Restored the ordering of `VecInt` and `Vec3Int`, which was lost when they stopped subclassing `tuple` in [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419). [#1493](https://github.com/scalableminds/webknossos-libs/pull/1493)
+
+
 
 ## [3.6.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.6.0) - 2026-08-07
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...v3.6.0)
