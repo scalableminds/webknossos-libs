@@ -5,10 +5,7 @@ import pytest
 from PIL import Image
 from upath import UPath
 
-from webknossos.dataset._utils.image_source_registry import (
-    UnknownFormatError,
-    open_images,
-)
+from webknossos.dataset._utils.image_source_registry import open_images
 from webknossos.dataset._utils.raster_slices import (
     MultiImageSlices,
     SingleImageSlices,
@@ -258,15 +255,16 @@ def test_open_images_prefers_higher_class_priority(tmp_upath: UPath) -> None:
 def test_open_images_rejects_unknown_suffix(tmp_upath: UPath) -> None:
     unknown = tmp_upath / "data.unsupported"
     unknown.write_bytes(b"x")
-    with pytest.raises(UnknownFormatError, match="Could not autodetect") as excinfo:
+    with pytest.raises(
+        UnsupportedImageFormatError, match="Could not autodetect"
+    ) as excinfo:
         open_images(str(unknown))
 
-    # UnknownFormatError is the registry's internal dispatch signal, normally
-    # replaced by a fuller error before a caller sees it. On the paths where it
-    # does escape it must still be catchable as the documented public type,
-    # rather than as a bare Exception.
+    # Dispatch failure raises the same public error as everything else in the
+    # conversion path, so it is catchable as ImageConversionError (and as
+    # ValueError), and it carries what it knows at this point. The caller
+    # replaces it with a fuller one that also knows the path and the extras.
     error = excinfo.value
-    assert isinstance(error, UnsupportedImageFormatError)
     assert isinstance(error, ImageConversionError)
     assert isinstance(error, ValueError)
     assert error.suffix == "unsupported"
@@ -276,7 +274,7 @@ def test_open_images_rejects_unknown_suffix(tmp_upath: UPath) -> None:
 def test_open_images_rejects_extensionless_file(tmp_upath: UPath) -> None:
     extensionless = tmp_upath / "data"
     extensionless.write_bytes(b"x")
-    with pytest.raises(UnknownFormatError, match="no extension"):
+    with pytest.raises(UnsupportedImageFormatError, match="no extension"):
         open_images(str(extensionless))
 
 

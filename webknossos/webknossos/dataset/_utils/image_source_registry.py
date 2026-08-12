@@ -42,21 +42,6 @@ from .chunked_image_source import ChunkedImageSource
 from .image_source import ImageSource, ReadOptions
 from .slice_sequence import SliceSequence
 
-
-class UnknownFormatError(UnsupportedImageFormatError):
-    """Raised when no registered reader can open a file.
-
-    The registry's own signal that dispatch found nothing usable, either
-    because no reader claims the suffix or because every reader that claimed it
-    raised. `SlicedImageSource` catches it and decides which of the two it was
-    (see `_classify_open_failure`), so it is normally replaced by a fuller
-    `UnsupportedImageFormatError` or a `CorruptImageError` before any caller
-    sees it — but it subclasses the public one so that the times it does escape
-    are still catchable as `ImageConversionError` (and as `ValueError`) rather
-    than as a bare `Exception`.
-    """
-
-
 _SLICE_READER_CLASSES: list[type[SliceSequence]] = []
 _CHUNKED_READER_CLASSES: list[type[ChunkedImageSource]] = []
 
@@ -107,13 +92,17 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     if len(glob.glob(path_spec)) > 1:
         return MultiImageSlices(path_spec, **kwargs)
 
-    # `path` is deliberately left unset on these: path_spec may be a glob, and
-    # the caller that turns this into a user-facing error knows the real path.
+    # Every failure below is dispatch failing to find a usable reader, not the
+    # final word: SlicedImageSource collects these while trying its other open
+    # strategies, and _classify_open_failure decides afterwards — on the suffix,
+    # not on the exception — whether the format is unsupported or the file is
+    # merely unreadable. The error it builds then has the `path` and
+    # `missing_extras` these cannot know (path_spec may be a glob).
     supported = tuple(sorted(get_valid_suffixes()))
 
     _, ext = os.path.splitext(path_spec)
     if len(ext) < 2:
-        raise UnknownFormatError(
+        raise UnsupportedImageFormatError(
             f"Could not detect the file type of {path_spec} because it has no "
             "extension.",
             supported_suffixes=supported,
@@ -126,7 +115,7 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
         if ext in {e.lstrip(".").lower() for e in handler.class_exts()}
     ]
     if not eligible_handlers:
-        raise UnknownFormatError(
+        raise UnsupportedImageFormatError(
             f"Could not autodetect how to load a file of type {ext}. The "
             f"following suffixes are supported: {list(supported)}",
             suffix=ext,
@@ -141,7 +130,7 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
             return handler(path_spec, **kwargs)  # type: ignore[call-arg]
         except Exception as e:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
             messages.append(f"{handler.__name__} errored: {e}")
-    raise UnknownFormatError(
+    raise UnsupportedImageFormatError(
         "All handlers returned exceptions:\n" + "\n".join(messages),
         suffix=ext,
         supported_suffixes=supported,

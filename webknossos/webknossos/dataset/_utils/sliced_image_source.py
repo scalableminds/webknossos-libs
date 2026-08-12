@@ -149,9 +149,11 @@ class SlicedImageSource(ImageSource):
         *is* supported, which must keep surfacing as its original error.
 
         The decision is made on the suffix, not on the exception type:
-        open_images raises UnknownFormatError both when no reader claims the
-        suffix and when every reader that claimed it errored out, so a
-        corrupt TIFF is indistinguishable from an unreadable format by type.
+        open_images raises UnsupportedImageFormatError both when no reader
+        claims the suffix and when every reader that claimed it errored out, so
+        a corrupt TIFF is indistinguishable from an unreadable format by type.
+        The error built here supersedes those — it is the one that knows the
+        path and the missing extras.
 
         Classifying afterwards, rather than rejecting unknown suffixes up
         front, keeps files that open without a recognized suffix (via
