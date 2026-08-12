@@ -10,6 +10,7 @@ from .attachments import (
     MeshAttachment,
     RemoteAttachments,
     SegmentIndexAttachment,
+    SegmentStatisticsAttachment,
 )
 from .remote_segmentation_layer import RemoteSegmentationLayer
 from .segmentation_layer import SegmentationLayer

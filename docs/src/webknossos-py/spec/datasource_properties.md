@@ -152,7 +152,7 @@ Not all element classes are valid for every layer category.
 | `"uint16"` | Unsigned 16-bit integer | Yes | Yes |
 | `"uint24"` | Unsigned 24-bit integer (3-channel RGB) | Yes | No |
 | `"uint32"` | Unsigned 32-bit integer | Yes | Yes |
-| `"uint64"` | Unsigned 64-bit integer | No | Yes (values limited to 2^53 - 1) |
+| `"uint64"` | Unsigned 64-bit integer | No | Yes |
 | `"int8"` | Signed 8-bit integer | Yes | Yes |
 | `"int16"` | Signed 16-bit integer | Yes | Yes |
 | `"int32"` | Signed 32-bit integer | Yes | Yes |
@@ -162,7 +162,7 @@ Not all element classes are valid for every layer category.
 
 **Notes:**
 - `uint24` is only meaningful for color layers where 3 channels are packed into one element.
-- `uint64` segmentation values are internally handled as JavaScript numbers, limiting the usable range to 2^53 - 1.
+- `int8`, `int16`, `int32` `int64`: even signed segmentation values should still be positive for full support with WEBKNOSSOS. Prefer the unsigned dtype variants.
 - `double` is not supported by WEBKNOSSOS for any layer type.
 - Signed integers for segmentation layers may cause issues with negative segment IDs in some workflows.
 
@@ -286,6 +286,7 @@ References to auxiliary data files for a segmentation layer.
 | `meshes` | Array of [AttachmentProperties](#attachmentproperties) | No | `null` | Precomputed mesh files. |
 | `agglomerates` | Array of [AttachmentProperties](#attachmentproperties) | No | `null` | Agglomerate mapping files. |
 | `segmentIndex` | [AttachmentProperties](#attachmentproperties) | No | `null` | Segment index file. |
+| `segmentStatistics` | [AttachmentProperties](#attachmentproperties) | No | `null` | Segment statistics file. |
 | `cumsum` | [AttachmentProperties](#attachmentproperties) | No | `null` | Cumulative sum file. |
 | `connectomes` | Array of [AttachmentProperties](#attachmentproperties) | No | `null` | Connectome files. |
 
