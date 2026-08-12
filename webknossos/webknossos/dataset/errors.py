@@ -1,8 +1,15 @@
 """Exceptions raised by the dataset API.
 
-This module deliberately imports nothing but `upath`, so that downstream code
-can catch these exceptions without pulling in the image readers or any of
-their optional dependencies.
+This module deliberately imports nothing but `upath`, so that none of these
+exceptions depends on an image reader or on a reader's optional dependency.
+They can be raised, caught and inspected on any install, whatever combination
+of `webknossos[tifffile]`, `[czi]`, `[ims]` and `[mrcfile]` is present.
+
+That is a constraint on this file, not a promise about import cost: reaching it
+runs `webknossos.dataset.__init__`, which imports the conversion path and with
+it the reader registry, so every reader is imported too. Readers whose optional
+dependency is missing fail harmlessly there and are reported as unavailable
+suffixes instead — but the ones that are installed do get loaded.
 """
 
 from __future__ import annotations
