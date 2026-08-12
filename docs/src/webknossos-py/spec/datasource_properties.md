@@ -66,6 +66,7 @@ The schema varies slightly based on `category`.
 | `dataFormat` | [DataFormat](#dataformat) | Yes | | On-disk storage format. |
 | `numChannels` | `integer` | No | `null` | Number of channels. Relevant for multi-channel color layers (e.g. `3` for RGB stored as `uint24`). |
 | `defaultViewConfiguration` | [LayerViewConfiguration](#layerviewconfiguration) | No | `null` | Default view settings for this layer. |
+| `coordinateTransformations` | Array of [CoordinateTransformation](#coordinatetransformation) | No | `null` | Transformations placing this layer into the coordinate space of the dataset, applied in order. |
 
 ### Magnification Fields
 
@@ -219,6 +220,60 @@ Optional defaults for how a single layer is displayed in WEBKNOSSOS.
 
 All fields are optional.
 Default values do not need to be serialized, the field can be omitted.
+
+---
+
+## CoordinateTransformation
+
+Describes how a layer is placed into the coordinate space of its dataset, e.g. to register
+several layers onto each other.
+A layer holds an array of transformations, which are applied in order.
+They only affect how WEBKNOSSOS renders the layer, the voxel data itself is not modified.
+
+There are two kinds of transformations, distinguished by their `type` field.
+
+### Affine
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `type` | `"affine"` | Yes | Discriminator. |
+| `matrix` | `number[4][4]` | Yes | 4x4 homogeneous transformation matrix. |
+
+The matrix uses the usual mathematical convention, i.e. `matrix[row][column]` with the
+translation in the last column.
+The example below translates the layer by `[10, 20, 30]`:
+
+```json
+{
+  "type": "affine",
+  "matrix": [
+    [1, 0, 0, 10],
+    [0, 1, 0, 20],
+    [0, 0, 1, 30],
+    [0, 0, 0, 1]
+  ]
+}
+```
+
+### Thin Plate Spline
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `type` | `"thin_plate_spline"` | Yes | Discriminator. |
+| `correspondences` | `object` | Yes | Object with the `source` and `target` landmarks, each an array of `[x, y, z]` points. |
+
+`source[i]` is mapped onto `target[i]`; in between, the layer is warped smoothly.
+Both arrays must have the same length.
+
+```json
+{
+  "type": "thin_plate_spline",
+  "correspondences": {
+    "source": [[0, 0, 0], [1, 2, 3]],
+    "target": [[1, 1, 1], [4, 5, 6]]
+  }
+}
+```
 
 ---
 

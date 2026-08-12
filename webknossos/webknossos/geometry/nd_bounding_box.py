@@ -28,13 +28,13 @@ def str_iterable_to_tuple(str_list: Iterable[str]) -> tuple[str, ...]:
     return tuple(str_list)
 
 
-def parse_vec_int(vec_int_like: VecIntLike) -> VecInt:
+def as_vec_int(vec_int_like: VecIntLike) -> VecInt:
     return VecInt(
         vec_int_like, axes=(f"unset_{i}" for i in range(len(list(vec_int_like))))
     )
 
 
-def parse_vec_int_or_none(vec_int_like: VecIntLike | None) -> VecInt | None:
+def as_vec_int_or_none(vec_int_like: VecIntLike | None) -> VecInt | None:
     if vec_int_like is None:
         return None
     return VecInt(
@@ -82,11 +82,11 @@ class NDBoundingBox:
         - Each axis must have a unique dense index starting from 0
     """
 
-    topleft: VecInt = attr.field(converter=parse_vec_int)
-    size: VecInt = attr.field(converter=parse_vec_int)
+    topleft: VecInt = attr.field(converter=as_vec_int)
+    size: VecInt = attr.field(converter=as_vec_int)
     axes: tuple[str, ...] = attr.field(converter=str_iterable_to_tuple)
     index: VecInt = attr.field(
-        converter=parse_vec_int_or_none, default=None
+        converter=as_vec_int_or_none, default=None
     )  # not used, but left for backwards compatibility
     bottomright: VecInt = attr.field(init=False)
     name: str | None = _DEFAULT_BBOX_NAME

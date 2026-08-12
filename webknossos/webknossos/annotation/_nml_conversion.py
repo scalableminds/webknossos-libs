@@ -160,8 +160,16 @@ def annotation_to_nml(
         description=annotation.description,
         organization=annotation.organization_id,
         time=annotation.time,
-        editPosition=annotation.edit_position,
-        editRotation=annotation.edit_rotation,
+        editPosition=(
+            None
+            if annotation.edit_position is None
+            else annotation.edit_position.to_tuple()
+        ),
+        editRotation=(
+            None
+            if annotation.edit_rotation is None
+            else annotation.edit_rotation.to_tuple()
+        ),
         zoomLevel=annotation.zoom_level,
         taskBoundingBox=annotation.task_bounding_box,
         userBoundingBoxes=annotation.user_bounding_boxes,

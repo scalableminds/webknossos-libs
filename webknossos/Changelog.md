@@ -10,19 +10,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
-- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm). [#1474](https://github.com/scalableminds/webknossos-libs/pull/1474)
+- Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Added `Vec3Float` and `Vec3FloatLike` to `webknossos.geometry`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 - Added support for the new attachment type `SegmentStatisticsAttachment` for segmentation layers. [#1490](https://github.com/scalableminds/webknossos-libs/pull/1490)
-- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
 
 ### Changed
+- `Dataset.voxel_size`, `Skeleton.voxel_size`, `Annotation.edit_position`/`edit_rotation` and `Node.rotation` now return `Vec3Float` instead of a plain tuple. Since `Vec3Float` compares and hashes equal to the corresponding tuple, runtime code keeps working unchanged; type annotations that spell out `tuple[float, float, float]` for these values should be widened to `Vec3FloatLike`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- `Node.rotation`, `Annotation.edit_position` and `Annotation.edit_rotation` now reject a value that is not three numbers with a `ValueError` when it is set. Previously such a value was stored as given and only failed later, while writing the annotation. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- The private `Vector3` aliases of `webknossos.annotation.annotation`, `webknossos.annotation.volume_layer`, `webknossos.skeleton.group`, `webknossos.skeleton.skeleton` and `webknossos.skeleton.tree` were replaced by the shared `Vec3Float`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Micro-optimizations done for `Vec3Float`, `Vec3Int` and `VecInt`, e.g using `__slots__` and fast-paths for common object construction patterns. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+
+### Fixed
+- `Dataset.add_layer_as_copy` and `Dataset.copy_dataset` now carry over the `default_view_configuration` and the `coordinate_transformations` of the copied layers, which were previously lost. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- `Dataset.add_layer_like` no longer shares the `default_view_configuration` with the layer it copies from, so changing it on one of the two layers no longer changes it on the other as well. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Restored the ordering of `VecInt` and `Vec3Int`, which was lost when they stopped subclassing `tuple` in [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419). [#1493](https://github.com/scalableminds/webknossos-libs/pull/1493)
+
+
+## [3.6.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.6.0) - 2026-08-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...v3.6.0)
+
+### Added
+- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
+- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
+- Added `BoundingBox.iter_chunk_toplefts()`, a fast, allocation-free variant of `BoundingBox.chunk()` that yields chunk toplefts as plain int tuples instead of `BoundingBox` instances, and accepts an optional `clip_to` bounding box. [#1494](https://github.com/scalableminds/webknossos-libs/pull/1494)
+
 
 ### Fixed
 - Fixed a storage leak where downloading annotations and editing volume layers wrote zip data to temporary files on disk instead of keeping it in memory. [#1485](https://github.com/scalableminds/webknossos-libs/pull/1485)
+
 
 
 ## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20

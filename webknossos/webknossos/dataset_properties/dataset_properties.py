@@ -1,27 +1,16 @@
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 
 import attr
 import numpy as np
 
-from ..geometry import Mag, NormalizedBoundingBox
+from ..geometry import Mag, NormalizedBoundingBox, Vec3Float
+from .coordinate_transformations import CoordinateTransformation
 from .data_format import AttachmentDataFormat, DataFormat
 from .layer_categories import LayerCategoryType
 from .length_unit import _LENGTH_UNIT_TO_NANOMETER, LengthUnit
 
 DEFAULT_LENGTH_UNIT = LengthUnit.NANOMETER
 DEFAULT_LENGTH_UNIT_STR = DEFAULT_LENGTH_UNIT.value
-
-
-def float_tpl(voxel_size: list | tuple) -> Iterable:
-    # Fix for mypy bug https://github.com/python/mypy/issues/5313.
-    # Solution based on other issue for the same bug: https://github.com/python/mypy/issues/8389.
-    return tuple(
-        (
-            voxel_size[0],
-            voxel_size[1],
-            voxel_size[2],
-        )
-    )
 
 
 @attr.define
@@ -84,7 +73,7 @@ class DatasetViewConfiguration:
 
 @attr.define
 class MagViewProperties:
-    mag: Mag
+    mag: Mag = attr.field(converter=Mag)
     path: str | None = None
     """
     Could be None for older datasource-proterties.json files.
@@ -101,6 +90,7 @@ class LayerProperties:
     data_format: DataFormat
     mags: list[MagViewProperties]
     default_view_configuration: LayerViewConfiguration | None = None
+    coordinate_transformations: list[CoordinateTransformation] | None = None
 
     @property
     def dtype_np(self) -> np.dtype:
@@ -147,16 +137,11 @@ class SegmentationLayerProperties(LayerProperties):
 
 @attr.define
 class VoxelSize:
-    factor: tuple[float, float, float] = attr.field(converter=float_tpl)
+    factor: Vec3Float = attr.field(converter=Vec3Float)
     unit: LengthUnit = DEFAULT_LENGTH_UNIT
 
-    def to_nanometer(self) -> tuple[float, float, float]:
-        conversion_factor = _LENGTH_UNIT_TO_NANOMETER[self.unit]
-        return (
-            self.factor[0] * conversion_factor,
-            self.factor[1] * conversion_factor,
-            self.factor[2] * conversion_factor,
-        )
+    def to_nanometer(self) -> Vec3Float:
+        return self.factor * _LENGTH_UNIT_TO_NANOMETER[self.unit]
 
 
 @attr.define

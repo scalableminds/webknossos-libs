@@ -77,7 +77,14 @@ from ..dataset_properties import (
     DataFormat,
     VoxelSize,
 )
-from ..geometry import NDBoundingBox, Vec3Int, Vec3IntLike
+from ..geometry import (
+    NDBoundingBox,
+    Vec3Float,
+    Vec3FloatLike,
+    Vec3Int,
+    Vec3IntLike,
+)
+from ..geometry.vec3_float import as_vec3_float_or_none
 from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import (
@@ -89,8 +96,6 @@ from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 from .volume_layer import SegmentInformation, VolumeLayer
 
 logger = logging.getLogger(__name__)
-
-Vector3 = tuple[float, float, float]
 
 
 @attr.define
@@ -156,14 +161,18 @@ class Annotation:
     # The following underscored attributes are just for initialization
     # in case the skeleton is not given. They are always None as attributes.
     _dataset_name: str | None = None
-    _voxel_size: VoxelSize | Vector3 | None = None
+    _voxel_size: VoxelSize | Vec3FloatLike | None = None
     _organization_id: str | None = None
     _description: str | None = None
     owner_name: str | None = None
     annotation_id: str | None = None
     time: int | None = attr.ib(factory=time_since_epoch_in_ms)
-    edit_position: Vector3 | None = None
-    edit_rotation: Vector3 | None = None
+    edit_position: Vec3Float | None = attr.ib(
+        default=None, converter=as_vec3_float_or_none
+    )
+    edit_rotation: Vec3Float | None = attr.ib(
+        default=None, converter=as_vec3_float_or_none
+    )
     zoom_level: float | None = None
     metadata: dict[str, str] = attr.Factory(dict)
     task_bounding_box: NDBoundingBox | None = None
@@ -259,7 +268,7 @@ class Annotation:
         self.skeleton.dataset_id = dataset_id
 
     @property
-    def voxel_size(self) -> tuple[float, float, float]:
+    def voxel_size(self) -> Vec3Float:
         """Voxel dimensions in nanometers (x, y, z).
 
         Proxies to skeleton.voxel_size.
@@ -267,7 +276,7 @@ class Annotation:
         return self.skeleton.voxel_size
 
     @voxel_size.setter
-    def voxel_size(self, voxel_size: tuple[float, float, float]) -> None:
+    def voxel_size(self, voxel_size: Vec3FloatLike) -> None:
         self.skeleton.voxel_size = voxel_size
 
     @property
@@ -1361,8 +1370,8 @@ class RemoteAnnotation(Annotation):
         skeleton: Skeleton,
         owner_name: str,
         time: int | None = None,
-        edit_position: Vector3 | None = None,
-        edit_rotation: Vector3 | None = None,
+        edit_position: Vec3FloatLike | None = None,
+        edit_rotation: Vec3FloatLike | None = None,
         zoom_level: float | None = None,
         task_bounding_box: NDBoundingBox | None = None,
         user_bounding_boxes: list[NDBoundingBox] | None = None,
@@ -1376,8 +1385,8 @@ class RemoteAnnotation(Annotation):
         self.organization_id = organization_id
         self.owner_name = owner_name
         self.time = time
-        self.edit_position = edit_position
-        self.edit_rotation = edit_rotation
+        self.edit_position = as_vec3_float_or_none(edit_position)
+        self.edit_rotation = as_vec3_float_or_none(edit_rotation)
         self.zoom_level = zoom_level
         self.task_bounding_box = task_bounding_box
         self.user_bounding_boxes = user_bounding_boxes or []

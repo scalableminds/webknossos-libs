@@ -35,10 +35,11 @@ from ..dataset import (
 )
 from ..dataset.defaults import PROPERTIES_FILE_NAME
 from ..dataset.layer import Zarr3Config
-from ..geometry import Vec3Int
+from ..geometry import Vec3Float, Vec3Int
+from ..geometry.vec3_float import as_vec3_float_or_none
+from ..geometry.vec3_int import as_vec3_int_or_none
 from ..utils import is_fs_path
 
-Vector3 = tuple[float, float, float]
 Vector4 = tuple[float, float, float, float]
 
 
@@ -51,7 +52,7 @@ ANNOTATION_WKW_PATH_RE = re.compile(rf"{MAG_RE}{SEP_RE}(header\.wkw|{CUBE_RE})")
 @attr.define
 class SegmentInformation:
     name: str | None
-    anchor_position: Vec3Int | None
+    anchor_position: Vec3Int | None = attr.field(converter=as_vec3_int_or_none)
     color: Vector4 | None
     metadata: dict[str, str | int | float | Sequence[str]]
 
@@ -96,7 +97,7 @@ class VolumeLayer:
     zip: ZipPath | None
     segments: dict[int, SegmentInformation]
     largest_segment_id: int | None
-    voxel_size: Vector3 | None
+    voxel_size: Vec3Float | None = attr.field(converter=as_vec3_float_or_none)
     dtype: DTypeLike | None = None
     layer_name: str = "volumeAnnotationData"
 

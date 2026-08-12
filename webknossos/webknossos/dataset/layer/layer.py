@@ -15,7 +15,7 @@ from webknossos.dataset_properties import (
     LayerProperties,
     MagViewProperties,
 )
-from webknossos.geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
+from webknossos.geometry import Mag, NDBoundingBox, Vec3Float, Vec3Int, Vec3IntLike
 from webknossos.geometry.mag import MagLike
 
 from ._downsampling_utils import (
@@ -1044,7 +1044,7 @@ class Layer(AbstractLayer):
                 )
                 sampling_mode = SamplingModes.CONSTANT_Z
 
-        voxel_size: tuple[float, float, float] | None = None
+        voxel_size: Vec3Float | None = None
         if sampling_mode == SamplingModes.ANISOTROPIC:
             voxel_size = self.dataset.voxel_size
         elif sampling_mode == SamplingModes.ISOTROPIC:
@@ -1395,7 +1395,7 @@ class Layer(AbstractLayer):
 
         sampling_mode = SamplingModes.parse(sampling_mode)
 
-        voxel_size: tuple[float, float, float] | None = None
+        voxel_size: Vec3Float | None = None
         if sampling_mode == SamplingModes.ANISOTROPIC:
             voxel_size = self.dataset.voxel_size
         elif sampling_mode == SamplingModes.ISOTROPIC:

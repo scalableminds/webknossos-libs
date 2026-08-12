@@ -49,7 +49,13 @@ from webknossos.dataset_properties import (
     SegmentationLayerProperties,
     VoxelSize,
 )
-from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int, Vec3IntLike
+from webknossos.geometry import (
+    BoundingBox,
+    NDBoundingBox,
+    Vec3FloatLike,
+    Vec3Int,
+    Vec3IntLike,
+)
 from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import infer_metadata_type, warn_deprecated
 
@@ -979,6 +985,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 bounding_box=foreign_layer.bounding_box,
             )
 
+        layer._copy_metadata_from(foreign_layer)
+
         for mag_view in foreign_layer.mags.values():
             layer.add_mag_as_copy(
                 mag_view,
@@ -1524,7 +1532,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def from_images(
         cls,
         input_path: str | PathLike | UPath,
-        voxel_size: tuple[float, float, float] | None = None,
+        voxel_size: Vec3FloatLike | None = None,
         name: str | None = None,
         *,
         map_filepath_to_layer_name: Any = None,

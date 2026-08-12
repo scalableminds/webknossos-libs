@@ -1,22 +1,35 @@
+import copy
+import json
+from collections.abc import Iterator
+from typing import cast
+
+import attr
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor, get_executor
 from scipy.ndimage import affine_transform as scipy_affine_transform
 from upath import UPath
 
+from tests.constants import TESTDATA_DIR
 from webknossos import (
     COLOR_CATEGORY,
+    AffineCoordinateTransformation,
     BoundingBox,
     Dataset,
     Layer,
     Mag,
+    ThinPlateSplineCoordinateTransformation,
+    Vec3Float,
     Vec3Int,
 )
+from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.layer._transform_utils import (
     AbstractTransform,
     AffineTransform,
     transform,
 )
+from webknossos.dataset_properties import DatasetProperties
+from webknossos.dataset_properties.structuring import get_dataset_converter
 
 # Small chunk/shard shapes so that the tests exercise multiple chunk jobs
 # (including bbox-truncated border chunks).
@@ -425,3 +438,262 @@ def test_transform_custom_abstract_transform(tmp_upath: UPath) -> None:
     assert written_bbox == input_layer.bounding_box.offset(shift)
     output_data = output_layer.get_mag(1).read(absolute_bounding_box=written_bbox)
     np.testing.assert_array_equal(output_data[0], data)
+
+
+# The coordinate transformations below are unrelated to the `transform` function
+# above: they are layer metadata that only affects how WEBKNOSSOS renders a layer,
+# and never touch the voxel data.
+
+
+def test_layer_coordinate_transformations(tmp_upath: UPath) -> None:
+    ds_path = tmp_upath / "coordinate_transformations"
+    ds1 = Dataset(ds_path, voxel_size=(2, 2, 1))
+    layer1 = ds1.add_layer("color", COLOR_CATEGORY)
+    assert layer1.coordinate_transformations == ()
+    assert (
+        "coordinateTransformations"
+        not in json.loads((ds1.path / PROPERTIES_FILE_NAME).read_text())["dataLayers"][
+            0
+        ]
+    )
+
+    affine = AffineCoordinateTransformation.from_translation((10, 20, 30))
+    thin_plate_spline = ThinPlateSplineCoordinateTransformation(
+        source=[[0, 0, 0], [1, 2, 3], [4, 5, 6]],
+        target=[[1, 1, 1], [2, 4, 6], [8, 10, 12]],
+    )
+    layer1.coordinate_transformations = [affine, thin_plate_spline]
+    assert layer1.coordinate_transformations == (affine, thin_plate_spline)
+
+    # Test the exact representation on disk, it must match what WEBKNOSSOS expects
+    properties = json.loads((ds1.path / PROPERTIES_FILE_NAME).read_text())
+    assert properties["dataLayers"][0]["coordinateTransformations"] == [
+        {
+            "type": "affine",
+            "matrix": [
+                [1.0, 0.0, 0.0, 10.0],
+                [0.0, 1.0, 0.0, 20.0],
+                [0.0, 0.0, 1.0, 30.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        },
+        {
+            "type": "thin_plate_spline",
+            "correspondences": {
+                "source": [[0.0, 0.0, 0.0], [1.0, 2.0, 3.0], [4.0, 5.0, 6.0]],
+                "target": [[1.0, 1.0, 1.0], [2.0, 4.0, 6.0], [8.0, 10.0, 12.0]],
+            },
+        },
+    ]
+
+    # Test if the data is persisted to disk
+    ds2 = Dataset.open(ds_path)
+    layer2 = ds2.get_layer("color")
+    assert layer2.coordinate_transformations == (affine, thin_plate_spline)
+    np.testing.assert_array_equal(
+        cast(
+            AffineCoordinateTransformation, layer2.coordinate_transformations[0]
+        ).matrix,
+        affine.matrix,
+    )
+
+    # The getter returns a tuple, so the layer cannot be changed by adding to or
+    # removing from what it hands out
+    assert isinstance(layer2.coordinate_transformations, tuple)
+
+    # The transformations themselves are immutable, so the layer cannot be changed
+    # through a reference to one of them either
+    with pytest.raises(ValueError, match="read-only"):
+        cast(
+            AffineCoordinateTransformation, layer2.coordinate_transformations[0]
+        ).matrix[0][3] = 99
+    assert layer2.coordinate_transformations == (affine, thin_plate_spline)
+
+    # Unsetting removes the key from the properties again
+    layer2.coordinate_transformations = []
+    assert layer2.coordinate_transformations == ()
+    assert (
+        "coordinateTransformations"
+        not in json.loads((ds2.path / PROPERTIES_FILE_NAME).read_text())["dataLayers"][
+            0
+        ]
+    )
+
+    # The properties must survive a round-trip through the file on disk
+    assert ds2._properties == Dataset.open(ds2.path)._properties
+
+
+def _apply_affine(
+    transformation: AffineCoordinateTransformation, point: tuple[float, float, float]
+) -> np.ndarray:
+    matrix = transformation.matrix
+    return np.round(matrix[:3, :3] @ np.array(point, dtype=float) + matrix[:3, 3], 6)
+
+
+def test_affine_coordinate_transformation_builders() -> None:
+    # The rotations must match the convention that WEBKNOSSOS uses, i.e. a rotation
+    # around z has its sine at matrix[1][0].
+    assert AffineCoordinateTransformation.from_rotation("z", 90).matrix[1][0] == 1.0
+    np.testing.assert_array_equal(
+        _apply_affine(AffineCoordinateTransformation.from_rotation("z", 90), (1, 0, 0)),
+        [0, 1, 0],
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(AffineCoordinateTransformation.from_rotation("x", 90), (0, 1, 0)),
+        [0, 0, 1],
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(AffineCoordinateTransformation.from_rotation("y", 90), (0, 0, 1)),
+        [1, 0, 0],
+    )
+
+    # `chain` applies the receiver first and its argument afterwards
+    translation = AffineCoordinateTransformation.from_translation((10, 0, 0))
+    scaling = AffineCoordinateTransformation.from_scale((2, 2, 2))
+    np.testing.assert_array_equal(
+        _apply_affine(translation.chain(scaling), (1, 0, 0)), [22, 0, 0]
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(scaling.chain(translation), (1, 0, 0)), [12, 0, 0]
+    )
+
+    # The fluent methods are equivalent to chaining the respective transformation
+    identity = AffineCoordinateTransformation.identity()
+    assert identity.translate((10, 0, 0)) == identity.chain(translation)
+    assert identity.scale((2, 2, 2)) == identity.chain(scaling)
+    assert identity.rotate("z", 90) == identity.chain(
+        AffineCoordinateTransformation.from_rotation("z", 90)
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(identity.rotate("z", 90).translate((5, 0, 0)), (1, 0, 0)),
+        [5, 1, 0],
+    )
+    np.testing.assert_array_equal(
+        _apply_affine(identity.flip("y"), (3, 4, 5)), [3, -4, 5]
+    )
+
+    # The builders return new objects and never modify the receiver
+    assert identity == AffineCoordinateTransformation.identity()
+
+    with pytest.raises(ValueError, match="must be `x`, `y` or `z`"):
+        AffineCoordinateTransformation.from_rotation("w", 90)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="must be `x`, `y` or `z`"):
+        identity.flip("w")  # type: ignore[arg-type]
+
+
+def test_thin_plate_spline_coordinate_transformation_pairs() -> None:
+    transformation = ThinPlateSplineCoordinateTransformation.from_pairs(
+        [
+            [Vec3Int(0, 0, 0), Vec3Int(1, 1, 1)],
+            [(1, 2, 3), (4, 5, 6)],
+        ]
+    )
+    assert transformation.pairs == (
+        (Vec3Float(0.0, 0.0, 0.0), Vec3Float(1.0, 1.0, 1.0)),
+        (Vec3Float(1.0, 2.0, 3.0), Vec3Float(4.0, 5.0, 6.0)),
+    )
+    np.testing.assert_array_equal(transformation.source, [[0, 0, 0], [1, 2, 3]])
+    np.testing.assert_array_equal(transformation.target, [[1, 1, 1], [4, 5, 6]])
+
+    # Round-trips through `pairs`
+    assert (
+        ThinPlateSplineCoordinateTransformation.from_pairs(transformation.pairs)
+        == transformation
+    )
+
+    # Sub-voxel precision survives, since the format stores the landmarks as floats
+    sub_voxel = ThinPlateSplineCoordinateTransformation.from_pairs(
+        [[(0.5, 1.25, 2.0), np.array([3.5, 4.0, 5.75])]]
+    )
+    assert sub_voxel.pairs == ((Vec3Float(0.5, 1.25, 2.0), Vec3Float(3.5, 4.0, 5.75)),)
+    assert ThinPlateSplineCoordinateTransformation.from_pairs(sub_voxel.pairs) == (
+        sub_voxel
+    )
+
+    with pytest.raises(ValueError, match="pair of a source and a target"):
+        ThinPlateSplineCoordinateTransformation.from_pairs([[(0, 0, 0)]])
+    with pytest.raises(ValueError, match="three floats"):
+        ThinPlateSplineCoordinateTransformation.from_pairs([[(0, 0), (1, 1, 1)]])
+
+
+def test_coordinate_transformations_are_immutable() -> None:
+    """The transformations are values, which is what makes sharing them safe."""
+    matrix = np.eye(4)
+    affine = AffineCoordinateTransformation(matrix=matrix)
+    thin_plate_spline = ThinPlateSplineCoordinateTransformation(
+        source=[[0, 0, 0]], target=[[1, 1, 1]]
+    )
+
+    # Constructing does not take ownership of the caller's array
+    assert matrix.flags.writeable
+    matrix[0][3] = 99
+    assert affine == AffineCoordinateTransformation.identity()
+
+    # The stored arrays cannot be written to
+    for array in [affine.matrix, thin_plate_spline.source, thin_plate_spline.target]:
+        assert not array.flags.writeable
+        with pytest.raises(ValueError, match="read-only"):
+            array[0][0] = 99
+
+    # ... nor can they be replaced
+    with pytest.raises(attr.exceptions.FrozenAttributeError):
+        affine.matrix = np.eye(4)
+    with pytest.raises(attr.exceptions.FrozenAttributeError):
+        thin_plate_spline.source = [[1, 1, 1]]  # type: ignore[assignment]
+
+    # Being immutable, copying one may and does hand back the same object
+    assert copy.deepcopy(affine) is affine
+    assert copy.copy(affine) is affine
+
+    # The builders never modify the transformation they are called on
+    assert affine.translate((1, 2, 3)) is not affine
+    assert affine == AffineCoordinateTransformation.identity()
+
+
+def _leaf_exceptions(exception: BaseException) -> Iterator[BaseException]:
+    """Yields the non-group exceptions of a possibly nested `ExceptionGroup`.
+
+    `BaseExceptionGroup` is only a builtin from Python 3.11 on, therefore the groups are
+    recognized by their `exceptions` attribute.
+    """
+    nested = getattr(exception, "exceptions", None)
+    if nested is None:
+        yield exception
+    else:
+        for child in nested:
+            yield from _leaf_exceptions(child)
+
+
+def test_coordinate_transformation_validation() -> None:
+    with pytest.raises(ValueError, match=r"shape \(4, 4\)"):
+        AffineCoordinateTransformation(matrix=np.eye(3))
+
+    with pytest.raises(ValueError, match=r"shape \(N, 3\)"):
+        ThinPlateSplineCoordinateTransformation(
+            source=[[0, 0], [1, 2]], target=[[0, 0], [1, 2]]
+        )
+
+    with pytest.raises(ValueError, match="same length"):
+        ThinPlateSplineCoordinateTransformation(
+            source=[[0, 0, 0]], target=[[0, 0, 0], [1, 2, 3]]
+        )
+
+    with pytest.raises(ValueError, match="at least one correspondence"):
+        ThinPlateSplineCoordinateTransformation(source=[], target=[])
+    with pytest.raises(ValueError, match="at least one correspondence"):
+        ThinPlateSplineCoordinateTransformation.from_pairs([])
+
+    # An unsupported transformation type is rejected while reading a dataset
+    data = json.loads(
+        (TESTDATA_DIR / "complex_property_ds" / PROPERTIES_FILE_NAME).read_text()
+    )
+    data["dataLayers"][0]["coordinateTransformations"] = [
+        {"type": "translation", "translation": [1, 2, 3]}
+    ]
+    with pytest.raises(Exception) as exc_info:
+        get_dataset_converter().structure(data, DatasetProperties)
+    # cattrs wraps the error in a (possibly nested) ExceptionGroup
+    leaves = list(_leaf_exceptions(exc_info.value))
+    assert len(leaves) == 1
+    assert isinstance(leaves[0], ValueError)
+    assert "`affine` or `thin_plate_spline`" in str(leaves[0])
