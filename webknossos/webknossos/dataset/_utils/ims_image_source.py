@@ -12,7 +12,7 @@ from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError
 from .chunked_image_source import ChunkedImageSource
 from .image_source import ReadOptions, compute_channel_selection
-from .image_source_registry import register_chunked_image_source
+from .image_source_registry import register_chunked_reader
 
 try:
     from imaris_ims_file_reader.ims import ims as ImsFile
@@ -39,7 +39,7 @@ def _read_ims_metadata_quietly(
     return shape, dtype  # type: ignore[return-value]
 
 
-@register_chunked_image_source
+@register_chunked_reader
 class ImsImageSource(ChunkedImageSource):
     """
     ChunkedImageSource for Imaris .ims files. Reads shard-sized 3D blocks

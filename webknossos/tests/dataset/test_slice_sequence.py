@@ -18,6 +18,10 @@ from webknossos.dataset._utils.slice_sequence import (
     _SlicedView,
 )
 from webknossos.dataset._utils.tiff_slices import TiffSlices
+from webknossos.dataset.errors import (
+    ImageConversionError,
+    UnsupportedImageFormatError,
+)
 
 # A volume with distinct values everywhere, so a wrong axis order or a wrong
 # index cannot accidentally produce the expected result.
@@ -254,8 +258,19 @@ def test_open_images_prefers_higher_class_priority(tmp_upath: UPath) -> None:
 def test_open_images_rejects_unknown_suffix(tmp_upath: UPath) -> None:
     unknown = tmp_upath / "data.unsupported"
     unknown.write_bytes(b"x")
-    with pytest.raises(UnknownFormatError, match="Could not autodetect"):
+    with pytest.raises(UnknownFormatError, match="Could not autodetect") as excinfo:
         open_images(str(unknown))
+
+    # UnknownFormatError is the registry's internal dispatch signal, normally
+    # replaced by a fuller error before a caller sees it. On the paths where it
+    # does escape it must still be catchable as the documented public type,
+    # rather than as a bare Exception.
+    error = excinfo.value
+    assert isinstance(error, UnsupportedImageFormatError)
+    assert isinstance(error, ImageConversionError)
+    assert isinstance(error, ValueError)
+    assert error.suffix == "unsupported"
+    assert "png" in error.supported_suffixes
 
 
 def test_open_images_rejects_extensionless_file(tmp_upath: UPath) -> None:

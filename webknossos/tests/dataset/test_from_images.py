@@ -444,7 +444,7 @@ def test_optional_reader_suffixes_match_class_exts() -> None:
     # install.
     from webknossos.dataset._utils.chunked_image_source import ChunkedImageSource
     from webknossos.dataset._utils.image_source_registry import (
-        _CHUNKED_IMAGE_SOURCE_CLASSES,
+        _CHUNKED_READER_CLASSES,
         _OPTIONAL_READERS,
         _SLICE_READER_CLASSES,
     )
@@ -455,7 +455,7 @@ def test_optional_reader_suffixes_match_class_exts() -> None:
     registered: dict[str, type[SliceSequence] | type[ChunkedImageSource]] = {
         cls.__name__: cls for cls in _SLICE_READER_CLASSES
     }
-    registered.update({cls.__name__: cls for cls in _CHUNKED_IMAGE_SOURCE_CLASSES})
+    registered.update({cls.__name__: cls for cls in _CHUNKED_READER_CLASSES})
     for reader in _OPTIONAL_READERS:
         # The test env installs all extras, so every optional reader is
         # registered and can be asked for its own suffixes.

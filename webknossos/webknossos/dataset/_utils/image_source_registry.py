@@ -1,13 +1,25 @@
 """Which reader handles which file suffix, and the one way a source is opened.
 
-`open_image_source()` is the single entry point: it picks the reading strategy
-from the suffix and hands back an `ImageSource`, so callers never have to know
-which of the two exists. Two kinds of class register here for it to choose
-between:
+Two words, deliberately not interchangeable:
 
-* slice readers (`SliceSequence` subclasses), which `SlicedImageSource` drives
-  slice by slice;
-* `ChunkedImageSource` subclasses, which read shard-sized blocks themselves.
+* a **reader** is a class that knows one input format. It is what registers
+  here, and what a suffix maps to.
+* a **source** is an `ImageSource` — one set of input images being converted,
+  which is what `image_conversion.py` drives.
+
+Every reader is one of two kinds, and the difference is exactly whether it is
+also a source:
+
+* **slice readers** (`SliceSequence` subclasses: `TiffSlices`, `Dm3Slices`, …)
+  are *not* sources. They only produce 2D slices; `SlicedImageSource` wraps one
+  and is the source.
+* **chunked readers** (`ChunkedImageSource` subclasses: `CziImageSource`,
+  `ImsImageSource`, `MrcImageSource`) *are* sources, reading shard-sized blocks
+  themselves — hence their `…ImageSource` names.
+
+`open_image_source()` is the single entry point: it picks the kind from the
+suffix and hands back an `ImageSource` either way, so no caller has to know
+which of the two it got.
 
 A reader with a missing dependency never imports and so never registers. That
 would leave its formats silently absent from the supported list, which is why
@@ -25,17 +37,28 @@ from typing import NamedTuple
 
 from upath import UPath
 
+from ..errors import UnsupportedImageFormatError
 from .chunked_image_source import ChunkedImageSource
 from .image_source import ImageSource, ReadOptions
 from .slice_sequence import SliceSequence
 
 
-class UnknownFormatError(Exception):
-    """Raised when no registered reader can open a file."""
+class UnknownFormatError(UnsupportedImageFormatError):
+    """Raised when no registered reader can open a file.
+
+    The registry's own signal that dispatch found nothing usable, either
+    because no reader claims the suffix or because every reader that claimed it
+    raised. `SlicedImageSource` catches it and decides which of the two it was
+    (see `_classify_open_failure`), so it is normally replaced by a fuller
+    `UnsupportedImageFormatError` or a `CorruptImageError` before any caller
+    sees it — but it subclasses the public one so that the times it does escape
+    are still catchable as `ImageConversionError` (and as `ValueError`) rather
+    than as a bare `Exception`.
+    """
 
 
 _SLICE_READER_CLASSES: list[type[SliceSequence]] = []
-_CHUNKED_IMAGE_SOURCE_CLASSES: list[type[ChunkedImageSource]] = []
+_CHUNKED_READER_CLASSES: list[type[ChunkedImageSource]] = []
 
 
 def register_slice_reader(cls: type[SliceSequence]) -> type[SliceSequence]:
@@ -43,10 +66,10 @@ def register_slice_reader(cls: type[SliceSequence]) -> type[SliceSequence]:
     return cls
 
 
-def register_chunked_image_source(
+def register_chunked_reader(
     cls: type[ChunkedImageSource],
 ) -> type[ChunkedImageSource]:
-    _CHUNKED_IMAGE_SOURCE_CLASSES.append(cls)
+    _CHUNKED_READER_CLASSES.append(cls)
     return cls
 
 
@@ -58,17 +81,17 @@ def get_valid_slice_reader_suffixes() -> set[str]:
     return valid_suffixes
 
 
-def get_valid_chunked_image_suffixes() -> set[str]:
-    """The suffixes (without dot) that a registered chunk-based format reads."""
+def get_valid_chunked_reader_suffixes() -> set[str]:
+    """The suffixes (without dot) that some registered chunked reader can open."""
     valid_suffixes: set[str] = set()
-    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
+    for cls in _CHUNKED_READER_CLASSES:
         valid_suffixes.update(cls.class_exts())
     return valid_suffixes
 
 
 def get_valid_suffixes() -> set[str]:
-    """Every suffix that can be converted, by either strategy."""
-    return get_valid_slice_reader_suffixes() | get_valid_chunked_image_suffixes()
+    """Every suffix that can be converted, by a reader of either kind."""
+    return get_valid_slice_reader_suffixes() | get_valid_chunked_reader_suffixes()
 
 
 def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
@@ -84,11 +107,16 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     if len(glob.glob(path_spec)) > 1:
         return MultiImageSlices(path_spec, **kwargs)
 
+    # `path` is deliberately left unset on these: path_spec may be a glob, and
+    # the caller that turns this into a user-facing error knows the real path.
+    supported = tuple(sorted(get_valid_suffixes()))
+
     _, ext = os.path.splitext(path_spec)
     if len(ext) < 2:
         raise UnknownFormatError(
             f"Could not detect the file type of {path_spec} because it has no "
-            "extension."
+            "extension.",
+            supported_suffixes=supported,
         )
     ext = ext.lower()[1:]
 
@@ -100,7 +128,9 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     if not eligible_handlers:
         raise UnknownFormatError(
             f"Could not autodetect how to load a file of type {ext}. The "
-            f"following suffixes are supported: {sorted(get_valid_suffixes())}"
+            f"following suffixes are supported: {list(supported)}",
+            suffix=ext,
+            supported_suffixes=supported,
         )
 
     messages = []
@@ -112,7 +142,9 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
         except Exception as e:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
             messages.append(f"{handler.__name__} errored: {e}")
     raise UnknownFormatError(
-        "All handlers returned exceptions:\n" + "\n".join(messages)
+        "All handlers returned exceptions:\n" + "\n".join(messages),
+        suffix=ext,
+        supported_suffixes=supported,
     )
 
 
@@ -132,7 +164,7 @@ def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> Imag
 
     if isinstance(images, UPath):
         suffix = images.suffix.lstrip(".").lower()
-        for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
+        for cls in _CHUNKED_READER_CLASSES:
             if suffix in cls.class_exts():
                 # Remote UPaths deliberately do reach the reader, which raises
                 # its own "must be a local file path" error via is_remote_path.
