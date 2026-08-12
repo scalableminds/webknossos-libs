@@ -15,6 +15,7 @@ from webknossos import (
     MeshAttachment,
     SegmentationLayer,
     SegmentIndexAttachment,
+    SegmentStatisticsAttachment,
 )
 from webknossos.geometry import BoundingBox
 
@@ -107,6 +108,24 @@ def test_attachments(tmp_upath: UPath) -> None:
         == AttachmentDataFormat.HDF5
     )
 
+    # segment statistics
+    seg_layer.attachments.add_attachment_as_ref(
+        SegmentStatisticsAttachment.from_path_and_name(
+            dataset.path / "seg" / "segment_statistics.zarr",
+            name="main",
+            data_format=AttachmentDataFormat.Zarr3,
+        )
+    )
+    assert seg_layer._properties.attachments.segment_statistics is not None
+    assert (
+        seg_layer._properties.attachments.segment_statistics.path
+        == "./seg/segment_statistics.zarr"
+    )
+    assert (
+        seg_layer._properties.attachments.segment_statistics.data_format
+        == AttachmentDataFormat.Zarr3
+    )
+
     # cumsum
     seg_layer.attachments.add_attachment_as_ref(
         CumsumAttachment.from_path_and_name(
@@ -135,6 +154,7 @@ def test_attachments(tmp_upath: UPath) -> None:
     assert len(attachments_json["agglomerates"]) == 1
     assert len(attachments_json["connectomes"]) == 1
     assert attachments_json["segmentIndex"] is not None
+    assert attachments_json["segmentStatistics"] is not None
     assert attachments_json["cumsum"] is not None
 
     # delete
@@ -146,6 +166,8 @@ def test_attachments(tmp_upath: UPath) -> None:
     assert seg_layer._properties.attachments.connectomes is None
     seg_layer.attachments.delete_attachment(seg_layer.attachments.segment_index)
     assert seg_layer._properties.attachments.segment_index is None
+    seg_layer.attachments.delete_attachment(seg_layer.attachments.segment_statistics)
+    assert seg_layer._properties.attachments.segment_statistics is None
     seg_layer.attachments.delete_attachment(seg_layer.attachments.cumsum)
     assert seg_layer._properties.attachments.cumsum is None
 
@@ -411,6 +433,22 @@ def test_add_copy_attachments(tmp_upath: UPath) -> None:
         == "./seg/segmentIndex/main"
     )
 
+    # segment statistics (has camel-casing)
+    segment_statistics_path = tmp_upath / "segment_statistics"
+    segment_statistics_path.write_text("test")
+
+    segment_statistics = SegmentStatisticsAttachment.from_path_and_name(
+        segment_statistics_path,
+        "main",
+        data_format=AttachmentDataFormat.Zarr3,
+    )
+    seg_layer.attachments.add_attachment_as_copy(segment_statistics)
+    assert seg_layer._properties.attachments.segment_statistics is not None
+    assert (
+        seg_layer._properties.attachments.segment_statistics.path
+        == "./seg/segmentStatistics/main"
+    )
+
 
 def test_add_symlink_attachments(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
@@ -455,6 +493,28 @@ def test_add_symlink_attachments(tmp_upath: UPath) -> None:
     assert (
         dataset.path / "seg" / "segmentIndex" / "main"
     ).resolve() == segment_index_path
+
+    # segment statistics (has camel-casing)
+    segment_statistics_path = tmp_upath / "segment_statistics"
+    segment_statistics_path.write_text("test")
+
+    segment_statistics = SegmentStatisticsAttachment.from_path_and_name(
+        segment_statistics_path,
+        "main",
+        data_format=AttachmentDataFormat.Zarr3,
+    )
+    with pytest.warns(DeprecationWarning):
+        seg_layer.attachments.add_symlink_attachments(segment_statistics)
+    assert seg_layer._properties.attachments.segment_statistics is not None
+    assert (
+        seg_layer._properties.attachments.segment_statistics.path
+        == segment_statistics_path.as_posix()
+    )
+    assert (dataset.path / "seg" / "segmentStatistics" / "main").exists()
+    assert (dataset.path / "seg" / "segmentStatistics" / "main").is_symlink()
+    assert (
+        dataset.path / "seg" / "segmentStatistics" / "main"
+    ).resolve() == segment_statistics_path
 
 
 def test_deprecated_add_methods(tmp_upath: UPath) -> None:

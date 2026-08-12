@@ -17,7 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
 - Added `Vec3Float` and `Vec3FloatLike` to `webknossos.geometry`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
-
+- Added support for the new attachment type `SegmentStatisticsAttachment` for segmentation layers. [#1490](https://github.com/scalableminds/webknossos-libs/pull/1490)
 
 ### Changed
 - `Dataset.voxel_size`, `Skeleton.voxel_size`, `Annotation.edit_position`/`edit_rotation` and `Node.rotation` now return `Vec3Float` instead of a plain tuple. Since `Vec3Float` compares and hashes equal to the corresponding tuple, runtime code keeps working unchanged; type annotations that spell out `tuple[float, float, float]` for these values should be widened to `Vec3FloatLike`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)

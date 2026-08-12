@@ -286,6 +286,7 @@ References to auxiliary data files for a segmentation layer.
 | `meshes` | Array of [AttachmentProperties](#attachmentproperties) | No | `null` | Precomputed mesh files. |
 | `agglomerates` | Array of [AttachmentProperties](#attachmentproperties) | No | `null` | Agglomerate mapping files. |
 | `segmentIndex` | [AttachmentProperties](#attachmentproperties) | No | `null` | Segment index file. |
+| `segmentStatistics` | [AttachmentProperties](#attachmentproperties) | No | `null` | Segment statistics file. |
 | `cumsum` | [AttachmentProperties](#attachmentproperties) | No | `null` | Cumulative sum file. |
 | `connectomes` | Array of [AttachmentProperties](#attachmentproperties) | No | `null` | Connectome files. |
 
