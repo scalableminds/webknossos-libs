@@ -17,7 +17,7 @@ from contextlib import contextmanager
 from enum import Enum, unique
 from itertools import product
 from os import PathLike
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import attr
 import numpy as np
@@ -74,17 +74,18 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# The reader modules whose UserWarnings this module suppresses while scanning a
-# whole directory: "loading ALL files in this directory" and the like are meant
-# for a caller who named one input, not for every file of a bulk conversion.
-# Named by module, which is how warnings.filterwarnings matches them, so
-# renaming either module silently stops the suppression.
+# Warnings like "loading ALL files in this directory" are meant for a caller
+# who named one input, not for every file of a bulk conversion. Taken from the
+# modules themselves because filterwarnings matches on the module name, which a
+# rename would otherwise silently break.
 _RASTER_SLICES_MODULE = raster_slices.__name__.rsplit(".", 1)[-1]
 _SLICED_SOURCE_MODULE = sliced_image_source.__name__.rsplit(".", 1)[-1]
 
 
 @contextmanager
-def _quiet_reader_warnings(sliced_source_action: str = "ignore") -> Iterator[None]:
+def _quiet_reader_warnings(
+    sliced_source_action: Literal["ignore", "once"] = "ignore",
+) -> Iterator[None]:
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore", category=UserWarning, module=_RASTER_SLICES_MODULE
@@ -221,9 +222,8 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 
 
 def _describe_rgb_formats() -> str:
-    """The formats whose channels mean colour, for the error message that tells
-    users which ones can share a layer. SingleImageSlices handles exactly the
-    everyday raster formats, so taking the list from it cannot drift into
+    """The formats whose channels mean colour, for the error message naming
+    which ones can share a layer. Taken from the reader so it cannot drift into
     naming formats that can no longer be read."""
     return ", ".join("." + suffix for suffix in sorted(SingleImageSlices.class_exts()))
 
@@ -257,8 +257,7 @@ def _channels_are_one_rgb_layer(
 
 
 def _has_image_z_dimension(filepath: UPath) -> bool:
-    # No option affects the z extent: the reader names its own axes, so how
-    # many slices there are does not depend on how they are to be written.
+    # No option affects the z extent, so the defaults will do.
     return open_image_source(filepath, ReadOptions()).expected_bbox.get_shape("z") > 1
 
 
@@ -457,10 +456,9 @@ def add_layer_from_images(
 ) -> Layer:
     """See Dataset.add_layer_from_images() for the public docstring."""
     _validate_layer_name(layer_name)
-    # Normalize paths to UPath once, here at the boundary, so everything
-    # downstream (SlicedImageSource, ChunkedImageSource, try_open_chunked_image_source) deals in
-    # a single path type and can use is_remote_path/is_fs_path directly. str
-    # round-trips through UPath unchanged, including glob patterns and URLs.
+    # Normalize to UPath once, here at the boundary, so everything downstream
+    # deals in a single path type. str round-trips unchanged, including glob
+    # patterns and URLs.
     image_paths = _normalize_images_argument(images)
     del images
     if category is None:
@@ -476,8 +474,7 @@ def add_layer_from_images(
     else:
         user_set_category = True
 
-    # czi_channel is meaningful to one reader only; sources that do not know
-    # the name simply ignore it, so it needs no special handling here.
+    # czi_channel is meaningful to one reader only; the rest ignore the name.
     read_options = ReadOptions(
         channel=channel,
         swap_xy=swap_xy,

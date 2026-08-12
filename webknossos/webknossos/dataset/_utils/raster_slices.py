@@ -33,12 +33,10 @@ def imread(uri: Any, **kwargs: Any) -> np.ndarray:
 
 
 def _plane_axes(plane: np.ndarray, source: object) -> str:
-    """The axes of one decoded raster image.
+    """The axes of one decoded raster image, always `(y, x)` or `(y, x, c)`.
 
-    These formats decode to `(y, x)` or `(y, x, c)` — the everyday image
-    layout, which is what makes it safe to state outright rather than guess:
-    the only axis that could be mistaken for another is the file index, and
-    that one belongs to the reader, not to the decoded array.
+    Safe to state rather than guess: the only axis that could be mistaken for
+    another is the file index, which belongs to the reader, not to the array.
     """
     if plane.ndim == 2:
         return "yx"
@@ -124,10 +122,8 @@ def _collect_files(
 
 class MultiImageSlices(SliceSequence):
     """Reads a directory, glob pattern, zip archive or list of 2D image files
-    as one sequence, with each file contributing one slice along `z`.
-
-    Every file must decode to the same shape as the first one, which is the
-    only one read up front.
+    as one sequence, each file contributing one slice along `z`. Every file
+    must decode to the shape of the first, which is the only one read up front.
     """
 
     def __init__(self, path_spec: str | Iterable[str], **kwargs: Any) -> None:
@@ -143,9 +139,8 @@ class MultiImageSlices(SliceSequence):
         self._dtype = first_slice.dtype
 
         # imageio also decodes formats this class is not the preferred reader
-        # for — a directory of TIFFs ends up here, and a "c" axis there is
-        # separate acquisitions, not colour. The files themselves say which
-        # case this is.
+        # for — a directory of TIFFs ends up here, where a "c" axis is separate
+        # acquisitions rather than colour. The files say which case this is.
         first_suffix = os.path.splitext(self._filepaths[0])[1].lstrip(".").lower()
         self.channels_are_colour = first_suffix in SingleImageSlices.class_exts()
 
@@ -153,7 +148,7 @@ class MultiImageSlices(SliceSequence):
         plane_axes = _plane_axes(first_slice, self._filepaths[0])
         for axis, size in zip(plane_axes, first_slice.shape):
             self._init_axis(axis, size)
-        # The declared axes are one file's; `z` picks which file, and reaches
+        # The declared axes are one file's; `z` picks the file, reaching
         # _read_file through the coords every get_slice call carries.
         self._set_get_slice(self._read_file, plane_axes)
         self.iter_axes = ["z"]
@@ -181,11 +176,9 @@ class MultiImageSlices(SliceSequence):
 
 
 class StackedFileSlices(SliceSequence):
-    """Stacks several n-dimensional image files along one added axis.
-
-    Each file is opened with the same reader class and must expose identical
-    axes and sizes; the added axis (`t` by default) selects the file.
-    """
+    """Stacks several n-dimensional image files along one added axis (`t` by
+    default) that selects the file. Each is opened with the same reader class
+    and must expose identical axes and sizes."""
 
     def __init__(
         self,

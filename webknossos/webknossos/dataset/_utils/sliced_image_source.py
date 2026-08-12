@@ -53,49 +53,33 @@ class SlicedImageSource(ImageSource):
         options: ReadOptions,
     ) -> None:
         """
-        Configures the reader to produce ndarrays of the form
-        (self._iter_axes, *self._bundle_axes).
+        Sorts the reader's axes into the two lists that shape every slice:
+        `_iter_axes`, what the sequence steps through (empty for a single 2D
+        image), and `_bundle_axes`, what one slice is — "y" and "x", preceded
+        by "c" when several channels are written.
 
-        self._iter_axes is the list of axes the sequence steps through, which
-        is empty for a single 2D image. self._bundle_axes is what one slice
-        consists of: "y" and "x", preceded by "c" when several channels are
-        written.
-
-        Every reader names its own axes, so this is a matter of sorting the
-        reader's axes into the two lists — not of guessing an axis order from
-        a raw shape, which cannot be done reliably.
+        Only sorting, not guessing: every reader names its own axes.
         """
         # `images` below always refers to an opened reader, never to this
         # argument.
         self._original_images = image_paths
         self._options = options
-
-        ## the requested channel; replaced below by the resolved one
-        self._channel = options.channel
-
-        ## attributes that will be set in __init__()
+        self._channel = options.channel  # replaced below by the resolved one
         self._iter_axes: list[str] = []
         self._possible_layers = {}
-
-        ## attributes that will also be set in __init__()
-        # dtype
-        # num_channels
-        # _first_n_channels
 
         with self._open_images() as images:
             self.dtype = images.dtype
             self.channels_are_colour = images.channels_are_colour
             self._default_coords = {}
 
-            # One slice is always a 2D image, with the channels of that image
-            # in front of it when there is more than one.
+            # A slice is a 2D image, channels first when there are several.
             raw_num_channels = images.sizes.get("c", 1)
             if raw_num_channels > 1:
                 bundle_axes = ["c", "y", "x"]
             else:
                 if "c" in images.axes:
-                    # With "c" in neither bundle_axes nor iter_axes, its value
-                    # at coordinate 0 is what gets returned.
+                    # In neither list, so coordinate 0 is what gets returned.
                     self._default_coords["c"] = 0
                 bundle_axes = ["y", "x"]
 
@@ -148,22 +132,19 @@ class SlicedImageSource(ImageSource):
         or something else, e.g. a corrupt file or an IO error of a format that
         *is* supported, which must keep surfacing as its original error.
 
-        The decision is made on the suffix, not on the exception type:
-        open_images raises UnsupportedImageFormatError both when no reader
-        claims the suffix and when every reader that claimed it errored out, so
-        a corrupt TIFF is indistinguishable from an unreadable format by type.
-        The error built here supersedes those — it is the one that knows the
-        path and the missing extras.
+        The decision is made on the suffix, not the exception type: open_images
+        raises the same error whether no reader claims the suffix or every
+        reader that claimed it failed, so a corrupt TIFF is indistinguishable
+        from an unreadable format by type. What is built here supersedes those,
+        knowing the path and the missing extras.
 
-        Classifying afterwards, rather than rejecting unknown suffixes up
-        front, keeps files that open without a recognized suffix (via
-        MultiImageSlices) working as before: this only runs once every open
-        strategy has already failed.
+        Classifying afterwards rather than rejecting unknown suffixes up front
+        keeps files that open without a recognized suffix (via MultiImageSlices)
+        working: this runs only once every open strategy has failed.
         """
         path = self._error_path()
-        # Only a file's suffix says anything about which readers apply: a
-        # directory of images has none (or, worse, a dot in its name), and
-        # neither has a path that does not exist at all.
+        # Only a file's suffix says anything about which readers apply; a
+        # directory has none, or worse, a dot in its name.
         suffix = (
             (path.suffix.lstrip(".").lower() or None)
             if path is not None and not path.is_dir()
@@ -194,13 +175,12 @@ class SlicedImageSource(ImageSource):
     def _classify_read_failure(self) -> CorruptImageError | None:
         """
         Decides whether a failure to open a file of a *supported* format means
-        the file itself is unreadable — damaged or incompletely uploaded, by
-        far the most common cause — as opposed to a problem this class should
-        not put words in the user's mouth about.
+        the file itself is unreadable — damaged or incompletely uploaded, by far
+        the most common cause — rather than something this class should not put
+        words in the user's mouth about.
 
-        Only runs once _classify_open_failure has ruled out an unsupported
-        format, so reaching here means readers exist for this suffix and none
-        of them could make sense of the contents.
+        Runs only once _classify_open_failure has ruled out an unsupported
+        format, so readers exist for this suffix and none could read it.
         """
         path = self._error_path()
         if path is None:
@@ -210,15 +190,15 @@ class SlicedImageSource(ImageSource):
             # blame, and the pattern may not have matched anything at all.
             return None
         if not path.is_file():
-            # A missing path keeps its FileNotFoundError-shaped error, and a
-            # directory that yielded nothing readable is not a corrupt file.
+            # A missing path keeps its FileNotFoundError; a directory that
+            # yielded nothing readable is not a corrupt file.
             return None
         try:
             with path.open("rb") as file:
                 file.read(1)
         except OSError:
-            # Not readable at all (permissions, IO error, …). That error is
-            # the honest one and is already among the collected exceptions.
+            # Not readable at all (permissions, IO error, …); that error is the
+            # honest one and is already among the collected exceptions.
             return None
 
         return CorruptImageError(
@@ -311,12 +291,9 @@ class SlicedImageSource(ImageSource):
         dtype: DTypeLike | None = None,
     ) -> ChunkResult:
         """Copies the slices covering `bbox` into `mag_view`, one batch of
-        z-slices per call, meant for usage with an executor.
-
-        Return value and axis conventions are ImageSource.copy_chunk_to_view's.
-        Because expected_bbox is a placeholder for this strategy, the x/y
-        extent returned here is the *observed* one, so the caller must correct
-        the layer's bounding box (and largest_segment_id) afterwards.
+        z-slices per call. Return value and axis conventions are
+        ImageSource.copy_chunk_to_view's; the x/y extent returned is the
+        *observed* one, since expected_bbox was only a placeholder.
         """
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -345,9 +322,9 @@ class SlicedImageSource(ImageSource):
             with self._open_images() as images:
                 slices: SliceSequence | _SlicedView = images
                 if len(self._iter_axes) > 1:
-                    # More than one iter axis: the sequence is a flat run over
-                    # all of them, so narrow it to the stretch this chunk's
-                    # non-z coordinates select before indexing z within it.
+                    # The sequence is a flat run over every iter axis, so narrow
+                    # it to the stretch this chunk's non-z coordinates select
+                    # before indexing z within it.
                     lower_bounds = images.flat_index(
                         {
                             axis: relative_bbox.get_bounds(axis)[0]
@@ -411,20 +388,15 @@ class SlicedImageSource(ImageSource):
 
     @property
     def channel(self) -> int | None:
-        """The selected channel, or None if all channels are used.
-
-        May differ from the `channel` constructor argument: e.g. it is set
-        to 0 automatically when the source has exactly two channels.
-        """
+        """The selected channel, or None if all are used. May differ from what
+        was requested — a two-channel source pins channel 0 by itself."""
         return self._channel
 
     @property
     def expected_bbox(self) -> NDBoundingBox:
-        """The extents the reader reports, in the axis order this source
-        produces. Only x/y is a placeholder — those are the extents of one
-        slice, which every later slice may exceed (see
-        `initial_layer_bounding_box`); the axes stepped through are exact,
-        since the reader counted them."""
+        """The extents the reader reports. Only x/y is a placeholder — it is
+        one slice's extent, which a later slice may exceed; the axes stepped
+        through are exact, since the reader counted them."""
         with self._open_images() as images:
             sizes = images.sizes
             x_size, y_size = sizes["x"], sizes["y"]
@@ -432,8 +404,8 @@ class SlicedImageSource(ImageSource):
                 x_size, y_size = y_size, x_size
 
             if len(self._iter_axes) <= 1:
-                # At most one axis is stepped through, so it is the z axis of a
-                # plain 3D box — whatever the reader happens to call it.
+                # One axis at most, so it is the z of a plain 3D box —
+                # whatever the reader happens to call it.
                 z_size = sizes[self._iter_axes[0]] if self._iter_axes else 1
                 return BoundingBox((0, 0, 0), (x_size, y_size, z_size))
 
@@ -462,10 +434,8 @@ class SlicedImageSource(ImageSource):
     def initial_layer_bounding_box(
         self, mag1_expected_bbox: NDBoundingBox
     ) -> NDBoundingBox:
-        """Deliberately oversized in x/y. Reading slice by slice cannot know
-        the true extent up front, and a write outside the layer's box would be
-        rejected, so the box starts far too large and final_bounding_box()
-        shrinks it to what was actually written."""
+        """Deliberately oversized in x/y, since a write outside the layer's
+        box would be rejected. final_bounding_box() shrinks it afterwards."""
         safe_size = mag1_expected_bbox.size.with_replaced(
             mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
         ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
@@ -479,9 +449,8 @@ class SlicedImageSource(ImageSource):
         mag: Mag,
         batch_size: int | None,
     ) -> list[NDBoundingBox]:
-        """Batches of z-slices spanning the full x/y extent. x/y cannot be
-        split, since at this point it is still the placeholder rather than a
-        real size."""
+        """Batches of z-slices spanning the full x/y extent, which cannot be
+        split while it is still the placeholder."""
         del mag
         batch_size = self._resolve_batch_size(mag_view, batch_size)
         return list(
@@ -494,8 +463,8 @@ class SlicedImageSource(ImageSource):
     @staticmethod
     def _resolve_batch_size(mag_view: MagView, batch_size: int | None) -> int:
         """Batches must not straddle whatever unit two jobs could write at
-        once, or parallel writes corrupt each other: a whole shard when the
-        data is compressed or zarr, a chunk otherwise."""
+        once, or parallel writes corrupt each other: a shard when the data is
+        compressed or zarr, a chunk otherwise."""
         shard_aligned = mag_view.info.compression_mode or mag_view.info.data_format in (
             DataFormat.Zarr3,
             DataFormat.Zarr,

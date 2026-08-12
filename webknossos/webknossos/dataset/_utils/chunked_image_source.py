@@ -17,32 +17,24 @@ from .image_source import ChunkResult, ImageSource, ReadOptions
 
 class ChunkedImageSource(ImageSource):
     """
-    ImageSource for volumetric, chunk-based input formats (e.g. ims, mrc,
-    zarr, n5): formats that state their exact extents in metadata and support
-    reading an arbitrary box of voxels.
+    ImageSource for volumetric formats (ims, mrc, czi) that state their exact
+    extents in metadata and can read an arbitrary box of voxels, so each chunk
+    reads and writes a whole shard-aligned block with no slice writer between.
 
-    That makes expected_bbox exact, and lets each chunk read and write a whole
-    shard-sized 3D/4D block aligned to the output shard grid, with no
-    slice-based writer in between.
-
-    Subclasses implement only _read_source_box; this class owns all the axis
-    bookkeeping needed to honour the ImageSource contract.
-
-    Registering a subclass for a suffix makes it the only way files with that
-    suffix are read.
+    Subclasses implement only _read_source_box; the axis bookkeeping the
+    ImageSource contract needs lives here. Registering one for a suffix makes
+    it the only way files with that suffix are read.
     """
 
-    # Source extents in the file's own axis order, which subclasses must set
-    # from metadata in __init__. The base class derives expected_bbox and every
-    # read range below from these, so they are always pre-swap_xy: _x is the
-    # source's x, even when swap_xy makes it the output's y.
+    # Source extents in the file's own axis order, set from metadata by the
+    # subclass. Always pre-swap_xy: _x is the source's x, even when swap_xy
+    # makes it the output's y.
     _x: int
     _y: int
     _z: int
-    # Timepoint handling. Formats without a time dimension leave these alone
-    # and are read at timepoint 0; a subclass with several timepoints and none
-    # pinned sets _include_t_axis, which puts a "t" axis on expected_bbox and
-    # makes each chunk carry its own timepoint.
+    # Formats without a time dimension leave these alone and read timepoint 0.
+    # A subclass with several timepoints and none pinned sets _include_t_axis,
+    # which puts a "t" axis on expected_bbox and gives each chunk its own.
     _t: int = 1
     _include_t_axis: bool = False
     _fixed_timepoint: int | None = 0
@@ -66,9 +58,7 @@ class ChunkedImageSource(ImageSource):
 
     @abstractmethod
     def get_possible_layers(self) -> dict[str, list[int]] | None:
-        """See ImageSource.get_possible_layers(). Chunk-based formats report
-        {"channel": [0, 1, 2]} when several channels could each become their
-        own layer, and None when there is nothing to split."""
+        """See ImageSource.get_possible_layers()."""
 
     @abstractmethod
     def _read_source_box(
@@ -82,24 +72,20 @@ class ChunkedImageSource(ImageSource):
         """
         Read exactly the given box in *source* coordinates and return it as
         (c, z, y, x), with a leading channel axis even for single-channel
-        formats. The slices are already resolved to the source's own axis
-        order and mag, and already account for swap_xy and for flips (which
-        arrive as mirrored ranges) — implementations do no axis bookkeeping of
-        their own beyond selecting channels.
+        formats. The slices are already resolved to the source's axis order and
+        mag, and already account for swap_xy and the flips (which arrive as
+        mirrored ranges), so implementations only select channels.
         """
 
     @property
     def expected_bbox(self) -> NDBoundingBox:
         """
-        The exact bounding box of the data to convert, in the source's native
-        Mag(1) space. Never the placeholder ImageSource.expected_bbox allows,
-        because these formats know their true extents from metadata alone, so
-        the caller has nothing to correct afterwards.
+        The exact bounding box of the data, in the source's native Mag(1)
+        space — never a placeholder, since these formats know their extents.
 
-        Reports every axis the source actually has, including "c" when more
-        than one channel is written (which is where NormalizedBoundingBox
-        reads num_channels from) and "t" for unpinned multi-timepoint data.
-        Always well-defined — it never has to reject an axis combination.
+        Reports every axis the source has, including "c" when more than one
+        channel is written (where NormalizedBoundingBox reads num_channels
+        from) and "t" for unpinned multi-timepoint data.
         """
         x_size, y_size = self._x, self._y
         if self._options.swap_xy:
@@ -132,13 +118,12 @@ class ChunkedImageSource(ImageSource):
         dtype: DTypeLike | None = None,
     ) -> ChunkResult:
         """
-        Reads exactly bbox's worth of data and writes it to mag_view directly.
-        Return value and axis conventions are ImageSource.copy_chunk_to_view's;
-        the x/y extent returned is always bbox's, since expected_bbox was exact
-        to begin with.
+        Reads exactly bbox's worth of data and writes it to mag_view. Return
+        value and axis conventions are ImageSource.copy_chunk_to_view's; the
+        x/y extent returned is always bbox's, since expected_bbox was exact.
 
-        All axis bookkeeping — mag, swap_xy, flips, channel and timepoint
-        placement — lives here, so subclasses only implement _read_source_box.
+        All the axis bookkeeping lives here, so subclasses implement only
+        _read_source_box.
         """
         options = self._options
         relative_bbox = bbox.offset(-mag_view.bounding_box.topleft)
@@ -150,14 +135,12 @@ class ChunkedImageSource(ImageSource):
             timepoint = self._fixed_timepoint
 
         # bbox is in Mag(1) while the source is indexed in its own mag, so
-        # every bound is scaled down before it addresses source data. For
-        # Mag(1) this is the identity.
+        # every bound is scaled down below (the identity for Mag(1)).
         mag_vec = mag_view.mag.to_vec3_int()
 
-        # bbox's x/y axes describe the *output* extents. When swap_xy is set,
-        # expected_bbox swaps which source axis feeds which output axis, so
-        # bbox.x holds the source y-extent and bbox.y holds the source
-        # x-extent — the read below must use the matching source bound.
+        # bbox's x/y are the *output* extents, so with swap_xy set bbox.x holds
+        # the source's y-extent and vice versa.
+
         out_x_start, out_x_end = relative_bbox.get_bounds("x")
         out_y_start, out_y_end = relative_bbox.get_bounds("y")
         z_start, z_end = relative_bbox.get_bounds("z")
@@ -181,14 +164,11 @@ class ChunkedImageSource(ImageSource):
                 out_y_end // mag_vec.y,
             )
 
-        # Every flip mirrors the *entire* source extent, as the ImageSource
-        # contract requires, not just this chunk in isolation. Each one
-        # reads a mirrored source range and is reversed back into output order
-        # below. Reversing a chunk in place would only mirror within that
-        # chunk, which is invisible while the image fits in a single shard but
-        # wrong as soon as it spans several.
-        # flip_x/-y are named for the output axis they mirror, so flip_x
-        # mirrors the source's y axis and flip_y mirrors its x axis.
+        # Each flip reads a mirrored source range and is reversed back into
+        # output order below, so it mirrors the *entire* extent as the
+        # ImageSource contract requires. Reversing a chunk in place would mirror
+        # only within that chunk — invisible in a single shard, wrong across
+        # several. flip_x mirrors the source's y axis and flip_y its x axis.
         if options.flip_z:
             read_z = slice(self._z - z_end, self._z - z_start)
         else:
@@ -223,24 +203,19 @@ class ChunkedImageSource(ImageSource):
         )
 
         if dtype is not None:
-            # order="F" as the ImageSource contract requires: the downstream
-            # writers expect Fortran-contiguous data.
-            block = block.astype(dtype, order="F")
+            block = block.astype(dtype, order="F")  # ImageSource contract
 
         max_value = int(block.max())
         if self.num_channels == 1:
             block = block[0]  # (x, y, z) — single-channel layers have no c axis
         if "t" in relative_bbox.axes:
-            # View.write() requires data.shape to have exactly as many
-            # dimensions as the layer's bbox axes; add the (size-1) "t"
-            # dimension this chunk corresponds to.
+            # View.write() wants one dimension per layer bbox axis; add the
+            # size-1 "t" this chunk corresponds to.
             block = block[np.newaxis]
 
-        # allow_unaligned=True: real image extents rarely divide evenly into
-        # full shards, so border chunks are smaller than shard_shape. Safe
-        # here because each parallel job writes a disjoint,
-        # shard-aligned-or-smaller region — no two jobs ever target
-        # overlapping data.
+        # allow_unaligned=True: border chunks are smaller than shard_shape,
+        # since extents rarely divide evenly. Safe because parallel jobs write
+        # disjoint regions.
         mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
 
         return ChunkResult(
@@ -250,8 +225,7 @@ class ChunkedImageSource(ImageSource):
     def initial_layer_bounding_box(
         self, mag1_expected_bbox: NDBoundingBox
     ) -> NDBoundingBox:
-        """Exact from the start: these formats state their extents in metadata,
-        so there is no placeholder to inflate and nothing to correct later."""
+        """Exact from the start — no placeholder to inflate."""
         return mag1_expected_bbox
 
     def chunk_grid(
@@ -262,9 +236,8 @@ class ChunkedImageSource(ImageSource):
         mag: Mag,
         batch_size: int | None,
     ) -> list[NDBoundingBox]:
-        """Full 3D shard-aligned chunks, so each job reads exactly one shard's
-        worth of data and writes it directly. Safe to chunk the layer's box
-        because it is the exact one. `batch_size` does not apply."""
+        """Full 3D shard-aligned chunks, one shard's worth of data per job.
+        Safe to chunk the layer's box because it is the exact one."""
         del batch_size
         chunked_shard_shape = mag_view.info.shard_shape * mag.to_vec3_int()
         return list(layer_bounding_box.chunk(chunked_shard_shape, chunked_shard_shape))
@@ -276,7 +249,7 @@ class ChunkedImageSource(ImageSource):
         chunk_sizes: Sequence[tuple[int, int]],
         mag: Mag,
     ) -> NDBoundingBox:
-        """Unchanged. Correcting from per-chunk sizes would be actively wrong
-        here: each job reports only its own shard, not the full extent."""
+        """Unchanged. Correcting from per-chunk sizes would be wrong: a job
+        reports its own shard, not the full extent."""
         del chunk_sizes, mag
         return layer_bounding_box

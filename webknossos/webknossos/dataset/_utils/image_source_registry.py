@@ -1,30 +1,13 @@
 """Which reader handles which file suffix, and the one way a source is opened.
 
-Two words, deliberately not interchangeable:
+A **reader** knows one input format and is what registers here; a **source** is
+an `ImageSource`, what `image_conversion.py` drives. The two kinds of reader
+differ in whether they are also sources: a slice reader (`SliceSequence`
+subclass) is not — `SlicedImageSource` wraps it — while a chunked reader is,
+which is what its `…ImageSource` name says.
 
-* a **reader** is a class that knows one input format. It is what registers
-  here, and what a suffix maps to.
-* a **source** is an `ImageSource` — one set of input images being converted,
-  which is what `image_conversion.py` drives.
-
-Every reader is one of two kinds, and the difference is exactly whether it is
-also a source:
-
-* **slice readers** (`SliceSequence` subclasses: `TiffSlices`, `Dm3Slices`, …)
-  are *not* sources. They only produce 2D slices; `SlicedImageSource` wraps one
-  and is the source.
-* **chunked readers** (`ChunkedImageSource` subclasses: `CziImageSource`,
-  `ImsImageSource`, `MrcImageSource`) *are* sources, reading shard-sized blocks
-  themselves — hence their `…ImageSource` names.
-
-`open_image_source()` is the single entry point: it picks the kind from the
-suffix and hands back an `ImageSource` either way, so no caller has to know
-which of the two it got.
-
-A reader with a missing dependency never imports and so never registers. That
-would leave its formats silently absent from the supported list, which is why
-`_OPTIONAL_READERS` restates their suffixes: it is what turns "unsupported
-format" into "install `webknossos[czi]`".
+`open_image_source()` picks the kind from the suffix and returns an
+`ImageSource` either way, so no caller has to know which it got.
 """
 
 from __future__ import annotations
@@ -92,12 +75,10 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     if len(glob.glob(path_spec)) > 1:
         return MultiImageSlices(path_spec, **kwargs)
 
-    # Every failure below is dispatch failing to find a usable reader, not the
-    # final word: SlicedImageSource collects these while trying its other open
-    # strategies, and _classify_open_failure decides afterwards — on the suffix,
-    # not on the exception — whether the format is unsupported or the file is
-    # merely unreadable. The error it builds then has the `path` and
-    # `missing_extras` these cannot know (path_spec may be a glob).
+    # The errors below are dispatch failing, not the final word: they are
+    # collected while SlicedImageSource tries its other open strategies, and
+    # _classify_open_failure replaces them with one that knows the `path` and
+    # `missing_extras` (path_spec may be a glob, so these cannot).
     supported = tuple(sorted(get_valid_suffixes()))
 
     _, ext = os.path.splitext(path_spec)
@@ -138,15 +119,11 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
 
 
 def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> ImageSource:
-    """Opens `images` as an `ImageSource`, choosing the reading strategy itself.
+    """Opens `images` as an `ImageSource`, choosing the reader kind itself.
 
-    A single file whose suffix a chunk-based format claims is read that way.
-    Everything else is read slice by slice — including every list of paths,
-    since chunk-based formats are inherently single-file, and callers normalize
-    to UPath before getting here (see `_normalize_images_argument`).
-
-    This is the only place the two strategies are told apart, so no caller has
-    to ask which kind of source it is holding.
+    A single file whose suffix a chunked reader claims is read that way;
+    everything else slice by slice, including every list of paths, since
+    chunked formats are inherently single-file.
     """
     # Deferred to avoid a cycle: SlicedImageSource consults this registry.
     from .sliced_image_source import SlicedImageSource
@@ -174,16 +151,14 @@ class _OptionalReader(NamedTuple):
     """The `webknossos[...]` extra that provides its dependency."""
 
     suffixes: frozenset[str]
-    """What its class_exts() returns. Restated here because a reader whose
-    dependency is missing never imports, and so cannot be asked — which is
-    exactly when this is needed, to turn "unsupported format" into "install
-    `webknossos[czi]`". test_optional_reader_suffixes_match_class_exts keeps
-    the two in sync."""
+    """What its class_exts() returns, restated because a reader whose
+    dependency is missing never imports and so cannot be asked — which is
+    exactly when this is needed. test_optional_reader_suffixes_match_class_exts
+    keeps the two in sync."""
 
 
-# Every optional reader, declared once. Covers both strategies: slice readers
-# are just as optional as chunked ones now that tifffile is not in the base
-# install.
+# Every optional reader, declared once. Slice readers are as optional as
+# chunked ones now that tifffile is not in the base install.
 _OPTIONAL_READERS: tuple[_OptionalReader, ...] = (
     _OptionalReader(
         "tiff_slices", "TiffSlices", "tifffile", frozenset({"tif", "tiff"})
@@ -205,22 +180,18 @@ _UNAVAILABLE_SUFFIXES: dict[str, str] = {}
 
 def get_unavailable_suffixes() -> dict[str, str]:
     """
-    Maps each suffix that a reader *would* handle, but cannot because its
-    optional dependency is missing, to the extra that provides it (e.g.
-    {"ims": "ims"}). Empty when every reader imported successfully.
-
-    Lets callers turn "no supported image data found" into a message that
-    names the missing dependency, rather than silently omitting the format
-    from the supported list.
+    Maps each suffix a reader *would* handle, but cannot because its optional
+    dependency is missing, to the extra that provides it (e.g. {"ims": "ims"}).
+    Empty when every reader imported. Lets callers name the missing dependency
+    instead of silently omitting the format from the supported list.
     """
     return dict(_UNAVAILABLE_SUFFIXES)
 
 
 def describe_missing_extras(found: dict[str, str]) -> str:
     """
-    Turns a suffix -> extra mapping, as returned for the files at hand by
-    get_unavailable_suffixes(), into a sentence naming the extras to install.
-    Meant to be appended to an error message.
+    Turns a get_unavailable_suffixes() mapping, narrowed to the files at hand,
+    into a sentence naming the extras to install. Appended to an error message.
     """
     extras = sorted(set(found.values()))
     return (

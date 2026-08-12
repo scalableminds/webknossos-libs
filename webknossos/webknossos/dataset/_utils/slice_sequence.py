@@ -1,18 +1,13 @@
 """The base class for slice-by-slice image readers.
 
-Only the behavior the conversion path actually relies on is implemented:
+Only what the conversion path relies on: named axes declared by the reader,
+with `bundle_axes` / `iter_axes` / `default_coords` selecting how they are
+presented, plus random access to numbered slices and lazy slicing.
 
-* named axes, declared by the reader, with `bundle_axes` / `iter_axes` /
-  `default_coords` selecting how they are presented,
-* random access to numbered slices, plus lazy slicing of a reader.
-
-Every reader names its own axes. That is what lets `SlicedImageSource` stay a
-single code path: the alternative — inferring axis order from the raw shape of
-an unlabelled array — cannot tell a leading sequence axis from a leading
-channel axis, which only the reader knows.
-
-Slices are plain `np.ndarray`s, with no wrapper type and no per-slice
-metadata, because nothing downstream reads any.
+Every reader names its own axes, which is what lets `SlicedImageSource` stay a
+single code path — inferring the order from a raw shape cannot tell a leading
+sequence axis from a leading channel axis, and only the reader knows which it
+has. Slices are plain `np.ndarray`s, since nothing downstream reads metadata.
 """
 
 from __future__ import annotations
@@ -43,12 +38,9 @@ def _resolve_indices(key: slice | Sequence[int] | np.ndarray, length: int) -> li
 
 
 class _SlicedView:
-    """A lazy view on a subset of a `SliceSequence`'s slices.
-
-    Supports exactly what `SlicedImageSource.copy_chunk_to_view` needs —
-    slicing, reversal (`[::-1]`), chained slicing of the result, `len()` and
-    iteration — and reads no slice until it is actually iterated over.
-    """
+    """A lazy view on a subset of a `SliceSequence`'s slices: slicing,
+    reversal (`[::-1]`), chaining, `len()` and iteration, reading nothing until
+    iterated over. That is exactly what `copy_chunk_to_view` needs."""
 
     def __init__(self, source: SliceSequence, indices: Sequence[int]) -> None:
         self._source = source
@@ -115,10 +107,9 @@ def _adapt_get_slice(
 ) -> GetSlice:
     """Adapts a reader's `get_slice` to return exactly `result_axes`.
 
-    A reader declares one method covering every axis it can produce, and
-    callers only ever ask for a subset of those, so this is: index away the
-    axes that were not asked for — using the coordinate the caller passed for
-    each — then transpose what is left into the requested order.
+    A reader declares one method covering every axis it can produce and callers
+    ask for a subset, so this indexes away what was not asked for — using the
+    coordinate passed for each — then transposes into the requested order.
     """
     source_axes = list(source_axes)
     result_axes = list(result_axes)
@@ -155,15 +146,14 @@ class SliceSequence(ABC):
     """A finite, randomly accessible sequence of slices over named axes.
 
     Subclasses declare their axes with `_init_axis(name, size)` and their one
-    reader method with `_set_get_slice(method, axes)`; they only need to
-    additionally define `pixel_type`. Everything below — `__len__`,
-    `slice_shape`, `get_slice` — is derived from three attributes the caller
-    sets:
+    reader method with `_set_get_slice(method, axes)`, and define `pixel_type`.
+    `__len__`, `slice_shape` and `get_slice` are derived from three attributes
+    the caller sets:
 
     * `bundle_axes`: the axes making up one slice, in the order the returned
       array has them. Defaults to `["y", "x"]`.
-    * `iter_axes`: the axes iterated over by the sequence; the last one varies
-      fastest. Defaults to `[]`.
+    * `iter_axes`: the axes iterated over; the last varies fastest. Defaults
+      to `[]`.
     * `default_coords`: the coordinate used for any axis in neither list.
 
     Slicing (`reader[1:4]`) returns a lazy view rather than reading anything.
@@ -186,8 +176,7 @@ class SliceSequence(ABC):
 
     def __init__(self) -> None:
         self._clear_axes()
-        # The reader's own get_slice, and the axes it returns. A reader
-        # declares one covering every axis it can produce; `bundle_axes`
+        # The reader's own get_slice and the axes it returns; `bundle_axes`
         # narrows it to whatever the caller asked for.
         self._get_slice_source: tuple[GetSlice, tuple[str, ...]] | None = None
 
@@ -311,8 +300,7 @@ class SliceSequence(ABC):
         """Splits the flat index `i` into one coordinate per iter axis; the
         last axis varies fastest."""
         iter_sizes = [self._sizes[k] for k in self.iter_axes]
-        # How much `i` has to increase for each iter axis' coordinate to
-        # increase by one.
+        # How much `i` must increase to advance each axis by one.
         iter_cumsizes = np.append(np.cumprod(iter_sizes[::-1])[-2::-1], 1)
         iter_coords = (i // iter_cumsizes) % iter_sizes
         return dict(zip(self.iter_axes, (int(c) for c in iter_coords)))
