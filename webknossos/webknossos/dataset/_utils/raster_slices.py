@@ -60,6 +60,9 @@ class SingleImageSlices(SliceSequence):
 
     class_priority = 12
 
+    # A three-channel png is a colour photograph, not three acquisitions.
+    channels_are_colour = True
+
     def __init__(self, filename: str, **kwargs: Any) -> None:
         super().__init__()
         self._data = imread(filename, **kwargs)
@@ -138,6 +141,13 @@ class MultiImageSlices(SliceSequence):
         )
         first_slice = self.imread(self._filepaths[0], **self.kwargs)
         self._dtype = first_slice.dtype
+
+        # imageio also decodes formats this class is not the preferred reader
+        # for — a directory of TIFFs ends up here, and a "c" axis there is
+        # separate acquisitions, not colour. The files themselves say which
+        # case this is.
+        first_suffix = os.path.splitext(self._filepaths[0])[1].lstrip(".").lower()
+        self.channels_are_colour = first_suffix in SingleImageSlices.class_exts()
 
         self._init_axis("z", len(self._filepaths))
         plane_axes = _plane_axes(first_slice, self._filepaths[0])

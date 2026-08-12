@@ -174,6 +174,11 @@ class SliceSequence(ABC):
     # precedence over the general-purpose ones sets something above it.
     class_priority: int = 10
 
+    channels_are_colour: bool = False
+    """Whether a "c" axis of this reader holds colour components rather than
+    separate acquisitions. `SlicedImageSource` passes this on; see
+    `ImageSource.channels_are_colour`."""
+
     @classmethod
     def class_exts(cls) -> set[str]:
         """The file extensions (without dot) this reader can open."""

@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import logging
 import warnings
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from enum import Enum, unique
 from itertools import product
 from os import PathLike
@@ -53,6 +54,7 @@ from ..layer.abstract_layer import (
     channels_fit_one_layer,
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
+from . import raster_slices, sliced_image_source
 from .image_source import ImageSource, ReadOptions
 from .image_source_registry import (
     describe_missing_extras,
@@ -72,7 +74,25 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
+# The reader modules whose UserWarnings this module suppresses while scanning a
+# whole directory: "loading ALL files in this directory" and the like are meant
+# for a caller who named one input, not for every file of a bulk conversion.
+# Named by module, which is how warnings.filterwarnings matches them, so
+# renaming either module silently stops the suppression.
+_RASTER_SLICES_MODULE = raster_slices.__name__.rsplit(".", 1)[-1]
+_SLICED_SOURCE_MODULE = sliced_image_source.__name__.rsplit(".", 1)[-1]
+
+
+@contextmanager
+def _quiet_reader_warnings(sliced_source_action: str = "ignore") -> Iterator[None]:
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=UserWarning, module=_RASTER_SLICES_MODULE
+        )
+        warnings.filterwarnings(
+            sliced_source_action, category=UserWarning, module=_SLICED_SOURCE_MODULE
+        )
+        yield
 
 
 @unique
@@ -200,27 +220,19 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
     return found
 
 
-# Formats whose channels mean colour rather than separate acquisitions: the
-# everyday 2D image formats, where three uint8 channels are RGB and belong in
-# one layer. Everything else — scientific formats such as TIFF, CZI, DM3/DM4,
-# .ims and MRC — stores one acquisition channel per channel, which users almost
-# always want as separate layers, even when there happen to be three of them.
-#
-# Taken from the reader rather than restated, so this cannot drift into naming
-# formats that can no longer be read: SingleImageSlices handles exactly the
-# everyday raster formats.
-_RGB_IMAGE_SUFFIXES = frozenset(SingleImageSlices.class_exts())
-
-
 def _describe_rgb_formats() -> str:
-    return ", ".join("." + suffix for suffix in sorted(_RGB_IMAGE_SUFFIXES))
+    """The formats whose channels mean colour, for the error message that tells
+    users which ones can share a layer. SingleImageSlices handles exactly the
+    everyday raster formats, so taking the list from it cannot drift into
+    naming formats that can no longer be read."""
+    return ", ".join("." + suffix for suffix in sorted(SingleImageSlices.class_exts()))
 
 
 def _channels_are_one_rgb_layer(
     num_source_channels: int,
     *,
     dtype: np.dtype,
-    images: UPath | list[UPath],
+    image_source: ImageSource,
     truncate_rgba_to_rgb: bool,
 ) -> bool:
     """
@@ -234,10 +246,7 @@ def _channels_are_one_rgb_layer(
     """
     if num_source_channels == 1:
         return True
-    path = images if isinstance(images, UPath) else None
-    if path is None and isinstance(images, list) and images:
-        path = images[0]
-    if path is None or path.suffix.lstrip(".").lower() not in _RGB_IMAGE_SUFFIXES:
+    if not image_source.channels_are_colour:
         return False
     # An RGBA image is written as RGB with the alpha channel dropped, unless the
     # caller asked to keep every channel, in which case they become layers.
@@ -330,17 +339,7 @@ def from_images(
         )
 
     if isinstance(map_filepath_to_layer_name, ConversionLayerMapping):
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=UserWarning,
-                module="raster_slices",
-            )
-            warnings.filterwarnings(
-                "once",
-                category=UserWarning,
-                module="sliced_image_source",
-            )
+        with _quiet_reader_warnings(sliced_source_action="once"):
             map_filepath_to_layer_name_func = map_filepath_to_layer_name._to_callable(
                 input_upath,
                 input_files=input_files,
@@ -387,17 +386,7 @@ def from_images(
                 f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
             }
     with wrap_executor(executor) as executor:
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=UserWarning,
-                module="sliced_image_source",
-            )
-            warnings.filterwarnings(
-                "ignore",
-                category=UserWarning,
-                module="raster_slices",
-            )
+        with _quiet_reader_warnings():
             for layer_name, filepaths in filepaths_per_layer.items():
                 filepaths.sort(key=z_slices_sort_key)
 
@@ -510,7 +499,7 @@ def add_layer_from_images(
         if _channels_are_one_rgb_layer(
             len(source_channels),
             dtype=layer_dtype,
-            images=image_paths,
+            image_source=image_source,
             truncate_rgba_to_rgb=truncate_rgba_to_rgb,
         ):
             # The channels are colour, so they belong in one layer rather than

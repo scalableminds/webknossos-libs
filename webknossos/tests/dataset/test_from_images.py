@@ -456,11 +456,15 @@ def test_optional_reader_suffixes_match_class_exts() -> None:
         cls.__name__: cls for cls in _SLICE_READER_CLASSES
     }
     registered.update({cls.__name__: cls for cls in _CHUNKED_IMAGE_SOURCE_CLASSES})
-    # The test env installs all extras, so every optional reader is registered.
-    assert set(_OPTIONAL_READERS) <= set(registered)
-    for name, (_extra, suffixes) in _OPTIONAL_READERS.items():
-        assert registered[name].class_exts() == set(suffixes), (
-            f"declared suffixes for {name} are out of sync with its class_exts()"
+    for reader in _OPTIONAL_READERS:
+        # The test env installs all extras, so every optional reader is
+        # registered and can be asked for its own suffixes.
+        assert reader.class_name in registered, (
+            f"{reader.class_name} is declared optional but did not register"
+        )
+        assert registered[reader.class_name].class_exts() == set(reader.suffixes), (
+            f"declared suffixes for {reader.class_name} are out of sync with "
+            "its class_exts()"
         )
 
 

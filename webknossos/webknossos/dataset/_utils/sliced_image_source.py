@@ -84,6 +84,7 @@ class SlicedImageSource(ImageSource):
 
         with self._open_images() as images:
             self.dtype = images.dtype
+            self.channels_are_colour = images.channels_are_colour
             self._default_coords = {}
 
             # One slice is always a 2D image, with the channels of that image

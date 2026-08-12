@@ -146,6 +146,15 @@ class ImageSource(ABC):
     pinned `channel` or by RGBA-to-RGB truncation, so not necessarily the
     source's raw channel count."""
 
+    channels_are_colour: bool = False
+    """Whether this source's channels are colour components of one image, as in
+    an RGB photograph, rather than separate acquisitions.
+
+    Colour channels belong in a single layer; acquisition channels each deserve
+    their own, even when there happen to be three of them. Scientific formats
+    (TIFF, CZI, DM3/DM4, .ims, MRC) store acquisitions, so False is the right
+    default — only the everyday raster formats say otherwise."""
+
     @property
     @abstractmethod
     def channel(self) -> int | None:
