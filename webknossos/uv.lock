@@ -2590,12 +2590,12 @@ name = "pylibczirw"
 version = "5.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cmake" },
+    { name = "cmake", marker = "python_full_version < '3.14'" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "packaging" },
-    { name = "validators" },
-    { name = "xmltodict" },
+    { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' and python_full_version < '3.14'" },
+    { name = "packaging", marker = "python_full_version < '3.14'" },
+    { name = "validators", marker = "python_full_version < '3.14'" },
+    { name = "xmltodict", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/46/15/b76a1891fe45483b4088e25e11e28bb6e2477194414d8987a7f648595898/pylibczirw-5.1.1.tar.gz", hash = "sha256:d10e81a83ebaebd704a0a1e2932a4dbc2b20f1f308f13661fb36d28d03caf114", size = 5910292, upload-time = "2025-10-23T09:00:30.679Z" }
 wheels = [
@@ -3606,7 +3606,7 @@ all = [
     { name = "tifffile", version = "2026.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
 czi = [
-    { name = "pylibczirw" },
+    { name = "pylibczirw", marker = "python_full_version < '3.14'" },
 ]
 examples = [
     { name = "fastremap" },
@@ -3683,7 +3683,7 @@ requires-dist = [
     { name = "pooch", marker = "extra == 'examples'", specifier = "~=1.5.2" },
     { name = "protobuf", specifier = ">=3.12.0,<7" },
     { name = "psutil", specifier = "~=6.0.0" },
-    { name = "pylibczirw", marker = "extra == 'czi'", specifier = "==5.1.1" },
+    { name = "pylibczirw", marker = "python_full_version < '3.14' and extra == 'czi'", specifier = "==5.1.1" },
     { name = "python-dateutil", specifier = ">=2.9.0" },
     { name = "python-dotenv", specifier = "~=1.0.1" },
     { name = "rich", specifier = "~=13.8.0" },
@@ -3698,7 +3698,7 @@ requires-dist = [
     { name = "typer", specifier = "~=0.12.5" },
     { name = "typing-extensions", specifier = "~=4.0" },
     { name = "universal-pathlib", specifier = "~=0.2" },
-    { name = "webknossos", extras = ["czi"], marker = "python_full_version < '3.14' and extra == 'all'" },
+    { name = "webknossos", extras = ["czi"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["examples"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["fastremap"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["fastremap"], marker = "extra == 'examples'" },
