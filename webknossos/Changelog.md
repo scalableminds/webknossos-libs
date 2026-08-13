@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `Layer.export`, providing `as_ozx` (a zipped OME-Zarr archive compliant with [NGFF RFC-9](https://ngff.openmicroscopy.org/rfc/9/)), `as_tiff_stack` (a directory of per-slice TIFF files) and `as_ome_tiff` (a single pyramidal OME-TIFF file) to export a layer's data, optionally restricted to a bounding box and/or magnification.
 
 ### Changed
 

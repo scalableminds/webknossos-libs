@@ -15,6 +15,7 @@ from .layer import (
     ConnectomeAttachment,
     CumsumAttachment,
     Layer,
+    LayerExport,
     LayerToLink,
     MagView,
     MeshAttachment,

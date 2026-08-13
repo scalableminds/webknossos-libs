@@ -281,6 +281,7 @@ nav:
         - SegmentationLayer: api/webknossos/dataset/layer/segmentation_layer/segmentation_layer.md
         - Attachment: api/webknossos/dataset/layer/segmentation_layer/attachments/attachment.md
         - Attachments: api/webknossos/dataset/layer/segmentation_layer/attachments/attachments.md
+        - LayerExport: api/webknossos/dataset/layer/export.md
         - MagView: api/webknossos/dataset/layer/view/mag_view.md
         - View: api/webknossos/dataset/layer/view/view.md
         - RemoteDataset: api/webknossos/dataset/remote_dataset.md
