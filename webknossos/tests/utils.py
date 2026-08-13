@@ -1,3 +1,4 @@
+import importlib.util
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -5,8 +6,17 @@ from contextlib import contextmanager
 import h5py
 import httpx
 import numpy as np
+import pytest
 from numpy.typing import DTypeLike
 from upath import UPath
+
+# pylibCZIrw ships no wheel past cp313, so the czi extra is uninstalled on
+# newer Pythons; tests that need it skip instead of failing.
+HAS_PYLIBCZIRW = importlib.util.find_spec("pylibCZIrw") is not None
+requires_pylibczirw = pytest.mark.skipif(
+    not HAS_PYLIBCZIRW,
+    reason="pylibCZIrw is not installed for this Python version",
+)
 
 
 @contextmanager

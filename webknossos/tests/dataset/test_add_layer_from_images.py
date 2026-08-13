@@ -24,9 +24,11 @@ from upath import UPath
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
 from tests.utils import (
+    HAS_PYLIBCZIRW,
     create_synthetic_czi,
     create_synthetic_multi_timepoint_ims,
     download_ims_fixture,
+    requires_pylibczirw,
 )
 
 
@@ -653,6 +655,7 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
 
 # A single shard hides both the multi-shard flip bug and the mag/shard
 # conversion, so every combination is checked at two shard shapes.
+@requires_pylibczirw
 @pytest.mark.parametrize("shard_shape", [(32, 32, 32), (64, 64, 64)])
 @pytest.mark.parametrize("swap_xy", [False, True])
 @pytest.mark.parametrize("flip_x", [False, True])
@@ -699,6 +702,7 @@ def test_czi_from_images_flip_and_swap(
     np.testing.assert_array_equal(actual, expected)
 
 
+@requires_pylibczirw
 def test_czi_from_images_multi_timepoint(tmp_upath: UPath) -> None:
     # Timepoints land on a "t" axis within one layer rather than being pinned.
     czi_path = tmp_upath / "multi_t.czi"
@@ -720,6 +724,7 @@ def test_czi_from_images_multi_timepoint(tmp_upath: UPath) -> None:
         np.testing.assert_array_equal(actual[t], data[t, 0].transpose(2, 1, 0))
 
 
+@requires_pylibczirw
 def test_czi_from_images_splits_czi_channels_into_layers(tmp_upath: UPath) -> None:
     # A CZI "C" is a separate acquisition, not a colour channel, so each one
     # becomes its own layer — and each must carry its own data.
@@ -748,6 +753,7 @@ def test_czi_from_images_splits_czi_channels_into_layers(tmp_upath: UPath) -> No
         )
 
 
+@requires_pylibczirw
 def test_czi_from_images_selects_a_single_czi_channel(tmp_upath: UPath) -> None:
     czi_path = tmp_upath / "pick_c.czi"
     data = create_synthetic_czi(czi_path, num_czi_channels=3, z=2, y=8, x=10)
@@ -1025,16 +1031,6 @@ TEST_IMAGES_ARGS: list[
         (4096, 4096, 1),
     ),
     (
-        # published with CC0 license, taken from
-        # https://doi.org/10.6084/m9.figshare.c.3727411_D391.v1
-        "https://static.webknossos.org/data/wklibs-samples/embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
-        "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
-        {},
-        "uint16",
-        1,
-        (512, 512, 30),
-    ),
-    (
         "https://static.webknossos.org/data/wklibs-samples/test-gif.zip",
         "scifio-test.gif",
         {},
@@ -1059,6 +1055,19 @@ TEST_IMAGES_ARGS: list[
         (500, 500, 1),
     ),
 ]
+if HAS_PYLIBCZIRW:
+    TEST_IMAGES_ARGS.append(
+        (
+            # published with CC0 license, taken from
+            # https://doi.org/10.6084/m9.figshare.c.3727411_D391.v1
+            "https://static.webknossos.org/data/wklibs-samples/embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
+            "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
+            {},
+            "uint16",
+            1,
+            (512, 512, 30),
+        )
+    )
 
 
 def _test_test_images(
