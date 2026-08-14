@@ -154,6 +154,12 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
+      - name: Cache RustFS binary
+        uses: actions/cache@v4
+        with:
+          path: webknossos/.rustfs_bin
+          key: rustfs-bin-${{ runner.os }}
+
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
@@ -229,10 +235,11 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
-      - name: Install minio
-        run: Invoke-WebRequest -Uri
-          "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
-          -OutFile "minio.exe"
+      - name: Cache RustFS binary
+        uses: actions/cache@v4
+        with:
+          path: webknossos/.rustfs_bin
+          key: rustfs-bin-${{ runner.os }}
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}

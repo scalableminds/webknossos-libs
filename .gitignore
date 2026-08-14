@@ -125,5 +125,6 @@ webknossos/testoutput/*
 */cell_*/*
 cell_*/*
 
-# minio
-minio_data
+# rustfs
+.rustfs_bin
+testoutput_rustfs
