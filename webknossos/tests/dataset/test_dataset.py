@@ -69,14 +69,24 @@ def start_rustfs() -> Iterator[None]:
 
 
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr, DataFormat.Zarr3]
+# rustfs's Windows binary hangs under sustained S3 read/write traffic (seemingly
+# an upstream concurrency bug, https://github.com/rustfs/rustfs); skip the
+# S3-backed cases on Windows until that's resolved upstream.
+REMOTE_TESTOUTPUT_DIR_PARAM = pytest.param(
+    REMOTE_TESTOUTPUT_DIR, marks=pytest.mark.skip_on_windows
+)
 DATA_FORMATS_AND_OUTPUT_PATHS = [
     (DataFormat.WKW, TESTOUTPUT_DIR),
     (DataFormat.Zarr, TESTOUTPUT_DIR),
-    (DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR),
+    pytest.param(
+        DataFormat.Zarr, REMOTE_TESTOUTPUT_DIR, marks=pytest.mark.skip_on_windows
+    ),
     (DataFormat.Zarr3, TESTOUTPUT_DIR),
-    (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR),
+    pytest.param(
+        DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR, marks=pytest.mark.skip_on_windows
+    ),
 ]
-OUTPUT_PATHS = [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR]
+OUTPUT_PATHS = [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR_PARAM]
 
 
 def copy_simple_dataset(
@@ -252,7 +262,7 @@ def test_create_dataset_with_layer_and_mag(
     assure_exported_properties(ds)
 
 
-@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
 def test_ome_ngff_0_4_metadata(output_path: UPath) -> None:
     ds_path = prepare_dataset_path(DataFormat.Zarr, output_path)
     ds = Dataset(ds_path, voxel_size=(11, 11, 28))
@@ -295,7 +305,7 @@ def test_ome_ngff_0_4_metadata(output_path: UPath) -> None:
     )
 
 
-@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
 def test_ome_ngff_0_5_metadata(output_path: UPath) -> None:
     ds_path = prepare_dataset_path(DataFormat.Zarr3, output_path)
     ds = Dataset(ds_path, voxel_size=(11, 11, 28))
@@ -829,7 +839,7 @@ def test_write_cxyz_mag_view(data_format: DataFormat, output_path: UPath) -> Non
     np.testing.assert_array_equal(data, write_data)
 
 
-@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_direct_zarr_access(output_path: UPath, data_format: DataFormat) -> None:
     ds_path = copy_simple_dataset(data_format, output_path)
@@ -1214,7 +1224,12 @@ def test_write_layer_mag2(
 
 @pytest.mark.parametrize(
     "data_format,output_path",
-    [(DataFormat.Zarr3, TESTOUTPUT_DIR), (DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR)],
+    [
+        (DataFormat.Zarr3, TESTOUTPUT_DIR),
+        pytest.param(
+            DataFormat.Zarr3, REMOTE_TESTOUTPUT_DIR, marks=pytest.mark.skip_on_windows
+        ),
+    ],
 )
 @pytest.mark.parametrize("absolute_offset", [None, (0, 3, 12, 12, 12)])
 def test_write_layer_5d(
@@ -2255,6 +2270,7 @@ def test_add_mag_as_ref_with_mag(data_format: DataFormat, output_path: UPath) ->
     assure_exported_properties(original_ds)
 
 
+@pytest.mark.skip_on_windows
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_remote_add_symlink_layer(data_format: DataFormat) -> None:
     src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
@@ -2269,6 +2285,7 @@ def test_remote_add_symlink_layer(data_format: DataFormat) -> None:
         dst_ds.add_symlink_layer(src_ds.get_layer("color"))
 
 
+@pytest.mark.skip_on_windows
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_remote_add_symlink_mag(data_format: DataFormat) -> None:
     src_dataset_path = copy_simple_dataset(data_format, REMOTE_TESTOUTPUT_DIR)
@@ -2537,6 +2554,7 @@ def test_dataset_shallow_copy_downsample() -> None:
     assert shallow_copy_of_ds.get_layer("color").get_mag(1).read_only
 
 
+@pytest.mark.skip_on_windows
 def test_write_remote_wkw_dataset() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
@@ -2550,6 +2568,7 @@ def test_write_remote_wkw_dataset() -> None:
     np.testing.assert_array_equal(data, actual)
 
 
+@pytest.mark.skip_on_windows
 def test_read_remote_wkw_dataset() -> None:
     local_ds_path = copy_simple_dataset(DataFormat.WKW, TESTOUTPUT_DIR, "local")
     remote_ds_path = copy_simple_dataset(
@@ -2634,7 +2653,7 @@ def test_dataset_conversion_wkw_only() -> None:
     assure_exported_properties(converted_ds)
 
 
-@pytest.mark.parametrize("output_path", [TESTOUTPUT_DIR, REMOTE_TESTOUTPUT_DIR])
+@pytest.mark.parametrize("output_path", OUTPUT_PATHS)
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_dataset_conversion_from_wkw_to_zarr(
     output_path: UPath, data_format: DataFormat
@@ -3867,6 +3886,7 @@ def test_guided_downsampling(data_format: DataFormat, output_path: UPath) -> Non
     assure_exported_properties(input_dataset)
 
 
+@pytest.mark.skip_on_windows
 @pytest.mark.parametrize("data_format", [DataFormat.Zarr, DataFormat.Zarr3])
 def test_zarr_copy_to_remote_dataset(data_format: DataFormat) -> None:
     ds_path = prepare_dataset_path(data_format, REMOTE_TESTOUTPUT_DIR, "copied")
@@ -3920,6 +3940,7 @@ def test_copy_dataset_with_attachments(input_path: UPath, output_path: UPath) ->
     assert (new_ds_path / "segmentation" / "meshes" / "meshfile" / "zarr.json").exists()
 
 
+@pytest.mark.skip_on_windows
 def test_wkw_copy_to_remote_dataset() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR, "copied")
     wkw_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")
@@ -3937,6 +3958,7 @@ def test_wkw_copy_to_remote_dataset() -> None:
         )
 
 
+@pytest.mark.skip_on_windows
 def test_copy_dataset_exists_ok() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, REMOTE_TESTOUTPUT_DIR, "copied")
     wkw_ds = Dataset.open(TESTDATA_DIR / "simple_wkw_dataset")

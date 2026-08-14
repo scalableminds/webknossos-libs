@@ -87,6 +87,7 @@ def _tiff_cubing(out_path: UPath, data_format: DataFormat) -> None:
     assert (out_path / "tiff" / "1").exists()
 
 
+@pytest.mark.skip_on_windows
 def test_tiff_cubing_zarr_s3(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests zarr support when performing tiff cubing."""
 

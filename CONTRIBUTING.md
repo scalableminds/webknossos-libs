@@ -134,9 +134,11 @@ Internal workflows for scalable minds:
 The `webknossos` folder contains examples, which are not part of the package, but added to the documentation (see `docs/src/webknossos-py/examples`).
 
 The tests use [RustFS](https://github.com/rustfs/rustfs) for testing S3-compatible storage.
-The matching binary for your OS/architecture is downloaded automatically and cached in `webknossos/.rustfs_bin` the first time the tests run — no manual install needed on Linux, macOS (Apple Silicon), or Windows.
+The matching binary for your OS/architecture is downloaded automatically and cached in `webknossos/.rustfs_bin` the first time the tests run — no manual install needed on Linux or macOS (Apple Silicon).
 
 Note for Intel Mac users: RustFS does not publish a prebuilt binary for Intel macOS (Apple Silicon only). Either build RustFS from source (see the [RustFS repo](https://github.com/rustfs/rustfs)) and place the `rustfs` binary at `webknossos/.rustfs_bin/rustfs`, or install Docker and run `docker run -p 8000:9000 rustfs/rustfs server /data` manually before running the tests.
+
+On Windows, the S3-backed tests are skipped (`skip_on_windows`): RustFS's Windows binary hangs under sustained S3 traffic, which looks like an upstream concurrency bug. This can be revisited once that's fixed upstream.
 
 The tests also contain functionality for the WEBKNOSSOS client.
 This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS.

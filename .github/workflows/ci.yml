@@ -235,12 +235,6 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
-      - name: Cache RustFS binary
-        uses: actions/cache@v4
-        with:
-          path: webknossos/.rustfs_bin
-          key: rustfs-bin-${{ runner.os }}
-
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 

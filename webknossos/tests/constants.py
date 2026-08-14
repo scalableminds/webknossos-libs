@@ -144,7 +144,16 @@ def use_rustfs() -> Iterator[None]:
 
     The matching binary for the current OS/arch is downloaded from GitHub
     releases and cached in RUSTFS_BIN_DIR on first use.
+
+    A no-op on Windows: rustfs's Windows binary hangs under sustained S3
+    traffic (looks like an upstream concurrency bug,
+    https://github.com/rustfs/rustfs), so all S3-touching tests are marked
+    `skip_on_windows` and don't need a running server there.
     """
+    if sys.platform == "win32":
+        yield
+        return
+
     rustfs_bin = _ensure_rustfs_binary()
     rustfs_path = UPath("testoutput_rustfs")
     rmtree(rustfs_path)
