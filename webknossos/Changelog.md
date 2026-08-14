@@ -22,7 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The access mode of a remote dataset can now be chosen per mag: `RemoteLayer.get_mag(mag, access_mode=RemoteAccessMode.PROXY_PATH)`. Mags of the same layer may use different access modes.
 - Added `RemoteMagView` with `direct_path`, `proxy_path`, `zarr_streaming_path`, `access_mode` and `data_format`. Only the direct path is stored in the dataset properties; the zarr streaming and proxy paths are computed from the datastore url.
 - Added `RemoteDataset.access_mode`, the default access mode that all mags of a dataset inherit.
-- Added `RemoteAttachments.with_access_mode()` and `RemoteAttachments.access_mode`.
+- Added `RemoteAttachments.with_access_mode()` and `RemoteAttachments.access_mode`. Attachments can be resolved via `DIRECT_PATH` or `PROXY_PATH`; `ZARR_STREAMING` is not supported, as attachments are not part of the served datasource-properties.json.
 - Added `View.data_format`.
 
 ### Changed

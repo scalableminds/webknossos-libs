@@ -363,6 +363,16 @@ def test_attachments_are_available_in_every_access_mode(tmp_upath: UPath) -> Non
     with pytest.raises(ValueError, match="not served via"):
         _ = attachments.with_access_mode(RemoteAccessMode.ZARR_STREAMING).agglomerates
 
+    # Attachments are also reachable through the proxy, at a computed path.
+    proxy_attachments = attachments.with_access_mode(RemoteAccessMode.PROXY_PATH)
+    assert proxy_attachments.access_mode == RemoteAccessMode.PROXY_PATH
+    proxy_agglomerate = proxy_attachments.agglomerates[0]
+    assert is_remote_path(proxy_agglomerate.path)
+    assert str(proxy_agglomerate.path).endswith(
+        "/proxy/layers/segmentation/attachments/agglomerate/map_all"
+    )
+    assert proxy_agglomerate.data_format == attachments.agglomerates[0].data_format
+
 
 def test_shallow_copy_remote_layers(tmp_upath: UPath) -> None:
     dataset = Dataset(tmp_upath / "origin", voxel_size=(10, 10, 10))

@@ -61,12 +61,14 @@ class RemoteMagView(MagView["RemoteLayer"]):
     def direct_path(self) -> UPath | None:
         """The path of the underlying storage, or `None` if the server does not expose it.
 
-        Reading from it requires that the client has access to that storage.
+        Reading from it requires that the client has access to that storage. Exposing
+        this alongside `proxy_path` and `zarr_streaming_path` lets a caller compare all
+        three candidate paths for a mag without constructing separate `RemoteMagView`
+        instances, e.g. to pick the fastest one that is actually reachable.
         """
-        try:
-            return self._path_for(RemoteAccessMode.DIRECT_PATH)
-        except ValueError:
+        if not self.layer.dataset._properties_are_direct:
             return None
+        return self._path_for(RemoteAccessMode.DIRECT_PATH)
 
     @property
     def proxy_path(self) -> UPath:

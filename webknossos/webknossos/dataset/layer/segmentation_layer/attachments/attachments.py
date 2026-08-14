@@ -83,7 +83,11 @@ class AbstractAttachments:
     def __init__(self, layer: "AbstractSegmentationLayer"):
         self._layer = layer
 
-    def _attachment_path(self, attachment: AttachmentProperties) -> UPath:
+    def _attachment_path(
+        self,
+        attachment: AttachmentProperties,
+        type_name: str,  # noqa: ARG002 only used by the RemoteAttachments override
+    ) -> UPath:
         """Resolves the stored path of an attachment into a usable path."""
         return enrich_path(attachment.path, self._get_optional_dataset_path())
 
@@ -92,7 +96,9 @@ class AbstractAttachments:
         if self._properties.meshes is None:
             return tuple()
         return tuple(
-            MeshAttachment(attachment, self._attachment_path(attachment))
+            MeshAttachment(
+                attachment, self._attachment_path(attachment, MeshAttachment.type_name)
+            )
             for attachment in self._properties.meshes
         )
 
@@ -101,7 +107,10 @@ class AbstractAttachments:
         if self._properties.agglomerates is None:
             return tuple()
         return tuple(
-            AgglomerateAttachment(attachment, self._attachment_path(attachment))
+            AgglomerateAttachment(
+                attachment,
+                self._attachment_path(attachment, AgglomerateAttachment.type_name),
+            )
             for attachment in self._properties.agglomerates
         )
 
@@ -111,7 +120,9 @@ class AbstractAttachments:
             return None
         return SegmentIndexAttachment(
             self._properties.segment_index,
-            self._attachment_path(self._properties.segment_index),
+            self._attachment_path(
+                self._properties.segment_index, SegmentIndexAttachment.type_name
+            ),
         )
 
     @property
@@ -119,7 +130,8 @@ class AbstractAttachments:
         if self._properties.cumsum is None:
             return None
         return CumsumAttachment(
-            self._properties.cumsum, self._attachment_path(self._properties.cumsum)
+            self._properties.cumsum,
+            self._attachment_path(self._properties.cumsum, CumsumAttachment.type_name),
         )
 
     @property
@@ -127,7 +139,10 @@ class AbstractAttachments:
         if self._properties.connectomes is None:
             return tuple()
         return tuple(
-            ConnectomeAttachment(attachment, self._attachment_path(attachment))
+            ConnectomeAttachment(
+                attachment,
+                self._attachment_path(attachment, ConnectomeAttachment.type_name),
+            )
             for attachment in self._properties.connectomes
         )
 
@@ -284,8 +299,9 @@ class RemoteAttachments(AbstractAttachments):
     def with_access_mode(self, access_mode: "RemoteAccessMode") -> "RemoteAttachments":
         """Returns a view of these attachments that resolves paths for `access_mode`.
 
-        Note that only `RemoteAccessMode.DIRECT_PATH` is currently supported; the other
-        modes raise when an attachment path is resolved.
+        Note that `RemoteAccessMode.ZARR_STREAMING` is not supported, since attachments
+        are not part of the served datasource-properties.json; it raises when an
+        attachment path is resolved.
         """
         return RemoteAttachments(self._layer, access_mode)
 
@@ -294,8 +310,15 @@ class RemoteAttachments(AbstractAttachments):
         """How the data of these attachments is accessed."""
         return self._access_mode
 
-    def _attachment_path(self, attachment: AttachmentProperties) -> UPath:
-        return self._layer.dataset._attachment_path(attachment, self._access_mode)
+    def _attachment_path(
+        self, attachment: AttachmentProperties, type_name: str
+    ) -> UPath:
+        return self._layer.dataset._attachment_path(
+            attachment,
+            self._access_mode,
+            layer_name=self._layer.name,
+            type_name=type_name,
+        )
 
     def _apply_server_properties(self) -> None:
         self._layer._apply_server_layer_properties()

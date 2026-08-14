@@ -26,6 +26,20 @@ def mag_url_suffix(access_mode: RemoteAccessMode, layer_name: str, mag: Mag) -> 
         raise ValueError(f"{access_mode} does not have a computed mag path.")
 
 
+def attachment_url_suffix(
+    access_mode: RemoteAccessMode, layer_name: str, type_name: str, name: str
+) -> str:
+    """The path of an attachment relative to the base path of the given access mode.
+
+    `type_name` is the attachment's WEBKNOSSOS-facing type (e.g. `Attachment.type_name`,
+    such as "agglomerate" or "mesh"), not its plural container name.
+    """
+    if access_mode == RemoteAccessMode.PROXY_PATH:
+        return f"layers/{layer_name}/attachments/{type_name}/{name}"
+    else:
+        raise ValueError(f"{access_mode} does not have a computed attachment path.")
+
+
 def data_format_for_access_mode(
     access_mode: RemoteAccessMode, layer_data_format: DataFormat
 ) -> DataFormat:
