@@ -198,7 +198,7 @@ def test_annotation_dataset_rejects_other_access_modes() -> None:
     assert ds.access_mode == wk.RemoteAccessMode.ZARR_STREAMING
     layer = ds.layers["Volume"]
     mag = layer.get_finest_mag()
-    assert mag.direct_path is None, (
+    assert wk.RemoteAccessMode.DIRECT_PATH not in mag.paths, (
         "An annotation's data source is not exposed by the api."
     )
     with pytest.raises(ValueError, match="direct paths"):

@@ -446,8 +446,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def _initialize_layer_from_properties(
         self, properties: "LayerProperties", read_only: bool
     ) -> RemoteLayer:
-        # Layers are read-only unless the dataset's default access mode is DIRECT_PATH.
-        read_only = self._metadata_is_read_only
+        # Layers are read-only whenever the dataset itself is (e.g. RemoteDataset.open(
+        # ..., read_only=True)), or when the dataset's default access mode does not
+        # support metadata writes.
+        read_only = read_only or self._metadata_is_read_only
         return super()._initialize_layer_from_properties(properties, read_only)
 
     @property
@@ -485,7 +487,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         for layer_properties in self._properties.data_layers:
             if layer_properties.name not in self.layers:
                 layer = self._initialize_layer_from_properties(
-                    layer_properties, self._metadata_is_read_only
+                    layer_properties, self.read_only
                 )
                 self._layers[layer_properties.name] = layer
         # remove deleted layers

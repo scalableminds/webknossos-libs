@@ -58,27 +58,22 @@ class RemoteMagView(MagView["RemoteLayer"]):
         return self._access_mode
 
     @property
-    def direct_path(self) -> UPath | None:
-        """The path of the underlying storage, or `None` if the server does not expose it.
+    def paths(self) -> dict[RemoteAccessMode, UPath]:
+        """All paths at which this mag's data can be reached, keyed by access mode.
 
-        Reading from it requires that the client has access to that storage. Exposing
-        this alongside `proxy_path` and `zarr_streaming_path` lets a caller compare all
-        three candidate paths for a mag without constructing separate `RemoteMagView`
-        instances, e.g. to pick the fastest one that is actually reachable.
+        Comparing these lets a caller pick which access mode to use for this mag, e.g.
+        preferring `DIRECT_PATH` when reachable and falling back otherwise, without
+        constructing a separate `RemoteMagView` per candidate mode. A mode is omitted
+        if it is not available for this mag (e.g. `DIRECT_PATH` when the server does not
+        expose it, or `PROXY_PATH`/`ZARR_STREAMING` for an annotation's volume layers).
         """
-        if not self.layer.dataset._properties_are_direct:
-            return None
-        return self._path_for(RemoteAccessMode.DIRECT_PATH)
-
-    @property
-    def proxy_path(self) -> UPath:
-        """The path that proxies the underlying storage through the WEBKNOSSOS datastore."""
-        return self._path_for(RemoteAccessMode.PROXY_PATH)
-
-    @property
-    def zarr_streaming_path(self) -> UPath:
-        """The path where the WEBKNOSSOS datastore re-serves this mag as Zarr."""
-        return self._path_for(RemoteAccessMode.ZARR_STREAMING)
+        result: dict[RemoteAccessMode, UPath] = {}
+        for access_mode in RemoteAccessMode:
+            try:
+                result[access_mode] = self._path_for(access_mode)
+            except ValueError:  # noqa: PERF203 only 3 iterations, clarity wins here
+                continue
+        return result
 
     def _path_for(self, access_mode: RemoteAccessMode) -> UPath:
         return self.layer.dataset._mag_path(

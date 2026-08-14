@@ -300,11 +300,14 @@ def test_per_mag_access_mode() -> None:
 
     # The computed paths follow the datastore routes and are not stored in the properties.
     mag = layer.get_mag(1)
-    assert mag.direct_path is not None
-    assert not is_remote_path(mag.direct_path)
-    assert str(mag.zarr_streaming_path).endswith("/color/1")
-    assert str(mag.proxy_path).endswith("/proxy/layers/color/mags/1")
-    assert "/zarr/" in str(mag.zarr_streaming_path)
+    paths = mag.paths
+    assert set(paths.keys()) == set(RemoteAccessMode)
+    assert not is_remote_path(paths[RemoteAccessMode.DIRECT_PATH])
+    assert str(paths[RemoteAccessMode.ZARR_STREAMING]).endswith("/color/1")
+    assert str(paths[RemoteAccessMode.PROXY_PATH]).endswith(
+        "/proxy/layers/color/mags/1"
+    )
+    assert "/zarr/" in str(paths[RemoteAccessMode.ZARR_STREAMING])
 
 
 def test_direct_path_available_in_zarr_streaming_mode() -> None:
@@ -314,7 +317,7 @@ def test_direct_path_available_in_zarr_streaming_mode() -> None:
     for layer in remote_dataset.layers.values():
         for mag in layer.mags.values():
             assert mag.access_mode == RemoteAccessMode.ZARR_STREAMING
-            assert mag.direct_path is not None, (
+            assert RemoteAccessMode.DIRECT_PATH in mag.paths, (
                 f"{layer.name}/{mag.name} should expose its direct path."
             )
 
@@ -431,6 +434,29 @@ def test_changing_properties_on_read_only_remote_dataset() -> None:
     with pytest.raises(RuntimeError):
         remote_dataset.description = "This is a test description"
     assert remote_dataset.description == description_before_change_attempt
+
+
+def test_read_only_forces_layers_read_only_with_direct_path() -> None:
+    """DIRECT_PATH normally allows metadata writes, but read_only=True must still win."""
+    read_only_dataset = RemoteDataset.open(
+        dataset_id="59e9cfbdba632ac2ab8b23b5",
+        access_mode=RemoteAccessMode.DIRECT_PATH,
+        read_only=True,
+    )
+    layer = read_only_dataset.get_layer("color")
+    assert layer.read_only
+    default_view_configuration_before_change_attempt = layer.default_view_configuration
+    with pytest.raises(RuntimeError):
+        layer.default_view_configuration = LayerViewConfiguration(alpha=0.3)
+    assert (
+        layer.default_view_configuration
+        == default_view_configuration_before_change_attempt
+    )
+
+    writable_dataset = RemoteDataset.open(
+        dataset_id="59e9cfbdba632ac2ab8b23b5", access_mode=RemoteAccessMode.DIRECT_PATH
+    )
+    assert not writable_dataset.get_layer("color").read_only
 
 
 def test_get_remote_datasets() -> None:

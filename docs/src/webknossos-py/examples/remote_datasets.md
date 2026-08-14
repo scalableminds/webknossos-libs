@@ -30,14 +30,14 @@ mag1 = layer.get_mag(1, access_mode=wk.RemoteAccessMode.DIRECT_PATH)
 mag2 = layer.get_mag(2, access_mode=wk.RemoteAccessMode.PROXY_PATH)
 ```
 
-Each mag knows all three of its paths, regardless of how it is currently accessed:
+Each mag knows all of its available paths, regardless of how it is currently accessed, via `mag.paths`, a `dict[RemoteAccessMode, UPath]`. A mode is missing from the dict if it isn't available for that mag (e.g. `DIRECT_PATH` when the server doesn't expose it):
 
 ```python
 mag = layer.get_mag(1)
-print(mag.direct_path)           # e.g. s3://bucket/dataset/color/1, or None if not exposed
-print(mag.proxy_path)
-print(mag.zarr_streaming_path)
-print(mag.data_format)           # what this mag actually serves
+print(mag.paths)
+# {RemoteAccessMode.ZARR_STREAMING: ..., RemoteAccessMode.PROXY_PATH: ..., RemoteAccessMode.DIRECT_PATH: ...}
+print(mag.paths.get(wk.RemoteAccessMode.DIRECT_PATH))  # e.g. s3://bucket/dataset/color/1, or None if not exposed
+print(mag.data_format)  # what this mag actually serves
 ```
 
-Only `direct_path` is stored in the dataset properties; the other two are computed from the datastore URL.
+Only the direct path is stored in the dataset properties; the other paths in `mag.paths` are computed from the datastore URL.
