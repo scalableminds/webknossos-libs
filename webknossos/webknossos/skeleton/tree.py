@@ -4,14 +4,13 @@ from typing import TYPE_CHECKING, Any
 import networkx as nx
 import numpy as np
 
-from ..geometry import Vec3Int, Vec3IntLike
+from ..geometry import Vec3FloatLike, Vec3Int, Vec3IntLike
 from .node import Node
 
 if TYPE_CHECKING:
     from .group import Group
     from .skeleton import Skeleton
 
-Vector3 = tuple[float, float, float]
 Vector4 = tuple[float, float, float, float]
 
 
@@ -279,7 +278,7 @@ class Tree(nx.Graph):
         position: Vec3IntLike,
         comment: str | None = None,
         radius: float | None = None,
-        rotation: Vector3 | None = None,
+        rotation: Vec3FloatLike | None = None,
         inVp: int | None = None,
         inMag: int | None = None,
         bitDepth: int | None = None,
@@ -299,7 +298,7 @@ class Tree(nx.Graph):
                 Visible in the WEBKNOSSOS UI. Defaults to None.
             radius (float | None, optional): Node radius for visualization.
                 Defaults to None.
-            rotation (Vector3 | None, optional): 3D rotation vector for the node.
+            rotation (Vec3Float | None, optional): 3D rotation vector for the node.
                 Defaults to None.
             inVp (int | None, optional): Viewport information. Defaults to None.
             inMag (int | None, optional): Magnification level. Defaults to None.

@@ -33,6 +33,7 @@ from webknossos.dataset.layer.view._array import Zarr3ArrayInfo, Zarr3Config
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
+    AffineCoordinateTransformation,
     AttachmentDataFormat,
     DataFormat,
     DatasetProperties,
@@ -40,9 +41,16 @@ from webknossos.dataset_properties import (
     LayerCategoryType,
     LayerViewConfiguration,
     SegmentationLayerProperties,
+    ThinPlateSplineCoordinateTransformation,
 )
 from webknossos.dataset_properties.structuring import get_dataset_converter
-from webknossos.geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, VecIntLike
+from webknossos.geometry import (
+    BoundingBox,
+    Mag,
+    NDBoundingBox,
+    Vec3Int,
+    VecIntLike,
+)
 from webknossos.utils import (
     copytree,
     dump_path,
@@ -1436,6 +1444,19 @@ def test_properties_with_segmentation() -> None:
             0
         ],
     )
+    color_layer = [
+        layer for layer in ds_properties.data_layers if layer.name == "color"
+    ][0]
+    assert color_layer.coordinate_transformations == [
+        AffineCoordinateTransformation.from_translation((10, 20, 30))
+    ]
+    assert segmentation_layer.coordinate_transformations == [
+        ThinPlateSplineCoordinateTransformation(
+            source=[[0, 0, 0], [1, 2, 3], [4, 5, 6]],
+            target=[[1, 1, 1], [2, 4, 6], [8, 10, 12]],
+        )
+    ]
+
     assert segmentation_layer.largest_segment_id == 1000000000
     assert segmentation_layer.mappings == [
         "larger5um1",
@@ -3335,6 +3356,95 @@ def test_add_layer_as_copy(data_format: DataFormat, output_path: UPath) -> None:
     assert "color" in Dataset.open(ds_path).layers.keys()
 
     assure_exported_properties(ds)
+
+
+def test_copy_preserves_layer_metadata() -> None:
+    """Copying a layer or a whole dataset carries over the optional layer metadata."""
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_original")
+    layer_copy_path = prepare_dataset_path(
+        DataFormat.WKW, TESTOUTPUT_DIR, "metadata_layer_copy"
+    )
+    dataset_copy_path = prepare_dataset_path(
+        DataFormat.WKW, TESTOUTPUT_DIR, "metadata_dataset_copy"
+    )
+
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY)
+    layer.add_mag(1)
+    view_configuration = LayerViewConfiguration(color=(255, 0, 0), alpha=50.0)
+    coordinate_transformations = (
+        AffineCoordinateTransformation.from_translation((1, 2, 3)),
+    )
+    layer.default_view_configuration = view_configuration
+    layer.coordinate_transformations = coordinate_transformations
+
+    # add_layer_as_copy
+    copied_layer = Dataset(layer_copy_path, voxel_size=(1, 1, 1)).add_layer_as_copy(
+        layer, "color_copy"
+    )
+    assert copied_layer.default_view_configuration == view_configuration
+    assert copied_layer.coordinate_transformations == coordinate_transformations
+
+    # copy_dataset
+    copied_dataset_layer = ds.copy_dataset(dataset_copy_path).get_layer("color")
+    assert copied_dataset_layer.default_view_configuration == view_configuration
+    assert copied_dataset_layer.coordinate_transformations == coordinate_transformations
+
+    # The copies must not share any mutable state with the layer they were copied from.
+    # `view_configuration` is the very object that was assigned, so it is mutated too
+    # and cannot serve as the expected value here.
+    expected = LayerViewConfiguration(color=(255, 0, 0), alpha=50.0)
+    assert layer.default_view_configuration is not None
+    layer.default_view_configuration.color = (0, 255, 0)
+    assert copied_layer.default_view_configuration == expected
+    assert copied_dataset_layer.default_view_configuration == expected
+
+    # The same holds for a layer that was added with `add_layer_like`, which must not
+    # end up sharing the stored list of transformations with the layer it was created
+    # from
+    like_layer = Dataset(
+        prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_like"),
+        voxel_size=(1, 1, 1),
+    ).add_layer_like(layer, "color_like")
+    assert like_layer.coordinate_transformations == coordinate_transformations
+    assert (
+        like_layer._properties.coordinate_transformations
+        is not layer._properties.coordinate_transformations
+    )
+    like_layer.coordinate_transformations = []
+    assert layer.coordinate_transformations == coordinate_transformations
+
+    # Copying onto an existing layer keeps the metadata that the source does not have
+    existing_dataset = Dataset(
+        prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_existing"),
+        voxel_size=(1, 1, 1),
+    )
+    existing_layer = existing_dataset.add_layer("color", COLOR_CATEGORY)
+    existing_view_configuration = LayerViewConfiguration(alpha=42.0)
+    existing_layer.default_view_configuration = existing_view_configuration
+    bare_source = Dataset(
+        prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_bare_source"),
+        voxel_size=(1, 1, 1),
+    ).add_layer("color", COLOR_CATEGORY)
+    bare_source.add_mag(1)
+    existing_dataset.add_layer_as_copy(bare_source, "color", exists_ok=True)
+    assert existing_layer.default_view_configuration == existing_view_configuration
+
+    # A layer without this metadata does not get empty entries in the properties
+    layer.default_view_configuration = None
+    layer.coordinate_transformations = []
+    bare_dataset = Dataset(
+        prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR, "metadata_bare"),
+        voxel_size=(1, 1, 1),
+    )
+    bare_layer = bare_dataset.add_layer_as_copy(layer, "color_bare")
+    assert bare_layer.default_view_configuration is None
+    assert bare_layer.coordinate_transformations == ()
+    properties = json.loads((bare_dataset.path / PROPERTIES_FILE_NAME).read_text())
+    assert "defaultViewConfiguration" not in properties["dataLayers"][0]
+    assert "coordinateTransformations" not in properties["dataLayers"][0]
+
+    assure_exported_properties(bare_dataset)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)

@@ -117,3 +117,12 @@ def test_new_axes() -> None:
     old = VecInt(1, 2, 3, 4, axes=("unset_0", "unset_1", "unset_2", "unset_3"))
     new = VecInt(1, 2, 3, 4, axes=("x", "y", "z", "t"))
     assert VecInt(old, axes=("x", "y", "z", "t")) == new
+
+
+def test_ordering() -> None:
+    """N-dimensional vectors are ordered lexicographically, like plain tuples."""
+    axes = ("x", "y", "z", "t")
+    assert VecInt(1, 2, 3, 4, axes=axes) < VecInt(1, 2, 3, 5, axes=axes)
+    assert VecInt(1, 2, 3, 5, axes=axes) > VecInt(1, 2, 3, 4, axes=axes)
+    assert VecInt(1, 2, 3, 4, axes=axes) <= VecInt(1, 2, 3, 4, axes=axes)
+    assert VecInt(1, 2, 3, 4, axes=axes) < (1, 2, 3, 5)

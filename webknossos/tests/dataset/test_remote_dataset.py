@@ -7,11 +7,13 @@ import numpy as np
 import pytest
 from upath import UPath
 
-from tests.constants import TESTOUTPUT_DIR
+from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
 from webknossos import (
     COLOR_CATEGORY,
+    AffineCoordinateTransformation,
     AgglomerateAttachment,
     AgglomerateGraph,
+    Annotation,
     BoundingBox,
     DataFormat,
     Dataset,
@@ -22,6 +24,7 @@ from webknossos import (
     RemoteFolder,
     SegmentationLayer,
     Team,
+    ThinPlateSplineCoordinateTransformation,
     TransferMode,
     Vec3Int,
     webknossos_context,
@@ -387,29 +390,55 @@ def test_shallow_copy_remote_layers(tmp_upath: UPath) -> None:
 
 
 def test_changing_properties_on_remote_dataset() -> None:
+    """Metadata writes work under the default ZARR_STREAMING access mode too, since the
+    properties stem from the api data source there, just as they do for DIRECT_PATH."""
     remote_dataset = RemoteDataset.open(dataset_id="59e9cfbdba632ac2ab8b23b5")
+    assert remote_dataset.access_mode == RemoteAccessMode.ZARR_STREAMING
     remote_dataset.description = "This is a test description"
     assert remote_dataset.description == "This is a test description"
-    largest_segment_id_before_change_attempt = remote_dataset.get_segmentation_layer(
+
+    largest_segment_id_before_change = remote_dataset.get_segmentation_layer(
         "segmentation"
     ).largest_segment_id
-    with pytest.raises(RuntimeError):
-        remote_dataset.get_segmentation_layer("segmentation").largest_segment_id = 10
+    remote_dataset.get_segmentation_layer("segmentation").largest_segment_id = 10
     assert (
-        remote_dataset.get_segmentation_layer("segmentation").largest_segment_id
-        == largest_segment_id_before_change_attempt
+        remote_dataset.get_segmentation_layer("segmentation").largest_segment_id == 10
     )
-    default_view_configuration_before_change_attempt = remote_dataset.get_layer(
+    remote_dataset.get_segmentation_layer(
+        "segmentation"
+    ).largest_segment_id = largest_segment_id_before_change
+
+    default_view_configuration_before_change = remote_dataset.get_layer(
         "color"
     ).default_view_configuration
-    with pytest.raises(RuntimeError):
-        remote_dataset.get_layer(
-            "color"
-        ).default_view_configuration = LayerViewConfiguration(alpha=0.3)
+    new_view_configuration = LayerViewConfiguration(alpha=30.0)
+    remote_dataset.get_layer(
+        "color"
+    ).default_view_configuration = new_view_configuration
     assert (
         remote_dataset.get_layer("color").default_view_configuration
-        == default_view_configuration_before_change_attempt
+        == new_view_configuration
     )
+    remote_dataset.get_layer(
+        "color"
+    ).default_view_configuration = default_view_configuration_before_change
+
+
+def test_changing_properties_fails_without_direct_sourced_properties() -> None:
+    """Metadata writes are only rejected when the properties are not api-sourced, e.g.
+    for an annotation's volume layers, regardless of access mode."""
+    path = TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"
+    annotation_from_file = Annotation.load(path)
+    annotation_from_file.organization_id = "Organization_X"
+    annotation = Annotation.download(annotation_from_file.upload())
+
+    ds = annotation.get_remote_annotation_dataset()
+    assert ds.access_mode == RemoteAccessMode.ZARR_STREAMING
+    layer = ds.layers["Volume"]
+    default_view_configuration_before_attempt = layer.default_view_configuration
+    with pytest.raises(RuntimeError):
+        layer.default_view_configuration = LayerViewConfiguration(alpha=0.3)
+    assert layer.default_view_configuration == default_view_configuration_before_attempt
 
 
 def test_remote_layer_view_configuration() -> None:
@@ -424,6 +453,51 @@ def test_remote_layer_view_configuration() -> None:
     # config values are readyonly
     with pytest.raises(AttributeError):
         layer.view_configuration = LayerViewConfiguration(alpha=50.0)
+
+
+def test_remote_layer_coordinate_transformations(tmp_upath: UPath) -> None:
+    local_dataset = get_sample_dataset(tmp_upath / "source", layers=["color"])
+    remote_dataset = reopen_dataset(
+        local_dataset.upload(new_dataset_name="test_coordinate_transformations")
+    )
+
+    layer = remote_dataset.get_layer("color")
+    assert layer.coordinate_transformations == ()
+
+    affine = AffineCoordinateTransformation.from_translation((10, 20, 30))
+    thin_plate_spline = ThinPlateSplineCoordinateTransformation(
+        source=[[0, 0, 0], [1, 2, 3], [4, 5, 6]],
+        target=[[1, 1, 1], [2, 4, 6], [8, 10, 12]],
+    )
+    layer.coordinate_transformations = [affine, thin_plate_spline]
+    assert layer.coordinate_transformations == (affine, thin_plate_spline)
+
+    # Test if the transformations are persisted on the server
+    assert reopen_dataset(remote_dataset).get_layer(
+        "color"
+    ).coordinate_transformations == (affine, thin_plate_spline)
+
+    layer.coordinate_transformations = []
+    assert layer.coordinate_transformations == ()
+    assert (
+        reopen_dataset(remote_dataset).get_layer("color").coordinate_transformations
+        == ()
+    )
+
+
+def test_changing_properties_on_remote_layer_with_zarr_streaming() -> None:
+    """ZARR_STREAMING loads its properties from the api data source, so metadata writes
+    work just like they do for DIRECT_PATH."""
+    remote_dataset = RemoteDataset.open(dataset_id="59e9cfbdba632ac2ab8b23b5")
+    assert remote_dataset.access_mode == RemoteAccessMode.ZARR_STREAMING
+    layer = remote_dataset.get_layer("color")
+    coordinate_transformations_before_change = layer.coordinate_transformations
+    new_coordinate_transformations = [
+        AffineCoordinateTransformation.from_translation((10, 20, 30))
+    ]
+    layer.coordinate_transformations = new_coordinate_transformations
+    assert layer.coordinate_transformations == tuple(new_coordinate_transformations)
+    layer.coordinate_transformations = coordinate_transformations_before_change
 
 
 def test_changing_properties_on_read_only_remote_dataset() -> None:
@@ -563,7 +637,9 @@ def test_remote_dataset(tmp_upath: UPath) -> None:
     )
 
     assert not remote_ds.read_only
-    assert remote_ds.get_color_layers()[0].read_only
+    # Metadata is writable, since the properties stem from the api data source.
+    assert not remote_ds.get_color_layers()[0].read_only
+    # The mag's array data itself is always read-only for remote layers, though.
     assert remote_ds.get_color_layers()[0].get_finest_mag().read_only
 
     assert remote_ds.name == "test_remote_metadata"

@@ -10,15 +10,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.7.0...HEAD)
 
 ### Breaking Changes
 - For remote datasets opened with `RemoteAccessMode.ZARR_STREAMING`, `RemoteLayer.data_format` now reports the format of the underlying storage (e.g. `zarr3`) instead of `zarr`. Use `RemoteMagView.data_format` to get the format that is actually served for a given mag.
 - The arguments of `RemoteDataset.__init__` changed. Use `RemoteDataset.open` instead, as documented.
 
 ### Added
-- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
-- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
 - The access mode of a remote dataset can now be chosen per mag: `RemoteLayer.get_mag(mag, access_mode=RemoteAccessMode.PROXY_PATH)`. Mags of the same layer may use different access modes.
 - Added `RemoteMagView` with `paths` (a `dict[RemoteAccessMode, UPath]` of every available path for that mag), `access_mode` and `data_format`. Only the direct path is stored in the dataset properties; the zarr streaming and proxy paths are computed from the datastore url.
 - Added `RemoteDataset.access_mode`, the default access mode that all mags of a dataset inherit.
@@ -28,10 +26,46 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 - Remote datasets now load their properties from the WEBKNOSSOS api regardless of the access mode, so the underlying (direct) paths are always available. Consequently, `RemoteSegmentationLayer.attachments` is now populated in zarr streaming mode, where it used to be empty.
 - `RemoteDataset.zarr_streaming_path` is deprecated. Use the path of an individual mag instead, e.g. `layer.get_mag(mag, access_mode=RemoteAccessMode.ZARR_STREAMING).path`.
+- Metadata (layer bounding boxes, view configurations, mags, attachments, etc.) can now be written under `RemoteAccessMode.ZARR_STREAMING` and `RemoteAccessMode.PROXY_PATH` too, not just `DIRECT_PATH`. Metadata writes are only unavailable when the dataset's properties don't stem from the WEBKNOSSOS api, e.g. for an annotation's volume layers or a dataset with an unusable data source.
 
 ### Fixed
 - `RemoteDataset.reopen` now keeps the `read_only` flag of the original dataset.
 - `RemoteDataset.open(..., read_only=True, access_mode=RemoteAccessMode.DIRECT_PATH)` now actually makes layers read-only. Previously the `read_only` argument was ignored whenever the access mode was `DIRECT_PATH`.
+
+
+## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.6.0...v3.7.0)
+
+### Added
+- Added `Layer.coordinate_transformations` to read and set the coordinate transformations that place a layer into the coordinate space of its dataset, for both local and remote layers. The transformations are represented by the new classes `AffineCoordinateTransformation` and `ThinPlateSplineCoordinateTransformation`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Added `Vec3Float` and `Vec3FloatLike` to `webknossos.geometry`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Added support for the new attachment type `SegmentStatisticsAttachment` for segmentation layers. [#1490](https://github.com/scalableminds/webknossos-libs/pull/1490)
+
+### Changed
+- `Dataset.voxel_size`, `Skeleton.voxel_size`, `Annotation.edit_position`/`edit_rotation` and `Node.rotation` now return `Vec3Float` instead of a plain tuple. Since `Vec3Float` compares and hashes equal to the corresponding tuple, runtime code keeps working unchanged; type annotations that spell out `tuple[float, float, float]` for these values should be widened to `Vec3FloatLike`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- `Node.rotation`, `Annotation.edit_position` and `Annotation.edit_rotation` now reject a value that is not three numbers with a `ValueError` when it is set. Previously such a value was stored as given and only failed later, while writing the annotation. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- The private `Vector3` aliases of `webknossos.annotation.annotation`, `webknossos.annotation.volume_layer`, `webknossos.skeleton.group`, `webknossos.skeleton.skeleton` and `webknossos.skeleton.tree` were replaced by the shared `Vec3Float`. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Micro-optimizations done for `Vec3Float`, `Vec3Int` and `VecInt`, e.g using `__slots__` and fast-paths for common object construction patterns. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+
+### Fixed
+- `Dataset.add_layer_as_copy` and `Dataset.copy_dataset` now carry over the `default_view_configuration` and the `coordinate_transformations` of the copied layers, which were previously lost. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- `Dataset.add_layer_like` no longer shares the `default_view_configuration` with the layer it copies from, so changing it on one of the two layers no longer changes it on the other as well. [#1491](https://github.com/scalableminds/webknossos-libs/pull/1491)
+- Restored the ordering of `VecInt` and `Vec3Int`, which was lost when they stopped subclassing `tuple` in [#1419](https://github.com/scalableminds/webknossos-libs/pull/1419). [#1493](https://github.com/scalableminds/webknossos-libs/pull/1493)
+
+
+
+## [3.6.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.6.0) - 2026-08-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.5.6...v3.6.0)
+
+### Added
+- Added `RemoteDataset.delete()` to enable deletion of remote datasets via the libs. [#1484](https://github.com/scalableminds/webknossos-libs/pull/1484)
+- Added a `transform` function to resample a layer's data into another layer using either a forward `AbstractTransform` such as `AffineTransform` or an arbitrary inverse coordinate transform callable, with support for parallel processing via cluster_tools executors (e.g. multiprocessing, slurm).
+- Added `BoundingBox.iter_chunk_toplefts()`, a fast, allocation-free variant of `BoundingBox.chunk()` that yields chunk toplefts as plain int tuples instead of `BoundingBox` instances, and accepts an optional `clip_to` bounding box. [#1494](https://github.com/scalableminds/webknossos-libs/pull/1494)
+
+
+### Fixed
+- Fixed a storage leak where downloading annotations and editing volume layers wrote zip data to temporary files on disk instead of keeping it in memory. [#1485](https://github.com/scalableminds/webknossos-libs/pull/1485)
+
 
 
 ## [3.5.6](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.5.6) - 2026-07-20

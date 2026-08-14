@@ -38,13 +38,25 @@ class Attachment:
     path: UPath
     data_format: AttachmentDataFormat
     container_name: Literal[
-        "agglomerates", "meshes", "segment_index", "cumsum", "connectomes"
+        "agglomerates",
+        "meshes",
+        "segment_index",
+        "segment_statistics",
+        "cumsum",
+        "connectomes",
     ]
     """
     The container names are also used to derive the folder names to put the attachments.
     The container names are converted to camelCase to get the folder names.
     """
-    type_name: Literal["mesh", "agglomerate", "segmentIndex", "connectome", "cumsum"]
+    type_name: Literal[
+        "mesh",
+        "agglomerate",
+        "segmentIndex",
+        "segmentStatistics",
+        "connectome",
+        "cumsum",
+    ]
     """
     The type names are used to communicate to WEBKNOSSOS which attachment type we want to e.g. upload.
     """
@@ -108,6 +120,12 @@ class SegmentIndexAttachment(Attachment):
     data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
     container_name = "segment_index"
     type_name = "segmentIndex"
+
+
+class SegmentStatisticsAttachment(Attachment):
+    data_format: Literal[AttachmentDataFormat.Zarr3]
+    container_name = "segment_statistics"
+    type_name = "segmentStatistics"
 
 
 class CumsumAttachment(Attachment):

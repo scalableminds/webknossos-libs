@@ -464,8 +464,10 @@ class RemoteLayer(AbstractLayer):
     def _ensure_writable(self) -> None:
         if self.read_only:
             raise RuntimeError(
-                f"Remote layer '{self.name}' is read-only, consider opening the dataset with "
-                + "RemoteDataset.open(access_mode=RemoteAccessMode.DIRECT_PATH)"
+                f"Remote layer '{self.name}' is read-only. This is either because the "
+                + "dataset was opened with read_only=True, or because its properties do "
+                + "not stem from the api data source (e.g. an annotation's volume layer, "
+                + "or a dataset with an unusable data source)."
             )
 
     def _apply_server_layer_properties(self) -> None:

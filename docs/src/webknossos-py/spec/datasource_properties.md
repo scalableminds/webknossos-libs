@@ -66,6 +66,7 @@ The schema varies slightly based on `category`.
 | `dataFormat` | [DataFormat](#dataformat) | Yes | | On-disk storage format. |
 | `numChannels` | `integer` | No | `null` | Number of channels. Relevant for multi-channel color layers (e.g. `3` for RGB stored as `uint24`). |
 | `defaultViewConfiguration` | [LayerViewConfiguration](#layerviewconfiguration) | No | `null` | Default view settings for this layer. |
+| `coordinateTransformations` | Array of [CoordinateTransformation](#coordinatetransformation) | No | `null` | Transformations placing this layer into the coordinate space of the dataset, applied in order. |
 
 ### Magnification Fields
 
@@ -151,7 +152,7 @@ Not all element classes are valid for every layer category.
 | `"uint16"` | Unsigned 16-bit integer | Yes | Yes |
 | `"uint24"` | Unsigned 24-bit integer (3-channel RGB) | Yes | No |
 | `"uint32"` | Unsigned 32-bit integer | Yes | Yes |
-| `"uint64"` | Unsigned 64-bit integer | No | Yes (values limited to 2^53 - 1) |
+| `"uint64"` | Unsigned 64-bit integer | No | Yes |
 | `"int8"` | Signed 8-bit integer | Yes | Yes |
 | `"int16"` | Signed 16-bit integer | Yes | Yes |
 | `"int32"` | Signed 32-bit integer | Yes | Yes |
@@ -161,7 +162,7 @@ Not all element classes are valid for every layer category.
 
 **Notes:**
 - `uint24` is only meaningful for color layers where 3 channels are packed into one element.
-- `uint64` segmentation values are internally handled as JavaScript numbers, limiting the usable range to 2^53 - 1.
+- `int8`, `int16`, `int32` `int64`: even signed segmentation values should still be positive for full support with WEBKNOSSOS. Prefer the unsigned dtype variants.
 - `double` is not supported by WEBKNOSSOS for any layer type.
 - Signed integers for segmentation layers may cause issues with negative segment IDs in some workflows.
 
@@ -222,6 +223,60 @@ Default values do not need to be serialized, the field can be omitted.
 
 ---
 
+## CoordinateTransformation
+
+Describes how a layer is placed into the coordinate space of its dataset, e.g. to register
+several layers onto each other.
+A layer holds an array of transformations, which are applied in order.
+They only affect how WEBKNOSSOS renders the layer, the voxel data itself is not modified.
+
+There are two kinds of transformations, distinguished by their `type` field.
+
+### Affine
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `type` | `"affine"` | Yes | Discriminator. |
+| `matrix` | `number[4][4]` | Yes | 4x4 homogeneous transformation matrix. |
+
+The matrix uses the usual mathematical convention, i.e. `matrix[row][column]` with the
+translation in the last column.
+The example below translates the layer by `[10, 20, 30]`:
+
+```json
+{
+  "type": "affine",
+  "matrix": [
+    [1, 0, 0, 10],
+    [0, 1, 0, 20],
+    [0, 0, 1, 30],
+    [0, 0, 0, 1]
+  ]
+}
+```
+
+### Thin Plate Spline
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `type` | `"thin_plate_spline"` | Yes | Discriminator. |
+| `correspondences` | `object` | Yes | Object with the `source` and `target` landmarks, each an array of `[x, y, z]` points. |
+
+`source[i]` is mapped onto `target[i]`; in between, the layer is warped smoothly.
+Both arrays must have the same length.
+
+```json
+{
+  "type": "thin_plate_spline",
+  "correspondences": {
+    "source": [[0, 0, 0], [1, 2, 3]],
+    "target": [[1, 1, 1], [4, 5, 6]]
+  }
+}
+```
+
+---
+
 ## AttachmentsProperties
 
 References to auxiliary data files for a segmentation layer.
@@ -231,6 +286,7 @@ References to auxiliary data files for a segmentation layer.
 | `meshes` | Array of [AttachmentProperties](#attachmentproperties) | No | `null` | Precomputed mesh files. |
 | `agglomerates` | Array of [AttachmentProperties](#attachmentproperties) | No | `null` | Agglomerate mapping files. |
 | `segmentIndex` | [AttachmentProperties](#attachmentproperties) | No | `null` | Segment index file. |
+| `segmentStatistics` | [AttachmentProperties](#attachmentproperties) | No | `null` | Segment statistics file. |
 | `cumsum` | [AttachmentProperties](#attachmentproperties) | No | `null` | Cumulative sum file. |
 | `connectomes` | Array of [AttachmentProperties](#attachmentproperties) | No | `null` | Connectome files. |
 

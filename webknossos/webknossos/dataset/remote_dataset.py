@@ -50,7 +50,13 @@ from webknossos.dataset_properties import (
     SegmentationLayerProperties,
     VoxelSize,
 )
-from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Int, Vec3IntLike
+from webknossos.geometry import (
+    BoundingBox,
+    NDBoundingBox,
+    Vec3FloatLike,
+    Vec3Int,
+    Vec3IntLike,
+)
 from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import enrich_path, infer_metadata_type, warn_deprecated
 
@@ -328,12 +334,18 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
     @property
     def _metadata_is_read_only(self) -> bool:
-        """Whether the dataset's default access mode allows metadata writes.
+        """Whether the dataset's properties can be written back to the server.
 
-        Only `DIRECT_PATH` can write metadata back to the server; `ZARR_STREAMING` and
-        `PROXY_PATH` both serve a read-only, re-derived view of the data.
+        Writing metadata means PUTting `self._properties` (the api data source) back to
+        the server via `client.dataset_update`. That is only meaningful when
+        `self._properties` actually stems from the api data source, i.e. when
+        `_properties_are_direct` is True. This is independent of the access mode used
+        to read image data: `ZARR_STREAMING` and `PROXY_PATH` both load their properties
+        from the api data source too, whenever one is available, so they can write
+        metadata just as `DIRECT_PATH` can. Only an annotation's volume layers or an
+        unusable data source have no api-sourced properties to write back.
         """
-        return self._access_mode != RemoteAccessMode.DIRECT_PATH
+        return not self._properties_are_direct
 
     @property
     def zarr_streaming_path(self) -> UPath | None:
@@ -505,8 +517,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         Exports the current dataset properties to the server.
         Note that some edits will not be accepted by the server.
         The client-side RemoteDataset is reinitialized to the new server state.
-        Only works when the dataset's default access mode is DIRECT_PATH, as the served
-        datasource-properties.json of the other access modes is not writable.
+        Only works when the dataset's properties stem from the api data source, i.e. not
+        for an annotation's volume layers or a dataset with an unusable data source.
         """
         from ..client.context import _get_api_client
 
@@ -514,8 +526,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             # reset the dataset properties to the server state
             self._apply_server_dataset_properties()
             raise RuntimeError(
-                f"{self._access_mode.value} does not support updating this property. "
-                + f"Reopen the dataset with {RemoteAccessMode.DIRECT_PATH} instead."
+                "This dataset's properties do not stem from the api data source "
+                + "(e.g. because this is an annotation's volume layer, or the dataset "
+                + "has an unusable data source), so updating this property is not "
+                + "supported."
             )
 
         layer_renamings = []
@@ -1094,6 +1108,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 bounding_box=foreign_layer.bounding_box,
             )
 
+        layer._copy_metadata_from(foreign_layer)
+
         for mag_view in foreign_layer.mags.values():
             layer.add_mag_as_copy(
                 mag_view,
@@ -1639,7 +1655,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def from_images(
         cls,
         input_path: str | PathLike | UPath,
-        voxel_size: tuple[float, float, float] | None = None,
+        voxel_size: Vec3FloatLike | None = None,
         name: str | None = None,
         *,
         map_filepath_to_layer_name: Any = None,

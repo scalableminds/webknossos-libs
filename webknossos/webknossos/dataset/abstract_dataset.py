@@ -27,7 +27,7 @@ from webknossos.dataset_properties import (
 from webknossos.dataset_properties.dtype_conversion import (
     properties_floating_type_to_python_type,
 )
-from webknossos.geometry import BoundingBox, NDBoundingBox
+from webknossos.geometry import BoundingBox, NDBoundingBox, Vec3Float
 from webknossos.utils import warn_deprecated
 
 from .defaults import DEFAULT_DATA_FORMAT, PROPERTIES_FILE_NAME
@@ -205,11 +205,11 @@ class AbstractDataset(Generic[LayerType, SegmentationLayerType]):
         return self._layers
 
     @property
-    def voxel_size(self) -> tuple[float, float, float]:
+    def voxel_size(self) -> Vec3Float:
         """Size of each voxel in nanometers along each dimension (x, y, z).
 
         Returns:
-            tuple[float, float, float]: Size of each voxel in nanometers for x,y,z dimensions
+            Vec3Float: Size of each voxel in nanometers for x,y,z dimensions
 
         Examples:
             ```

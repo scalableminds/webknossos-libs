@@ -16,6 +16,7 @@ from .segmentation_layer import (
     RemoteSegmentationLayer,
     SegmentationLayer,
     SegmentIndexAttachment,
+    SegmentStatisticsAttachment,
 )
 from .view import (
     ArrayException,

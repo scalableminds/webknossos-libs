@@ -1,3 +1,4 @@
+import copy
 import logging
 import re
 from abc import abstractmethod
@@ -9,6 +10,7 @@ from upath import UPath
 
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
+    CoordinateTransformation,
     DataFormat,
     LayerCategoryType,
     LayerProperties,
@@ -120,6 +122,29 @@ class AbstractLayer:
         self, renamings: "Sequence[LayerRenaming | AttachmentRenaming] | None" = None
     ) -> None:
         self.dataset._save_dataset_properties(renamings=renamings)
+
+    def _copy_metadata_from(self, other: "AbstractLayer") -> None:
+        """Copies the optional metadata of `other` onto this layer.
+
+        This covers the metadata that is not already derived from the layer's data
+        (such as the bounding box, the dtype or the mags), so that a copied layer is
+        displayed in WEBKNOSSOS just like the layer it was copied from.
+
+        Metadata that `other` does not have is left as it is, so that copying onto an
+        existing layer does not wipe the metadata of that layer.
+        """
+        self._ensure_metadata_writable()
+        if other.default_view_configuration is not None:
+            # The view configuration is mutable and has to be copied, the
+            # transformations are immutable and only need a list of their own
+            self._properties.default_view_configuration = copy.deepcopy(
+                other.default_view_configuration
+            )
+        if other.coordinate_transformations:
+            self._properties.coordinate_transformations = list(
+                other.coordinate_transformations
+            )
+        self._save_layer_properties()
 
     def _setup_mag(self, mag: Mag, mag_path: UPath, read_only: bool) -> None:
         """Initialize a magnification level when opening the Dataset.
@@ -273,6 +298,31 @@ class AbstractLayer:
     ) -> None:
         self._ensure_metadata_writable()
         self._properties.default_view_configuration = view_configuration
+        self._save_layer_properties()
+
+    @property
+    def coordinate_transformations(self) -> tuple[CoordinateTransformation, ...]:
+        """Gets the coordinate transformations that place this layer into the
+        coordinate space of its dataset.
+
+        The transformations are applied in order. They only affect how WEBKNOSSOS
+        renders the layer, the voxel data itself is not modified.
+
+        Returns:
+            tuple[CoordinateTransformation, ...]: The transformations, empty if there
+                are none.
+        """
+
+        return tuple(self._properties.coordinate_transformations or ())
+
+    @coordinate_transformations.setter
+    def coordinate_transformations(
+        self, coordinate_transformations: Sequence[CoordinateTransformation] | None
+    ) -> None:
+        self._ensure_metadata_writable()
+        self._properties.coordinate_transformations = (
+            list(coordinate_transformations) if coordinate_transformations else None
+        )
         self._save_layer_properties()
 
     @property

@@ -41,3 +41,5 @@ print(mag.data_format)  # what this mag actually serves
 ```
 
 Only the direct path is stored in the dataset properties; the other paths in `mag.paths` are computed from the datastore URL.
+
+Metadata (layer bounding boxes, view configurations, mags, attachments, ...) can be written back to the server under any access mode, as long as the dataset's properties stem from the WEBKNOSSOS api — which is the case unless the dataset is viewed through an annotation, or its data source is unusable. Reading and writing metadata is independent of which access mode is used to read the image data itself.

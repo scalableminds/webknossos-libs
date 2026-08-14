@@ -24,6 +24,7 @@ from .layer import (
     RemoteSegmentationLayer,
     SegmentationLayer,
     SegmentIndexAttachment,
+    SegmentStatisticsAttachment,
     View,
 )
 from .remote_access_mode import RemoteAccessMode
