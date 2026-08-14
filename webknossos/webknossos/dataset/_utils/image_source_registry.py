@@ -118,12 +118,39 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     )
 
 
+def _chunked_reader_for_directory(path: UPath) -> type[ChunkedImageSource] | None:
+    """The registered chunked reader that claims `path` as a directory-based
+    store, by suffix first and then by content (`probe_directory`). None if
+    no reader claims it — e.g. an ordinary directory of images."""
+    suffix = path.suffix.lstrip(".").lower()
+    for cls in _CHUNKED_READER_CLASSES:
+        if suffix in cls.class_exts():
+            return cls
+    for cls in _CHUNKED_READER_CLASSES:
+        if cls.probe_directory(path):
+            return cls
+    return None
+
+
+def is_chunked_source_directory(path: UPath) -> bool:
+    """Whether `path` is a directory that some registered chunked reader would
+    open as a single store (a Zarr/N5/neuroglancer-precomputed root), rather
+    than a directory to walk into for individual image files. Used by the
+    directory walk in image_conversion.py so it treats such a directory as one
+    leaf item, the same way it already treats a single `.ims`/`.mrc` file."""
+    return path.is_dir() and _chunked_reader_for_directory(path) is not None
+
+
 def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> ImageSource:
     """Opens `images` as an `ImageSource`, choosing the reader kind itself.
 
-    A single file whose suffix a chunked reader claims is read that way;
-    everything else slice by slice, including every list of paths, since
-    chunked formats are inherently single-file.
+    A single file whose suffix a chunked reader claims is read that way. A
+    directory is also read that way if some chunked reader recognizes it by
+    suffix or by content (`probe_directory`) — e.g. a Zarr/N5 store, whether
+    or not it is named `*.zarr`/`*.n5`, or a neuroglancer precomputed volume,
+    which has no suffix convention at all. Everything else is read slice by
+    slice, including every list of paths, since chunked formats are inherently
+    single-file (or single-directory).
     """
     # Deferred to avoid a cycle: SlicedImageSource consults this registry.
     from .sliced_image_source import SlicedImageSource
@@ -135,6 +162,10 @@ def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> Imag
                 # Remote UPaths deliberately do reach the reader, which raises
                 # its own "must be a local file path" error via is_remote_path.
                 return cls(images, options)
+        if images.is_dir():
+            dir_cls = _chunked_reader_for_directory(images)
+            if dir_cls is not None:
+                return dir_cls(images, options)
     return SlicedImageSource(images, options)
 
 
@@ -206,11 +237,16 @@ def _import_readers() -> str | None:
     which could not be imported. Returns a description of those, or None."""
     import_exceptions = []
 
-    # No optional dependency beyond imageio, which is a hard requirement — but
-    # imported here so that every reader registers in one place.
+    # No optional dependency beyond imageio/tensorstore, which are hard
+    # requirements — but imported here so that every reader registers in one
+    # place. tensorstore already reads zarr/zarr3/n5/neuroglancer_precomputed
+    # for webknossos's own dataset storage, so these need no extra.
     from . import (
         dm_slices,  # noqa: F401 unused-import
+        n5_image_source,  # noqa: F401 unused-import
+        neuroglancer_precomputed_image_source,  # noqa: F401 unused-import
         raster_slices,  # noqa: F401 unused-import
+        zarr_image_source,  # noqa: F401 unused-import
     )
 
     for reader in _OPTIONAL_READERS:

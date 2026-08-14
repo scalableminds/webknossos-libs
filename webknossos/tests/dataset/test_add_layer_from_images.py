@@ -27,6 +27,11 @@ from tests.utils import (
     HAS_PYLIBCZIRW,
     create_synthetic_czi,
     create_synthetic_multi_timepoint_ims,
+    create_synthetic_n5_dataset,
+    create_synthetic_n5_pyramid,
+    create_synthetic_neuroglancer_precomputed,
+    create_synthetic_ome_zarr_multiscale,
+    create_synthetic_zarr3_array,
     download_ims_fixture,
     requires_pylibczirw,
 )
@@ -768,6 +773,110 @@ def test_czi_from_images_selects_a_single_czi_channel(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(
         layer.get_finest_mag().read()[0], data[0, 2].transpose(2, 1, 0)
     )
+
+
+def test_zarr_from_images(tmp_upath: UPath) -> None:
+    Z, Y, X = 4, 16, 20
+    data = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    zarr_path = tmp_upath / "input.zarr"
+    create_synthetic_zarr3_array(zarr_path, data, dimension_names=["z", "y", "x"])
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            zarr_path, layer_name="zarr_layer", executor=executor
+        )
+
+    assert layer.dtype == np.dtype("uint8")
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
+
+    # WEBKNOSSOS's own downsampling builds the rest of the mag pyramid.
+    layer.downsample(executor=executor)
+    assert len(layer.mags) > 1
+
+
+def test_ome_zarr_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
+    finest = np.arange(2 * 16 * 16, dtype="uint8").reshape(2, 16, 16)
+    coarse = finest[:, ::2, ::2]
+    ome_zarr_path = tmp_upath / "multiscale.zarr"
+    # Coarse level listed first, to make sure the resolution and not the list
+    # position decides.
+    create_synthetic_ome_zarr_multiscale(
+        ome_zarr_path,
+        [coarse, finest],
+        zarr_version=3,
+        scales=[[1.0, 2.0, 2.0], [1.0, 1.0, 1.0]],
+        dataset_paths=["1", "0"],
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ome_zarr_path, layer_name="ome_zarr_layer", executor=executor
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (16, 16, 2)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
+
+
+def test_n5_from_images(tmp_upath: UPath) -> None:
+    Z, Y, X = 3, 10, 12
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    n5_path = tmp_upath / "input.n5"
+    create_synthetic_n5_dataset(n5_path, data)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            n5_path, layer_name="n5_layer", executor=executor
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
+
+
+def test_n5_pyramid_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
+    finest = np.arange(2 * 16 * 16, dtype="uint16").reshape(2, 16, 16)
+    coarse = finest[:, ::2, ::2]
+    pyramid_path = tmp_upath / "pyramid.n5"
+    create_synthetic_n5_pyramid(pyramid_path, [finest, coarse])
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            pyramid_path, layer_name="n5_pyramid_layer", executor=executor
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (16, 16, 2)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
+
+
+def test_neuroglancer_precomputed_from_images_picks_finest_resolution(
+    tmp_upath: UPath,
+) -> None:
+    x, y, z, c = 16, 16, 2, 1
+    finest = np.arange(x * y * z * c, dtype="uint8").reshape(x, y, z, c)
+    coarse = finest[::2, ::2]
+    volume_path = tmp_upath / "precomputed"
+    create_synthetic_neuroglancer_precomputed(
+        volume_path,
+        [([4, 4, 4], coarse), ([2, 2, 2], finest)],  # coarse listed first
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            volume_path, layer_name="ngprecomputed_layer", executor=executor
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (x, y, z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, finest[..., 0])
 
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:

@@ -1,14 +1,21 @@
 import importlib.util
+import json
 import uuid
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
+from typing import Any
 
 import h5py
 import httpx
 import numpy as np
 import pytest
+import tensorstore as ts
 from numpy.typing import DTypeLike
 from upath import UPath
+
+from webknossos.dataset._utils.tensorstore_helpers import _make_kvstore
+
+_TS_CONTEXT = ts.Context()
 
 # pylibCZIrw ships no wheel past cp313, so the czi extra is uninstalled on
 # newer Pythons; tests that need it skip instead of failing.
@@ -115,3 +122,201 @@ def create_synthetic_czi(
                         plane={"T": t, "C": c, "Z": k},
                     )
     return data
+
+
+def create_synthetic_zarr3_array(
+    path: UPath, data: np.ndarray, *, dimension_names: Sequence[str] | None = None
+) -> None:
+    """Writes `data` as a real Zarr v3 array via tensorstore, one chunk. Set
+    `dimension_names` to give it labeled axes (Zarr v3's `dimension_names`);
+    omitted, the array carries no axis names, exercising positional guessing."""
+    metadata: dict[str, Any] = {
+        "data_type": str(data.dtype),
+        "shape": list(data.shape),
+        "chunk_grid": {
+            "name": "regular",
+            "configuration": {"chunk_shape": list(data.shape)},
+        },
+        "chunk_key_encoding": {"name": "default", "configuration": {"separator": "/"}},
+        "fill_value": 0,
+    }
+    if dimension_names is not None:
+        metadata["dimension_names"] = list(dimension_names)
+    arr = ts.open(
+        {
+            "driver": "zarr3",
+            "kvstore": _make_kvstore(path),
+            "metadata": metadata,
+        },
+        create=True,
+        context=_TS_CONTEXT,
+    ).result()
+    arr[:].write(data).result()
+
+
+def create_synthetic_zarr2_array(path: UPath, data: np.ndarray) -> None:
+    """Writes `data` as a real Zarr v2 array via tensorstore, one chunk. Zarr
+    v2 has no `dimension_names` equivalent, so a bare array like this always
+    exercises positional axis guessing."""
+    arr = ts.open(
+        {
+            "driver": "zarr",
+            "kvstore": _make_kvstore(path),
+            "metadata": {
+                "shape": list(data.shape),
+                "chunks": list(data.shape),
+                "dtype": data.dtype.str,
+                "fill_value": 0,
+                "order": "C",
+                "compressor": None,
+                "filters": None,
+                "dimension_separator": "/",
+            },
+        },
+        create=True,
+        context=_TS_CONTEXT,
+    ).result()
+    arr[:].write(data).result()
+
+
+def create_synthetic_ome_zarr_multiscale(
+    path: UPath,
+    levels: Sequence[np.ndarray],
+    *,
+    zarr_version: int,
+    axes_names: Sequence[str] = ("z", "y", "x"),
+    scales: Sequence[Sequence[float]] | None = None,
+    dataset_paths: Sequence[str] | None = None,
+) -> None:
+    """Writes an OME-NGFF multiscale group with one array per level —
+    NGFF 0.5 on Zarr v3 (`zarr_version=3`) or NGFF 0.4 on Zarr v2
+    (`zarr_version=2`). `levels[0]` is the finest resolution; `scales`
+    defaults to `2**index` per spatial axis, so passing `levels` out of
+    finest-first order (with `dataset_paths` to match) still lets a test
+    verify the reader picks the finest one by scale, not by list position.
+    """
+    if scales is None:
+        scales = [[2.0**i] * len(axes_names) for i in range(len(levels))]
+    if dataset_paths is None:
+        dataset_paths = [str(i) for i in range(len(levels))]
+
+    axes = [{"name": name, "type": "space"} for name in axes_names]
+    datasets = [
+        {
+            "path": dataset_path,
+            "coordinateTransformations": [{"type": "scale", "scale": list(scale)}],
+        }
+        for dataset_path, scale in zip(dataset_paths, scales, strict=True)
+    ]
+
+    if zarr_version == 3:
+        for dataset_path, level in zip(dataset_paths, levels, strict=True):
+            create_synthetic_zarr3_array(path / dataset_path, level)
+        (path / "zarr.json").write_text(
+            json.dumps(
+                {
+                    "zarr_format": 3,
+                    "node_type": "group",
+                    "attributes": {
+                        "ome": {
+                            "version": "0.5",
+                            "multiscales": [{"axes": axes, "datasets": datasets}],
+                        }
+                    },
+                }
+            )
+        )
+    elif zarr_version == 2:
+        for dataset_path, level in zip(dataset_paths, levels, strict=True):
+            create_synthetic_zarr2_array(path / dataset_path, level)
+        (path / ".zgroup").write_text(json.dumps({"zarr_format": 2}))
+        (path / ".zattrs").write_text(
+            json.dumps(
+                {
+                    "multiscales": [
+                        {"version": "0.4", "axes": axes, "datasets": datasets}
+                    ]
+                }
+            )
+        )
+    else:
+        raise ValueError(f"Unsupported zarr_version {zarr_version}, expected 2 or 3.")
+
+
+def create_synthetic_n5_dataset(path: UPath, data: np.ndarray) -> None:
+    """Writes `data` as a real N5 dataset via tensorstore, one block. N5's
+    attributes.json carries no axis names, so this always exercises
+    positional axis guessing."""
+    arr = ts.open(
+        {
+            "driver": "n5",
+            "kvstore": _make_kvstore(path),
+            "metadata": {
+                "dimensions": list(data.shape),
+                "blockSize": list(data.shape),
+                "dataType": str(data.dtype),
+                "compression": {"type": "raw"},
+            },
+        },
+        create=True,
+        context=_TS_CONTEXT,
+    ).result()
+    arr[:].write(data).result()
+
+
+def create_synthetic_n5_pyramid(
+    path: UPath,
+    levels: Sequence[np.ndarray],
+    *,
+    level_names: Sequence[str] | None = None,
+    downsampling_factors: Sequence[Sequence[int]] | None = None,
+) -> None:
+    """Writes an N5 multiscale pyramid group: one dataset per level, named
+    `s0`/`s1`/... by default (`levels[0]` = finest = `s0`), each carrying its
+    own `downsamplingFactors` attribute (`2**index` per axis by default)."""
+    if level_names is None:
+        level_names = [f"s{i}" for i in range(len(levels))]
+    if downsampling_factors is None:
+        downsampling_factors = [[2**i] * levels[0].ndim for i in range(len(levels))]
+    for name, level, factors in zip(
+        level_names, levels, downsampling_factors, strict=True
+    ):
+        level_path = path / name
+        create_synthetic_n5_dataset(level_path, level)
+        attrs_path = level_path / "attributes.json"
+        attrs = json.loads(attrs_path.read_bytes())
+        attrs["downsamplingFactors"] = list(factors)
+        attrs_path.write_text(json.dumps(attrs))
+
+
+def create_synthetic_neuroglancer_precomputed(
+    path: UPath, scales: Sequence[tuple[Sequence[int], np.ndarray]]
+) -> None:
+    """Writes a real Neuroglancer precomputed volume via tensorstore, one
+    chunk per scale. `scales` is a sequence of (resolution_xyz, data), where
+    `data` has axis order (x, y, z, channel) — the format's own native order.
+    Keys are derived from the resolution (`f"{x}_{y}_{z}"`), like real
+    precomputed volumes; pass scales out of finest-first order to verify the
+    reader picks the finest one by resolution, not by list position."""
+    for resolution, data in scales:
+        x, y, z, num_channels = data.shape
+        key = "_".join(str(r) for r in resolution)
+        spec = {
+            "driver": "neuroglancer_precomputed",
+            "kvstore": _make_kvstore(path),
+            "multiscale_metadata": {
+                "data_type": str(data.dtype),
+                "num_channels": num_channels,
+                "type": "image",
+            },
+            "scale_metadata": {
+                "key": key,
+                "resolution": list(resolution),
+                "size": [x, y, z],
+                "voxel_offset": [0, 0, 0],
+                "chunk_size": [x, y, z],
+                "encoding": "raw",
+            },
+        }
+        arr = ts.open(spec, create=True, context=_TS_CONTEXT).result()
+        arr[:].write(data).result()

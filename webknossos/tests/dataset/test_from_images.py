@@ -17,6 +17,7 @@ from upath import UPath
 from tests.constants import TESTDATA_DIR
 from tests.utils import (
     create_synthetic_multi_timepoint_ims,
+    create_synthetic_zarr3_array,
     download_ims_fixture,
 )
 from webknossos.dataset import (
@@ -402,6 +403,44 @@ def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
             )
 
             assert all("/" not in layername for layername in dataset.layers)
+
+
+def test_from_images_treats_zarr_stores_as_atomic_directories(
+    tmp_upath: UPath,
+) -> None:
+    # A folder containing two zarr stores -- one named *.zarr, one bare --
+    # plus an ordinary tiff must become three layers, without walking into
+    # either store's internal chunk files.
+    data_a = np.zeros((2, 5, 6), dtype=np.uint8)
+    data_b = np.ones((2, 5, 6), dtype=np.uint8) * 7
+    input_dir = tmp_upath / "input"
+    create_synthetic_zarr3_array(
+        input_dir / "layer_a.zarr", data_a, dimension_names=["z", "y", "x"]
+    )
+    create_synthetic_zarr3_array(
+        input_dir / "layer_b", data_b, dimension_names=["z", "y", "x"]
+    )
+    imwrite(str(input_dir / "layer_c.tiff"), np.zeros((5, 6), dtype=np.uint8))
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            input_dir,
+            tmp_upath / "ds",
+            voxel_size=(1, 1, 1),
+            # Mixing a 2D image with 3D stores at the same folder level is
+            # ambiguous for the default INSPECT_SINGLE_FILE strategy (it
+            # decides 2D-vs-3D handling for the whole folder from a single
+            # representative file) -- orthogonal to what this test checks, so
+            # sidestepped with an explicit one-layer-per-item strategy.
+            map_filepath_to_layer_name=Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_FILE,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"layer_a.zarr", "layer_b", "layer_c.tiff"}
+    np.testing.assert_array_equal(
+        ds.layers["layer_b"].get_finest_mag().read()[0],
+        data_b.transpose(2, 1, 0),
+    )
 
 
 def test_remote_dataset_from_images() -> None:

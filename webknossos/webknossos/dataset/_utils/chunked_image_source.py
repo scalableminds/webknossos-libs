@@ -51,6 +51,15 @@ class ChunkedImageSource(ImageSource):
     def class_exts(cls) -> set[str]:
         """File extensions (without the dot, lowercase) this class can read."""
 
+    @classmethod
+    def probe_directory(cls, _path: UPath) -> bool:
+        """Whether this class can open `_path` as a directory-based store, by
+        its contents rather than its suffix. Only consulted when `_path` is a
+        directory and no registered suffix claims it — e.g. a bare Zarr/N5
+        store with no `.zarr`/`.n5` name, or neuroglancer precomputed, which
+        has no suffix convention at all. Default: no directory sniffing."""
+        return False
+
     @property
     def channel(self) -> int | None:
         """The selected channel, or None if all channels are used."""

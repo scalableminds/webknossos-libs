@@ -60,6 +60,7 @@ from .image_source_registry import (
     describe_missing_extras,
     get_unavailable_suffixes,
     get_valid_suffixes,
+    is_chunked_source_directory,
     open_image_source,
 )
 from .raster_slices import SingleImageSlices
@@ -195,6 +196,29 @@ class ConversionLayerMapping(Enum):
             raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
 
 
+def _iter_convertible_paths(root: UPath) -> Iterator[UPath]:
+    """Walks `root`, yielding every convertible item as a path relative to it:
+    an ordinary file whose suffix a reader claims, or a whole directory that
+    some chunked reader recognizes as a single store (a Zarr/N5/neuroglancer
+    precomputed root) — yielded as one leaf item, the same way a single
+    `.ims`/`.mrc` file is, rather than walked into. Plain `glob("**/*")` would
+    otherwise recurse into such a directory and pick up its internal chunk
+    files as if they were individual images.
+    """
+    valid_suffixes = get_valid_suffixes()
+    directories = [root]
+    while directories:
+        current = directories.pop()
+        for child in current.iterdir():
+            if child.is_dir():
+                if is_chunked_source_directory(child):
+                    yield child.relative_to(root)
+                else:
+                    directories.append(child)
+            elif child.suffix.lstrip(".").lower() in valid_suffixes:
+                yield child.relative_to(root)
+
+
 def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
     """
     Looks for files whose format a chunk-based reader would handle if its
@@ -307,12 +331,14 @@ def from_images(
             # No reader handles this file. Leaving input_files unassigned here
             # used to raise an UnboundLocalError instead of the error below.
             input_files = []
+    elif is_chunked_source_directory(input_upath):
+        # input_path itself is a single Zarr/N5/neuroglancer precomputed
+        # store, not a folder to walk — same idea as the single-file case
+        # above, one directory "file" instead of one file.
+        input_files = [UPath(input_upath.name)]
+        input_upath = input_upath.parent
     else:
-        input_files = [
-            i.relative_to(input_upath)
-            for i in input_upath.glob("**/*")
-            if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
-        ]
+        input_files = list(_iter_convertible_paths(input_upath))
 
     if len(input_files) == 0:
         message = (
