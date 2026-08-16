@@ -27,7 +27,7 @@ REMOTE_TESTOUTPUT_DIR = UPath(
 
 @contextmanager
 def use_moto() -> Iterator[None]:
-    """Moto mocks S3. It is used as local test server, which runs as a 
+    """Moto mocks S3. It is used as local test server, which runs as a
     background thread in the same process.
 
     Serves moto's WSGI app via waitress instead of moto's own
