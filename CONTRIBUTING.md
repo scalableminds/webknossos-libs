@@ -134,7 +134,6 @@ Internal workflows for scalable minds:
 The `webknossos` folder contains examples, which are not part of the package, but added to the documentation (see `docs/src/webknossos-py/examples`).
 
 The tests use [`moto`](https://github.com/getmoto/moto) (in its `ThreadedMotoServer` mode) to mock S3-compatible storage.
-It's a regular Python dev dependency, so `uv sync --all-extras` is all that's needed — no separate install step, and it works the same way on Linux, macOS, and Windows.
 
 The tests also contain functionality for the WEBKNOSSOS client.
 This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS.

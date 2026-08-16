@@ -27,11 +27,8 @@ REMOTE_TESTOUTPUT_DIR = UPath(
 
 @contextmanager
 def use_moto() -> Iterator[None]:
-    """Moto mocks S3 in-process and is used as local test server.
-
-    Unlike minio/rustfs, this runs as a background thread in the same
-    process instead of a separate binary/container, so it needs no
-    per-OS install and works the same way on Linux, macOS, and Windows.
+    """Moto mocks S3. It is used as local test server, which runs as a 
+    background thread in the same process.
 
     Serves moto's WSGI app via waitress instead of moto's own
     ThreadedMotoServer (which uses werkzeug's single-threaded dev server):
