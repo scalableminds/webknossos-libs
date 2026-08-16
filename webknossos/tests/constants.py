@@ -1,7 +1,12 @@
+import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from moto.server import ThreadedMotoServer
+import waitress
+from moto.moto_server.werkzeug_app import (
+    DomainDispatcherApplication,
+    create_backend_app,
+)
 from upath import UPath
 
 TESTDATA_DIR = UPath(__file__).parent.parent / "testdata"
@@ -27,11 +32,30 @@ def use_moto() -> Iterator[None]:
     Unlike minio/rustfs, this runs as a background thread in the same
     process instead of a separate binary/container, so it needs no
     per-OS install and works the same way on Linux, macOS, and Windows.
+
+    Serves moto's WSGI app via waitress instead of moto's own
+    ThreadedMotoServer (which uses werkzeug's single-threaded dev server):
+    waitress is a production-grade, cross-platform WSGI server and is
+    noticeably faster on Windows under the many small S3 requests this
+    test suite makes.
     """
-    server = ThreadedMotoServer(port=S3_PORT)
-    server.start()
+    app = DomainDispatcherApplication(create_backend_app)
+    server = waitress.create_server(app, host="127.0.0.1", port=S3_PORT, threads=8)
+
+    def run_server() -> None:
+        try:
+            server.run()
+        except OSError:
+            # Expected: closing the socket from the main thread interrupts
+            # the accept loop's select() call with a benign "bad file
+            # descriptor" error.
+            pass
+
+    thread = threading.Thread(target=run_server, daemon=True)
+    thread.start()
     try:
         REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
         yield
     finally:
-        server.stop()
+        server.close()
+        thread.join(timeout=5)

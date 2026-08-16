@@ -3927,6 +3927,15 @@ wheels = [
 ]
 
 [[package]]
+name = "waitress"
+version = "3.0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bf/cb/04ddb054f45faa306a230769e868c28b8065ea196891f09004ebace5b184/waitress-3.0.2.tar.gz", hash = "sha256:682aaaf2af0c44ada4abfb70ded36393f0e307f4ab9456a215ce0020baefc31f", size = 179901, upload-time = "2024-11-16T20:02:35.195Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8d/57/a27182528c90ef38d82b636a11f606b0cbb0e17588ed205435f8affe3368/waitress-3.0.2-py3-none-any.whl", hash = "sha256:c56d67fd6e87c2ee598b76abdd4e96cfad1f24cacdea5078d382b1f9d7b5ed2e", size = 56232, upload-time = "2024-11-16T20:02:33.858Z" },
+]
+
+[[package]]
 name = "webknossos"
 version = "0.0.0"
 source = { editable = "." }
@@ -4033,6 +4042,7 @@ dev = [
     { name = "pytest-timestamper" },
     { name = "ruff" },
     { name = "types-python-dateutil" },
+    { name = "waitress" },
 ]
 
 [package.metadata]
@@ -4109,6 +4119,7 @@ dev = [
     { name = "pytest-timestamper", specifier = "~=0.0.10" },
     { name = "ruff", specifier = "~=0.15.0" },
     { name = "types-python-dateutil", specifier = "~=2.9" },
+    { name = "waitress", specifier = "~=3.0.2" },
 ]
 
 [[package]]
