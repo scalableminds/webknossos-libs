@@ -277,8 +277,8 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, expected)
 
 
-# The fixture is 673x635x51, so (256, 256, 32) spans several shards in every
-# axis while (1024, 1024, 64) fits in one. Each flip mirrors the whole source
+# The fixture is 673x635x51, so with shard shape (256, 256, 32) it spans several shards in every
+# axis while with (1024, 1024, 64) it fits in one. Each flip mirrors the whole source
 # extent, which only differs from mirroring within each chunk once the image
 # spans more than one shard.
 @pytest.mark.parametrize("shard_shape", [(1024, 1024, 64), (256, 256, 32)])
