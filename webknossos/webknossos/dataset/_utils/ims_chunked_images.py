@@ -42,8 +42,7 @@ class ImsChunkedImages(ChunkedImages):
     """
     ChunkedImages implementation for Imaris .ims files. Reads shard-sized 3D
     blocks directly from the underlying HDF5 file via h5py and writes them
-    to mag_view directly — no slice-by-slice pims reading, no BufferedSliceWriter.
-    This is the only supported way .ims files are read for conversion.
+    to mag_view directly.
     """
 
     @classmethod
