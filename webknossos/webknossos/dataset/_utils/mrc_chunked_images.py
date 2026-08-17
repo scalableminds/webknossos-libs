@@ -16,10 +16,8 @@ except ImportError as e:
 class MrcChunkedImages(ChunkedImages):
     """
     ChunkedImages implementation for MRC files. MRC data is stored as a
-    single contiguous array (no internal chunking, unlike HDF5-based
-    formats), so shard-sized blocks are read directly via mrcfile's
-    memory-mapped array and written to mag_view directly — no
-    slice-by-slice pims reading, no BufferedSliceWriter.
+    single contiguous array, so shard-sized blocks are read directly via mrcfile's
+    memory-mapped array and written to mag_view directly.
 
     MRC files have neither channels nor timepoints, so num_channels is
     always 1 and get_possible_layers() always returns None.
