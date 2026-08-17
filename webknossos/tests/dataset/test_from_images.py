@@ -19,8 +19,8 @@ from tests.data_fixtures import (
     download_wklibs_sample_archive,
 )
 from webknossos.dataset import Dataset, RemoteDataset
-from webknossos.dataset._utils.mrc_chunked_images import MrcChunkedImages
-from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
+from webknossos.dataset._image_conversion.mrc_chunked_images import MrcChunkedImages
+from webknossos.dataset._image_conversion.pims_tiff_reader import PimsTiffReader
 from webknossos.geometry import BoundingBox, Vec3Int, VecInt
 
 
@@ -265,7 +265,7 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
     ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._utils.ims_chunked_images"
+        "webknossos.dataset._image_conversion.ims_chunked_images"
     )
     monkeypatch.setattr(
         ims_chunked_images,
@@ -413,7 +413,7 @@ def test_optional_reader_suffixes_match_supported_file_extensions() -> None:
     # report its own supported_file_extensions(). Whenever a reader *is*
     # importable, the two must agree — otherwise the missing-dependency hint
     # names the wrong formats, or silently stops covering one.
-    from webknossos.dataset._utils.chunked_images import (
+    from webknossos.dataset._image_conversion.chunked_images import (
         _CHUNKED_IMAGE_CLASSES,
         _OPTIONAL_CHUNKED_IMAGE_READERS,
     )
@@ -438,7 +438,7 @@ def test_from_images_names_missing_optional_dependency(
     # sides: its suffix drops out of the supported set and shows up as
     # unavailable, exactly as it would with the reader unimportable.
     image_conversion = importlib.import_module(
-        "webknossos.dataset._utils.image_conversion"
+        "webknossos.dataset._image_conversion.image_conversion"
     )
     available = image_conversion.get_valid_chunked_image_suffixes()
     monkeypatch.setattr(

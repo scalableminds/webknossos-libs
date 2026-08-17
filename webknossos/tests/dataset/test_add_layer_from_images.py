@@ -340,7 +340,7 @@ def test_ims_from_images_multi_timepoint(
         ims_path, num_timepoints=3, num_channels=1, z=4, y=8, x=10
     )
     ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._utils.ims_chunked_images"
+        "webknossos.dataset._image_conversion.ims_chunked_images"
     )
     monkeypatch.setattr(
         ims_chunked_images,
@@ -378,7 +378,7 @@ def test_ims_from_images_multi_timepoint_multi_channel_single_layer_keeps_both_a
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
     ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._utils.ims_chunked_images"
+        "webknossos.dataset._image_conversion.ims_chunked_images"
     )
     monkeypatch.setattr(
         ims_chunked_images,
@@ -416,7 +416,7 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
     ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._utils.ims_chunked_images"
+        "webknossos.dataset._image_conversion.ims_chunked_images"
     )
     monkeypatch.setattr(
         ims_chunked_images,
