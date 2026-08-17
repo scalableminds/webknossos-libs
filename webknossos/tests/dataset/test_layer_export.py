@@ -7,6 +7,7 @@ from upath import UPath
 
 from tests.constants import TESTDATA_DIR
 from webknossos import COLOR_CATEGORY, Dataset, Layer
+from webknossos.dataset._utils.tensorstore_helpers import read_zarr3_array
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
 
 
@@ -89,6 +90,38 @@ def test_as_ozx_single_mag(tmp_upath: UPath) -> None:
         names = zip_file.namelist()
         assert "1/zarr.json" not in names
         assert "2-2-1/zarr.json" in names
+
+
+def test_as_ozx_odd_sized_layer_covers_full_coarser_mags(tmp_upath: UPath) -> None:
+    """Regression test: a coarser mag's own array always covers the
+    ceil(mag-factor)-of-the-layer-size extent (see Layer.add_mag), so a
+    layer whose size isn't an exact multiple of a mag's factor must still
+    export that mag's full, real data - not silently truncate the last
+    row/column/slice, which floor-aligning the exported region used to do.
+    """
+    dataset = Dataset(tmp_upath / "test_odd_sized", voxel_size=(10, 10, 10))
+    layer = dataset.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), (65, 65, 65)),
+    )
+    data = (np.random.rand(65, 65, 65) * 255).astype(np.uint8)
+    layer.add_mag(1).write(data=data)
+    layer.downsample()  # produces mag 2 (33**3) and mag 4 (17**3)
+
+    zip_path = tmp_upath / "color_odd.ozx"
+    layer.export.as_ozx(output_path=zip_path)
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        zip_file.extractall(str(tmp_upath / "extracted"))
+
+    for mag_name in ("1", "2", "4"):
+        expected = layer.get_mag(mag_name).read()
+        got = read_zarr3_array(tmp_upath / "extracted" / mag_name)
+        got = got[tuple(slice(0, s) for s in expected.shape)]
+        assert np.array_equal(got, expected), f"mismatch at mag {mag_name}"
 
 
 @pytest.mark.parametrize("mag", [None, Mag("2-2-2")])
