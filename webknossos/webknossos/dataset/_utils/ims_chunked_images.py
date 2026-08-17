@@ -46,7 +46,7 @@ class ImsChunkedImages(ChunkedImages):
     """
 
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         return {"ims"}
 
     def __init__(

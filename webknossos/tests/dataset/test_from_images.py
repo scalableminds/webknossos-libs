@@ -407,12 +407,12 @@ def test_remote_dataset_from_images() -> None:
     )
 
 
-def test_optional_reader_suffixes_match_class_exts() -> None:
+def test_optional_reader_suffixes_match_supported_file_extensions() -> None:
     # _OPTIONAL_CHUNKED_IMAGE_READERS has to restate each reader's suffixes,
     # because a reader whose dependency is missing never imports and so cannot
-    # report its own class_exts(). Whenever a reader *is* importable, the two
-    # must agree — otherwise the missing-dependency hint names the wrong
-    # formats, or silently stops covering one.
+    # report its own supported_file_extensions(). Whenever a reader *is*
+    # importable, the two must agree — otherwise the missing-dependency hint
+    # names the wrong formats, or silently stops covering one.
     from webknossos.dataset._utils.chunked_images import (
         _CHUNKED_IMAGE_CLASSES,
         _OPTIONAL_CHUNKED_IMAGE_READERS,
@@ -422,8 +422,9 @@ def test_optional_reader_suffixes_match_class_exts() -> None:
     # The test env installs all extras, so every reader should be registered.
     assert set(registered) == set(_OPTIONAL_CHUNKED_IMAGE_READERS)
     for name, (_extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
-        assert registered[name].class_exts() == set(suffixes), (
-            f"declared suffixes for {name} are out of sync with its class_exts()"
+        assert registered[name].supported_file_extensions() == set(suffixes), (
+            f"declared suffixes for {name} are out of sync with "
+            "its supported_file_extensions()"
         )
 
 

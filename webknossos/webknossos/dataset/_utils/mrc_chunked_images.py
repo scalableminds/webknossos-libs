@@ -24,7 +24,7 @@ class MrcChunkedImages(ChunkedImages):
     """
 
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         return {"mrc", "rec", "st", "map", "ali"}
 
     def __init__(

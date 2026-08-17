@@ -68,7 +68,7 @@ class ChunkedImages(ABC):
 
     @classmethod
     @abstractmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         """File extensions (without the dot, lowercase) this class can read."""
 
     @property
@@ -271,7 +271,7 @@ def register_chunked_images(cls: type[ChunkedImages]) -> type[ChunkedImages]:
 def get_valid_chunked_image_suffixes() -> set[str]:
     valid_suffixes: set[str] = set()
     for cls in _CHUNKED_IMAGE_CLASSES:
-        valid_suffixes.update(cls.class_exts())
+        valid_suffixes.update(cls.supported_file_extensions())
     return valid_suffixes
 
 
@@ -302,7 +302,7 @@ def try_open_chunked_images(
     path = images
     suffix = path.suffix.lstrip(".").lower()
     for cls in _CHUNKED_IMAGE_CLASSES:
-        if suffix in cls.class_exts():
+        if suffix in cls.supported_file_extensions():
             return cls(
                 path,
                 channel=channel,
@@ -317,9 +317,10 @@ def try_open_chunked_images(
 
 # The suffixes and extra each optional reader is responsible for. A reader
 # whose dependency is missing never imports, so it never registers and cannot
-# report its own class_exts() — these have to be declared out here for the
-# "you are missing an optional dependency" hint to be possible at all.
-# test_optional_reader_suffixes_match_class_exts keeps them in sync.
+# report its own supported_file_extensions() — these have to be declared out
+# here for the "you are missing an optional dependency" hint to be possible
+# at all. test_optional_reader_suffixes_match_supported_file_extensions keeps
+# them in sync.
 _OPTIONAL_CHUNKED_IMAGE_READERS: dict[str, tuple[str, frozenset[str]]] = {
     "ImsChunkedImages": ("ims", frozenset({"ims"})),
     "MrcChunkedImages": ("mrcfile", frozenset({"mrc", "rec", "st", "map", "ali"})),
