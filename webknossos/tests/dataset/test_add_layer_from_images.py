@@ -21,7 +21,6 @@ import webknossos as wk
 from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
-    download_and_unpack,
     download_wklibs_sample_archive,
 )
 
@@ -675,12 +674,22 @@ def test_repo_images(
     _test_repo_images(tmp_upath, path, kwargs, dtype, num_channels, num_layers, size)
 
 
+def _remote_sample(name: str) -> Callable[[], UPath]:
+    """Lazily downloads the named wklibs-samples archive (only when the
+    returned callable is invoked, not at parametrize-collection time)."""
+    return lambda: download_wklibs_sample_archive(name)
+
+
+def _remote_samples(names: list[str]) -> Callable[[], list[UPath]]:
+    return lambda: [download_wklibs_sample_archive(n) for n in names]
+
+
 # All scif images used here are published with CC0 license,
 # see https://scif.io/images.
 TEST_IMAGES_ARGS: list[
     tuple[
-        str | list[str],
-        str | list[str],
+        str,
+        Callable[[], UPath | list[UPath]],
         dict,
         str,
         int,
@@ -688,35 +697,32 @@ TEST_IMAGES_ARGS: list[
     ]
 ] = [
     (
-        "https://static.webknossos.org/data/webknossos-libs/slice_0420.dm4",
         "slice_0420.dm4",
+        _remote_sample("slice_0420.dm4"),
         {"data_format": "zarr3"},  # using zarr to allow z=1 chunking
         "uint16",
         1,
         (8192, 8192, 1),
     ),
     (
-        "https://static.webknossos.org/data/webknossos-libs/slice_0073.dm3",
         "slice_0073.dm3",
+        _remote_sample("slice_0073.dm3"),
         {"data_format": "zarr3"},  # using zarr to allow z=1 chunking
         "uint16",
         1,
         (4096, 4096, 1),
     ),
     (
-        [
-            "https://static.webknossos.org/data/webknossos-libs/slice_0073.dm3",
-            "https://static.webknossos.org/data/webknossos-libs/slice_0074.dm3",
-        ],
-        ["slice_0073.dm3", "slice_0074.dm3"],
+        "slice_0073.dm3...",
+        _remote_samples(["slice_0073.dm3", "slice_0074.dm3"]),
         {"data_format": "zarr3"},  # using zarr to allow smaller chunking
         "uint16",
         1,
         (4096, 4096, 2),
     ),
     (
-        "https://static.webknossos.org/data/wklibs-samples/dnasample1.zip",
         "dnasample1.dm3",
+        _remote_sample("dnasample1.dm3"),
         {"data_format": "zarr3"},  # using zarr to allow z=1 chunking
         "int16",
         1,
@@ -725,40 +731,42 @@ TEST_IMAGES_ARGS: list[
     (
         # published with CC0 license, taken from
         # https://doi.org/10.6084/m9.figshare.c.3727411_D391.v1
-        "https://static.webknossos.org/data/wklibs-samples/embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
         "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
+        _remote_sample(
+            "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi"
+        ),
         {},
         "uint16",
         1,
         (512, 512, 30),
     ),
     (
-        "https://static.webknossos.org/data/wklibs-samples/test-gif.zip",
         "scifio-test.gif",
+        _remote_sample("scifio-test.gif"),
         {},
         "uint8",
         3,
         (500, 500, 1),
     ),
     (
-        "https://static.webknossos.org/data/wklibs-samples/test-jpeg2000.zip",
         "scifio-test.jp2",
+        _remote_sample("scifio-test.jp2"),
         {},
         "uint8",
         3,
         (500, 500, 1),
     ),
     (
-        "https://static.webknossos.org/data/wklibs-samples/test-jpg.zip",
         "scifio-test.jpg",
+        _remote_sample("scifio-test.jpg"),
         {"flip_x": True, "batch_size": 2048},
         "uint8",
         3,
         (500, 500, 1),
     ),
     (
-        "https://static.webknossos.org/data/wklibs-samples/test-png.zip",
         "scifio-test.png",
+        _remote_sample("scifio-test.png"),
         {"flip_y": True},
         "uint8",
         3,
@@ -769,27 +777,18 @@ TEST_IMAGES_ARGS: list[
 
 def _test_test_images(
     tmp_upath: UPath,
-    url: str | list[str],
-    filename: str | list[str],
+    name: str,
+    path: Callable[[], UPath | list[UPath]],
     kwargs: dict,
     dtype: str,
     num_channels: int,
     size: tuple[int, int, int],
 ) -> wk.Dataset:
-    unzip_path = tmp_upath / "unzip"
-    download_and_unpack(url, unzip_path, filename)
-    path: UPath | list[UPath]
-    if isinstance(filename, list):
-        layer_name = filename[0] + "..."
-        path = [unzip_path / i for i in filename]
-    else:
-        layer_name = filename
-        path = unzip_path / filename
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
         l_normal = ds.add_layer_from_images(
-            path,
-            layer_name="normal_" + layer_name,
+            path(),
+            layer_name="normal_" + name,
             compress=True,
             executor=executor,
             **kwargs,
@@ -801,7 +800,7 @@ def _test_test_images(
 
 
 @pytest.mark.parametrize(
-    "url, filename, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
+    "name, path, kwargs, dtype, num_channels, size", TEST_IMAGES_ARGS
 )
 @pytest.mark.skipif(
     "CI" not in os.environ or os.environ["CI"] != "true" or sys.platform != "linux",
@@ -809,14 +808,14 @@ def _test_test_images(
 )
 def test_test_images(
     tmp_upath: UPath,
-    url: str | list[str],
-    filename: str | list[str],
+    name: str,
+    path: Callable[[], UPath | list[UPath]],
     kwargs: dict,
     dtype: str,
     num_channels: int,
     size: tuple[int, int, int],
 ) -> None:
-    _test_test_images(tmp_upath, url, filename, kwargs, dtype, num_channels, size)
+    _test_test_images(tmp_upath, name, path, kwargs, dtype, num_channels, size)
 
 
 if __name__ == "__main__":
@@ -839,7 +838,7 @@ if __name__ == "__main__":
 
     for test_images_args in TEST_IMAGES_ARGS:
         with TemporaryDirectory() as tempdir:
-            name = "".join(filter(str.isalnum, test_images_args[1]))
+            name = "".join(filter(str.isalnum, test_images_args[0]))
             print(*test_images_args)
             print(
                 _test_test_images(UPath(tempdir), *test_images_args)

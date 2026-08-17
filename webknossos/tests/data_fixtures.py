@@ -9,9 +9,8 @@ automatically; delete it by hand if you want to force a re-download."""
 import os
 import stat
 import uuid
-from shutil import copy
 from tempfile import NamedTemporaryFile
-from zipfile import BadZipFile, ZipFile
+from zipfile import ZipFile
 
 import h5py
 import httpx
@@ -27,28 +26,6 @@ WKLIBS_SAMPLES_BASE_URL = "https://static.webknossos.org/data/wklibs-samples"
 
 def _tmp_cache_path(name: str) -> UPath:
     return CACHE_DIR / f".tmp-{name}-{uuid.uuid4().hex}"
-
-
-def download_and_unpack(
-    url: str | list[str], out_path: UPath, filename: str | list[str]
-) -> None:
-    """Downloads one or more URLs into out_path, extracting them if they are
-    zip archives and copying them as-is (under `filename`) otherwise."""
-    if isinstance(url, str):
-        assert isinstance(filename, str)
-        url = [url]
-        filename = [filename]
-    for url_i, filename_i in zip(url, filename):
-        with NamedTemporaryFile() as download_file:
-            with httpx.stream("GET", url_i, follow_redirects=True) as response:
-                for chunk in response.iter_bytes():
-                    download_file.write(chunk)
-            try:
-                with ZipFile(download_file, "r") as zip_file:
-                    zip_file.extractall(str(out_path))
-            except BadZipFile:
-                out_path.mkdir(parents=True, exist_ok=True)
-                copy(download_file.name, str(out_path / filename_i))
 
 
 def _extract_zip_preserving_symlinks(zip_file: ZipFile, dest_dir: str) -> None:
