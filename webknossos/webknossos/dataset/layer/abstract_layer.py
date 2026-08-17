@@ -357,8 +357,7 @@ class AbstractLayer:
         """Export this layer's data to common bioimaging file formats.
 
         Returns:
-            LayerExport: Accessor object with `as_ozx`, `as_tiff_stack` and
-                `as_ome_tiff` export methods.
+            LayerExport
         """
         return self._export
 

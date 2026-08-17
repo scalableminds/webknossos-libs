@@ -284,11 +284,6 @@ class LayerExport:
             )
             for target_mag in target_mags:
                 source_mag_view = layer.get_mag(target_mag)
-                # ceil=True: a coarser mag's own array always covers the
-                # ceil-of-mag-factor extent of the layer's bounding box (see
-                # Layer.add_mag), so floor-aligning here would silently
-                # truncate the last row/column/slice of real, already
-                # downsampled data at that mag.
                 source_local_bbox = source_bbox.align_with_mag(target_mag, ceil=True)
                 target_local_bbox = target_bbox.align_with_mag(target_mag, ceil=True)
                 if target_local_bbox.is_empty():
