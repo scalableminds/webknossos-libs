@@ -45,10 +45,7 @@ def _extract_zip_preserving_symlinks(zip_file: ZipFile, dest_dir: str) -> None:
 def download_wklibs_sample_archive(name: str) -> UPath:
     """Downloads `{name}.zip` from the wklibs-samples bucket and extracts it
     into CACHE_DIR, once ever (subsequent calls, including from later test
-    runs, reuse the cached extraction). Each archive's contents live at a
-    top-level file or folder named after the archive (e.g. `4D.zip` contains
-    `4D/`, `brain_crop3.ims.zip` contains `brain_crop3.ims`), which is what
-    this function returns the path to."""
+    runs, reuse the cached extraction)."""
     dest_dir = CACHE_DIR / name
     if not dest_dir.exists():
         tmp_dir = _tmp_cache_path(name)

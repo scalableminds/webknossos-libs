@@ -16,7 +16,7 @@ from ..layer.view import MagView
 
 class ChunkedImages(ABC):
     """
-    Base class for volumetric, chunk-based input formats (e.g. ims, mrc, zarr, n5).
+    Base class for reading volumetric, chunk-based input formats for conversion.
 
     Unlike PimsImages, which reads slice-by-slice and can't always know its
     true x/y extent ahead of time (requiring a placeholder bounding box that
