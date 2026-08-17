@@ -5,11 +5,12 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 import numpy as np
+from cluster_tools import Executor
 from upath import UPath
 
 from webknossos.dataset_properties import SEGMENTATION_CATEGORY
-from webknossos.geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike
-from webknossos.utils import WkImportError
+from webknossos.geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
+from webknossos.utils import WkImportError, wait_and_ensure_success, wrap_executor
 
 from ..defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -20,7 +21,7 @@ from ..defaults import (
 
 if TYPE_CHECKING:
     from .abstract_layer import AbstractLayer
-    from .view import MagView
+    from .view import MagView, View
 
 # Constants for as_ome_tiff's pyramid levels, ported from the reference
 # tiff-export implementation.
@@ -31,8 +32,11 @@ OME_TIFF_DOWNSAMPLING_MIN_PIXEL = 16
 def _resolve_export_bbox(
     layer: "AbstractLayer", bounding_box: NDBoundingBox | None
 ) -> NDBoundingBox:
-    bbox = bounding_box if bounding_box is not None else layer.bounding_box
-    return bbox.intersected_with(layer.bounding_box)
+    return (
+        layer.bounding_box
+        if bounding_box is None
+        else bounding_box.intersected_with(layer.bounding_box)
+    )
 
 
 def _resolve_export_mag(layer: "AbstractLayer", mag: Mag | None) -> "MagView":
@@ -145,8 +149,21 @@ def _write_ome_zarr_zip(layer_dir: UPath, output_path: UPath, ome_version: str) 
                 dest.write(source.read())
 
         zip_file.comment = json.dumps(
-            {"ome": {"version": ome_version}, "jsonFirst": True}
+            {
+                "ome": {"version": ome_version},
+                "jsonFirst": True,
+            }
         ).encode("utf-8")
+
+
+def _copy(args: "tuple[View, MagView, NDBoundingBox]") -> None:
+    source, target_mag_view, chunk_bbox = args
+    # allow_unaligned is safe here since chunk_bbox is aligned to the
+    # target mag's own shard grid, except possibly at the true edge of the
+    # exported region - each parallel writer still touches a distinct shard.
+    target_mag_view.write(
+        source.read(), absolute_bounding_box=chunk_bbox, allow_unaligned=True
+    )
 
 
 class LayerExport:
@@ -170,6 +187,7 @@ class LayerExport:
         bounding_box: NDBoundingBox | None = None,
         mag: Mag | None = None,
         shard_shape: Vec3IntLike | int | None = None,
+        executor: Executor | None = None,
     ) -> None:
         """Exports the layer as a single, zipped OME-Zarr archive compliant
         with [NGFF RFC-9](https://ngff.openmicroscopy.org/rfc/9/), "Zipped
@@ -179,6 +197,8 @@ class LayerExport:
         with the layer's own bounding box). If `mag` is given, the archive
         contains that mag plus every coarser mag already present on the
         layer; if `mag` is None, the full mag pyramid is exported.
+
+        The output bounding box is translated to origin.
 
         `shard_shape` fixes the shard shape used for every exported mag. If
         omitted, a shard shape is picked per mag that just covers the
@@ -191,7 +211,8 @@ class LayerExport:
             Vec3Int.from_vec_or_int(shard_shape) if shard_shape is not None else None
         )
         layer = self._layer
-        bbox = _resolve_export_bbox(layer, bounding_box)
+        source_bbox = _resolve_export_bbox(layer, bounding_box)
+        target_bbox = source_bbox.with_topleft(VecInt.zeros(axes=source_bbox.axes))
         target_mags = sorted(m for m in layer.mags if mag is None or m >= mag)
 
         with TemporaryDirectory() as tmpdir:
@@ -208,15 +229,15 @@ class LayerExport:
                 dtype=layer.dtype,
                 num_channels=layer.num_channels,
                 data_format="zarr3",
-                bounding_box=bbox,
+                bounding_box=target_bbox,
                 largest_segment_id=layer._get_largest_segment_id_maybe(),
             )
             for target_mag in target_mags:
                 source_mag_view = layer.get_mag(target_mag)
-                local_bbox = bbox.align_with_mag(target_mag)
-                if local_bbox.is_empty():
+                source_local_bbox = source_bbox.align_with_mag(target_mag)
+                target_local_bbox = target_bbox.align_with_mag(target_mag)
+                if target_local_bbox.is_empty():
                     continue
-                data = source_mag_view.read(absolute_bounding_box=local_bbox)
                 if fixed_shard_shape is not None:
                     mag_shard_shape = fixed_shard_shape
                 else:
@@ -227,19 +248,39 @@ class LayerExport:
                     # region per axis (one shard, if possible), capped at a
                     # sensible default so a large export doesn't fragment
                     # into more, smaller shards than necessary.
-                    local_size = local_bbox.in_mag(target_mag).size_xyz
+                    local_size = target_local_bbox.in_mag(target_mag).size_xyz
                     mag_shard_shape = _shard_shape_for_export(
                         local_size, _default_max_shard_shape(local_size)
                     )
                 target_mag_view = tmp_layer.add_mag(
                     target_mag, shard_shape=mag_shard_shape
                 )
-                target_mag_view.write(
-                    data,
-                    absolute_bounding_box=local_bbox,
-                    allow_resize=True,
-                    allow_unaligned=True,
-                )
+                # target_local_bbox is in Mag(1) units, so the shard shape
+                # (in this mag's own voxel units) needs to be scaled up to
+                # Mag(1) before it can be used to chunk the bbox.
+                shard_shape_mag1 = mag_shard_shape * target_mag.to_vec3_int()
+                with wrap_executor(executor) as mag_executor:
+                    jobs = [
+                        (
+                            source_mag_view.get_view(
+                                absolute_bounding_box=chunk_bbox.with_topleft(
+                                    chunk_bbox.topleft + source_local_bbox.topleft
+                                ),
+                                read_only=True,
+                            ),
+                            target_mag_view,
+                            chunk_bbox,
+                        )
+                        for chunk_bbox in target_local_bbox.chunk(
+                            shard_shape_mag1, shard_shape_mag1
+                        )
+                    ]
+                    wait_and_ensure_success(
+                        mag_executor.map_to_futures(_copy, jobs),
+                        executor=mag_executor,
+                        progress_desc=f"Exporting {target_mag}",
+                    )
+
             _write_ome_zarr_zip(tmp_layer.path, output_path, ome_version="0.5")
 
     def as_tiff_stack(
