@@ -1,13 +1,3 @@
-"""Implementation of Dataset.from_images() / Dataset.add_layer_from_images(),
-factored out of dataset.py since this functionality (mapping input image
-files to layers, then converting them via either the ChunkedImages or
-PimsImages reader path) is large and self-contained.
-
-Dataset.from_images and Dataset.add_layer_from_images are thin wrappers
-around the free functions here, keeping the public API and docstrings on
-the Dataset class itself.
-"""
-
 from __future__ import annotations
 
 import logging
