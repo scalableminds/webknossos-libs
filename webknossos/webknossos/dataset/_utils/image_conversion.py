@@ -847,6 +847,16 @@ def add_layer_from_images(
         except Exception:
             # The used heuristic was not able to guess the layer category, the previous value is kept
             pass
+
+        # Verify the properties are actually consistent now, instead of assuming so.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "error",
+                message=".* properties changed in a way that they are not comparable anymore. Most likely the bounding box naming or axis order changed.*",
+                category=UserWarning,
+                module="webknossos",
+            )
+            dataset._save_dataset_properties()
         if first_layer is None:
             first_layer = layer
     assert first_layer is not None

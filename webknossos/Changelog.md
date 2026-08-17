@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 - `.ims` and MRC file conversion now reads shard-sized blocks directly instead of slice-by-slice, improving conversion performance for large files. These formats are always read through a dedicated reader. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Timepoints are no longer split into separate layers by `allow_multiple_layers=True`; readers that can address them expose all timepoints on a `t` axis within one layer instead. Readers that cannot (images without dimension metadata) now warn that only the first timepoint is converted. `allow_multiple_layers` still splits channels. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
+- `Dataset.add_layer_from_images`/`from_images` now verify the dataset properties are internally consistent after converting each layer and raise an error if not, instead of silently continuing. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 
 ### Fixed
 - `Dataset.from_images` now names the missing optional dependency when the input contains a format whose reader could not be imported (e.g. `.ims` without `webknossos[ims]`), instead of only reporting that no supported image data was found. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
