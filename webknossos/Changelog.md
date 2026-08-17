@@ -15,7 +15,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
-- Added `Layer.export`, providing `as_ozx` (a zipped OME-Zarr archive compliant with [NGFF RFC-9](https://ngff.openmicroscopy.org/rfc/9/)), `as_tiff_stack` (a directory of per-slice TIFF files) and `as_ome_tiff` (a single pyramidal OME-TIFF file) to export a layer's data, optionally restricted to a bounding box and/or magnification.
+- Added `Layer.export`, providing `as_ozx` (a zipped OME-Zarr archive compliant with [NGFF RFC-9](https://ngff.openmicroscopy.org/rfc/9/)), `as_tiff_stack` (a directory of per-slice TIFF files, one per z-section and per combination of any additional axes) and `as_ome_tiff` (a single pyramidal OME-TIFF file) to export a layer's data, optionally restricted to a bounding box and/or magnification. All three support layers with additional axes (e.g. time); `as_ome_tiff` additionally requires the layer's axes to be a subset of c, t, z, y, x.
+
+### Fixed
+- Fixed the OME-NGFF `axes`/`coordinateTransformations.scale` metadata written for layers with additional axes (e.g. time): it previously always hard-coded 4 entries (c, x, y, z) regardless of the layer's actual dimensionality, producing a spec-invalid document whose axes count didn't match the array's shape.
 
 ### Changed
 

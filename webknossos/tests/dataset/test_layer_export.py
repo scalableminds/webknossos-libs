@@ -5,8 +5,9 @@ import numpy as np
 import pytest
 from upath import UPath
 
+from tests.constants import TESTDATA_DIR
 from webknossos import COLOR_CATEGORY, Dataset, Layer
-from webknossos.geometry import BoundingBox, Mag
+from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
 
 
 def make_layer(dataset_path: UPath) -> tuple[Dataset, Layer, np.ndarray]:
@@ -157,3 +158,104 @@ def test_as_ome_tiff_readable(tmp_upath: UPath, mag: Mag | None) -> None:
         ].transpose((2, 1, 0))
         assert arr.shape == expected.shape
         assert np.array_equal(arr, expected)
+
+
+def make_nd_layer() -> Layer:
+    """Opens the repo's ND (c,t,z,y,x) test fixture."""
+    dataset = Dataset.open(TESTDATA_DIR / "4D" / "4D_series_zarr3")
+    return dataset.get_layer("color")
+
+
+def test_as_ozx_nd_layer_ome_metadata(tmp_upath: UPath) -> None:
+    layer = make_nd_layer()
+    zip_path = tmp_upath / "color_4d.ozx"
+
+    layer.export.as_ozx(output_path=zip_path)
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        root_attrs = json.loads(zip_file.read("zarr.json"))["attributes"]
+        axes = root_attrs["ome"]["multiscales"][0]["axes"]
+        assert [a["name"] for a in axes] == ["c", "t", "z", "y", "x"]
+
+        mag_shape = json.loads(zip_file.read("1/zarr.json"))["shape"]
+        # the OME axes count must match the exported array's ndim
+        assert len(axes) == len(mag_shape)
+
+
+def test_as_tiff_stack_nd_layer(tmp_upath: UPath) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    layer = make_nd_layer()
+    data = layer.get_finest_mag().read()  # (c=1, t=7, z=5, y=167, x=439)
+    out_dir = tmp_upath / "nd_tiff_stack"
+
+    layer.export.as_tiff_stack(output_path=out_dir)
+
+    files = sorted(out_dir.glob("*.tiff"))
+    assert len(files) == 7 * 5
+
+    for t, z in [(0, 0), (3, 2), (6, 4)]:
+        image = tifffile.imread(str(out_dir / f"t{t}_z{z}.tiff"))
+        expected = data[0, t, z]
+        assert np.array_equal(image, expected)
+
+
+def test_as_ome_tiff_nd_layer_roundtrip(tmp_upath: UPath) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    layer = make_nd_layer()
+    data = layer.get_finest_mag().read()  # (c=1, t=7, z=5, y=167, x=439)
+    out_path = tmp_upath / "color_4d.ome.tif"
+
+    layer.export.as_ome_tiff(output_path=out_path)
+
+    with tifffile.TiffFile(str(out_path)) as tif:
+        arr = tif.series[0].asarray()
+        # tifffile drops the size-1 channel axis on read-back
+        assert arr.shape == data.shape[1:]
+        assert np.array_equal(arr, data[0])
+
+
+def test_as_ome_tiff_unsupported_axis_raises(tmp_upath: UPath) -> None:
+    pytest.importorskip("tifffile")
+
+    dataset = Dataset(tmp_upath / "bad_axis", voxel_size=(10, 10, 10))
+    bbox = NDBoundingBox(
+        (0, 0, 0, 0), (2, 4, 4, 4), axes=("w", "x", "y", "z"), index=(0, 1, 2, 3)
+    )
+    layer = dataset.add_layer(
+        "color", COLOR_CATEGORY, dtype="uint8", data_format="zarr3", bounding_box=bbox
+    )
+    layer.add_mag(1).write(
+        data=np.zeros((2, 4, 4, 4), dtype="uint8"), absolute_bounding_box=bbox
+    )
+
+    with pytest.raises(ValueError, match="w"):
+        layer.export.as_ome_tiff(output_path=tmp_upath / "bad.ome.tif")
+
+
+def test_as_tiff_stack_nd_layer_no_channel_axis(tmp_upath: UPath) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    dataset = Dataset(tmp_upath / "no_channel_axis", voxel_size=(10, 10, 10))
+    bbox = NDBoundingBox(
+        (0, 0, 0, 0), (2, 3, 4, 5), axes=("t", "z", "y", "x"), index=(0, 1, 2, 3)
+    )
+    layer = dataset.add_layer(
+        "color", COLOR_CATEGORY, dtype="uint8", data_format="zarr3", bounding_box=bbox
+    )
+    data = (np.random.rand(2, 3, 4, 5) * 255).astype(np.uint8)
+    layer.add_mag(1).write(data=data, absolute_bounding_box=bbox)
+    out_dir = tmp_upath / "no_channel_tiffs"
+
+    layer.export.as_tiff_stack(output_path=out_dir)
+
+    files = sorted(out_dir.glob("*.tiff"))
+    assert len(files) == 2 * 3
+    for t in range(2):
+        for z in range(3):
+            image = tifffile.imread(str(out_dir / f"t{t}_z{z}.tiff"))
+            assert np.array_equal(image, data[t, z])

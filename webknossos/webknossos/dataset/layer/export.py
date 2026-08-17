@@ -1,15 +1,23 @@
+import itertools
 import json
 import zipfile
 from os import PathLike
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
 from webknossos.dataset_properties import SEGMENTATION_CATEGORY
-from webknossos.geometry import Mag, NDBoundingBox, Vec3Int, Vec3IntLike, VecInt
+from webknossos.geometry import (
+    BoundingBox,
+    Mag,
+    NDBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+    VecInt,
+)
 from webknossos.utils import WkImportError, wait_and_ensure_success, wrap_executor
 
 from ..defaults import (
@@ -28,6 +36,9 @@ if TYPE_CHECKING:
 OME_TIFF_DOWNSAMPLING_STEPS = 5
 OME_TIFF_DOWNSAMPLING_MIN_PIXEL = 16
 
+# OME-TIFF only supports this fixed set of axes.
+_OME_TIFF_AXIS_CODES = {"c": "C", "t": "T", "z": "Z", "y": "Y", "x": "X"}
+
 
 def _resolve_export_bbox(
     layer: "AbstractLayer", bounding_box: NDBoundingBox | None
@@ -43,10 +54,75 @@ def _resolve_export_mag(layer: "AbstractLayer", mag: Mag | None) -> "MagView":
     return layer.get_mag(mag) if mag is not None else layer.get_finest_mag()
 
 
+def _data_axes(bbox: NDBoundingBox) -> tuple[str, ...]:
+    """The axis order `mag_view.read(absolute_bounding_box=bbox)` actually
+    returns. A plain `BoundingBox` (x,y,z only) always gets a channel axis
+    prepended; a general `NDBoundingBox` only has "c" if it was already
+    present in `bbox.axes` - mirrors `NDBoundingBox`/`BoundingBox.normalize_axes()`.
+    """
+    if isinstance(bbox, BoundingBox):
+        return ("c", *bbox.axes)
+    return bbox.axes
+
+
 def _make_tiff_name(filename_prefix: str, slice_index: int, digits: int) -> str:
     if not filename_prefix:
         return f"{slice_index:0{digits}d}.tiff"
     return f"{filename_prefix}_{slice_index:0{digits}d}.tiff"
+
+
+def _make_tiff_stack_name(
+    filename_prefix: str,
+    extra_axes: list[str],
+    combo: tuple[int, ...],
+    extra_digits: dict[str, int],
+    slice_index: int,
+    z_digits: int,
+) -> str:
+    segments = [
+        f"{axis}{i:0{extra_digits[axis]}d}" for axis, i in zip(extra_axes, combo)
+    ]
+    segments.append(f"z{slice_index:0{z_digits}d}")
+    body = "_".join(segments)
+    return f"{filename_prefix}_{body}.tiff" if filename_prefix else f"{body}.tiff"
+
+
+def _extract_tiff_stack_slice(
+    slice_data: np.ndarray, slice_axes: tuple[str, ...]
+) -> np.ndarray:
+    """Squeezes the (size-1) extra axes out of a per-slice array yielded by
+    `get_buffered_slice_reader` (whose axis order is `slice_axes`), and
+    reorders the rest to (c, x, y) - synthesizing a channel axis if the
+    layer doesn't have one, so `_slice_to_image` always sees (C, X, Y).
+    """
+    extra = [a for a in slice_axes if a not in ("c", "x", "y")]
+    squeezed = np.squeeze(slice_data, axis=tuple(slice_axes.index(a) for a in extra))
+    remaining = tuple(a for a in slice_axes if a not in extra)
+    target = tuple(a for a in ("c", "x", "y") if a in remaining)
+    reordered = np.moveaxis(
+        squeezed, [remaining.index(a) for a in target], list(range(len(target)))
+    )
+    if "c" not in target:
+        reordered = np.expand_dims(reordered, axis=0)
+    return reordered
+
+
+def _ome_tiff_axes_and_permutation(
+    bbox: NDBoundingBox,
+) -> tuple[tuple[str, ...], tuple[int, ...]]:
+    """The OME-TIFF axis order (y, x always last, as tifffile requires) and
+    the permutation of `mag_view.read()`'s axes needed to reach it.
+    """
+    data_axes = _data_axes(bbox)
+    unsupported = [a for a in data_axes if a not in _OME_TIFF_AXIS_CODES]
+    if unsupported:
+        raise ValueError(
+            f"as_ome_tiff does not support axis/axes {unsupported!r}; "
+            "OME-TIFF only supports c, t, z, y, x."
+        )
+    other = [a for a in data_axes if a not in ("x", "y")]
+    canonical = (*other, "y", "x")
+    return canonical, tuple(data_axes.index(a) for a in canonical)
 
 
 def _default_max_shard_shape(local_size: Vec3Int) -> Vec3Int:
@@ -90,29 +166,6 @@ def _slice_to_image(data_slice: np.ndarray) -> np.ndarray:
         # swap axis and move the channel axis
         data_slice = data_slice.transpose((2, 1, 0))
     return data_slice
-
-
-def _squeeze_nd_data_to_3d(
-    data: np.ndarray,
-    bbox: NDBoundingBox,
-    mag_view: "MagView",
-    is_single_section: bool,
-) -> np.ndarray:
-    nd_detection_limit = 2 if is_single_section else 3
-    has_additional_axes = len(bbox.axes) > nd_detection_limit
-    if not has_additional_axes:
-        return data
-    additional_axes_indices = []
-    channel_offset = 1
-    axes = mag_view.bounding_box.axes
-    if is_single_section:
-        # z is already removed from the shape of single-section data.
-        axes = tuple(axis for axis in axes if axis != "z")
-    for index, axis_name in enumerate(axes):
-        if axis_name not in ("x", "y", "z"):
-            additional_axes_indices.append(index + channel_offset)
-    # All additional axes only extend by one value, so they can be dropped.
-    return data.squeeze(axis=tuple(additional_axes_indices))
 
 
 def _write_ome_zarr_zip(layer_dir: UPath, output_path: UPath, ome_version: str) -> None:
@@ -191,7 +244,9 @@ class LayerExport:
     ) -> None:
         """Exports the layer as a single, zipped OME-Zarr archive compliant
         with [NGFF RFC-9](https://ngff.openmicroscopy.org/rfc/9/), "Zipped
-        OME-Zarr" (`.ozx`).
+        OME-Zarr" (`.ozx`). Layers with additional axes (e.g. time) are
+        supported - the OME axes/scale metadata is derived from the
+        layer's own axes.
 
         If `bounding_box` is given, the export is cropped to it (intersected
         with the layer's own bounding box). If `mag` is given, the archive
@@ -291,9 +346,14 @@ class LayerExport:
         mag: Mag | None = None,
         filename_prefix: str = "",
     ) -> None:
-        """Exports the layer as a directory of per-slice TIFF files, one file
-        per z-section, under `output_path`. Files are named `NNNNNN.tiff`, or
-        `{filename_prefix}_NNNNNN.tiff` if `filename_prefix` is given.
+        """Exports the layer as a directory of per-slice TIFF files, one
+        file per z-section (and per combination of any additional axes,
+        e.g. time), under `output_path`.
+
+        Files are named `NNNNNN.tiff` (or `{filename_prefix}_NNNNNN.tiff`)
+        for plain 3D layers, or `{axis}NNN_..._zNNN.tiff` (one segment per
+        additional axis, sorted by name, plus z; still prefixed with
+        `filename_prefix` if given) for layers with additional axes.
         """
         try:
             import tifffile
@@ -311,18 +371,39 @@ class LayerExport:
         num_slices = bbox.in_mag(mag_view.mag).size_xyz.z
         digits = max(1, len(str(max(num_slices - 1, 0))))
 
-        with mag_view.get_buffered_slice_reader(absolute_bounding_box=bbox) as reader:
-            for slice_index, slice_data in enumerate(reader):
-                image = _slice_to_image(
-                    _squeeze_nd_data_to_3d(
-                        slice_data, bbox, mag_view, is_single_section=True
+        extra_axes = sorted(a for a in bbox.axes if a not in ("c", "x", "y", "z"))
+        extra_digits = {
+            a: max(1, len(str(max(bbox.get_shape(a) - 1, 0)))) for a in extra_axes
+        }
+
+        for combo in itertools.product(*(range(bbox.get_shape(a)) for a in extra_axes)):
+            sub_bbox = bbox
+            for axis, i in zip(extra_axes, combo):
+                sub_bbox = sub_bbox.with_bounds(axis, bbox.topleft[axis] + i, 1)
+            slice_axes = tuple(a for a in _data_axes(sub_bbox) if a != "z")
+
+            with mag_view.get_buffered_slice_reader(
+                absolute_bounding_box=sub_bbox
+            ) as reader:
+                for slice_index, slice_data in enumerate(reader):
+                    image = _slice_to_image(
+                        _extract_tiff_stack_slice(slice_data, slice_axes)
                     )
-                )
-                tiff_path = output_path / _make_tiff_name(
-                    filename_prefix, slice_index, digits
-                )
-                with tiff_path.open("wb") as f:
-                    tifffile.imwrite(f, data=image, compression=compression)
+                    name = (
+                        _make_tiff_stack_name(
+                            filename_prefix,
+                            extra_axes,
+                            combo,
+                            extra_digits,
+                            slice_index,
+                            digits,
+                        )
+                        if extra_axes
+                        else _make_tiff_name(filename_prefix, slice_index, digits)
+                    )
+                    tiff_path = output_path / name
+                    with tiff_path.open("wb") as f:
+                        tifffile.imwrite(f, data=image, compression=compression)
 
     def as_ome_tiff(
         self,
@@ -331,7 +412,11 @@ class LayerExport:
         bounding_box: NDBoundingBox | None = None,
         mag: Mag | None = None,
     ) -> None:
-        """Exports the layer as a single, pyramidal OME-TIFF file."""
+        """Exports the layer as a single, pyramidal OME-TIFF file.
+
+        Only layers whose axes are a subset of c, t, z, y, x are supported
+        (OME-TIFF's own dimension model doesn't extend to other axes).
+        """
         try:
             import tifffile
         except ImportError as e:
@@ -343,37 +428,44 @@ class LayerExport:
         bbox = _resolve_export_bbox(layer, bounding_box).align_with_mag(mag_view.mag)
         compression = "zlib" if layer.category == SEGMENTATION_CATEGORY else None
 
+        canonical_axes, permutation = _ome_tiff_axes_and_permutation(bbox)
+        axes_str = "".join(_OME_TIFF_AXIS_CODES[a] for a in canonical_axes)
+        x_idx = axes_str.index("X")
+        y_idx = axes_str.index("Y")
+
         voxel_size_nm = (
             layer.dataset.voxel_size_with_unit.to_nanometer().to_np()
             * mag_view.mag.to_np()
         )
 
         data = mag_view.read(absolute_bounding_box=bbox)
-        data = _squeeze_nd_data_to_3d(data, bbox, mag_view, is_single_section=False)
-        data = data.swapaxes(1, 3)  # (C,X,Y,Z) -> (C,Z,Y,X)
+        data = np.transpose(data, permutation)
 
         with (
             output_path.open("wb") as f,
             tifffile.TiffWriter(f, bigtiff=True) as tif,
         ):
-            metadata = {
-                "axes": "CZYX",
+            metadata: dict[str, Any] = {
+                "axes": axes_str,
                 "PhysicalSizeX": voxel_size_nm[0],
                 "PhysicalSizeXUnit": "nm",
                 "PhysicalSizeY": voxel_size_nm[1],
                 "PhysicalSizeYUnit": "nm",
                 "PhysicalSizeZ": voxel_size_nm[2],
                 "PhysicalSizeZUnit": "nm",
-                "Channel": {"Name": [f"Channel {i}" for i in range(data.shape[0])]},
             }
+            if "c" in canonical_axes:
+                metadata["Channel"] = {
+                    "Name": [f"Channel {i}" for i in range(layer.num_channels)]
+                }
 
             downsampling_factors = [
                 factor
                 for factor in (
                     2 ** (step + 1) for step in range(OME_TIFF_DOWNSAMPLING_STEPS)
                 )
-                if data.shape[2] // factor > OME_TIFF_DOWNSAMPLING_MIN_PIXEL
-                and data.shape[3] // factor > OME_TIFF_DOWNSAMPLING_MIN_PIXEL
+                if data.shape[y_idx] // factor > OME_TIFF_DOWNSAMPLING_MIN_PIXEL
+                and data.shape[x_idx] // factor > OME_TIFF_DOWNSAMPLING_MIN_PIXEL
             ]
 
             tif.write(
@@ -385,8 +477,12 @@ class LayerExport:
                 compression=compression,
             )
             for factor in downsampling_factors:
+                strides = tuple(
+                    slice(None, None, factor) if i in (x_idx, y_idx) else slice(None)
+                    for i in range(data.ndim)
+                )
                 tif.write(
-                    data[:, :, ::factor, ::factor],  # cheap downsampling
+                    data[strides],  # cheap downsampling
                     subfiletype=1,
                     resolution=(
                         (factor * voxel_size_nm[0]) / 1e7,
