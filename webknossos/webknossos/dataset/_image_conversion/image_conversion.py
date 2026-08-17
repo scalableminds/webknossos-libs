@@ -200,7 +200,7 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
     return found
 
 
-# Formats whose channels mean colour rather than separate acquisitions: the
+# Formats whose channels mean RGB rather than separate acquisitions: the
 # everyday 2D image formats, where three uint8 channels are RGB and belong in
 # one layer. Everything else — scientific formats such as TIFF, CZI, DM3/DM4,
 # .ims and MRC — stores one acquisition channel per channel, which users almost
@@ -238,16 +238,16 @@ def _channels_are_one_rgb_layer(
     truncate_rgba_to_rgb: bool,
 ) -> bool:
     """
-    Whether the source's channels are colour channels of a single layer, rather
+    Whether the source's channels are RGB channels of a single layer, rather
     than separate channels that each deserve their own layer.
 
     This needs the *source's* channel count, not the reader's `num_channels`:
     the readers already pin or truncate channels (a two-channel source reports
     one channel, pinned to the first), which is exactly the silent discarding
-    this decision exists to avoid.
+    this decision exists to avoid. Callers only reach here with 2+ source
+    channels — a single channel is never offered as a possible layer split in
+    the first place.
     """
-    if num_source_channels == 1:
-        return True
     path = images if isinstance(images, UPath) else None
     if path is None and isinstance(images, list) and images:
         path = images[0]
@@ -426,8 +426,8 @@ def from_images(
     if z_slices_sort_key is None:
         z_slices_sort_key = natsort_keygen()
 
-    # Kept around for the error below, since input_upath moves to the parent
-    # directory for a single file that can be converted.
+    # input_upath is replaced with its parent directory below for a single
+    # convertible file, so keep the original around to report in the error.
     original_input_upath = input_upath
     input_is_file = input_upath.is_file()
     if input_is_file:
@@ -557,8 +557,8 @@ def from_images(
                     allow_multiple_layers=True,
                     max_layers=max_layers - len(ds.layers),
                     # An RGBA screenshot should convert into one RGB layer, not
-                    # into four grayscale ones. Channels that are not colour are
-                    # split by allow_multiple_layers above regardless.
+                    # into four grayscale ones. Non-RGB channels are split by
+                    # allow_multiple_layers above regardless.
                     truncate_rgba_to_rgb=True,
                     executor=executor,
                 )
@@ -687,17 +687,16 @@ def add_layer_from_images(
             images=images,
             truncate_rgba_to_rgb=truncate_rgba_to_rgb,
         ):
-            # The channels are colour, so they belong in one layer rather than
+            # The channels are RGB, so they belong in one layer rather than
             # being offered up as one layer each. The readers take care of the
             # RGBA -> RGB truncation.
             assert possible_layers is not None
             del possible_layers["channel"]
         elif not allow_multiple_layers:
             raise UnsupportedImageDataError(
-                f"Cannot convert the {len(source_channels)} channels of these images "
-                + "into a single layer: WEBKNOSSOS only displays several channels "
-                + "within one layer as RGB, which means three uint8 channels of an "
-                + f"image format that stores colour ({_describe_rgb_formats()}). "
+                f"Cannot write these {len(source_channels)} channels into a "
+                + "single layer: WEBKNOSSOS only combines several channels into "
+                + f"one layer as RGB (three uint8 channels of {_describe_rgb_formats()}). "
                 + "Set allow_multiple_layers=True to write one layer per channel, "
                 + "or channel=<index> to convert a single channel.",
                 path=images if isinstance(images, UPath) else None,

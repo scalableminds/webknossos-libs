@@ -332,8 +332,8 @@ def test_timepoint_argument_is_removed(tmp_upath: UPath) -> None:
 
 
 def test_add_layer_from_images_unsupported_format(tmp_upath: UPath) -> None:
-    # No reader handles .dcm since Bio-Formats was removed. Downstream code
-    # needs to recognize this without matching on an error message.
+    # No reader handles .dcm. Downstream code needs to recognize this without
+    # matching on an error message.
     unsupported = tmp_upath / "scan.dcm"
     unsupported.write_bytes(b"\x00" * 132)
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
@@ -365,8 +365,8 @@ def test_add_layer_from_images_unsupported_format(tmp_upath: UPath) -> None:
 def test_add_layer_from_images_corrupt_file(
     tmp_upath: UPath, filename: str, contents: bytes, wraps_reader_error: bool
 ) -> None:
-    # A damaged file of a *supported* format is the most common upload
-    # failure, and needs a different message than an unsupported format.
+    # A damaged file of a *supported* format needs a different message than an
+    # unsupported format.
     corrupt = tmp_upath / filename
     corrupt.write_bytes(contents)
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
@@ -379,6 +379,29 @@ def test_add_layer_from_images_corrupt_file(
     if wraps_reader_error:
         # The reader's own error stays available for the log.
         assert error.__cause__ is not None
+
+
+def test_ims_empty_shape_is_corrupt(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A damaged or incompletely uploaded .ims file can still open and report a
+    # shape, just with an empty axis (mirroring broken.mrc above), which would
+    # otherwise convert into an empty layer instead of surfacing as corrupt.
+    ims_path = tmp_upath / "empty.ims"
+    ims_path.write_bytes(b"\x89HDF\r\n\x1a\n" + b"\x00" * 100)
+    ims_chunked_images = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_chunked_images"
+    )
+    monkeypatch.setattr(
+        ims_chunked_images,
+        "_read_ims_metadata_quietly",
+        lambda _path: ((1, 1, 4, 8, 0), np.dtype("uint16")),
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(wk.CorruptImageError) as excinfo:
+        ds.add_layer_from_images(ims_path, layer_name="color")
+    assert excinfo.value.path == ims_path
 
 
 def test_add_layer_from_images_missing_file_is_not_corrupt(tmp_upath: UPath) -> None:
@@ -476,7 +499,7 @@ def test_ims_multi_channel_needs_one_layer_per_channel(
 ) -> None:
     # .ims stores one acquisition channel per channel, so they belong in
     # separate layers whatever their number and dtype — the uint8 RGB exception
-    # is for image formats that store colour, not for scientific formats. Three
+    # is for image formats that store RGB, not for scientific formats. Three
     # uint8 channels are therefore refused here too, and four channels are not
     # treated as RGBA either.
     ims_path = tmp_upath / "synthetic_multi_c.ims"
@@ -532,9 +555,9 @@ def test_ims_multi_channel_needs_one_layer_per_channel(
 def test_rgb_image_stays_a_single_layer(
     tmp_upath: UPath, mode: str, expected_size: wk.VecInt
 ) -> None:
-    # The colour channels of an everyday image format belong together in one
-    # RGB layer, and an alpha channel is dropped rather than becoming a layer
-    # of its own.
+    # The RGB channels of an everyday image format belong together in one
+    # layer, and an alpha channel is dropped rather than becoming a layer of
+    # its own.
     png_path = tmp_upath / f"{mode.lower()}.png"
     data = np.zeros((8, 16, len(mode)), dtype="uint8")
     for channel in range(len(mode)):
@@ -558,8 +581,10 @@ def test_rgb_image_stays_a_single_layer(
 def test_multi_channel_16bit_tiff_needs_one_layer_per_channel(
     tmp_upath: UPath,
 ) -> None:
-    # TIFF is not an image format that stores colour, so even three channels
-    # are separate acquisitions rather than RGB.
+    # .tif is not in the RGB-suffix allowlist — TIFF can store RGB, but in the
+    # microscopy context this library targets it usually doesn't — so even
+    # three channels are separate acquisitions rather than RGB. uint16 makes
+    # this unambiguous either way: only uint8 channels are ever treated as RGB.
     tiff_path = tmp_upath / "three_channels.tif"
     imwrite(
         str(tiff_path),

@@ -89,6 +89,18 @@ class ImsChunkedImages(ChunkedImages):
         t, raw_num_channels, self._z, self._y, self._x = file_shape
         self._t = t
 
+        if 0 in (t, raw_num_channels, self._z, self._y, self._x):
+            # A damaged or incompletely uploaded .ims file can still open and
+            # report a shape, just with an empty axis, which would otherwise
+            # convert into an empty layer or fail much later with an
+            # unrelated error.
+            raise CorruptImageError(
+                f"Cannot open IMS file {path}. It describes an empty image "
+                + f"(shape {file_shape}), so the file is likely corrupted or "
+                + "not a valid IMS file.",
+                path=path,
+            )
+
         self.num_channels, self._channel, self._first_n_channels, possible_channels = (
             compute_channel_selection(raw_num_channels, channel)
         )

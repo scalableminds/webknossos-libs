@@ -293,7 +293,7 @@ class PimsImages:
                     raise UnsupportedImageDataError(
                         f"Got {len(images.shape)} axes for the images, "
                         + "but don't have axes information.",
-                        path=self._error_path(),
+                        path=self._blame_path(),
                     )
 
         #########################
@@ -339,9 +339,9 @@ class PimsImages:
         else:
             return str(original_images)
 
-    def _error_path(self) -> UPath | None:
-        """The single input path to blame when opening fails, or None when
-        there is no such path (a pims.FramesSequence was passed in)."""
+    def _blame_path(self) -> UPath | None:
+        """The single input image path to blame when opening fails, or None
+        when there is no such path (a pims.FramesSequence was passed in)."""
         if isinstance(self._original_images, UPath):
             return self._original_images
         if isinstance(self._original_images, list) and self._original_images:
@@ -364,18 +364,18 @@ class PimsImages:
 
         Classifying afterwards, rather than rejecting unknown suffixes up
         front, keeps files that pims opens without a recognized suffix (via
-        pims.ImageSequence/skimage) working as before: this only runs once
-        every open strategy has already failed.
+        pims.ImageSequence/skimage) working: this only runs once every open
+        strategy has already failed.
         """
         # Imported inside the function so that the two reader modules stay
-        # independent at import time; this is only needed on the error path.
+        # independent at import time; only needed once opening has failed.
         from .chunked_images import (
             describe_missing_extras,
             get_unavailable_chunked_image_suffixes,
             get_valid_chunked_image_suffixes,
         )
 
-        path = self._error_path()
+        path = self._blame_path()
         # Only a file's suffix says anything about which readers apply: a
         # directory of images has none (or, worse, a dot in its name), and
         # neither has a path that does not exist at all.
@@ -411,14 +411,14 @@ class PimsImages:
         """
         Decides whether a failure to open a file of a *supported* format means
         the file itself is unreadable — damaged or incompletely uploaded, by
-        far the most common cause — as opposed to a problem this class should
-        not put words in the user's mouth about.
+        far the most common cause — as opposed to some other failure this
+        class has no specific enough evidence to explain.
 
         Only runs once _classify_open_failure has ruled out an unsupported
         format, so reaching here means readers exist for this suffix and none
         of them could make sense of the contents.
         """
-        path = self._error_path()
+        path = self._blame_path()
         if path is None:
             return None
         if any(char in str(path) for char in "*?["):

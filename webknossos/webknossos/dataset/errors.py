@@ -1,4 +1,4 @@
-"""Exceptions raised by the dataset API.
+"""Exceptions raised by the dataset conversion.
 
 This module deliberately imports nothing but `upath`, so that downstream code
 can catch these exceptions without pulling in the image readers or any of
@@ -14,9 +14,6 @@ class ImageConversionError(ValueError):
     """Base class for the ways image conversion can fail because of its input.
 
     Raised by `Dataset.from_images` and `Dataset.add_layer_from_images`.
-
-    Subclasses `ValueError`, which the call sites raised before these exceptions
-    existed, so `except ValueError` keeps working.
 
     Attributes:
         path: The offending input path, if there is a single one. `None` when
@@ -38,8 +35,9 @@ class UnsupportedImageFormatError(ImageConversionError):
     Attributes:
         path: The offending input path, if there is a single one. `None` when
             the images were passed as a list or as a `pims.FramesSequence`.
-        suffix: The offending file's suffix, lowercase and without the leading
-            dot (e.g. `"dcm"`). `None` when `path` is a directory or unknown.
+        suffix: The offending file's extension — lowercase, without the
+            leading dot (e.g. `"dcm"`). `None` when `path` is a directory or
+            unknown.
         supported_suffixes: The suffixes that can currently be converted, in
             the same lowercase, dot-less form.
         missing_extras: The `webknossos` extras that would add support for the

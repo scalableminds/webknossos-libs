@@ -222,8 +222,8 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
 
 @pytest.mark.parametrize("mode", ["RGB", "RGBA"])
 def test_rgb_image_creates_a_single_rgb_layer(tmp_upath: UPath, mode: str) -> None:
-    # from_images() passes allow_multiple_layers=True, but the colour channels
-    # of an everyday image format still belong in one layer rather than being
+    # from_images() passes allow_multiple_layers=True, but the RGB channels of
+    # an everyday image format still belong in one layer rather than being
     # split into grayscale ones — and an alpha channel is dropped, not turned
     # into a fourth layer.
     images = tmp_upath / "images"
