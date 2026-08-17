@@ -27,9 +27,9 @@ from .image_source import (
 )
 from .image_source_registry import (
     describe_missing_extras,
-    get_unavailable_suffixes,
-    get_valid_slice_reader_suffixes,
-    get_valid_suffixes,
+    get_unavailable_extensions,
+    get_valid_extensions,
+    get_valid_slice_reader_extensions,
     open_images,
 )
 from .raster_slices import MultiImageSlices, StackedFileSlices
@@ -103,11 +103,11 @@ class SlicedImageSource(ImageSource):
         if isinstance(original_images, list):
             return [str(i) for i in original_images]
         if original_images.is_dir():
-            valid_suffixes = get_valid_slice_reader_suffixes()
+            valid_extensions = get_valid_slice_reader_extensions()
             files: list[str] = natsorted(
                 str(i)
                 for i in original_images.glob("**/*")
-                if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
+                if i.is_file() and i.suffix.lstrip(".") in valid_extensions
             )
             if len(files) == 1:
                 return files[0]
@@ -132,43 +132,46 @@ class SlicedImageSource(ImageSource):
         or something else, e.g. a corrupt file or an IO error of a format that
         *is* supported, which must keep surfacing as its original error.
 
-        The decision is made on the suffix, not the exception type: open_images
-        raises the same error whether no reader claims the suffix or every
-        reader that claimed it failed, so a corrupt TIFF is indistinguishable
-        from an unreadable format by type. What is built here supersedes those,
-        knowing the path and the missing extras.
+        The decision is made on the extension, not the exception type:
+        open_images raises the same error whether no reader claims the
+        extension or every reader that claimed it failed, so a corrupt TIFF is
+        indistinguishable from an unreadable format by type. What is built
+        here supersedes those, knowing the path and the missing extras.
 
-        Classifying afterwards rather than rejecting unknown suffixes up front
-        keeps files that open without a recognized suffix (via MultiImageSlices)
-        working: this runs only once every open strategy has failed.
+        Classifying afterwards rather than rejecting unknown extensions up
+        front keeps files that open without a recognized extension (via
+        MultiImageSlices) working: this runs only once every open strategy has
+        failed.
         """
         path = self._error_path()
-        # Only a file's suffix says anything about which readers apply; a
+        # Only a file's extension says anything about which readers apply; a
         # directory has none, or worse, a dot in its name.
-        suffix = (
+        extension = (
             (path.suffix.lstrip(".").lower() or None)
             if path is not None and not path.is_dir()
             else None
         )
 
-        supported_suffixes = get_valid_suffixes()
+        supported_extensions = get_valid_extensions()
 
-        if suffix is None or suffix in supported_suffixes:
+        if extension is None or extension in supported_extensions:
             return None
 
-        unavailable = get_unavailable_suffixes()
-        missing = {suffix: unavailable[suffix]} if suffix in unavailable else {}
+        unavailable = get_unavailable_extensions()
+        missing = (
+            {extension: unavailable[extension]} if extension in unavailable else {}
+        )
         message = (
-            f"Could not convert {path}: no reader supports the .{suffix} format. "
-            + f"The following suffixes are supported: {sorted(supported_suffixes)}"
+            f"Could not convert {path}: no reader supports the .{extension} format. "
+            + f"The following extensions are supported: {sorted(supported_extensions)}"
         )
         if missing:
             message += describe_missing_extras(missing)
         return UnsupportedImageFormatError(
             message,
             path=path,
-            suffix=suffix,
-            supported_suffixes=tuple(sorted(supported_suffixes)),
+            file_extension=extension,
+            supported_file_extensions=tuple(sorted(supported_extensions)),
             missing_extras=tuple(sorted(set(missing.values()))),
         )
 
@@ -180,7 +183,7 @@ class SlicedImageSource(ImageSource):
         words in the user's mouth about.
 
         Runs only once _classify_open_failure has ruled out an unsupported
-        format, so readers exist for this suffix and none could read it.
+        format, so readers exist for this extension and none could read it.
         """
         path = self._error_path()
         if path is None:
@@ -215,7 +218,7 @@ class SlicedImageSource(ImageSource):
     def _try_open_images(
         self, original_images: str | list[str], exceptions: list[Exception]
     ) -> SliceSequence | None:
-        # try the registered reader for this suffix
+        # try the registered reader for this extension
         def strategy_0() -> SliceSequence | None:
             if isinstance(original_images, list):
                 return None

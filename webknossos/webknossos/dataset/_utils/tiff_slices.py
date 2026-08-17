@@ -16,7 +16,7 @@ except ImportError as e:
 @register_slice_reader
 class TiffSlices(SliceSequence):
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         return {"tif", "tiff"}
 
     # open_images() picks the eligible reader with the highest class_priority.

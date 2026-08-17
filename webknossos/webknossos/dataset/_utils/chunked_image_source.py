@@ -22,8 +22,8 @@ class ChunkedImageSource(ImageSource):
     reads and writes a whole shard-aligned block with no slice writer between.
 
     Subclasses implement only _read_source_box; the axis bookkeeping the
-    ImageSource contract needs lives here. Registering one for a suffix makes
-    it the only way files with that suffix are read.
+    ImageSource contract needs lives here. Registering one for an extension
+    makes it the only way files with that extension are read.
     """
 
     # Source extents in the file's own axis order, set from metadata by the
@@ -48,7 +48,7 @@ class ChunkedImageSource(ImageSource):
 
     @classmethod
     @abstractmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         """File extensions (without the dot, lowercase) this class can read."""
 
     @property

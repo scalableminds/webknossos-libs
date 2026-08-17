@@ -58,8 +58,8 @@ from . import raster_slices, sliced_image_source
 from .image_source import ImageSource, ReadOptions
 from .image_source_registry import (
     describe_missing_extras,
-    get_unavailable_suffixes,
-    get_valid_suffixes,
+    get_unavailable_extensions,
+    get_valid_extensions,
     open_image_source,
 )
 from .raster_slices import SingleImageSlices
@@ -204,7 +204,7 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
     Only runs on the "no supported image data" error path, so the extra
     directory scan costs nothing in the normal case.
     """
-    unavailable = get_unavailable_suffixes()
+    unavailable = get_unavailable_extensions()
     if not unavailable:
         return {}
 
@@ -225,7 +225,10 @@ def _describe_rgb_formats() -> str:
     """The formats whose channels mean colour, for the error message naming
     which ones can share a layer. Taken from the reader so it cannot drift into
     naming formats that can no longer be read."""
-    return ", ".join("." + suffix for suffix in sorted(SingleImageSlices.class_exts()))
+    return ", ".join(
+        "." + extension
+        for extension in sorted(SingleImageSlices.supported_file_extensions())
+    )
 
 
 def _channels_are_one_rgb_layer(
@@ -292,7 +295,7 @@ def from_images(
     """See Dataset.from_images() for the public docstring."""
     input_upath = UPath(input_path)
 
-    valid_extensions = get_valid_suffixes()
+    valid_extensions = get_valid_extensions()
 
     if z_slices_sort_key is None:
         z_slices_sort_key = natsort_keygen()
@@ -330,12 +333,12 @@ def from_images(
         raise UnsupportedImageFormatError(
             message,
             path=original_input_upath,
-            suffix=(
+            file_extension=(
                 original_input_upath.suffix.lstrip(".").lower() or None
                 if input_is_file
                 else None
             ),
-            supported_suffixes=tuple(sorted(valid_extensions)),
+            supported_file_extensions=tuple(sorted(valid_extensions)),
             missing_extras=tuple(sorted(set(missing.values()))),
         )
 

@@ -53,7 +53,7 @@ class SingleImageSlices(SliceSequence):
     """Reads a single 2D raster image into a length-1 sequence."""
 
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         return {"png", "jpg", "jpeg", "gif", "bmp", "ico"}
 
     class_priority = 12
@@ -141,8 +141,10 @@ class MultiImageSlices(SliceSequence):
         # imageio also decodes formats this class is not the preferred reader
         # for — a directory of TIFFs ends up here, where a "c" axis is separate
         # acquisitions rather than colour. The files say which case this is.
-        first_suffix = os.path.splitext(self._filepaths[0])[1].lstrip(".").lower()
-        self.channels_are_colour = first_suffix in SingleImageSlices.class_exts()
+        first_extension = os.path.splitext(self._filepaths[0])[1].lstrip(".").lower()
+        self.channels_are_colour = (
+            first_extension in SingleImageSlices.supported_file_extensions()
+        )
 
         self._init_axis("z", len(self._filepaths))
         plane_axes = _plane_axes(first_slice, self._filepaths[0])

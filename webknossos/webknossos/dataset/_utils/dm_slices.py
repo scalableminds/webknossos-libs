@@ -14,7 +14,7 @@ from .vendor.dm4 import DM4File  # type: ignore[attr-defined]
 @register_slice_reader
 class Dm3Slices(SliceSequence):
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         return {"dm3"}
 
     # open_images() picks the eligible reader with the highest class_priority.
@@ -46,7 +46,7 @@ class Dm3Slices(SliceSequence):
 @register_slice_reader
 class Dm4Slices(SliceSequence):
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         return {"dm4"}
 
     # open_images() picks the eligible reader with the highest class_priority.

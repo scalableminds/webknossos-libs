@@ -431,41 +431,43 @@ def test_remote_dataset_from_images() -> None:
     )
 
 
-def test_optional_reader_suffixes_match_class_exts() -> None:
-    # _OPTIONAL_READERS has to restate each reader's suffixes, because a
-    # reader whose dependency is missing never imports and so cannot report its
-    # own class_exts(). Whenever a reader *is* importable, the two must agree —
-    # otherwise the missing-dependency hint names the wrong formats, or
-    # silently stops covering one. Covers both strategies: slice readers are
-    # just as optional as chunked ones now that tifffile is not in the base
-    # install.
+def test_optional_reader_extensions_match_supported_file_extensions() -> None:
+    # _OPTIONAL_READERS has to restate each reader's extensions, because a
+    # reader whose dependency is missing never imports and so cannot report
+    # its own supported_file_extensions(). Whenever a reader *is* importable,
+    # the two must agree — otherwise the missing-dependency hint names the
+    # wrong formats, or silently stops covering one. Covers both strategies:
+    # slice readers are just as optional as chunked ones now that tifffile is
+    # not in the base install.
     from webknossos.dataset._utils.chunked_image_source import ChunkedImageSource
     from webknossos.dataset._utils.image_source_registry import (
         _CHUNKED_READER_CLASSES,
         _OPTIONAL_READERS,
         _SLICE_READER_CLASSES,
-        get_unavailable_suffixes,
+        get_unavailable_extensions,
     )
     from webknossos.dataset._utils.slice_sequence import SliceSequence
 
     # Annotated because the two lists' only common base is ABC, which does
-    # not declare class_exts(); the union does.
+    # not declare supported_file_extensions(); the union does.
     registered: dict[str, type[SliceSequence] | type[ChunkedImageSource]] = {
         cls.__name__: cls for cls in _SLICE_READER_CLASSES
     }
     registered.update({cls.__name__: cls for cls in _CHUNKED_READER_CLASSES})
     # The test env installs every extra except czi on Python 3.14, since
     # pylibCZIrw ships no wheel there.
-    unavailable_extras = set(get_unavailable_suffixes().values())
+    unavailable_extras = set(get_unavailable_extensions().values())
     for reader in _OPTIONAL_READERS:
         if reader.extra in unavailable_extras:
             continue
         assert reader.class_name in registered, (
             f"{reader.class_name} is declared optional but did not register"
         )
-        assert registered[reader.class_name].class_exts() == set(reader.suffixes), (
-            f"declared suffixes for {reader.class_name} are out of sync with "
-            "its class_exts()"
+        assert registered[reader.class_name].supported_file_extensions() == set(
+            reader.extensions
+        ), (
+            f"declared extensions for {reader.class_name} are out of sync "
+            "with its supported_file_extensions()"
         )
 
 
@@ -481,15 +483,15 @@ def test_from_images_names_missing_optional_dependency(
     image_conversion = importlib.import_module(
         "webknossos.dataset._utils.image_conversion"
     )
-    available = image_conversion.get_valid_suffixes()
+    available = image_conversion.get_valid_extensions()
     monkeypatch.setattr(
         image_conversion,
-        "get_valid_suffixes",
+        "get_valid_extensions",
         lambda: available - {"ims"},
     )
     monkeypatch.setattr(
         image_conversion,
-        "get_unavailable_suffixes",
+        "get_unavailable_extensions",
         lambda: {"ims": "ims"},
     )
     (tmp_upath / "a.ims").write_bytes(b"stand-in for an ims file")
@@ -516,9 +518,9 @@ def test_from_images_error_unchanged_when_nothing_is_missing(
     error = excinfo.value
     assert error.missing_extras == ()
     # The input is a directory, so there is no single offending extension.
-    assert error.suffix is None
+    assert error.file_extension is None
     assert error.path == tmp_upath
-    assert "tif" in error.supported_suffixes
+    assert "tif" in error.supported_file_extensions
 
 
 def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
@@ -533,7 +535,7 @@ def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
     ) as excinfo:
         Dataset.from_images(unsupported, tmp_upath / "ds", voxel_size=(1, 1, 1))
     error = excinfo.value
-    assert error.suffix == "dcm"
+    assert error.file_extension == "dcm"
     assert error.path == unsupported
     assert error.missing_extras == ()
     # Subclassing ValueError keeps `except ValueError` callers working.

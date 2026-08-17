@@ -1,4 +1,4 @@
-"""Which reader handles which file suffix, and the one way a source is opened.
+"""Which reader handles which file extension, and the one way a source is opened.
 
 A **reader** knows one input format and is what registers here; a **source** is
 an `ImageSource`, what `image_conversion.py` drives. The two kinds of reader
@@ -6,7 +6,7 @@ differ in whether they are also sources: a slice reader (`SliceSequence`
 subclass) is not — `SlicedImageSource` wraps it — while a chunked reader is,
 which is what its `…ImageSource` name says.
 
-`open_image_source()` picks the kind from the suffix and returns an
+`open_image_source()` picks the kind from the extension and returns an
 `ImageSource` either way, so no caller has to know which it got.
 """
 
@@ -41,25 +41,25 @@ def register_chunked_reader(
     return cls
 
 
-def get_valid_slice_reader_suffixes() -> set[str]:
-    """The suffixes (without dot) that some registered slice reader can open."""
-    valid_suffixes: set[str] = set()
+def get_valid_slice_reader_extensions() -> set[str]:
+    """The extensions (without dot) that some registered slice reader can open."""
+    valid_extensions: set[str] = set()
     for cls in _SLICE_READER_CLASSES:
-        valid_suffixes.update(cls.class_exts())
-    return valid_suffixes
+        valid_extensions.update(cls.supported_file_extensions())
+    return valid_extensions
 
 
-def get_valid_chunked_reader_suffixes() -> set[str]:
-    """The suffixes (without dot) that some registered chunked reader can open."""
-    valid_suffixes: set[str] = set()
+def get_valid_chunked_reader_extensions() -> set[str]:
+    """The extensions (without dot) that some registered chunked reader can open."""
+    valid_extensions: set[str] = set()
     for cls in _CHUNKED_READER_CLASSES:
-        valid_suffixes.update(cls.class_exts())
-    return valid_suffixes
+        valid_extensions.update(cls.supported_file_extensions())
+    return valid_extensions
 
 
-def get_valid_suffixes() -> set[str]:
-    """Every suffix that can be converted, by a reader of either kind."""
-    return get_valid_slice_reader_suffixes() | get_valid_chunked_reader_suffixes()
+def get_valid_extensions() -> set[str]:
+    """Every extension that can be converted, by a reader of either kind."""
+    return get_valid_slice_reader_extensions() | get_valid_chunked_reader_extensions()
 
 
 def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
@@ -67,7 +67,8 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
 
     A pattern matching more than one file becomes an image sequence; a single
     file is handed to the registered reader with the highest `class_priority`
-    that claims its suffix, falling back to the next one if that reader raises.
+    that claims its extension, falling back to the next one if that reader
+    raises.
     """
     # Deferred to avoid a cycle: the raster readers register themselves here.
     from .raster_slices import MultiImageSlices
@@ -79,28 +80,28 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     # collected while SlicedImageSource tries its other open strategies, and
     # _classify_open_failure replaces them with one that knows the `path` and
     # `missing_extras` (path_spec may be a glob, so these cannot).
-    supported = tuple(sorted(get_valid_suffixes()))
+    supported = tuple(sorted(get_valid_extensions()))
 
     _, ext = os.path.splitext(path_spec)
     if len(ext) < 2:
         raise UnsupportedImageFormatError(
             f"Could not detect the file type of {path_spec} because it has no "
             "extension.",
-            supported_suffixes=supported,
+            supported_file_extensions=supported,
         )
     ext = ext.lower()[1:]
 
     eligible_handlers = [
         handler
         for handler in _SLICE_READER_CLASSES
-        if ext in {e.lstrip(".").lower() for e in handler.class_exts()}
+        if ext in {e.lstrip(".").lower() for e in handler.supported_file_extensions()}
     ]
     if not eligible_handlers:
         raise UnsupportedImageFormatError(
             f"Could not autodetect how to load a file of type {ext}. The "
-            f"following suffixes are supported: {list(supported)}",
-            suffix=ext,
-            supported_suffixes=supported,
+            f"following extensions are supported: {list(supported)}",
+            file_extension=ext,
+            supported_file_extensions=supported,
         )
 
     messages = []
@@ -113,15 +114,15 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
             messages.append(f"{handler.__name__} errored: {e}")
     raise UnsupportedImageFormatError(
         "All handlers returned exceptions:\n" + "\n".join(messages),
-        suffix=ext,
-        supported_suffixes=supported,
+        file_extension=ext,
+        supported_file_extensions=supported,
     )
 
 
 def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> ImageSource:
     """Opens `images` as an `ImageSource`, choosing the reader kind itself.
 
-    A single file whose suffix a chunked reader claims is read that way;
+    A single file whose extension a chunked reader claims is read that way;
     everything else slice by slice, including every list of paths, since
     chunked formats are inherently single-file.
     """
@@ -129,9 +130,9 @@ def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> Imag
     from .sliced_image_source import SlicedImageSource
 
     if isinstance(images, UPath):
-        suffix = images.suffix.lstrip(".").lower()
+        extension = images.suffix.lstrip(".").lower()
         for cls in _CHUNKED_READER_CLASSES:
-            if suffix in cls.class_exts():
+            if extension in cls.supported_file_extensions():
                 # Remote UPaths deliberately do reach the reader, which raises
                 # its own "must be a local file path" error via is_remote_path.
                 return cls(images, options)
@@ -150,11 +151,12 @@ class _OptionalReader(NamedTuple):
     extra: str
     """The `webknossos[...]` extra that provides its dependency."""
 
-    suffixes: frozenset[str]
-    """What its class_exts() returns, restated because a reader whose
-    dependency is missing never imports and so cannot be asked — which is
-    exactly when this is needed. test_optional_reader_suffixes_match_class_exts
-    keeps the two in sync."""
+    extensions: frozenset[str]
+    """What its supported_file_extensions() returns, restated because a reader
+    whose dependency is missing never imports and so cannot be asked — which
+    is exactly when this is needed.
+    test_optional_reader_extensions_match_supported_file_extensions keeps the
+    two in sync."""
 
 
 # Every optional reader, declared once. Slice readers are as optional as
@@ -173,25 +175,27 @@ _OPTIONAL_READERS: tuple[_OptionalReader, ...] = (
     _OptionalReader("czi_image_source", "CziImageSource", "czi", frozenset({"czi"})),
 )
 
-# suffix -> extra, for readers that failed to import. Populated at import time
-# below and consumed by get_unavailable_suffixes().
-_UNAVAILABLE_SUFFIXES: dict[str, str] = {}
+# extension -> extra, for readers that failed to import. Populated at import
+# time below and consumed by get_unavailable_extensions().
+_UNAVAILABLE_EXTENSIONS: dict[str, str] = {}
 
 
-def get_unavailable_suffixes() -> dict[str, str]:
+def get_unavailable_extensions() -> dict[str, str]:
     """
-    Maps each suffix a reader *would* handle, but cannot because its optional
-    dependency is missing, to the extra that provides it (e.g. {"ims": "ims"}).
-    Empty when every reader imported. Lets callers name the missing dependency
-    instead of silently omitting the format from the supported list.
+    Maps each extension a reader *would* handle, but cannot because its
+    optional dependency is missing, to the extra that provides it (e.g.
+    {"ims": "ims"}). Empty when every reader imported. Lets callers name the
+    missing dependency instead of silently omitting the format from the
+    supported list.
     """
-    return dict(_UNAVAILABLE_SUFFIXES)
+    return dict(_UNAVAILABLE_EXTENSIONS)
 
 
 def describe_missing_extras(found: dict[str, str]) -> str:
     """
-    Turns a get_unavailable_suffixes() mapping, narrowed to the files at hand,
-    into a sentence naming the extras to install. Appended to an error message.
+    Turns a get_unavailable_extensions() mapping, narrowed to the files at
+    hand, into a sentence naming the extras to install. Appended to an error
+    message.
     """
     extras = sorted(set(found.values()))
     return (
@@ -220,8 +224,8 @@ def _import_readers() -> str | None:
             import_exceptions.append(f"{reader.class_name}: {import_error.msg}")
             # The reader never registered, so its formats would silently drop
             # out of the supported list; this is what names the extra instead.
-            for suffix in reader.suffixes:
-                _UNAVAILABLE_SUFFIXES[suffix] = reader.extra
+            for extension in reader.extensions:
+                _UNAVAILABLE_EXTENSIONS[extension] = reader.extra
 
     if import_exceptions:
         return "".join(

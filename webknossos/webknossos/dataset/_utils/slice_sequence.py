@@ -160,7 +160,7 @@ class SliceSequence(ABC):
     """
 
     # Consulted by `open_images()` to pick between readers that claim the same
-    # suffix; higher wins. 10 is the baseline, so a reader meant to take
+    # extension; higher wins. 10 is the baseline, so a reader meant to take
     # precedence over the general-purpose ones sets something above it.
     class_priority: int = 10
 
@@ -170,7 +170,7 @@ class SliceSequence(ABC):
     `ImageSource.channels_are_colour`."""
 
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         """The file extensions (without dot) this reader can open."""
         return set()
 

@@ -347,10 +347,10 @@ def test_add_layer_from_images_unsupported_format(tmp_upath: UPath) -> None:
     with pytest.raises(wk.UnsupportedImageFormatError) as excinfo:
         ds.add_layer_from_images(unsupported, layer_name="color")
     error = excinfo.value
-    assert error.suffix == "dcm"
+    assert error.file_extension == "dcm"
     assert error.path == unsupported
     assert error.missing_extras == ()
-    assert "dcm" not in error.supported_suffixes
+    assert "dcm" not in error.supported_file_extensions
     # Subclassing ValueError keeps `except ValueError` callers working.
     assert isinstance(error, ValueError)
 
@@ -446,7 +446,7 @@ def test_add_layer_from_images_names_missing_optional_dependency(
         "webknossos.dataset._utils.image_source_registry"
     )
     monkeypatch.setattr(registry, "_CHUNKED_READER_CLASSES", [])
-    monkeypatch.setattr(registry, "_UNAVAILABLE_SUFFIXES", {"ims": "ims"})
+    monkeypatch.setattr(registry, "_UNAVAILABLE_EXTENSIONS", {"ims": "ims"})
     ims_path = tmp_upath / "a.ims"
     ims_path.write_bytes(b"stand-in for an ims file")
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))

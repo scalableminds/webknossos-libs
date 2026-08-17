@@ -238,7 +238,7 @@ def _write_png(path: UPath, value: int) -> None:
     Image.fromarray(np.full((4, 6), value, dtype="uint8")).save(str(path))
 
 
-def test_open_images_dispatches_on_suffix(tmp_upath: UPath) -> None:
+def test_open_images_dispatches_on_extension(tmp_upath: UPath) -> None:
     png_path = tmp_upath / "single.png"
     _write_png(png_path, 7)
     assert isinstance(open_images(str(png_path)), SingleImageSlices)
@@ -252,7 +252,7 @@ def test_open_images_prefers_higher_class_priority(tmp_upath: UPath) -> None:
     assert isinstance(open_images(str(tif_path)), TiffSlices)
 
 
-def test_open_images_rejects_unknown_suffix(tmp_upath: UPath) -> None:
+def test_open_images_rejects_unknown_extension(tmp_upath: UPath) -> None:
     unknown = tmp_upath / "data.unsupported"
     unknown.write_bytes(b"x")
     with pytest.raises(
@@ -267,8 +267,8 @@ def test_open_images_rejects_unknown_suffix(tmp_upath: UPath) -> None:
     error = excinfo.value
     assert isinstance(error, ImageConversionError)
     assert isinstance(error, ValueError)
-    assert error.suffix == "unsupported"
-    assert "png" in error.supported_suffixes
+    assert error.file_extension == "unsupported"
+    assert "png" in error.supported_file_extensions
 
 
 def test_open_images_rejects_extensionless_file(tmp_upath: UPath) -> None:
