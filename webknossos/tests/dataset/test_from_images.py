@@ -15,10 +15,13 @@ from tifffile import TiffFile, imwrite
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR
-from tests.utils import create_synthetic_multi_timepoint_ims, download_ims_fixture
+from tests.data_fixtures import (
+    create_synthetic_multi_timepoint_ims,
+    download_wklibs_sample_archive,
+)
 from webknossos.dataset import Dataset, RemoteDataset, UnsupportedImageFormatError
-from webknossos.dataset._utils.mrc_chunked_images import MrcChunkedImages
-from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
+from webknossos.dataset._image_conversion.mrc_chunked_images import MrcChunkedImages
+from webknossos.dataset._image_conversion.pims_tiff_reader import PimsTiffReader
 from webknossos.geometry import BoundingBox, Vec3Int, VecInt
 
 
@@ -157,7 +160,7 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
 def test_multiple_multitiffs(tmp_upath: UPath) -> None:
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
-            TESTDATA_DIR / "various_tiff_formats",
+            download_wklibs_sample_archive("various_tiff_formats"),
             tmp_upath,
             (1, 1, 1),
             data_format="zarr3",
@@ -248,7 +251,7 @@ def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     # ImsChunkedImages.get_possible_layers() reports {"channel": [0, 1]} and
     # from_images() (which always passes allow_multiple_layers=True) should
     # split it into one layer per channel instead of picking just the first.
-    ims_path = download_ims_fixture(tmp_upath)
+    ims_path = download_wklibs_sample_archive("brain_crop3.ims")
 
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
@@ -289,7 +292,7 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
     ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._utils.ims_chunked_images"
+        "webknossos.dataset._image_conversion.ims_chunked_images"
     )
     monkeypatch.setattr(
         ims_chunked_images,
@@ -386,7 +389,7 @@ def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
 def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
     (input_path := tmp_upath / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
     copytree(
-        str(TESTDATA_DIR / "tiff_with_different_shapes"),
+        str(download_wklibs_sample_archive("tiff_with_different_shapes")),
         str(input_path),
         dirs_exist_ok=True,
     )
@@ -431,13 +434,13 @@ def test_remote_dataset_from_images() -> None:
     )
 
 
-def test_optional_reader_suffixes_match_class_exts() -> None:
+def test_optional_reader_suffixes_match_supported_file_extensions() -> None:
     # _OPTIONAL_CHUNKED_IMAGE_READERS has to restate each reader's suffixes,
     # because a reader whose dependency is missing never imports and so cannot
-    # report its own class_exts(). Whenever a reader *is* importable, the two
-    # must agree — otherwise the missing-dependency hint names the wrong
-    # formats, or silently stops covering one.
-    from webknossos.dataset._utils.chunked_images import (
+    # report its own supported_file_extensions(). Whenever a reader *is*
+    # importable, the two must agree — otherwise the missing-dependency hint
+    # names the wrong formats, or silently stops covering one.
+    from webknossos.dataset._image_conversion.chunked_images import (
         _CHUNKED_IMAGE_CLASSES,
         _OPTIONAL_CHUNKED_IMAGE_READERS,
     )
@@ -446,8 +449,9 @@ def test_optional_reader_suffixes_match_class_exts() -> None:
     # The test env installs all extras, so every reader should be registered.
     assert set(registered) == set(_OPTIONAL_CHUNKED_IMAGE_READERS)
     for name, (_extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
-        assert registered[name].class_exts() == set(suffixes), (
-            f"declared suffixes for {name} are out of sync with its class_exts()"
+        assert registered[name].supported_file_extensions() == set(suffixes), (
+            f"declared suffixes for {name} are out of sync with "
+            "its supported_file_extensions()"
         )
 
 
@@ -461,7 +465,7 @@ def test_from_images_names_missing_optional_dependency(
     # sides: its suffix drops out of the supported set and shows up as
     # unavailable, exactly as it would with the reader unimportable.
     image_conversion = importlib.import_module(
-        "webknossos.dataset._utils.image_conversion"
+        "webknossos.dataset._image_conversion.image_conversion"
     )
     available = image_conversion.get_valid_chunked_image_suffixes()
     monkeypatch.setattr(

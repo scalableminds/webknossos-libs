@@ -28,7 +28,7 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
-from ._utils import image_conversion
+from ._image_conversion import image_conversion
 from .abstract_dataset import (
     DEFAULT_VERSION,
     AbstractDataset,
@@ -95,7 +95,9 @@ from ..utils import (
     warn_deprecated,
     wrap_executor,
 )
-from ._utils.infer_bounding_box_existing_files import infer_bounding_box_existing_files
+from ._image_conversion.infer_bounding_box_existing_files import (
+    infer_bounding_box_existing_files,
+)
 
 logger = logging.getLogger(__name__)
 
