@@ -324,11 +324,11 @@ class PimsImages:
         if isinstance(original_images, str | UPath):
             original_images_path = UPath(original_images)
             if original_images_path.is_dir():
-                valid_suffixes = get_valid_pims_suffixes()
+                valid_extensions = get_valid_pims_extensions()
                 original_images = natsorted(
                     str(i)
                     for i in original_images_path.glob("**/*")
-                    if i.is_file() and i.suffix.lstrip(".") in valid_suffixes
+                    if i.is_file() and i.suffix.lstrip(".") in valid_extensions
                 )
                 if len(original_images) == 1:
                     original_images = original_images[0]
@@ -357,13 +357,13 @@ class PimsImages:
         or something else, e.g. a corrupt file or an IO error of a format that
         *is* supported, which must keep surfacing as its original error.
 
-        The decision is made on the suffix, not on the exception type:
+        The decision is made on the extension, not on the exception type:
         pims.open raises UnknownFormatError both when no handler claims the
-        suffix and when every handler that claimed it errored out, so a
+        extension and when every handler that claimed it errored out, so a
         corrupt TIFF is indistinguishable from an unreadable format by type.
 
-        Classifying afterwards, rather than rejecting unknown suffixes up
-        front, keeps files that pims opens without a recognized suffix (via
+        Classifying afterwards, rather than rejecting unknown extensions up
+        front, keeps files that pims opens without a recognized extension (via
         pims.ImageSequence/skimage) working: this only runs once every open
         strategy has already failed.
         """
@@ -371,39 +371,41 @@ class PimsImages:
         # independent at import time; only needed once opening has failed.
         from .chunked_images import (
             describe_missing_extras,
-            get_unavailable_chunked_image_suffixes,
-            get_valid_chunked_image_suffixes,
+            get_unavailable_chunked_image_extensions,
+            get_valid_chunked_image_extensions,
         )
 
         path = self._blame_path()
-        # Only a file's suffix says anything about which readers apply: a
+        # Only a file's extension says anything about which readers apply: a
         # directory of images has none (or, worse, a dot in its name), and
         # neither has a path that does not exist at all.
-        suffix = (
+        extension = (
             (path.suffix.lstrip(".").lower() or None)
             if path is not None and not path.is_dir()
             else None
         )
 
-        supported_suffixes = get_valid_pims_suffixes()
-        supported_suffixes.update(get_valid_chunked_image_suffixes())
+        supported_extensions = get_valid_pims_extensions()
+        supported_extensions.update(get_valid_chunked_image_extensions())
 
-        if suffix is None or suffix in supported_suffixes:
+        if extension is None or extension in supported_extensions:
             return None
 
-        unavailable = get_unavailable_chunked_image_suffixes()
-        missing = {suffix: unavailable[suffix]} if suffix in unavailable else {}
+        unavailable = get_unavailable_chunked_image_extensions()
+        missing = (
+            {extension: unavailable[extension]} if extension in unavailable else {}
+        )
         message = (
-            f"Could not convert {path}: no reader supports the .{suffix} format. "
-            + f"The following suffixes are supported: {sorted(supported_suffixes)}"
+            f"Could not convert {path}: no reader supports the .{extension} format. "
+            + f"The following extensions are supported: {sorted(supported_extensions)}"
         )
         if missing:
             message += describe_missing_extras(missing)
         return UnsupportedImageFormatError(
             message,
             path=path,
-            suffix=suffix,
-            supported_suffixes=tuple(sorted(supported_suffixes)),
+            file_extension=extension,
+            supported_file_extensions=tuple(sorted(supported_extensions)),
             missing_extras=tuple(sorted(set(missing.values()))),
         )
 
@@ -415,8 +417,8 @@ class PimsImages:
         class has no specific enough evidence to explain.
 
         Only runs once _classify_open_failure has ruled out an unsupported
-        format, so reaching here means readers exist for this suffix and none
-        of them could make sense of the contents.
+        format, so reaching here means readers exist for this extension and
+        none of them could make sense of the contents.
         """
         path = self._blame_path()
         if path is None:
@@ -776,11 +778,11 @@ def _get_all_pims_handlers() -> Iterable[
     )
 
 
-def get_valid_pims_suffixes() -> set[str]:
-    valid_suffixes = set()
+def get_valid_pims_extensions() -> set[str]:
+    valid_extensions = set()
     for pims_handler in _get_all_pims_handlers():
-        valid_suffixes.update(pims_handler.class_exts())
-    return valid_suffixes
+        valid_extensions.update(pims_handler.class_exts())
+    return valid_extensions
 
 
 def has_image_z_dimension(

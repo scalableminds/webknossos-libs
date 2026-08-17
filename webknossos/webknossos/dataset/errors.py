@@ -29,17 +29,17 @@ class ImageConversionError(ValueError):
 class UnsupportedImageFormatError(ImageConversionError):
     """Raised when image data cannot be converted because no reader handles its format.
 
-    Raised either because the input contains no file with a supported suffix,
-    or because every reader failed to recognize the file.
+    Raised either because the input contains no file with a supported
+    extension, or because every reader failed to recognize the file.
 
     Attributes:
         path: The offending input path, if there is a single one. `None` when
             the images were passed as a list or as a `pims.FramesSequence`.
-        suffix: The offending file's extension — lowercase, without the
-            leading dot (e.g. `"dcm"`). `None` when `path` is a directory or
-            unknown.
-        supported_suffixes: The suffixes that can currently be converted, in
-            the same lowercase, dot-less form.
+        file_extension: The offending file's extension — lowercase, without
+            the leading dot (e.g. `"dcm"`). `None` when `path` is a directory
+            or unknown.
+        supported_file_extensions: The extensions that can currently be
+            converted, in the same lowercase, dot-less form.
         missing_extras: The `webknossos` extras that would add support for the
             input at hand, e.g. `("ims",)` when converting an `.ims` file
             without `webknossos[ims]` installed. Empty when the format is not
@@ -55,7 +55,7 @@ class UnsupportedImageFormatError(ImageConversionError):
             if e.missing_extras:
                 print(f"Install webknossos[{','.join(e.missing_extras)}] to convert this file.")
             else:
-                print(f"Cannot convert .{e.suffix} files.")
+                print(f"Cannot convert .{e.file_extension} files.")
         ```
     """
 
@@ -64,13 +64,13 @@ class UnsupportedImageFormatError(ImageConversionError):
         message: str,
         *,
         path: UPath | None = None,
-        suffix: str | None = None,
-        supported_suffixes: tuple[str, ...] = (),
+        file_extension: str | None = None,
+        supported_file_extensions: tuple[str, ...] = (),
         missing_extras: tuple[str, ...] = (),
     ) -> None:
         super().__init__(message, path=path)
-        self.suffix = suffix
-        self.supported_suffixes = supported_suffixes
+        self.file_extension = file_extension
+        self.supported_file_extensions = supported_file_extensions
         self.missing_extras = missing_extras
 
 

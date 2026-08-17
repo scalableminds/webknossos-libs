@@ -341,10 +341,10 @@ def test_add_layer_from_images_unsupported_format(tmp_upath: UPath) -> None:
     with pytest.raises(wk.UnsupportedImageFormatError) as excinfo:
         ds.add_layer_from_images(unsupported, layer_name="color")
     error = excinfo.value
-    assert error.suffix == "dcm"
+    assert error.file_extension == "dcm"
     assert error.path == unsupported
     assert error.missing_extras == ()
-    assert "dcm" not in error.supported_suffixes
+    assert "dcm" not in error.supported_file_extensions
     # Subclassing ValueError keeps `except ValueError` callers working.
     assert isinstance(error, ValueError)
 
@@ -441,7 +441,7 @@ def test_add_layer_from_images_names_missing_optional_dependency(
     )
     monkeypatch.setattr(chunked_images, "_CHUNKED_IMAGE_CLASSES", [])
     monkeypatch.setattr(
-        chunked_images, "_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES", {"ims": "ims"}
+        chunked_images, "_UNAVAILABLE_CHUNKED_IMAGE_EXTENSIONS", {"ims": "ims"}
     )
     ims_path = tmp_upath / "a.ims"
     ims_path.write_bytes(b"stand-in for an ims file")
@@ -581,8 +581,8 @@ def test_rgb_image_stays_a_single_layer(
 def test_multi_channel_16bit_tiff_needs_one_layer_per_channel(
     tmp_upath: UPath,
 ) -> None:
-    # .tif is not in the RGB-suffix allowlist — TIFF can store RGB, but in the
-    # microscopy context this library targets it usually doesn't — so even
+    # .tif is not in the RGB-extension allowlist — TIFF can store RGB, but in
+    # the microscopy context this library targets it usually doesn't — so even
     # three channels are separate acquisitions rather than RGB. uint16 makes
     # this unambiguous either way: only uint8 channels are ever treated as RGB.
     tiff_path = tmp_upath / "three_channels.tif"

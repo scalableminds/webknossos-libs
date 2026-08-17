@@ -268,11 +268,11 @@ def register_chunked_images(cls: type[ChunkedImages]) -> type[ChunkedImages]:
     return cls
 
 
-def get_valid_chunked_image_suffixes() -> set[str]:
-    valid_suffixes: set[str] = set()
+def get_valid_chunked_image_extensions() -> set[str]:
+    valid_extensions: set[str] = set()
     for cls in _CHUNKED_IMAGE_CLASSES:
-        valid_suffixes.update(cls.supported_file_extensions())
-    return valid_suffixes
+        valid_extensions.update(cls.supported_file_extensions())
+    return valid_extensions
 
 
 def try_open_chunked_images(
@@ -287,7 +287,7 @@ def try_open_chunked_images(
 ) -> ChunkedImages | None:
     """
     Returns a ChunkedImages instance if `images` is a single path whose
-    suffix a registered chunk-based format handles, else None. Chunk-based
+    extension a registered chunk-based format handles, else None. Chunk-based
     formats are inherently single-file, so lists of paths and
     pims.FramesSequence instances always fall back to the generic PimsImages
     path.
@@ -300,9 +300,9 @@ def try_open_chunked_images(
     if not isinstance(images, UPath):
         return None
     path = images
-    suffix = path.suffix.lstrip(".").lower()
+    extension = path.suffix.lstrip(".").lower()
     for cls in _CHUNKED_IMAGE_CLASSES:
-        if suffix in cls.supported_file_extensions():
+        if extension in cls.supported_file_extensions():
             return cls(
                 path,
                 channel=channel,
@@ -315,25 +315,25 @@ def try_open_chunked_images(
     return None
 
 
-# The suffixes and extra each optional reader is responsible for. A reader
+# The extensions and extra each optional reader is responsible for. A reader
 # whose dependency is missing never imports, so it never registers and cannot
 # report its own supported_file_extensions() — these have to be declared out
 # here for the "you are missing an optional dependency" hint to be possible
-# at all. test_optional_reader_suffixes_match_supported_file_extensions keeps
-# them in sync.
+# at all. test_optional_reader_extensions_match_supported_file_extensions
+# keeps them in sync.
 _OPTIONAL_CHUNKED_IMAGE_READERS: dict[str, tuple[str, frozenset[str]]] = {
     "ImsChunkedImages": ("ims", frozenset({"ims"})),
     "MrcChunkedImages": ("mrcfile", frozenset({"mrc", "rec", "st", "map", "ali"})),
 }
 
-# suffix -> extra, for readers that failed to import. Populated at import time
-# below and consumed by get_unavailable_chunked_image_suffixes().
-_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES: dict[str, str] = {}
+# extension -> extra, for readers that failed to import. Populated at import
+# time below and consumed by get_unavailable_chunked_image_extensions().
+_UNAVAILABLE_CHUNKED_IMAGE_EXTENSIONS: dict[str, str] = {}
 
 
-def get_unavailable_chunked_image_suffixes() -> dict[str, str]:
+def get_unavailable_chunked_image_extensions() -> dict[str, str]:
     """
-    Maps each suffix that a chunk-based reader *would* handle, but cannot
+    Maps each extension that a chunk-based reader *would* handle, but cannot
     because its optional dependency is missing, to the extra that provides it
     (e.g. {"ims": "ims"}). Empty when every reader imported successfully.
 
@@ -341,13 +341,13 @@ def get_unavailable_chunked_image_suffixes() -> dict[str, str]:
     names the missing dependency, rather than silently omitting the format
     from the supported list.
     """
-    return dict(_UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES)
+    return dict(_UNAVAILABLE_CHUNKED_IMAGE_EXTENSIONS)
 
 
 def describe_missing_extras(found: dict[str, str]) -> str:
     """
-    Turns a suffix -> extra mapping, as returned for the files at hand by
-    get_unavailable_chunked_image_suffixes(), into a sentence naming the
+    Turns an extension -> extra mapping, as returned for the files at hand by
+    get_unavailable_chunked_image_extensions(), into a sentence naming the
     extras to install. Meant to be appended to an error message.
     """
     extras = sorted(set(found.values()))
@@ -372,10 +372,10 @@ def _chunked_images_imports() -> str | None:
         import_exceptions.append(f"MrcChunkedImages: {import_error.msg}")
 
     registered = {cls.__name__ for cls in _CHUNKED_IMAGE_CLASSES}
-    for name, (extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
+    for name, (extra, extensions) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
         if name not in registered:
-            for suffix in suffixes:
-                _UNAVAILABLE_CHUNKED_IMAGE_SUFFIXES[suffix] = extra
+            for extension in extensions:
+                _UNAVAILABLE_CHUNKED_IMAGE_EXTENSIONS[extension] = extra
 
     if import_exceptions:
         import_exception_string = "".join(

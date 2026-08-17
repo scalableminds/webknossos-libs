@@ -434,8 +434,8 @@ def test_remote_dataset_from_images() -> None:
     )
 
 
-def test_optional_reader_suffixes_match_supported_file_extensions() -> None:
-    # _OPTIONAL_CHUNKED_IMAGE_READERS has to restate each reader's suffixes,
+def test_optional_reader_extensions_match_supported_file_extensions() -> None:
+    # _OPTIONAL_CHUNKED_IMAGE_READERS has to restate each reader's extensions,
     # because a reader whose dependency is missing never imports and so cannot
     # report its own supported_file_extensions(). Whenever a reader *is*
     # importable, the two must agree — otherwise the missing-dependency hint
@@ -448,9 +448,9 @@ def test_optional_reader_suffixes_match_supported_file_extensions() -> None:
     registered = {cls.__name__: cls for cls in _CHUNKED_IMAGE_CLASSES}
     # The test env installs all extras, so every reader should be registered.
     assert set(registered) == set(_OPTIONAL_CHUNKED_IMAGE_READERS)
-    for name, (_extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
-        assert registered[name].supported_file_extensions() == set(suffixes), (
-            f"declared suffixes for {name} are out of sync with "
+    for name, (_extra, extensions) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
+        assert registered[name].supported_file_extensions() == set(extensions), (
+            f"declared extensions for {name} are out of sync with "
             "its supported_file_extensions()"
         )
 
@@ -459,23 +459,23 @@ def test_from_images_names_missing_optional_dependency(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # With an extra uninstalled its reader never registers, so its formats are
-    # simply absent from the "supported suffixes" list and the failure gives no
-    # hint that a dependency is missing.
+    # simply absent from the "supported extensions" list and the failure gives
+    # no hint that a dependency is missing.
     # The test env installs every extra, so simulate the missing one on both
-    # sides: its suffix drops out of the supported set and shows up as
+    # sides: its extension drops out of the supported set and shows up as
     # unavailable, exactly as it would with the reader unimportable.
     image_conversion = importlib.import_module(
         "webknossos.dataset._image_conversion.image_conversion"
     )
-    available = image_conversion.get_valid_chunked_image_suffixes()
+    available = image_conversion.get_valid_chunked_image_extensions()
     monkeypatch.setattr(
         image_conversion,
-        "get_valid_chunked_image_suffixes",
+        "get_valid_chunked_image_extensions",
         lambda: available - {"ims"},
     )
     monkeypatch.setattr(
         image_conversion,
-        "get_unavailable_chunked_image_suffixes",
+        "get_unavailable_chunked_image_extensions",
         lambda: {"ims": "ims"},
     )
     (tmp_upath / "a.ims").write_bytes(b"stand-in for an ims file")
@@ -501,16 +501,16 @@ def test_from_images_error_unchanged_when_nothing_is_missing(
         Dataset.from_images(tmp_upath, tmp_upath / "ds", voxel_size=(1, 1, 1))
     error = excinfo.value
     assert error.missing_extras == ()
-    # The input is a directory, so there is no single offending suffix.
-    assert error.suffix is None
+    # The input is a directory, so there is no single offending extension.
+    assert error.file_extension is None
     assert error.path == tmp_upath
-    assert "tif" in error.supported_suffixes
+    assert "tif" in error.supported_file_extensions
 
 
 def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
     # Passing a single file that no reader handles used to raise an
     # UnboundLocalError, because input_files was only assigned for files with a
-    # supported suffix.
+    # supported extension.
     unsupported = tmp_upath / "scan.dcm"
     unsupported.write_bytes(b"\x00" * 132)
 
@@ -519,7 +519,7 @@ def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
     ) as excinfo:
         Dataset.from_images(unsupported, tmp_upath / "ds", voxel_size=(1, 1, 1))
     error = excinfo.value
-    assert error.suffix == "dcm"
+    assert error.file_extension == "dcm"
     assert error.path == unsupported
     assert error.missing_extras == ()
     # Subclassing ValueError keeps `except ValueError` callers working.

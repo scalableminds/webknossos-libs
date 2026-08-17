@@ -48,8 +48,8 @@ from . import pims_images
 from .chunked_images import (
     ChunkedImages,
     describe_missing_extras,
-    get_unavailable_chunked_image_suffixes,
-    get_valid_chunked_image_suffixes,
+    get_unavailable_chunked_image_extensions,
+    get_valid_chunked_image_extensions,
     try_open_chunked_images,
 )
 from .segmentation_recognition import (
@@ -177,13 +177,13 @@ class ConversionLayerMapping(Enum):
 def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
     """
     Looks for files whose format a chunk-based reader would handle if its
-    optional dependency were installed, and maps their suffix to the extra
+    optional dependency were installed, and maps their extension to the extra
     that provides it. Empty if there are none.
 
     Only runs on the "no supported image data" error path, so the extra
     directory scan costs nothing in the normal case.
     """
-    unavailable = get_unavailable_chunked_image_suffixes()
+    unavailable = get_unavailable_chunked_image_extensions()
     if not unavailable:
         return {}
 
@@ -194,9 +194,9 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 
     found: dict[str, str] = {}
     for path in candidates:
-        suffix = path.suffix.lstrip(".").lower()
-        if suffix in unavailable:
-            found[suffix] = unavailable[suffix]
+        extension = path.suffix.lstrip(".").lower()
+        if extension in unavailable:
+            found[extension] = unavailable[extension]
     return found
 
 
@@ -205,7 +205,7 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 # one layer. Everything else — scientific formats such as TIFF, CZI, DM3/DM4,
 # .ims and MRC — stores one acquisition channel per channel, which users almost
 # always want as separate layers, even when there happen to be three of them.
-_RGB_IMAGE_SUFFIXES = frozenset(
+_RGB_IMAGE_EXTENSIONS = frozenset(
     {
         "bmp",
         "gif",
@@ -227,7 +227,7 @@ _RGB_IMAGE_SUFFIXES = frozenset(
 
 
 def _describe_rgb_formats() -> str:
-    return ", ".join("." + suffix for suffix in sorted(_RGB_IMAGE_SUFFIXES))
+    return ", ".join("." + extension for extension in sorted(_RGB_IMAGE_EXTENSIONS))
 
 
 def _channels_are_one_rgb_layer(
@@ -251,7 +251,7 @@ def _channels_are_one_rgb_layer(
     path = images if isinstance(images, UPath) else None
     if path is None and isinstance(images, list) and images:
         path = images[0]
-    if path is None or path.suffix.lstrip(".").lower() not in _RGB_IMAGE_SUFFIXES:
+    if path is None or path.suffix.lstrip(".").lower() not in _RGB_IMAGE_EXTENSIONS:
         return False
     # An RGBA image is written as RGB with the alpha channel dropped, unless the
     # caller asked to keep every channel, in which case they become layers.
@@ -420,8 +420,8 @@ def from_images(
     """See Dataset.from_images() for the public docstring."""
     input_upath = UPath(input_path)
 
-    valid_suffixes = pims_images.get_valid_pims_suffixes()
-    valid_suffixes.update(get_valid_chunked_image_suffixes())
+    valid_extensions = pims_images.get_valid_pims_extensions()
+    valid_extensions.update(get_valid_chunked_image_extensions())
 
     if z_slices_sort_key is None:
         z_slices_sort_key = natsort_keygen()
@@ -431,7 +431,7 @@ def from_images(
     original_input_upath = input_upath
     input_is_file = input_upath.is_file()
     if input_is_file:
-        if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
+        if input_upath.suffix.lstrip(".").lower() in valid_extensions:
             input_files = [UPath(input_upath.name)]
             input_upath = input_upath.parent
         else:
@@ -442,13 +442,13 @@ def from_images(
         input_files = [
             i.relative_to(input_upath)
             for i in input_upath.glob("**/*")
-            if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
+            if i.is_file() and i.suffix.lstrip(".").lower() in valid_extensions
         ]
 
     if len(input_files) == 0:
         message = (
             "Could not find any supported image data. "
-            + f"The following suffixes are supported: {sorted(valid_suffixes)}"
+            + f"The following extensions are supported: {sorted(valid_extensions)}"
         )
         # A reader whose optional dependency is missing never registers, so its
         # formats are simply absent from the list above. Without this the only
@@ -459,12 +459,12 @@ def from_images(
         raise UnsupportedImageFormatError(
             message,
             path=original_input_upath,
-            suffix=(
+            file_extension=(
                 original_input_upath.suffix.lstrip(".").lower() or None
                 if input_is_file
                 else None
             ),
-            supported_suffixes=tuple(sorted(valid_suffixes)),
+            supported_file_extensions=tuple(sorted(valid_extensions)),
             missing_extras=tuple(sorted(set(missing.values()))),
         )
 
