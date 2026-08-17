@@ -198,7 +198,7 @@ class ConversionLayerMapping(Enum):
 def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
     """
     Looks for files whose format a chunk-based reader would handle if its
-    optional dependency were installed, and maps their suffix to the extra
+    optional dependency were installed, and maps their extension to the extra
     that provides it. Empty if there are none.
 
     Only runs on the "no supported image data" error path, so the extra
@@ -215,9 +215,9 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 
     found: dict[str, str] = {}
     for path in candidates:
-        suffix = path.suffix.lstrip(".").lower()
-        if suffix in unavailable:
-            found[suffix] = unavailable[suffix]
+        extension = path.suffix.lstrip(".").lower()
+        if extension in unavailable:
+            found[extension] = unavailable[extension]
     return found
 
 
@@ -236,13 +236,15 @@ def _channels_are_one_rgb_layer(
     truncate_rgba_to_rgb: bool,
 ) -> bool:
     """
-    Whether the source's channels are colour channels of a single layer, rather
+    Whether the source's channels are RGB channels of a single layer, rather
     than separate channels that each deserve their own layer.
 
     This needs the *source's* channel count, not the reader's `num_channels`:
     the readers already pin or truncate channels (a two-channel source reports
     one channel, pinned to the first), which is exactly the silent discarding
-    this decision exists to avoid.
+    this decision exists to avoid. Callers only reach here with 2+ source
+    channels — a single channel is never offered as a possible layer split in
+    the first place.
     """
     if num_source_channels == 1:
         return True
@@ -290,17 +292,17 @@ def from_images(
     """See Dataset.from_images() for the public docstring."""
     input_upath = UPath(input_path)
 
-    valid_suffixes = get_valid_suffixes()
+    valid_extensions = get_valid_suffixes()
 
     if z_slices_sort_key is None:
         z_slices_sort_key = natsort_keygen()
 
-    # Kept around for the error below, since input_upath moves to the parent
-    # directory for a single file that can be converted.
+    # input_upath is replaced with its parent directory below for a single
+    # convertible file, so keep the original around to report in the error.
     original_input_upath = input_upath
     input_is_file = input_upath.is_file()
     if input_is_file:
-        if input_upath.suffix.lstrip(".").lower() in valid_suffixes:
+        if input_upath.suffix.lstrip(".").lower() in valid_extensions:
             input_files = [UPath(input_upath.name)]
             input_upath = input_upath.parent
         else:
@@ -311,13 +313,13 @@ def from_images(
         input_files = [
             i.relative_to(input_upath)
             for i in input_upath.glob("**/*")
-            if i.is_file() and i.suffix.lstrip(".").lower() in valid_suffixes
+            if i.is_file() and i.suffix.lstrip(".").lower() in valid_extensions
         ]
 
     if len(input_files) == 0:
         message = (
             "Could not find any supported image data. "
-            + f"The following suffixes are supported: {sorted(valid_suffixes)}"
+            + f"The following extensions are supported: {sorted(valid_extensions)}"
         )
         # A reader whose optional dependency is missing never registers, so its
         # formats are simply absent from the list above. Without this the only
@@ -333,7 +335,7 @@ def from_images(
                 if input_is_file
                 else None
             ),
-            supported_suffixes=tuple(sorted(valid_suffixes)),
+            supported_suffixes=tuple(sorted(valid_extensions)),
             missing_extras=tuple(sorted(set(missing.values()))),
         )
 
@@ -406,8 +408,8 @@ def from_images(
                     allow_multiple_layers=True,
                     max_layers=max_layers - len(ds.layers),
                     # An RGBA screenshot should convert into one RGB layer, not
-                    # into four grayscale ones. Channels that are not colour are
-                    # split by allow_multiple_layers above regardless.
+                    # into four grayscale ones. Non-RGB channels are split by
+                    # allow_multiple_layers above regardless.
                     truncate_rgba_to_rgb=True,
                     executor=executor,
                 )
@@ -499,17 +501,16 @@ def add_layer_from_images(
             image_source=image_source,
             truncate_rgba_to_rgb=truncate_rgba_to_rgb,
         ):
-            # The channels are colour, so they belong in one layer rather than
+            # The channels are RGB, so they belong in one layer rather than
             # being offered up as one layer each. The readers take care of the
             # RGBA -> RGB truncation.
             assert possible_layers is not None
             del possible_layers["channel"]
         elif not allow_multiple_layers:
             raise UnsupportedImageDataError(
-                f"Cannot convert the {len(source_channels)} channels of these images "
-                + "into a single layer: WEBKNOSSOS only displays several channels "
-                + "within one layer as RGB, which means three uint8 channels of an "
-                + f"image format that stores colour ({_describe_rgb_formats()}). "
+                f"Cannot write these {len(source_channels)} channels into a "
+                + "single layer: WEBKNOSSOS only combines several channels into "
+                + f"one layer as RGB (three uint8 channels of {_describe_rgb_formats()}). "
                 + "Set allow_multiple_layers=True to write one layer per channel, "
                 + "or channel=<index> to convert a single channel.",
                 path=image_paths if isinstance(image_paths, UPath) else None,
@@ -731,6 +732,16 @@ def add_layer_from_images(
         except Exception:
             # The used heuristic was not able to guess the layer category, the previous value is kept
             pass
+
+        # Verify the properties are actually consistent now, instead of assuming so.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "error",
+                message=".* properties changed in a way that they are not comparable anymore. Most likely the bounding box naming or axis order changed.*",
+                category=UserWarning,
+                module="webknossos",
+            )
+            dataset._save_dataset_properties()
         if first_layer is None:
             first_layer = layer
     assert first_layer is not None

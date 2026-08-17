@@ -15,9 +15,9 @@ from tifffile import TiffFile, imwrite
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR
-from tests.utils import (
+from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
-    download_ims_fixture,
+    download_wklibs_sample_archive,
 )
 from webknossos.dataset import (
     Dataset,
@@ -165,7 +165,7 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
 def test_multiple_multitiffs(tmp_upath: UPath) -> None:
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
-            TESTDATA_DIR / "various_tiff_formats",
+            download_wklibs_sample_archive("various_tiff_formats"),
             tmp_upath,
             (1, 1, 1),
             data_format="zarr3",
@@ -227,8 +227,8 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
 
 @pytest.mark.parametrize("mode", ["RGB", "RGBA"])
 def test_rgb_image_creates_a_single_rgb_layer(tmp_upath: UPath, mode: str) -> None:
-    # from_images() passes allow_multiple_layers=True, but the colour channels
-    # of an everyday image format still belong in one layer rather than being
+    # from_images() passes allow_multiple_layers=True, but the RGB channels of
+    # an everyday image format still belong in one layer rather than being
     # split into grayscale ones — and an alpha channel is dropped, not turned
     # into a fourth layer.
     images = tmp_upath / "images"
@@ -256,7 +256,7 @@ def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     # ImsImageSource.get_possible_layers() reports {"channel": [0, 1]} and
     # from_images() (which always passes allow_multiple_layers=True) should
     # split it into one layer per channel instead of picking just the first.
-    ims_path = download_ims_fixture(tmp_upath)
+    ims_path = download_wklibs_sample_archive("brain_crop3.ims")
 
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
@@ -386,7 +386,7 @@ def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
 def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
     (input_path := tmp_upath / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
     copytree(
-        str(TESTDATA_DIR / "tiff_with_different_shapes"),
+        str(download_wklibs_sample_archive("tiff_with_different_shapes")),
         str(input_path),
         dirs_exist_ok=True,
     )
@@ -473,10 +473,10 @@ def test_from_images_names_missing_optional_dependency(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # With an extra uninstalled its reader never registers, so its formats are
-    # simply absent from the "supported suffixes" list and the failure gives no
-    # hint that a dependency is missing.
+    # simply absent from the "supported extensions" list and the failure gives
+    # no hint that a dependency is missing.
     # The test env installs every extra, so simulate the missing one on both
-    # sides: its suffix drops out of the supported set and shows up as
+    # sides: its extension drops out of the supported set and shows up as
     # unavailable, exactly as it would with the reader unimportable.
     image_conversion = importlib.import_module(
         "webknossos.dataset._utils.image_conversion"
@@ -515,7 +515,7 @@ def test_from_images_error_unchanged_when_nothing_is_missing(
         Dataset.from_images(tmp_upath, tmp_upath / "ds", voxel_size=(1, 1, 1))
     error = excinfo.value
     assert error.missing_extras == ()
-    # The input is a directory, so there is no single offending suffix.
+    # The input is a directory, so there is no single offending extension.
     assert error.suffix is None
     assert error.path == tmp_upath
     assert "tif" in error.supported_suffixes
@@ -524,7 +524,7 @@ def test_from_images_error_unchanged_when_nothing_is_missing(
 def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
     # Passing a single file that no reader handles used to raise an
     # UnboundLocalError, because input_files was only assigned for files with a
-    # supported suffix.
+    # supported extension.
     unsupported = tmp_upath / "scan.dcm"
     unsupported.write_bytes(b"\x00" * 132)
 

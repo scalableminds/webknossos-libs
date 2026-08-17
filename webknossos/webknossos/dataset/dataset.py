@@ -1162,15 +1162,13 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `allow_multiple_layers`: set to `True` if channels may result in multiple layers being added (only the first is returned)
         * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
-
-        Several channels are only written into a single layer when they are
-        actually colour: three uint8 channels of an image format that stores
-        colour (`.png`, `.jpg`, `.bmp`, …), which WEBKNOSSOS displays as RGB.
-        The channels of any other source are separate acquisitions and need one
-        layer each, so this method raises `UnsupportedImageDataError` for them
-        unless `allow_multiple_layers=True` (one layer per channel, the first is
-        returned) or `channel=<index>` (a single channel) is given.
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
+
+        Several channels only share a single layer when they are RGB: three
+        uint8 channels of a format that stores RGB (`.png`, `.jpg`, `.bmp`, …).
+        Channels from any other source need one layer each, so this method
+        raises `UnsupportedImageDataError` for them unless
+        `allow_multiple_layers=True` or `channel=<index>` is given.
 
         Raises:
             UnsupportedImageFormatError: If no reader can convert `images`. Its
@@ -1181,8 +1179,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 read, which usually means it is damaged or incomplete.
             UnsupportedImageDataError: If the images were read, but their data
                 cannot be stored as requested, e.g. a float image converted
-                into a segmentation layer, or several non-colour channels
-                without `allow_multiple_layers=True`.
+                into a segmentation layer, or several non-RGB channels without
+                `allow_multiple_layers=True`.
         """
 
         return image_conversion.add_layer_from_images(

@@ -3,7 +3,7 @@ import sys
 from upath import UPath
 
 import webknossos as wk
-from webknossos.dataset._utils.segmentation_recognition import (
+from webknossos.dataset._image_conversion.segmentation_recognition import (
     THRESHOLD,
     guess_category_from_view,
     sample_distinct_values_per_vx,

@@ -1,4 +1,4 @@
-"""Exceptions raised by the dataset API.
+"""Exceptions raised by the dataset conversion.
 
 This module deliberately imports nothing but `upath`, so that none of these
 exceptions depends on an image reader or on a reader's optional dependency.
@@ -21,9 +21,6 @@ class ImageConversionError(ValueError):
     """Base class for the ways image conversion can fail because of its input.
 
     Raised by `Dataset.from_images` and `Dataset.add_layer_from_images`.
-
-    Subclasses `ValueError`, which the call sites raised before these exceptions
-    existed, so `except ValueError` keeps working.
 
     Attributes:
         path: The offending input path, if there is a single one. `None` when

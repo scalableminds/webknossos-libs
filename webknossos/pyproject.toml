@@ -155,7 +155,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    "webknossos/dataset/_utils/vendor",
+    "webknossos/dataset/_image_conversion/vendor",
     "webknossos/proofreading/generated/agglomerate_graph_pb2.py",
     "webknossos/proofreading/generated/agglomerate_graph_pb2.pyi",
 ]
