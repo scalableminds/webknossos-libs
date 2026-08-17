@@ -856,7 +856,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         )
 
     def download_mesh(
-        self,π
+        self,
         segment_id: int,
         output_dir: PathLike | UPath | str,
         *,
