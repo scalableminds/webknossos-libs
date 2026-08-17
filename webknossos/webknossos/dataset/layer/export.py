@@ -211,9 +211,13 @@ def _write_ome_zarr_zip(layer_dir: UPath, output_path: UPath, ome_version: str) 
 
 def _copy(args: "tuple[View, MagView, NDBoundingBox]") -> None:
     source, target_mag_view, chunk_bbox = args
-    # allow_unaligned is safe here since chunk_bbox is aligned to the
-    # target mag's own shard grid, except possibly at the true edge of the
-    # exported region - each parallel writer still touches a distinct shard.
+    # chunk_bbox is aligned to the target mag's own (x,y,z-only) shard grid,
+    # so this is safe for plain 3D layers without allow_unaligned. It's only
+    # needed for layers with additional axes (e.g. time): those are always
+    # chunked to size 1 (see as_ozx), so a write covering a full x/y/z shard
+    # but a single value along such an axis still lands entirely within its
+    # own, fully owned shard file, but WEBKNOSSOS's shard-alignment check
+    # only looks at x/y/z and flags it as unaligned regardless.
     target_mag_view.write(
         source.read(), absolute_bounding_box=chunk_bbox, allow_unaligned=True
     )
