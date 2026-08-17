@@ -14,7 +14,11 @@ from tifffile import TiffFile, imwrite
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR
-from tests.utils import create_synthetic_multi_timepoint_ims, download_ims_fixture
+from tests.data_fixtures import (
+    create_synthetic_multi_timepoint_ims,
+    download_ims_fixture,
+    download_wklibs_sample_archive,
+)
 from webknossos.dataset import Dataset, RemoteDataset
 from webknossos.dataset._utils.mrc_chunked_images import MrcChunkedImages
 from webknossos.dataset._utils.pims_tiff_reader import PimsTiffReader
@@ -156,7 +160,7 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
 def test_multiple_multitiffs(tmp_upath: UPath) -> None:
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
-            TESTDATA_DIR / "various_tiff_formats",
+            download_wklibs_sample_archive("various_tiff_formats"),
             tmp_upath,
             (1, 1, 1),
             data_format="zarr3",
@@ -221,7 +225,7 @@ def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     # ImsChunkedImages.get_possible_layers() reports {"channel": [0, 1]} and
     # from_images() (which always passes allow_multiple_layers=True) should
     # split it into one layer per channel instead of picking just the first.
-    ims_path = download_ims_fixture(tmp_upath)
+    ims_path = download_ims_fixture()
 
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(
@@ -359,7 +363,7 @@ def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
 def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
     (input_path := tmp_upath / "tiff" / "subfolder" / "tifffiles").mkdir(parents=True)
     copytree(
-        str(TESTDATA_DIR / "tiff_with_different_shapes"),
+        str(download_wklibs_sample_archive("tiff_with_different_shapes")),
         str(input_path),
         dirs_exist_ok=True,
     )

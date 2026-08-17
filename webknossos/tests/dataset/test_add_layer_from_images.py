@@ -5,13 +5,11 @@ import warnings
 from collections.abc import Callable, Iterator
 from pathlib import Path
 from shutil import copy
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import TemporaryDirectory, mkdtemp
 from time import gmtime, strftime
 from typing import Any
-from zipfile import BadZipFile, ZipFile
 
 import h5py
-import httpx
 import mrcfile
 import numpy as np
 import pytest
@@ -21,7 +19,12 @@ from upath import UPath
 
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
-from tests.utils import create_synthetic_multi_timepoint_ims, download_ims_fixture
+from tests.data_fixtures import (
+    create_synthetic_multi_timepoint_ims,
+    download_and_unpack,
+    download_ims_fixture,
+    download_wklibs_sample_archive,
+)
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -232,7 +235,7 @@ def _read_ims_reference(ims_path: UPath, channel: int) -> np.ndarray:
 
 @pytest.mark.parametrize("channel", [0, 1])
 def test_ims_from_images(tmp_upath: UPath, channel: int) -> None:
-    ims_path = download_ims_fixture(tmp_upath)
+    ims_path = download_ims_fixture()
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
@@ -257,7 +260,7 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     # a per-chunk-shape-based correction (as used for the generic pims path)
     # would be wrong here, since each ChunkedImages job only reports its own
     # shard-sized chunk, not the total extent.
-    ims_path = download_ims_fixture(tmp_upath)
+    ims_path = download_ims_fixture()
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
@@ -291,7 +294,7 @@ def test_ims_from_images_flip_and_swap(
     # reference: flip_z/flip_x/flip_y reverse the source's z/y/x axes
     # respectively (in that source-axis order, regardless of swap_xy), and
     # swap_xy then picks (y, x, z) instead of (x, y, z) as the output order.
-    ims_path = download_ims_fixture(tmp_upath)
+    ims_path = download_ims_fixture()
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
@@ -448,10 +451,13 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
 
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
+    four_d_series_tif = (
+        download_wklibs_sample_archive("4D") / "4D_series" / "4D-series.ome.tif"
+    )
     ds = wk.Dataset(tmp_upath, (1, 1, 1))
     with SequentialExecutor() as executor:
         layer = ds.add_layer_from_images(
-            "testdata/4D/4D_series/4D-series.ome.tif",
+            str(four_d_series_tif),
             layer_name="color",
             category="color",
             topleft=(2, 55, 100, 100),
@@ -462,17 +468,43 @@ def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
         )
     assert layer.bounding_box.topleft == wk.VecInt(t=2, z=55, y=100, x=100)
     assert layer.bounding_box.size == wk.VecInt(t=7, z=5, y=167, x=439)
-    read_with_tifffile_reader = TiffFile(
-        "testdata/4D/4D_series/4D-series.ome.tif"
-    ).asarray()
+    read_with_tifffile_reader = TiffFile(str(four_d_series_tif)).asarray()
     # For ND data without explicit channel axis, read() returns data directly
     # without a channel wrapper dimension
     read_from_dataset = layer.get_finest_mag().read()
     np.testing.assert_array_equal(read_with_tifffile_reader, read_from_dataset)
 
 
+def _remote_repo_image_path(archive: str, *parts: str) -> Callable[[], str]:
+    """Builds a lazy resolver for a file/dir/glob inside a wklibs-samples
+    archive: the archive is only downloaded (once per process) when the
+    returned callable is actually invoked, not when this is called."""
+
+    def resolve() -> str:
+        base = download_wklibs_sample_archive(archive)
+        return str(base.joinpath(*parts)) if parts else str(base)
+
+    return resolve
+
+
+def _remote_single_multipage_tiff_folder() -> str:
+    """`various_tiff_formats/test_C.tif` copied into its own folder, to test
+    converting a folder that contains a single multi-page tiff."""
+    various_tiff_formats_dir = download_wklibs_sample_archive("various_tiff_formats")
+    folder = UPath(mkdtemp(prefix="single_multipage_tiff_folder-"))
+    copy(str(various_tiff_formats_dir / "test_C.tif"), str(folder / "test_C.tif"))
+    return str(folder)
+
+
 REPO_IMAGES_ARGS: list[
-    tuple[str | list[UPath], dict[str, Any], str, int, int, wk.VecInt]
+    tuple[
+        str | list[UPath] | Callable[[], str | list[UPath]],
+        dict[str, Any],
+        str,
+        int,
+        int,
+        wk.VecInt,
+    ]
 ] = [
     (
         "testdata/tiff/test.*.tiff",
@@ -511,7 +543,7 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(c=1, x=64, y=64, z=6),
     ),
     (
-        "testdata/temca2/*/*/*.jpg",
+        _remote_repo_image_path("temca2", "*", "*", "*.jpg"),
         {"flip_x": True, "batch_size": 2048},
         "uint8",
         1,
@@ -519,7 +551,7 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(c=1, x=1024, y=1024, z=12),
     ),
     (
-        "testdata/temca2",
+        _remote_repo_image_path("temca2"),
         {"flip_z": True, "batch_size": 2048},
         "uint8",
         1,
@@ -530,7 +562,7 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(c=1, x=1024, y=1024, z=13),
     ),
     (
-        "testdata/tiff_with_different_shapes/*",
+        _remote_repo_image_path("tiff_with_different_shapes", "*"),
         {"flip_y": True},
         "uint8",
         1,
@@ -538,7 +570,7 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(c=1, x=2970, y=2521, z=4),
     ),
     (
-        "testdata/various_tiff_formats/test_CS.tif",
+        _remote_repo_image_path("various_tiff_formats", "test_CS.tif"),
         {"data_format": "zarr3", "allow_multiple_layers": True},
         "uint8",
         1,
@@ -546,7 +578,7 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(s=3, x=64, c=1, y=128, z=128),
     ),
     (
-        "testdata/various_tiff_formats/test_C.tif",
+        _remote_repo_image_path("various_tiff_formats", "test_C.tif"),
         {"allow_multiple_layers": True},
         "uint8",
         1,
@@ -555,7 +587,7 @@ REPO_IMAGES_ARGS: list[
     ),
     # same as test_C.tif above, but as a single file in a folder:
     (
-        "testdata/single_multipage_tiff_folder",
+        _remote_single_multipage_tiff_folder,
         {"allow_multiple_layers": True},
         "uint8",
         1,
@@ -563,7 +595,7 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(c=1, x=128, y=128, z=64),
     ),
     (
-        "testdata/various_tiff_formats/test_I.tif",
+        _remote_repo_image_path("various_tiff_formats", "test_I.tif"),
         {},
         "uint32",
         1,
@@ -571,7 +603,7 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(c=1, x=64, y=128, z=64),
     ),
     (
-        "testdata/various_tiff_formats/test_S.tif",
+        _remote_repo_image_path("various_tiff_formats", "test_S.tif"),
         {"data_format": "zarr3"},
         "uint16",
         1,
@@ -579,7 +611,7 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(s=3, x=64, y=128, z=128),
     ),
     (
-        "testdata/4D/single_channel/single-channel.ome.tiff",
+        _remote_repo_image_path("4D", "single_channel", "single-channel.ome.tiff"),
         {},
         "int8",
         1,
@@ -587,7 +619,9 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(c=1, x=439, y=167, z=1),
     ),
     (
-        "testdata/4D/multi_channel_z_series/multi-channel-z-series.ome.tif",
+        _remote_repo_image_path(
+            "4D", "multi_channel_z_series", "multi-channel-z-series.ome.tif"
+        ),
         {"allow_multiple_layers": True},
         "int8",
         1,
@@ -599,13 +633,15 @@ REPO_IMAGES_ARGS: list[
 
 def _test_repo_images(
     tmp_upath: UPath,
-    path: str | list[UPath],
+    path: str | list[UPath] | Callable[[], str | list[UPath]],
     kwargs: dict,
     dtype: str,
     num_channels: int,
     num_layers: int,
     size: wk.VecInt,
 ) -> wk.Dataset:
+    if callable(path):
+        path = path()
     with SequentialExecutor() as executor:
         ds = wk.Dataset(tmp_upath, (1, 1, 1))
         layer = ds.add_layer_from_images(
@@ -630,7 +666,7 @@ def _test_repo_images(
 )
 def test_repo_images(
     tmp_upath: UPath,
-    path: str,
+    path: str | list[UPath] | Callable[[], str | list[UPath]],
     kwargs: dict,
     dtype: str,
     num_channels: int,
@@ -638,26 +674,6 @@ def test_repo_images(
     size: wk.VecInt,
 ) -> None:
     _test_repo_images(tmp_upath, path, kwargs, dtype, num_channels, num_layers, size)
-
-
-def download_and_unpack(
-    url: str | list[str], out_path: UPath, filename: str | list[str]
-) -> None:
-    if isinstance(url, str):
-        assert isinstance(filename, str)
-        url = [url]
-        filename = [filename]
-    for url_i, filename_i in zip(url, filename):
-        with NamedTemporaryFile() as download_file:
-            with httpx.stream("GET", url_i, follow_redirects=True) as response:
-                for chunk in response.iter_bytes():
-                    download_file.write(chunk)
-            try:
-                with ZipFile(download_file, "r") as zip_file:
-                    zip_file.extractall(str(out_path))
-            except BadZipFile:
-                out_path.mkdir(parents=True, exist_ok=True)
-                copy(download_file.name, str(out_path / filename_i))
 
 
 # All scif images used here are published with CC0 license,
@@ -810,6 +826,8 @@ if __name__ == "__main__":
     for repo_image in REPO_IMAGES_ARGS:
         with TemporaryDirectory() as tempdir:
             image_path = repo_image[0]
+            if callable(image_path):
+                image_path = image_path()
             if isinstance(image_path, list):
                 image_path = str(image_path[0])
             name = "".join(filter(str.isalnum, image_path))
