@@ -22,7 +22,6 @@ from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
     download_and_unpack,
-    download_ims_fixture,
     download_wklibs_sample_archive,
 )
 
@@ -235,7 +234,7 @@ def _read_ims_reference(ims_path: UPath, channel: int) -> np.ndarray:
 
 @pytest.mark.parametrize("channel", [0, 1])
 def test_ims_from_images(tmp_upath: UPath, channel: int) -> None:
-    ims_path = download_ims_fixture()
+    ims_path = download_wklibs_sample_archive("brain_crop3.ims")
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
@@ -260,7 +259,7 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     # a per-chunk-shape-based correction (as used for the generic pims path)
     # would be wrong here, since each ChunkedImages job only reports its own
     # shard-sized chunk, not the total extent.
-    ims_path = download_ims_fixture()
+    ims_path = download_wklibs_sample_archive("brain_crop3.ims")
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
@@ -294,7 +293,7 @@ def test_ims_from_images_flip_and_swap(
     # reference: flip_z/flip_x/flip_y reverse the source's z/y/x axes
     # respectively (in that source-axis order, regardless of swap_xy), and
     # swap_xy then picks (y, x, z) instead of (x, y, z) as the output order.
-    ims_path = download_ims_fixture()
+    ims_path = download_wklibs_sample_archive("brain_crop3.ims")
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:

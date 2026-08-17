@@ -16,7 +16,6 @@ from upath import UPath
 from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
-    download_ims_fixture,
     download_wklibs_sample_archive,
 )
 from webknossos.dataset import Dataset, RemoteDataset
@@ -225,7 +224,7 @@ def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     # ImsChunkedImages.get_possible_layers() reports {"channel": [0, 1]} and
     # from_images() (which always passes allow_multiple_layers=True) should
     # split it into one layer per channel instead of picking just the first.
-    ims_path = download_ims_fixture()
+    ims_path = download_wklibs_sample_archive("brain_crop3.ims")
 
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(

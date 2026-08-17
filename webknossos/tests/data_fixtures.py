@@ -24,28 +24,9 @@ CACHE_DIR = UPath(__file__).parent.parent / ".cache" / "wklibs-samples"
 
 WKLIBS_SAMPLES_BASE_URL = "https://static.webknossos.org/data/wklibs-samples"
 
-IMS_FIXTURE_URL = f"{WKLIBS_SAMPLES_BASE_URL}/brain_crop3.ims"
-
 
 def _tmp_cache_path(name: str) -> UPath:
     return CACHE_DIR / f".tmp-{name}-{uuid.uuid4().hex}"
-
-
-def download_ims_fixture() -> UPath:
-    """Downloads the brain_crop3.ims test fixture (2 channels, single
-    timepoint, uint16) into CACHE_DIR, once ever, and returns its path."""
-    ims_path = CACHE_DIR / "brain_crop3.ims"
-    if not ims_path.exists():
-        CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        tmp_path = _tmp_cache_path("brain_crop3.ims")
-        with (
-            httpx.stream("GET", IMS_FIXTURE_URL, follow_redirects=True) as response,
-            tmp_path.open("wb") as out_file,
-        ):
-            for chunk in response.iter_bytes():
-                out_file.write(chunk)
-        os.replace(str(tmp_path), str(ims_path))
-    return ims_path
 
 
 def download_and_unpack(
@@ -87,9 +68,10 @@ def _extract_zip_preserving_symlinks(zip_file: ZipFile, dest_dir: str) -> None:
 def download_wklibs_sample_archive(name: str) -> UPath:
     """Downloads `{name}.zip` from the wklibs-samples bucket and extracts it
     into CACHE_DIR, once ever (subsequent calls, including from later test
-    runs, reuse the cached extraction). Each archive's contents live in a
-    top-level folder named after the archive, which is what this function
-    returns the path to."""
+    runs, reuse the cached extraction). Each archive's contents live at a
+    top-level file or folder named after the archive (e.g. `4D.zip` contains
+    `4D/`, `brain_crop3.ims.zip` contains `brain_crop3.ims`), which is what
+    this function returns the path to."""
     dest_dir = CACHE_DIR / name
     if not dest_dir.exists():
         tmp_dir = _tmp_cache_path(name)
