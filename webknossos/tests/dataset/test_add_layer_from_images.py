@@ -27,6 +27,7 @@ from tests.data_fixtures import (
 )
 from tests.utils import (
     HAS_PYLIBCZIRW,
+    PYLIBCZIRW_EXPECTED,
     create_synthetic_czi,
     requires_pylibczirw,
 )
@@ -411,7 +412,7 @@ def test_ims_empty_shape_is_corrupt(
 
 
 def test_add_layer_from_images_missing_file_is_not_corrupt(tmp_upath: UPath) -> None:
-    # open_images flattens each reader's exception into a message, so a missing
+    # open_slice_reader flattens each reader's exception into a message, so a missing
     # file reaches the same code path as a damaged one. Telling the user their
     # file is damaged when it is simply not there would be worse than the
     # unspecific error they get today.
@@ -445,7 +446,7 @@ def test_add_layer_from_images_names_missing_optional_dependency(
     registry = importlib.import_module(
         "webknossos.dataset._image_conversion.image_source_registry"
     )
-    monkeypatch.setattr(registry, "_CHUNKED_READER_CLASSES", [])
+    monkeypatch.setattr(registry, "_CHUNKED_IMAGE_SOURCE_CLASSES", [])
     monkeypatch.setattr(registry, "_UNAVAILABLE_EXTENSIONS", {"ims": "ims"})
     ims_path = tmp_upath / "a.ims"
     ims_path.write_bytes(b"stand-in for an ims file")
@@ -1114,6 +1115,12 @@ if HAS_PYLIBCZIRW:
             1,
             (512, 512, 30),
         )
+    )
+elif PYLIBCZIRW_EXPECTED:
+    # pylibCZIrw is expected on this Python version; missing here means a
+    # broken test environment, not a reason to silently drop CZI coverage.
+    raise ImportError(
+        "pylibCZIrw is not installed, but is expected for this Python version."
     )
 
 

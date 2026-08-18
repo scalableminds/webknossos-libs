@@ -1,5 +1,5 @@
 import warnings
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from typing import TypeVar, cast
 
@@ -31,7 +31,7 @@ from .image_source_registry import (
     get_unavailable_extensions,
     get_valid_extensions,
     get_valid_slice_reader_extensions,
-    open_images,
+    open_slice_reader,
 )
 from .slice_reader import SliceReader, _SlicedView
 
@@ -83,7 +83,7 @@ class SlicedImageSource(ImageSource):
         self._iter_axes: list[str] = []
         self._possible_layers = {}
 
-        with self._open_images() as images:
+        with self._open_slice_reader() as images:
             self.dtype = images.dtype
             self.channels_are_rgb = images.channels_are_rgb
             self._default_coords = {}
@@ -221,14 +221,14 @@ class SlicedImageSource(ImageSource):
 
         Image.MAX_IMAGE_PIXELS = None
 
-    def _try_open_images(
+    def _try_open_slice_reader(
         self, original_images: str | list[str], exceptions: list[Exception]
     ) -> SliceReader | None:
         # try the registered reader for this extension
         def strategy_0() -> SliceReader | None:
             if isinstance(original_images, list):
                 return None
-            return open_images(original_images)
+            return open_slice_reader(original_images)
 
         # try MultiImageSliceReader, which handles a directory, glob or list of 2D images
         strategy_1 = lambda: MultiImageSliceReader(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
@@ -238,7 +238,7 @@ class SlicedImageSource(ImageSource):
         def strategy_2() -> SliceReader | None:
             if isinstance(original_images, list):
                 # assuming the same reader works for all images:
-                first_image_handler = open_images(original_images[0])
+                first_image_handler = open_slice_reader(original_images[0])
                 return StackedFileSliceReader(
                     original_images, type(first_image_handler)
                 )
@@ -258,7 +258,7 @@ class SlicedImageSource(ImageSource):
         return None
 
     @contextmanager
-    def _open_images(self) -> Iterator[SliceReader]:
+    def _open_slice_reader(self) -> Generator[SliceReader]:
         """
         Yields the opened reader, configured to produce slices of the form
         (self._iter_axes, *self._bundle_axes) once those are known. Before
@@ -268,7 +268,9 @@ class SlicedImageSource(ImageSource):
         exceptions: list[Exception] = []
         original_images = self._resolve_original_image_paths()
 
-        images_context_manager = self._try_open_images(original_images, exceptions)
+        images_context_manager = self._try_open_slice_reader(
+            original_images, exceptions
+        )
 
         if images_context_manager is None:
             first_exception = exceptions[0] if exceptions else None
@@ -329,7 +331,7 @@ class SlicedImageSource(ImageSource):
             shapes = []
             max_value = 0
 
-            with self._open_images() as images:
+            with self._open_slice_reader() as images:
                 slices: SliceReader | _SlicedView = images
                 if len(self._iter_axes) > 1:
                     # The sequence is a flat run over every iter axis, so narrow
@@ -405,7 +407,7 @@ class SlicedImageSource(ImageSource):
         """The extents the reader reports. Only x/y is a placeholder — it is
         one slice's extent, which a later slice may exceed; the axes stepped
         through are exact, since the reader counted them."""
-        with self._open_images() as images:
+        with self._open_slice_reader() as images:
             sizes = images.sizes
             x_size, y_size = sizes["x"], sizes["y"]
             if self._options.swap_xy:

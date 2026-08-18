@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 
 import numpy as np
@@ -127,7 +127,7 @@ class CziImageSource(ChunkedImageSource):
         self._fixed_timepoint = None if self._include_t_axis else 0
 
     @contextmanager
-    def _czi_file(self) -> Iterator[pyczi.CziReader]:
+    def _czi_file(self) -> Generator[pyczi.CziReader]:
         try:
             czi_file = pyczi.open_czi(str(self.path))
         except Exception as e:

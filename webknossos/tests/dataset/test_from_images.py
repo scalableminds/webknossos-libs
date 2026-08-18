@@ -432,7 +432,8 @@ def test_remote_dataset_from_images() -> None:
 
 
 def test_optional_reader_extensions_match_supported_file_extensions() -> None:
-    # _OPTIONAL_READERS has to restate each reader's extensions, because a
+    # _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES has to restate each reader's
+    # extensions, because a
     # reader whose dependency is missing never imports and so cannot report
     # its own supported_file_extensions(). Whenever a reader *is* importable,
     # the two must agree — otherwise the missing-dependency hint names the
@@ -443,8 +444,8 @@ def test_optional_reader_extensions_match_supported_file_extensions() -> None:
         ChunkedImageSource,
     )
     from webknossos.dataset._image_conversion.image_source_registry import (
-        _CHUNKED_READER_CLASSES,
-        _OPTIONAL_READERS,
+        _CHUNKED_IMAGE_SOURCE_CLASSES,
+        _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES,
         _SLICE_READER_CLASSES,
         get_unavailable_extensions,
     )
@@ -455,11 +456,11 @@ def test_optional_reader_extensions_match_supported_file_extensions() -> None:
     registered: dict[str, type[SliceReader] | type[ChunkedImageSource]] = {
         cls.__name__: cls for cls in _SLICE_READER_CLASSES
     }
-    registered.update({cls.__name__: cls for cls in _CHUNKED_READER_CLASSES})
+    registered.update({cls.__name__: cls for cls in _CHUNKED_IMAGE_SOURCE_CLASSES})
     # The test env installs every extra except czi on Python 3.14, since
     # pylibCZIrw ships no wheel there.
     unavailable_extras = set(get_unavailable_extensions().values())
-    for reader in _OPTIONAL_READERS:
+    for reader in _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES:
         if reader.extra in unavailable_extras:
             continue
         assert reader.class_name in registered, (

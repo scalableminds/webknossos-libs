@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import closing, contextmanager
 
 import numpy as np
@@ -49,7 +49,7 @@ class Dm4SliceReader(SliceReader):
     def supported_file_extensions(cls) -> set[str]:
         return {"dm4"}
 
-    # open_images() picks the eligible reader with the highest class_priority.
+    # open_slice_reader() picks the eligible reader with the highest class_priority.
     # 10 is the default; nothing else claims dm4.
     class_priority = 20
 
@@ -82,7 +82,7 @@ class Dm4SliceReader(SliceReader):
                 self._set_get_slice(self._get_slice, "zyx")
 
     @contextmanager
-    def dm4_file(self) -> Iterator[DM4File]:
+    def dm4_file(self) -> Generator[DM4File]:
         with closing(DM4File.open(self.path)) as dm4_file:
             yield dm4_file
 

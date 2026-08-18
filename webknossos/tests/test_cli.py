@@ -4,7 +4,7 @@ import json
 import os
 import random
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from math import ceil
 from tempfile import TemporaryDirectory
@@ -41,7 +41,7 @@ runner = CliRunner()
 
 
 @contextmanager
-def tmp_cwd() -> Iterator[None]:
+def tmp_cwd() -> Generator[None]:
     """Creates a temporary working directory to test side effects."""
 
     prev_cwd = os.getcwd()

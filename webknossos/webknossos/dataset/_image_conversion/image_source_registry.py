@@ -25,7 +25,7 @@ from .image_source import ImageSource, ReadOptions
 from .slice_reader import SliceReader
 
 _SLICE_READER_CLASSES: list[type[SliceReader]] = []
-_CHUNKED_READER_CLASSES: list[type[ChunkedImageSource]] = []
+_CHUNKED_IMAGE_SOURCE_CLASSES: list[type[ChunkedImageSource]] = []
 
 
 def register_slice_reader(cls: type[SliceReader]) -> type[SliceReader]:
@@ -36,7 +36,7 @@ def register_slice_reader(cls: type[SliceReader]) -> type[SliceReader]:
 def register_chunked_image_source(
     cls: type[ChunkedImageSource],
 ) -> type[ChunkedImageSource]:
-    _CHUNKED_READER_CLASSES.append(cls)
+    _CHUNKED_IMAGE_SOURCE_CLASSES.append(cls)
     return cls
 
 
@@ -51,7 +51,7 @@ def get_valid_slice_reader_extensions() -> set[str]:
 def get_valid_chunked_reader_extensions() -> set[str]:
     """The extensions (without dot) that some registered chunked reader can open."""
     valid_extensions: set[str] = set()
-    for cls in _CHUNKED_READER_CLASSES:
+    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
         valid_extensions.update(cls.supported_file_extensions())
     return valid_extensions
 
@@ -61,7 +61,7 @@ def get_valid_extensions() -> set[str]:
     return get_valid_slice_reader_extensions() | get_valid_chunked_reader_extensions()
 
 
-def open_images(path_spec: str, **kwargs: object) -> SliceReader:
+def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
     """Opens a path, glob pattern or directory as a sequence of slices.
 
     A pattern matching more than one file becomes an image sequence; a single
@@ -129,7 +129,7 @@ def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> Imag
 
     if isinstance(images, UPath):
         extension = images.suffix.lstrip(".").lower()
-        for cls in _CHUNKED_READER_CLASSES:
+        for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
             if extension in cls.supported_file_extensions():
                 # Remote UPaths deliberately do reach the reader, which raises
                 # its own "must be a local file path" error via is_remote_path.
@@ -154,7 +154,7 @@ class _OptionalReader(NamedTuple):
     whose dependency is missing never imports and so cannot be asked."""
 
 
-_OPTIONAL_READERS: tuple[_OptionalReader, ...] = (
+_OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES: tuple[_OptionalReader, ...] = (
     _OptionalReader(
         "tiff_slice_reader", "TiffSliceReader", "tifffile", frozenset({"tif", "tiff"})
     ),
@@ -210,7 +210,7 @@ def _import_readers() -> str | None:
         dm_slice_reader,  # noqa: F401 unused-import
     )
 
-    for reader in _OPTIONAL_READERS:
+    for reader in _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES:
         try:
             __import__(f"{__package__}.{reader.module}", fromlist=[reader.class_name])
         except ImportError as import_error:  # noqa: PERF203

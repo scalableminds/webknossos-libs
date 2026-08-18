@@ -187,9 +187,9 @@ class StackedFileSliceReader(SliceReader):
         self.kwargs = kwargs
         self._zipfile: zipfile.ZipFile | None = None
         if reader_cls is None:
-            from .image_source_registry import open_images
+            from .image_source_registry import open_slice_reader
 
-            self.reader_cls: Callable[..., Any] = open_images
+            self.reader_cls: Callable[..., Any] = open_slice_reader
         else:
             self.reader_cls = reader_cls
         self._filepaths, self._zipfile = _collect_files(path_spec)

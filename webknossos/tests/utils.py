@@ -1,4 +1,5 @@
 import importlib.util
+import sys
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -8,11 +9,16 @@ import pytest
 from numpy.typing import DTypeLike
 from upath import UPath
 
-# pylibCZIrw ships no wheel past cp313, so the czi extra is uninstalled on
-# newer Pythons; tests that need it skip instead of failing.
+# pylibCZIrw ships no wheel past cp313 (mirrors pyproject.toml's czi extra,
+# `pylibCZIrw ==5.1.1; python_version < '3.14'`), so it is expected to be
+# missing on newer Pythons and tests that need it skip there. On earlier
+# versions it must be installed; if it's missing there instead, that's a
+# broken test environment, not a reason to skip, so such tests are left to
+# fail rather than silently pass over pylibCZIrw-only code paths.
+PYLIBCZIRW_EXPECTED = sys.version_info < (3, 14)
 HAS_PYLIBCZIRW = importlib.util.find_spec("pylibCZIrw") is not None
 requires_pylibczirw = pytest.mark.skipif(
-    not HAS_PYLIBCZIRW,
+    not HAS_PYLIBCZIRW and not PYLIBCZIRW_EXPECTED,
     reason="pylibCZIrw is not installed for this Python version",
 )
 

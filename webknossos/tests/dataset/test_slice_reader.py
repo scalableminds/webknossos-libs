@@ -9,7 +9,7 @@ from webknossos.dataset._image_conversion.common_slice_readers import (
     MultiImageSliceReader,
     SingleImageSliceReader,
 )
-from webknossos.dataset._image_conversion.image_source_registry import open_images
+from webknossos.dataset._image_conversion.image_source_registry import open_slice_reader
 from webknossos.dataset._image_conversion.slice_reader import (
     SliceReader,
     _SlicedView,
@@ -238,27 +238,27 @@ def _write_png(path: UPath, value: int) -> None:
     Image.fromarray(np.full((4, 6), value, dtype="uint8")).save(str(path))
 
 
-def test_open_images_dispatches_on_extension(tmp_upath: UPath) -> None:
+def test_open_slice_reader_dispatches_on_extension(tmp_upath: UPath) -> None:
     png_path = tmp_upath / "single.png"
     _write_png(png_path, 7)
-    assert isinstance(open_images(str(png_path)), SingleImageSliceReader)
+    assert isinstance(open_slice_reader(str(png_path)), SingleImageSliceReader)
 
 
-def test_open_images_prefers_higher_class_priority(tmp_upath: UPath) -> None:
+def test_open_slice_reader_prefers_higher_class_priority(tmp_upath: UPath) -> None:
     # Both TiffSliceReader (priority=19) and, in principle, any lower-priority reader claim
     # .tif; the dedicated one has to win because it understands axis metadata.
     tif_path = tmp_upath / "single.tif"
     Image.fromarray(np.zeros((4, 6), dtype="uint8")).save(str(tif_path))
-    assert isinstance(open_images(str(tif_path)), TiffSliceReader)
+    assert isinstance(open_slice_reader(str(tif_path)), TiffSliceReader)
 
 
-def test_open_images_rejects_unknown_extension(tmp_upath: UPath) -> None:
+def test_open_slice_reader_rejects_unknown_extension(tmp_upath: UPath) -> None:
     unknown = tmp_upath / "data.unsupported"
     unknown.write_bytes(b"x")
     with pytest.raises(
         UnsupportedImageFormatError, match="Could not autodetect"
     ) as excinfo:
-        open_images(str(unknown))
+        open_slice_reader(str(unknown))
 
     # Dispatch failure raises the same public error as everything else in the
     # conversion path, so it is catchable as ImageConversionError (and as
@@ -271,17 +271,17 @@ def test_open_images_rejects_unknown_extension(tmp_upath: UPath) -> None:
     assert "png" in error.supported_file_extensions
 
 
-def test_open_images_rejects_extensionless_file(tmp_upath: UPath) -> None:
+def test_open_slice_reader_rejects_extensionless_file(tmp_upath: UPath) -> None:
     extensionless = tmp_upath / "data"
     extensionless.write_bytes(b"x")
     with pytest.raises(UnsupportedImageFormatError, match="no extension"):
-        open_images(str(extensionless))
+        open_slice_reader(str(extensionless))
 
 
-def test_open_images_glob_with_multiple_matches(tmp_upath: UPath) -> None:
+def test_open_slice_reader_glob_with_multiple_matches(tmp_upath: UPath) -> None:
     for i in range(3):
         _write_png(tmp_upath / f"img_{i}.png", i)
-    reader = open_images(str(tmp_upath / "img_*.png"))
+    reader = open_slice_reader(str(tmp_upath / "img_*.png"))
     assert isinstance(reader, MultiImageSliceReader)
     assert len(reader) == 3
 
