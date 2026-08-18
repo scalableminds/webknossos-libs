@@ -113,7 +113,7 @@ class SlicedImageSource(ImageSource):
         if possible_channels is not None:
             self._possible_layers["channel"] = possible_channels
 
-    def _normalize_original_images(self) -> str | list[str]:
+    def _resolve_original_image_paths(self) -> str | list[str]:
         original_images = self._original_images
         if isinstance(original_images, list):
             return [str(i) for i in original_images]
@@ -266,7 +266,7 @@ class SlicedImageSource(ImageSource):
         axes are found in the first place.
         """
         exceptions: list[Exception] = []
-        original_images = self._normalize_original_images()
+        original_images = self._resolve_original_image_paths()
 
         images_context_manager = self._try_open_images(original_images, exceptions)
 
