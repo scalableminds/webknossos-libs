@@ -337,10 +337,12 @@ class SlicedImageSource(ImageSource):
                     # The sequence is a flat run over every iter axis, so narrow
                     # it to the stretch this chunk's non-z coordinates select
                     # before indexing z within it.
-                    lower_bounds = images.flat_index({
-                        axis: relative_bbox.get_bounds(axis)[0]
-                        for axis in self._iter_axes[:-1]
-                    })
+                    lower_bounds = images.flat_index(
+                        {
+                            axis: relative_bbox.get_bounds(axis)[0]
+                            for axis in self._iter_axes[:-1]
+                        }
+                    )
                     upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
                     slices = images[lower_bounds:upper_bounds]
                 if self._options.flip_z:
