@@ -17,8 +17,8 @@ class Dm3Slices(SliceSequence):
     def supported_file_extensions(cls) -> set[str]:
         return {"dm3"}
 
-    # open_images() picks the eligible reader with the highest class_priority.
-    # 10 is the default; nothing else claims dm3.
+    # The highest class_priority wins among eligible readers. 10 is the
+    # default; nothing else claims dm3.
     class_priority = 20
 
     def __init__(self, path: UPath) -> None:

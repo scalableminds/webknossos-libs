@@ -1,10 +1,9 @@
 """Which reader handles which file extension, and the one way a source is opened.
 
-A **reader** knows one input format and is what registers here; a **source** is
-an `ImageSource`, what `image_conversion.py` drives. The two kinds of reader
-differ in whether they are also sources: a slice reader (`SliceSequence`
-subclass) is not — `SlicedImageSource` wraps it — while a chunked reader is,
-which is what its `…ImageSource` name says.
+A **reader** knows one input format and is what registers here; a **source**
+is an `ImageSource`. The two kinds of reader differ in whether they are also
+sources: a slice reader (`SliceSequence` subclass) is not and gets wrapped,
+while a chunked reader is, which is what its `…ImageSource` name says.
 
 `open_image_source()` picks the kind from the extension and returns an
 `ImageSource` either way, so no caller has to know which it got.
@@ -76,10 +75,9 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     if len(glob.glob(path_spec)) > 1:
         return MultiImageSlices(path_spec, **kwargs)
 
-    # The errors below are dispatch failing, not the final word: they are
-    # collected while SlicedImageSource tries its other open strategies, and
-    # _classify_open_failure replaces them with one that knows the `path` and
-    # `missing_extras` (path_spec may be a glob, so these cannot).
+    # The errors below are dispatch failing, not the final word: a caller may
+    # replace them with one that knows the actual path and missing extras
+    # (path_spec may be a glob, so these cannot).
     supported = tuple(sorted(get_valid_extensions()))
 
     _, ext = os.path.splitext(path_spec)
@@ -152,11 +150,8 @@ class _OptionalReader(NamedTuple):
     """The `webknossos[...]` extra that provides its dependency."""
 
     extensions: frozenset[str]
-    """What its supported_file_extensions() returns, restated because a reader
-    whose dependency is missing never imports and so cannot be asked — which
-    is exactly when this is needed.
-    test_optional_reader_extensions_match_supported_file_extensions keeps the
-    two in sync."""
+    """The extensions this reader supports, restated here because a reader
+    whose dependency is missing never imports and so cannot be asked."""
 
 
 # Every optional reader, declared once. Slice readers are as optional as

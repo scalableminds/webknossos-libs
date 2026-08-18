@@ -46,9 +46,9 @@ class CziImageSource(ChunkedImageSource):
     time, instead of decoding whole planes and writing them slice by slice.
 
     A CZI "C" dimension holds separate acquisition channels, which may even
-    differ in pixel type. It is selected with `czi_channel` and reported by
-    get_possible_layers(), rather than being written as colour channels — the
-    colour components of one image come from its pixel type (Gray/Bgr/Bgra).
+    differ in pixel type. It is selected with `czi_channel` rather than being
+    written as colour channels — the colour components of one image come from
+    its pixel type (Gray/Bgr/Bgra).
     """
 
     @classmethod
@@ -89,7 +89,7 @@ class CziImageSource(ChunkedImageSource):
             #
             # Scenes are not among them: they are not a dimension at all, but
             # regions within total_bounding_rectangle, so a multi-scene file
-            # converts to one image spanning all of them — as it did before.
+            # converts to one image spanning all of them.
             for dim, (start, end) in bounding_box.items():
                 if dim not in _SUPPORTED_DIMS and end - start > 1:
                     raise UnsupportedImageDataError(

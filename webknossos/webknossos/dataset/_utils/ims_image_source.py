@@ -93,8 +93,8 @@ class ImsImageSource(ChunkedImageSource):
 
         # A "t" axis is only added to the bounding box when there actually are
         # multiple timepoints; each chunk along that axis then carries its own
-        # timepoint (chunk size 1), read per chunk in copy_chunk_to_view() below. A
-        # single-timepoint file stays 3D and always reads timepoint 0.
+        # timepoint (chunk size 1). A single-timepoint file stays 3D and
+        # always reads timepoint 0.
         self._include_t_axis = t > 1
         self._fixed_timepoint: int | None = None if self._include_t_axis else 0
 

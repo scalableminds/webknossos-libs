@@ -155,9 +155,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ```
     """
 
-    # Kept as a class attribute for backward compatibility: Dataset.ConversionLayerMapping
-    # used to be a nested class; the implementation now lives in image_conversion.py
-    # alongside from_images()/add_layer_from_images(), which use it directly.
+    # Exposed as a class attribute so `Dataset.ConversionLayerMapping` works.
     ConversionLayerMapping = image_conversion.ConversionLayerMapping
 
     def __init__(

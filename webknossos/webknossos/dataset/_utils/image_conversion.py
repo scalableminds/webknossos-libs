@@ -1,11 +1,8 @@
-"""Implementation of Dataset.from_images() / Dataset.add_layer_from_images(),
-factored out of dataset.py since this functionality (mapping input image
-files to layers, then converting them via either the ChunkedImageSource or
-SlicedImageSource reader path) is large and self-contained.
+"""Implementation of `Dataset.from_images()` / `Dataset.add_layer_from_images()`:
+mapping input image files to layers, then converting them via an `ImageSource`.
 
-Dataset.from_images and Dataset.add_layer_from_images are thin wrappers
-around the free functions here, keeping the public API and docstrings on
-the Dataset class itself.
+The public functions on `Dataset` are thin wrappers around the free functions
+here, keeping the public API and docstrings on the `Dataset` class itself.
 """
 
 from __future__ import annotations
@@ -223,8 +220,7 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 
 def _describe_rgb_formats() -> str:
     """The formats whose channels mean colour, for the error message naming
-    which ones can share a layer. Taken from the reader so it cannot drift into
-    naming formats that can no longer be read."""
+    which ones can share a layer."""
     return ", ".join(
         "." + extension
         for extension in sorted(SingleImageSlices.supported_file_extensions())
@@ -309,8 +305,7 @@ def from_images(
             input_files = [UPath(input_upath.name)]
             input_upath = input_upath.parent
         else:
-            # No reader handles this file. Leaving input_files unassigned here
-            # used to raise an UnboundLocalError instead of the error below.
+            # No reader handles this file.
             input_files = []
     else:
         input_files = [
@@ -518,23 +513,13 @@ def add_layer_from_images(
                 + "or channel=<index> to convert a single channel.",
                 path=image_paths if isinstance(image_paths, UPath) else None,
             )
-    # Further below, we iterate over suffix_with_open_kwargs_per_layer in the for-loop
-    # to add one layer per possible_layer if allow_multiple_layers is True.
-    # If just a single layer is added, we still add a default value in the dict.
+    # One layer is added per entry below, named with its suffix; a single
+    # entry with an empty suffix and selection means just one default layer.
     if possible_layers is not None and len(possible_layers) > 0:
         if allow_multiple_layers:
-            # Get all combinations of possible layers. E.g.
-            # possible_layers = {
-            #    "channel": [0, 1, 2],
-            #    "czi_channel": [0, 1],
-            # }
-            # suffix_with_open_kwargs_per_layer = {
-            #    "__channel0_czi_channel0", {"channel": 0, "czi_channel": 0},
-            #    "__channel0_czi_channel1", {"channel": 0, "czi_channel": 1},
-            #    …,
-            #    "__channel1_czi_channel0", {"channel": 1, "czi_channel": 0},
-            #    …,
-            # }
+            # Every combination of possible layers, e.g. {"channel": [0, 1],
+            # "czi_channel": [0, 1]} becomes suffixes "__channel0_czi_channel0",
+            # "__channel0_czi_channel1", etc., each mapped to its selection.
             # Timepoints are never split this way: readers that can address
             # them expose all timepoints on a "t" axis within a single layer.
             suffix_with_open_kwargs_per_layer = {
@@ -547,7 +532,7 @@ def add_layer_from_images(
                 )
             }
         else:
-            # initialize SlicedImageSource as above, with normal layer name
+            # A single default layer, with the normal layer name.
             suffix_with_open_kwargs_per_layer = {"": {}}
             # Channels are already resolved above — either written into this
             # layer as RGB, or refused — so anything left here is a dimension
@@ -559,7 +544,7 @@ def add_layer_from_images(
                 "or set specific values as arguments.",
             )
     else:
-        # initialize SlicedImageSource as above, with normal layer name
+        # A single default layer, with the normal layer name.
         suffix_with_open_kwargs_per_layer = {"": {}}
     first_layer = None
     add_layer_kwargs = {}
@@ -660,14 +645,9 @@ def add_layer_from_images(
         )
 
         with warnings.catch_warnings():
-            # We need to catch and ignore a warning here about comparing persisted properties.
-            # The problem is that there is an `axisOrder` property that goes in the datasource-properties.json
-            # file, but is only stored in a mag object. However, at first we don't have any mags
-            # so there is no place to store them. When we add the first mag and update the properties,
-            # there is a check that reads the properties first and compares them to the current state.
-            # This check fails because the axisOrder property hasn't been stored in the properties file.
-            # It is safe to ignore this warning because it is only an intermediate problem in this function.
-            # At the end of this function, the properties are complete and consistent.
+            # The layer has no mags yet, so its `axisOrder` property is not
+            # yet stored; comparing against the persisted properties then
+            # spuriously warns until the first mag is added below.
             warnings.filterwarnings(
                 "ignore",
                 message=".* properties changed in a way that they are not comparable anymore. Most likely the bounding box naming or axis order changed.*",
@@ -694,13 +674,11 @@ def add_layer_from_images(
                 + f"New bbox is {layer.bounding_box}, expected {expected_bbox}."
             )
 
-        # Check if category of layer is set correctly
         try:
             if not user_set_category:
-                # When the category is not set by the user, we use a very simple heuristic to guess the category
-                # based on the file name of the input images. After loading the images, we check if the guessed
-                # category might be wrong and adjust it if necessary. This second heuristic is based on the
-                # pixel data of the images
+                # The category was only guessed from the input file names, so
+                # double-check it against the actual pixel data now that it
+                # has been read.
                 guessed_category = guess_category_from_view(layer.get_finest_mag())
                 if guessed_category != layer.category:
                     new_layer_properties: LayerProperties
@@ -733,7 +711,7 @@ def add_layer_from_images(
                     dataset._save_dataset_properties()
 
         except Exception:
-            # The used heuristic was not able to guess the layer category, the previous value is kept
+            # Could not guess the category; keep the one already set.
             pass
 
         # Verify the properties are actually consistent now, instead of assuming so.

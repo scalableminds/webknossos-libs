@@ -85,11 +85,8 @@ def _collect_files(
     into the list of files to read, in the order they should be read."""
     if not isinstance(path_spec, str):
         filepaths = [str(i) for i in path_spec]
-        # Deliberate asymmetry: StackedFileSlices re-sorts an explicitly
-        # passed list, MultiImageSlices does not. Both orders are long-standing,
-        # and changing either would silently reorder z in existing conversions.
-        # The cost is that for StackedFileSlices a custom `z_slices_sort_key`
-        # given to `Dataset.from_images` does not survive.
+        # An explicitly passed list is optionally re-sorted; a custom sort
+        # order given by the caller does not survive when it is.
         if sort_explicit_lists:
             filepaths.sort(key=_natsort_key)
         return filepaths, None
@@ -185,8 +182,8 @@ class StackedFileSlices(SliceSequence):
     def __init__(
         self,
         path_spec: str | Iterable[str],
-        # Any rather than SliceSequence: callers pass the class that opened the
-        # first file, or open_images itself, neither of which is a fixed type.
+        # Any rather than SliceSequence: not a fixed type since it can be a
+        # reader class or a factory function.
         reader_cls: Callable[..., Any] | None = None,
         axis_name: str = "t",
         **kwargs: Any,

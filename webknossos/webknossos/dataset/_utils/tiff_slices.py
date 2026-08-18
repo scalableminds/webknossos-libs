@@ -19,8 +19,8 @@ class TiffSlices(SliceSequence):
     def supported_file_extensions(cls) -> set[str]:
         return {"tif", "tiff"}
 
-    # open_images() picks the eligible reader with the highest class_priority.
-    # 10 is the default; this reader is preferred because it recognizes axis
+    # The highest class_priority wins among eligible readers. 10 is the
+    # default; this reader is preferred because it recognizes axis
     # information and supports tiffs with more than 3 dimensions.
     class_priority = 19
 

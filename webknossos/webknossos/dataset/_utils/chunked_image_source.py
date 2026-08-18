@@ -21,9 +21,8 @@ class ChunkedImageSource(ImageSource):
     extents in metadata and can read an arbitrary box of voxels, so each chunk
     reads and writes a whole shard-aligned block with no slice writer between.
 
-    Subclasses implement only _read_source_box; the axis bookkeeping the
-    ImageSource contract needs lives here. Registering one for an extension
-    makes it the only way files with that extension are read.
+    Subclasses implement only `_read_source_box`; the axis bookkeeping lives
+    here.
     """
 
     # Source extents in the file's own axis order, set from metadata by the
@@ -42,8 +41,7 @@ class ChunkedImageSource(ImageSource):
     def __init__(self, path: UPath, options: ReadOptions) -> None:
         self.path = path
         self._options = options
-        # The requested channel; subclasses replace it with the resolved one
-        # from compute_channel_selection().
+        # The requested channel; subclasses replace it with the resolved one.
         self._channel = options.channel
 
     @classmethod
@@ -58,7 +56,8 @@ class ChunkedImageSource(ImageSource):
 
     @abstractmethod
     def get_possible_layers(self) -> dict[str, list[int]] | None:
-        """See ImageSource.get_possible_layers()."""
+        """The ways this source could be split across several layers, or None
+        when there is nothing to split."""
 
     @abstractmethod
     def _read_source_box(
@@ -84,8 +83,7 @@ class ChunkedImageSource(ImageSource):
         space — never a placeholder, since these formats know their extents.
 
         Reports every axis the source has, including "c" when more than one
-        channel is written (where NormalizedBoundingBox reads num_channels
-        from) and "t" for unpinned multi-timepoint data.
+        channel is written and "t" for unpinned multi-timepoint data.
         """
         x_size, y_size = self._x, self._y
         if self._options.swap_xy:
@@ -94,8 +92,8 @@ class ChunkedImageSource(ImageSource):
         if not self._include_t_axis and self.num_channels == 1:
             return BoundingBox((0, 0, 0), (x_size, y_size, self._z))
 
-        # NDBoundingBox.chunk() keeps "c" whole rather than splitting it, so
-        # copy_chunk_to_view still receives the full channel extent per chunk.
+        # "c" is kept whole rather than split, so each chunk still gets the
+        # full channel extent.
         axes = ["x", "y", "z"]
         sizes = [x_size, y_size, self._z]
         if self.num_channels > 1:
@@ -118,12 +116,8 @@ class ChunkedImageSource(ImageSource):
         dtype: DTypeLike | None = None,
     ) -> ChunkResult:
         """
-        Reads exactly bbox's worth of data and writes it to mag_view. Return
-        value and axis conventions are ImageSource.copy_chunk_to_view's; the
-        x/y extent returned is always bbox's, since expected_bbox was exact.
-
-        All the axis bookkeeping lives here, so subclasses implement only
-        _read_source_box.
+        Reads exactly bbox's worth of data and writes it to mag_view. The x/y
+        extent returned is always bbox's, since expected_bbox was exact.
         """
         options = self._options
         relative_bbox = bbox.offset(-mag_view.bounding_box.topleft)
@@ -165,10 +159,10 @@ class ChunkedImageSource(ImageSource):
             )
 
         # Each flip reads a mirrored source range and is reversed back into
-        # output order below, so it mirrors the *entire* extent as the
-        # ImageSource contract requires. Reversing a chunk in place would mirror
-        # only within that chunk — invisible in a single shard, wrong across
-        # several. flip_x mirrors the source's y axis and flip_y its x axis.
+        # output order below, mirroring the *entire* extent. Reversing a chunk
+        # in place would mirror only within that chunk — invisible in a single
+        # shard, wrong across several. flip_x mirrors the source's y axis and
+        # flip_y its x axis.
         if options.flip_z:
             read_z = slice(self._z - z_end, self._z - z_start)
         else:
@@ -193,7 +187,7 @@ class ChunkedImageSource(ImageSource):
         if options.flip_y:
             block = block[:, :, :, ::-1]
 
-        # Transpose to mag_view.write() convention (c, x, y, z).
+        # Transpose to (c, x, y, z).
         # swap_xy=False (default): (c, z, y, x) → (c, x, y, z)
         # swap_xy=True:            (c, z, y, x) → (c, y, x, z)
         block = (
@@ -203,14 +197,13 @@ class ChunkedImageSource(ImageSource):
         )
 
         if dtype is not None:
-            block = block.astype(dtype, order="F")  # ImageSource contract
+            block = block.astype(dtype, order="F")
 
         max_value = int(block.max())
         if self.num_channels == 1:
             block = block[0]  # (x, y, z) — single-channel layers have no c axis
         if "t" in relative_bbox.axes:
-            # View.write() wants one dimension per layer bbox axis; add the
-            # size-1 "t" this chunk corresponds to.
+            # Add back the size-1 "t" axis this chunk corresponds to.
             block = block[np.newaxis]
 
         # allow_unaligned=True: border chunks are smaller than shard_shape,

@@ -1,13 +1,12 @@
 """The base class for slice-by-slice image readers.
 
-Only what the conversion path relies on: named axes declared by the reader,
-with `bundle_axes` / `iter_axes` / `default_coords` selecting how they are
-presented, plus random access to numbered slices and lazy slicing.
+Named axes declared by the reader, with `bundle_axes` / `iter_axes` /
+`default_coords` selecting how they are presented, plus random access to
+numbered slices and lazy slicing.
 
-Every reader names its own axes, which is what lets `SlicedImageSource` stay a
-single code path — inferring the order from a raw shape cannot tell a leading
-sequence axis from a leading channel axis, and only the reader knows which it
-has. Slices are plain `np.ndarray`s, since nothing downstream reads metadata.
+Every reader names its own axes — inferring the order from a raw shape cannot
+tell a leading sequence axis from a leading channel axis, and only the reader
+knows which it has. Slices are plain `np.ndarray`s, with no metadata attached.
 """
 
 from __future__ import annotations
@@ -40,7 +39,7 @@ def _resolve_indices(key: slice | Sequence[int] | np.ndarray, length: int) -> li
 class _SlicedView:
     """A lazy view on a subset of a `SliceSequence`'s slices: slicing,
     reversal (`[::-1]`), chaining, `len()` and iteration, reading nothing until
-    iterated over. That is exactly what `copy_chunk_to_view` needs."""
+    iterated over."""
 
     def __init__(self, source: SliceSequence, indices: Sequence[int]) -> None:
         self._source = source
@@ -159,15 +158,14 @@ class SliceSequence(ABC):
     Slicing (`reader[1:4]`) returns a lazy view rather than reading anything.
     """
 
-    # Consulted by `open_images()` to pick between readers that claim the same
-    # extension; higher wins. 10 is the baseline, so a reader meant to take
-    # precedence over the general-purpose ones sets something above it.
+    # Picks between readers that claim the same extension; higher wins. 10 is
+    # the baseline, so a reader meant to take precedence over the
+    # general-purpose ones sets something above it.
     class_priority: int = 10
 
     channels_are_colour: bool = False
     """Whether a "c" axis of this reader holds colour components rather than
-    separate acquisitions. `SlicedImageSource` passes this on; see
-    `ImageSource.channels_are_colour`."""
+    separate acquisitions."""
 
     @classmethod
     def supported_file_extensions(cls) -> set[str]:

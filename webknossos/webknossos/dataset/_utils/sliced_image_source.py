@@ -36,14 +36,13 @@ from .raster_slices import MultiImageSlices, StackedFileSlices
 from .slice_sequence import SliceSequence, _SlicedView
 
 # The x/y extent is only discovered while reading, so the layer starts out
-# deliberately oversized and is cut back down by final_bounding_box().
+# deliberately oversized and is cut back down once reading is complete.
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
 class SlicedImageSource(ImageSource):
-    # Set at the end of __init__(); _open_images() uses hasattr() on
-    # _bundle_axes to tell whether that has happened yet, so these must stay
-    # bare annotations rather than assignments.
+    # Set once the axes are known; kept as bare annotations rather than
+    # assignments so their presence can be checked with hasattr().
     _bundle_axes: list[str]
     _default_coords: dict[str, int]
 
@@ -57,8 +56,6 @@ class SlicedImageSource(ImageSource):
         `_iter_axes`, what the sequence steps through (empty for a single 2D
         image), and `_bundle_axes`, what one slice is — "y" and "x", preceded
         by "c" when several channels are written.
-
-        Only sorting, not guessing: every reader names its own axes.
         """
         # `images` below always refers to an opened reader, never to this
         # argument.
@@ -132,16 +129,10 @@ class SlicedImageSource(ImageSource):
         or something else, e.g. a corrupt file or an IO error of a format that
         *is* supported, which must keep surfacing as its original error.
 
-        The decision is made on the extension, not the exception type:
-        open_images raises the same error whether no reader claims the
-        extension or every reader that claimed it failed, so a corrupt TIFF is
-        indistinguishable from an unreadable format by type. What is built
-        here supersedes those, knowing the path and the missing extras.
-
-        Classifying afterwards rather than rejecting unknown extensions up
-        front keeps files that open without a recognized extension (via
-        MultiImageSlices) working: this runs only once every open strategy has
-        failed.
+        The decision is made on the extension, not the exception type, since
+        an unsupported format and a corrupt file of a supported one raise the
+        same kind of error. Only called once every open strategy has failed,
+        so files that open without a recognized extension are unaffected.
         """
         path = self._error_path()
         # Only a file's extension says anything about which readers apply; a
@@ -181,9 +172,6 @@ class SlicedImageSource(ImageSource):
         the file itself is unreadable — damaged or incompletely uploaded, by far
         the most common cause — rather than something this class should not put
         words in the user's mouth about.
-
-        Runs only once _classify_open_failure has ruled out an unsupported
-        format, so readers exist for this extension and none could read it.
         """
         path = self._error_path()
         if path is None:
@@ -253,9 +241,9 @@ class SlicedImageSource(ImageSource):
     def _open_images(self) -> Iterator[SliceSequence]:
         """
         Yields the opened reader, configured to produce slices of the form
-        (self._iter_axes, *self._bundle_axes) once __init__() has worked those
-        out. Before that — on the one call __init__() itself makes — the reader
-        is yielded with its own defaults, which is how those axes are found.
+        (self._iter_axes, *self._bundle_axes) once those are known. Before
+        that, the reader is yielded with its own defaults, which is how those
+        axes are found in the first place.
         """
         exceptions: list[Exception] = []
         original_images = self._normalize_original_images()
@@ -281,7 +269,7 @@ class SlicedImageSource(ImageSource):
 
         with images_context_manager as images:
             if hasattr(self, "_bundle_axes"):
-                # __init__() has worked out the axes
+                # The axes have been worked out.
                 images.default_coords.update(self._default_coords)
                 images.bundle_axes = self._bundle_axes
                 images.iter_axes = self._iter_axes
@@ -294,9 +282,8 @@ class SlicedImageSource(ImageSource):
         dtype: DTypeLike | None = None,
     ) -> ChunkResult:
         """Copies the slices covering `bbox` into `mag_view`, one batch of
-        z-slices per call. Return value and axis conventions are
-        ImageSource.copy_chunk_to_view's; the x/y extent returned is the
-        *observed* one, since expected_bbox was only a placeholder.
+        z-slices per call. The x/y extent returned is the *observed* one,
+        since expected_bbox was only a placeholder.
         """
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -340,8 +327,6 @@ class SlicedImageSource(ImageSource):
                     slices = slices[::-1]
 
                 with mag_view.get_buffered_slice_writer(
-                    # Previously only z_start and its end were important, now the slice writer needs to know
-                    # which axis is currently written.
                     absolute_bounding_box=absolute_bbox,
                     buffer_size=absolute_bbox.get_shape("z"),
                     allow_unaligned=True,
@@ -422,10 +407,7 @@ class SlicedImageSource(ImageSource):
                 # sizes["c"] is the source's raw channel count, but only
                 # self.num_channels of them are actually written (a pinned
                 # `channel` selects one, and _first_n_channels truncates to the
-                # first three). Reporting the raw count here would contradict
-                # the num_channels passed to add_layer(), which surfaces as a
-                # spurious "images are larger than expected" warning and a
-                # bounding box that disagrees with the data.
+                # first three).
                 axes_sizes[axes_names.index("c")] = self.num_channels
             return NDBoundingBox(
                 VecInt.zeros(tuple(axes_names)),
@@ -438,7 +420,7 @@ class SlicedImageSource(ImageSource):
         self, mag1_expected_bbox: NDBoundingBox
     ) -> NDBoundingBox:
         """Deliberately oversized in x/y, since a write outside the layer's
-        box would be rejected. final_bounding_box() shrinks it afterwards."""
+        box would be rejected. Shrunk to the true extent afterwards."""
         safe_size = mag1_expected_bbox.size.with_replaced(
             mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
         ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
