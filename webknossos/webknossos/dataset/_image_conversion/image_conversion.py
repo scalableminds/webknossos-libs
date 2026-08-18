@@ -196,7 +196,7 @@ class ConversionLayerMapping(Enum):
 
 def _iter_convertible_paths(root: UPath, valid_extensions: set[str]) -> Iterator[UPath]:
     """Walks `root`, yielding files with a supported extension and, as single
-    leaf entries, directories a chunked reader recognizes as its own store
+    leaf entries, directories a chunked image source recognizes as its own store
     (e.g. a Zarr/N5/neuroglancer-precomputed root) — those are never descended
     into, since their contents are the store's internal chunks, not more
     input files."""

@@ -445,12 +445,12 @@ def test_from_images_zarr_directories_are_not_descended_into(tmp_upath: UPath) -
     )
 
 
-def test_valid_chunked_reader_extensions_include_zarr_and_n5() -> None:
+def test_valid_chunked_image_source_extensions_include_zarr_and_n5() -> None:
     from webknossos.dataset._image_conversion.image_source_registry import (
-        get_valid_chunked_reader_extensions,
+        get_valid_chunked_image_source_extensions,
     )
 
-    extensions = get_valid_chunked_reader_extensions()
+    extensions = get_valid_chunked_image_source_extensions()
     assert "zarr" in extensions
     assert "n5" in extensions
 

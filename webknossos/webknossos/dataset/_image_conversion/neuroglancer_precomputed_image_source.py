@@ -20,7 +20,7 @@ _INFO_FILE_NAME = "info"
 
 # Neuroglancer precomputed's physical axis order is always (x, y, z, channel)
 # per the format's own spec — no guessing needed, unlike Zarr/N5.
-_AXIS_ROLES = ("x", "y", "z", "c")
+_AXES = ("x", "y", "z", "c")
 
 
 def _read_info(path: UPath) -> Any:
@@ -111,7 +111,7 @@ class NeuroglancerPrecomputedImageSource(TensorStoreChunkedImageSource):
                 path=path,
             ) from e
 
-        self._axis_roles = _AXIS_ROLES
+        self._axes = _AXES
         self._ts_spec = {
             "driver": "neuroglancer_precomputed",
             "kvstore": _make_kvstore(path),

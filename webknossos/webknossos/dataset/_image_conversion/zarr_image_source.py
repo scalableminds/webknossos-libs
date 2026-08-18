@@ -32,9 +32,11 @@ from .image_source import ReadOptions, compute_channel_selection
 from .image_source_registry import register_chunked_image_source
 from .tensorstore_chunked_image_source import (
     TensorStoreChunkedImageSource,
-    guess_axis_roles,
-    normalize_axis_role,
+    guess_axes,
+    normalize_axis,
 )
+
+_SUPPORTED_OME_VERSIONS = ("0.4", "0.5")
 
 
 def _read_json(path: UPath, *, path_for_errors: UPath) -> Any:
@@ -77,8 +79,8 @@ def _resolution_key(
     return product
 
 
-def _ome_axis_role(axis: dict[str, Any], *, path: UPath) -> str:
-    """The role (`t`/`c`/`z`/`y`/`x`) of one OME `axes` entry, from its `type`
+def _ome_axis_name(axis: dict[str, Any], *, path: UPath) -> str:
+    """The name (`t`/`c`/`z`/`y`/`x`) of one OME `axes` entry, from its `type`
     (channel/time/space) and, for a space axis, its `name`."""
     axis_type = axis.get("type")
     if axis_type == "channel":
@@ -86,7 +88,7 @@ def _ome_axis_role(axis: dict[str, Any], *, path: UPath) -> str:
     if axis_type == "time":
         return "t"
     if axis_type in ("space", None):
-        return normalize_axis_role(axis.get("name", ""), path=path)
+        return normalize_axis(axis.get("name", ""), path=path)
     raise UnsupportedImageDataError(
         f"Cannot place OME axis {axis!r} of {path} — only channel/time/space "
         "axes are supported.",
@@ -129,8 +131,6 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             array = ts.open(
                 self._ts_spec, open=True, context=TS_CONTEXT, recheck_cached="open"
             ).result()
-        except (CorruptImageError, UnsupportedImageFormatError):
-            raise
         except Exception as e:
             raise CorruptImageError(
                 f"Cannot open the Zarr array at {resolved_path} (from {path}). "
@@ -140,19 +140,17 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
 
         domain_labels = list(array.domain.labels)
         axis_labels = axis_name_hint or (domain_labels if any(domain_labels) else None)
-        self._axis_roles = guess_axis_roles(
-            len(array.shape), axis_labels=axis_labels, path=path
-        )
+        self._axes = guess_axes(len(array.shape), axis_labels=axis_labels, path=path)
 
         shape = array.domain.exclusive_max
-        role_to_size = dict(zip(self._axis_roles, shape))
-        self._x = role_to_size.get("x", 1)
-        self._y = role_to_size.get("y", 1)
-        self._z = role_to_size.get("z", 1)
-        raw_num_channels = role_to_size.get("c", 1)
+        axis_to_size = dict(zip(self._axes, shape))
+        self._x = axis_to_size.get("x", 1)
+        self._y = axis_to_size.get("y", 1)
+        self._z = axis_to_size.get("z", 1)
+        raw_num_channels = axis_to_size.get("c", 1)
         self.dtype = array.dtype.numpy_dtype
 
-        t = role_to_size.get("t", 1)
+        t = axis_to_size.get("t", 1)
         self._t = t
         self._include_t_axis = t > 1
         self._fixed_timepoint = None if self._include_t_axis else 0
@@ -178,7 +176,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
         Resolves `path` to the Zarr array to actually open: itself, if it is
         already a plain array, or — for an OME-Zarr multiscale group — the
         dataset at the requested `scale` rank (0 = finest, the default).
-        Also returns axis roles derived from the group's OME `axes` metadata
+        Also returns axis names derived from the group's OME `axes` metadata
         when resolving out of a group, since a v2 sub-array carries no axis
         names of its own.
         """
@@ -194,7 +192,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             if node_type == "group":
                 attributes = metadata.get("attributes", {})
                 ome = attributes.get("ome", attributes)
-                return self._resolve_multiscale(path, ome, options)
+                return self._resolve_ome_multiscale(path, ome, options)
             raise CorruptImageError(
                 f"{zarr_json_path} has an unexpected node_type {node_type!r}.",
                 path=path,
@@ -210,7 +208,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
                 if zattrs_path.is_file()
                 else {}
             )
-            return self._resolve_multiscale(path, attributes, options)
+            return self._resolve_ome_multiscale(path, attributes, options)
 
         raise CorruptImageError(
             f"{path} is not a valid Zarr store (no {ZARR_JSON_FILE_NAME}/"
@@ -218,7 +216,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             path=path,
         )
 
-    def _resolve_multiscale(
+    def _resolve_ome_multiscale(
         self, path: UPath, attributes: dict[str, Any], options: ReadOptions
     ) -> tuple[UPath, list[str] | None]:
         multiscales = attributes.get("multiscales")
@@ -229,6 +227,19 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
                 path=path,
             )
         multiscale = multiscales[0]
+
+        # NGFF 0.4 (Zarr v2) carries "version" inside the multiscale entry;
+        # NGFF 0.5 (Zarr v3) carries it on the enclosing "ome" object instead
+        # — `attributes` is whichever of the two was passed in.
+        version = attributes.get("version") or multiscale.get("version")
+        if version not in _SUPPORTED_OME_VERSIONS:
+            raise UnsupportedImageFormatError(
+                f"{path} is an OME-Zarr multiscale group with version "
+                f"{version!r}; only {', '.join(_SUPPORTED_OME_VERSIONS)} are "
+                "supported.",
+                path=path,
+            )
+
         datasets = multiscale.get("datasets") or []
         if not datasets:
             raise CorruptImageError(
@@ -255,7 +266,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
 
         chosen_dataset = datasets[ranked_indices[rank]]
         resolved_path = path / chosen_dataset["path"]
-        axis_roles = (
-            [_ome_axis_role(axis, path=path) for axis in axes] if axes else None
+        axis_names = (
+            [_ome_axis_name(axis, path=path) for axis in axes] if axes else None
         )
-        return resolved_path, axis_roles
+        return resolved_path, axis_names

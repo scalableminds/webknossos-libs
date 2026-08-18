@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 import numpy as np
@@ -188,3 +189,25 @@ def test_corrupt_metadata_json_raises_corrupt_image_error(tmp_upath: UPath) -> N
     (array_path / "zarr.json").write_text("{not valid json")
     with pytest.raises(CorruptImageError):
         _open(array_path)
+
+
+@pytest.mark.parametrize("writer", [write_ome_zarr_v2_group, write_ome_zarr_v3_group])
+def test_unsupported_ome_version_is_rejected(tmp_upath: UPath, writer: Any) -> None:
+    group_path = tmp_upath / "future_version"
+    data = np.zeros((4, 8, 8), dtype=np.uint8)
+    writer(group_path, [("0", data, [1.0, 1.0, 1.0])], _AXES_CZYX[1:])
+    # Overwrite the version the writer set with an unsupported one, wherever
+    # it lives for that Zarr version (multiscale entry for v2, "ome" object
+    # for v3).
+    if (group_path / ".zattrs").is_file():
+        metadata_path = group_path / ".zattrs"
+        metadata = json.loads(metadata_path.read_bytes())
+        metadata["multiscales"][0]["version"] = "0.1"
+    else:
+        metadata_path = group_path / "zarr.json"
+        metadata = json.loads(metadata_path.read_bytes())
+        metadata["attributes"]["ome"]["version"] = "0.1"
+    metadata_path.write_text(json.dumps(metadata))
+
+    with pytest.raises(UnsupportedImageFormatError, match="0.1"):
+        _open(group_path)

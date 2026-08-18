@@ -18,7 +18,7 @@ from .image_source import ReadOptions, compute_channel_selection
 from .image_source_registry import register_chunked_image_source
 from .tensorstore_chunked_image_source import (
     TensorStoreChunkedImageSource,
-    guess_axis_roles,
+    guess_axes,
 )
 
 _ATTRIBUTES_FILE_NAME = "attributes.json"
@@ -47,8 +47,8 @@ class N5ImageSource(TensorStoreChunkedImageSource):
     `ReadOptions.format_options["scale"]` picks another level (0 = finest),
     the same way `czi_channel` picks a CZI acquisition channel.
 
-    N5 has no axis-name metadata, so axis roles always come from the
-    positional OME-NGFF-style convention (see `guess_axis_roles`).
+    N5 has no axis-name metadata, so axes always come from the positional
+    OME-NGFF-style convention (see `guess_axes`).
     """
 
     @classmethod
@@ -85,8 +85,6 @@ class N5ImageSource(TensorStoreChunkedImageSource):
             array = ts.open(
                 self._ts_spec, open=True, context=TS_CONTEXT, recheck_cached="open"
             ).result()
-        except CorruptImageError:
-            raise
         except Exception as e:
             raise CorruptImageError(
                 f"Cannot open the N5 dataset at {resolved_path} (from {path}). "
@@ -94,19 +92,17 @@ class N5ImageSource(TensorStoreChunkedImageSource):
                 path=path,
             ) from e
 
-        self._axis_roles = guess_axis_roles(
-            len(array.shape), axis_labels=None, path=path
-        )
+        self._axes = guess_axes(len(array.shape), axis_labels=None, path=path)
 
         shape = array.domain.exclusive_max
-        role_to_size = dict(zip(self._axis_roles, shape))
-        self._x = role_to_size.get("x", 1)
-        self._y = role_to_size.get("y", 1)
-        self._z = role_to_size.get("z", 1)
-        raw_num_channels = role_to_size.get("c", 1)
+        axis_to_size = dict(zip(self._axes, shape))
+        self._x = axis_to_size.get("x", 1)
+        self._y = axis_to_size.get("y", 1)
+        self._z = axis_to_size.get("z", 1)
+        raw_num_channels = axis_to_size.get("c", 1)
         self.dtype = array.dtype.numpy_dtype
 
-        t = role_to_size.get("t", 1)
+        t = axis_to_size.get("t", 1)
         self._t = t
         self._include_t_axis = t > 1
         self._fixed_timepoint = None if self._include_t_axis else 0
