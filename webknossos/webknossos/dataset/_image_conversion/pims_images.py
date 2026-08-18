@@ -412,9 +412,9 @@ class PimsImages:
     def _classify_read_failure(self) -> CorruptImageError | None:
         """
         Decides whether a failure to open a file of a *supported* format means
-        the file itself is unreadable — damaged or incompletely uploaded, by
-        far the most common cause — as opposed to some other failure this
-        class has no specific enough evidence to explain.
+        the file itself is unreadable — damaged or incompletely uploaded
+        — as opposed to some other failure this class has no specific enough
+        evidence to explain.
 
         Only runs once _classify_open_failure has ruled out an unsupported
         format, so reaching here means readers exist for this extension and
