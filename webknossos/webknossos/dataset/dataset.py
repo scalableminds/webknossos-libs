@@ -5,7 +5,7 @@ import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from os import PathLike
 from os.path import relpath
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import Any, cast
 
 import attr
 import numpy as np
@@ -13,10 +13,28 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.dataset.layer import (
+    Layer,
+    RemoteLayer,
+    SegmentationLayer,
+)
+
 from ..client.api_client.models import (
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
     ApiReserveDatasetUploadToPathsParameters,
 )
+from ..dataset_properties import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    AttachmentsProperties,
+    DataFormat,
+    DatasetProperties,
+    LayerCategoryType,
+    LayerProperties,
+    SegmentationLayerProperties,
+    VoxelSize,
+)
+from ..dataset_properties.structuring import get_dataset_converter
 from ..geometry import (
     BoundingBox,
     Mag,
@@ -28,7 +46,22 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
+from ..utils import (
+    cheap_resolve,
+    copytree,
+    count_defined_values,
+    dump_path,
+    enrich_path,
+    is_fs_path,
+    rmtree,
+    strip_trailing_slash,
+    warn_deprecated,
+    wrap_executor,
+)
 from ._image_conversion import image_conversion
+from ._image_conversion.infer_bounding_box_existing_files import (
+    infer_bounding_box_existing_files,
+)
 from .abstract_dataset import (
     DEFAULT_VERSION,
     AbstractDataset,
@@ -60,44 +93,6 @@ from .remote_dataset import RemoteAccessMode, RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .transfer_mode import TransferMode
-
-if TYPE_CHECKING:
-    import pims
-
-
-from webknossos.dataset.layer import (
-    Layer,
-    RemoteLayer,
-    SegmentationLayer,
-)
-
-from ..dataset_properties import (
-    COLOR_CATEGORY,
-    SEGMENTATION_CATEGORY,
-    AttachmentsProperties,
-    DataFormat,
-    DatasetProperties,
-    LayerCategoryType,
-    LayerProperties,
-    SegmentationLayerProperties,
-    VoxelSize,
-)
-from ..dataset_properties.structuring import get_dataset_converter
-from ..utils import (
-    cheap_resolve,
-    copytree,
-    count_defined_values,
-    dump_path,
-    enrich_path,
-    is_fs_path,
-    rmtree,
-    strip_trailing_slash,
-    warn_deprecated,
-    wrap_executor,
-)
-from ._image_conversion.infer_bounding_box_existing_files import (
-    infer_bounding_box_existing_files,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -162,9 +157,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ```
     """
 
-    # Kept as a class attribute for backward compatibility: Dataset.ConversionLayerMapping
-    # used to be a nested class; the implementation now lives in image_conversion.py
-    # alongside from_images()/add_layer_from_images(), which use it directly.
+    # Exposed as a class attribute so `Dataset.ConversionLayerMapping` works.
     ConversionLayerMapping = image_conversion.ConversionLayerMapping
 
     def __init__(
@@ -1114,9 +1107,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_layer_from_images(
         self,
-        images: Union[
-            str, PathLike, UPath, "pims.FramesSequence", list[str | PathLike | UPath]
-        ],
+        images: str | PathLike | UPath | Sequence[str | PathLike | UPath],
         ## add_layer arguments
         layer_name: str,
         category: LayerCategoryType | None = "color",
@@ -1147,11 +1138,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Creates a new layer called `layer_name` with mag `mag` from `images`.
         `images` can be one of the following:
 
+        * path to a single image file
+        * path to a directory of image files
         * glob-string
         * list of paths
-        * `pims.FramesSequence` instance
-
-        Please see the [pims docs](http://soft-matter.github.io/pims/v0.6.1/opening_files.html) for more information.
 
         This method needs extra packages like tifffile or pylibczirw. Please install the respective extras,
         e.g. using `pip install "webknossos[all]"`.

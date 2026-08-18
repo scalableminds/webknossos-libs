@@ -1,10 +1,11 @@
 from itertools import product
 
 import numpy as np
-from pims import FramesSequenceND
 from upath import UPath
 
 from ...utils import WkImportError
+from .image_source_registry import register_slice_reader
+from .slice_reader import SliceReader
 
 try:
     import tifffile
@@ -12,15 +13,15 @@ except ImportError as e:
     raise WkImportError("tifffile", "tifffile") from e
 
 
-class PimsTiffReader(FramesSequenceND):
+@register_slice_reader
+class TiffSliceReader(SliceReader):
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         return {"tif", "tiff"}
 
-    # class_priority is used in pims to pick the reader with the highest priority.
-    # We decided to use a custom reader for tiff files to support images with more than 3 dimensions out of the box.
-    # Default is 10, and bioformats priority is 2.
-    # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
+    # The highest class_priority wins among eligible readers. 10 is the
+    # default; this reader is preferred because it recognizes axis
+    # information and supports tiffs with more than 3 dimensions.
     class_priority = 19
 
     def __init__(self, path: UPath) -> None:
@@ -33,8 +34,6 @@ class PimsTiffReader(FramesSequenceND):
             self._tiff_axes = tuple(_tiff.axes.lower())  # All the axes in the tiff file
             for axis, shape in zip(self._tiff_axes, _tiff.shape):
                 self._init_axis(axis, shape)
-
-            self._tiff_shape = _tiff.shape
 
             # Selecting the first page to get the dtype and shape
             if hasattr(_tiff, "pages"):
@@ -52,11 +51,11 @@ class PimsTiffReader(FramesSequenceND):
             )
 
             if "c" in self._tiff_axes:
-                self._register_get_frame(self.get_frame_2D, "cyx")
+                self._set_get_slice(self.get_slice_2d, "cyx")
             else:
-                self._register_get_frame(self.get_frame_2D, "yx")
+                self._set_get_slice(self.get_slice_2d, "yx")
 
-    def get_frame_2D(self, **ind: int) -> np.ndarray:
+    def get_slice_2d(self, **ind: int) -> np.ndarray:
         out_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)
         out = np.zeros(out_shape, dtype=self._dtype)
 
@@ -154,11 +153,3 @@ class PimsTiffReader(FramesSequenceND):
     @property
     def pixel_type(self) -> np.dtype:
         return self._dtype
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        return self._tiff_shape
-
-    @property
-    def frame_shape(self) -> tuple[int, ...]:
-        return self._shape

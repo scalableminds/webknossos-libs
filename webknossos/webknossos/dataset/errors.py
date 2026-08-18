@@ -1,8 +1,9 @@
 """Exceptions raised by the dataset conversion.
 
-This module deliberately imports nothing but `upath`, so that downstream code
-can catch these exceptions without pulling in the image readers or any of
-their optional dependencies.
+This module deliberately imports nothing but `upath`, so that none of these
+exceptions depends on an image reader or on a reader's optional dependency.
+They can be raised, caught and inspected on any install, whatever combination
+of `webknossos[tifffile]`, `[czi]`, `[ims]` and `[mrcfile]` is present.
 """
 
 from __future__ import annotations
@@ -17,8 +18,8 @@ class ImageConversionError(ValueError):
 
     Attributes:
         path: The offending input path, if there is a single one. `None` when
-            the images were passed as a list or as a `pims.FramesSequence`, or
-            when the failure is not tied to one file.
+            the images were passed as a list, or when the failure is not tied
+            to one file.
     """
 
     def __init__(self, message: str, *, path: UPath | None = None) -> None:
@@ -34,7 +35,7 @@ class UnsupportedImageFormatError(ImageConversionError):
 
     Attributes:
         path: The offending input path, if there is a single one. `None` when
-            the images were passed as a list or as a `pims.FramesSequence`.
+            the images were passed as a list.
         file_extension: The offending file's extension — lowercase, without
             the leading dot (e.g. `"dcm"`). `None` when `path` is a directory
             or unknown.

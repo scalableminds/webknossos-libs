@@ -1,10 +1,10 @@
-"""Provides test data fixtures: downloaded (mainly from the `wklibs-samples`
-bucket on static.webknossos.org) or synthetically generated.
+"""Test data fixtures: downloaded (mainly from the `wklibs-samples` bucket on
+static.webknossos.org) or synthetically generated.
 
 Downloads are cached under CACHE_DIR so repeated local test runs reuse
 what's already there instead of re-fetching it every time. The cache is
-gitignored (via the repo's generic `.cache` rule) and never cleaned up
-automatically; delete it by hand if you want to force a re-download."""
+gitignored and never cleaned up automatically; delete it by hand to force a
+re-download."""
 
 import os
 import stat
@@ -83,12 +83,9 @@ def create_synthetic_multi_timepoint_ims(
     x: int,
     dtype: DTypeLike = np.uint16,
 ) -> None:
-    """Writes a minimal HDF5 structure matching what ImsChunkedImages actually
-    reads (DataSet/ResolutionLevel 0/TimePoint {t}/Channel {c}/Data). This
-    intentionally skips the DataSetInfo attributes that the full
-    imaris_ims_file_reader library needs, since callers monkeypatch
-    ims_chunked_images._read_ims_metadata_quietly instead of relying on a
-    byte-perfect Imaris file.
+    """Writes a minimal HDF5 structure matching what an Imaris reader expects
+    (DataSet/ResolutionLevel 0/TimePoint {t}/Channel {c}/Data). Intentionally
+    skips the DataSetInfo attributes a full Imaris file would need.
 
     `dtype` matters for multi-channel files: only three uint8 channels are
     written into a single layer, everything else is split per channel."""

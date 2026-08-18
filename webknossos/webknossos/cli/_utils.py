@@ -3,7 +3,7 @@
 import json
 import logging
 import re
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager
 from enum import Enum
 from multiprocessing import cpu_count
@@ -407,7 +407,14 @@ def parse_bbox(bbox_str: str) -> BoundingBox:
         result = tuple(int(x) for x in bbox_str.split(","))
         if len(result) == 6:
             return BoundingBox.from_tuple6(
-                (result[0], result[1], result[2], result[3], result[4], result[5])
+                (
+                    result[0],
+                    result[1],
+                    result[2],
+                    result[3],
+                    result[4],
+                    result[5],
+                )
             )
         raise ValueError(
             f"Expected six values formatted like: 0,0,0,5,5,5 but got: {bbox_str}"
@@ -540,7 +547,7 @@ def open_dataset(
     annotation_ok: bool,
     token: str | None = None,
     access_mode: RemoteAccessMode | None = None,
-) -> Iterator[Dataset | RemoteDataset]:
+) -> Generator[Dataset | RemoteDataset]:
     if not is_fs_path(source):
         url = resolve_short_link(str(source))
         parsed = urlparse(url)
