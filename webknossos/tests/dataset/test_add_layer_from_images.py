@@ -396,7 +396,7 @@ def test_ims_empty_shape_is_corrupt(
     ims_path = tmp_upath / "empty.ims"
     ims_path.write_bytes(b"\x89HDF\r\n\x1a\n" + b"\x00" * 100)
     ims_image_source = importlib.import_module(
-        "webknossos.dataset._utils.ims_image_source"
+        "webknossos.dataset._image_conversion.ims_image_source"
     )
     monkeypatch.setattr(
         ims_image_source,
@@ -443,7 +443,7 @@ def test_add_layer_from_images_names_missing_optional_dependency(
     # The test env installs every extra, so unregister the reader to reproduce
     # exactly the state a missing dependency leaves behind.
     registry = importlib.import_module(
-        "webknossos.dataset._utils.image_source_registry"
+        "webknossos.dataset._image_conversion.image_source_registry"
     )
     monkeypatch.setattr(registry, "_CHUNKED_READER_CLASSES", [])
     monkeypatch.setattr(registry, "_UNAVAILABLE_EXTENSIONS", {"ims": "ims"})
@@ -469,7 +469,7 @@ def test_ims_from_images_multi_timepoint(
         ims_path, num_timepoints=3, num_channels=1, z=4, y=8, x=10
     )
     ims_image_source = importlib.import_module(
-        "webknossos.dataset._utils.ims_image_source"
+        "webknossos.dataset._image_conversion.ims_image_source"
     )
     monkeypatch.setattr(
         ims_image_source,
@@ -517,7 +517,7 @@ def test_ims_multi_channel_needs_one_layer_per_channel(
         dtype=dtype,
     )
     ims_image_source = importlib.import_module(
-        "webknossos.dataset._utils.ims_image_source"
+        "webknossos.dataset._image_conversion.ims_image_source"
     )
     monkeypatch.setattr(
         ims_image_source,
@@ -646,7 +646,7 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
     ims_image_source = importlib.import_module(
-        "webknossos.dataset._utils.ims_image_source"
+        "webknossos.dataset._image_conversion.ims_image_source"
     )
     monkeypatch.setattr(
         ims_image_source,

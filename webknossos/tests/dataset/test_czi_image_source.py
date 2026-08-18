@@ -10,10 +10,10 @@ pytest.importorskip("pylibCZIrw")
 
 from tests.utils import create_synthetic_czi  # noqa: E402
 from webknossos.dataset import UnsupportedImageDataError  # noqa: E402
-from webknossos.dataset._utils.czi_image_source import (
+from webknossos.dataset._image_conversion.czi_image_source import (
     CziImageSource,  # noqa: E402
 )
-from webknossos.dataset._utils.image_source import ReadOptions  # noqa: E402
+from webknossos.dataset._image_conversion.image_source import ReadOptions  # noqa: E402
 
 
 def _open_czi_image_source(path: UPath, **options: Any) -> CziImageSource:
@@ -105,7 +105,7 @@ def test_czi_image_source_rejects_unsupported_dimension(tmp_upath: UPath) -> Non
             pass
 
     czi_image_source = importlib.import_module(
-        "webknossos.dataset._utils.czi_image_source"
+        "webknossos.dataset._image_conversion.czi_image_source"
     )
     with patch.object(
         czi_image_source.pyczi, "open_czi", lambda _path: _ReaderWithViewDimension()

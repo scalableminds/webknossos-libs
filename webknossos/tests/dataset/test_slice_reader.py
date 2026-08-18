@@ -5,16 +5,16 @@ import pytest
 from PIL import Image
 from upath import UPath
 
-from webknossos.dataset._utils.image_source_registry import open_images
-from webknossos.dataset._utils.raster_slice_reader import (
+from webknossos.dataset._image_conversion.image_source_registry import open_images
+from webknossos.dataset._image_conversion.raster_slice_reader import (
     MultiImageSliceReader,
     SingleImageSliceReader,
 )
-from webknossos.dataset._utils.slice_reader import (
+from webknossos.dataset._image_conversion.slice_reader import (
     SliceReader,
     _SlicedView,
 )
-from webknossos.dataset._utils.tiff_slice_reader import TiffSliceReader
+from webknossos.dataset._image_conversion.tiff_slice_reader import TiffSliceReader
 from webknossos.dataset.errors import (
     ImageConversionError,
     UnsupportedImageFormatError,

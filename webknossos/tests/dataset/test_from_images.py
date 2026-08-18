@@ -24,9 +24,9 @@ from webknossos.dataset import (
     RemoteDataset,
     UnsupportedImageFormatError,
 )
-from webknossos.dataset._utils.image_source import ReadOptions
-from webknossos.dataset._utils.mrc_image_source import MrcImageSource
-from webknossos.dataset._utils.tiff_slice_reader import TiffSliceReader
+from webknossos.dataset._image_conversion.image_source import ReadOptions
+from webknossos.dataset._image_conversion.mrc_image_source import MrcImageSource
+from webknossos.dataset._image_conversion.tiff_slice_reader import TiffSliceReader
 from webknossos.geometry import BoundingBox, Vec3Int, VecInt
 
 
@@ -297,7 +297,7 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
     ims_image_source = importlib.import_module(
-        "webknossos.dataset._utils.ims_image_source"
+        "webknossos.dataset._image_conversion.ims_image_source"
     )
     monkeypatch.setattr(
         ims_image_source,
@@ -439,16 +439,16 @@ def test_optional_reader_extensions_match_supported_file_extensions() -> None:
     # wrong formats, or silently stops covering one. Covers both strategies:
     # slice readers are just as optional as chunked ones now that tifffile is
     # not in the base install.
-    from webknossos.dataset._utils.chunked_image_source import (
+    from webknossos.dataset._image_conversion.chunked_image_source import (
         ChunkedImageSource,
     )
-    from webknossos.dataset._utils.image_source_registry import (
+    from webknossos.dataset._image_conversion.image_source_registry import (
         _CHUNKED_READER_CLASSES,
         _OPTIONAL_READERS,
         _SLICE_READER_CLASSES,
         get_unavailable_extensions,
     )
-    from webknossos.dataset._utils.slice_reader import SliceReader
+    from webknossos.dataset._image_conversion.slice_reader import SliceReader
 
     # Annotated because the two lists' only common base is ABC, which does
     # not declare supported_file_extensions(); the union does.
@@ -483,7 +483,7 @@ def test_from_images_names_missing_optional_dependency(
     # sides: its extension drops out of the supported set and shows up as
     # unavailable, exactly as it would with the reader unimportable.
     image_conversion = importlib.import_module(
-        "webknossos.dataset._utils.image_conversion"
+        "webknossos.dataset._image_conversion.image_conversion"
     )
     available = image_conversion.get_valid_extensions()
     monkeypatch.setattr(
