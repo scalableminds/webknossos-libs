@@ -79,17 +79,14 @@ class SingleImageSliceReader(SliceReader):
 
 
 def _collect_files(
-    path_spec: str | Iterable[str], sort_explicit_lists: bool
+    path_spec: str | Iterable[str],
 ) -> tuple[list[str], zipfile.ZipFile | None]:
     """Resolves a directory, glob pattern, zip archive or iterable of paths
-    into the list of files to read, in the order they should be read."""
+    into the list of files to read, in the order they should be read. An
+    explicitly passed list is returned as given, preserving a custom order;
+    callers that want it sorted anyway do so themselves."""
     if not isinstance(path_spec, str):
-        filepaths = [str(i) for i in path_spec]
-        # An explicitly passed list is optionally re-sorted; a custom sort
-        # order given by the caller does not survive when it is.
-        if sort_explicit_lists:
-            filepaths.sort(key=_natsort_key)
-        return filepaths, None
+        return [str(i) for i in path_spec], None
 
     if zipfile.is_zipfile(path_spec):
         archive = zipfile.ZipFile(path_spec, "r")
@@ -129,9 +126,7 @@ class MultiImageSliceReader(SliceReader):
         # Set before anything that can raise, so __del__ -> close() does not
         # fail with AttributeError when __init__ aborts.
         self._zipfile: zipfile.ZipFile | None = None
-        self._filepaths, self._zipfile = _collect_files(
-            path_spec, sort_explicit_lists=False
-        )
+        self._filepaths, self._zipfile = _collect_files(path_spec)
         first_slice = self.imread(self._filepaths[0], **self.kwargs)
         self._dtype = first_slice.dtype
 
@@ -197,9 +192,11 @@ class StackedFileSliceReader(SliceReader):
             self.reader_cls: Callable[..., Any] = open_images
         else:
             self.reader_cls = reader_cls
-        self._filepaths, self._zipfile = _collect_files(
-            path_spec, sort_explicit_lists=True
-        )
+        self._filepaths, self._zipfile = _collect_files(path_spec)
+        if not isinstance(path_spec, str):
+            # Unlike MultiImageSliceReader, an explicit list is sorted here
+            # too, rather than kept in the caller's order.
+            self._filepaths.sort(key=_natsort_key)
 
         with self.reader_cls(self._filepaths[0], **self.kwargs) as reader:
             for ax in reader.axes:
