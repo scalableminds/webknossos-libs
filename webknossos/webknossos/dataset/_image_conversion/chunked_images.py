@@ -108,28 +108,23 @@ class ChunkedImages(ABC):
         needs placeholder inflation, since chunk-based formats know their
         true extents from metadata alone.
 
-        Reports every axis the source actually has, including "c" when more
-        than one channel is written (which is where NormalizedBoundingBox
-        reads num_channels from) and "t" for unpinned multi-timepoint data.
-        Always well-defined — it never has to reject an axis combination.
+        Channels are never reported as a "c" axis here: like every other
+        layer bounding box, this describes only the spatial (and, for
+        unpinned multi-timepoint data, "t") extent — the channel count is
+        conveyed separately, via the `num_channels` passed to `add_layer()`,
+        whether the channels end up combined into one layer or split into
+        one layer each. Always well-defined — it never has to reject an axis
+        combination.
         """
         x_size, y_size = self._x, self._y
         if self._swap_xy:
             x_size, y_size = y_size, x_size
 
-        if not self._include_t_axis and self.num_channels == 1:
+        if not self._include_t_axis:
             return BoundingBox((0, 0, 0), (x_size, y_size, self._z))
 
-        # NDBoundingBox.chunk() keeps "c" whole rather than splitting it, so
-        # read_chunk still receives the full channel extent per chunk.
-        axes = ["x", "y", "z"]
-        sizes = [x_size, y_size, self._z]
-        if self.num_channels > 1:
-            axes.insert(0, "c")
-            sizes.insert(0, self.num_channels)
-        if self._include_t_axis:
-            axes.insert(0, "t")
-            sizes.insert(0, self._t)
+        axes = ["t", "x", "y", "z"]
+        sizes = [self._t, x_size, y_size, self._z]
         return NDBoundingBox(
             VecInt.zeros(tuple(axes)),
             VecInt(sizes, axes=axes),

@@ -201,10 +201,13 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 
 
 # Formats whose channels mean RGB rather than separate acquisitions: the
-# everyday 2D image formats, where three uint8 channels are RGB and belong in
-# one layer. Everything else — scientific formats such as TIFF, CZI, DM3/DM4,
-# .ims and MRC — stores one acquisition channel per channel, which users almost
-# always want as separate layers, even when there happen to be three of them.
+# everyday 2D image formats, where three uint8 channels are RGB and always
+# belong in one layer, regardless of allow_multiple_layers. Everything else —
+# scientific formats such as TIFF, CZI, DM3/DM4, .ims and MRC — stores one
+# acquisition channel per channel, which users may want as separate layers
+# even when there happen to be three of them, so those are only combined into
+# an RGB layer as a fallback when allow_multiple_layers=False; passing
+# allow_multiple_layers=True still splits them.
 _RGB_IMAGE_EXTENSIONS = frozenset(
     {
         "bmp",
@@ -693,14 +696,22 @@ def add_layer_from_images(
             assert possible_layers is not None
             del possible_layers["channel"]
         elif not allow_multiple_layers:
-            raise UnsupportedImageDataError(
-                f"Cannot write these {len(source_channels)} channels into a "
-                + "single layer: WEBKNOSSOS only combines several channels into "
-                + f"one layer as RGB (three uint8 channels of {_describe_rgb_formats()}). "
-                + "Set allow_multiple_layers=True to write one layer per channel, "
-                + "or channel=<index> to convert a single channel.",
-                path=images if isinstance(images, UPath) else None,
-            )
+            if channels_fit_one_layer(len(source_channels), layer_dtype):
+                # Not one of the RGB image formats, but three uint8 channels
+                # still display as RGB in WEBKNOSSOS, so write them into one
+                # layer instead of erroring, since the caller did not ask for
+                # separate layers via allow_multiple_layers=True.
+                assert possible_layers is not None
+                del possible_layers["channel"]
+            else:
+                raise UnsupportedImageDataError(
+                    f"Cannot write these {len(source_channels)} channels into a "
+                    + "single layer: WEBKNOSSOS only combines several channels into "
+                    + f"one layer as RGB (three uint8 channels of {_describe_rgb_formats()}). "
+                    + "Set allow_multiple_layers=True to write one layer per channel, "
+                    + "or channel=<index> to convert a single channel.",
+                    path=images if isinstance(images, UPath) else None,
+                )
     # Further below, we iterate over suffix_with_pims_open_kwargs_per_layer in the for-loop
     # to add one layer per possible_layer if allow_multiple_layers is True.
     # If just a single layer is added, we still add a default value in the dict.
