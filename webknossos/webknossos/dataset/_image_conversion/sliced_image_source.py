@@ -187,9 +187,9 @@ class SlicedImageSource(ImageSource):
     def _classify_read_failure(self) -> CorruptImageError | None:
         """
         Decides whether a failure to open a file of a *supported* format means
-        the file itself is unreadable — damaged or incompletely uploaded, by far
-        the most common cause — rather than something this class should not put
-        words in the user's mouth about.
+        the file itself is unreadable — damaged or incompletely uploaded
+        — as opposed to some other failure this class has no specific enough
+        evidence to explain.
         """
         path = self._error_path()
         if path is None:
@@ -337,12 +337,10 @@ class SlicedImageSource(ImageSource):
                     # The sequence is a flat run over every iter axis, so narrow
                     # it to the stretch this chunk's non-z coordinates select
                     # before indexing z within it.
-                    lower_bounds = images.flat_index(
-                        {
-                            axis: relative_bbox.get_bounds(axis)[0]
-                            for axis in self._iter_axes[:-1]
-                        }
-                    )
+                    lower_bounds = images.flat_index({
+                        axis: relative_bbox.get_bounds(axis)[0]
+                        for axis in self._iter_axes[:-1]
+                    })
                     upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
                     slices = images[lower_bounds:upper_bounds]
                 if self._options.flip_z:
