@@ -51,7 +51,7 @@ from ..layer.abstract_layer import (
     channels_fit_one_layer,
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
-from . import raster_slices, sliced_image_source
+from . import raster_slice_reader, sliced_image_source
 from .image_source import ImageSource, ReadOptions
 from .image_source_registry import (
     describe_missing_extras,
@@ -59,7 +59,7 @@ from .image_source_registry import (
     get_valid_extensions,
     open_image_source,
 )
-from .raster_slices import SingleImageSlices
+from .raster_slice_reader import SingleImageSliceReader
 from .segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
@@ -75,7 +75,7 @@ logger = logging.getLogger(__name__)
 # who named one input, not for every file of a bulk conversion. Taken from the
 # modules themselves because filterwarnings matches on the module name, which a
 # rename would otherwise silently break.
-_RASTER_SLICES_MODULE = raster_slices.__name__.rsplit(".", 1)[-1]
+_RASTER_SLICE_READER_MODULE = raster_slice_reader.__name__.rsplit(".", 1)[-1]
 _SLICED_SOURCE_MODULE = sliced_image_source.__name__.rsplit(".", 1)[-1]
 
 
@@ -85,7 +85,7 @@ def _quiet_reader_warnings(
 ) -> Iterator[None]:
     with warnings.catch_warnings():
         warnings.filterwarnings(
-            "ignore", category=UserWarning, module=_RASTER_SLICES_MODULE
+            "ignore", category=UserWarning, module=_RASTER_SLICE_READER_MODULE
         )
         warnings.filterwarnings(
             sliced_source_action, category=UserWarning, module=_SLICED_SOURCE_MODULE
@@ -223,7 +223,7 @@ def _describe_rgb_formats() -> str:
     which ones can share a layer."""
     return ", ".join(
         "." + extension
-        for extension in sorted(SingleImageSlices.supported_file_extensions())
+        for extension in sorted(SingleImageSliceReader.supported_file_extensions())
     )
 
 

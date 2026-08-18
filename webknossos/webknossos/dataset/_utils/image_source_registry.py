@@ -2,7 +2,7 @@
 
 A **reader** knows one input format and is what registers here; a **source**
 is an `ImageSource`. The two kinds of reader differ in whether they are also
-sources: a slice reader (`SliceSequence` subclass) is not and gets wrapped,
+sources: a slice reader (`SliceReader` subclass) is not and gets wrapped,
 while a chunked reader is, which is what its `…ImageSource` name says.
 
 `open_image_source()` picks the kind from the extension and returns an
@@ -22,13 +22,13 @@ from upath import UPath
 from ..errors import UnsupportedImageFormatError
 from .chunked_image_source import ChunkedImageSource
 from .image_source import ImageSource, ReadOptions
-from .slice_sequence import SliceSequence
+from .slice_reader import SliceReader
 
-_SLICE_READER_CLASSES: list[type[SliceSequence]] = []
+_SLICE_READER_CLASSES: list[type[SliceReader]] = []
 _CHUNKED_READER_CLASSES: list[type[ChunkedImageSource]] = []
 
 
-def register_slice_reader(cls: type[SliceSequence]) -> type[SliceSequence]:
+def register_slice_reader(cls: type[SliceReader]) -> type[SliceReader]:
     _SLICE_READER_CLASSES.append(cls)
     return cls
 
@@ -61,7 +61,7 @@ def get_valid_extensions() -> set[str]:
     return get_valid_slice_reader_extensions() | get_valid_chunked_reader_extensions()
 
 
-def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
+def open_images(path_spec: str, **kwargs: object) -> SliceReader:
     """Opens a path, glob pattern or directory as a sequence of slices.
 
     A pattern matching more than one file becomes an image sequence; a single
@@ -70,10 +70,10 @@ def open_images(path_spec: str, **kwargs: object) -> SliceSequence:
     raises.
     """
     # Deferred to avoid a cycle: the raster readers register themselves here.
-    from .raster_slices import MultiImageSlices
+    from .raster_slice_reader import MultiImageSliceReader
 
     if len(glob.glob(path_spec)) > 1:
-        return MultiImageSlices(path_spec, **kwargs)
+        return MultiImageSliceReader(path_spec, **kwargs)
 
     # The errors below are dispatch failing, not the final word: a caller may
     # replace them with one that knows the actual path and missing extras
@@ -158,7 +158,7 @@ class _OptionalReader(NamedTuple):
 # chunked ones now that tifffile is not in the base install.
 _OPTIONAL_READERS: tuple[_OptionalReader, ...] = (
     _OptionalReader(
-        "tiff_slices", "TiffSlices", "tifffile", frozenset({"tif", "tiff"})
+        "tiff_slice_reader", "TiffSliceReader", "tifffile", frozenset({"tif", "tiff"})
     ),
     _OptionalReader("ims_image_source", "ImsImageSource", "ims", frozenset({"ims"})),
     _OptionalReader(
@@ -208,8 +208,8 @@ def _import_readers() -> str | None:
     # No optional dependency beyond imageio, which is a hard requirement — but
     # imported here so that every reader registers in one place.
     from . import (
-        dm_slices,  # noqa: F401 unused-import
-        raster_slices,  # noqa: F401 unused-import
+        dm_slice_reader,  # noqa: F401 unused-import
+        raster_slice_reader,  # noqa: F401 unused-import
     )
 
     for reader in _OPTIONAL_READERS:

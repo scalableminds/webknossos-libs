@@ -26,7 +26,7 @@ from webknossos.dataset import (
 )
 from webknossos.dataset._utils.image_source import ReadOptions
 from webknossos.dataset._utils.mrc_image_source import MrcImageSource
-from webknossos.dataset._utils.tiff_slices import TiffSlices
+from webknossos.dataset._utils.tiff_slice_reader import TiffSliceReader
 from webknossos.geometry import BoundingBox, Vec3Int, VecInt
 
 
@@ -101,7 +101,7 @@ def test_imagej_virtual_stack_tiff(tmp_upath: UPath) -> None:
     assert len(t.pages) == 1, "expected exactly 1 real IFD"
     assert t.series[0].shape == (Z, Y, X)
 
-    reader = TiffSlices(tif_path)
+    reader = TiffSliceReader(tif_path)
     reader.bundle_axes = ["y", "x"]
     reader.iter_axes = ["z"]
 
@@ -141,7 +141,7 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
     # Verify that reading z=0 only accesses the C pages for z=0, not pages from other z-slices.
     # With CZYX ordering (C=3, Z=2) pages are laid out as: c=0→[pg0,pg1], c=1→[pg2,pg3], c=2→[pg4,pg5]
     # so z=0 corresponds to pages 0, 2, 4 and z=1 to pages 1, 3, 5.
-    reader = TiffSlices(tif_path)
+    reader = TiffSliceReader(tif_path)
     reader.bundle_axes = ["c", "y", "x"]
     reader.iter_axes = ["z"]
 
@@ -446,11 +446,11 @@ def test_optional_reader_extensions_match_supported_file_extensions() -> None:
         _SLICE_READER_CLASSES,
         get_unavailable_extensions,
     )
-    from webknossos.dataset._utils.slice_sequence import SliceSequence
+    from webknossos.dataset._utils.slice_reader import SliceReader
 
     # Annotated because the two lists' only common base is ABC, which does
     # not declare supported_file_extensions(); the union does.
-    registered: dict[str, type[SliceSequence] | type[ChunkedImageSource]] = {
+    registered: dict[str, type[SliceReader] | type[ChunkedImageSource]] = {
         cls.__name__: cls for cls in _SLICE_READER_CLASSES
     }
     registered.update({cls.__name__: cls for cls in _CHUNKED_READER_CLASSES})

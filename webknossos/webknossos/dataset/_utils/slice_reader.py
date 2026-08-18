@@ -37,11 +37,11 @@ def _resolve_indices(key: slice | Sequence[int] | np.ndarray, length: int) -> li
 
 
 class _SlicedView:
-    """A lazy view on a subset of a `SliceSequence`'s slices: slicing,
+    """A lazy view on a subset of a `SliceReader`'s slices: slicing,
     reversal (`[::-1]`), chaining, `len()` and iteration, reading nothing until
     iterated over."""
 
-    def __init__(self, source: SliceSequence, indices: Sequence[int]) -> None:
+    def __init__(self, source: SliceReader, indices: Sequence[int]) -> None:
         self._source = source
         self._indices = list(indices)
 
@@ -141,7 +141,7 @@ class DefaultCoordsDict(dict[str, int]):
             self[k] = v
 
 
-class SliceSequence(ABC):
+class SliceReader(ABC):
     """A finite, randomly accessible sequence of slices over named axes.
 
     Subclasses declare their axes with `_init_axis(name, size)` and their one
@@ -325,7 +325,7 @@ class SliceSequence(ABC):
     def close(self) -> None:
         """Release any resources held. Subclasses should call super()."""
 
-    def __enter__(self) -> SliceSequence:
+    def __enter__(self) -> SliceReader:
         return self
 
     def __exit__(self, *args: object) -> None:

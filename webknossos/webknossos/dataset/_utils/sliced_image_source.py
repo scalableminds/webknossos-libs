@@ -32,8 +32,8 @@ from .image_source_registry import (
     get_valid_slice_reader_extensions,
     open_images,
 )
-from .raster_slices import MultiImageSlices, StackedFileSlices
-from .slice_sequence import SliceSequence, _SlicedView
+from .raster_slice_reader import MultiImageSliceReader, StackedFileSliceReader
+from .slice_reader import SliceReader, _SlicedView
 
 # The x/y extent is only discovered while reading, so the layer starts out
 # deliberately oversized and is cut back down once reading is complete.
@@ -205,23 +205,25 @@ class SlicedImageSource(ImageSource):
 
     def _try_open_images(
         self, original_images: str | list[str], exceptions: list[Exception]
-    ) -> SliceSequence | None:
+    ) -> SliceReader | None:
         # try the registered reader for this extension
-        def strategy_0() -> SliceSequence | None:
+        def strategy_0() -> SliceReader | None:
             if isinstance(original_images, list):
                 return None
             return open_images(original_images)
 
-        # try MultiImageSlices, which handles a directory, glob or list of 2D images
-        strategy_1 = lambda: MultiImageSlices(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
+        # try MultiImageSliceReader, which handles a directory, glob or list of 2D images
+        strategy_1 = lambda: MultiImageSliceReader(original_images)  # noqa: E731 Do not assign a `lambda` expression, use a `def`
 
         # for image lists, try to guess the correct reader using only the first image,
-        # and apply that for all images via StackedFileSlices
-        def strategy_2() -> SliceSequence | None:
+        # and apply that for all images via StackedFileSliceReader
+        def strategy_2() -> SliceReader | None:
             if isinstance(original_images, list):
                 # assuming the same reader works for all images:
                 first_image_handler = open_images(original_images[0])
-                return StackedFileSlices(original_images, type(first_image_handler))
+                return StackedFileSliceReader(
+                    original_images, type(first_image_handler)
+                )
             else:
                 return None
 
@@ -238,7 +240,7 @@ class SlicedImageSource(ImageSource):
         return None
 
     @contextmanager
-    def _open_images(self) -> Iterator[SliceSequence]:
+    def _open_images(self) -> Iterator[SliceReader]:
         """
         Yields the opened reader, configured to produce slices of the form
         (self._iter_axes, *self._bundle_axes) once those are known. Before
@@ -310,7 +312,7 @@ class SlicedImageSource(ImageSource):
             max_value = 0
 
             with self._open_images() as images:
-                slices: SliceSequence | _SlicedView = images
+                slices: SliceReader | _SlicedView = images
                 if len(self._iter_axes) > 1:
                     # The sequence is a flat run over every iter axis, so narrow
                     # it to the stretch this chunk's non-z coordinates select

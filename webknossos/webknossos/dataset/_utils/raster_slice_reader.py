@@ -22,7 +22,7 @@ from numpy.typing import DTypeLike
 
 from ..errors import UnsupportedImageDataError
 from .image_source_registry import register_slice_reader
-from .slice_sequence import SliceSequence
+from .slice_reader import SliceReader
 
 _natsort_key = natsort_keygen()
 
@@ -49,7 +49,7 @@ def _plane_axes(plane: np.ndarray, source: object) -> str:
 
 
 @register_slice_reader
-class SingleImageSlices(SliceSequence):
+class SingleImageSliceReader(SliceReader):
     """Reads a single 2D raster image into a length-1 sequence."""
 
     @classmethod
@@ -117,7 +117,7 @@ def _collect_files(
     return filepaths, None
 
 
-class MultiImageSlices(SliceSequence):
+class MultiImageSliceReader(SliceReader):
     """Reads a directory, glob pattern, zip archive or list of 2D image files
     as one sequence, each file contributing one slice along `z`. Every file
     must decode to the shape of the first, which is the only one read up front.
@@ -140,7 +140,7 @@ class MultiImageSlices(SliceSequence):
         # acquisitions rather than colour. The files say which case this is.
         first_extension = os.path.splitext(self._filepaths[0])[1].lstrip(".").lower()
         self.channels_are_colour = (
-            first_extension in SingleImageSlices.supported_file_extensions()
+            first_extension in SingleImageSliceReader.supported_file_extensions()
         )
 
         self._init_axis("z", len(self._filepaths))
@@ -174,7 +174,7 @@ class MultiImageSlices(SliceSequence):
         return self._dtype
 
 
-class StackedFileSlices(SliceSequence):
+class StackedFileSliceReader(SliceReader):
     """Stacks several n-dimensional image files along one added axis (`t` by
     default) that selects the file. Each is opened with the same reader class
     and must expose identical axes and sizes."""
@@ -182,7 +182,7 @@ class StackedFileSlices(SliceSequence):
     def __init__(
         self,
         path_spec: str | Iterable[str],
-        # Any rather than SliceSequence: not a fixed type since it can be a
+        # Any rather than SliceReader: not a fixed type since it can be a
         # reader class or a factory function.
         reader_cls: Callable[..., Any] | None = None,
         axis_name: str = "t",

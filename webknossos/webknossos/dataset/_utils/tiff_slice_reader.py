@@ -5,7 +5,7 @@ from upath import UPath
 
 from ...utils import WkImportError
 from .image_source_registry import register_slice_reader
-from .slice_sequence import SliceSequence
+from .slice_reader import SliceReader
 
 try:
     import tifffile
@@ -14,7 +14,7 @@ except ImportError as e:
 
 
 @register_slice_reader
-class TiffSlices(SliceSequence):
+class TiffSliceReader(SliceReader):
     @classmethod
     def supported_file_extensions(cls) -> set[str]:
         return {"tif", "tiff"}

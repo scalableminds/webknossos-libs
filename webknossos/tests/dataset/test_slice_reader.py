@@ -6,15 +6,15 @@ from PIL import Image
 from upath import UPath
 
 from webknossos.dataset._utils.image_source_registry import open_images
-from webknossos.dataset._utils.raster_slices import (
-    MultiImageSlices,
-    SingleImageSlices,
+from webknossos.dataset._utils.raster_slice_reader import (
+    MultiImageSliceReader,
+    SingleImageSliceReader,
 )
-from webknossos.dataset._utils.slice_sequence import (
-    SliceSequence,
+from webknossos.dataset._utils.slice_reader import (
+    SliceReader,
     _SlicedView,
 )
-from webknossos.dataset._utils.tiff_slices import TiffSlices
+from webknossos.dataset._utils.tiff_slice_reader import TiffSliceReader
 from webknossos.dataset.errors import (
     ImageConversionError,
     UnsupportedImageFormatError,
@@ -25,7 +25,7 @@ from webknossos.dataset.errors import (
 _VOLUME = np.arange(2 * 3 * 4 * 5, dtype="uint16").reshape(2, 3, 4, 5)  # z, c, y, x
 
 
-class _ZcyxReader(SliceSequence):
+class _ZcyxReader(SliceReader):
     """Declares a single reader method returning all four axes at once."""
 
     def __init__(self) -> None:
@@ -43,7 +43,7 @@ class _ZcyxReader(SliceSequence):
         return _VOLUME.dtype
 
 
-class _YxcReader(SliceSequence):
+class _YxcReader(SliceReader):
     """Declares a 2D+channel method."""
 
     def __init__(self) -> None:
@@ -160,7 +160,7 @@ def test_get_slice_rejects_out_of_range_index() -> None:
         reader.get_slice(2)
 
 
-class _RangeSequence(SliceSequence):
+class _RangeSequence(SliceReader):
     """A sequence whose slice i is a 1x1 array holding i."""
 
     def __init__(self, length: int = 6) -> None:
@@ -241,15 +241,15 @@ def _write_png(path: UPath, value: int) -> None:
 def test_open_images_dispatches_on_extension(tmp_upath: UPath) -> None:
     png_path = tmp_upath / "single.png"
     _write_png(png_path, 7)
-    assert isinstance(open_images(str(png_path)), SingleImageSlices)
+    assert isinstance(open_images(str(png_path)), SingleImageSliceReader)
 
 
 def test_open_images_prefers_higher_class_priority(tmp_upath: UPath) -> None:
-    # Both TiffSlices (19) and, in principle, any lower-priority reader claim
+    # Both TiffSliceReader (19) and, in principle, any lower-priority reader claim
     # .tif; the dedicated one has to win because it understands axis metadata.
     tif_path = tmp_upath / "single.tif"
     Image.fromarray(np.zeros((4, 6), dtype="uint8")).save(str(tif_path))
-    assert isinstance(open_images(str(tif_path)), TiffSlices)
+    assert isinstance(open_images(str(tif_path)), TiffSliceReader)
 
 
 def test_open_images_rejects_unknown_extension(tmp_upath: UPath) -> None:
@@ -282,7 +282,7 @@ def test_open_images_glob_with_multiple_matches(tmp_upath: UPath) -> None:
     for i in range(3):
         _write_png(tmp_upath / f"img_{i}.png", i)
     reader = open_images(str(tmp_upath / "img_*.png"))
-    assert isinstance(reader, MultiImageSlices)
+    assert isinstance(reader, MultiImageSliceReader)
     assert len(reader) == 3
 
 
@@ -292,7 +292,7 @@ def test_image_sequence_orders_glob_naturally(tmp_upath: UPath) -> None:
     for i in [1, 2, 10]:
         _write_png(tmp_upath / f"img_{i}.png", i)
 
-    reader = MultiImageSlices(str(tmp_upath / "img_*.png"))
+    reader = MultiImageSliceReader(str(tmp_upath / "img_*.png"))
     assert _values(reader) == [1, 2, 10]
 
 
@@ -303,7 +303,7 @@ def test_image_sequence_keeps_explicit_list_order(tmp_upath: UPath) -> None:
         _write_png(tmp_upath / f"img_{i}.png", i)
 
     paths = [str(tmp_upath / f"img_{i}.png") for i in [10, 1, 2]]
-    assert _values(MultiImageSlices(paths)) == [10, 1, 2]
+    assert _values(MultiImageSliceReader(paths)) == [10, 1, 2]
 
 
 def test_image_sequence_reads_zip_archive(tmp_upath: UPath) -> None:
@@ -316,7 +316,7 @@ def test_image_sequence_reads_zip_archive(tmp_upath: UPath) -> None:
         for i in [1, 2, 10]:
             zf.write(str(tmp_upath / f"img_{i}.png"), f"img_{i}.png")
 
-    reader = MultiImageSlices(str(archive))
+    reader = MultiImageSliceReader(str(archive))
     assert reader.slice_shape == (4, 6)
     assert _values(reader) == [1, 2, 10]
     reader.close()
@@ -324,4 +324,4 @@ def test_image_sequence_reads_zip_archive(tmp_upath: UPath) -> None:
 
 def test_image_sequence_reports_missing_files(tmp_upath: UPath) -> None:
     with pytest.raises(OSError, match="No files were found"):
-        MultiImageSlices(str(tmp_upath / "nothing_*.png"))
+        MultiImageSliceReader(str(tmp_upath / "nothing_*.png"))
