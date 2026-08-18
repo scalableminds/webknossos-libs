@@ -13,6 +13,7 @@ import h5py
 import mrcfile
 import numpy as np
 import pytest
+import tensorstore as ts
 from cluster_tools import SequentialExecutor, get_executor
 from numpy.typing import DTypeLike
 from PIL import Image
@@ -1400,6 +1401,42 @@ def test_neuroglancer_precomputed_from_images_picks_finest_scale(
     read_data = layer.get_finest_mag().read()[0]
     # Precomputed's native axis order is already (x, y, z) — same as wK storage.
     np.testing.assert_array_equal(read_data, finest[:, :, :, 0])
+
+
+def test_real_ome_zarr_sample_conversion(tmp_upath: UPath) -> None:
+    # A real published OME-Zarr v3 (NGFF 0.5) sample, not a synthetic
+    # fixture: 5D (t, c, z, y, x), sharded, 3 resolution levels, with
+    # dimension_names on both the group's OME axes and each array's own
+    # zarr.json, plus a "consolidated_metadata" key this reader must ignore.
+    sample_path = download_wklibs_sample_archive("13457537.zarr")
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            sample_path,
+            layer_name="sample",
+            channel=0,
+            executor=executor,
+        )
+
+    assert layer.dtype == np.dtype("uint16")
+    assert layer.bounding_box.axes == ("t", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (18, 198, 223, 12)
+
+    # Compares against the finest level's channel 0 read directly, rather
+    # than trusting the converter's own read path.
+    finest_array = ts.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {"driver": "file", "path": str(sample_path / "0")},
+        },
+        open=True,
+        context=ts.Context(),
+    ).result()
+    # (t, c, z, y, x), channel 0 -> (t, z, y, x) -> (t, x, y, z)
+    expected = np.asarray(finest_array[:, 0].read().result()).transpose(0, 3, 2, 1)
+    actual = layer.get_finest_mag().read()  # (t, x, y, z), channel dim dropped
+    np.testing.assert_array_equal(actual, expected)
 
 
 @pytest.mark.parametrize(
