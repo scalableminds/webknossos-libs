@@ -92,11 +92,15 @@ class RemoteLayer(AbstractLayer):
             mag2 = layer.get_mag(2, access_mode=RemoteAccessMode.PROXY_PATH)
             ```
         """
-        mag_view = super().get_mag(mag)
-        assert isinstance(mag_view, RemoteMagView)  # for mypy
+        mag = Mag(mag)
+        if mag not in self.mags:
+            raise IndexError(
+                f"The mag {mag.to_layer_name()} is not a mag of this layer"
+            )
+        mag_view = self.mags[mag]
         if access_mode is None or access_mode == mag_view.access_mode:
             return mag_view
-        return RemoteMagView(self, Mag(mag), access_mode=access_mode, read_only=True)
+        return mag_view.with_access_mode(access_mode)
 
     def get_finest_mag(
         self, *, access_mode: RemoteAccessMode | None = None

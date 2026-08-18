@@ -1,7 +1,6 @@
 from enum import Enum
 
 from ..dataset_properties import DataFormat
-from ..geometry.mag import Mag
 
 
 class RemoteAccessMode(Enum):
@@ -10,34 +9,6 @@ class RemoteAccessMode(Enum):
     ZARR_STREAMING = "zarr_streaming"
     DIRECT_PATH = "direct_path"
     PROXY_PATH = "proxy_path"
-
-
-def mag_url_suffix(access_mode: RemoteAccessMode, layer_name: str, mag: Mag) -> str:
-    """The path of a mag relative to the base path of the given access mode.
-
-    These layouts are dictated by the WEBKNOSSOS datastore routes. They are kept here
-    so that a server-side change only has to be reflected in one place.
-    """
-    if access_mode == RemoteAccessMode.ZARR_STREAMING:
-        return f"{layer_name}/{mag.to_layer_name()}"
-    elif access_mode == RemoteAccessMode.PROXY_PATH:
-        return f"layers/{layer_name}/mags/{mag.to_layer_name()}"
-    else:
-        raise ValueError(f"{access_mode} does not have a computed mag path.")
-
-
-def attachment_url_suffix(
-    access_mode: RemoteAccessMode, layer_name: str, type_name: str, name: str
-) -> str:
-    """The path of an attachment relative to the base path of the given access mode.
-
-    `type_name` is the attachment's WEBKNOSSOS-facing type (e.g. `Attachment.type_name`,
-    such as "agglomerate" or "mesh"), not its plural container name.
-    """
-    if access_mode == RemoteAccessMode.PROXY_PATH:
-        return f"layers/{layer_name}/attachments/{type_name}/{name}"
-    else:
-        raise ValueError(f"{access_mode} does not have a computed attachment path.")
 
 
 def data_format_for_access_mode(

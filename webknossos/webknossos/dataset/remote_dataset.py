@@ -63,11 +63,7 @@ from webknossos.utils import enrich_path, infer_metadata_type, warn_deprecated
 from ..client.api_client.errors import UnexpectedStatusError
 from ..ssl_context import SSL_CONTEXT
 from .defaults import DEFAULT_DATA_FORMAT, DEFAULT_DTYPE
-from .remote_access_mode import (
-    RemoteAccessMode,
-    attachment_url_suffix,
-    mag_url_suffix,
-)
+from .remote_access_mode import RemoteAccessMode
 from .remote_dataset_registry import RemoteDatasetRegistry
 from .remote_folder import RemoteFolder
 from .transfer_mode import TransferMode
@@ -78,6 +74,7 @@ _UNSET = make_sentinel("UNSET", var_name="_UNSET")
 
 if TYPE_CHECKING:
     from webknossos.administration.user import Team
+    from webknossos.client.api_client.datastore_api_client import DatastoreApiClient
     from webknossos.dataset import Dataset
     from webknossos.dataset.layer import Layer
 
@@ -152,7 +149,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         context: webknossos_context,
         read_only: bool,
         access_mode: RemoteAccessMode,
-        datastore_url_prefix: str,
+        datastore_url: str,
         dataset_properties: DatasetProperties | None = None,
     ) -> None:
         """Initialize a remote dataset instance.
@@ -163,8 +160,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             context: Context manager for WEBKNOSSOS connection
             read_only: Whether metadata of the dataset may be modified
             access_mode: The default access mode that all mags of this dataset inherit
-            datastore_url_prefix: Base url of the datastore api, used to compute
-                zarr streaming and proxy paths
+            datastore_url: Base url of the datastore that serves this dataset's data,
+                used to look up the `DatastoreApiClient` that computes zarr streaming
+                and proxy paths
             dataset_properties: Already loaded properties of the remote dataset, if they
                 stem from the api data source (i.e. contain direct paths). If omitted, the
                 properties are loaded from the datasource-properties.json served by
@@ -181,7 +179,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self._annotation_id = annotation_id
         self._context = context
         self._access_mode = access_mode
-        self._datastore_url_prefix = datastore_url_prefix
+        self._datastore_url = datastore_url
         # Whether `dataset_properties` was supplied, i.e. whether the mag/attachment
         # paths it carries are direct paths. If it was omitted, the properties are
         # loaded below from a served datasource-properties.json, whose mag/attachment
@@ -274,7 +272,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 dataset_id=dataset_id, sharing_token=sharing_token
             )
             datastore_url = api_dataset_info.data_store.url
-            url_prefix = wk_context.get_datastore_api_client(datastore_url).url_prefix
 
             if not isinstance(access_mode, RemoteAccessMode):
                 raise ValueError(
@@ -302,7 +299,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 context=context_manager,
                 read_only=read_only,
                 access_mode=access_mode,
-                datastore_url_prefix=url_prefix,
+                datastore_url=datastore_url,
                 dataset_properties=dataset_properties,
             )
 
@@ -354,6 +351,19 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         warn_deprecated("RemoteDataset.zarr_streaming_path", "RemoteMagView.path")
         return self._base_path(self._access_mode)
 
+    def _get_datastore_api_client(self) -> "DatastoreApiClient":
+        """The api client for the datastore that serves this dataset's data.
+
+        Its routes are the single source of truth for how mag/attachment paths are
+        built for each access mode, so that a route change for a future api version
+        only has to be reflected there, e.g. by overriding routes on a version-specific
+        subclass like `DatastoreApiClientV13`.
+        """
+        from ..client.context import _get_context
+
+        with self._context:
+            return _get_context().get_datastore_api_client(self._datastore_url)
+
     def _base_path(self, access_mode: RemoteAccessMode) -> UPath | None:
         """The base path that mags of the given access mode are relative to.
 
@@ -369,19 +379,20 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             # pickling does not freeze a token and context changes are picked up.
             token = _get_context().token
         headers = {} if token is None else {"X-Auth-Token": token}
+        client = self._get_datastore_api_client()
 
         if access_mode == RemoteAccessMode.ZARR_STREAMING:
             if self._annotation_id is not None:
-                url = f"{self._datastore_url_prefix}/annotations/zarr/{self._annotation_id}/"
+                url = client.zarr_streaming_annotation_url(self._annotation_id)
             else:
-                url = f"{self._datastore_url_prefix}/zarr/{self._dataset_id}/"
+                url = client.zarr_streaming_dataset_url(self._dataset_id)
         elif access_mode == RemoteAccessMode.PROXY_PATH:
             if self._annotation_id is not None:
                 raise ValueError(
                     "Annotations are only supported with zarr streaming. "
                     + f"Got {access_mode} instead."
                 )
-            url = f"{self._datastore_url_prefix}/datasets/{self._dataset_id}/proxy/"
+            url = client.proxy_dataset_url(self._dataset_id)
         else:
             raise ValueError(
                 f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
@@ -416,7 +427,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         base_path = self._base_path(access_mode)
         assert base_path is not None  # for mypy
         if self._properties_are_direct or access_mode != self._access_mode:
-            return base_path / mag_url_suffix(access_mode, layer_name, mag)
+            client = self._get_datastore_api_client()
+            if access_mode == RemoteAccessMode.ZARR_STREAMING:
+                suffix = client.zarr_streaming_mag_path(layer_name, mag)
+            elif access_mode == RemoteAccessMode.PROXY_PATH:
+                suffix = client.proxy_mag_path(layer_name, mag)
+            else:
+                raise ValueError(f"{access_mode} does not have a computed mag path.")
+            return base_path / suffix
         # The properties were served by this very endpoint, so they already carry the
         # matching relative paths. Prefer them over the computed layout.
         assert mag_properties.path is not None, (
@@ -440,8 +458,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         elif access_mode == RemoteAccessMode.PROXY_PATH:
             base_path = self._base_path(access_mode)
             assert base_path is not None  # for mypy
-            return base_path / attachment_url_suffix(
-                access_mode, layer_name, type_name, attachment_properties.name
+            client = self._get_datastore_api_client()
+            return base_path / client.proxy_attachment_path(
+                layer_name, type_name, attachment_properties.name
             )
         elif access_mode == RemoteAccessMode.ZARR_STREAMING:
             raise ValueError(

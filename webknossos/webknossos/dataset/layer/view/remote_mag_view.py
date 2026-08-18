@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from upath import UPath
@@ -57,8 +59,18 @@ class RemoteMagView(MagView["RemoteLayer"]):
         """How the data of this mag is accessed."""
         return self._access_mode
 
+    def with_access_mode(self, access_mode: RemoteAccessMode) -> "RemoteMagView":
+        """Returns a view of this mag that resolves its path via `access_mode`.
+
+        Raises:
+            ValueError: If `access_mode` is not available for this mag.
+        """
+        return RemoteMagView(
+            self.layer, self._mag, access_mode=access_mode, read_only=self._read_only
+        )
+
     @property
-    def paths(self) -> dict[RemoteAccessMode, UPath]:
+    def paths(self) -> Mapping[RemoteAccessMode, UPath]:
         """All paths at which this mag's data can be reached, keyed by access mode.
 
         Comparing these lets a caller pick which access mode to use for this mag, e.g.
@@ -73,7 +85,7 @@ class RemoteMagView(MagView["RemoteLayer"]):
                 result[access_mode] = self._path_for(access_mode)
             except ValueError:  # noqa: PERF203 only 3 iterations, clarity wins here
                 continue
-        return result
+        return MappingProxyType(result)
 
     def _path_for(self, access_mode: RemoteAccessMode) -> UPath:
         return self.layer.dataset._mag_path(

@@ -11,6 +11,7 @@ from webknossos.client.api_client.models import (
     ApiPrecomputedMeshInfo,
     ApiReserveDatasetUploadInformationV13,
 )
+from webknossos.geometry.mag import Mag
 
 from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
 
@@ -37,6 +38,29 @@ class DatastoreApiClient(AbstractApiClient):
 
     def dataset_upload_resumable_url(self) -> str:
         return f"{self.url_prefix}/datasets/upload/dataset"
+
+    # Routes for reading a dataset's image data. Kept here, rather than on the
+    # RemoteDataset/RemoteMagView side, so that a route change for a future api
+    # version only has to be reflected in one place, e.g. by overriding these on a
+    # version-specific subclass like DatastoreApiClientV13 below.
+
+    def zarr_streaming_dataset_url(self, dataset_id: str) -> str:
+        return f"{self.url_prefix}/zarr/{dataset_id}/"
+
+    def zarr_streaming_annotation_url(self, annotation_id: str) -> str:
+        return f"{self.url_prefix}/annotations/zarr/{annotation_id}/"
+
+    def proxy_dataset_url(self, dataset_id: str) -> str:
+        return f"{self.url_prefix}/datasets/{dataset_id}/proxy/"
+
+    def zarr_streaming_mag_path(self, layer_name: str, mag: Mag) -> str:
+        return f"{layer_name}/{mag.to_layer_name()}"
+
+    def proxy_mag_path(self, layer_name: str, mag: Mag) -> str:
+        return f"layers/{layer_name}/mags/{mag.to_layer_name()}"
+
+    def proxy_attachment_path(self, layer_name: str, type_name: str, name: str) -> str:
+        return f"layers/{layer_name}/attachments/{type_name}/{name}"
 
     def dataset_upload_resumable_query(
         self, _organization_id: str, _dataset_name: str, total_file_count: int
