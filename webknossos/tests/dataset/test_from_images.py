@@ -18,8 +18,8 @@ from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
     download_wklibs_sample_archive,
+    write_zarr_v3_array,
 )
-from tests.utils import write_zarr_v3_array
 from webknossos.dataset import (
     Dataset,
     RemoteDataset,

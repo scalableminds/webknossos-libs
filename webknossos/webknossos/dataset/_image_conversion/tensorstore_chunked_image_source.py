@@ -14,9 +14,11 @@ import numpy as np
 import tensorstore as ts
 from upath import UPath
 
+from ...utils import is_remote_path
 from .._utils.tensorstore_helpers import TS_CONTEXT
 from ..errors import UnsupportedImageDataError
 from .chunked_image_source import ChunkedImageSource
+from .image_source import ReadOptions
 
 # Axis names, in the canonical order a `_read_source_box` result uses (t and c
 # are squeezed out again in that order once selected/sliced).
@@ -92,6 +94,17 @@ class TensorStoreChunkedImageSource(ChunkedImageSource):
     # Set by subclasses via compute_channel_selection(), same as
     # CziImageSource/ImsImageSource.
     _first_n_channels: int | None
+
+    def __init__(self, path: UPath, options: ReadOptions) -> None:
+        super().__init__(path, options)
+        # Tensorstore itself can read s3://, gs:// and http(s):// just fine,
+        # but conversion from remote paths isn't supported for these formats
+        # yet — restricted here, once, for every subclass.
+        if is_remote_path(path):
+            raise ValueError(
+                f"Cannot open {path}. Remote paths (s3://, gs://, http(s)://) "
+                "are not supported yet; the path must be a local file path."
+            )
 
     def _open_array(self) -> ts.TensorStore:
         # Reopened on every call rather than cached: chunks are read from

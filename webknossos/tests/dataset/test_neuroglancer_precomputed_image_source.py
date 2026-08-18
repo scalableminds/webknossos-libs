@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from upath import UPath
 
-from tests.utils import write_neuroglancer_precomputed_scale
+from tests.data_fixtures import write_neuroglancer_precomputed_scale
 from webknossos.dataset import CorruptImageError
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.neuroglancer_precomputed_image_source import (
@@ -120,3 +120,8 @@ def test_corrupt_info_raises_corrupt_image_error(tmp_upath: UPath) -> None:
     (path / "info").write_text("{not valid json")
     with pytest.raises(CorruptImageError):
         _open(path)
+
+
+def test_remote_path_is_rejected() -> None:
+    with pytest.raises(ValueError, match="local file path"):
+        _open(UPath("memory://some/path"))

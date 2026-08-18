@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from upath import UPath
 
-from tests.utils import (
+from tests.data_fixtures import (
     write_ome_zarr_v2_group,
     write_ome_zarr_v3_group,
     write_zarr_v2_array,
@@ -165,6 +165,11 @@ def test_probe_directory_recognizes_bare_zarr_directories(tmp_upath: UPath) -> N
     assert ZarrImageSource.probe_directory(group_path)
 
     assert not ZarrImageSource.probe_directory(tmp_upath / "not_a_store")
+
+
+def test_remote_path_is_rejected() -> None:
+    with pytest.raises(ValueError, match="local file path"):
+        _open(UPath("memory://some/path.zarr"))
 
 
 def test_not_a_zarr_store_raises_corrupt_image_error(tmp_upath: UPath) -> None:

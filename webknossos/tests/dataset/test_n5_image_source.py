@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from upath import UPath
 
-from tests.utils import write_n5_array
+from tests.data_fixtures import write_n5_array
 from webknossos.dataset import CorruptImageError
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.n5_image_source import N5ImageSource
@@ -93,3 +93,8 @@ def test_not_a_valid_n5_store_raises_corrupt_image_error(tmp_upath: UPath) -> No
     empty_dir.mkdir(parents=True)
     with pytest.raises(CorruptImageError):
         _open(empty_dir)
+
+
+def test_remote_path_is_rejected() -> None:
+    with pytest.raises(ValueError, match="local file path"):
+        _open(UPath("memory://some/path.n5"))
