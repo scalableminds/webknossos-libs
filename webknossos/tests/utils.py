@@ -1,11 +1,14 @@
 import importlib.util
+import json
 import sys
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
+from typing import Any
 
 import numpy as np
 import pytest
+import tensorstore as ts
 from numpy.typing import DTypeLike
 from upath import UPath
 
@@ -69,3 +72,198 @@ def create_synthetic_czi(
                         plane={"T": t, "C": c, "Z": k},
                     )
     return data
+
+
+def write_zarr_v2_array(path: UPath, data: np.ndarray) -> None:
+    """Writes `data` as a plain Zarr v2 array (a single chunk, no compression)
+    via tensorstore, for tests of readers that consume a bare `.zarray`."""
+    array = ts.open(
+        {
+            "driver": "zarr",
+            "kvstore": {"driver": "file", "path": str(path)},
+            "metadata": {
+                "shape": list(data.shape),
+                "chunks": list(data.shape),
+                "dtype": data.dtype.str,
+                "compressor": None,
+                "fill_value": 0,
+                "order": "C",
+            },
+        },
+        create=True,
+        context=ts.Context(),
+    ).result()
+    array[...] = data
+
+
+def write_zarr_v3_array(
+    path: UPath, data: np.ndarray, *, dimension_names: list[str] | None = None
+) -> None:
+    """Writes `data` as a plain Zarr v3 array (a single chunk, no compression,
+    no sharding) via tensorstore. `dimension_names` is Zarr v3's own axis-name
+    metadata, independent of any OME wrapper — omit it to test the positional
+    axis fallback instead."""
+    metadata: dict[str, Any] = {
+        "data_type": data.dtype.name,
+        "shape": list(data.shape),
+        "chunk_grid": {
+            "name": "regular",
+            "configuration": {"chunk_shape": list(data.shape)},
+        },
+        "chunk_key_encoding": {"name": "default"},
+        "fill_value": 0,
+        "codecs": [{"name": "bytes", "configuration": {"endian": "little"}}],
+    }
+    if dimension_names is not None:
+        metadata["dimension_names"] = dimension_names
+    array = ts.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {"driver": "file", "path": str(path)},
+            "metadata": metadata,
+        },
+        create=True,
+        context=ts.Context(),
+    ).result()
+    array[...] = data
+
+
+def write_n5_array(
+    path: UPath, data: np.ndarray, *, downsampling_factors: list[int] | None = None
+) -> None:
+    """Writes `data` as a plain N5 dataset (a single block, no compression)
+    via tensorstore. `downsampling_factors`, if given, is added to
+    `attributes.json` afterwards, as a real N5 pyramid level would carry."""
+    array = ts.open(
+        {
+            "driver": "n5",
+            "kvstore": {"driver": "file", "path": str(path)},
+            "metadata": {
+                "dimensions": list(data.shape),
+                "blockSize": list(data.shape),
+                "dataType": data.dtype.name,
+                "compression": {"type": "raw"},
+            },
+        },
+        create=True,
+        context=ts.Context(),
+    ).result()
+    array[...] = data
+    if downsampling_factors is not None:
+        attributes_path = path / "attributes.json"
+        attributes = json.loads(attributes_path.read_bytes())
+        attributes["downsamplingFactors"] = downsampling_factors
+        attributes_path.write_text(json.dumps(attributes))
+
+
+def write_neuroglancer_precomputed_scale(
+    path: UPath,
+    data_xyzc: np.ndarray,
+    *,
+    resolution: tuple[float, float, float] = (4.0, 4.0, 4.0),
+    key: str | None = None,
+) -> None:
+    """Writes one scale of a neuroglancer precomputed volume at `path`
+    (its `info` file's root) via tensorstore. `data_xyzc` is in the format's
+    own native axis order, (x, y, z, channel) — call again with a different
+    `resolution`/`key` to add further scales to the same volume."""
+    x, y, z, num_channels = data_xyzc.shape
+    scale_key = key or "_".join(str(int(r)) for r in resolution)
+    array = ts.open(
+        {
+            "driver": "neuroglancer_precomputed",
+            "kvstore": {"driver": "file", "path": str(path)},
+            "multiscale_metadata": {
+                "type": "image",
+                "data_type": data_xyzc.dtype.name,
+                "num_channels": num_channels,
+            },
+            "scale_metadata": {
+                "key": scale_key,
+                "size": [x, y, z],
+                "resolution": list(resolution),
+                "chunk_size": [x, y, z],
+                "encoding": "raw",
+            },
+        },
+        create=True,
+        context=ts.Context(),
+    ).result()
+    array[...] = data_xyzc
+
+
+def write_ome_zarr_v2_group(
+    path: UPath,
+    datasets: list[tuple[str, np.ndarray, list[float]]],
+    axes: list[dict[str, str]],
+) -> None:
+    """Writes a v2 (`.zgroup`/`.zattrs`) OME-Zarr (NGFF 0.4) multiscale group.
+    Each entry in `datasets` is `(relative_path, data, scale)`: `data` is
+    written as a plain v2 sub-array at `path/relative_path`, and `scale`
+    becomes its `coordinateTransformations`."""
+    path.mkdir(parents=True, exist_ok=True)
+    (path / ".zgroup").write_text(json.dumps({"zarr_format": 2}))
+    (path / ".zattrs").write_text(
+        json.dumps(
+            {
+                "multiscales": [
+                    {
+                        "version": "0.4",
+                        "axes": axes,
+                        "datasets": [
+                            {
+                                "path": rel_path,
+                                "coordinateTransformations": [
+                                    {"type": "scale", "scale": scale}
+                                ],
+                            }
+                            for rel_path, _, scale in datasets
+                        ],
+                    }
+                ]
+            }
+        )
+    )
+    for rel_path, data, _ in datasets:
+        write_zarr_v2_array(path / rel_path, data)
+
+
+def write_ome_zarr_v3_group(
+    path: UPath,
+    datasets: list[tuple[str, np.ndarray, list[float]]],
+    axes: list[dict[str, str]],
+) -> None:
+    """Writes a v3 (`zarr.json`) OME-Zarr (NGFF 0.5) multiscale group. Each
+    entry in `datasets` is `(relative_path, data, scale)`: `data` is written
+    as a plain v3 sub-array at `path/relative_path`, and `scale` becomes its
+    `coordinateTransformations`."""
+    path.mkdir(parents=True, exist_ok=True)
+    (path / "zarr.json").write_text(
+        json.dumps(
+            {
+                "zarr_format": 3,
+                "node_type": "group",
+                "attributes": {
+                    "ome": {
+                        "version": "0.5",
+                        "multiscales": [
+                            {
+                                "axes": axes,
+                                "datasets": [
+                                    {
+                                        "path": rel_path,
+                                        "coordinateTransformations": [
+                                            {"type": "scale", "scale": scale}
+                                        ],
+                                    }
+                                    for rel_path, _, scale in datasets
+                                ],
+                            }
+                        ],
+                    }
+                },
+            }
+        )
+    )
+    for rel_path, data, _ in datasets:
+        write_zarr_v3_array(path / rel_path, data)

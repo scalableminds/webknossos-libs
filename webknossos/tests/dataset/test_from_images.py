@@ -19,6 +19,7 @@ from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
     download_wklibs_sample_archive,
 )
+from tests.utils import write_zarr_v3_array
 from webknossos.dataset import (
     Dataset,
     RemoteDataset,
@@ -402,6 +403,56 @@ def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
             )
 
             assert all("/" not in layername for layername in dataset.layers)
+
+
+def test_from_images_zarr_directories_are_not_descended_into(tmp_upath: UPath) -> None:
+    # A directory tree with a suffixed and a bare Zarr layer, plus a plain
+    # TIFF: the two Zarr directories must each become a single input entry —
+    # not be walked into for their internal chunk files, and not silently
+    # dropped either (the old plain-glob walk did the latter, since none of a
+    # Zarr array's own chunk files carry a recognized extension).
+    input_dir = tmp_upath / "input"
+    input_dir.mkdir(parents=True)
+
+    suffixed = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8)
+    write_zarr_v3_array(
+        input_dir / "layer_a.zarr", suffixed, dimension_names=["z", "y", "x"]
+    )
+    bare = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8) + 1
+    write_zarr_v3_array(input_dir / "layer_b", bare, dimension_names=["z", "y", "x"])
+    tiff_data = np.arange(8 * 8, dtype="uint8").reshape(8, 8).astype("uint8")
+    imwrite(str(input_dir / "layer_c.tif"), tiff_data)
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            input_dir,
+            tmp_upath / "ds",
+            voxel_size=(1, 1, 1),
+            map_filepath_to_layer_name=Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_FILE,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"layer_a.zarr", "layer_b", "layer_c.tif"}
+    np.testing.assert_array_equal(
+        ds.layers["layer_a.zarr"].get_finest_mag().read()[0],
+        suffixed.transpose(2, 1, 0),
+    )
+    np.testing.assert_array_equal(
+        ds.layers["layer_b"].get_finest_mag().read()[0], bare.transpose(2, 1, 0)
+    )
+    np.testing.assert_array_equal(
+        ds.layers["layer_c.tif"].get_finest_mag().read()[0, :, :, 0], tiff_data.T
+    )
+
+
+def test_valid_chunked_reader_extensions_include_zarr_and_n5() -> None:
+    from webknossos.dataset._image_conversion.image_source_registry import (
+        get_valid_chunked_reader_extensions,
+    )
+
+    extensions = get_valid_chunked_reader_extensions()
+    assert "zarr" in extensions
+    assert "n5" in extensions
 
 
 def test_remote_dataset_from_images() -> None:

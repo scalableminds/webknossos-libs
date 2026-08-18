@@ -49,6 +49,12 @@ class ChunkedImageSource(ImageSource):
     def supported_file_extensions(cls) -> set[str]:
         """File extensions (without the dot, lowercase) this class can read."""
 
+    @classmethod
+    def probe_directory(cls, _path: UPath) -> bool:
+        """Whether this class can open `path` as a directory-based store, used
+        when no registered extension matches. Default: no directory sniffing."""
+        return False
+
     @property
     def channel(self) -> int | None:
         """The selected channel, or None if all channels are used."""

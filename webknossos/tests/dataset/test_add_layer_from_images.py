@@ -30,6 +30,10 @@ from tests.utils import (
     PYLIBCZIRW_EXPECTED,
     create_synthetic_czi,
     requires_pylibczirw,
+    write_n5_array,
+    write_neuroglancer_precomputed_scale,
+    write_ome_zarr_v3_group,
+    write_zarr_v3_array,
 )
 
 
@@ -1292,6 +1296,110 @@ def _test_test_images(
         assert l_normal.num_channels == num_channels
         assert l_normal.bounding_box.size.to_tuple() == size
     return ds
+
+
+def test_zarr_array_from_images(tmp_upath: UPath) -> None:
+    Z, Y, X = 6, 24, 32
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    zarr_path = tmp_upath / "test.zarr"
+    write_zarr_v3_array(zarr_path, data, dimension_names=["z", "y", "x"])
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            zarr_path,
+            layer_name="zarr_layer",
+            executor=executor,
+        )
+
+    assert layer.dtype == np.dtype("uint16")
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]  # drop channel dim
+    np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
+
+    layer.downsample()
+    assert len(layer.mags) > 1
+
+
+def test_ome_zarr_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
+    Z, Y, X = 4, 16, 16
+    finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    write_ome_zarr_v3_group(
+        group_path,
+        [
+            ("1", coarse, [1.0, 2.0, 2.0]),  # listed first, but coarser
+            ("0", finest, [1.0, 1.0, 1.0]),
+        ],
+        axes,
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            group_path,
+            layer_name="ome_zarr_layer",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
+
+
+def test_n5_pyramid_from_images_picks_finest_level(tmp_upath: UPath) -> None:
+    Z, Y, X = 4, 16, 16
+    finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
+    group_path = tmp_upath / "test.n5"
+    write_n5_array(group_path / "s0", finest, downsampling_factors=[1, 1, 1])
+    write_n5_array(group_path / "s1", coarse, downsampling_factors=[1, 2, 2])
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            group_path,
+            layer_name="n5_layer",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
+
+
+def test_neuroglancer_precomputed_from_images_picks_finest_scale(
+    tmp_upath: UPath,
+) -> None:
+    X, Y, Z = 16, 16, 4
+    finest = np.arange(X * Y * Z, dtype="uint8").reshape(X, Y, Z, 1)
+    coarse = np.zeros((X // 2, Y // 2, Z, 1), dtype="uint8")
+    volume_path = tmp_upath / "precomputed"
+    write_neuroglancer_precomputed_scale(
+        volume_path, finest, resolution=(4.0, 4.0, 4.0)
+    )
+    write_neuroglancer_precomputed_scale(
+        volume_path, coarse, resolution=(8.0, 8.0, 4.0)
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            volume_path,
+            layer_name="neuroglancer_layer",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    # Precomputed's native axis order is already (x, y, z) — same as wK storage.
+    np.testing.assert_array_equal(read_data, finest[:, :, :, 0])
 
 
 @pytest.mark.parametrize(

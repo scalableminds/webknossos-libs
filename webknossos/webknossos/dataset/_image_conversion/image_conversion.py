@@ -10,7 +10,7 @@ from __future__ import annotations
 import colorsys
 import logging
 import warnings
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Iterator, Sequence
 from contextlib import contextmanager
 from enum import Enum, unique
 from itertools import product
@@ -59,6 +59,7 @@ from .image_source_registry import (
     describe_missing_extras,
     get_unavailable_extensions,
     get_valid_extensions,
+    is_chunked_source_directory,
     open_image_source,
 )
 from .segmentation_recognition import (
@@ -191,6 +192,22 @@ class ConversionLayerMapping(Enum):
                 return lambda p: input_path.name if p.parent == UPath() else p.parts[-2]
         else:
             raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
+
+
+def _iter_convertible_paths(root: UPath, valid_extensions: set[str]) -> Iterator[UPath]:
+    """Walks `root`, yielding files with a supported extension and, as single
+    leaf entries, directories a chunked reader recognizes as its own store
+    (e.g. a Zarr/N5/neuroglancer-precomputed root) — those are never descended
+    into, since their contents are the store's internal chunks, not more
+    input files."""
+    for child in root.iterdir():
+        if child.is_dir():
+            if is_chunked_source_directory(child):
+                yield child
+            else:
+                yield from _iter_convertible_paths(child, valid_extensions)
+        elif child.suffix.lstrip(".").lower() in valid_extensions:
+            yield child
 
 
 def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
@@ -348,8 +365,7 @@ def from_images(
     else:
         input_files = [
             i.relative_to(input_upath)
-            for i in input_upath.glob("**/*")
-            if i.is_file() and i.suffix.lstrip(".").lower() in valid_extensions
+            for i in _iter_convertible_paths(input_upath, valid_extensions)
         ]
 
     if len(input_files) == 0:
