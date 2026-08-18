@@ -1,10 +1,10 @@
-"""Provides test data fixtures: downloaded (mainly from the `wklibs-samples`
-bucket on static.webknossos.org) or synthetically generated.
+"""Test data fixtures: downloaded (mainly from the `wklibs-samples` bucket on
+static.webknossos.org) or synthetically generated.
 
 Downloads are cached under CACHE_DIR so repeated local test runs reuse
 what's already there instead of re-fetching it every time. The cache is
-gitignored (via the repo's generic `.cache` rule) and never cleaned up
-automatically; delete it by hand if you want to force a re-download."""
+gitignored and never cleaned up automatically; delete it by hand to force a
+re-download."""
 
 import os
 import stat
@@ -15,6 +15,7 @@ from zipfile import ZipFile
 import h5py
 import httpx
 import numpy as np
+from numpy.typing import DTypeLike
 from upath import UPath
 
 from webknossos.utils import rmtree
@@ -73,14 +74,21 @@ def download_wklibs_sample_archive(name: str) -> UPath:
 
 
 def create_synthetic_multi_timepoint_ims(
-    path: UPath, *, num_timepoints: int, num_channels: int, z: int, y: int, x: int
+    path: UPath,
+    *,
+    num_timepoints: int,
+    num_channels: int,
+    z: int,
+    y: int,
+    x: int,
+    dtype: DTypeLike = np.uint16,
 ) -> None:
-    """Writes a minimal HDF5 structure matching what ImsChunkedImages actually
-    reads (DataSet/ResolutionLevel 0/TimePoint {t}/Channel {c}/Data). This
-    intentionally skips the DataSetInfo attributes that the full
-    imaris_ims_file_reader library needs, since callers monkeypatch
-    ims_chunked_images._read_ims_metadata_quietly instead of relying on a
-    byte-perfect Imaris file."""
+    """Writes a minimal HDF5 structure matching what an Imaris reader expects
+    (DataSet/ResolutionLevel 0/TimePoint {t}/Channel {c}/Data). Intentionally
+    skips the DataSetInfo attributes a full Imaris file would need.
+
+    `dtype` matters for multi-channel files: only three uint8 channels are
+    written into a single layer, everything else is split per channel."""
     with h5py.File(str(path), "w") as f:
         res0 = f.create_group("DataSet").create_group("ResolutionLevel 0")
         for t in range(num_timepoints):
@@ -89,5 +97,5 @@ def create_synthetic_multi_timepoint_ims(
                 ch = tp.create_group(f"Channel {c}")
                 # encodes (t, c) into every voxel so tests can verify both
                 # axes were read correctly, independent of x/y/z position
-                data = np.full((z, y, x), t * 100 + c, dtype=np.uint16)
+                data = np.full((z, y, x), t * 100 + c, dtype=dtype)
                 ch.create_dataset("Data", data=data)

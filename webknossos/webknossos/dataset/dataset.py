@@ -5,7 +5,7 @@ import warnings
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from os import PathLike
 from os.path import relpath
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import Any, cast
 
 import attr
 import numpy as np
@@ -13,10 +13,28 @@ from cluster_tools import Executor
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from webknossos.dataset.layer import (
+    Layer,
+    RemoteLayer,
+    SegmentationLayer,
+)
+
 from ..client.api_client.models import (
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
     ApiReserveDatasetUploadToPathsParameters,
 )
+from ..dataset_properties import (
+    COLOR_CATEGORY,
+    SEGMENTATION_CATEGORY,
+    AttachmentsProperties,
+    DataFormat,
+    DatasetProperties,
+    LayerCategoryType,
+    LayerProperties,
+    SegmentationLayerProperties,
+    VoxelSize,
+)
+from ..dataset_properties.structuring import get_dataset_converter
 from ..geometry import (
     BoundingBox,
     Mag,
@@ -28,7 +46,22 @@ from ..geometry import (
 )
 from ..geometry.mag import MagLike
 from ..geometry.nd_bounding_box import derive_nd_bounding_box_from_shape
+from ..utils import (
+    cheap_resolve,
+    copytree,
+    count_defined_values,
+    dump_path,
+    enrich_path,
+    is_fs_path,
+    rmtree,
+    strip_trailing_slash,
+    warn_deprecated,
+    wrap_executor,
+)
 from ._image_conversion import image_conversion
+from ._image_conversion.infer_bounding_box_existing_files import (
+    infer_bounding_box_existing_files,
+)
 from .abstract_dataset import (
     DEFAULT_VERSION,
     AbstractDataset,
@@ -53,50 +86,13 @@ from .layer import (
 )
 from .layer.abstract_layer import (
     _validate_layer_name,
+    channels_fit_one_layer,
 )
 from .ome_metadata import write_ome_metadata
 from .remote_dataset import RemoteAccessMode, RemoteDataset
 from .remote_folder import RemoteFolder
 from .sampling_modes import SamplingModes
 from .transfer_mode import TransferMode
-
-if TYPE_CHECKING:
-    import pims
-
-
-from webknossos.dataset.layer import (
-    Layer,
-    RemoteLayer,
-    SegmentationLayer,
-)
-
-from ..dataset_properties import (
-    COLOR_CATEGORY,
-    SEGMENTATION_CATEGORY,
-    AttachmentsProperties,
-    DataFormat,
-    DatasetProperties,
-    LayerCategoryType,
-    LayerProperties,
-    SegmentationLayerProperties,
-    VoxelSize,
-)
-from ..dataset_properties.structuring import get_dataset_converter
-from ..utils import (
-    cheap_resolve,
-    copytree,
-    count_defined_values,
-    dump_path,
-    enrich_path,
-    is_fs_path,
-    rmtree,
-    strip_trailing_slash,
-    warn_deprecated,
-    wrap_executor,
-)
-from ._image_conversion.infer_bounding_box_existing_files import (
-    infer_bounding_box_existing_files,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -161,9 +157,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ```
     """
 
-    # Kept as a class attribute for backward compatibility: Dataset.ConversionLayerMapping
-    # used to be a nested class; the implementation now lives in image_conversion.py
-    # alongside from_images()/add_layer_from_images(), which use it directly.
+    # Exposed as a class attribute so `Dataset.ConversionLayerMapping` works.
     ConversionLayerMapping = image_conversion.ConversionLayerMapping
 
     def __init__(
@@ -761,6 +755,16 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Returns:
             Dataset: The created dataset instance
 
+        Raises:
+            UnsupportedImageFormatError: If the input contains no file that any
+                reader can convert. Its `missing_extras` attribute names the
+                extras to install when the format would be supported by an
+                optional dependency that is not installed.
+            CorruptImageError: If a file of a supported format could not be
+                read, which usually means it is damaged or incomplete.
+            UnsupportedImageDataError: If the images were read, but their data
+                cannot be stored as requested.
+
         Examples:
             ```
             ds = Dataset.from_images("path/to/images/",
@@ -886,9 +890,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     "For an overview of supported dtypes, see https://docs.webknossos.org/webknossos/data/upload_ui.html",
                 )
 
-        if (num_channels > 1 and dtype.name != "uint8") or (
-            num_channels not in (1, 3) and dtype.name == "uint8"
-        ):
+        if not channels_fit_one_layer(num_channels, dtype):
             warnings.warn(
                 f"Data type {dtype.name} with multiple channels (got {num_channels}) not supported by WEBKNOSSOS. Create multiple layers instead."
             )
@@ -1105,9 +1107,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
     def add_layer_from_images(
         self,
-        images: Union[
-            str, PathLike, UPath, "pims.FramesSequence", list[str | PathLike | UPath]
-        ],
+        images: str | PathLike | UPath | Sequence[str | PathLike | UPath],
         ## add_layer arguments
         layer_name: str,
         category: LayerCategoryType | None = "color",
@@ -1138,11 +1138,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Creates a new layer called `layer_name` with mag `mag` from `images`.
         `images` can be one of the following:
 
+        * path to a single image file
+        * path to a directory of image files
         * glob-string
         * list of paths
-        * `pims.FramesSequence` instance
-
-        Please see the [pims docs](http://soft-matter.github.io/pims/v0.6.1/opening_files.html) for more information.
 
         This method needs extra packages like tifffile or pylibczirw. Please install the respective extras,
         e.g. using `pip install "webknossos[all]"`.
@@ -1164,6 +1163,29 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels
         * `truncate_rgba_to_rgb`: only applies if `allow_multiple_layers=True`, set to `False` to write four channels into layers instead of an RGB channel
         * `executor`: pass a `ClusterExecutor` instance to parallelize the conversion jobs across the batches
+
+        Several channels only share a single layer when they are RGB: three
+        uint8 channels, either from a format that stores RGB (`.png`, `.jpg`,
+        `.bmp`, …), or, as long as `allow_multiple_layers=False`, from any
+        other source. Any other combination of channels needs one layer each,
+        so this method raises `UnsupportedImageDataError` for them unless
+        `allow_multiple_layers=True` or `channel=<index>` is given. When
+        `allow_multiple_layers=True` does split channels into separate color
+        layers, the first three get `default_view_configuration.color` red,
+        green and blue respectively (further channels get other, evenly
+        spaced colors), so the layers overlay sensibly right away.
+
+        Raises:
+            UnsupportedImageFormatError: If no reader can convert `images`. Its
+                `missing_extras` attribute names the extras to install when the
+                format would be supported by an optional dependency that is not
+                installed.
+            CorruptImageError: If a file of a supported format could not be
+                read, which usually means it is damaged or incomplete.
+            UnsupportedImageDataError: If the images were read, but their data
+                cannot be stored as requested, e.g. a float image converted
+                into a segmentation layer, or several non-RGB channels without
+                `allow_multiple_layers=True`.
         """
 
         return image_conversion.add_layer_from_images(

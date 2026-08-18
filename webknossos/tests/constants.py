@@ -2,7 +2,7 @@ import os
 import shlex
 import subprocess
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from time import sleep
 
@@ -27,7 +27,7 @@ REMOTE_TESTOUTPUT_DIR = UPath(
 
 
 @contextmanager
-def use_minio() -> Iterator[None]:
+def use_minio() -> Generator[None]:
     """Minio is an S3 clone and is used as local test server"""
     if sys.platform == "darwin":
         minio_path = UPath("testoutput_minio")

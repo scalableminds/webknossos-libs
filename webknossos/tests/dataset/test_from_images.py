@@ -10,6 +10,7 @@ import mrcfile
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor
+from PIL import Image
 from tifffile import TiffFile, imwrite
 from upath import UPath
 
@@ -18,9 +19,14 @@ from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
     download_wklibs_sample_archive,
 )
-from webknossos.dataset import Dataset, RemoteDataset
-from webknossos.dataset._image_conversion.mrc_chunked_images import MrcChunkedImages
-from webknossos.dataset._image_conversion.pims_tiff_reader import PimsTiffReader
+from webknossos.dataset import (
+    Dataset,
+    RemoteDataset,
+    UnsupportedImageFormatError,
+)
+from webknossos.dataset._image_conversion.image_source import ReadOptions
+from webknossos.dataset._image_conversion.mrc_image_source import MrcImageSource
+from webknossos.dataset._image_conversion.tiff_slice_reader import TiffSliceReader
 from webknossos.geometry import BoundingBox, Vec3Int, VecInt
 
 
@@ -95,12 +101,12 @@ def test_imagej_virtual_stack_tiff(tmp_upath: UPath) -> None:
     assert len(t.pages) == 1, "expected exactly 1 real IFD"
     assert t.series[0].shape == (Z, Y, X)
 
-    reader = PimsTiffReader(tif_path)
+    reader = TiffSliceReader(tif_path)
     reader.bundle_axes = ["y", "x"]
     reader.iter_axes = ["z"]
 
     assert reader.shape == (Z, Y, X)
-    assert reader.frame_shape == (Y, X)
+    assert reader.slice_shape == (Y, X)
 
     for z in range(Z):
         np.testing.assert_array_equal(np.array(reader[z]), data[z])
@@ -135,7 +141,7 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
     # Verify that reading z=0 only accesses the C pages for z=0, not pages from other z-slices.
     # With CZYX ordering (C=3, Z=2) pages are laid out as: c=0→[pg0,pg1], c=1→[pg2,pg3], c=2→[pg4,pg5]
     # so z=0 corresponds to pages 0, 2, 4 and z=1 to pages 1, 3, 5.
-    reader = PimsTiffReader(tif_path)
+    reader = TiffSliceReader(tif_path)
     reader.bundle_axes = ["c", "y", "x"]
     reader.iter_axes = ["z"]
 
@@ -147,13 +153,13 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
         return original_asarray(self, **kwargs)
 
     with patch.object(tifffile_module.TiffPage, "asarray", tracking_asarray):
-        frame_z0 = np.array(reader[0])
+        slice_z0 = np.array(reader[0])
 
     assert pages_read == [0, 2, 4], (
         f"Expected pages [0, 2, 4] for z=0, got {pages_read}"
     )
-    assert frame_z0.shape == (C, Y, X)
-    np.testing.assert_array_equal(frame_z0, data[:, 0, :, :])
+    assert slice_z0.shape == (C, Y, X)
+    np.testing.assert_array_equal(slice_z0, data[:, 0, :, :])
 
 
 def test_multiple_multitiffs(tmp_upath: UPath) -> None:
@@ -219,9 +225,35 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         assert array_shape == shard_aligned_bottomright.to_list()
 
 
+@pytest.mark.parametrize("mode", ["RGB", "RGBA"])
+def test_rgb_image_creates_a_single_rgb_layer(tmp_upath: UPath, mode: str) -> None:
+    # from_images() passes allow_multiple_layers=True, but the RGB channels of
+    # an everyday image format still belong in one layer rather than being
+    # split into grayscale ones — and an alpha channel is dropped, not turned
+    # into a fourth layer.
+    images = tmp_upath / "images"
+    images.mkdir()
+    data = np.zeros((8, 16, len(mode)), dtype="uint8")
+    for channel in range(len(mode)):
+        data[..., channel] = channel + 1
+    Image.fromarray(data, mode=mode).save(str(images / "shot.png"))
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            images, tmp_upath / "ds", (1, 1, 1), layer_name="color", executor=executor
+        )
+
+    assert set(ds.layers.keys()) == {"color"}
+    layer = ds.get_layer("color")
+    assert layer.num_channels == 3
+    read = layer.get_finest_mag().read()
+    for channel in range(3):
+        assert (read[channel] == channel + 1).all()
+
+
 def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     # brain_crop3.ims has 2 channels and no explicit channel is selected, so
-    # ImsChunkedImages.get_possible_layers() reports {"channel": [0, 1]} and
+    # ImsImageSource.get_possible_layers() reports {"channel": [0, 1]} and
     # from_images() (which always passes allow_multiple_layers=True) should
     # split it into one layer per channel instead of picking just the first.
     ims_path = download_wklibs_sample_archive("brain_crop3.ims")
@@ -264,11 +296,11 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
     create_synthetic_multi_timepoint_ims(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
-    ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._image_conversion.ims_chunked_images"
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_image_source"
     )
     monkeypatch.setattr(
-        ims_chunked_images,
+        ims_image_source,
         "_read_ims_metadata_quietly",
         lambda _path: ((2, 3, 4, 8, 10), np.dtype("uint16")),
     )
@@ -296,16 +328,8 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
             assert (data[t] == t * 100 + c).all()
 
 
-def _open_mrc_chunked_images(mrc_path: UPath) -> MrcChunkedImages:
-    return MrcChunkedImages(
-        mrc_path,
-        channel=None,
-        swap_xy=False,
-        flip_x=False,
-        flip_y=False,
-        flip_z=False,
-        is_segmentation=False,
-    )
+def _open_mrc_chunked_images(mrc_path: UPath) -> MrcImageSource:
+    return MrcImageSource(mrc_path, ReadOptions())
 
 
 def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
@@ -325,7 +349,7 @@ def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
 
 
 def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
-    # MRC data is read via a memory-mapped array; each read_chunk() call must
+    # MRC data is read via a memory-mapped array; each copy_chunk_to_view() call must
     # reopen its own mmap (rather than reusing a shared/cached one), so no
     # mmap handle crosses a multiprocessing boundary between parallel jobs.
     Z, Y, X = 4, 8, 8
@@ -352,7 +376,7 @@ def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
     with patch("mrcfile.mmap", counting_mmap):
         for z in range(Z):
             bbox = BoundingBox((0, 0, z), (X, Y, 1))
-            reader.read_chunk(bbox, mag_view=mag_view, dtype=None)
+            reader.copy_chunk_to_view(bbox, mag_view=mag_view, dtype=None)
 
     assert open_count == Z, (
         f"Expected mrcfile.mmap to be called {Z} times (once per chunk), got {open_count}"
@@ -407,24 +431,46 @@ def test_remote_dataset_from_images() -> None:
     )
 
 
-def test_optional_reader_suffixes_match_supported_file_extensions() -> None:
-    # _OPTIONAL_CHUNKED_IMAGE_READERS has to restate each reader's suffixes,
-    # because a reader whose dependency is missing never imports and so cannot
-    # report its own supported_file_extensions(). Whenever a reader *is*
-    # importable, the two must agree — otherwise the missing-dependency hint
-    # names the wrong formats, or silently stops covering one.
-    from webknossos.dataset._image_conversion.chunked_images import (
-        _CHUNKED_IMAGE_CLASSES,
-        _OPTIONAL_CHUNKED_IMAGE_READERS,
+def test_optional_reader_extensions_match_supported_file_extensions() -> None:
+    # _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES has to restate each reader's
+    # extensions, because a
+    # reader whose dependency is missing never imports and so cannot report
+    # its own supported_file_extensions(). Whenever a reader *is* importable,
+    # the two must agree — otherwise the missing-dependency hint names the
+    # wrong formats, or silently stops covering one. Covers both strategies:
+    # slice readers are just as optional as chunked ones now that tifffile is
+    # not in the base install.
+    from webknossos.dataset._image_conversion.chunked_image_source import (
+        ChunkedImageSource,
     )
+    from webknossos.dataset._image_conversion.image_source_registry import (
+        _CHUNKED_IMAGE_SOURCE_CLASSES,
+        _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES,
+        _SLICE_READER_CLASSES,
+        get_unavailable_extensions,
+    )
+    from webknossos.dataset._image_conversion.slice_reader import SliceReader
 
-    registered = {cls.__name__: cls for cls in _CHUNKED_IMAGE_CLASSES}
-    # The test env installs all extras, so every reader should be registered.
-    assert set(registered) == set(_OPTIONAL_CHUNKED_IMAGE_READERS)
-    for name, (_extra, suffixes) in _OPTIONAL_CHUNKED_IMAGE_READERS.items():
-        assert registered[name].supported_file_extensions() == set(suffixes), (
-            f"declared suffixes for {name} are out of sync with "
-            "its supported_file_extensions()"
+    # Annotated because the two lists' only common base is ABC, which does
+    # not declare supported_file_extensions(); the union does.
+    registered: dict[str, type[SliceReader] | type[ChunkedImageSource]] = {
+        cls.__name__: cls for cls in _SLICE_READER_CLASSES
+    }
+    registered.update({cls.__name__: cls for cls in _CHUNKED_IMAGE_SOURCE_CLASSES})
+    # The test env installs every extra except czi on Python 3.14, since
+    # pylibCZIrw ships no wheel there.
+    unavailable_extras = set(get_unavailable_extensions().values())
+    for reader in _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES:
+        if reader.extra in unavailable_extras:
+            continue
+        assert reader.class_name in registered, (
+            f"{reader.class_name} is declared optional but did not register"
+        )
+        assert registered[reader.class_name].supported_file_extensions() == set(
+            reader.extensions
+        ), (
+            f"declared extensions for {reader.class_name} are out of sync "
+            "with its supported_file_extensions()"
         )
 
 
@@ -432,30 +478,35 @@ def test_from_images_names_missing_optional_dependency(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # With an extra uninstalled its reader never registers, so its formats are
-    # simply absent from the "supported suffixes" list and the failure gives no
-    # hint that a dependency is missing.
+    # simply absent from the "supported extensions" list and the failure gives
+    # no hint that a dependency is missing.
     # The test env installs every extra, so simulate the missing one on both
-    # sides: its suffix drops out of the supported set and shows up as
+    # sides: its extension drops out of the supported set and shows up as
     # unavailable, exactly as it would with the reader unimportable.
     image_conversion = importlib.import_module(
         "webknossos.dataset._image_conversion.image_conversion"
     )
-    available = image_conversion.get_valid_chunked_image_suffixes()
+    available = image_conversion.get_valid_extensions()
     monkeypatch.setattr(
         image_conversion,
-        "get_valid_chunked_image_suffixes",
+        "get_valid_extensions",
         lambda: available - {"ims"},
     )
     monkeypatch.setattr(
         image_conversion,
-        "get_unavailable_chunked_image_suffixes",
+        "get_unavailable_extensions",
         lambda: {"ims": "ims"},
     )
     (tmp_upath / "a.ims").write_bytes(b"stand-in for an ims file")
 
-    with pytest.raises(ValueError, match=r"pip install webknossos\[ims\]") as excinfo:
+    with pytest.raises(
+        UnsupportedImageFormatError, match=r"pip install webknossos\[ims\]"
+    ) as excinfo:
         Dataset.from_images(tmp_upath, tmp_upath / "ds", voxel_size=(1, 1, 1))
     assert ".ims" in str(excinfo.value)
+    # A non-empty missing_extras is how downstream tells "install this" apart
+    # from "this format cannot be converted at all".
+    assert excinfo.value.missing_extras == ("ims",)
 
 
 def test_from_images_error_unchanged_when_nothing_is_missing(
@@ -463,5 +514,32 @@ def test_from_images_error_unchanged_when_nothing_is_missing(
 ) -> None:
     # The hint must not appear when every reader imported fine.
     (tmp_upath / "a.unsupported").write_bytes(b"x")
-    with pytest.raises(ValueError, match="Could not find any supported image data"):
+    with pytest.raises(
+        UnsupportedImageFormatError, match="Could not find any supported image data"
+    ) as excinfo:
         Dataset.from_images(tmp_upath, tmp_upath / "ds", voxel_size=(1, 1, 1))
+    error = excinfo.value
+    assert error.missing_extras == ()
+    # The input is a directory, so there is no single offending extension.
+    assert error.file_extension is None
+    assert error.path == tmp_upath
+    assert "tif" in error.supported_file_extensions
+
+
+def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
+    # Passing a single file that no reader handles used to raise an
+    # UnboundLocalError, because input_files was only assigned for files with a
+    # supported extension.
+    unsupported = tmp_upath / "scan.dcm"
+    unsupported.write_bytes(b"\x00" * 132)
+
+    with pytest.raises(
+        UnsupportedImageFormatError, match="Could not find any supported image data"
+    ) as excinfo:
+        Dataset.from_images(unsupported, tmp_upath / "ds", voxel_size=(1, 1, 1))
+    error = excinfo.value
+    assert error.file_extension == "dcm"
+    assert error.path == unsupported
+    assert error.missing_extras == ()
+    # Subclassing ValueError keeps `except ValueError` callers working.
+    assert isinstance(error, ValueError)

@@ -11,7 +11,7 @@ import os
 import signal
 import subprocess
 import sys
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from shutil import copyfileobj, rmtree, unpack_archive
@@ -100,7 +100,7 @@ def is_wk_healthy():
 
 
 @contextmanager
-def local_test_wk() -> Iterator[None]:
+def local_test_wk() -> Generator[None]:
     assert not IS_WINDOWS, "Windows is not supported for local testing"
 
     check_and_clean_datasets_folder()

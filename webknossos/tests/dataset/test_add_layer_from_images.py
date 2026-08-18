@@ -14,7 +14,9 @@ import mrcfile
 import numpy as np
 import pytest
 from cluster_tools import SequentialExecutor, get_executor
-from tifffile import TiffFile
+from numpy.typing import DTypeLike
+from PIL import Image
+from tifffile import TiffFile, imwrite
 from upath import UPath
 
 import webknossos as wk
@@ -22,6 +24,12 @@ from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
     download_wklibs_sample_archive,
+)
+from tests.utils import (
+    HAS_PYLIBCZIRW,
+    PYLIBCZIRW_EXPECTED,
+    create_synthetic_czi,
+    requires_pylibczirw,
 )
 
 
@@ -115,7 +123,7 @@ def test_mrc_from_images_flip_and_swap(
     actual = layer.get_finest_mag().read()[0]
 
     # flips apply in source axis order (z, y, x): flip_z mirrors z, flip_x
-    # mirrors y and flip_y mirrors x (the PimsImages convention).
+    # mirrors y and flip_y mirrors x (the SlicedImageSource convention).
     expected = data
     if flip_z:
         expected = expected[::-1]
@@ -216,7 +224,7 @@ def test_mrc_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
 
 def _read_ims_reference(ims_path: UPath, channel: int) -> np.ndarray:
     # Read independently via h5py/imaris_ims_file_reader rather than through
-    # ImsChunkedImages, to get a reference unrelated to the code under test.
+    # ImsImageSource, to get a reference unrelated to the code under test.
     from imaris_ims_file_reader.ims import ims as ImsFile
 
     ims_obj = ImsFile(str(ims_path), squeeze_output=False)
@@ -255,8 +263,8 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
     # With an explicit shard_shape smaller than the image extent, conversion
     # must split into multiple shards along x and y. The final bounding box
     # must reflect the *full* image extent, not just a single shard's size —
-    # a per-chunk-shape-based correction (as used for the generic pims path)
-    # would be wrong here, since each ChunkedImages job only reports its own
+    # a per-chunk-shape-based correction (as used for the SlicedImageSource path)
+    # would be wrong here, since each ChunkedImageSource job only reports its own
     # shard-sized chunk, not the total extent.
     ims_path = download_wklibs_sample_archive("brain_crop3.ims")
 
@@ -286,8 +294,9 @@ def test_ims_from_images_multi_shard_bbox(tmp_upath: UPath) -> None:
 def test_ims_from_images_flip_and_swap(
     tmp_upath: UPath, shard_shape: tuple[int, int, int]
 ) -> None:
-    # .ims files are read exclusively through ImsChunkedImages (never through
-    # pims), so there's no separate "slow path" to compare against. Instead,
+    # .ims files are read exclusively through ImsImageSource (never through
+    # SlicedImageSource), so there's no separate "slow path" to compare against.
+    # Instead,
     # this derives the expected flip/swap transform directly from the h5py
     # reference: flip_z/flip_x/flip_y reverse the source's z/y/x axes
     # respectively (in that source-axis order, regardless of swap_xy), and
@@ -329,21 +338,142 @@ def test_timepoint_argument_is_removed(tmp_upath: UPath) -> None:
         )
 
 
+def test_add_layer_from_images_unsupported_format(tmp_upath: UPath) -> None:
+    # No reader handles .dcm. Downstream code needs to recognize this without
+    # matching on an error message.
+    unsupported = tmp_upath / "scan.dcm"
+    unsupported.write_bytes(b"\x00" * 132)
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(wk.UnsupportedImageFormatError) as excinfo:
+        ds.add_layer_from_images(unsupported, layer_name="color")
+    error = excinfo.value
+    assert error.file_extension == "dcm"
+    assert error.path == unsupported
+    assert error.missing_extras == ()
+    assert "dcm" not in error.supported_file_extensions
+    # Subclassing ValueError keeps `except ValueError` callers working.
+    assert isinstance(error, ValueError)
+
+
+@pytest.mark.parametrize(
+    "filename,contents,wraps_reader_error",
+    [
+        ("broken.tif", b"not a tiff at all", True),
+        # mrcfile parses this permissively and reports an empty extent instead
+        # of raising, so there is no reader error to wrap — and without the
+        # check the file would convert into an empty layer.
+        ("broken.mrc", b"\x00" * 2048, False),
+        # An HDF5 signature with nothing behind it: the .ims reader gets far
+        # enough to fail deep inside h5py.
+        ("broken.ims", b"\x89HDF\r\n\x1a\n" + b"\x00" * 100, True),
+    ],
+)
+def test_add_layer_from_images_corrupt_file(
+    tmp_upath: UPath, filename: str, contents: bytes, wraps_reader_error: bool
+) -> None:
+    # A damaged file of a *supported* format needs a different message than an
+    # unsupported format.
+    corrupt = tmp_upath / filename
+    corrupt.write_bytes(contents)
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(wk.CorruptImageError) as excinfo:
+        ds.add_layer_from_images(corrupt, layer_name="color")
+    error = excinfo.value
+    assert error.path == corrupt
+    assert not isinstance(error, wk.UnsupportedImageFormatError)
+    if wraps_reader_error:
+        # The reader's own error stays available for the log.
+        assert error.__cause__ is not None
+
+
+def test_ims_empty_shape_is_corrupt(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A damaged or incompletely uploaded .ims file can still open and report a
+    # shape, just with an empty axis (mirroring broken.mrc above), which would
+    # otherwise convert into an empty layer instead of surfacing as corrupt.
+    ims_path = tmp_upath / "empty.ims"
+    ims_path.write_bytes(b"\x89HDF\r\n\x1a\n" + b"\x00" * 100)
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_image_source"
+    )
+    monkeypatch.setattr(
+        ims_image_source,
+        "_read_ims_metadata_quietly",
+        lambda _path: ((1, 1, 4, 8, 0), np.dtype("uint16")),
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(wk.CorruptImageError) as excinfo:
+        ds.add_layer_from_images(ims_path, layer_name="color")
+    assert excinfo.value.path == ims_path
+
+
+def test_add_layer_from_images_missing_file_is_not_corrupt(tmp_upath: UPath) -> None:
+    # open_slice_reader flattens each reader's exception into a message, so a missing
+    # file reaches the same code path as a damaged one. Telling the user their
+    # file is damaged when it is simply not there would be worse than the
+    # unspecific error they get today.
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(ValueError) as excinfo:
+        ds.add_layer_from_images(tmp_upath / "does_not_exist.tif", layer_name="color")
+    assert not isinstance(excinfo.value, wk.ImageConversionError)
+
+
+def test_add_layer_from_images_rejects_unstorable_dtype(tmp_upath: UPath) -> None:
+    # Float images cannot become a segmentation layer. The dtype comes from the
+    # image, so this is an input problem the user can act on.
+    float_image = tmp_upath / "float.tif"
+    imwrite(str(float_image), np.zeros((8, 8), dtype="float32"))
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(wk.UnsupportedImageDataError, match="float32") as excinfo:
+        ds.add_layer_from_images(float_image, layer_name="seg", category="segmentation")
+    assert isinstance(excinfo.value, ValueError)
+
+
+def test_add_layer_from_images_names_missing_optional_dependency(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # With webknossos[ims] uninstalled, ImsImageSource never registers and the
+    # file falls through to SlicedImageSource, which has no reader for it either. The error
+    # must still point at the missing extra instead of calling .ims unsupported.
+    # The test env installs every extra, so unregister the reader to reproduce
+    # exactly the state a missing dependency leaves behind.
+    registry = importlib.import_module(
+        "webknossos.dataset._image_conversion.image_source_registry"
+    )
+    monkeypatch.setattr(registry, "_CHUNKED_IMAGE_SOURCE_CLASSES", [])
+    monkeypatch.setattr(registry, "_UNAVAILABLE_EXTENSIONS", {"ims": "ims"})
+    ims_path = tmp_upath / "a.ims"
+    ims_path.write_bytes(b"stand-in for an ims file")
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(
+        wk.UnsupportedImageFormatError, match=r"pip install webknossos\[ims\]"
+    ) as excinfo:
+        ds.add_layer_from_images(ims_path, layer_name="color")
+    assert excinfo.value.missing_extras == ("ims",)
+
+
 def test_ims_from_images_multi_timepoint(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # Multi-timepoint .ims files (without an explicit `timepoint=`) are a new
-    # capability of the ChunkedImages abstraction: the bounding box gets a "t"
+    # capability of the ChunkedImageSource abstraction: the bounding box gets a "t"
     # axis, and each chunk along it reads its own timepoint.
     ims_path = tmp_upath / "synthetic_multi_t.ims"
     create_synthetic_multi_timepoint_ims(
         ims_path, num_timepoints=3, num_channels=1, z=4, y=8, x=10
     )
-    ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._image_conversion.ims_chunked_images"
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_image_source"
     )
     monkeypatch.setattr(
-        ims_chunked_images,
+        ims_image_source,
         "_read_ims_metadata_quietly",
         lambda _path: ((3, 1, 4, 8, 10), np.dtype("uint16")),
     )
@@ -364,45 +494,292 @@ def test_ims_from_images_multi_timepoint(
         assert (data[t] == t * 100).all()
 
 
-def test_ims_from_images_multi_timepoint_multi_channel_single_layer_keeps_both_axes(
-    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    "num_channels,dtype",
+    [
+        (2, np.uint8),
+        (2, np.uint16),
+        (3, np.uint16),
+        (4, np.uint8),
+        (4, np.uint16),
+    ],
+)
+def test_ims_multi_channel_needs_one_layer_per_channel(
+    tmp_upath: UPath,
+    monkeypatch: pytest.MonkeyPatch,
+    num_channels: int,
+    dtype: DTypeLike,
 ) -> None:
-    # expected_bbox reports every axis the source actually has, so a file with
-    # both multiple timepoints and multiple (3+) channels fits in a single
-    # layer as (t, c, x, y, z) — "c" is where NormalizedBoundingBox reads
-    # num_channels from, and NDBoundingBox.chunk() keeps it whole. Splitting
-    # channels into separate layers is what allow_multiple_layers=True does
-    # instead — see test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers.
-    ims_path = tmp_upath / "synthetic_multi_t_multi_c.ims"
+    # .ims stores one acquisition channel per channel, so they belong in
+    # separate layers whatever their number and dtype — except three uint8
+    # channels, which fall back to a single RGB layer just like any other
+    # format does without allow_multiple_layers=True (see
+    # test_ims_three_uint8_channels_become_rgb_layer_without_allow_multiple_layers
+    # below). Four channels are never treated as RGBA outside of an RGB image
+    # format, regardless of dtype.
+    ims_path = tmp_upath / "synthetic_multi_c.ims"
     create_synthetic_multi_timepoint_ims(
-        ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
+        ims_path,
+        num_timepoints=1,
+        num_channels=num_channels,
+        z=4,
+        y=8,
+        x=10,
+        dtype=dtype,
     )
-    ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._image_conversion.ims_chunked_images"
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_image_source"
     )
     monkeypatch.setattr(
-        ims_chunked_images,
+        ims_image_source,
         "_read_ims_metadata_quietly",
-        lambda _path: ((2, 3, 4, 8, 10), np.dtype("uint16")),
+        lambda _path: ((1, num_channels, 4, 8, 10), np.dtype(dtype)),
     )
-
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
     with SequentialExecutor() as executor:
-        layer = ds.add_layer_from_images(
+        with pytest.raises(wk.UnsupportedImageDataError, match="allow_multiple_layers"):
+            ds.add_layer_from_images(
+                ims_path, layer_name="multi_c", data_format="zarr3", executor=executor
+            )
+
+        first_layer = ds.add_layer_from_images(
             ims_path,
-            layer_name="multi_t_multi_c",
+            layer_name="multi_c",
             data_format="zarr3",
+            allow_multiple_layers=True,
             executor=executor,
         )
 
-    assert layer.bounding_box.axes == ("t", "c", "x", "y", "z")
-    assert layer.bounding_box.size.to_tuple() == (2, 3, 10, 8, 4)
+    assert set(ds.layers.keys()) == {
+        f"multi_c__channel{c}" for c in range(num_channels)
+    }
+    assert first_layer.name == "multi_c__channel0"
+    for c in range(num_channels):
+        layer = ds.layers[f"multi_c__channel{c}"]
+        assert layer.num_channels == 1
+        assert layer.dtype == np.dtype(dtype)
+        assert layer.bounding_box.axes == ("x", "y", "z")
+        assert (layer.get_finest_mag().read()[0] == c).all()
+
+
+def test_ims_three_uint8_channels_become_rgb_layer_without_allow_multiple_layers(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # .ims is not an RGB image format, but three uint8 channels still display
+    # as RGB in WEBKNOSSOS, so without allow_multiple_layers=True they fall
+    # back to a single layer instead of raising. Passing
+    # allow_multiple_layers=True explicitly still splits them into one layer
+    # per channel, same as any other channel count.
+    num_channels = 3
+    dtype = np.uint8
+    ims_path = tmp_upath / "synthetic_multi_c.ims"
+    create_synthetic_multi_timepoint_ims(
+        ims_path,
+        num_timepoints=1,
+        num_channels=num_channels,
+        z=4,
+        y=8,
+        x=10,
+        dtype=dtype,
+    )
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_image_source"
+    )
+    monkeypatch.setattr(
+        ims_image_source,
+        "_read_ims_metadata_quietly",
+        lambda _path: ((1, num_channels, 4, 8, 10), np.dtype(dtype)),
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ims_path, layer_name="multi_c", data_format="zarr3", executor=executor
+        )
+
+        assert set(ds.layers.keys()) == {"multi_c"}
+        assert layer.num_channels == num_channels
+        assert layer.dtype == np.dtype(dtype)
+
+        ds.add_layer_from_images(
+            ims_path,
+            layer_name="multi_c_split",
+            data_format="zarr3",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"multi_c"} | {
+        f"multi_c_split__channel{c}" for c in range(num_channels)
+    }
+    for c in range(num_channels):
+        split_layer = ds.layers[f"multi_c_split__channel{c}"]
+        assert split_layer.num_channels == 1
+        assert split_layer.dtype == np.dtype(dtype)
+
+
+@pytest.mark.parametrize(
+    "mode,expected_size",
+    [("RGB", wk.VecInt(c=3, x=16, y=8, z=1)), ("RGBA", wk.VecInt(c=3, x=16, y=8, z=1))],
+)
+def test_rgb_image_stays_a_single_layer(
+    tmp_upath: UPath, mode: str, expected_size: wk.VecInt
+) -> None:
+    # The RGB channels of an everyday image format belong together in one
+    # layer, and an alpha channel is dropped rather than becoming a layer of
+    # its own.
+    png_path = tmp_upath / f"{mode.lower()}.png"
+    data = np.zeros((8, 16, len(mode)), dtype="uint8")
+    for channel in range(len(mode)):
+        data[..., channel] = channel + 1
+    Image.fromarray(data, mode=mode).save(str(png_path))
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            png_path, layer_name="color", executor=executor
+        )
+
+    assert set(ds.layers.keys()) == {"color"}
     assert layer.num_channels == 3
-    data = layer.get_finest_mag().read()
-    assert data.shape == (2, 3, 10, 8, 4)
-    for t in range(2):
-        for c in range(3):
-            assert (data[t, c] == t * 100 + c).all()
+    assert layer.normalized_bounding_box.size == expected_size
+    read = layer.get_finest_mag().read()
+    for channel in range(3):
+        assert (read[channel] == channel + 1).all()
+
+
+def test_multi_channel_16bit_tiff_needs_one_layer_per_channel(
+    tmp_upath: UPath,
+) -> None:
+    # .tif is not in the RGB-extension allowlist — TIFF can store RGB, but in
+    # the microscopy context this library targets it usually doesn't — so even
+    # three channels are separate acquisitions rather than RGB. uint16 makes
+    # this unambiguous either way: only uint8 channels are ever treated as RGB.
+    tiff_path = tmp_upath / "three_channels.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((3, 8, 16), dtype="uint16"),
+        photometric="minisblack",
+        metadata={"axes": "CYX"},
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        with pytest.raises(wk.UnsupportedImageDataError, match="allow_multiple_layers"):
+            ds.add_layer_from_images(tiff_path, layer_name="color", executor=executor)
+
+        ds.add_layer_from_images(
+            tiff_path,
+            layer_name="color",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {f"color__channel{c}" for c in range(3)}
+    # Splitting a multi-channel image into layers defaults their colors to
+    # red, green, blue, so the layers overlay sensibly right away.
+    for c, expected_color in enumerate([(255, 0, 0), (0, 255, 0), (0, 0, 255)]):
+        view_configuration = ds.layers[f"color__channel{c}"].default_view_configuration
+        assert view_configuration is not None
+        assert view_configuration.color == expected_color
+
+
+def test_multi_channel_tiff_layer_split_colors_beyond_rgb(
+    tmp_upath: UPath,
+) -> None:
+    # A fourth (and any further) split-off channel layer still gets a color
+    # of its own — just not one of the fixed RGB ones, since there is no
+    # similarly universal convention past three channels.
+    tiff_path = tmp_upath / "four_channels.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((4, 8, 16), dtype="uint16"),
+        photometric="minisblack",
+        metadata={"axes": "CYX"},
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            tiff_path,
+            layer_name="color",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {f"color__channel{c}" for c in range(4)}
+    colors = []
+    for c in range(4):
+        view_configuration = ds.layers[f"color__channel{c}"].default_view_configuration
+        assert view_configuration is not None
+        assert view_configuration.color is not None
+        colors.append(view_configuration.color)
+
+    assert colors[:3] == [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+    # The fourth channel gets some other color, distinct from the first three.
+    assert colors[3] not in colors[:3]
+    assert all(0 <= component <= 255 for component in colors[3])
+
+
+def test_three_uint8_channel_tiff_becomes_rgb_layer_without_allow_multiple_layers(
+    tmp_upath: UPath,
+) -> None:
+    # .tif is not in the RGB-extension allowlist, but three uint8 channels
+    # still display as RGB in WEBKNOSSOS, so without allow_multiple_layers=True
+    # they fall back to a single layer instead of raising, same as the uint16
+    # case above raises. allow_multiple_layers=True still splits them.
+    tiff_path = tmp_upath / "three_channels.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((3, 8, 16), dtype="uint8"),
+        photometric="minisblack",
+        metadata={"axes": "CYX"},
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path, layer_name="color", executor=executor
+        )
+
+        assert set(ds.layers.keys()) == {"color"}
+        assert layer.num_channels == 3
+        assert layer.dtype == np.dtype("uint8")
+
+        ds.add_layer_from_images(
+            tiff_path,
+            layer_name="color_split",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"color"} | {
+        f"color_split__channel{c}" for c in range(3)
+    }
+
+
+def test_add_layer_from_images_channel_argument_avoids_the_split(
+    tmp_upath: UPath,
+) -> None:
+    # Picking one channel is the other way out of the error above, and has to
+    # keep working without allow_multiple_layers.
+    tiff_path = tmp_upath / "three_channels.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((3, 8, 16), dtype="uint16"),
+        photometric="minisblack",
+        metadata={"axes": "CYX"},
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path, layer_name="color", channel=1, executor=executor
+        )
+
+    assert set(ds.layers.keys()) == {"color"}
+    assert layer.num_channels == 1
 
 
 def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
@@ -415,11 +792,11 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
     create_synthetic_multi_timepoint_ims(
         ims_path, num_timepoints=2, num_channels=3, z=4, y=8, x=10
     )
-    ims_chunked_images = importlib.import_module(
-        "webknossos.dataset._image_conversion.ims_chunked_images"
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_image_source"
     )
     monkeypatch.setattr(
-        ims_chunked_images,
+        ims_image_source,
         "_read_ims_metadata_quietly",
         lambda _path: ((2, 3, 4, 8, 10), np.dtype("uint16")),
     )
@@ -446,6 +823,123 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
         data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
         for t in range(2):
             assert (data[t] == t * 100 + c).all()
+
+
+# A single shard hides both the multi-shard flip bug and the mag/shard
+# conversion, so every combination is checked at two shard shapes.
+@requires_pylibczirw
+@pytest.mark.parametrize("shard_shape", [(32, 32, 32), (64, 64, 64)])
+@pytest.mark.parametrize("swap_xy", [False, True])
+@pytest.mark.parametrize("flip_x", [False, True])
+@pytest.mark.parametrize("flip_y", [False, True])
+@pytest.mark.parametrize("flip_z", [False, True])
+def test_czi_from_images_flip_and_swap(
+    tmp_upath: UPath,
+    shard_shape: tuple[int, int, int],
+    swap_xy: bool,
+    flip_x: bool,
+    flip_y: bool,
+    flip_z: bool,
+) -> None:
+    # x != y != z so a transposed axis cannot pass by coincidence.
+    czi_path = tmp_upath / "flip.czi"
+    data = create_synthetic_czi(czi_path, z=6, y=40, x=48)[0, 0]  # (z, y, x)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            czi_path,
+            layer_name="czi_layer",
+            flip_x=flip_x,
+            flip_y=flip_y,
+            flip_z=flip_z,
+            swap_xy=swap_xy,
+            data_format="zarr3",
+            chunk_shape=(8, 8, 8),
+            shard_shape=shard_shape,
+            executor=executor,
+        )
+    actual = layer.get_finest_mag().read()[0]
+
+    # flips apply in source axis order (z, y, x): flip_z mirrors z, flip_x
+    # mirrors y and flip_y mirrors x (the ImageSource convention).
+    expected = data
+    if flip_z:
+        expected = expected[::-1]
+    if flip_x:
+        expected = expected[:, ::-1]
+    if flip_y:
+        expected = expected[:, :, ::-1]
+    expected = expected.transpose(1, 2, 0) if swap_xy else expected.transpose(2, 1, 0)
+    np.testing.assert_array_equal(actual, expected)
+
+
+@requires_pylibczirw
+def test_czi_from_images_multi_timepoint(tmp_upath: UPath) -> None:
+    # Timepoints land on a "t" axis within one layer rather than being pinned.
+    czi_path = tmp_upath / "multi_t.czi"
+    data = create_synthetic_czi(czi_path, num_timepoints=3, z=2, y=8, x=10)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            czi_path,
+            layer_name="czi_layer",
+            data_format="zarr3",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.axes == ("t", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (3, 10, 8, 2)
+    actual = layer.get_finest_mag().read()
+    for t in range(3):
+        np.testing.assert_array_equal(actual[t], data[t, 0].transpose(2, 1, 0))
+
+
+@requires_pylibczirw
+def test_czi_from_images_splits_czi_channels_into_layers(tmp_upath: UPath) -> None:
+    # A CZI "C" is a separate acquisition, not a RGB channel, so each one
+    # becomes its own layer — and each must carry its own data.
+    czi_path = tmp_upath / "multi_c.czi"
+    data = create_synthetic_czi(czi_path, num_czi_channels=3, z=2, y=8, x=10)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            czi_path,
+            layer_name="czi_layer",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers) == {
+        "czi_layer__czi_channel0",
+        "czi_layer__czi_channel1",
+        "czi_layer__czi_channel2",
+    }
+    for c in range(3):
+        layer = ds.layers[f"czi_layer__czi_channel{c}"]
+        assert layer.num_channels == 1
+        np.testing.assert_array_equal(
+            layer.get_finest_mag().read()[0], data[0, c].transpose(2, 1, 0)
+        )
+
+
+@requires_pylibczirw
+def test_czi_from_images_selects_a_single_czi_channel(tmp_upath: UPath) -> None:
+    czi_path = tmp_upath / "pick_c.czi"
+    data = create_synthetic_czi(czi_path, num_czi_channels=3, z=2, y=8, x=10)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            czi_path, layer_name="czi_layer", czi_channel=2, executor=executor
+        )
+
+    assert len(ds.layers) == 1
+    np.testing.assert_array_equal(
+        layer.get_finest_mag().read()[0], data[0, 2].transpose(2, 1, 0)
+    )
 
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
@@ -729,28 +1223,8 @@ TEST_IMAGES_ARGS: list[
         (4096, 4096, 1),
     ),
     (
-        # published with CC0 license, taken from
-        # https://doi.org/10.6084/m9.figshare.c.3727411_D391.v1
-        "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
-        _remote_sample(
-            "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi"
-        ),
-        {},
-        "uint16",
-        1,
-        (512, 512, 30),
-    ),
-    (
         "scifio-test.gif",
         _remote_sample("scifio-test.gif"),
-        {},
-        "uint8",
-        3,
-        (500, 500, 1),
-    ),
-    (
-        "scifio-test.jp2",
-        _remote_sample("scifio-test.jp2"),
         {},
         "uint8",
         3,
@@ -773,6 +1247,27 @@ TEST_IMAGES_ARGS: list[
         (500, 500, 1),
     ),
 ]
+if HAS_PYLIBCZIRW:
+    TEST_IMAGES_ARGS.append(
+        (
+            # published with CC0 license, taken from
+            # https://doi.org/10.6084/m9.figshare.c.3727411_D391.v1
+            "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi",
+            _remote_sample(
+                "embedded_NCI_mono_matrigelcollagen_docetaxel_day10_sample10.czi"
+            ),
+            {},
+            "uint16",
+            1,
+            (512, 512, 30),
+        )
+    )
+elif PYLIBCZIRW_EXPECTED:
+    # pylibCZIrw is expected on this Python version; missing here means a
+    # broken test environment, not a reason to silently drop CZI coverage.
+    raise ImportError(
+        "pylibCZIrw is not installed, but is expected for this Python version."
+    )
 
 
 def _test_test_images(

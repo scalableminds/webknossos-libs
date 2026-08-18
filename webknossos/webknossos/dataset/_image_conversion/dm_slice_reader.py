@@ -1,23 +1,24 @@
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import closing, contextmanager
 
 import numpy as np
-from pims import FramesSequenceND
 from upath import UPath
 
+from .image_source_registry import register_slice_reader
+from .slice_reader import SliceReader
 from .vendor.dm3 import DM3  # type: ignore[attr-defined]
 from .vendor.dm3 import dT_str as DM3_DTYPE_MAPPING  # type: ignore[attr-defined]
 from .vendor.dm4 import DM4File  # type: ignore[attr-defined]
 
 
-class PimsDm3Reader(FramesSequenceND):
+@register_slice_reader
+class Dm3SliceReader(SliceReader):
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         return {"dm3"}
 
-    # class_priority is used in pims to pick the reader with the highest priority.
-    # Default is 10, and bioformats priority is 2.
-    # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
+    # The highest class_priority wins among eligible readers. 10 is the
+    # default; nothing else claims dm3.
     class_priority = 20
 
     def __init__(self, path: UPath) -> None:
@@ -28,28 +29,28 @@ class PimsDm3Reader(FramesSequenceND):
         self._init_axis("y", dm3_file.height)
         if dm3_file.depth > 1:
             self._init_axis("z", dm3_file.depth)
-            self._register_get_frame(self._get_frame, "zyx")
+            self._set_get_slice(self._get_slice, "zyx")
         else:
-            self._register_get_frame(self._get_frame, "yx")
+            self._set_get_slice(self._get_slice, "yx")
 
     @property  # potential @cached_property for py3.8+
     def pixel_type(self) -> np.dtype:
         dm3_file = DM3(self.path)
         return np.dtype(DM3_DTYPE_MAPPING[dm3_file._data_type])
 
-    def _get_frame(self, **ind: int) -> np.ndarray:
+    def _get_slice(self, **ind: int) -> np.ndarray:
         del ind
         return DM3(self.path).imagedata
 
 
-class PimsDm4Reader(FramesSequenceND):
+@register_slice_reader
+class Dm4SliceReader(SliceReader):
     @classmethod
-    def class_exts(cls) -> set[str]:
+    def supported_file_extensions(cls) -> set[str]:
         return {"dm4"}
 
-    # class_priority is used in pims to pick the reader with the highest priority.
-    # Default is 10, and bioformats priority is 2.
-    # See http://soft-matter.github.io/pims/v0.6.1/custom_readers.html#plugging-into-pims-s-open-function
+    # open_slice_reader() picks the eligible reader with the highest class_priority.
+    # 10 is the default; nothing else claims dm4.
     class_priority = 20
 
     def __init__(self, path: UPath) -> None:
@@ -75,13 +76,13 @@ class PimsDm4Reader(FramesSequenceND):
             self._init_axis("x", self._shape[0])
             self._init_axis("y", self._shape[1])
             if len(self._shape) == 2:
-                self._register_get_frame(self._get_frame, "yx")
+                self._set_get_slice(self._get_slice, "yx")
             else:
                 self._init_axis("z", self._shape[2])
-                self._register_get_frame(self._get_frame, "zyx")
+                self._set_get_slice(self._get_slice, "zyx")
 
     @contextmanager
-    def dm4_file(self) -> Iterator[DM4File]:
+    def dm4_file(self) -> Generator[DM4File]:
         with closing(DM4File.open(self.path)) as dm4_file:
             yield dm4_file
 
@@ -90,7 +91,7 @@ class PimsDm4Reader(FramesSequenceND):
         with self.dm4_file() as dm4_file:
             return np.dtype(dm4_file.read_tag_data_type(self._image_tag))
 
-    def _get_frame(self, **ind: int) -> np.ndarray:
+    def _get_slice(self, **ind: int) -> np.ndarray:
         del ind
         with self.dm4_file() as dm4_file:
             a = np.asarray(dm4_file.read_tag_data(self._image_tag))
