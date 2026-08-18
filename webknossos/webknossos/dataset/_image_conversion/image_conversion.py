@@ -210,23 +210,25 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 # even when there happen to be three of them, so those are only combined into
 # an RGB layer as a fallback when allow_multiple_layers=False; passing
 # allow_multiple_layers=True still splits them.
-_RGB_IMAGE_EXTENSIONS = frozenset({
-    "bmp",
-    "gif",
-    "ico",
-    "j2k",
-    "jp2",
-    "jpeg",
-    "jpg",
-    "pbm",
-    "pcx",
-    "pgm",
-    "png",
-    "ppm",
-    "targa",
-    "tga",
-    "webp",
-})
+_RGB_IMAGE_EXTENSIONS = frozenset(
+    {
+        "bmp",
+        "gif",
+        "ico",
+        "j2k",
+        "jp2",
+        "jpeg",
+        "jpg",
+        "pbm",
+        "pcx",
+        "pgm",
+        "png",
+        "ppm",
+        "targa",
+        "tga",
+        "webp",
+    }
+)
 
 
 def _describe_rgb_formats() -> str:
