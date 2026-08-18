@@ -27,6 +27,7 @@ from tests.data_fixtures import (
     write_n5_array,
     write_neuroglancer_precomputed_scale,
     write_ome_zarr_v3_group,
+    write_ozx_file,
     write_zarr_v3_array,
 )
 from tests.utils import (
@@ -1345,6 +1346,38 @@ def test_ome_zarr_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
         layer = ds.add_layer_from_images(
             group_path,
             layer_name="ome_zarr_layer",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
+
+
+def test_ozx_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
+    Z, Y, X = 4, 16, 16
+    finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
+    ozx_path = tmp_upath / "test.ozx"
+    axes = [
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    write_ozx_file(
+        ozx_path,
+        [
+            ("1", coarse, [1.0, 2.0, 2.0]),  # listed first, but coarser
+            ("0", finest, [1.0, 1.0, 1.0]),
+        ],
+        axes,
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ozx_path,
+            layer_name="ozx_layer",
             executor=executor,
         )
 

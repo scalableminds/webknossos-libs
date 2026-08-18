@@ -239,6 +239,7 @@ def _import_readers() -> str | None:
         dm_slice_reader,  # noqa: F401 unused-import
         n5_image_source,  # noqa: F401 unused-import
         neuroglancer_precomputed_image_source,  # noqa: F401 unused-import
+        ozx_image_source,  # noqa: F401 unused-import
         zarr_image_source,  # noqa: F401 unused-import
     )
 

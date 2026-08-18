@@ -23,20 +23,11 @@ from ..defaults import (
     ZATTRS_FILE_NAME,
     ZGROUP_FILE_NAME,
 )
-from ..errors import (
-    CorruptImageError,
-    UnsupportedImageDataError,
-    UnsupportedImageFormatError,
-)
+from ..errors import CorruptImageError
 from .image_source import ReadOptions, compute_channel_selection
 from .image_source_registry import register_chunked_image_source
-from .tensorstore_chunked_image_source import (
-    TensorStoreChunkedImageSource,
-    guess_axes,
-    normalize_axis,
-)
-
-_SUPPORTED_OME_VERSIONS = ("0.4", "0.5")
+from .ome_zarr_multiscale import resolve_ome_multiscale
+from .tensorstore_chunked_image_source import TensorStoreChunkedImageSource, guess_axes
 
 
 def _read_json(path: UPath, *, path_for_errors: UPath) -> Any:
@@ -47,53 +38,6 @@ def _read_json(path: UPath, *, path_for_errors: UPath) -> Any:
             f"Cannot read {path}. It is likely corrupted or not valid JSON.",
             path=path_for_errors,
         ) from e
-
-
-def _scale_transform(dataset: dict[str, Any], *, path: UPath) -> list[float]:
-    for transform in dataset.get("coordinateTransformations", ()):
-        if transform.get("type") == "scale":
-            return transform["scale"]
-    raise CorruptImageError(
-        f"OME-Zarr dataset {dataset.get('path')!r} of {path} has no 'scale' "
-        "coordinateTransformation.",
-        path=path,
-    )
-
-
-def _resolution_key(
-    dataset: dict[str, Any], axes: list[dict[str, Any]], *, path: UPath
-) -> float:
-    """Product of the spatial-axis scale factors — smaller is finer. Uses the
-    group's `axes` metadata to know which scale entries are spatial, rather
-    than assuming any particular list order."""
-    scale = _scale_transform(dataset, path=path)
-    if axes:
-        spatial_indices = [
-            i for i, axis in enumerate(axes) if axis.get("type") == "space"
-        ]
-    else:
-        spatial_indices = list(range(len(scale)))
-    product = 1.0
-    for i in spatial_indices:
-        product *= scale[i]
-    return product
-
-
-def _ome_axis_name(axis: dict[str, Any], *, path: UPath) -> str:
-    """The name (`t`/`c`/`z`/`y`/`x`) of one OME `axes` entry, from its `type`
-    (channel/time/space) and, for a space axis, its `name`."""
-    axis_type = axis.get("type")
-    if axis_type == "channel":
-        return "c"
-    if axis_type == "time":
-        return "t"
-    if axis_type in ("space", None):
-        return normalize_axis(axis.get("name", ""), path=path)
-    raise UnsupportedImageDataError(
-        f"Cannot place OME axis {axis!r} of {path} — only channel/time/space "
-        "axes are supported.",
-        path=path,
-    )
 
 
 @register_chunked_image_source
@@ -219,54 +163,19 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
     def _resolve_ome_multiscale(
         self, path: UPath, attributes: dict[str, Any], options: ReadOptions
     ) -> tuple[UPath, list[str] | None]:
-        multiscales = attributes.get("multiscales")
-        if not multiscales:
-            raise UnsupportedImageFormatError(
-                f"{path} is a Zarr group but not an OME-Zarr multiscale group "
-                "(no 'multiscales' metadata).",
-                path=path,
-            )
-        multiscale = multiscales[0]
-
-        # NGFF 0.4 (Zarr v2) carries "version" inside the multiscale entry;
-        # NGFF 0.5 (Zarr v3) carries it on the enclosing "ome" object instead
-        # — `attributes` is whichever of the two was passed in.
-        version = attributes.get("version") or multiscale.get("version")
-        if version not in _SUPPORTED_OME_VERSIONS:
-            raise UnsupportedImageFormatError(
-                f"{path} is an OME-Zarr multiscale group with version "
-                f"{version!r}; only {', '.join(_SUPPORTED_OME_VERSIONS)} are "
-                "supported.",
-                path=path,
-            )
-
-        datasets = multiscale.get("datasets") or []
-        if not datasets:
-            raise CorruptImageError(
-                f"OME-Zarr multiscale group {path} has no datasets.", path=path
-            )
-        axes = multiscale.get("axes", [])
-
-        # Rank 0 = finest, regardless of the metadata's own dataset order.
-        ranked_indices = sorted(
-            range(len(datasets)),
-            key=lambda i: _resolution_key(datasets[i], axes, path=path),
-        )
+        multiscale = resolve_ome_multiscale(attributes, path=path)
 
         rank = options.format_option("scale")
         rank = 0 if rank is None else rank
-        if not (0 <= rank < len(datasets)):
+        if not (0 <= rank < len(multiscale.dataset_paths)):
             raise ValueError(
                 f"scale {rank} does not exist in {path}. Available: "
-                f"{list(range(len(datasets)))}."
+                f"{list(range(len(multiscale.dataset_paths)))}."
             )
 
-        if len(datasets) > 1:
-            self._possible_layers["scale"] = list(range(len(datasets)))
+        if len(multiscale.dataset_paths) > 1:
+            self._possible_layers["scale"] = list(range(len(multiscale.dataset_paths)))
 
-        chosen_dataset = datasets[ranked_indices[rank]]
-        resolved_path = path / chosen_dataset["path"]
-        axis_names = (
-            [_ome_axis_name(axis, path=path) for axis in axes] if axes else None
-        )
+        resolved_path = path / multiscale.dataset_paths[rank]
+        axis_names = list(multiscale.axis_names) if multiscale.axis_names else None
         return resolved_path, axis_names

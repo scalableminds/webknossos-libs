@@ -10,9 +10,9 @@ import json
 import os
 import stat
 import uuid
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any
-from zipfile import ZipFile
+from zipfile import ZIP_STORED, ZipFile
 
 import h5py
 import httpx
@@ -74,6 +74,36 @@ def download_wklibs_sample_archive(name: str) -> UPath:
         finally:
             rmtree(tmp_dir)  # a no-op if already moved away above
     return dest_dir
+
+
+def download_wklibs_sample_file(name: str) -> UPath:
+    """Downloads `{name}` itself (no `.zip` wrapping/extraction, unlike
+    `download_wklibs_sample_archive`) from the wklibs-samples bucket into
+    CACHE_DIR, once ever (subsequent calls, including from later test runs,
+    reuse the cached download). For a sample that is already one file, such
+    as a `.ozx` archive."""
+    dest_path = CACHE_DIR / name
+    if not dest_path.exists():
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        tmp_path = _tmp_cache_path(name)
+        try:
+            with (
+                open(str(tmp_path), "wb") as tmp_file,
+                httpx.stream(
+                    "GET", f"{WKLIBS_SAMPLES_BASE_URL}/{name}", follow_redirects=True
+                ) as response,
+            ):
+                response.raise_for_status()
+                for chunk in response.iter_bytes():
+                    tmp_file.write(chunk)
+            # os.replace is atomic (both paths are under CACHE_DIR, i.e. the
+            # same filesystem), so a crash mid-download never leaves a
+            # half-written dest_path behind.
+            os.replace(str(tmp_path), str(dest_path))
+        finally:
+            if tmp_path.exists():
+                tmp_path.unlink()
+    return dest_path
 
 
 def create_synthetic_multi_timepoint_ims(
@@ -297,3 +327,26 @@ def write_ome_zarr_v3_group(
     )
     for rel_path, data, _ in datasets:
         write_zarr_v3_array(path / rel_path, data)
+
+
+def write_ozx_file(
+    path: UPath,
+    datasets: list[tuple[str, np.ndarray, list[float]]],
+    axes: list[dict[str, str]],
+) -> None:
+    """Writes `datasets` as a zipped OME-Zarr (`.ozx`, NGFF RFC-9) archive at
+    `path`: a v3 OME-Zarr multiscale group (see `write_ome_zarr_v3_group`),
+    written to a temporary directory and then zipped up uncompressed, with
+    the root `zarr.json` as the first entry — as RFC-9 recommends."""
+    with TemporaryDirectory() as tmp_dir:
+        group_path = UPath(tmp_dir) / "group"
+        write_ome_zarr_v3_group(group_path, datasets, axes)
+        with ZipFile(str(path), "w", compression=ZIP_STORED) as zip_file:
+            zip_file.write(str(group_path / "zarr.json"), "zarr.json")
+            for file_path in sorted(group_path.rglob("*")):
+                if file_path.is_dir():
+                    continue
+                rel_path = file_path.relative_to(group_path).as_posix()
+                if rel_path == "zarr.json":
+                    continue
+                zip_file.write(str(file_path), rel_path)
