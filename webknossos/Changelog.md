@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `UnsupportedImageFormatError`: no reader handles this format. Also carries the `file_extension`, the `supported_file_extensions`, and `missing_extras` — the extras to install when the format is only unsupported because an optional dependency is missing, e.g. `.ims` without `webknossos[ims]`.
     - `CorruptImageError`: the format is supported but the file could not be read, which usually means it is damaged or was uploaded incompletely. Previously a reader-specific error, or an aggregate of all readers' errors. Missing files and permission errors keep raising `FileNotFoundError`/`PermissionError`.
     - `UnsupportedImageDataError`: the images were read, but their data cannot be stored as requested, e.g. a float image converted into a segmentation layer, or extra axes with `data_format="wkw"`. Previously a `ValueError` or `RuntimeError`.
+- `Dataset.add_layer_from_images`/`from_images` now set a default layer color when splitting a multi-channel image into one layer per channel. [#1496](https://github.com/scalableminds/webknossos-libs/pull/1496)
 
 ### Changed
 - `.ims` and MRC file conversion now reads shard-sized blocks directly instead of slice-by-slice, improving conversion performance for large files. These formats are always read through a dedicated reader. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)

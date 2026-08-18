@@ -672,6 +672,49 @@ def test_multi_channel_16bit_tiff_needs_one_layer_per_channel(
         )
 
     assert set(ds.layers.keys()) == {f"color__channel{c}" for c in range(3)}
+    # Splitting a multi-channel image into layers defaults their colors to
+    # red, green, blue, so the layers overlay sensibly right away.
+    for c, expected_color in enumerate([(255, 0, 0), (0, 255, 0), (0, 0, 255)]):
+        view_configuration = ds.layers[f"color__channel{c}"].default_view_configuration
+        assert view_configuration is not None
+        assert view_configuration.color == expected_color
+
+
+def test_multi_channel_tiff_layer_split_colors_beyond_rgb(
+    tmp_upath: UPath,
+) -> None:
+    # A fourth (and any further) split-off channel layer still gets a color
+    # of its own — just not one of the fixed RGB ones, since there is no
+    # similarly universal convention past three channels.
+    tiff_path = tmp_upath / "four_channels.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((4, 8, 16), dtype="uint16"),
+        photometric="minisblack",
+        metadata={"axes": "CYX"},
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            tiff_path,
+            layer_name="color",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {f"color__channel{c}" for c in range(4)}
+    colors = []
+    for c in range(4):
+        view_configuration = ds.layers[f"color__channel{c}"].default_view_configuration
+        assert view_configuration is not None
+        assert view_configuration.color is not None
+        colors.append(view_configuration.color)
+
+    assert colors[:3] == [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+    # The fourth channel gets some other color, distinct from the first three.
+    assert colors[3] not in colors[:3]
+    assert all(0 <= component <= 255 for component in colors[3])
 
 
 def test_three_uint8_channel_tiff_becomes_rgb_layer_without_allow_multiple_layers(

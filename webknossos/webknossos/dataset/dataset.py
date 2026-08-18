@@ -1179,7 +1179,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         `.bmp`, …), or, as long as `allow_multiple_layers=False`, from any
         other source. Any other combination of channels needs one layer each,
         so this method raises `UnsupportedImageDataError` for them unless
-        `allow_multiple_layers=True` or `channel=<index>` is given.
+        `allow_multiple_layers=True` or `channel=<index>` is given. When
+        `allow_multiple_layers=True` does split channels into separate color
+        layers, the first three get `default_view_configuration.color` red,
+        green and blue respectively (further channels get other, evenly
+        spaced colors), so the layers overlay sensibly right away.
 
         Raises:
             UnsupportedImageFormatError: If no reader can convert `images`. Its

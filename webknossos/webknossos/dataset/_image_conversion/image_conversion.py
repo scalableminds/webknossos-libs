@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import colorsys
 import logging
 import warnings
 from collections.abc import Callable, Sequence
@@ -21,6 +22,7 @@ from ...dataset_properties import (
     DataFormat,
     LayerCategoryType,
     LayerProperties,
+    LayerViewConfiguration,
     SegmentationLayerProperties,
     VoxelSize,
 )
@@ -208,29 +210,48 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 # even when there happen to be three of them, so those are only combined into
 # an RGB layer as a fallback when allow_multiple_layers=False; passing
 # allow_multiple_layers=True still splits them.
-_RGB_IMAGE_EXTENSIONS = frozenset(
-    {
-        "bmp",
-        "gif",
-        "ico",
-        "j2k",
-        "jp2",
-        "jpeg",
-        "jpg",
-        "pbm",
-        "pcx",
-        "pgm",
-        "png",
-        "ppm",
-        "targa",
-        "tga",
-        "webp",
-    }
-)
+_RGB_IMAGE_EXTENSIONS = frozenset({
+    "bmp",
+    "gif",
+    "ico",
+    "j2k",
+    "jp2",
+    "jpeg",
+    "jpg",
+    "pbm",
+    "pcx",
+    "pgm",
+    "png",
+    "ppm",
+    "targa",
+    "tga",
+    "webp",
+})
 
 
 def _describe_rgb_formats() -> str:
     return ", ".join("." + extension for extension in sorted(_RGB_IMAGE_EXTENSIONS))
+
+
+# Colors assigned to the layers created by splitting a multi-channel image
+# into one layer per channel: the first three channels are so often the
+# acquisition's own red/green/blue-ish stains that defaulting to actual red,
+# green and blue makes the split layers overlay sensibly right away. Further
+# channels get evenly spaced hues instead of a fixed color, since there is no
+# similarly universal convention for a fourth, fifth, … channel.
+def _channel_layer_color(channel_index: int) -> tuple[int, int, int]:
+    if channel_index == 0:
+        return (255, 0, 0)
+    if channel_index == 1:
+        return (0, 255, 0)
+    if channel_index == 2:
+        return (0, 0, 255)
+
+    # The golden-angle increment spreads any number of additional channels
+    # across the hue circle so consecutive ones stay visually distinct.
+    hue = ((channel_index - 3) * 0.618033988749895) % 1.0
+    red, green, blue = colorsys.hsv_to_rgb(hue, 0.85, 1.0)
+    return (round(red * 255), round(green * 255), round(blue * 255))
 
 
 def _channels_are_one_rgb_layer(
@@ -712,6 +733,11 @@ def add_layer_from_images(
                     + "or channel=<index> to convert a single channel.",
                     path=images if isinstance(images, UPath) else None,
                 )
+
+    splitting_channels_into_layers = (
+        possible_layers is not None and "channel" in possible_layers
+    )
+
     # Further below, we iterate over suffix_with_pims_open_kwargs_per_layer in the for-loop
     # to add one layer per possible_layer if allow_multiple_layers is True.
     # If just a single layer is added, we still add a default value in the dict.
@@ -797,6 +823,15 @@ def add_layer_from_images(
             # themselves, or from the caller's `dtype` argument, so it is a
             # problem with the input rather than a programming error.
             raise UnsupportedImageDataError(str(e)) from e
+
+        if splitting_channels_into_layers and category == "color":
+            # pims_open_kwargs["channel"] is set for every layer here (it is
+            # one of the keys that produced suffix_with_pims_open_kwargs_per_layer's
+            # combinations), pinning this layer to the channel it was split
+            # off from.
+            layer.default_view_configuration = LayerViewConfiguration(
+                color=_channel_layer_color(pims_open_kwargs["channel"])
+            )
 
         expected_bbox = image_source.expected_bbox
 
