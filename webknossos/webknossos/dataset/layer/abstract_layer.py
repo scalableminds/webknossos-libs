@@ -32,6 +32,15 @@ if TYPE_CHECKING:
     )
 
 
+def channels_fit_one_layer(num_channels: int, dtype: np.dtype) -> bool:
+    """
+    Whether WEBKNOSSOS can display `num_channels` channels of `dtype` within a
+    single layer: one channel always works, and three uint8 channels are shown
+    as RGB. Every other combination has to become one layer per channel.
+    """
+    return num_channels == 1 or (num_channels == 3 and dtype.name == "uint8")
+
+
 def _validate_layer_name(layer_name: str) -> None:
     if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
         raise ValueError(
