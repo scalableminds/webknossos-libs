@@ -177,7 +177,7 @@ def test_public_apis_accept_vec3_float_like() -> None:
 
 
 def test_tree_color_accepts_vec3_float() -> None:
-    """A Vec3Float colour must be widened to RGBA, not element-wise added."""
+    """A Vec3Float color must be widened to RGBA, not element-wise added."""
     skeleton = Skeleton(voxel_size=(1, 1, 1), dataset_name="d")
     tree = skeleton.add_tree("t", color=Vec3Float(1.0, 0.0, 0.0))
     assert tree.color == (1.0, 0.0, 0.0, 1.0)

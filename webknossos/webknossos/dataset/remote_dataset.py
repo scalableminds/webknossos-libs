@@ -988,7 +988,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         datastore_url: str | None = None,
         lod: int = 0,
         mapping_name: str | None = None,
-        mapping_type: Literal["agglomerate", "json"] | None = None,
+        mapping_type: Literal["AGGLOMERATE", "JSON"] | None = None,
         mag: MagLike | None = None,
         seed_position: Vec3Int | None = None,
         token: str | None = None,
@@ -1672,7 +1672,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         flip_x: bool = False,
         flip_y: bool = False,
         flip_z: bool = False,
-        use_bioformats: bool = False,
         max_layers: int = 20,
         batch_size: int | None = None,
         executor: Executor | None = None,
@@ -1704,7 +1703,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             flip_x: Whether to flip the x axis
             flip_y: Whether to flip the y axis
             flip_z: Whether to flip the z axis
-            use_bioformats: Whether to use bioformats for reading, defaults to False
             max_layers: Maximum number of layers to create
             batch_size: Size of batches for processing
             executor: Optional executor for parallelization
@@ -1747,7 +1745,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 flip_x=flip_x,
                 flip_y=flip_y,
                 flip_z=flip_z,
-                use_bioformats=use_bioformats,
                 max_layers=max_layers,
                 batch_size=batch_size,
                 executor=executor,

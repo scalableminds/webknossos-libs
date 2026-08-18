@@ -43,7 +43,7 @@ class RemoteSegmentationLayer(
         datastore_url: str | None = None,
         lod: int = 0,
         mapping_name: str | None = None,
-        mapping_type: Literal["agglomerate", "json"] | None = None,
+        mapping_type: Literal["AGGLOMERATE", "JSON"] | None = None,
         mag: MagLike | None = None,
         seed_position: Vec3IntLike | None = None,
         token: str | None = None,

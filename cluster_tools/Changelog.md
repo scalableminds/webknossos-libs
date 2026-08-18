@@ -1,6 +1,6 @@
 # Change Log
 
-All notable changes to the cluser_tools library are documented in this file.
+All notable changes to the cluster_tools library are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
@@ -923,7 +923,7 @@ This module did not exist in 0.8.28. See the following notes about the mono-repo
 
 # Mono Repo Migration
 
-Before 0.8.29, cluser_tools did not exist in this repository. Instead, v1.1 to v1.61 were maintained in [this repository](https://github.com/scalableminds/cluster_tools/releases).
+Before 0.8.29, cluster_tools did not exist in this repository. Instead, v1.1 to v1.61 were maintained in [this repository](https://github.com/scalableminds/cluster_tools/releases).
 Note that 0.8.29 is newer than 1.61.
 The poor naming was a sacrifice during the mono-repo migration which enforced synchronized versioning between all packages (e.g., wkcuber and webknossos).
 To avoid version conflicts in the future, the first major release for webknossos-libs will be v2.
