@@ -26,7 +26,7 @@ from ..layer.view import MagView
 
 @dataclass(frozen=True)
 class ReadOptions:
-    """How to read a source, bundled as one value."""
+    """How to read an `ImageSource`, bundled as one value."""
 
     channel: int | None = None
     """The channel to convert, or None for all."""
@@ -112,8 +112,8 @@ class ImageSource(ABC):
     """How many channels will actually be written — already reduced by a pinned
     `channel` or by RGBA-to-RGB truncation."""
 
-    channels_are_colour: bool = False
-    """Whether the channels are colour components of one image rather than
+    channels_are_rgb: bool = False
+    """Whether the channels are RGB components of one image rather than
     separate acquisitions, which decides whether they share a layer."""
 
     @property

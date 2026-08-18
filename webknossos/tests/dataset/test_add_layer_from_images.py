@@ -751,7 +751,7 @@ def test_czi_from_images_multi_timepoint(tmp_upath: UPath) -> None:
 
 @requires_pylibczirw
 def test_czi_from_images_splits_czi_channels_into_layers(tmp_upath: UPath) -> None:
-    # A CZI "C" is a separate acquisition, not a colour channel, so each one
+    # A CZI "C" is a separate acquisition, not a RGB channel, so each one
     # becomes its own layer — and each must carry its own data.
     czi_path = tmp_upath / "multi_c.czi"
     data = create_synthetic_czi(czi_path, num_czi_channels=3, z=2, y=8, x=10)

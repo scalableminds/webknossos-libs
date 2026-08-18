@@ -58,8 +58,8 @@ class SingleImageSliceReader(SliceReader):
 
     class_priority = 12
 
-    # A three-channel png is a colour photograph, not three acquisitions.
-    channels_are_colour = True
+    # A three-channel png is an RGB photograph, not three acquisitions.
+    channels_are_rgb = True
 
     def __init__(self, filename: str, **kwargs: Any) -> None:
         super().__init__()
@@ -137,9 +137,9 @@ class MultiImageSliceReader(SliceReader):
 
         # imageio also decodes formats this class is not the preferred reader
         # for — a directory of TIFFs ends up here, where a "c" axis is separate
-        # acquisitions rather than colour. The files say which case this is.
+        # acquisitions rather than RGB. The files say which case this is.
         first_extension = os.path.splitext(self._filepaths[0])[1].lstrip(".").lower()
-        self.channels_are_colour = (
+        self.channels_are_rgb = (
             first_extension in SingleImageSliceReader.supported_file_extensions()
         )
 

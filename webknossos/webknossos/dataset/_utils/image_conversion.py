@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import warnings
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from enum import Enum, unique
 from itertools import product
@@ -82,7 +82,7 @@ _SLICED_SOURCE_MODULE = sliced_image_source.__name__.rsplit(".", 1)[-1]
 @contextmanager
 def _quiet_reader_warnings(
     sliced_source_action: Literal["ignore", "once"] = "ignore",
-) -> Iterator[None]:
+) -> Generator[None]:
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore", category=UserWarning, module=_RASTER_SLICE_READER_MODULE
@@ -219,7 +219,7 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 
 
 def _describe_rgb_formats() -> str:
-    """The formats whose channels mean colour, for the error message naming
+    """The formats whose channels mean RGB, for the error message naming
     which ones can share a layer."""
     return ", ".join(
         "." + extension
@@ -247,7 +247,7 @@ def _channels_are_one_rgb_layer(
     """
     if num_source_channels == 1:
         return True
-    if not image_source.channels_are_colour:
+    if not image_source.channels_are_rgb:
         return False
     # An RGBA image is written as RGB with the alpha channel dropped, unless the
     # caller asked to keep every channel, in which case they become layers.

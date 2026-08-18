@@ -163,8 +163,8 @@ class SliceReader(ABC):
     # general-purpose ones sets something above it.
     class_priority: int = 10
 
-    channels_are_colour: bool = False
-    """Whether a "c" axis of this reader holds colour components rather than
+    channels_are_rgb: bool = False
+    """Whether a "c" axis of this reader holds RGB components rather than
     separate acquisitions."""
 
     @classmethod

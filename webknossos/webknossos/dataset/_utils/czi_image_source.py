@@ -15,7 +15,7 @@ try:
 except ImportError as e:
     raise WkImportError("pylibCZIrw", "czi") from e
 
-# Each CZI pixel type fixes both the dtype of a voxel and how many colour
+# Each CZI pixel type fixes both the dtype of a voxel and how many RGB
 # components it carries. Gray* is a single component, Bgr* three, Bgra* four.
 PIXEL_TYPES: dict[str, tuple[str, int]] = {
     "Gray8": ("uint8", 1),
@@ -32,7 +32,7 @@ PIXEL_TYPES: dict[str, tuple[str, int]] = {
 }
 
 # Dimensions this reader can place. "C" is deliberately absent: a CZI "C" is a
-# separate acquisition channel, selected with czi_channel, not a colour
+# separate acquisition channel, selected with czi_channel, not a RGB
 # component of one image (those come from the pixel type instead).
 _SUPPORTED_DIMS = frozenset({"X", "Y", "Z", "T", "C"})
 
@@ -47,7 +47,7 @@ class CziImageSource(ChunkedImageSource):
 
     A CZI "C" dimension holds separate acquisition channels, which may even
     differ in pixel type. It is selected with `czi_channel` rather than being
-    written as colour channels — the colour components of one image come from
+    written as RGB channels — the RGB components of one image come from
     its pixel type (Gray/Bgr/Bgra).
     """
 

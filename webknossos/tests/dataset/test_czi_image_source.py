@@ -10,7 +10,9 @@ pytest.importorskip("pylibCZIrw")
 
 from tests.utils import create_synthetic_czi  # noqa: E402
 from webknossos.dataset import UnsupportedImageDataError  # noqa: E402
-from webknossos.dataset._utils.czi_image_source import CziImageSource  # noqa: E402
+from webknossos.dataset._utils.czi_image_source import (
+    CziImageSource,  # noqa: E402
+)
 from webknossos.dataset._utils.image_source import ReadOptions  # noqa: E402
 
 
@@ -28,7 +30,7 @@ def test_czi_image_source_metadata(tmp_upath: UPath) -> None:
 
     assert source.dtype == np.dtype("uint16")
     # A CZI "C" holds separate acquisitions, so it is offered as a layer split
-    # rather than written as colour channels: one channel per layer.
+    # rather than written as RGB channels: one channel per layer.
     assert source.num_channels == 1
     assert source.get_possible_layers() == {"czi_channel": [0, 1]}
     assert source.expected_bbox.size.to_tuple() == (10, 8, 4)

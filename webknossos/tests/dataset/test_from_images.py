@@ -439,7 +439,9 @@ def test_optional_reader_extensions_match_supported_file_extensions() -> None:
     # wrong formats, or silently stops covering one. Covers both strategies:
     # slice readers are just as optional as chunked ones now that tifffile is
     # not in the base install.
-    from webknossos.dataset._utils.chunked_image_source import ChunkedImageSource
+    from webknossos.dataset._utils.chunked_image_source import (
+        ChunkedImageSource,
+    )
     from webknossos.dataset._utils.image_source_registry import (
         _CHUNKED_READER_CLASSES,
         _OPTIONAL_READERS,

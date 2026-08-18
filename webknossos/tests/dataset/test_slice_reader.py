@@ -245,7 +245,7 @@ def test_open_images_dispatches_on_extension(tmp_upath: UPath) -> None:
 
 
 def test_open_images_prefers_higher_class_priority(tmp_upath: UPath) -> None:
-    # Both TiffSliceReader (19) and, in principle, any lower-priority reader claim
+    # Both TiffSliceReader (priority=19) and, in principle, any lower-priority reader claim
     # .tif; the dedicated one has to win because it understands axis metadata.
     tif_path = tmp_upath / "single.tif"
     Image.fromarray(np.zeros((4, 6), dtype="uint8")).save(str(tif_path))
