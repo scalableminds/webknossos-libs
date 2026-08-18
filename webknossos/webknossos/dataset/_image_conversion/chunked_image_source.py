@@ -82,26 +82,22 @@ class ChunkedImageSource(ImageSource):
         The exact bounding box of the data, in the source's native Mag(1)
         space — never a placeholder, since these formats know their extents.
 
-        Reports every axis the source has, including "c" when more than one
-        channel is written and "t" for unpinned multi-timepoint data.
+        Channels are never reported as a "c" axis here: like every other
+        layer bounding box, this describes only the spatial (and, for
+        unpinned multi-timepoint data, "t") extent — the channel count is
+        conveyed separately, via the `num_channels` passed to `add_layer()`,
+        whether the channels end up combined into one layer or split into
+        one layer each.
         """
         x_size, y_size = self._x, self._y
         if self._options.swap_xy:
             x_size, y_size = y_size, x_size
 
-        if not self._include_t_axis and self.num_channels == 1:
+        if not self._include_t_axis:
             return BoundingBox((0, 0, 0), (x_size, y_size, self._z))
 
-        # "c" is kept whole rather than split, so each chunk still gets the
-        # full channel extent.
-        axes = ["x", "y", "z"]
-        sizes = [x_size, y_size, self._z]
-        if self.num_channels > 1:
-            axes.insert(0, "c")
-            sizes.insert(0, self.num_channels)
-        if self._include_t_axis:
-            axes.insert(0, "t")
-            sizes.insert(0, self._t)
+        axes = ["t", "x", "y", "z"]
+        sizes = [self._t, x_size, y_size, self._z]
         return NDBoundingBox(
             VecInt.zeros(tuple(axes)),
             VecInt(sizes, axes=axes),

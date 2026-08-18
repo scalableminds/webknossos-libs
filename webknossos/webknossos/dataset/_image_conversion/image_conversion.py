@@ -7,6 +7,7 @@ here, keeping the public API and docstrings on the `Dataset` class itself.
 
 from __future__ import annotations
 
+import colorsys
 import logging
 import warnings
 from collections.abc import Callable, Generator, Sequence
@@ -29,6 +30,7 @@ from ...dataset_properties import (
     DataFormat,
     LayerCategoryType,
     LayerProperties,
+    LayerViewConfiguration,
     SegmentationLayerProperties,
     VoxelSize,
 )
@@ -218,10 +220,14 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
 
 
 # Formats whose channels mean RGB rather than separate acquisitions: the
-# everyday 2D image formats, where three uint8 channels are RGB and belong in
-# one layer. Everything else — scientific formats such as TIFF, CZI, DM3/DM4,
-# .ims and MRC — stores one acquisition channel per channel, which users almost
-# always want as separate layers, even when there happen to be three of them.
+# everyday 2D image formats, where three uint8 channels are RGB and always
+# belong in one layer, regardless of allow_multiple_layers (see
+# SingleImageSliceReader.channels_are_rgb). Everything else — scientific
+# formats such as TIFF, CZI, DM3/DM4, .ims and MRC — stores one acquisition
+# channel per channel, which users may want as separate layers even when
+# there happen to be three of them, so those are only combined into an RGB
+# layer as a fallback when allow_multiple_layers=False; passing
+# allow_multiple_layers=True still splits them.
 _RGB_IMAGE_EXTENSIONS = frozenset(
     {
         "bmp",
@@ -236,6 +242,27 @@ _RGB_IMAGE_EXTENSIONS = frozenset(
 
 def _describe_rgb_formats() -> str:
     return ", ".join("." + extension for extension in sorted(_RGB_IMAGE_EXTENSIONS))
+
+
+# Colors assigned to the layers created by splitting a multi-channel image
+# into one layer per channel: the first three channels are so often the
+# acquisition's own red/green/blue-ish stains that defaulting to actual red,
+# green and blue makes the split layers overlay sensibly right away. Further
+# channels get evenly spaced hues instead of a fixed color, since there is no
+# similarly universal convention for a fourth, fifth, … channel.
+def _channel_layer_color(channel_index: int) -> tuple[int, int, int]:
+    if channel_index == 0:
+        return (255, 0, 0)
+    if channel_index == 1:
+        return (0, 255, 0)
+    if channel_index == 2:
+        return (0, 0, 255)
+
+    # The golden-angle increment spreads any number of additional channels
+    # across the hue circle so consecutive ones stay visually distinct.
+    hue = ((channel_index - 3) * 0.618033988749895) % 1.0
+    red, green, blue = colorsys.hsv_to_rgb(hue, 0.85, 1.0)
+    return (round(red * 255), round(green * 255), round(blue * 255))
 
 
 def _channels_are_one_rgb_layer(
@@ -516,14 +543,29 @@ def add_layer_from_images(
             assert possible_layers is not None
             del possible_layers["channel"]
         elif not allow_multiple_layers:
-            raise UnsupportedImageDataError(
-                f"Cannot write these {len(source_channels)} channels into a "
-                + "single layer: WEBKNOSSOS only combines several channels into "
-                + f"one layer as RGB (three uint8 channels of {_describe_rgb_formats()}). "
-                + "Set allow_multiple_layers=True to write one layer per channel, "
-                + "or channel=<index> to convert a single channel.",
-                path=image_paths if isinstance(image_paths, UPath) else None,
-            )
+            if channels_fit_one_layer(len(source_channels), layer_dtype):
+                # Not one of the RGB image formats, but three uint8 channels
+                # still display as RGB in WEBKNOSSOS, so write them into one
+                # layer instead of erroring, since the caller did not ask for
+                # separate layers via allow_multiple_layers=True.
+                assert possible_layers is not None
+                del possible_layers["channel"]
+            else:
+                raise UnsupportedImageDataError(
+                    f"Cannot write these {len(source_channels)} channels into a "
+                    + "single layer: WEBKNOSSOS only combines several channels into "
+                    + f"one layer as RGB (three uint8 channels of {_describe_rgb_formats()}). "
+                    + "Set allow_multiple_layers=True to write one layer per channel, "
+                    + "or channel=<index> to convert a single channel.",
+                    path=image_paths if isinstance(image_paths, UPath) else None,
+                )
+    # "channel" only survives in possible_layers when its channels are being
+    # split into one layer each (both branches above delete it once the
+    # channels are combined into a single RGB layer instead), so this is
+    # exactly the condition under which the per-channel colors below apply.
+    splitting_channels_into_layers = (
+        possible_layers is not None and "channel" in possible_layers
+    )
     # One layer is added per entry below, named with its suffix; a single
     # entry with an empty suffix and selection means just one default layer.
     if possible_layers is not None and len(possible_layers) > 0:
@@ -597,6 +639,15 @@ def add_layer_from_images(
             # themselves, or from the caller's `dtype` argument, so it is a
             # problem with the input rather than a programming error.
             raise UnsupportedImageDataError(str(e)) from e
+
+        if splitting_channels_into_layers and category == "color":
+            # layer_selection["channel"] is set for every layer here (it is
+            # one of the keys that produced suffix_with_open_kwargs_per_layer's
+            # combinations), pinning this layer to the channel it was split
+            # off from.
+            layer.default_view_configuration = LayerViewConfiguration(
+                color=_channel_layer_color(layer_selection["channel"])
+            )
 
         expected_bbox = image_source.expected_bbox
 

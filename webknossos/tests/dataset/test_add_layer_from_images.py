@@ -494,8 +494,16 @@ def test_ims_from_images_multi_timepoint(
         assert (data[t] == t * 100).all()
 
 
-@pytest.mark.parametrize("dtype", [np.uint8, np.uint16])
-@pytest.mark.parametrize("num_channels", [2, 3, 4])
+@pytest.mark.parametrize(
+    "num_channels,dtype",
+    [
+        (2, np.uint8),
+        (2, np.uint16),
+        (3, np.uint16),
+        (4, np.uint8),
+        (4, np.uint16),
+    ],
+)
 def test_ims_multi_channel_needs_one_layer_per_channel(
     tmp_upath: UPath,
     monkeypatch: pytest.MonkeyPatch,
@@ -503,10 +511,12 @@ def test_ims_multi_channel_needs_one_layer_per_channel(
     dtype: DTypeLike,
 ) -> None:
     # .ims stores one acquisition channel per channel, so they belong in
-    # separate layers whatever their number and dtype — the uint8 RGB exception
-    # is for image formats that store RGB, not for scientific formats. Three
-    # uint8 channels are therefore refused here too, and four channels are not
-    # treated as RGBA either.
+    # separate layers whatever their number and dtype — except three uint8
+    # channels, which fall back to a single RGB layer just like any other
+    # format does without allow_multiple_layers=True (see
+    # test_ims_three_uint8_channels_become_rgb_layer_without_allow_multiple_layers
+    # below). Four channels are never treated as RGBA outside of an RGB image
+    # format, regardless of dtype.
     ims_path = tmp_upath / "synthetic_multi_c.ims"
     create_synthetic_multi_timepoint_ims(
         ims_path,
@@ -551,6 +561,62 @@ def test_ims_multi_channel_needs_one_layer_per_channel(
         assert layer.dtype == np.dtype(dtype)
         assert layer.bounding_box.axes == ("x", "y", "z")
         assert (layer.get_finest_mag().read()[0] == c).all()
+
+
+def test_ims_three_uint8_channels_become_rgb_layer_without_allow_multiple_layers(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # .ims is not an RGB image format, but three uint8 channels still display
+    # as RGB in WEBKNOSSOS, so without allow_multiple_layers=True they fall
+    # back to a single layer instead of raising. Passing
+    # allow_multiple_layers=True explicitly still splits them into one layer
+    # per channel, same as any other channel count.
+    num_channels = 3
+    dtype = np.uint8
+    ims_path = tmp_upath / "synthetic_multi_c.ims"
+    create_synthetic_multi_timepoint_ims(
+        ims_path,
+        num_timepoints=1,
+        num_channels=num_channels,
+        z=4,
+        y=8,
+        x=10,
+        dtype=dtype,
+    )
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_image_source"
+    )
+    monkeypatch.setattr(
+        ims_image_source,
+        "_read_ims_metadata_quietly",
+        lambda _path: ((1, num_channels, 4, 8, 10), np.dtype(dtype)),
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ims_path, layer_name="multi_c", data_format="zarr3", executor=executor
+        )
+
+        assert set(ds.layers.keys()) == {"multi_c"}
+        assert layer.num_channels == num_channels
+        assert layer.dtype == np.dtype(dtype)
+
+        ds.add_layer_from_images(
+            ims_path,
+            layer_name="multi_c_split",
+            data_format="zarr3",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"multi_c"} | {
+        f"multi_c_split__channel{c}" for c in range(num_channels)
+    }
+    for c in range(num_channels):
+        split_layer = ds.layers[f"multi_c_split__channel{c}"]
+        assert split_layer.num_channels == 1
+        assert split_layer.dtype == np.dtype(dtype)
 
 
 @pytest.mark.parametrize(
@@ -611,6 +677,86 @@ def test_multi_channel_16bit_tiff_needs_one_layer_per_channel(
         )
 
     assert set(ds.layers.keys()) == {f"color__channel{c}" for c in range(3)}
+    # Splitting a multi-channel image into layers defaults their colors to
+    # red, green, blue, so the layers overlay sensibly right away.
+    for c, expected_color in enumerate([(255, 0, 0), (0, 255, 0), (0, 0, 255)]):
+        view_configuration = ds.layers[f"color__channel{c}"].default_view_configuration
+        assert view_configuration is not None
+        assert view_configuration.color == expected_color
+
+
+def test_multi_channel_tiff_layer_split_colors_beyond_rgb(
+    tmp_upath: UPath,
+) -> None:
+    # A fourth (and any further) split-off channel layer still gets a color
+    # of its own — just not one of the fixed RGB ones, since there is no
+    # similarly universal convention past three channels.
+    tiff_path = tmp_upath / "four_channels.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((4, 8, 16), dtype="uint16"),
+        photometric="minisblack",
+        metadata={"axes": "CYX"},
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            tiff_path,
+            layer_name="color",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {f"color__channel{c}" for c in range(4)}
+    colors = []
+    for c in range(4):
+        view_configuration = ds.layers[f"color__channel{c}"].default_view_configuration
+        assert view_configuration is not None
+        assert view_configuration.color is not None
+        colors.append(view_configuration.color)
+
+    assert colors[:3] == [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+    # The fourth channel gets some other color, distinct from the first three.
+    assert colors[3] not in colors[:3]
+    assert all(0 <= component <= 255 for component in colors[3])
+
+
+def test_three_uint8_channel_tiff_becomes_rgb_layer_without_allow_multiple_layers(
+    tmp_upath: UPath,
+) -> None:
+    # .tif is not in the RGB-extension allowlist, but three uint8 channels
+    # still display as RGB in WEBKNOSSOS, so without allow_multiple_layers=True
+    # they fall back to a single layer instead of raising, same as the uint16
+    # case above raises. allow_multiple_layers=True still splits them.
+    tiff_path = tmp_upath / "three_channels.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((3, 8, 16), dtype="uint8"),
+        photometric="minisblack",
+        metadata={"axes": "CYX"},
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path, layer_name="color", executor=executor
+        )
+
+        assert set(ds.layers.keys()) == {"color"}
+        assert layer.num_channels == 3
+        assert layer.dtype == np.dtype("uint8")
+
+        ds.add_layer_from_images(
+            tiff_path,
+            layer_name="color_split",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"color"} | {
+        f"color_split__channel{c}" for c in range(3)
+    }
 
 
 def test_add_layer_from_images_channel_argument_avoids_the_split(
