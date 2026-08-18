@@ -8,7 +8,7 @@ from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError, UnsupportedImageDataError
 from .chunked_image_source import ChunkedImageSource
 from .image_source import ReadOptions, compute_channel_selection
-from .image_source_registry import register_chunked_reader
+from .image_source_registry import register_chunked_image_source
 
 try:
     from pylibCZIrw import czi as pyczi
@@ -37,7 +37,7 @@ PIXEL_TYPES: dict[str, tuple[str, int]] = {
 _SUPPORTED_DIMS = frozenset({"X", "Y", "Z", "T", "C"})
 
 
-@register_chunked_reader
+@register_chunked_image_source
 class CziImageSource(ChunkedImageSource):
     """
     ChunkedImageSource for Zeiss .czi files. CZI stores its data as tiled

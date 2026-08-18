@@ -51,7 +51,7 @@ from ..layer.abstract_layer import (
     channels_fit_one_layer,
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
-from . import raster_slice_reader, sliced_image_source
+from . import common_slice_readers, sliced_image_source
 from .image_source import ImageSource, ReadOptions
 from .image_source_registry import (
     describe_missing_extras,
@@ -59,7 +59,6 @@ from .image_source_registry import (
     get_valid_extensions,
     open_image_source,
 )
-from .raster_slice_reader import SingleImageSliceReader
 from .segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
@@ -75,7 +74,7 @@ logger = logging.getLogger(__name__)
 # who named one input, not for every file of a bulk conversion. Taken from the
 # modules themselves because filterwarnings matches on the module name, which a
 # rename would otherwise silently break.
-_RASTER_SLICE_READER_MODULE = raster_slice_reader.__name__.rsplit(".", 1)[-1]
+_COMMON_SLICE_READERS_MODULE = common_slice_readers.__name__.rsplit(".", 1)[-1]
 _SLICED_SOURCE_MODULE = sliced_image_source.__name__.rsplit(".", 1)[-1]
 
 
@@ -85,7 +84,7 @@ def _quiet_reader_warnings(
 ) -> Generator[None]:
     with warnings.catch_warnings():
         warnings.filterwarnings(
-            "ignore", category=UserWarning, module=_RASTER_SLICE_READER_MODULE
+            "ignore", category=UserWarning, module=_COMMON_SLICE_READERS_MODULE
         )
         warnings.filterwarnings(
             sliced_source_action, category=UserWarning, module=_SLICED_SOURCE_MODULE
@@ -218,13 +217,25 @@ def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
     return found
 
 
+# Formats whose channels mean RGB rather than separate acquisitions: the
+# everyday 2D image formats, where three uint8 channels are RGB and belong in
+# one layer. Everything else — scientific formats such as TIFF, CZI, DM3/DM4,
+# .ims and MRC — stores one acquisition channel per channel, which users almost
+# always want as separate layers, even when there happen to be three of them.
+_RGB_IMAGE_EXTENSIONS = frozenset(
+    {
+        "bmp",
+        "gif",
+        "ico",
+        "jpeg",
+        "jpg",
+        "png",
+    }
+)
+
+
 def _describe_rgb_formats() -> str:
-    """The formats whose channels mean RGB, for the error message naming
-    which ones can share a layer."""
-    return ", ".join(
-        "." + extension
-        for extension in sorted(SingleImageSliceReader.supported_file_extensions())
-    )
+    return ", ".join("." + extension for extension in sorted(_RGB_IMAGE_EXTENSIONS))
 
 
 def _channels_are_one_rgb_layer(

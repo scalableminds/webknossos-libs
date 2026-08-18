@@ -33,7 +33,7 @@ def register_slice_reader(cls: type[SliceReader]) -> type[SliceReader]:
     return cls
 
 
-def register_chunked_reader(
+def register_chunked_image_source(
     cls: type[ChunkedImageSource],
 ) -> type[ChunkedImageSource]:
     _CHUNKED_READER_CLASSES.append(cls)
@@ -70,7 +70,7 @@ def open_images(path_spec: str, **kwargs: object) -> SliceReader:
     raises.
     """
     # Deferred to avoid a cycle: the raster readers register themselves here.
-    from .raster_slice_reader import MultiImageSliceReader
+    from .common_slice_readers import MultiImageSliceReader
 
     if len(glob.glob(path_spec)) > 1:
         return MultiImageSliceReader(path_spec, **kwargs)
@@ -154,8 +154,6 @@ class _OptionalReader(NamedTuple):
     whose dependency is missing never imports and so cannot be asked."""
 
 
-# Every optional reader, declared once. Slice readers are as optional as
-# chunked ones now that tifffile is not in the base install.
 _OPTIONAL_READERS: tuple[_OptionalReader, ...] = (
     _OptionalReader(
         "tiff_slice_reader", "TiffSliceReader", "tifffile", frozenset({"tif", "tiff"})
@@ -208,8 +206,8 @@ def _import_readers() -> str | None:
     # No optional dependency beyond imageio, which is a hard requirement — but
     # imported here so that every reader registers in one place.
     from . import (
+        common_slice_readers,  # noqa: F401 unused-import
         dm_slice_reader,  # noqa: F401 unused-import
-        raster_slice_reader,  # noqa: F401 unused-import
     )
 
     for reader in _OPTIONAL_READERS:

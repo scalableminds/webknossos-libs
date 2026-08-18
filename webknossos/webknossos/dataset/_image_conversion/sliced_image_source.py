@@ -19,6 +19,7 @@ from ..errors import (
     UnsupportedImageFormatError,
 )
 from ..layer.view import MagView
+from .common_slice_readers import MultiImageSliceReader, StackedFileSliceReader
 from .image_source import (
     ChunkResult,
     ImageSource,
@@ -32,7 +33,6 @@ from .image_source_registry import (
     get_valid_slice_reader_extensions,
     open_images,
 )
-from .raster_slice_reader import MultiImageSliceReader, StackedFileSliceReader
 from .slice_reader import SliceReader, _SlicedView
 
 # The x/y extent is only discovered while reading, so the layer starts out
@@ -41,6 +41,18 @@ SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
 
 
 class SlicedImageSource(ImageSource):
+    """
+    ImageSource for formats read one 2D slice at a time (common raster image
+    formats, TIFF, DM3/DM4) rather than in arbitrary boxes, via a
+    `SliceReader`. Extents are not known upfront, so conversion starts with
+    an oversized placeholder bbox and `final_bounding_box` corrects it from
+    what was actually written.
+
+    Composes a `SliceReader` rather than subclassing one, re-opening it for
+    every chunk: sources are pickled across processes and must not carry open
+    file handles between calls.
+    """
+
     # Set once the axes are known; kept as bare annotations rather than
     # assignments so their presence can be checked with hasattr().
     _bundle_axes: list[str]
@@ -51,11 +63,17 @@ class SlicedImageSource(ImageSource):
         image_paths: UPath | list[UPath],
         options: ReadOptions,
     ) -> None:
-        """
-        Sorts the reader's axes into the two lists that shape every slice:
-        `_iter_axes`, what the sequence steps through (empty for a single 2D
-        image), and `_bundle_axes`, what one slice is — "y" and "x", preceded
-        by "c" when several channels are written.
+        """Opens the reader once to discover its dtype and axes, then works
+        out how to present every slice and how channels are selected.
+
+        Sets `dtype` and `channels_are_rgb` from the reader, and derives
+        `_bundle_axes` (what one slice is — "y" and "x", preceded by "c" when
+        there are several channels) and `_iter_axes` (what is stepped through
+        per slice, "z" last so it varies fastest; empty for a single 2D
+        image). `num_channels`, `_channel` and `_first_n_channels` come from
+        `compute_channel_selection`, which also fills
+        `_possible_layers["channel"]` when the channels could be split across
+        layers.
         """
         # `images` below always refers to an opened reader, never to this
         # argument.

@@ -7,7 +7,7 @@ from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError, UnsupportedImageDataError
 from .chunked_image_source import ChunkedImageSource
 from .image_source import ReadOptions
-from .image_source_registry import register_chunked_reader
+from .image_source_registry import register_chunked_image_source
 
 try:
     import mrcfile
@@ -15,7 +15,7 @@ except ImportError as e:
     raise WkImportError("mrcfile", "mrcfile") from e
 
 
-@register_chunked_reader
+@register_chunked_image_source
 class MrcImageSource(ChunkedImageSource):
     """
     ChunkedImageSource for MRC files. MRC data is stored as a single

@@ -12,7 +12,7 @@ from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError
 from .chunked_image_source import ChunkedImageSource
 from .image_source import ReadOptions, compute_channel_selection
-from .image_source_registry import register_chunked_reader
+from .image_source_registry import register_chunked_image_source
 
 try:
     from imaris_ims_file_reader.ims import ims as ImsFile
@@ -39,12 +39,12 @@ def _read_ims_metadata_quietly(
     return shape, dtype  # type: ignore[return-value]
 
 
-@register_chunked_reader
+@register_chunked_image_source
 class ImsImageSource(ChunkedImageSource):
     """
     ChunkedImageSource for Imaris .ims files. Reads shard-sized 3D blocks
     straight out of the underlying HDF5 file via h5py and writes them to
-    mag_view. This is the only supported way .ims files are read.
+    mag_view.
     """
 
     @classmethod

@@ -38,7 +38,7 @@ class ReadOptions:
     """Axis swap/mirror options applied while copying a chunk."""
 
     format_options: Mapping[str, int | None] = field(default_factory=dict)
-    """Knobs only some formats understand, e.g. `czi_channel`. A source reads
+    """Conversion options only some formats understand, e.g. `czi_channel`. A source reads
     the names it knows and ignores the rest."""
 
     def format_option(self, name: str) -> int | None:
@@ -67,7 +67,7 @@ class ChannelSelection(NamedTuple):
     """A single pinned channel index, or None if all of them are used."""
 
     first_n_channels: int | None
-    """Truncation to the first 3 of 3-or-more channels (e.g. RGB out of RGBA),
+    """Truncation to the first n channels (e.g. RGB out of RGBA),
     or None when none applies."""
 
     possible_channels: list[int] | None
@@ -148,8 +148,8 @@ class ImageSource(ABC):
         Conventions every implementation shares, so that output is
         interchangeable:
 
-        * `swap_xy` swaps which source axis feeds which output axis.
-        * `flip_x` mirrors the source's **y** axis and `flip_y` its **x** axis
+        * `ReadOptions.swap_xy` swaps which source axis feeds which output axis.
+        * `ReadOptions.flip_x` mirrors the source's **y** axis and `ReadOptions.flip_y` its **x** axis
           — the axes are named for the output, not the source. Each flip
           mirrors the whole extent, never one chunk in isolation.
         * When `dtype` is given, data is converted with `order="F"`.
