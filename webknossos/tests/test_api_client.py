@@ -1,6 +1,7 @@
 import pytest
 
 from webknossos.client.api_client import WkApiClient
+from webknossos.client.api_client.datastore_api_client import DatastoreApiClient
 from webknossos.client.api_client.models import ApiDataStore
 from webknossos.client.context import _get_api_client
 from webknossos.dataset_properties import DatasetProperties
@@ -79,3 +80,24 @@ def test_build_info(client: WkApiClient) -> None:
     assert api_build_info.webknossos.name == "webknossos"
     assert api_build_info.local_data_store_enabled
     assert api_build_info.local_tracing_store_enabled
+
+
+def test_datastore_api_client_paths() -> None:
+    """These routes are also used to look up RemoteDataset's per-mode properties."""
+    client = DatastoreApiClient(datastore_base_url=DATASTORE_URL, timeout_seconds=30)
+    assert client.url_prefix == f"{DATASTORE_URL}/data/v{client.webknossos_api_version}"
+
+    dataset_id = "59e9cfbdba632ac2ab8b23b5"
+    annotation_id = "570ba0092a7c0e980056fe9b"
+    assert (
+        client.zarr_streaming_dataset_url(dataset_id)
+        == f"{client.url_prefix}/zarr/{dataset_id}/"
+    )
+    assert (
+        client.zarr_streaming_annotation_url(annotation_id)
+        == f"{client.url_prefix}/annotations/zarr/{annotation_id}/"
+    )
+    assert (
+        client.proxy_dataset_url(dataset_id)
+        == f"{client.url_prefix}/datasets/{dataset_id}/proxy/"
+    )

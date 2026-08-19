@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING, TypeGuard
 import attr
 from upath import UPath
 
-from .....dataset_properties import AttachmentDataFormat, AttachmentsProperties
+from .....dataset_properties import (
+    AttachmentDataFormat,
+    AttachmentProperties,
+    AttachmentsProperties,
+    SegmentationLayerProperties,
+)
 from .....utils import (
     cheap_resolve,
     copytree,
@@ -30,6 +35,7 @@ from .attachment import (
 )
 
 if TYPE_CHECKING:
+    from ....remote_access_mode import RemoteAccessMode
     from ... import (
         AbstractSegmentationLayer,
         RemoteSegmentationLayer,
@@ -80,14 +86,21 @@ class AbstractAttachments:
     def __init__(self, layer: "AbstractSegmentationLayer"):
         self._layer = layer
 
+    def _attachment_path(
+        self,
+        attachment: AttachmentProperties,
+        type_name: str,  # noqa: ARG002 only used by the RemoteAttachments override
+    ) -> UPath:
+        """Resolves the stored path of an attachment into a usable path."""
+        return enrich_path(attachment.path, self._get_optional_dataset_path())
+
     @property
     def meshes(self) -> tuple[MeshAttachment, ...]:
         if self._properties.meshes is None:
             return tuple()
         return tuple(
             MeshAttachment(
-                attachment,
-                enrich_path(attachment.path, self._get_optional_dataset_path()),
+                attachment, self._attachment_path(attachment, MeshAttachment.type_name)
             )
             for attachment in self._properties.meshes
         )
@@ -99,7 +112,7 @@ class AbstractAttachments:
         return tuple(
             AgglomerateAttachment(
                 attachment,
-                enrich_path(attachment.path, self._get_optional_dataset_path()),
+                self._attachment_path(attachment, AgglomerateAttachment.type_name),
             )
             for attachment in self._properties.agglomerates
         )
@@ -110,9 +123,8 @@ class AbstractAttachments:
             return None
         return SegmentIndexAttachment(
             self._properties.segment_index,
-            enrich_path(
-                self._properties.segment_index.path,
-                self._get_optional_dataset_path(),
+            self._attachment_path(
+                self._properties.segment_index, SegmentIndexAttachment.type_name
             ),
         )
 
@@ -122,9 +134,9 @@ class AbstractAttachments:
             return None
         return SegmentStatisticsAttachment(
             self._properties.segment_statistics,
-            enrich_path(
-                self._properties.segment_statistics.path,
-                self._get_optional_dataset_path(),
+            self._attachment_path(
+                self._properties.segment_statistics,
+                SegmentStatisticsAttachment.type_name,
             ),
         )
 
@@ -134,9 +146,7 @@ class AbstractAttachments:
             return None
         return CumsumAttachment(
             self._properties.cumsum,
-            enrich_path(
-                self._properties.cumsum.path, self._get_optional_dataset_path()
-            ),
+            self._attachment_path(self._properties.cumsum, CumsumAttachment.type_name),
         )
 
     @property
@@ -146,7 +156,7 @@ class AbstractAttachments:
         return tuple(
             ConnectomeAttachment(
                 attachment,
-                enrich_path(attachment.path, self._get_optional_dataset_path()),
+                self._attachment_path(attachment, ConnectomeAttachment.type_name),
             )
             for attachment in self._properties.connectomes
         )
@@ -287,15 +297,67 @@ class AbstractAttachments:
 
 class RemoteAttachments(AbstractAttachments):
     _layer: "RemoteSegmentationLayer"
+    _access_mode: "RemoteAccessMode"
 
-    def __init__(self, layer: "RemoteSegmentationLayer"):
+    def __init__(
+        self,
+        layer: "RemoteSegmentationLayer",
+        access_mode: "RemoteAccessMode | None" = None,
+    ):
+        from ....remote_access_mode import RemoteAccessMode
+
         super().__init__(layer)
+        # Attachments are always resolved via their direct path by default. Unlike mags,
+        # they are not re-served by the zarr streaming endpoint, and their stored paths
+        # are absolute.
+        self._access_mode = (
+            RemoteAccessMode.DIRECT_PATH if access_mode is None else access_mode
+        )
+
+    def with_access_mode(self, access_mode: "RemoteAccessMode") -> "RemoteAttachments":
+        """Returns a view of these attachments that resolves paths for `access_mode`.
+
+        Note that `RemoteAccessMode.ZARR_STREAMING` is not supported, since attachments
+        are not part of the served datasource-properties.json; it raises when an
+        attachment path is resolved.
+        """
+        return RemoteAttachments(self._layer, access_mode)
+
+    @property
+    def access_mode(self) -> "RemoteAccessMode":
+        """How the data of these attachments is accessed."""
+        return self._access_mode
+
+    def _attachment_path(
+        self,
+        attachment: AttachmentProperties,
+        type_name: str,  # noqa: ARG002 kept for interface parity with the base class
+    ) -> UPath:
+        return self._layer.dataset._attachment_path(attachment, self._access_mode)
+
+    @property
+    def _properties(self) -> "AttachmentsProperties":
+        # Which attachments exist has to come from self._access_mode's own served
+        # layer properties: ZARR_STREAMING never lists attachments at all, so this is
+        # empty whenever self._access_mode is ZARR_STREAMING, regardless of the
+        # dataset's own default access mode.
+        try:
+            layer_properties = self._layer.dataset._get_layer_properties_for_mode(
+                self._layer.name, self._access_mode
+            )
+        except ValueError:
+            return AttachmentsProperties()
+        if isinstance(layer_properties, SegmentationLayerProperties):
+            return layer_properties.attachments
+        return AttachmentsProperties()
 
     def _apply_server_properties(self) -> None:
         self._layer._apply_server_layer_properties()
 
     def _get_optional_dataset_path(self) -> UPath | None:
-        return self._layer.dataset.zarr_streaming_path
+        # Required by the abstract base class; unused here since _attachment_path is
+        # fully overridden above.
+        return self._layer.dataset._base_path(self._layer.dataset.access_mode)
 
     def add_attachment_as_ref(
         self,

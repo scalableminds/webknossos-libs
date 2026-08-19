@@ -1,6 +1,7 @@
+from collections.abc import Mapping
 from os import PathLike
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from cluster_tools import Executor
 from upath import UPath
@@ -18,9 +19,10 @@ from ...client.api_client.models import (
 )
 from ...geometry import Mag, MagLike, Vec3IntLike
 from ...utils import enrich_path
+from ..remote_access_mode import RemoteAccessMode
 from ..transfer_mode import TransferMode
 from .abstract_layer import AbstractLayer, _validate_layer_name
-from .view import MagView, Zarr3Config
+from .view import MagView, RemoteMagView, Zarr3Config
 
 if TYPE_CHECKING:
     from webknossos.dataset import RemoteDataset
@@ -37,17 +39,26 @@ class RemoteLayer(AbstractLayer):
     ):
         super().__init__(dataset, properties, read_only)
 
-    def _determine_read_only_and_path_for_mag(
-        self, mag_properties: MagViewProperties
-    ) -> tuple[bool, UPath]:
+    def _setup_mag_from_properties(
+        self,
+        mag_properties: MagViewProperties,
+        read_only: bool,  # noqa: ARG002 remote mags are always read-only
+    ) -> None:
         assert mag_properties.path is not None, (
             f"Remote mags must have a path: {mag_properties}"
         )
-        # In case of zarr-streaming remote datasets, the mag paths are relative to the dataset path.
-        # In the case of non-streaming remote datasets, the mag paths are absolute.
-        mag_path = enrich_path(mag_properties.path, self._dataset.zarr_streaming_path)
-        read_only = True
-        return read_only, mag_path
+        mag = Mag(mag_properties.mag)
+        self._assert_mag_does_not_exist_yet(mag)
+        try:
+            # Remote mags are always read-only, regardless of the access mode.
+            mag_view = RemoteMagView(
+                self, mag, access_mode=self._dataset.access_mode, read_only=True
+            )
+        except ValueError:
+            # The default access mode's own served properties may legitimately not
+            # (yet) list this mag; skip it rather than failing the whole layer.
+            return
+        self._mags[mag] = mag_view
 
     @property
     def dataset(self) -> "RemoteDataset":
@@ -62,11 +73,52 @@ class RemoteLayer(AbstractLayer):
         else:
             raise TypeError(f"self is not a SegmentationLayer. Got: {type(self)}")
 
-    def get_mag(self, mag: MagLike) -> MagView["RemoteLayer"]:
-        return super().get_mag(mag)
+    def get_mag(
+        self, mag: MagLike, *, access_mode: RemoteAccessMode | None = None
+    ) -> RemoteMagView:
+        """Gets the mag for the specified magnification level.
 
-    def get_finest_mag(self) -> MagView["RemoteLayer"]:
-        return super().get_finest_mag()
+        Args:
+            mag: Magnification identifier in multiple formats (int, str, list, etc)
+            access_mode: How the data of this mag should be accessed. Defaults to the
+                access mode of the dataset. If given, a new `RemoteMagView` is returned
+                that is not cached on the layer, so `layer.mags` keeps reflecting the
+                dataset's access mode.
+
+        Returns:
+            RemoteMagView: View of data at the specified magnification
+
+        Raises:
+            IndexError: If specified magnification does not exist
+            ValueError: If the requested access mode is not available for this dataset
+
+        Examples:
+            ```
+            mag1 = layer.get_mag(1, access_mode=RemoteAccessMode.DIRECT_PATH)
+            mag2 = layer.get_mag(2, access_mode=RemoteAccessMode.PROXY_PATH)
+            ```
+        """
+        mag = Mag(mag)
+        if mag not in self.mags:
+            raise IndexError(
+                f"The mag {mag.to_layer_name()} is not a mag of this layer"
+            )
+        mag_view = self.mags[mag]
+        if access_mode is None or access_mode == mag_view.access_mode:
+            return mag_view
+        return mag_view.with_access_mode(access_mode)
+
+    def get_finest_mag(
+        self, *, access_mode: RemoteAccessMode | None = None
+    ) -> RemoteMagView:
+        return self.get_mag(min(self.mags.keys()), access_mode=access_mode)
+
+    @property
+    def mags(self) -> Mapping[Mag, RemoteMagView]:
+        """
+        Getter for dictionary containing all mags, using the dataset's access mode.
+        """
+        return cast(Mapping[Mag, RemoteMagView], self._mags)
 
     def add_mag_as_copy(
         self,
@@ -422,7 +474,10 @@ class RemoteLayer(AbstractLayer):
     def _ensure_writable(self) -> None:
         if self.read_only:
             raise RuntimeError(
-                f"Remote layer '{self.name}' is read-only, consider disabling zarr_streaming with RemoteDataset.open(use_zarr_streaming=False)"
+                f"Remote layer '{self.name}' is read-only. This is either because the "
+                + "dataset was opened with read_only=True, or because its properties do "
+                + "not stem from the api data source (e.g. an annotation's volume layer, "
+                + "or a dataset with an unusable data source)."
             )
 
     def _apply_server_layer_properties(self) -> None:
