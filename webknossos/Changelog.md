@@ -28,6 +28,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `CorruptImageError`: the format is supported but the file could not be read, which usually means it is damaged or was uploaded incompletely. Previously a reader-specific error, or an aggregate of all readers' errors. Missing files and permission errors keep raising `FileNotFoundError`/`PermissionError`.
     - `UnsupportedImageDataError`: the images were read, but their data cannot be stored as requested, e.g. a float image converted into a segmentation layer, or extra axes with `data_format="wkw"`. Previously a `ValueError` or `RuntimeError`.
 - `Dataset.add_layer_from_images`/`from_images` now set a default layer color when splitting a multi-channel image into one layer per channel. [#1496](https://github.com/scalableminds/webknossos-libs/pull/1496)
+- Converting an OME-Zarr file (0.4, 0.5 or `.ozx`) that carries `omero` channel metadata now uses it to set each converted layer's default view configuration (color, intensity range, min/max, and whether it starts disabled) and, when channels are split into one layer each, to name the layers from the channel's label instead of `channel{N}`. [#1512](https://github.com/scalableminds/webknossos-libs/pull/1512)
 
 ### Changed
 - `.czi` conversion is faster and uses less memory: only the data needed for each chunk is read, rather than whole image planes. Multi-timepoint `.czi` files now convert into a single layer with a `t` axis. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)

@@ -19,6 +19,7 @@ from typing import NamedTuple
 
 from numpy.typing import DTypeLike
 
+from ...dataset_properties import LayerViewConfiguration
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ..layer.view import MagView
@@ -125,6 +126,20 @@ class ImageSource(ABC):
     def get_possible_layers(self) -> dict[str, list[int]] | None:
         """The ways this source could be split across several layers, e.g.
         `{"channel": [0, 1, 2]}`, or None when there is nothing to split."""
+
+    @property
+    def suggested_view_configuration(self) -> LayerViewConfiguration | None:
+        """Format-specific default display (color, intensity range, ...) for
+        the channel this source writes, when the format's own metadata
+        carries one. None for formats with no such metadata."""
+        return None
+
+    def layer_split_label(self, key: str, value: int) -> str:
+        """A layer-name suffix component for one `get_possible_layers()`
+        split entry. Defaults to `f"{key}{value}"`; a format may override
+        this with something more descriptive, e.g. an OME-Zarr channel's
+        `omero` label."""
+        return f"{key}{value}"
 
     @property
     @abstractmethod

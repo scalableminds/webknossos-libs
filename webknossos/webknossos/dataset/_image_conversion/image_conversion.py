@@ -592,7 +592,10 @@ def add_layer_from_images(
             # Timepoints are never split this way: readers that can address
             # them expose all timepoints on a "t" axis within a single layer.
             suffix_with_open_kwargs_per_layer = {
-                "__" + "_".join(f"{k}{v}" for k, v in sorted(pairs)): dict(pairs)
+                "__"
+                + "_".join(
+                    image_source.layer_split_label(k, v) for k, v in sorted(pairs)
+                ): dict(pairs)
                 for pairs in product(
                     *(
                         [(key, value) for value in values]
@@ -656,14 +659,26 @@ def add_layer_from_images(
             # problem with the input rather than a programming error.
             raise UnsupportedImageDataError(str(e)) from e
 
-        if splitting_channels_into_layers and category == "color":
-            # layer_selection["channel"] is set for every layer here (it is
-            # one of the keys that produced suffix_with_open_kwargs_per_layer's
-            # combinations), pinning this layer to the channel it was split
-            # off from.
-            layer.default_view_configuration = LayerViewConfiguration(
-                color=_channel_layer_color(layer_selection["channel"])
-            )
+        if category == "color":
+            # A format may suggest its own display defaults for the channel
+            # this layer was written from (e.g. OME-Zarr's `omero` channel
+            # metadata) — used as is when pinned to a single channel, or
+            # merged with the split colors below.
+            suggested = image_source.suggested_view_configuration
+            if splitting_channels_into_layers:
+                # layer_selection["channel"] is set for every layer here (it
+                # is one of the keys that produced
+                # suffix_with_open_kwargs_per_layer's combinations), pinning
+                # this layer to the channel it was split off from.
+                fallback_color = _channel_layer_color(layer_selection["channel"])
+                color = (suggested.color if suggested else None) or fallback_color
+                layer.default_view_configuration = (
+                    attr.evolve(suggested, color=color)
+                    if suggested is not None
+                    else LayerViewConfiguration(color=color)
+                )
+            elif suggested is not None:
+                layer.default_view_configuration = suggested
 
         expected_bbox = image_source.expected_bbox
 

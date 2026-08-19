@@ -12,11 +12,13 @@ from typing import Any
 
 from upath import UPath
 
+from ...dataset_properties import LayerViewConfiguration
 from ..errors import (
     CorruptImageError,
     UnsupportedImageDataError,
     UnsupportedImageFormatError,
 )
+from ..layer.abstract_layer import _UNALLOWED_LAYER_NAME_CHARS
 from .tensorstore_chunked_image_source import normalize_axis
 
 _SUPPORTED_OME_VERSIONS = ("0.4", "0.5")
@@ -70,6 +72,120 @@ def _ome_axis_name(axis: dict[str, Any], *, path: UPath) -> str:
 
 
 @dataclass(frozen=True)
+class OmeChannelMetadata:
+    """One entry of `omero.channels`, resolved to what a caller can apply
+    directly to a layer."""
+
+    view_configuration: LayerViewConfiguration | None
+    """Color, intensity range, min/max and is_disabled, built from `color`/
+    `window`/`active`. None if the entry carried none of these."""
+
+    label: str | None
+    """The channel's `label`, if any non-empty string was given."""
+
+
+def _hex_to_rgb(value: Any) -> tuple[int, int, int] | None:
+    if not isinstance(value, str):
+        return None
+    value = value.strip().lstrip("#")
+    if len(value) != 6:
+        return None
+    try:
+        return (int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16))
+    except ValueError:
+        return None
+
+
+def _parse_omero_channel(channel: dict[str, Any]) -> OmeChannelMetadata:
+    color = _hex_to_rgb(channel.get("color"))
+    window = channel.get("window")
+    window = window if isinstance(window, dict) else {}
+    start, end = window.get("start"), window.get("end")
+    intensity_range = (start, end) if start is not None and end is not None else None
+    is_disabled = not channel["active"] if "active" in channel else None
+
+    view_configuration = None
+    if any(
+        v is not None
+        for v in (
+            color,
+            intensity_range,
+            window.get("min"),
+            window.get("max"),
+            is_disabled,
+        )
+    ):
+        view_configuration = LayerViewConfiguration(
+            color=color,
+            intensity_range=intensity_range,
+            min=window.get("min"),
+            max=window.get("max"),
+            is_disabled=is_disabled,
+        )
+
+    label = channel.get("label")
+    label = label if isinstance(label, str) and label.strip() else None
+    return OmeChannelMetadata(view_configuration, label)
+
+
+def _parse_omero_channels(
+    attributes: dict[str, Any],
+) -> tuple[OmeChannelMetadata, ...] | None:
+    omero = attributes.get("omero")
+    channels = omero.get("channels") if isinstance(omero, dict) else None
+    if not isinstance(channels, list) or not channels:
+        return None
+    return tuple(
+        _parse_omero_channel(channel)
+        if isinstance(channel, dict)
+        else OmeChannelMetadata(None, None)
+        for channel in channels
+    )
+
+
+def _omero_channel_at(
+    channels: tuple[OmeChannelMetadata, ...] | None,
+    channel_index: int | None,
+    num_channels: int,
+) -> OmeChannelMetadata | None:
+    if channels is None:
+        return None
+    if channel_index is None:
+        channel_index = 0 if num_channels == 1 else None
+    if channel_index is None or not (0 <= channel_index < len(channels)):
+        return None
+    return channels[channel_index]
+
+
+def suggested_view_configuration(
+    channels: tuple[OmeChannelMetadata, ...] | None,
+    channel_index: int | None,
+    num_channels: int,
+) -> LayerViewConfiguration | None:
+    """The `omero`-derived view configuration for the channel this source
+    writes: `channel_index` if pinned, else channel 0 when there is only a
+    single output channel. None if there's no matching `omero` entry."""
+    channel = _omero_channel_at(channels, channel_index, num_channels)
+    return channel.view_configuration if channel else None
+
+
+def layer_split_label(
+    channels: tuple[OmeChannelMetadata, ...] | None, key: str, value: int
+) -> str | None:
+    """A layer-name suffix component for one `get_possible_layers()` split
+    entry, from the channel's `omero` label. Only resolves anything for
+    `key == "channel"`; None when there's no usable label, so the caller
+    falls back to its own default naming."""
+    if key != "channel" or channels is None or not (0 <= value < len(channels)):
+        return None
+    channel = channels[value]
+    if channel.label is None:
+        return None
+    sanitized = _UNALLOWED_LAYER_NAME_CHARS.sub("", channel.label).lstrip(".")
+    return sanitized or None
+
+
+@dataclass(frozen=True)
 class OmeMultiscale:
     """The first `multiscales` entry of an OME-Zarr group, resolved to
     something a caller can pick a level from."""
@@ -83,6 +199,10 @@ class OmeMultiscale:
     """Axis names (`t`/`c`/`z`/`y`/`x`) derived from the group's `axes`
     metadata, in physical dimension order. None when the group has no `axes`
     entries (Zarr v2 permits this)."""
+
+    channels: tuple[OmeChannelMetadata, ...] | None
+    """Per-channel `omero.channels` metadata, index-aligned with the group's
+    channel axis. None when the group has no `omero` metadata."""
 
 
 def resolve_ome_multiscale(attributes: dict[str, Any], *, path: UPath) -> OmeMultiscale:
@@ -128,4 +248,5 @@ def resolve_ome_multiscale(attributes: dict[str, Any], *, path: UPath) -> OmeMul
     axis_names = (
         tuple(_ome_axis_name(axis, path=path) for axis in axes) if axes else None
     )
-    return OmeMultiscale(dataset_paths, axis_names)
+    channels = _parse_omero_channels(attributes)
+    return OmeMultiscale(dataset_paths, axis_names, channels)

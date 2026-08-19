@@ -16,6 +16,7 @@ from typing import Any
 import tensorstore as ts
 from upath import UPath
 
+from ...dataset_properties import LayerViewConfiguration
 from .._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from ..defaults import (
     ZARR_JSON_FILE_NAME,
@@ -26,7 +27,11 @@ from ..defaults import (
 from ..errors import CorruptImageError
 from .image_source import ReadOptions, compute_channel_selection
 from .image_source_registry import register_chunked_image_source
-from .ome_zarr_multiscale import resolve_ome_multiscale
+from .ome_zarr_multiscale import OmeChannelMetadata, resolve_ome_multiscale
+from .ome_zarr_multiscale import layer_split_label as _ome_layer_split_label
+from .ome_zarr_multiscale import (
+    suggested_view_configuration as _ome_suggested_view_configuration,
+)
 from .tensorstore_chunked_image_source import TensorStoreChunkedImageSource, guess_axes
 
 
@@ -65,7 +70,9 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
         super().__init__(path, options)
         self._possible_layers: dict[str, list[int]] = {}
 
-        resolved_path, axis_name_hint = self._resolve_array_path(path, options)
+        resolved_path, axis_name_hint, self._omero_channels = self._resolve_array_path(
+            path, options
+        )
 
         try:
             driver = (
@@ -113,16 +120,27 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             return None
         return self._possible_layers
 
+    @property
+    def suggested_view_configuration(self) -> LayerViewConfiguration | None:
+        return _ome_suggested_view_configuration(
+            self._omero_channels, self._channel, self.num_channels
+        )
+
+    def layer_split_label(self, key: str, value: int) -> str:
+        return _ome_layer_split_label(
+            self._omero_channels, key, value
+        ) or super().layer_split_label(key, value)
+
     def _resolve_array_path(
         self, path: UPath, options: ReadOptions
-    ) -> tuple[UPath, list[str] | None]:
+    ) -> tuple[UPath, list[str] | None, tuple[OmeChannelMetadata, ...] | None]:
         """
         Resolves `path` to the Zarr array to actually open: itself, if it is
         already a plain array, or — for an OME-Zarr multiscale group — the
         dataset at the requested `scale` rank (0 = finest, the default).
         Also returns axis names derived from the group's OME `axes` metadata
         when resolving out of a group, since a v2 sub-array carries no axis
-        names of its own.
+        names of its own, and the group's `omero.channels` metadata, if any.
         """
         zarr_json_path = path / ZARR_JSON_FILE_NAME
         zarray_path = path / ZARRAY_FILE_NAME
@@ -132,7 +150,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             metadata = _read_json(zarr_json_path, path_for_errors=path)
             node_type = metadata.get("node_type")
             if node_type == "array":
-                return path, None
+                return path, None, None
             if node_type == "group":
                 attributes = metadata.get("attributes", {})
                 ome = attributes.get("ome", attributes)
@@ -143,7 +161,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             )
 
         if zarray_path.is_file():
-            return path, None
+            return path, None, None
 
         if zgroup_path.is_file():
             zattrs_path = path / ZATTRS_FILE_NAME
@@ -162,7 +180,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
 
     def _resolve_ome_multiscale(
         self, path: UPath, attributes: dict[str, Any], options: ReadOptions
-    ) -> tuple[UPath, list[str] | None]:
+    ) -> tuple[UPath, list[str] | None, tuple[OmeChannelMetadata, ...] | None]:
         multiscale = resolve_ome_multiscale(attributes, path=path)
 
         rank = options.format_option("scale")
@@ -178,4 +196,4 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
 
         resolved_path = path / multiscale.dataset_paths[rank]
         axis_names = list(multiscale.axis_names) if multiscale.axis_names else None
-        return resolved_path, axis_names
+        return resolved_path, axis_names, multiscale.channels

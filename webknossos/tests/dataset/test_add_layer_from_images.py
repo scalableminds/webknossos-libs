@@ -1383,6 +1383,134 @@ def test_ozx_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
 
 
+def test_ome_zarr_omero_channel_metadata_applied_when_splitting(
+    tmp_upath: UPath,
+) -> None:
+    Z, Y, X = 2, 8, 8
+    data = np.zeros((4, Z, Y, X), dtype="uint16")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "c", "type": "channel"},
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    omero = {
+        "channels": [
+            {
+                "color": "0000FF",
+                "window": {"min": 0.0, "max": 65535.0, "start": 10.0, "end": 500.0},
+                "label": "DAPI",
+                "active": True,
+            },
+            {
+                "window": {"min": 0.0, "max": 65535.0, "start": 0.0, "end": 100.0},
+                "active": False,
+            },
+            {
+                "color": "FF0000",
+                "window": {"start": 5.0, "end": 200.0},
+                "label": "Hyb probe!",
+            },
+            # Channel 3 has no matching omero entry at all.
+        ]
+    }
+    write_ome_zarr_v3_group(
+        group_path, [("0", data, [1.0, 1.0, 1.0, 1.0])], axes, omero
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            group_path,
+            layer_name="test",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    # Channels with a usable omero label are named from it (with disallowed
+    # characters stripped); channels without one fall back to "channel{N}".
+    assert set(ds.layers.keys()) == {
+        "test__DAPI",
+        "test__channel1",
+        "test__Hybprobe",
+        "test__channel3",
+    }
+
+    dapi = ds.layers["test__DAPI"].default_view_configuration
+    assert dapi is not None
+    assert dapi.color == (0, 0, 255)
+    assert dapi.intensity_range == (10.0, 500.0)
+    assert dapi.min == 0.0
+    assert dapi.max == 65535.0
+    assert dapi.is_disabled is False
+
+    inactive = ds.layers["test__channel1"].default_view_configuration
+    assert inactive is not None
+    # No omero color for this channel, so it falls back to the usual
+    # red/green/blue default for the second split-off layer.
+    assert inactive.color == (0, 255, 0)
+    assert inactive.intensity_range == (0.0, 100.0)
+    assert inactive.is_disabled is True
+
+    hyb = ds.layers["test__Hybprobe"].default_view_configuration
+    assert hyb is not None
+    assert hyb.color == (255, 0, 0)
+    assert hyb.intensity_range == (5.0, 200.0)
+    assert hyb.min is None
+    assert hyb.max is None
+    assert hyb.is_disabled is None
+
+    fallback = ds.layers["test__channel3"].default_view_configuration
+    assert fallback is not None
+    fallback_color = fallback.color
+    assert fallback_color is not None
+    assert fallback_color not in {(0, 0, 255), (255, 0, 0)}
+    assert all(0 <= component <= 255 for component in fallback_color)
+    assert fallback.intensity_range is None
+
+
+def test_ome_zarr_omero_channel_metadata_applied_to_pinned_channel(
+    tmp_upath: UPath,
+) -> None:
+    Z, Y, X = 2, 8, 8
+    data = np.zeros((2, Z, Y, X), dtype="uint16")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "c", "type": "channel"},
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    omero = {
+        "channels": [
+            {"color": "00FF00", "window": {"start": 1.0, "end": 2.0}},
+            {
+                "color": "FF00FF",
+                "window": {"start": 3.0, "end": 4.0},
+                "label": "second",
+            },
+        ]
+    }
+    write_ome_zarr_v3_group(
+        group_path, [("0", data, [1.0, 1.0, 1.0, 1.0])], axes, omero
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            group_path, layer_name="pinned", channel=1, executor=executor
+        )
+
+    # channel=<index> pins a single layer, so the omero label plays no part
+    # in naming it — only the view configuration is applied.
+    assert layer.name == "pinned"
+    view_configuration = layer.default_view_configuration
+    assert view_configuration is not None
+    assert view_configuration.color == (255, 0, 255)
+    assert view_configuration.intensity_range == (3.0, 4.0)
+
+
 def test_n5_pyramid_from_images_picks_finest_level(tmp_upath: UPath) -> None:
     Z, Y, X = 4, 16, 16
     finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
@@ -1451,6 +1579,15 @@ def test_real_ome_zarr_sample_conversion(tmp_upath: UPath) -> None:
     assert layer.dtype == np.dtype("uint16")
     assert layer.bounding_box.axes == ("t", "x", "y", "z")
     assert layer.bounding_box.size.to_tuple() == (18, 198, 223, 12)
+
+    # The sample's omero metadata for channel 0 ("cy 1"):
+    # {"color": "FFFFFF", "window": {"min": 0.0, "max": 65535.0, "start": 0.0, "end": 1200.0}}
+    view_configuration = layer.default_view_configuration
+    assert view_configuration is not None
+    assert view_configuration.color == (255, 255, 255)
+    assert view_configuration.intensity_range == (0.0, 1200.0)
+    assert view_configuration.min == 0.0
+    assert view_configuration.max == 65535.0
 
     # Compares against the finest level's channel 0 read directly, rather
     # than trusting the converter's own read path.

@@ -19,11 +19,16 @@ import zipfile
 import tensorstore as ts
 from upath import UPath
 
+from ...dataset_properties import LayerViewConfiguration
 from .._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from ..errors import CorruptImageError, UnsupportedImageFormatError
 from .image_source import ReadOptions, compute_channel_selection
 from .image_source_registry import register_chunked_image_source
+from .ome_zarr_multiscale import layer_split_label as _ome_layer_split_label
 from .ome_zarr_multiscale import resolve_ome_multiscale
+from .ome_zarr_multiscale import (
+    suggested_view_configuration as _ome_suggested_view_configuration,
+)
 from .tensorstore_chunked_image_source import TensorStoreChunkedImageSource, guess_axes
 
 _ROOT_ZARR_JSON_KEY = "zarr.json"
@@ -87,6 +92,7 @@ class OzxImageSource(TensorStoreChunkedImageSource):
         attributes = root_metadata.get("attributes", {})
         ome = attributes.get("ome", attributes)
         multiscale = resolve_ome_multiscale(ome, path=path)
+        self._omero_channels = multiscale.channels
 
         rank = options.format_option("scale")
         rank = 0 if rank is None else rank
@@ -150,3 +156,14 @@ class OzxImageSource(TensorStoreChunkedImageSource):
         if len(self._possible_layers) == 0:
             return None
         return self._possible_layers
+
+    @property
+    def suggested_view_configuration(self) -> LayerViewConfiguration | None:
+        return _ome_suggested_view_configuration(
+            self._omero_channels, self._channel, self.num_channels
+        )
+
+    def layer_split_label(self, key: str, value: int) -> str:
+        return _ome_layer_split_label(
+            self._omero_channels, key, value
+        ) or super().layer_split_label(key, value)
