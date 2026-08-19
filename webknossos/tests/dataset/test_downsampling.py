@@ -6,6 +6,7 @@ import pytest
 from cluster_tools import get_executor
 from upath import UPath
 
+from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
 from webknossos.dataset.layer._downsampling_utils import (
     InterpolationModes,
@@ -71,9 +72,9 @@ def test_non_linear_filter_reshape() -> None:
 
 
 def downsample_test_helper(
-    WT1_upath: UPath, tmp_upath: UPath, use_compress: bool, chunk_shape: Vec3Int
+    tmp_upath: UPath, use_compress: bool, chunk_shape: Vec3Int
 ) -> None:
-    source_path = WT1_upath
+    source_path = download_wklibs_sample_archive("WT1_wkw")
     target_path = tmp_upath / "WT1_wkw"
 
     source_ds = Dataset.open(source_path)
@@ -125,14 +126,14 @@ def downsample_test_helper(
     )
 
 
-def test_downsample_cube_job(WT1_upath: UPath, tmp_upath: UPath) -> None:
-    downsample_test_helper(WT1_upath, tmp_upath, False, Vec3Int.full(16))
+def test_downsample_cube_job(tmp_upath: UPath) -> None:
+    downsample_test_helper(tmp_upath, False, Vec3Int.full(16))
 
 
-def test_compressed_downsample_cube_job(WT1_upath: UPath, tmp_upath: UPath) -> None:
+def test_compressed_downsample_cube_job(tmp_upath: UPath) -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("error")  # This escalates the warning to an error
-        downsample_test_helper(WT1_upath, tmp_upath, True, Vec3Int.full(32))
+        downsample_test_helper(tmp_upath, True, Vec3Int.full(32))
 
 
 def test_downsample_multi_channel(tmp_upath: UPath) -> None:
@@ -462,9 +463,7 @@ def test_downsample_2d(tmp_upath: UPath) -> None:
 
 
 def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
-    source_path = (
-        UPath(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
-    )
+    source_path = download_wklibs_sample_archive("4D") / "4D_series_zarr3"
     target_path = tmp_upath / "downsample_test"
 
     source_ds = Dataset.open(source_path)

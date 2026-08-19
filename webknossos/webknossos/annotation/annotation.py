@@ -42,7 +42,7 @@ See Also:
 import logging
 import re
 import warnings
-from collections.abc import Iterable, Iterator
+from collections.abc import Generator, Iterable
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
@@ -1228,7 +1228,7 @@ class Annotation:
         volume_layer_name: str | None = None,
         volume_layer_id: int | None = None,
         read_only: bool = True,
-    ) -> Iterator[SegmentationLayer]:
+    ) -> Generator[SegmentationLayer]:
         """Creates a temporary copy of a volume layer as a dataset.
 
         Context manager that provides temporary access to volume layer data

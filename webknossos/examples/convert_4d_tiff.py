@@ -1,12 +1,28 @@
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+from zipfile import ZipFile
+
+import httpx
 
 import webknossos as wk
 
+FOUR_D_SAMPLE_URL = "https://static.webknossos.org/data/wklibs-samples/4D.zip"
+
 
 def main() -> None:
+    # Download and extract the sample 4D tiff image
+    source_dir = Path("testoutput/4D_source")
+    source_dir.mkdir(parents=True, exist_ok=True)
+    with NamedTemporaryFile(suffix=".zip") as archive_file:
+        with httpx.stream("GET", FOUR_D_SAMPLE_URL, follow_redirects=True) as response:
+            for chunk in response.iter_bytes():
+                archive_file.write(chunk)
+        with ZipFile(archive_file, "r") as zip_file:
+            zip_file.extractall(source_dir)
+
     # Create a WEBKNOSSOS dataset from a 4D tiff image
     dataset = wk.Dataset.from_images(
-        Path(__file__).parent.parent / "testdata" / "4D" / "4D_series",
+        source_dir / "4D" / "4D_series",
         "testoutput/4D_series",
         layer_category=wk.COLOR_CATEGORY,
         data_format="zarr3",
