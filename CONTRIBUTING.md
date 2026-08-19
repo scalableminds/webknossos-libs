@@ -133,12 +133,7 @@ Internal workflows for scalable minds:
 
 The `webknossos` folder contains examples, which are not part of the package, but added to the documentation (see `docs/src/webknossos-py/examples`).
 
-The tests use `minio` for testing S3-compatible storage.
-On Linux, this is installed automatically.
-On macOS and Windows it must be installed manually.
-
-* macOS: `brew install minio`
-* Windows: Download the [latest release](https://dl.min.io/server/minio/release/windows-amd64/minio.exe).
+The tests use [`moto`](https://github.com/getmoto/moto) (in its `ThreadedMotoServer` mode) to mock S3-compatible storage.
 
 The tests also contain functionality for the WEBKNOSSOS client.
 This expects a local WEBKNOSSOS setup with specific test data, which is shipped with WEBKNOSSOS.
