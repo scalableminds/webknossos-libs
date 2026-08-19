@@ -345,7 +345,7 @@ class LayerExport:
         file per z-section (and per combination of any additional axes,
         e.g. time), under `output_path`.
 
-        Files are named `NNNNNN.tiff` (or `{filename_prefix}_NNNNNN.tiff`)
+        Files are named `{NNNNNN}.tiff` (or `{filename_prefix}_{NNNNNN}.tiff`)
         for plain 3D layers, or `{axis}NNN_..._zNNN.tiff` (one segment per
         additional axis, sorted by name, plus z; still prefixed with
         `filename_prefix` if given) for layers with additional axes.
