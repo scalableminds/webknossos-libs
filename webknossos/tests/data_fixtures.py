@@ -76,36 +76,6 @@ def download_wklibs_sample_archive(name: str) -> UPath:
     return dest_dir
 
 
-def download_wklibs_sample_file(name: str) -> UPath:
-    """Downloads `{name}` itself (no `.zip` wrapping/extraction, unlike
-    `download_wklibs_sample_archive`) from the wklibs-samples bucket into
-    CACHE_DIR, once ever (subsequent calls, including from later test runs,
-    reuse the cached download). For a sample that is already one file, such
-    as a `.ozx` archive."""
-    dest_path = CACHE_DIR / name
-    if not dest_path.exists():
-        CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        tmp_path = _tmp_cache_path(name)
-        try:
-            with (
-                open(str(tmp_path), "wb") as tmp_file,
-                httpx.stream(
-                    "GET", f"{WKLIBS_SAMPLES_BASE_URL}/{name}", follow_redirects=True
-                ) as response,
-            ):
-                response.raise_for_status()
-                for chunk in response.iter_bytes():
-                    tmp_file.write(chunk)
-            # os.replace is atomic (both paths are under CACHE_DIR, i.e. the
-            # same filesystem), so a crash mid-download never leaves a
-            # half-written dest_path behind.
-            os.replace(str(tmp_path), str(dest_path))
-        finally:
-            if tmp_path.exists():
-                tmp_path.unlink()
-    return dest_path
-
-
 def create_synthetic_czi(
     path: UPath,
     *,

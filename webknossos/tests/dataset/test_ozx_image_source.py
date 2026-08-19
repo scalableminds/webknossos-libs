@@ -7,7 +7,7 @@ import pytest
 import tensorstore as ts
 from upath import UPath
 
-from tests.data_fixtures import download_wklibs_sample_file, write_ozx_file
+from tests.data_fixtures import download_wklibs_sample_archive, write_ozx_file
 from webknossos.dataset import CorruptImageError, UnsupportedImageFormatError
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.ozx_image_source import OzxImageSource
@@ -194,7 +194,7 @@ def test_axis_names_come_from_ome_axes_metadata(tmp_upath: UPath) -> None:
 def test_real_world_ozx_sample() -> None:
     # A genuine RFC-9 archive (root zarr.json first, three multiscale levels,
     # two channels), rather than one of this file's own synthetic fixtures.
-    ozx_path = download_wklibs_sample_file("6001240.ozx")
+    ozx_path = download_wklibs_sample_archive("6001240.ozx")
 
     source = _open(ozx_path)
 
