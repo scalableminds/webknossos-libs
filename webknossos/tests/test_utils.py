@@ -6,6 +6,7 @@ from upath import UPath
 
 from tests.utils import TestTemporaryDirectoryNonLocal
 from webknossos.utils import (
+    _strip_extended_path_prefix,
     call_with_retries,
     cheap_resolve,
     copytree,
@@ -139,6 +140,16 @@ def test_cheap_resolve_nonexistent_path_is_not_strict(tmp_upath: UPath) -> None:
 
     path = tmp_upath / "does_not_exist" / "sub"
     assert cheap_resolve(path) == path
+
+
+def test_strip_extended_path_prefix() -> None:
+    assert _strip_extended_path_prefix("\\\\?\\C:\\Users\\foo") == "C:\\Users\\foo"
+    assert (
+        _strip_extended_path_prefix("\\\\?\\UNC\\server\\share\\foo")
+        == "\\\\server\\share\\foo"
+    )
+    assert _strip_extended_path_prefix("C:\\Users\\foo") == "C:\\Users\\foo"
+    assert _strip_extended_path_prefix("/home/foo") == "/home/foo"
 
 
 def test_dump_path(tmp_upath: UPath) -> None:

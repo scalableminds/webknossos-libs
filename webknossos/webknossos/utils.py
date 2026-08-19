@@ -330,12 +330,27 @@ def _resolve_local_path(path: UPath, _seen: frozenset[str] = frozenset()) -> UPa
             if key in _seen:
                 raise OSError(f"Symlink loop detected while resolving {path!r}")
             target = candidate.readlink()
+            target = target.with_segments(_strip_extended_path_prefix(str(target)))
             if not target.is_absolute():
                 target = resolved / target
             resolved = _resolve_local_path(target, _seen | {key})
         else:
             resolved = candidate
     return resolved
+
+
+def _strip_extended_path_prefix(path_str: str) -> str:
+    """Strips a Windows extended-length path prefix (`\\\\?\\` / `\\\\?\\UNC\\`).
+    `Path.readlink()` on Windows can return an absolute symlink target in this
+    form even for a plain drive-letter target; stripping it here keeps
+    `_resolve_local_path`'s output consistent with the pre-existing
+    (non-extended-prefix) path style used elsewhere in this codebase.
+    """
+    if path_str.startswith("\\\\?\\UNC\\"):
+        return "\\\\" + path_str[len("\\\\?\\UNC\\") :]
+    if path_str.startswith("\\\\?\\"):
+        return path_str[len("\\\\?\\") :]
+    return path_str
 
 
 def is_writable_path(path: UPath) -> bool:
