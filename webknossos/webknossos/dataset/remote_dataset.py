@@ -185,7 +185,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         # paths are relative to `access_mode`'s base path and contain no direct paths.
         self._properties_are_direct = dataset_properties is not None
         # Lazily fetched and cached by _get_dataset_properties_for_mode() for any
-        # access mode other than self._access_mode (which is self._properties).
+        # access mode other than DIRECT_PATH when self._properties is already
+        # api-sourced (in which case DIRECT_PATH resolves to self._properties there).
         self._properties_by_mode: dict[RemoteAccessMode, DatasetProperties | None] = {}
 
         if dataset_properties is None:
@@ -280,20 +281,25 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
                 )
 
-            if access_mode == RemoteAccessMode.DIRECT_PATH:
-                if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
+            # self._properties -- which drives layer/mag/attachment management and
+            # metadata writes -- is always sourced from the api data source whenever
+            # one is available, regardless of access_mode: that is the only source
+            # safe to write back to the api (see _metadata_is_read_only). access_mode
+            # only selects which document a mag's own read (path, bounding box, axis
+            # order, data_format) is resolved from (see
+            # _get_dataset_properties_for_mode), independently of this.
+            if annotation_id is not None:
+                # An annotation's volume layers are not part of the dataset's api
+                # data source, so there is no api-sourced properties to fall back on.
+                dataset_properties = None
+            elif isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
+                if access_mode == RemoteAccessMode.DIRECT_PATH:
                     raise RuntimeError(
                         f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
                     )
-                dataset_properties = api_dataset_info.data_source
-            else:
-                # ZARR_STREAMING/PROXY_PATH always load their properties from the
-                # endpoint that actually serves the data, rather than the api data
-                # source. The datastore can derive a different bounding box or axis
-                # order for its streamed/proxied representation than what the api
-                # reports (e.g. for externally explored datasets); using the api's
-                # properties there would misalign reads against the actual array.
                 dataset_properties = None
+            else:
+                dataset_properties = api_dataset_info.data_source
 
             return cls(
                 dataset_id=dataset_id,
@@ -336,12 +342,12 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         """Whether the dataset's properties can be written back to the server.
 
         Writing metadata means PUTting `self._properties` back to the server via
-        `client.dataset_update`. Only `DIRECT_PATH` loads `self._properties` from the
-        api data source; `ZARR_STREAMING` and `PROXY_PATH` load it from the endpoint
-        that actually serves the data, which can legitimately disagree with the api
-        data source (e.g. bounding box or axis order, for externally explored
-        datasets). Writing that served representation back as the api data source
-        could silently corrupt it, so only `DIRECT_PATH` supports metadata writes.
+        `client.dataset_update`. `self._properties` is api-sourced whenever the api
+        exposes a usable data source for this dataset (see `_properties_are_direct`),
+        independently of the dataset's default access mode, so metadata writes work
+        the same way under any access mode. Only an annotation's volume layers or a
+        dataset with an unusable data source have no api-sourced properties to write
+        back.
         """
         return not self._properties_are_direct
 
@@ -370,12 +376,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     ) -> DatasetProperties | None:
         """This dataset's properties as reported by `access_mode`'s own endpoint.
 
-        Returns `self._properties` directly for the dataset's own default access mode
-        (no extra fetch needed). For any other mode, fetches and caches that mode's own
-        served datasource-properties.json (or the api data source, for `DIRECT_PATH`).
-        `None` if that mode's properties are unavailable for this dataset, e.g.
-        `DIRECT_PATH` without a usable api data source, or `PROXY_PATH` for an
-        annotation's volume layers.
+        Returns `self._properties` directly for `DIRECT_PATH`, when it is api-sourced
+        (see `_properties_are_direct`) -- no extra fetch needed, and independent of the
+        dataset's own default access mode, since `self._properties` is always
+        api-sourced whenever possible (so that layer/mag/attachment management works
+        under any default access mode). For any other mode, fetches and caches that
+        mode's own served datasource-properties.json. `None` if that mode's properties
+        are unavailable for this dataset, e.g. `DIRECT_PATH` without a usable api data
+        source, or `PROXY_PATH` for an annotation's volume layers.
 
         A mode's bounding box, axis order and mag paths can only be read correctly from
         that mode's own document: the datastore may derive a different representation
@@ -383,7 +391,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         single-channel layers) than what another mode's document describes, so mixing
         documents across modes can silently misalign reads.
         """
-        if access_mode == self._access_mode:
+        if access_mode == RemoteAccessMode.DIRECT_PATH and self._properties_are_direct:
             assert isinstance(self._properties, DatasetProperties)  # for mypy
             return self._properties
 
@@ -504,8 +512,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self, properties: "LayerProperties", read_only: bool
     ) -> RemoteLayer:
         # Layers are read-only whenever the dataset itself is (e.g. RemoteDataset.open(
-        # ..., read_only=True)), or when the dataset's default access mode does not
-        # support metadata writes.
+        # ..., read_only=True)), or when the dataset has no api-sourced properties to
+        # write back to (see _metadata_is_read_only).
         read_only = read_only or self._metadata_is_read_only
         return super()._initialize_layer_from_properties(properties, read_only)
 
@@ -530,6 +538,11 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def _apply_server_dataset_properties(self) -> None:
         self._properties = self._load_dataset_properties()
         self._last_read_properties = copy.deepcopy(self._properties)
+        # A metadata write (e.g. adding a mag) can change what other access modes now
+        # serve too, so their cached properties (see _get_dataset_properties_for_mode)
+        # would otherwise miss it, e.g. a newly added mag not yet being found via the
+        # dataset's own default access mode when its layers are re-initialized below.
+        self._properties_by_mode = {}
 
         # update existing layers
         for layer in self.layers.values():
