@@ -48,7 +48,7 @@ def get_valid_slice_reader_extensions() -> set[str]:
     return valid_extensions
 
 
-def get_valid_chunked_reader_extensions() -> set[str]:
+def get_valid_chunked_image_source_extensions() -> set[str]:
     """The extensions (without dot) that some registered chunked reader can open."""
     valid_extensions: set[str] = set()
     for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
@@ -58,7 +58,10 @@ def get_valid_chunked_reader_extensions() -> set[str]:
 
 def get_valid_extensions() -> set[str]:
     """Every extension that can be converted, by a reader of either kind."""
-    return get_valid_slice_reader_extensions() | get_valid_chunked_reader_extensions()
+    return (
+        get_valid_slice_reader_extensions()
+        | get_valid_chunked_image_source_extensions()
+    )
 
 
 def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
@@ -117,23 +120,47 @@ def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
     )
 
 
+def _find_chunked_image_source_class(path: UPath) -> type[ChunkedImageSource] | None:
+    """The registered chunked image source that would open `path`, by
+    extension or, for a directory that no extension matches, by
+    `probe_directory`. None if none claims it."""
+    extension = path.suffix.lstrip(".").lower()
+    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
+        if extension in cls.supported_file_extensions():
+            return cls
+    if path.is_dir():
+        for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
+            if cls.probe_directory(path):
+                return cls
+    return None
+
+
+def is_chunked_source_directory(path: UPath) -> bool:
+    """Whether `path` is a directory a registered chunked image source
+    recognizes as one store (by extension or by `probe_directory`) — so a
+    caller walking a directory tree should treat it as a single leaf entry
+    rather than descend into it."""
+    return path.is_dir() and _find_chunked_image_source_class(path) is not None
+
+
 def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> ImageSource:
     """Opens `images` as an `ImageSource`, choosing the reader kind itself.
 
-    A single file whose extension a chunked reader claims is read that way;
-    everything else slice by slice, including every list of paths, since
-    chunked formats are inherently single-file.
+    A single file (or directory, for formats stored as one) whose extension or
+    content a chunked image source claims is read that way; everything else
+    slice by slice, including every list of paths, since chunked formats are
+    inherently single-file.
     """
     # Deferred to avoid a cycle: SlicedImageSource consults this registry.
     from .sliced_image_source import SlicedImageSource
 
     if isinstance(images, UPath):
-        extension = images.suffix.lstrip(".").lower()
-        for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
-            if extension in cls.supported_file_extensions():
-                # Remote UPaths deliberately do reach the reader, which raises
-                # its own "must be a local file path" error via is_remote_path.
-                return cls(images, options)
+        cls = _find_chunked_image_source_class(images)
+        if cls is not None:
+            # Remote UPaths deliberately do reach the image source, which
+            # raises its own "must be a local file path" error via
+            # is_remote_path, for sources that need one.
+            return cls(images, options)
     return SlicedImageSource(images, options)
 
 
@@ -204,10 +231,16 @@ def _import_readers() -> str | None:
     import_exceptions = []
 
     # No optional dependency beyond imageio, which is a hard requirement — but
-    # imported here so that every reader registers in one place.
+    # imported here so that every reader registers in one place. The
+    # tensorstore-backed readers need no optional dependency either:
+    # tensorstore is a base (non-optional) dependency of this package.
     from . import (
         common_slice_readers,  # noqa: F401 unused-import
         dm_slice_reader,  # noqa: F401 unused-import
+        n5_image_source,  # noqa: F401 unused-import
+        neuroglancer_precomputed_image_source,  # noqa: F401 unused-import
+        ozx_image_source,  # noqa: F401 unused-import
+        zarr_image_source,  # noqa: F401 unused-import
     )
 
     for reader in _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES:
