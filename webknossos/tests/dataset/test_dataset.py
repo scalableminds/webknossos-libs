@@ -338,6 +338,48 @@ def test_ome_ngff_0_5_metadata(output_path: UPath) -> None:
     )
 
 
+def test_ome_ngff_0_5_metadata_nd() -> None:
+    """OME axes/scale must be derived from the layer's actual axes, not
+    hard-coded to c,x,y,z, for a layer with an additional (e.g. time) axis.
+    """
+    ds_path = prepare_dataset_path(DataFormat.Zarr3, TESTOUTPUT_DIR, suffix="nd")
+    ds = Dataset(ds_path, voxel_size=(11, 11, 28))
+    layer = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        data_format=DataFormat.Zarr3,
+        bounding_box=NDBoundingBox(
+            (0, 0, 0, 0, 0),
+            (1, 10, 10, 10, 3),
+            axes=("c", "x", "y", "z", "t"),
+            index=(0, 1, 2, 3, 4),
+        ),
+    )
+    layer.add_mag("1")
+
+    zattrs = json.loads((ds_path / "color" / "zarr.json").read_bytes())["attributes"]
+    axes = zattrs["ome"]["multiscales"][0]["axes"]
+    assert [a["name"] for a in axes] == ["c", "x", "y", "z", "t"]
+    assert axes[-1] == {"name": "t", "type": "time"}
+    assert zattrs["ome"]["multiscales"][0]["datasets"][0]["coordinateTransformations"][
+        0
+    ]["scale"] == [1, 11, 11, 28, 1]
+
+    mag_shape = json.loads((ds_path / "color" / "1" / "zarr.json").read_bytes())[
+        "shape"
+    ]
+    assert len(axes) == len(mag_shape)
+
+    validate(
+        instance=zattrs,
+        schema=json.loads(
+            UPath(
+                "https://ngff.openmicroscopy.org/0.5/schemas/image.schema"
+            ).read_bytes()
+        ),
+    )
+
+
 def test_ome_ngff_0_5_metadata_symlink() -> None:
     def recursive_chmod(ds_path: UPath, mode: int) -> None:
         from pathlib import Path
