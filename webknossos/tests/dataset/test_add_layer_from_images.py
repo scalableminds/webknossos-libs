@@ -23,6 +23,7 @@ from upath import UPath
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import (
+    create_synthetic_czi,
     create_synthetic_multi_timepoint_ims,
     download_wklibs_sample_archive,
     write_n5_array,
@@ -30,12 +31,7 @@ from tests.data_fixtures import (
     write_ome_zarr_v3_group,
     write_zarr_v3_array,
 )
-from tests.utils import (
-    HAS_PYLIBCZIRW,
-    PYLIBCZIRW_EXPECTED,
-    create_synthetic_czi,
-    requires_pylibczirw,
-)
+from tests.utils import HAS_PYLIBCZIRW, PYLIBCZIRW_EXPECTED, requires_pylibczirw
 
 
 @pytest.fixture(autouse=True, scope="function")
