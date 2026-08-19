@@ -23,6 +23,7 @@ from webknossos.geometry import NDBoundingBox, NormalizedBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
 
 from ...utils import warn_deprecated
+from .export import LayerExport
 from .view import ArrayException, MagView
 
 if TYPE_CHECKING:
@@ -65,6 +66,7 @@ class AbstractLayer:
     ) -> None:
         self._dataset = dataset
         self._apply_properties(properties, read_only)
+        self._export = LayerExport(self)
 
     def _apply_properties(self, properties: LayerProperties, read_only: bool) -> None:
         # It is possible that the properties on disk do not contain the number of channels.
@@ -359,6 +361,15 @@ class AbstractLayer:
         """
 
         return self._name
+
+    @property
+    def export(self) -> LayerExport:
+        """Export this layer's data to common bioimaging file formats.
+
+        Returns:
+            LayerExport
+        """
+        return self._export
 
     def get_mag(self, mag: MagLike) -> MagView:
         """Gets the MagView for the specified magnification level.
