@@ -3,7 +3,6 @@ import sys
 import warnings
 from collections.abc import Generator, Iterator
 from pathlib import Path
-from shutil import unpack_archive
 from typing import Any
 
 import pytest
@@ -15,7 +14,7 @@ from webknossos.client._upload_dataset import _cached_get_upload_datastore
 from webknossos.client.context import _clear_all_context_caches
 from webknossos.utils import rmtree
 
-from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
+from .constants import TESTOUTPUT_DIR
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -110,15 +109,3 @@ def error_on_warnings() -> Generator:
     with warnings.catch_warnings():
         warnings.filterwarnings("error", module="webknossos", message=r"\[WARNING\]")
         yield
-
-
-### Misc fixtures
-
-
-@pytest.fixture(scope="session")
-def WT1_upath() -> UPath:
-    ds_path = TESTDATA_DIR / "WT1_wkw"
-    if ds_path.exists():
-        rmtree(ds_path)
-    unpack_archive(str(TESTDATA_DIR / "WT1_wkw.tar.gz"), str(ds_path))
-    return ds_path

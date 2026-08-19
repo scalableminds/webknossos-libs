@@ -60,7 +60,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    "webknossos/dataset/_utils/vendor"
+    "webknossos/dataset/_image_conversion/vendor"
 ]
 
 # Same as Black.
