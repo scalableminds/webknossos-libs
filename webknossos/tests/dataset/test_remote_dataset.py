@@ -311,14 +311,16 @@ def test_per_mag_access_mode() -> None:
         "/proxy/layers/color/mags/1"
     )
     assert "/zarr/" in str(paths[RemoteAccessMode.ZARR_STREAMING])
+    # Testing the immutability of the paths property
     with pytest.raises(TypeError):
         paths[RemoteAccessMode.DIRECT_PATH] = paths[RemoteAccessMode.DIRECT_PATH]  # type: ignore[index]
 
     # with_access_mode() is equivalent to layer.get_mag(mag, access_mode=...).
     for access_mode in RemoteAccessMode:
-        assert mag.with_access_mode(access_mode).path == layer.get_mag(
-            1, access_mode=access_mode
-        ).path
+        assert (
+            mag.with_access_mode(access_mode).path
+            == layer.get_mag(1, access_mode=access_mode).path
+        )
 
 
 def test_direct_path_available_in_zarr_streaming_mode() -> None:

@@ -39,11 +39,8 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_upload_resumable_url(self) -> str:
         return f"{self.url_prefix}/datasets/upload/dataset"
 
-    # Routes for reading a dataset's image data. Kept here, rather than on the
-    # RemoteDataset/RemoteMagView side, so that a route change for a future api
-    # version only has to be reflected in one place, e.g. by overriding these on a
-    # version-specific subclass like DatastoreApiClientV13 below.
-
+    # Routes for reading a dataset's image data. Kept here, so that a route change
+    # for a future api version only has to be reflected in one place.
     def zarr_streaming_dataset_url(self, dataset_id: str) -> str:
         return f"{self.url_prefix}/zarr/{dataset_id}/"
 
