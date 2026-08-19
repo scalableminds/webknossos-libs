@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from upath import UPath
 
-from tests.constants import TESTDATA_DIR
+from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos import COLOR_CATEGORY, Dataset, Layer
 from webknossos.dataset._utils.tensorstore_helpers import read_zarr3_array
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
@@ -94,11 +94,10 @@ def test_as_ozx_single_mag(tmp_upath: UPath) -> None:
         assert "2-2-1/zarr.json" in names
 
 
-def test_as_ozx_odd_sized_layer_covers_full_coarser_mags(tmp_upath: UPath) -> None:
-    """Regression test: for a layer whose size isn't an exact multiple of a
-    mag's factor, every exported mag must match that mag's full, real data
-    (as read directly from the source layer) - not silently drop the last
-    row/column/slice, which floor-aligning the exported region used to do.
+def make_odd_sized_layer(tmp_upath: UPath) -> tuple[Dataset, Layer, np.ndarray]:
+    """A layer whose size (65) isn't an exact multiple of any of its
+    coarser mags' factors, so mag 2 (33**3) and mag 4 (17**3) each have one
+    more voxel per axis than floor-dividing 65 would suggest.
     """
     dataset = Dataset(tmp_upath / "test_odd_sized", voxel_size=(10, 10, 10))
     layer = dataset.add_layer(
@@ -112,6 +111,16 @@ def test_as_ozx_odd_sized_layer_covers_full_coarser_mags(tmp_upath: UPath) -> No
     data = (np.random.rand(65, 65, 65) * 255).astype(np.uint8)
     layer.add_mag(1).write(data=data)
     layer.downsample()  # produces mag 2 (33**3) and mag 4 (17**3)
+    return dataset, layer, data
+
+
+def test_as_ozx_odd_sized_layer_covers_full_coarser_mags(tmp_upath: UPath) -> None:
+    """Regression test: for a layer whose size isn't an exact multiple of a
+    mag's factor, every exported mag must match that mag's full, real data
+    (as read directly from the source layer) - not silently drop the last
+    row/column/slice, which floor-aligning the exported region used to do.
+    """
+    _dataset, layer, _data = make_odd_sized_layer(tmp_upath)
 
     zip_path = tmp_upath / "color_odd.ozx"
     layer.export.as_ozx(output_path=zip_path)
@@ -124,6 +133,36 @@ def test_as_ozx_odd_sized_layer_covers_full_coarser_mags(tmp_upath: UPath) -> No
         got = read_zarr3_array(tmp_upath / "extracted" / mag_name)
         got = got[tuple(slice(0, s) for s in expected.shape)]
         assert np.array_equal(got, expected), f"mismatch at mag {mag_name}"
+
+
+def test_as_tiff_stack_and_as_ome_tiff_odd_sized_layer_cover_full_coarser_mag(
+    tmp_upath: UPath,
+) -> None:
+    """Same regression as test_as_ozx_odd_sized_layer_covers_full_coarser_mags,
+    for as_tiff_stack and as_ome_tiff: exporting a coarser mag of a layer
+    whose size isn't an exact multiple of that mag's factor must include the
+    full, real data (mag 2 is 33**3 here) - not silently drop the last
+    row/column/slice.
+    """
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    _dataset, layer, _data = make_odd_sized_layer(tmp_upath)
+    expected = layer.get_mag(2).read()  # (1, 33, 33, 33)
+
+    tiff_dir = tmp_upath / "odd_tiff_stack"
+    layer.export.as_tiff_stack(output_path=tiff_dir, mag=Mag(2))
+    files = sorted(tiff_dir.glob("*.tiff"))
+    assert len(files) == expected.shape[3]
+    for z, file in enumerate(files):
+        image = tifffile.imread(str(file))
+        assert np.array_equal(image, expected[0, :, :, z].transpose((1, 0)))
+
+    ome_tiff_path = tmp_upath / "odd.ome.tif"
+    layer.export.as_ome_tiff(output_path=ome_tiff_path, mag=Mag(2))
+    with tifffile.TiffFile(str(ome_tiff_path)) as tif:
+        arr = tif.series[0].asarray()
+        assert np.array_equal(arr, expected[0].transpose((2, 1, 0)))
 
 
 @pytest.mark.parametrize("mag", [None, Mag("2-2-2")])
@@ -196,8 +235,9 @@ def test_as_ome_tiff_readable(tmp_upath: UPath, mag: Mag | None) -> None:
 
 
 def make_nd_layer() -> Layer:
-    """Opens the repo's ND (c,t,z,y,x) test fixture."""
-    dataset = Dataset.open(TESTDATA_DIR / "4D" / "4D_series_zarr3")
+    """Opens the ND (c,t,z,y,x) sample dataset."""
+    source_path = download_wklibs_sample_archive("4D") / "4D_series_zarr3"
+    dataset = Dataset.open(source_path)
     return dataset.get_layer("color")
 
 

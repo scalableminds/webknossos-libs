@@ -11,9 +11,9 @@ from upath import UPath
 
 from webknossos.dataset_properties import SEGMENTATION_CATEGORY
 from webknossos.geometry import (
-    BoundingBox,
     Mag,
     NDBoundingBox,
+    NormalizedBoundingBox,
     Vec3Int,
     Vec3IntLike,
     VecInt,
@@ -42,27 +42,21 @@ _OME_TIFF_AXIS_CODES = {"c": "C", "t": "T", "z": "Z", "y": "Y", "x": "X"}
 
 def _resolve_export_bbox(
     layer: "AbstractLayer", bounding_box: NDBoundingBox | None
-) -> NDBoundingBox:
-    return (
-        layer.bounding_box
-        if bounding_box is None
-        else bounding_box.intersected_with(layer.bounding_box)
+) -> NormalizedBoundingBox:
+    """Resolves the region to export as a `NormalizedBoundingBox`, whose
+    `.axes` always matches the axis order `mag_view.read()`/`.write()`
+    actually use - unlike a plain `NDBoundingBox`/`BoundingBox`, which may
+    or may not include "c" depending on the layer.
+    """
+    if bounding_box is None:
+        return layer.normalized_bounding_box
+    return bounding_box.normalize_axes(layer.num_channels).intersected_with(
+        layer.normalized_bounding_box
     )
 
 
 def _resolve_export_mag(layer: "AbstractLayer", mag: Mag | None) -> "MagView":
     return layer.get_mag(mag) if mag is not None else layer.get_finest_mag()
-
-
-def _data_axes(bbox: NDBoundingBox) -> tuple[str, ...]:
-    """The axis order `mag_view.read(absolute_bounding_box=bbox)` actually
-    returns. A plain `BoundingBox` (x,y,z only) always gets a channel axis
-    prepended; a general `NDBoundingBox` only has "c" if it was already
-    present in `bbox.axes` - mirrors `NDBoundingBox`/`BoundingBox.normalize_axes()`.
-    """
-    if isinstance(bbox, BoundingBox):
-        return ("c", *bbox.axes)
-    return bbox.axes
 
 
 def _make_tiff_name(filename_prefix: str, slice_index: int, digits: int) -> str:
@@ -108,12 +102,12 @@ def _extract_tiff_stack_slice(
 
 
 def _ome_tiff_axes_and_permutation(
-    bbox: NDBoundingBox,
+    bbox: NormalizedBoundingBox,
 ) -> tuple[tuple[str, ...], tuple[int, ...]]:
     """The OME-TIFF axis order (y, x always last, as tifffile requires) and
     the permutation of `mag_view.read()`'s axes needed to reach it.
     """
-    data_axes = _data_axes(bbox)
+    data_axes = bbox.axes
     unsupported = [a for a in data_axes if a not in _OME_TIFF_AXIS_CODES]
     if unsupported:
         raise ValueError(
@@ -358,7 +352,13 @@ class LayerExport:
         output_path = UPath(output_path)
         layer = self._layer
         mag_view = _resolve_export_mag(layer, mag)
-        bbox = _resolve_export_bbox(layer, bounding_box).align_with_mag(mag_view.mag)
+        # ceil=True: a coarser mag's own array always covers the
+        # ceil-of-mag-factor extent of the layer's bounding box (see
+        # Layer.add_mag), so floor-aligning here would silently drop the
+        # last row/column/slice of real, already downsampled data.
+        bbox = _resolve_export_bbox(layer, bounding_box).align_with_mag(
+            mag_view.mag, ceil=True
+        )
 
         output_path.mkdir(parents=True, exist_ok=True)
         compression = "zlib" if layer.category == SEGMENTATION_CATEGORY else None
@@ -375,7 +375,7 @@ class LayerExport:
             sub_bbox = bbox
             for axis, i in zip(extra_axes, combo):
                 sub_bbox = sub_bbox.with_bounds(axis, bbox.topleft[axis] + i, 1)
-            slice_axes = tuple(a for a in _data_axes(sub_bbox) if a != "z")
+            slice_axes = tuple(a for a in sub_bbox.axes if a != "z")
 
             with mag_view.get_buffered_slice_reader(
                 absolute_bounding_box=sub_bbox
@@ -420,7 +420,13 @@ class LayerExport:
         output_path = UPath(output_path)
         layer = self._layer
         mag_view = _resolve_export_mag(layer, mag)
-        bbox = _resolve_export_bbox(layer, bounding_box).align_with_mag(mag_view.mag)
+        # ceil=True: a coarser mag's own array always covers the
+        # ceil-of-mag-factor extent of the layer's bounding box (see
+        # Layer.add_mag), so floor-aligning here would silently drop the
+        # last row/column/slice of real, already downsampled data.
+        bbox = _resolve_export_bbox(layer, bounding_box).align_with_mag(
+            mag_view.mag, ceil=True
+        )
         compression = "zlib" if layer.category == SEGMENTATION_CATEGORY else None
 
         canonical_axes, permutation = _ome_tiff_axes_and_permutation(bbox)
