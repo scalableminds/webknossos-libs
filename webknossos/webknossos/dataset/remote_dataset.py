@@ -46,7 +46,6 @@ from webknossos.dataset_properties import (
     DatasetProperties,
     LayerCategoryType,
     LayerProperties,
-    MagViewProperties,
     SegmentationLayerProperties,
     VoxelSize,
 )
@@ -89,21 +88,6 @@ def _assert_same_webknossos_instance(
             f"Cannot {action} from a different WEBKNOSSOS instance. "
             + f"Got {dataset2._context._url}, expected {dataset1._context._url}."
         )
-
-
-def _find_mag_path(properties: DatasetProperties, layer_name: str, mag: Mag) -> str:
-    for layer_properties in properties.data_layers:
-        if layer_properties.name != layer_name:
-            continue
-        for mag_properties in layer_properties.mags:
-            if Mag(mag_properties.mag) == mag:
-                assert mag_properties.path is not None, (
-                    f"Remote mags must have a path: {mag_properties}"
-                )
-                return mag_properties.path
-    raise ValueError(
-        f"{layer_name}/{mag.to_layer_name()} not found in the api data source."
-    )
 
 
 @attr.frozen
@@ -200,8 +184,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         # loaded below from a served datasource-properties.json, whose mag/attachment
         # paths are relative to `access_mode`'s base path and contain no direct paths.
         self._properties_are_direct = dataset_properties is not None
-        # Lazily fetched by _get_direct_dataset_properties(); _UNSET until first use.
-        self._direct_dataset_properties: DatasetProperties | None | Any = _UNSET
+        # Lazily fetched and cached by _get_dataset_properties_for_mode() for any
+        # access mode other than self._access_mode (which is self._properties).
+        self._properties_by_mode: dict[RemoteAccessMode, DatasetProperties | None] = {}
 
         if dataset_properties is None:
             dataset_properties = self._load_dataset_properties()
@@ -370,59 +355,81 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def _get_datastore_api_client(self) -> "DatastoreApiClient":
         """The api client for the datastore that serves this dataset's data.
 
-        Its routes are the single source of truth for how mag/attachment paths are
-        built for each access mode, so that a route change for a future api version
-        only has to be reflected there, e.g. by overriding routes on a version-specific
-        subclass like `DatastoreApiClientV13`.
+        Its routes are the single source of truth for where each access mode's
+        datasource-properties.json document lives, so that a route change for a future
+        api version only has to be reflected there, e.g. by overriding routes on a
+        version-specific subclass like `DatastoreApiClientV13`.
         """
         from ..client.context import _get_context
 
         with self._context:
             return _get_context().get_datastore_api_client(self._datastore_url)
 
-    def _get_direct_dataset_properties(self) -> DatasetProperties | None:
-        """The dataset's properties as reported by the api, regardless of access_mode.
+    def _get_dataset_properties_for_mode(
+        self, access_mode: RemoteAccessMode
+    ) -> DatasetProperties | None:
+        """This dataset's properties as reported by `access_mode`'s own endpoint.
 
-        `None` if the api does not expose a usable data source for this dataset (e.g.
-        an annotation's volume layers, or a dataset with an unusable data source).
+        Returns `self._properties` directly for the dataset's own default access mode
+        (no extra fetch needed). For any other mode, fetches and caches that mode's own
+        served datasource-properties.json (or the api data source, for `DIRECT_PATH`).
+        `None` if that mode's properties are unavailable for this dataset, e.g.
+        `DIRECT_PATH` without a usable api data source, or `PROXY_PATH` for an
+        annotation's volume layers.
 
-        This is used only to resolve a mag's or attachment's `DIRECT_PATH`, never as
-        the source of bounding_box/axis metadata for actual reads: the api data source
-        can disagree with what a non-DIRECT_PATH access mode's endpoint actually serves
-        (see `_metadata_is_read_only`), so `self._properties` never uses it directly
-        unless `self._access_mode` is itself `DIRECT_PATH`.
+        A mode's bounding box, axis order and mag paths can only be read correctly from
+        that mode's own document: the datastore may derive a different representation
+        for what it actually serves (e.g. splitting a multi-channel source into
+        single-channel layers) than what another mode's document describes, so mixing
+        documents across modes can silently misalign reads.
         """
-        if self._access_mode == RemoteAccessMode.DIRECT_PATH:
+        if access_mode == self._access_mode:
             assert isinstance(self._properties, DatasetProperties)  # for mypy
             return self._properties
 
-        if self._direct_dataset_properties is _UNSET:
+        if access_mode not in self._properties_by_mode:
+            self._properties_by_mode[access_mode] = (
+                self._fetch_dataset_properties_for_mode(access_mode)
+            )
+        return self._properties_by_mode[access_mode]
+
+    def _fetch_dataset_properties_for_mode(
+        self, access_mode: RemoteAccessMode
+    ) -> DatasetProperties | None:
+        if access_mode == RemoteAccessMode.DIRECT_PATH:
             api_dataset_info = self._get_dataset_info()
             if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
-                self._direct_dataset_properties = None
-            else:
-                self._direct_dataset_properties = api_dataset_info.data_source
-        return self._direct_dataset_properties
+                return None
+            return api_dataset_info.data_source
 
-    def _get_underlying_data_format(self, layer_name: str) -> DataFormat:
-        """The data format of the underlying storage for a layer, regardless of
-        access_mode.
+        # Not caught here: _base_path raises ValueError with a specific reason for
+        # PROXY_PATH on an annotation, which only supports ZARR_STREAMING. Letting it
+        # propagate keeps that reason, rather than collapsing it into a generic
+        # "not available" message.
+        base_path = self._base_path(access_mode)
+        assert base_path is not None  # for mypy
+        try:
+            return self._load_dataset_properties_from_path(base_path)
+        except FileNotFoundError:
+            return None
 
-        `ZARR_STREAMING` always re-serves data as `zarr`, so `self._properties` reports
-        that format whenever it is the dataset's default access mode, even though a
-        `DIRECT_PATH`/`PROXY_PATH` mag of the same layer needs the true underlying
-        format to pick the right array reader. Falls back to `self._properties` when no
-        direct properties are available (e.g. an annotation's volume layers), the only
-        case where there is no independent underlying format to report.
+    def _get_layer_properties_for_mode(
+        self, layer_name: str, access_mode: RemoteAccessMode
+    ) -> "LayerProperties":
+        """The layer's properties as reported by `access_mode`'s own endpoint.
+
+        Raises:
+            ValueError: If `layer_name` is not accessible via `access_mode`.
         """
-        direct_properties = self._get_direct_dataset_properties()
-        for properties in (direct_properties, self._properties):
-            if properties is None:
-                continue
+        properties = self._get_dataset_properties_for_mode(access_mode)
+        if properties is not None:
             for layer_properties in properties.data_layers:
                 if layer_properties.name == layer_name:
-                    return layer_properties.data_format
-        raise ValueError(f"Layer {layer_name} not found.")
+                    return layer_properties
+        raise ValueError(
+            f"Cannot access layer {layer_name} via {access_mode.value}: not "
+            + "available for this dataset."
+        )
 
     def _base_path(self, access_mode: RemoteAccessMode) -> UPath | None:
         """The base path that mags of the given access mode are relative to.
@@ -460,80 +467,38 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         return UPath(url, headers=headers, ssl=SSL_CONTEXT)
 
     def _mag_path(
-        self,
-        layer_name: str,
-        mag: Mag,
-        mag_properties: MagViewProperties,
-        access_mode: RemoteAccessMode,
+        self, layer_name: str, mag: Mag, access_mode: RemoteAccessMode
     ) -> UPath:
         """Resolves the path of a mag for the given access mode.
 
-        `mag_properties` must be sourced from `self._properties`, i.e. it matches
-        `self._access_mode`. For that same mode, its path is used directly. For any
-        other mode, the path is computed from the datastore url instead, since
-        `mag_properties` does not describe that mode's endpoint; `DIRECT_PATH` is
-        looked up separately (see `_get_direct_dataset_properties`), since a mag's
-        direct path is never derivable from a URL formula.
+        Looks up the mag within that mode's own layer properties (see
+        `_get_layer_properties_for_mode`), so the path always matches what that mode's
+        endpoint actually serves.
+
+        Raises:
+            ValueError: If the mag is not accessible via `access_mode`.
         """
-        if access_mode == self._access_mode:
-            assert mag_properties.path is not None, (
-                f"Remote mags must have a path: {mag_properties}"
+        layer_properties = self._get_layer_properties_for_mode(layer_name, access_mode)
+        mag_properties = next(
+            (m for m in layer_properties.mags if Mag(m.mag) == mag), None
+        )
+        if mag_properties is None or mag_properties.path is None:
+            raise ValueError(
+                f"Cannot access {layer_name}/{mag.to_layer_name()} via "
+                + f"{access_mode.value}: not available for this dataset."
             )
-            return enrich_path(mag_properties.path, self._base_path(access_mode))
-
-        if access_mode == RemoteAccessMode.DIRECT_PATH:
-            direct_properties = self._get_direct_dataset_properties()
-            if direct_properties is None:
-                raise ValueError(
-                    f"Cannot access {layer_name}/{mag.to_layer_name()} via "
-                    + f"{RemoteAccessMode.DIRECT_PATH}, because the api does not "
-                    + "expose a usable data source for this dataset."
-                )
-            direct_mag_path = _find_mag_path(direct_properties, layer_name, mag)
-            return enrich_path(direct_mag_path, None)
-
-        base_path = self._base_path(access_mode)
-        assert base_path is not None  # for mypy
-        client = self._get_datastore_api_client()
-        if access_mode == RemoteAccessMode.ZARR_STREAMING:
-            suffix = client.zarr_streaming_mag_path(layer_name, mag)
-        elif access_mode == RemoteAccessMode.PROXY_PATH:
-            suffix = client.proxy_mag_path(layer_name, mag)
-        else:
-            raise ValueError(f"{access_mode} does not have a computed mag path.")
-        return base_path / suffix
+        return enrich_path(mag_properties.path, self._base_path(access_mode))
 
     def _attachment_path(
-        self,
-        attachment_properties: AttachmentProperties,
-        access_mode: RemoteAccessMode,
-        *,
-        layer_name: str,
-        type_name: str,
+        self, attachment_properties: AttachmentProperties, access_mode: RemoteAccessMode
     ) -> UPath:
-        """Resolves the path of an attachment for the given access mode."""
-        if access_mode == RemoteAccessMode.DIRECT_PATH:
-            return enrich_path(
-                attachment_properties.path, self._base_path(self._access_mode)
-            )
-        elif access_mode == RemoteAccessMode.PROXY_PATH:
-            base_path = self._base_path(access_mode)
-            assert base_path is not None  # for mypy
-            client = self._get_datastore_api_client()
-            return base_path / client.proxy_attachment_path(
-                layer_name, type_name, attachment_properties.name
-            )
-        elif access_mode == RemoteAccessMode.ZARR_STREAMING:
-            raise ValueError(
-                f"Attachments are not served via {RemoteAccessMode.ZARR_STREAMING}, "
-                + "as they are not part of the served datasource-properties.json. "
-                + f"Use {RemoteAccessMode.DIRECT_PATH} or {RemoteAccessMode.PROXY_PATH} "
-                + "instead."
-            )
-        else:
-            raise ValueError(
-                f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
-            )
+        """Resolves the path of an attachment for the given access mode.
+
+        `attachment_properties` must already be sourced from `access_mode`'s own layer
+        properties (see `RemoteAttachments._properties`), so its path always matches
+        what that mode's endpoint actually serves.
+        """
+        return enrich_path(attachment_properties.path, self._base_path(access_mode))
 
     def _initialize_layer_from_properties(
         self, properties: "LayerProperties", read_only: bool

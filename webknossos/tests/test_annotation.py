@@ -201,7 +201,7 @@ def test_annotation_dataset_rejects_other_access_modes() -> None:
     assert wk.RemoteAccessMode.DIRECT_PATH not in mag.paths, (
         "An annotation's data source is not exposed by the api."
     )
-    with pytest.raises(ValueError, match="not found in the api data source"):
+    with pytest.raises(ValueError, match="not available for this dataset"):
         layer.get_mag(mag.mag, access_mode=wk.RemoteAccessMode.DIRECT_PATH)
     with pytest.raises(ValueError, match="only supported with zarr streaming"):
         layer.get_mag(mag.mag, access_mode=wk.RemoteAccessMode.PROXY_PATH)

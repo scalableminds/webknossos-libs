@@ -8,7 +8,6 @@ from upath import UPath
 
 from webknossos.dataset.sampling_modes import SamplingModes
 from webknossos.dataset_properties import (
-    DataFormat,
     LayerProperties,
     LayerViewConfiguration,
     MagViewProperties,
@@ -58,17 +57,6 @@ class RemoteLayer(AbstractLayer):
     @property
     def dataset(self) -> "RemoteDataset":
         return self._dataset
-
-    @property
-    def data_format(self) -> DataFormat:
-        """Gets the data storage format of the underlying storage, e.g. `zarr3`.
-
-        Reports the true underlying format regardless of access mode, even under
-        `ZARR_STREAMING`, which always re-serves data as `zarr`: a `DIRECT_PATH` or
-        `PROXY_PATH` mag of this layer needs the real format to pick the right array
-        reader, independently of the dataset's default access mode.
-        """
-        return self._dataset._get_underlying_data_format(self.name)
 
     def as_segmentation_layer(self) -> "RemoteSegmentationLayer":
         """Casts into SegmentationLayer."""

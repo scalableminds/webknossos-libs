@@ -5,7 +5,6 @@ from webknossos.client.api_client.datastore_api_client import DatastoreApiClient
 from webknossos.client.api_client.models import ApiDataStore
 from webknossos.client.context import _get_api_client
 from webknossos.dataset_properties import DatasetProperties
-from webknossos.geometry import Mag
 
 pytestmark = [pytest.mark.skip_on_windows]
 
@@ -84,7 +83,7 @@ def test_build_info(client: WkApiClient) -> None:
 
 
 def test_datastore_api_client_paths() -> None:
-    """These routes are also used to build RemoteMagView/RemoteAttachments paths."""
+    """These routes are also used to look up RemoteDataset's per-mode properties."""
     client = DatastoreApiClient(datastore_base_url=DATASTORE_URL, timeout_seconds=30)
     assert client.url_prefix == f"{DATASTORE_URL}/data/v{client.webknossos_api_version}"
 
@@ -101,12 +100,4 @@ def test_datastore_api_client_paths() -> None:
     assert (
         client.proxy_dataset_url(dataset_id)
         == f"{client.url_prefix}/datasets/{dataset_id}/proxy/"
-    )
-
-    mag = Mag(1)
-    assert client.zarr_streaming_mag_path("color", mag) == "color/1"
-    assert client.proxy_mag_path("color", mag) == "layers/color/mags/1"
-    assert (
-        client.proxy_attachment_path("segmentation", "agglomerate", "map_all")
-        == "layers/segmentation/attachments/agglomerate/map_all"
     )

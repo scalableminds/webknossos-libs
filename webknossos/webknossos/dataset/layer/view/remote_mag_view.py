@@ -4,12 +4,13 @@ from typing import TYPE_CHECKING
 
 from upath import UPath
 
-from ....dataset_properties import DataFormat, MagViewProperties
-from ....geometry import Mag
+from ....geometry import Mag, NDBoundingBox, NormalizedBoundingBox
+from ....utils import enrich_path
 from ...remote_access_mode import RemoteAccessMode
 from .mag_view import MagView
 
 if TYPE_CHECKING:
+    from ....dataset_properties import LayerProperties
     from ..remote_layer import RemoteLayer
 
 
@@ -18,7 +19,8 @@ class RemoteMagView(MagView["RemoteLayer"]):
 
     Each mag can be accessed independently, so different mags of the same layer may use
     different access modes. Only the direct path is stored in the dataset properties;
-    the zarr streaming and proxy paths are computed from the datastore url on demand.
+    the zarr streaming and proxy paths are only known once fetched from their own
+    endpoint (see `RemoteDataset._get_dataset_properties_for_mode`).
 
     Examples:
         ```
@@ -30,6 +32,7 @@ class RemoteMagView(MagView["RemoteLayer"]):
     """
 
     _access_mode: RemoteAccessMode
+    _layer_properties: "LayerProperties"
 
     def __init__(
         self,
@@ -43,23 +46,30 @@ class RemoteMagView(MagView["RemoteLayer"]):
         Do not use this constructor manually. Instead use `RemoteLayer.get_mag()`.
         """
         self._access_mode = access_mode
-        path = layer.dataset._mag_path(
-            layer.name, mag, _mag_properties(layer, mag), access_mode
+        # The properties document actually served by access_mode is the only source
+        # that reliably describes what it serves: the datastore may derive a
+        # materially different representation for one mode than another mode's
+        # document describes (e.g. splitting a multi-channel source into
+        # single-channel layers), so bounding_box, data_format and the mag path all
+        # come from this single document, never mixed across modes.
+        self._layer_properties = layer.dataset._get_layer_properties_for_mode(
+            layer.name, access_mode
         )
-        # ZARR_STREAMING always re-serves data as Zarr, regardless of the underlying
-        # format, so this is resolved without evaluating layer.data_format -- which,
-        # for other access modes, may need an extra request to determine the true
-        # underlying format independently of the dataset's default access mode.
-        if access_mode == RemoteAccessMode.ZARR_STREAMING:
-            data_format = DataFormat.Zarr
-        else:
-            data_format = layer.data_format
+        mag_properties = next(
+            (m for m in self._layer_properties.mags if Mag(m.mag) == mag), None
+        )
+        if mag_properties is None or mag_properties.path is None:
+            raise ValueError(
+                f"Cannot access {layer.name}/{mag.to_layer_name()} via "
+                + f"{access_mode.value}: not available for this dataset."
+            )
+        path = enrich_path(mag_properties.path, layer.dataset._base_path(access_mode))
         super().__init__(
             layer,
             mag,
             path,
             read_only=read_only,
-            data_format=data_format,
+            data_format=self._layer_properties.data_format,
         )
 
     @property
@@ -78,6 +88,21 @@ class RemoteMagView(MagView["RemoteLayer"]):
         )
 
     @property
+    def bounding_box(self) -> NDBoundingBox:
+        # Overrides MagView's method, which uses self.layer.bounding_box -- the
+        # dataset's default access mode's bounding box, which does not necessarily
+        # match this mag's own access_mode (see __init__).
+        return self.normalized_bounding_box.denormalize()
+
+    @property
+    def normalized_bounding_box(self) -> NormalizedBoundingBox:
+        return self._layer_properties.bounding_box.align_with_mag(self._mag, ceil=True)
+
+    @property
+    def num_channels(self) -> int:
+        return self.normalized_bounding_box.size.get("c", 1)
+
+    @property
     def paths(self) -> Mapping[RemoteAccessMode, UPath]:
         """All paths at which this mag's data can be reached, keyed by access mode.
 
@@ -90,26 +115,15 @@ class RemoteMagView(MagView["RemoteLayer"]):
         result: dict[RemoteAccessMode, UPath] = {}
         for access_mode in RemoteAccessMode:
             try:
-                result[access_mode] = self._path_for(access_mode)
+                result[access_mode] = self.layer.dataset._mag_path(
+                    self.layer.name, self._mag, access_mode
+                )
             except ValueError:  # noqa: PERF203 only 3 iterations, clarity wins here
                 continue
         return MappingProxyType(result)
-
-    def _path_for(self, access_mode: RemoteAccessMode) -> UPath:
-        return self.layer.dataset._mag_path(
-            self.layer.name, self._mag, self._properties, access_mode
-        )
 
     def __repr__(self) -> str:
         return (
             f"RemoteMagView(name={repr(self.name)}, access_mode={self._access_mode.value}, "
             + f"bounding_box={self.bounding_box})"
         )
-
-
-def _mag_properties(layer: "RemoteLayer", mag: Mag) -> MagViewProperties:
-    return next(
-        mag_properties
-        for mag_properties in layer._properties.mags
-        if Mag(mag_properties.mag) == mag
-    )

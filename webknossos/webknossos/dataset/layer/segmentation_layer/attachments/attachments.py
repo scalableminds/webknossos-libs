@@ -329,31 +329,28 @@ class RemoteAttachments(AbstractAttachments):
         return self._access_mode
 
     def _attachment_path(
-        self, attachment: AttachmentProperties, type_name: str
+        self,
+        attachment: AttachmentProperties,
+        type_name: str,  # noqa: ARG002 kept for interface parity with the base class
     ) -> UPath:
-        return self._layer.dataset._attachment_path(
-            attachment,
-            self._access_mode,
-            layer_name=self._layer.name,
-            type_name=type_name,
-        )
+        return self._layer.dataset._attachment_path(attachment, self._access_mode)
 
     @property
     def _properties(self) -> "AttachmentsProperties":
-        # Attachments are never part of the served datasource-properties.json (see
-        # _get_optional_dataset_path), so which attachments exist has to come from the
-        # api data source regardless of the dataset's default access mode. This is safe
-        # even though self._layer.dataset._properties may not itself be api-sourced
-        # (see RemoteDataset._metadata_is_read_only): the attachment listing is only
-        # used to resolve names/paths, never for bounding_box/axis-sensitive reads.
-        direct_properties = self._layer.dataset._get_direct_dataset_properties()
-        if direct_properties is not None:
-            for layer_properties in direct_properties.data_layers:
-                if layer_properties.name == self._layer.name and isinstance(
-                    layer_properties, SegmentationLayerProperties
-                ):
-                    return layer_properties.attachments
-        return self._layer._properties.attachments
+        # Which attachments exist has to come from self._access_mode's own layer
+        # properties, same as a mag's path (see RemoteDataset._get_layer_properties_for_
+        # mode): ZARR_STREAMING never lists attachments at all, so this is empty
+        # whenever self._access_mode is ZARR_STREAMING, regardless of the dataset's own
+        # default access mode.
+        try:
+            layer_properties = self._layer.dataset._get_layer_properties_for_mode(
+                self._layer.name, self._access_mode
+            )
+        except ValueError:
+            return AttachmentsProperties()
+        if isinstance(layer_properties, SegmentationLayerProperties):
+            return layer_properties.attachments
+        return AttachmentsProperties()
 
     def _apply_server_properties(self) -> None:
         self._layer._apply_server_layer_properties()

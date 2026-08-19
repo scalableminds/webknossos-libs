@@ -278,6 +278,48 @@ def test_ref_layer_non_public(tmp_upath: UPath) -> None:
     remote_dataset.is_public = True
 
 
+def test_explored_remote_access_modes_return_same_data() -> None:
+    """Regression test: for an externally explored dataset whose layer is a single
+    channel split out of a multi-channel source, ZARR_STREAMING used to return
+    different (and briefly, all-zero) data than PROXY_PATH/DIRECT_PATH, because the
+    datastore's own served representation for such a layer can legitimately disagree
+    with the api's metadata (e.g. channel index, axis order, bounding box) -- see
+    idr0062A on webknossos.org, reported in #1492."""
+    remote_dataset = RemoteDataset.explore_and_add_remote(
+        "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr",
+        "idr0062A_access_mode_regression",
+        folder=RemoteFolder.get_by_path("Organization_X"),
+    )
+    try:
+        layer = remote_dataset.get_layer("Dapi")
+        reference = None
+        for access_mode in RemoteAccessMode:
+            mag = layer.get_mag(1, access_mode=access_mode)
+            data = mag.read()
+            # Different access modes may legitimately report different (but equally
+            # valid) axis orders for this dataset; normalize to (c, x, y, z) before
+            # comparing so only the actual voxel values are asserted to match.
+            bbox = mag.normalized_bounding_box
+            axis_position = dict(zip(bbox.axes, bbox.index))
+            normalized = np.transpose(
+                data, [axis_position[a] for a in ("c", "x", "y", "z")]
+            )
+            if reference is None:
+                assert normalized.sum() > 0, (
+                    f"{access_mode} unexpectedly returned all-zero data."
+                )
+                reference = normalized
+            else:
+                np.testing.assert_array_equal(
+                    normalized,
+                    reference,
+                    err_msg=f"{access_mode} returned different data than "
+                    + f"{next(iter(RemoteAccessMode))}.",
+                )
+    finally:
+        remote_dataset.delete()
+
+
 def test_per_mag_access_mode() -> None:
     remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     layer = remote_dataset.get_layer("color")
@@ -367,8 +409,8 @@ def test_attachments_are_available_in_every_access_mode(tmp_upath: UPath) -> Non
         local_ds.get_segmentation_layer("segmentation").attachments.agglomerates[0]
     )
 
-    # Attachments are not part of the zarr streaming datasource-properties.json, but
-    # they are still available because the properties carry the direct paths.
+    # Attachments default to DIRECT_PATH resolution regardless of the dataset's own
+    # default access mode, by fetching the api data source on demand.
     streaming_ds = RemoteDataset.open(
         dataset_id=remote_ds.dataset_id, access_mode=RemoteAccessMode.ZARR_STREAMING
     )
@@ -376,8 +418,15 @@ def test_attachments_are_available_in_every_access_mode(tmp_upath: UPath) -> Non
     assert len(attachments.agglomerates) == 1
     assert attachments.access_mode == RemoteAccessMode.DIRECT_PATH
 
-    with pytest.raises(ValueError, match="not served via"):
-        _ = attachments.with_access_mode(RemoteAccessMode.ZARR_STREAMING).agglomerates
+    # PROXY_PATH resolves attachments too, from its own served properties.
+    proxy_attachments = attachments.with_access_mode(RemoteAccessMode.PROXY_PATH)
+    assert len(proxy_attachments.agglomerates) == 1
+
+    # ZARR_STREAMING never lists attachments at all, so this is simply empty.
+    streaming_attachments = attachments.with_access_mode(
+        RemoteAccessMode.ZARR_STREAMING
+    )
+    assert len(streaming_attachments.agglomerates) == 0
 
     # Attachments are also reachable through the proxy, at a computed path.
     proxy_attachments = attachments.with_access_mode(RemoteAccessMode.PROXY_PATH)
