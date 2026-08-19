@@ -9,7 +9,7 @@ from upath import UPath
 
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.mag import Mag
-from ...geometry.nd_bounding_box import NDBoundingBox
+from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
 from .image_source import ChunkResult, ImageSource, ReadOptions
@@ -77,28 +77,32 @@ class ChunkedImageSource(ImageSource):
         """
 
     @property
-    def expected_bbox(self) -> NDBoundingBox:
+    def expected_bbox(self) -> NormalizedBoundingBox:
         """
         The exact bounding box of the data, in the source's native Mag(1)
         space — never a placeholder, since these formats know their extents.
 
-        Channels are never reported as a "c" axis here: like every other
-        layer bounding box, this describes only the spatial (and, for
-        unpinned multi-timepoint data, "t") extent — the channel count is
-        conveyed separately, via the `num_channels` passed to `add_layer()`,
-        whether the channels end up combined into one layer or split into
-        one layer each.
+        Carries an explicit "c" axis sized `num_channels` in the common
+        case (no unpinned "t" axis). With an unpinned "t" axis, "c" is left
+        out instead: a subclass can have `num_channels > 1` together with
+        `_include_t_axis=True` for a single, non-split layer, and
+        `NDBoundingBox.normalize_axes()` cannot add "c" in for a channel
+        count above 1 — so this box keeps describing only the spatial and
+        "t" extent, and `num_channels` continues to be conveyed separately
+        via `add_layer()`, exactly as before.
         """
         x_size, y_size = self._x, self._y
         if self._options.swap_xy:
             x_size, y_size = y_size, x_size
 
         if not self._include_t_axis:
-            return BoundingBox((0, 0, 0), (x_size, y_size, self._z))
+            return BoundingBox((0, 0, 0), (x_size, y_size, self._z)).normalize_axes(
+                self.num_channels
+            )
 
         axes = ["t", "x", "y", "z"]
         sizes = [self._t, x_size, y_size, self._z]
-        return NDBoundingBox(
+        return NormalizedBoundingBox(
             VecInt.zeros(tuple(axes)),
             VecInt(sizes, axes=axes),
             axes,
@@ -107,7 +111,7 @@ class ChunkedImageSource(ImageSource):
 
     def copy_chunk_to_view(
         self,
-        bbox: NDBoundingBox,
+        bbox: NormalizedBoundingBox,
         mag_view: MagView,
         dtype: DTypeLike | None = None,
     ) -> ChunkResult:
@@ -212,19 +216,19 @@ class ChunkedImageSource(ImageSource):
         )
 
     def initial_layer_bounding_box(
-        self, mag1_expected_bbox: NDBoundingBox
-    ) -> NDBoundingBox:
+        self, mag1_expected_bbox: NormalizedBoundingBox
+    ) -> NormalizedBoundingBox:
         """Exact from the start — no placeholder to inflate."""
         return mag1_expected_bbox
 
     def chunk_grid(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         mag_view: MagView,
         mag: Mag,
         batch_size: int | None,
-    ) -> list[NDBoundingBox]:
+    ) -> list[NormalizedBoundingBox]:
         """Full 3D shard-aligned chunks, one shard's worth of data per job.
         Safe to chunk the layer's box because it is the exact one."""
         del batch_size
@@ -233,11 +237,11 @@ class ChunkedImageSource(ImageSource):
 
     def final_bounding_box(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         chunk_sizes: Sequence[tuple[int, int]],
         mag: Mag,
-    ) -> NDBoundingBox:
+    ) -> NormalizedBoundingBox:
         """Unchanged. Correcting from per-chunk sizes would be wrong: a job
         reports its own shard, not the full extent."""
         del chunk_sizes, mag

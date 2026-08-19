@@ -11,7 +11,7 @@ from upath import UPath
 from ...dataset_properties import DataFormat
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.mag import Mag
-from ...geometry.nd_bounding_box import NDBoundingBox
+from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec3_int import Vec3Int
 from ...geometry.vec_int import VecInt
 from ..errors import (
@@ -299,7 +299,7 @@ class SlicedImageSource(ImageSource):
 
     def copy_chunk_to_view(
         self,
-        bbox: BoundingBox | NDBoundingBox,
+        bbox: NormalizedBoundingBox,
         mag_view: MagView,
         dtype: DTypeLike | None = None,
     ) -> ChunkResult:
@@ -403,10 +403,12 @@ class SlicedImageSource(ImageSource):
         return self._channel
 
     @property
-    def expected_bbox(self) -> NDBoundingBox:
+    def expected_bbox(self) -> NormalizedBoundingBox:
         """The extents the reader reports. Only x/y is a placeholder — it is
         one slice's extent, which a later slice may exceed; the axes stepped
-        through are exact, since the reader counted them."""
+        through are exact, since the reader counted them.
+
+        Always carries an explicit "c" axis sized `num_channels`."""
         with self._open_slice_reader() as images:
             sizes = images.sizes
             x_size, y_size = sizes["x"], sizes["y"]
@@ -417,10 +419,15 @@ class SlicedImageSource(ImageSource):
                 # One axis at most, so it is the z of a plain 3D box —
                 # whatever the reader happens to call it.
                 z_size = sizes[self._iter_axes[0]] if self._iter_axes else 1
-                return BoundingBox((0, 0, 0), (x_size, y_size, z_size))
+                return BoundingBox((0, 0, 0), (x_size, y_size, z_size)).normalize_axes(
+                    self.num_channels
+                )
 
             # Several axes are stepped through (e.g. "t" and "z"), so each one
-            # has to be named in the box.
+            # has to be named in the box. "c" is already one of them whenever
+            # there is more than one raw channel, sized self.num_channels
+            # below — matches what self.num_channels reports for every other
+            # branch here, so no further normalization is needed.
             axes_names = self._iter_axes + self._bundle_axes
             axes_sizes = [sizes[axis] for axis in axes_names]
             axes_sizes[axes_names.index("x")] = x_size
@@ -431,7 +438,7 @@ class SlicedImageSource(ImageSource):
                 # `channel` selects one, and _first_n_channels truncates to the
                 # first three).
                 axes_sizes[axes_names.index("c")] = self.num_channels
-            return NDBoundingBox(
+            return NormalizedBoundingBox(
                 VecInt.zeros(tuple(axes_names)),
                 VecInt(axes_sizes, axes=axes_names),
                 axes_names,
@@ -439,8 +446,8 @@ class SlicedImageSource(ImageSource):
             )
 
     def initial_layer_bounding_box(
-        self, mag1_expected_bbox: NDBoundingBox
-    ) -> NDBoundingBox:
+        self, mag1_expected_bbox: NormalizedBoundingBox
+    ) -> NormalizedBoundingBox:
         """Deliberately oversized in x/y, since a write outside the layer's
         box would be rejected. Shrunk to the true extent afterwards."""
         safe_size = mag1_expected_bbox.size.with_replaced(
@@ -450,12 +457,12 @@ class SlicedImageSource(ImageSource):
 
     def chunk_grid(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         mag_view: MagView,
         mag: Mag,
         batch_size: int | None,
-    ) -> list[NDBoundingBox]:
+    ) -> list[NormalizedBoundingBox]:
         """Batches of z-slices spanning the full x/y extent, which cannot be
         split while it is still the placeholder."""
         del mag
@@ -492,11 +499,11 @@ class SlicedImageSource(ImageSource):
 
     def final_bounding_box(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         chunk_sizes: Sequence[tuple[int, int]],
         mag: Mag,
-    ) -> NDBoundingBox:
+    ) -> NormalizedBoundingBox:
         """Replaces the placeholder x/y with the largest extent any chunk
         actually wrote."""
         return layer_bounding_box.with_size_xyz(
