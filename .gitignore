@@ -125,5 +125,3 @@ webknossos/testoutput/*
 */cell_*/*
 cell_*/*
 
-# minio
-minio_data

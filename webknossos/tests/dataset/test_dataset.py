@@ -16,7 +16,7 @@ from tests.constants import (
     REMOTE_TESTOUTPUT_DIR,
     TESTDATA_DIR,
     TESTOUTPUT_DIR,
-    use_minio,
+    use_moto,
 )
 from tests.utils import TestTemporaryDirectoryNonLocal
 from webknossos.dataset import (
@@ -63,8 +63,8 @@ from webknossos.utils import (
 
 
 @pytest.fixture(autouse=True, scope="module")
-def start_minio() -> Iterator[None]:
-    with use_minio():
+def start_moto() -> Iterator[None]:
+    with use_moto():
         yield
 
 
