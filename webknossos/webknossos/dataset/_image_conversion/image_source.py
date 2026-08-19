@@ -132,14 +132,10 @@ class ImageSource(ABC):
         """The bounding box the data is expected to occupy, in Mag(1). Exact,
         or an oversized placeholder.
 
-        A "c" axis is present with the true channel count whenever the
-        expected extent is representable as a plain 3D box, or whenever the
-        source's own axes already carry a channel dimension. It can still be
-        absent when the implementation's axes lack "c" for another reason
-        (e.g. an unpinned "t" axis) and `num_channels` is 1 for that call —
-        mirroring `NDBoundingBox.normalize_axes()`'s asymmetric contract,
-        which only adds "c" in when it's already present or the box being
-        normalized is a plain `BoundingBox`.
+        Carries a "c" axis whenever there is more than one channel. A
+        single-channel source may still omit it, conveying that count
+        separately via `num_channels`, the same way every other ND layer
+        bounding box does.
         """
 
     @abstractmethod

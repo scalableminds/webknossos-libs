@@ -82,14 +82,11 @@ class ChunkedImageSource(ImageSource):
         The exact bounding box of the data, in the source's native Mag(1)
         space — never a placeholder, since these formats know their extents.
 
-        Carries an explicit "c" axis sized `num_channels` in the common
-        case (no unpinned "t" axis). With an unpinned "t" axis, "c" is left
-        out instead: a subclass can have `num_channels > 1` together with
-        `_include_t_axis=True` for a single, non-split layer, and
-        `NDBoundingBox.normalize_axes()` cannot add "c" in for a channel
-        count above 1 — so this box keeps describing only the spatial and
-        "t" extent, and `num_channels` continues to be conveyed separately
-        via `add_layer()`, exactly as before.
+        Carries an explicit "c" axis sized `num_channels` whenever there is
+        more than one channel. A single-channel source with an unpinned "t"
+        axis omits "c" instead, like every other ND layer bounding box that
+        relies on `add_layer()`'s `num_channels` argument to convey a
+        channel count of 1.
         """
         x_size, y_size = self._x, self._y
         if self._options.swap_xy:
@@ -102,6 +99,12 @@ class ChunkedImageSource(ImageSource):
 
         axes = ["t", "x", "y", "z"]
         sizes = [self._t, x_size, y_size, self._z]
+        if self.num_channels > 1:
+            # "c" goes right after "t", matching the axis order
+            # copy_chunk_to_view's block ends up in below (it prepends "t" to
+            # a block that already has "c" as its leading axis).
+            axes = ["t", "c", "x", "y", "z"]
+            sizes = [self._t, self.num_channels, x_size, y_size, self._z]
         return NormalizedBoundingBox(
             VecInt.zeros(tuple(axes)),
             VecInt(sizes, axes=axes),

@@ -619,6 +619,61 @@ def test_ims_three_uint8_channels_become_rgb_layer_without_allow_multiple_layers
         assert split_layer.dtype == np.dtype(dtype)
 
 
+def test_ims_rgb_layer_with_multiple_timepoints(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Three uint8 channels combine into a single RGB layer (see
+    # test_ims_three_uint8_channels_become_rgb_layer_without_allow_multiple_layers
+    # above), and multiple timepoints add a "t" axis (see
+    # test_ims_from_images_multi_timepoint above) — this combination used to
+    # crash, since expected_bbox couldn't carry both "c" and "t" for a
+    # single, non-split layer.
+    num_timepoints = 2
+    num_channels = 3
+    dtype = np.uint8
+    ims_path = tmp_upath / "synthetic_multi_t_c.ims"
+    create_synthetic_multi_timepoint_ims(
+        ims_path,
+        num_timepoints=num_timepoints,
+        num_channels=num_channels,
+        z=4,
+        y=8,
+        x=10,
+        dtype=dtype,
+    )
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_image_source"
+    )
+    monkeypatch.setattr(
+        ims_image_source,
+        "_read_ims_metadata_quietly",
+        lambda _path: (
+            (num_timepoints, num_channels, 4, 8, 10),
+            np.dtype(dtype),
+        ),
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ims_path, layer_name="rgb_t", data_format="zarr3", executor=executor
+        )
+
+    assert layer.num_channels == num_channels
+    assert layer.bounding_box.axes == ("t", "c", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (
+        num_timepoints,
+        num_channels,
+        10,
+        8,
+        4,
+    )
+    data = layer.get_finest_mag().read()  # (t, c, x, y, z)
+    for t in range(num_timepoints):
+        for c in range(num_channels):
+            assert (data[t, c] == t * 100 + c).all()
+
+
 @pytest.mark.parametrize(
     "mode,expected_size",
     [("RGB", wk.VecInt(c=3, x=16, y=8, z=1)), ("RGBA", wk.VecInt(c=3, x=16, y=8, z=1))],
