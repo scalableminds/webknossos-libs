@@ -345,7 +345,8 @@ def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
     assert reader.num_channels == 1
     assert reader.channel is None
     assert reader.get_possible_layers() is None
-    assert reader.expected_bbox.size.to_tuple() == (X, Y, Z)
+    assert reader.expected_bbox.size_xyz.to_tuple() == (X, Y, Z)
+    assert reader.expected_bbox.size.c == 1
 
 
 def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
@@ -375,7 +376,7 @@ def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
 
     with patch("mrcfile.mmap", counting_mmap):
         for z in range(Z):
-            bbox = BoundingBox((0, 0, z), (X, Y, 1))
+            bbox = BoundingBox((0, 0, z), (X, Y, 1)).normalize_axes(1)
             reader.copy_chunk_to_view(bbox, mag_view=mag_view, dtype=None)
 
     assert open_count == Z, (

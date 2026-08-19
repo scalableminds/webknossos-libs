@@ -703,7 +703,10 @@ def add_layer_from_images(
                 )
 
         args = image_source.chunk_grid(
-            layer.bounding_box, mag_view=mag_view, mag=mag, batch_size=batch_size
+            layer.normalized_bounding_box,
+            mag_view=mag_view,
+            mag=mag,
+            batch_size=batch_size,
         )
 
         with warnings.catch_warnings():
@@ -728,7 +731,7 @@ def add_layer_from_images(
                 max_id = max(max_ids)
                 cast(SegmentationLayer, layer).largest_segment_id = max_id
             layer.bounding_box = image_source.final_bounding_box(
-                layer.bounding_box, chunk_sizes=shapes, mag=mag
+                layer.normalized_bounding_box, chunk_sizes=shapes, mag=mag
             )
         if expected_bbox != layer.bounding_box:
             warnings.warn(

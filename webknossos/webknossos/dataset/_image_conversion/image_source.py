@@ -20,7 +20,7 @@ from typing import NamedTuple
 from numpy.typing import DTypeLike
 
 from ...geometry.mag import Mag
-from ...geometry.nd_bounding_box import NDBoundingBox
+from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ..layer.view import MagView
 
 
@@ -128,14 +128,20 @@ class ImageSource(ABC):
 
     @property
     @abstractmethod
-    def expected_bbox(self) -> NDBoundingBox:
+    def expected_bbox(self) -> NormalizedBoundingBox:
         """The bounding box the data is expected to occupy, in Mag(1). Exact,
-        or an oversized placeholder."""
+        or an oversized placeholder.
+
+        Carries a "c" axis whenever there is more than one channel. A
+        single-channel source may still omit it, conveying that count
+        separately via `num_channels`, the same way every other ND layer
+        bounding box does.
+        """
 
     @abstractmethod
     def copy_chunk_to_view(
         self,
-        bbox: NDBoundingBox,
+        bbox: NormalizedBoundingBox,
         mag_view: MagView,
         dtype: DTypeLike | None = None,
     ) -> ChunkResult:
@@ -157,30 +163,30 @@ class ImageSource(ABC):
 
     @abstractmethod
     def initial_layer_bounding_box(
-        self, mag1_expected_bbox: NDBoundingBox
-    ) -> NDBoundingBox:
+        self, mag1_expected_bbox: NormalizedBoundingBox
+    ) -> NormalizedBoundingBox:
         """The bounding box to give the layer before conversion starts. A
         placeholder is oversized so writes are never out of bounds."""
 
     @abstractmethod
     def chunk_grid(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         mag_view: MagView,
         mag: Mag,
         batch_size: int | None,
-    ) -> list[NDBoundingBox]:
+    ) -> list[NormalizedBoundingBox]:
         """The units of work, one per `copy_chunk_to_view` call. `batch_size`
         is honoured only by strategies that chunk along z."""
 
     @abstractmethod
     def final_bounding_box(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         chunk_sizes: Sequence[tuple[int, int]],
         mag: Mag,
-    ) -> NDBoundingBox:
+    ) -> NormalizedBoundingBox:
         """The layer's bounding box once every chunk has been written.
         Unchanged for a source that started out exact."""

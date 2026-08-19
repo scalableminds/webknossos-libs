@@ -33,7 +33,8 @@ def test_czi_image_source_metadata(tmp_upath: UPath) -> None:
     # rather than written as RGB channels: one channel per layer.
     assert source.num_channels == 1
     assert source.get_possible_layers() == {"czi_channel": [0, 1]}
-    assert source.expected_bbox.size.to_tuple() == (10, 8, 4)
+    assert source.expected_bbox.size_xyz.to_tuple() == (10, 8, 4)
+    assert source.expected_bbox.size.c == 1
 
 
 def test_czi_image_source_multi_timepoint_gets_a_t_axis(tmp_upath: UPath) -> None:
