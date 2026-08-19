@@ -49,10 +49,16 @@ class RemoteLayer(AbstractLayer):
         )
         mag = Mag(mag_properties.mag)
         self._assert_mag_does_not_exist_yet(mag)
-        # Remote mags are always read-only, regardless of the access mode.
-        self._mags[mag] = RemoteMagView(
-            self, mag, access_mode=self._dataset.access_mode, read_only=True
-        )
+        try:
+            # Remote mags are always read-only, regardless of the access mode.
+            mag_view = RemoteMagView(
+                self, mag, access_mode=self._dataset.access_mode, read_only=True
+            )
+        except ValueError:
+            # The default access mode's own served properties may legitimately not
+            # (yet) list this mag; skip it rather than failing the whole layer.
+            return
+        self._mags[mag] = mag_view
 
     @property
     def dataset(self) -> "RemoteDataset":

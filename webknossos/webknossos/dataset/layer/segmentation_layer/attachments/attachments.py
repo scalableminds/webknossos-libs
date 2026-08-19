@@ -337,11 +337,10 @@ class RemoteAttachments(AbstractAttachments):
 
     @property
     def _properties(self) -> "AttachmentsProperties":
-        # Which attachments exist has to come from self._access_mode's own layer
-        # properties, same as a mag's path (see RemoteDataset._get_layer_properties_for_
-        # mode): ZARR_STREAMING never lists attachments at all, so this is empty
-        # whenever self._access_mode is ZARR_STREAMING, regardless of the dataset's own
-        # default access mode.
+        # Which attachments exist has to come from self._access_mode's own served
+        # layer properties: ZARR_STREAMING never lists attachments at all, so this is
+        # empty whenever self._access_mode is ZARR_STREAMING, regardless of the
+        # dataset's own default access mode.
         try:
             layer_properties = self._layer.dataset._get_layer_properties_for_mode(
                 self._layer.name, self._access_mode
@@ -356,6 +355,8 @@ class RemoteAttachments(AbstractAttachments):
         self._layer._apply_server_layer_properties()
 
     def _get_optional_dataset_path(self) -> UPath | None:
+        # Required by the abstract base class; unused here since _attachment_path is
+        # fully overridden above.
         return self._layer.dataset._base_path(self._layer.dataset.access_mode)
 
     def add_attachment_as_ref(

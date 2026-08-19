@@ -281,13 +281,12 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
                 )
 
-            # self._properties -- which drives layer/mag/attachment management and
-            # metadata writes -- is always sourced from the api data source whenever
-            # one is available, regardless of access_mode: that is the only source
-            # safe to write back to the api (see _metadata_is_read_only). access_mode
-            # only selects which document a mag's own read (path, bounding box, axis
-            # order, data_format) is resolved from (see
-            # _get_dataset_properties_for_mode), independently of this.
+            # The dataset's properties, which drive layer/mag/attachment management
+            # and metadata writes, are always sourced from the api data source
+            # whenever one is available, regardless of access_mode: that is the only
+            # source safe to write back to the api. access_mode only selects which
+            # document a mag's own read (path, bounding box, axis order, data_format)
+            # is resolved from, independently of this.
             if annotation_id is not None:
                 # An annotation's volume layers are not part of the dataset's api
                 # data source, so there is no api-sourced properties to fall back on.
@@ -343,11 +342,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         Writing metadata means PUTting `self._properties` back to the server via
         `client.dataset_update`. `self._properties` is api-sourced whenever the api
-        exposes a usable data source for this dataset (see `_properties_are_direct`),
-        independently of the dataset's default access mode, so metadata writes work
-        the same way under any access mode. Only an annotation's volume layers or a
-        dataset with an unusable data source have no api-sourced properties to write
-        back.
+        exposes a usable data source for this dataset, independently of the
+        dataset's default access mode, so metadata writes work the same way under
+        any access mode. Only an annotation's volume layers or a dataset with an
+        unusable data source have no api-sourced properties to write back.
         """
         return not self._properties_are_direct
 
@@ -377,13 +375,13 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         """This dataset's properties as reported by `access_mode`'s own endpoint.
 
         Returns `self._properties` directly for `DIRECT_PATH`, when it is api-sourced
-        (see `_properties_are_direct`) -- no extra fetch needed, and independent of the
-        dataset's own default access mode, since `self._properties` is always
-        api-sourced whenever possible (so that layer/mag/attachment management works
-        under any default access mode). For any other mode, fetches and caches that
-        mode's own served datasource-properties.json. `None` if that mode's properties
-        are unavailable for this dataset, e.g. `DIRECT_PATH` without a usable api data
-        source, or `PROXY_PATH` for an annotation's volume layers.
+        -- no extra fetch needed, and independent of the dataset's own default access
+        mode, since `self._properties` is always api-sourced whenever possible (so
+        that layer/mag/attachment management works under any default access mode).
+        For any other mode, fetches and caches that mode's own served
+        datasource-properties.json. `None` if that mode's properties are unavailable
+        for this dataset, e.g. `DIRECT_PATH` without a usable api data source, or
+        `PROXY_PATH` for an annotation's volume layers.
 
         A mode's bounding box, axis order and mag paths can only be read correctly from
         that mode's own document: the datastore may derive a different representation
@@ -405,6 +403,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self, access_mode: RemoteAccessMode
     ) -> DatasetProperties | None:
         if access_mode == RemoteAccessMode.DIRECT_PATH:
+            if self._annotation_id is not None:
+                # self._dataset_id refers to the annotation's base dataset, which
+                # does not expose the annotation's own volume layers.
+                return None
             api_dataset_info = self._get_dataset_info()
             if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
                 return None
@@ -503,8 +505,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         """Resolves the path of an attachment for the given access mode.
 
         `attachment_properties` must already be sourced from `access_mode`'s own layer
-        properties (see `RemoteAttachments._properties`), so its path always matches
-        what that mode's endpoint actually serves.
+        properties, so its path always matches what that mode's endpoint actually
+        serves.
         """
         return enrich_path(attachment_properties.path, self._base_path(access_mode))
 
@@ -513,7 +515,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     ) -> RemoteLayer:
         # Layers are read-only whenever the dataset itself is (e.g. RemoteDataset.open(
         # ..., read_only=True)), or when the dataset has no api-sourced properties to
-        # write back to (see _metadata_is_read_only).
+        # write back to.
         read_only = read_only or self._metadata_is_read_only
         return super()._initialize_layer_from_properties(properties, read_only)
 
@@ -539,9 +541,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self._properties = self._load_dataset_properties()
         self._last_read_properties = copy.deepcopy(self._properties)
         # A metadata write (e.g. adding a mag) can change what other access modes now
-        # serve too, so their cached properties (see _get_dataset_properties_for_mode)
-        # would otherwise miss it, e.g. a newly added mag not yet being found via the
-        # dataset's own default access mode when its layers are re-initialized below.
+        # serve too, so their cached properties would otherwise miss it, e.g. a newly
+        # added mag not yet being found via the dataset's own default access mode
+        # when its layers are re-initialized below.
         self._properties_by_mode = {}
 
         # update existing layers

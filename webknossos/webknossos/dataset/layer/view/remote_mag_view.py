@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from upath import UPath
 
 from ....geometry import Mag, NDBoundingBox, NormalizedBoundingBox
-from ....utils import enrich_path
 from ...remote_access_mode import RemoteAccessMode
 from .mag_view import MagView
 
@@ -20,7 +19,7 @@ class RemoteMagView(MagView["RemoteLayer"]):
     Each mag can be accessed independently, so different mags of the same layer may use
     different access modes. Only the direct path is stored in the dataset properties;
     the zarr streaming and proxy paths are only known once fetched from their own
-    endpoint (see `RemoteDataset._get_dataset_properties_for_mode`).
+    endpoint.
 
     Examples:
         ```
@@ -55,15 +54,7 @@ class RemoteMagView(MagView["RemoteLayer"]):
         self._layer_properties = layer.dataset._get_layer_properties_for_mode(
             layer.name, access_mode
         )
-        mag_properties = next(
-            (m for m in self._layer_properties.mags if Mag(m.mag) == mag), None
-        )
-        if mag_properties is None or mag_properties.path is None:
-            raise ValueError(
-                f"Cannot access {layer.name}/{mag.to_layer_name()} via "
-                + f"{access_mode.value}: not available for this dataset."
-            )
-        path = enrich_path(mag_properties.path, layer.dataset._base_path(access_mode))
+        path = layer.dataset._mag_path(layer.name, mag, access_mode)
         super().__init__(
             layer,
             mag,
@@ -91,7 +82,7 @@ class RemoteMagView(MagView["RemoteLayer"]):
     def bounding_box(self) -> NDBoundingBox:
         # Overrides MagView's method, which uses self.layer.bounding_box -- the
         # dataset's default access mode's bounding box, which does not necessarily
-        # match this mag's own access_mode (see __init__).
+        # match this mag's own access mode.
         return self.normalized_bounding_box.denormalize()
 
     @property
