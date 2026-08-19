@@ -91,6 +91,21 @@ def _assert_same_webknossos_instance(
         )
 
 
+def _find_mag_path(properties: DatasetProperties, layer_name: str, mag: Mag) -> str:
+    for layer_properties in properties.data_layers:
+        if layer_properties.name != layer_name:
+            continue
+        for mag_properties in layer_properties.mags:
+            if Mag(mag_properties.mag) == mag:
+                assert mag_properties.path is not None, (
+                    f"Remote mags must have a path: {mag_properties}"
+                )
+                return mag_properties.path
+    raise ValueError(
+        f"{layer_name}/{mag.to_layer_name()} not found in the api data source."
+    )
+
+
 @attr.frozen
 class StorageCredentials:
     """Credentials for accessing remote storage when exploring and adding a dataset."""
@@ -185,6 +200,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         # loaded below from a served datasource-properties.json, whose mag/attachment
         # paths are relative to `access_mode`'s base path and contain no direct paths.
         self._properties_are_direct = dataset_properties is not None
+        # Lazily fetched by _get_direct_dataset_properties(); _UNSET until first use.
+        self._direct_dataset_properties: DatasetProperties | None | Any = _UNSET
 
         if dataset_properties is None:
             dataset_properties = self._load_dataset_properties()
@@ -278,20 +295,20 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
                 )
 
-            if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
-                if access_mode == RemoteAccessMode.DIRECT_PATH:
+            if access_mode == RemoteAccessMode.DIRECT_PATH:
+                if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
                     raise RuntimeError(
                         f"The dataset {dataset_id} is unusable {api_dataset_info.data_source.status}"
                     )
-                # Without a usable api data source there are no direct paths available.
-                # The properties are loaded from the served datasource-properties.json.
-                dataset_properties = None
-            elif annotation_id is not None:
-                # The volume layers of an annotation are not part of the dataset's api
-                # data source, so the annotation's served properties are the only source.
-                dataset_properties = None
-            else:
                 dataset_properties = api_dataset_info.data_source
+            else:
+                # ZARR_STREAMING/PROXY_PATH always load their properties from the
+                # endpoint that actually serves the data, rather than the api data
+                # source. The datastore can derive a different bounding box or axis
+                # order for its streamed/proxied representation than what the api
+                # reports (e.g. for externally explored datasets); using the api's
+                # properties there would misalign reads against the actual array.
+                dataset_properties = None
 
             return cls(
                 dataset_id=dataset_id,
@@ -333,14 +350,13 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     def _metadata_is_read_only(self) -> bool:
         """Whether the dataset's properties can be written back to the server.
 
-        Writing metadata means PUTting `self._properties` (the api data source) back to
-        the server via `client.dataset_update`. That is only meaningful when
-        `self._properties` actually stems from the api data source, i.e. when
-        `_properties_are_direct` is True. This is independent of the access mode used
-        to read image data: `ZARR_STREAMING` and `PROXY_PATH` both load their properties
-        from the api data source too, whenever one is available, so they can write
-        metadata just as `DIRECT_PATH` can. Only an annotation's volume layers or an
-        unusable data source have no api-sourced properties to write back.
+        Writing metadata means PUTting `self._properties` back to the server via
+        `client.dataset_update`. Only `DIRECT_PATH` loads `self._properties` from the
+        api data source; `ZARR_STREAMING` and `PROXY_PATH` load it from the endpoint
+        that actually serves the data, which can legitimately disagree with the api
+        data source (e.g. bounding box or axis order, for externally explored
+        datasets). Writing that served representation back as the api data source
+        could silently corrupt it, so only `DIRECT_PATH` supports metadata writes.
         """
         return not self._properties_are_direct
 
@@ -363,6 +379,50 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         with self._context:
             return _get_context().get_datastore_api_client(self._datastore_url)
+
+    def _get_direct_dataset_properties(self) -> DatasetProperties | None:
+        """The dataset's properties as reported by the api, regardless of access_mode.
+
+        `None` if the api does not expose a usable data source for this dataset (e.g.
+        an annotation's volume layers, or a dataset with an unusable data source).
+
+        This is used only to resolve a mag's or attachment's `DIRECT_PATH`, never as
+        the source of bounding_box/axis metadata for actual reads: the api data source
+        can disagree with what a non-DIRECT_PATH access mode's endpoint actually serves
+        (see `_metadata_is_read_only`), so `self._properties` never uses it directly
+        unless `self._access_mode` is itself `DIRECT_PATH`.
+        """
+        if self._access_mode == RemoteAccessMode.DIRECT_PATH:
+            assert isinstance(self._properties, DatasetProperties)  # for mypy
+            return self._properties
+
+        if self._direct_dataset_properties is _UNSET:
+            api_dataset_info = self._get_dataset_info()
+            if isinstance(api_dataset_info.data_source, ApiUnusableDataSource):
+                self._direct_dataset_properties = None
+            else:
+                self._direct_dataset_properties = api_dataset_info.data_source
+        return self._direct_dataset_properties
+
+    def _get_underlying_data_format(self, layer_name: str) -> DataFormat:
+        """The data format of the underlying storage for a layer, regardless of
+        access_mode.
+
+        `ZARR_STREAMING` always re-serves data as `zarr`, so `self._properties` reports
+        that format whenever it is the dataset's default access mode, even though a
+        `DIRECT_PATH`/`PROXY_PATH` mag of the same layer needs the true underlying
+        format to pick the right array reader. Falls back to `self._properties` when no
+        direct properties are available (e.g. an annotation's volume layers), the only
+        case where there is no independent underlying format to report.
+        """
+        direct_properties = self._get_direct_dataset_properties()
+        for properties in (direct_properties, self._properties):
+            if properties is None:
+                continue
+            for layer_properties in properties.data_layers:
+                if layer_properties.name == layer_name:
+                    return layer_properties.data_format
+        raise ValueError(f"Layer {layer_name} not found.")
 
     def _base_path(self, access_mode: RemoteAccessMode) -> UPath | None:
         """The base path that mags of the given access mode are relative to.
@@ -408,39 +468,40 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     ) -> UPath:
         """Resolves the path of a mag for the given access mode.
 
-        Only the direct path is stored in the properties. The zarr streaming and proxy
-        paths are computed from the datastore url and are not persisted anywhere.
+        `mag_properties` must be sourced from `self._properties`, i.e. it matches
+        `self._access_mode`. For that same mode, its path is used directly. For any
+        other mode, the path is computed from the datastore url instead, since
+        `mag_properties` does not describe that mode's endpoint; `DIRECT_PATH` is
+        looked up separately (see `_get_direct_dataset_properties`), since a mag's
+        direct path is never derivable from a URL formula.
         """
-        if access_mode == RemoteAccessMode.DIRECT_PATH:
-            if not self._properties_are_direct:
-                raise ValueError(
-                    f"Cannot access {layer_name}/{mag.to_layer_name()} via "
-                    + f"{RemoteAccessMode.DIRECT_PATH}, because this dataset does not "
-                    + "expose direct paths. Its properties were loaded from the "
-                    + f"{self._access_mode.value} endpoint."
-                )
+        if access_mode == self._access_mode:
             assert mag_properties.path is not None, (
                 f"Remote mags must have a path: {mag_properties}"
             )
-            return enrich_path(mag_properties.path, None)
+            return enrich_path(mag_properties.path, self._base_path(access_mode))
+
+        if access_mode == RemoteAccessMode.DIRECT_PATH:
+            direct_properties = self._get_direct_dataset_properties()
+            if direct_properties is None:
+                raise ValueError(
+                    f"Cannot access {layer_name}/{mag.to_layer_name()} via "
+                    + f"{RemoteAccessMode.DIRECT_PATH}, because the api does not "
+                    + "expose a usable data source for this dataset."
+                )
+            direct_mag_path = _find_mag_path(direct_properties, layer_name, mag)
+            return enrich_path(direct_mag_path, None)
 
         base_path = self._base_path(access_mode)
         assert base_path is not None  # for mypy
-        if self._properties_are_direct or access_mode != self._access_mode:
-            client = self._get_datastore_api_client()
-            if access_mode == RemoteAccessMode.ZARR_STREAMING:
-                suffix = client.zarr_streaming_mag_path(layer_name, mag)
-            elif access_mode == RemoteAccessMode.PROXY_PATH:
-                suffix = client.proxy_mag_path(layer_name, mag)
-            else:
-                raise ValueError(f"{access_mode} does not have a computed mag path.")
-            return base_path / suffix
-        # The properties were served by this very endpoint, so they already carry the
-        # matching relative paths. Prefer them over the computed layout.
-        assert mag_properties.path is not None, (
-            f"Remote mags must have a path: {mag_properties}"
-        )
-        return enrich_path(mag_properties.path, base_path)
+        client = self._get_datastore_api_client()
+        if access_mode == RemoteAccessMode.ZARR_STREAMING:
+            suffix = client.zarr_streaming_mag_path(layer_name, mag)
+        elif access_mode == RemoteAccessMode.PROXY_PATH:
+            suffix = client.proxy_mag_path(layer_name, mag)
+        else:
+            raise ValueError(f"{access_mode} does not have a computed mag path.")
+        return base_path / suffix
 
     def _attachment_path(
         self,

@@ -12,6 +12,7 @@ from .....dataset_properties import (
     AttachmentDataFormat,
     AttachmentProperties,
     AttachmentsProperties,
+    SegmentationLayerProperties,
 )
 from .....utils import (
     cheap_resolve,
@@ -336,6 +337,23 @@ class RemoteAttachments(AbstractAttachments):
             layer_name=self._layer.name,
             type_name=type_name,
         )
+
+    @property
+    def _properties(self) -> "AttachmentsProperties":
+        # Attachments are never part of the served datasource-properties.json (see
+        # _get_optional_dataset_path), so which attachments exist has to come from the
+        # api data source regardless of the dataset's default access mode. This is safe
+        # even though self._layer.dataset._properties may not itself be api-sourced
+        # (see RemoteDataset._metadata_is_read_only): the attachment listing is only
+        # used to resolve names/paths, never for bounding_box/axis-sensitive reads.
+        direct_properties = self._layer.dataset._get_direct_dataset_properties()
+        if direct_properties is not None:
+            for layer_properties in direct_properties.data_layers:
+                if layer_properties.name == self._layer.name and isinstance(
+                    layer_properties, SegmentationLayerProperties
+                ):
+                    return layer_properties.attachments
+        return self._layer._properties.attachments
 
     def _apply_server_properties(self) -> None:
         self._layer._apply_server_layer_properties()

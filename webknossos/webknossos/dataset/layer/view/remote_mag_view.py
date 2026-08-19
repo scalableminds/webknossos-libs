@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 from upath import UPath
 
-from ....dataset_properties import MagViewProperties
+from ....dataset_properties import DataFormat, MagViewProperties
 from ....geometry import Mag
-from ...remote_access_mode import RemoteAccessMode, data_format_for_access_mode
+from ...remote_access_mode import RemoteAccessMode
 from .mag_view import MagView
 
 if TYPE_CHECKING:
@@ -46,12 +46,20 @@ class RemoteMagView(MagView["RemoteLayer"]):
         path = layer.dataset._mag_path(
             layer.name, mag, _mag_properties(layer, mag), access_mode
         )
+        # ZARR_STREAMING always re-serves data as Zarr, regardless of the underlying
+        # format, so this is resolved without evaluating layer.data_format -- which,
+        # for other access modes, may need an extra request to determine the true
+        # underlying format independently of the dataset's default access mode.
+        if access_mode == RemoteAccessMode.ZARR_STREAMING:
+            data_format = DataFormat.Zarr
+        else:
+            data_format = layer.data_format
         super().__init__(
             layer,
             mag,
             path,
             read_only=read_only,
-            data_format=data_format_for_access_mode(access_mode, layer.data_format),
+            data_format=data_format,
         )
 
     @property
