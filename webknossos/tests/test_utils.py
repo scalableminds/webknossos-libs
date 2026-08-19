@@ -19,7 +19,7 @@ def test_call_with_retries_success() -> None:
 
 
 @patch("time.sleep")
-def test_call_with_retries_sucess_with_retry(mock_sleep: Mock) -> None:
+def test_call_with_retries_success_with_retry(mock_sleep: Mock) -> None:
     """Test retry behavior when function succeeds after retryable failures."""
     mock_fn = Mock(
         side_effect=[

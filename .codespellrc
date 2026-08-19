@@ -1,6 +1,6 @@
 [codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = *.svg,*.lock,./webknossos/tests/cassettes,./webknossos/tests/dataset/cassettes,./webknossos/webknossos/dataset/_utils/vendor,./docs/out,./webknossos/build,./docs/src/api/search.js
+skip = *.svg,*.lock,./webknossos/tests/cassettes,./webknossos/tests/dataset/cassettes,./webknossos/webknossos/dataset/_utils/vendor,./docs/out,./webknossos/build,./docs/src/api/search.js,./webknossos/webknossos/dataset/_image_conversion/vendor/*
 # some names and camelCased variables etc
 ignore-regex = \b([a-z]+[A-Z][a-zA-Z]*)\b
 ignore-words-list = nd,ND,lod,LOD
