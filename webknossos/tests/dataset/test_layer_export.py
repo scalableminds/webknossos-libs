@@ -20,6 +20,7 @@ def make_layer(dataset_path: UPath) -> tuple[Dataset, Layer, np.ndarray]:
         data_format="zarr3",
         bounding_box=BoundingBox((0, 0, 0), (64, 64, 64)),
     )
+    np.random.seed(1234)
     data = (np.random.rand(64, 64, 64) * 255).astype(np.uint8)
     layer.add_mag(1).write(data=data)
     layer.downsample()
@@ -33,6 +34,7 @@ def make_layer_with_mags(
     own, independent data, so tests can verify export methods pick the
     right mag rather than always defaulting to the finest one.
     """
+    np.random.seed(1234)
     dataset = Dataset(dataset_path / "test_layer_export_mags", voxel_size=(11, 11, 25))
     layer = dataset.add_layer(
         "color",
@@ -93,10 +95,9 @@ def test_as_ozx_single_mag(tmp_upath: UPath) -> None:
 
 
 def test_as_ozx_odd_sized_layer_covers_full_coarser_mags(tmp_upath: UPath) -> None:
-    """Regression test: a coarser mag's own array always covers the
-    ceil(mag-factor)-of-the-layer-size extent (see Layer.add_mag), so a
-    layer whose size isn't an exact multiple of a mag's factor must still
-    export that mag's full, real data - not silently truncate the last
+    """Regression test: for a layer whose size isn't an exact multiple of a
+    mag's factor, every exported mag must match that mag's full, real data
+    (as read directly from the source layer) - not silently drop the last
     row/column/slice, which floor-aligning the exported region used to do.
     """
     dataset = Dataset(tmp_upath / "test_odd_sized", voxel_size=(10, 10, 10))
@@ -107,6 +108,7 @@ def test_as_ozx_odd_sized_layer_covers_full_coarser_mags(tmp_upath: UPath) -> No
         data_format="zarr3",
         bounding_box=BoundingBox((0, 0, 0), (65, 65, 65)),
     )
+    np.random.seed(1234)
     data = (np.random.rand(65, 65, 65) * 255).astype(np.uint8)
     layer.add_mag(1).write(data=data)
     layer.downsample()  # produces mag 2 (33**3) and mag 4 (17**3)
@@ -280,6 +282,7 @@ def test_as_tiff_stack_nd_layer_no_channel_axis(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         "color", COLOR_CATEGORY, dtype="uint8", data_format="zarr3", bounding_box=bbox
     )
+    np.random.seed(1234)
     data = (np.random.rand(2, 3, 4, 5) * 255).astype(np.uint8)
     layer.add_mag(1).write(data=data, absolute_bounding_box=bbox)
     out_dir = tmp_upath / "no_channel_tiffs"
