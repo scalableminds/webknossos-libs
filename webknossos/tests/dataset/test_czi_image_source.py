@@ -8,7 +8,7 @@ from upath import UPath
 
 pytest.importorskip("pylibCZIrw")
 
-from tests.utils import create_synthetic_czi  # noqa: E402
+from tests.data_fixtures import create_synthetic_czi  # noqa: E402
 from webknossos.dataset import UnsupportedImageDataError  # noqa: E402
 from webknossos.dataset._image_conversion.czi_image_source import (
     CziImageSource,  # noqa: E402
