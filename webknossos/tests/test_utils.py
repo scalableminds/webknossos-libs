@@ -5,7 +5,13 @@ import pytest
 from upath import UPath
 
 from tests.utils import TestTemporaryDirectoryNonLocal
-from webknossos.utils import call_with_retries, copytree, dump_path, enrich_path
+from webknossos.utils import (
+    call_with_retries,
+    cheap_resolve,
+    copytree,
+    dump_path,
+    enrich_path,
+)
 
 
 def test_call_with_retries_success() -> None:
@@ -71,6 +77,68 @@ def test_call_with_retries_direct_failure(mock_sleep: Mock) -> None:
 
     assert mock_fn.call_count == 1  # Only called once, no retries
     assert mock_sleep.call_count == 0  # Sleep not called since it failed immediately
+
+
+def test_cheap_resolve_normalizes_relative_and_dots(tmp_upath: UPath) -> None:
+    tmp_upath = UPath(tmp_upath.resolve())
+
+    real_dir = tmp_upath / "real"
+    real_dir.mkdir()
+
+    # relative segments and `.`/`..` are normalized away
+    dotted = real_dir / ".." / "real" / "." / "sub"
+    assert cheap_resolve(dotted) == real_dir / "sub"
+
+    # a relative path is made absolute
+    assert cheap_resolve(UPath("real")).is_absolute()
+
+
+@pytest.mark.skip_on_windows
+def test_cheap_resolve_follows_symlinks(tmp_upath: UPath) -> None:
+    tmp_upath = UPath(tmp_upath.resolve())
+
+    real_dir = tmp_upath / "real"
+    real_dir.mkdir()
+    (real_dir / "sub").mkdir()
+
+    # absolute symlink target
+    abs_link = tmp_upath / "abs_link"
+    abs_link.symlink_to(real_dir)
+    assert cheap_resolve(abs_link / "sub") == real_dir / "sub"
+
+    # relative symlink target
+    rel_link = tmp_upath / "rel_link"
+    rel_link.symlink_to(UPath("real"))
+    assert cheap_resolve(rel_link / "sub") == real_dir / "sub"
+
+    # symlink reached via a `..`-containing path
+    dotted = tmp_upath / "abs_link" / ".." / "abs_link" / "sub"
+    assert cheap_resolve(dotted) == real_dir / "sub"
+
+    # multi-hop symlink chain
+    chained_link = tmp_upath / "chained_link"
+    chained_link.symlink_to(abs_link)
+    assert cheap_resolve(chained_link / "sub") == real_dir / "sub"
+
+
+@pytest.mark.skip_on_windows
+def test_cheap_resolve_detects_symlink_loop(tmp_upath: UPath) -> None:
+    tmp_upath = UPath(tmp_upath.resolve())
+
+    link_a = tmp_upath / "a"
+    link_b = tmp_upath / "b"
+    link_a.symlink_to(link_b)
+    link_b.symlink_to(link_a)
+
+    with pytest.raises(OSError):
+        cheap_resolve(link_a / "sub")
+
+
+def test_cheap_resolve_nonexistent_path_is_not_strict(tmp_upath: UPath) -> None:
+    tmp_upath = UPath(tmp_upath.resolve())
+
+    path = tmp_upath / "does_not_exist" / "sub"
+    assert cheap_resolve(path) == path
 
 
 def test_dump_path(tmp_upath: UPath) -> None:

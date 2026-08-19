@@ -305,7 +305,37 @@ def cheap_resolve(path: UPath) -> UPath:
 
     if isinstance(path, HTTPPath):
         return path.resolve(follow_redirects=False, strict=False)
+    if is_fs_path(path):
+        return _resolve_local_path(path)
     return path.resolve()
+
+
+def _resolve_local_path(path: UPath, _seen: frozenset[str] = frozenset()) -> UPath:
+    r"""Resolves a local filesystem path, following real symlinks, without
+    invoking OS-level path canonicalization. `Path.resolve()` on Windows uses
+    `GetFinalPathNameByHandle`, which conflates symlink/junction resolution
+    with canonicalizing mapped/substituted drive letters into UNC form
+    (`\\server\share\...`), which TensorStore's local file driver rejects.
+    Walking the path one component at a time and only touching the filesystem
+    to follow actual symlinks avoids that conversion, since a mapped drive
+    letter is a drive-mapping-table entry, not something a component-wise
+    symlink check ever queries.
+    """
+    abs_path = path.with_segments(os.path.abspath(str(path)))
+    resolved = abs_path.with_segments(abs_path.parts[0])
+    for part in abs_path.parts[1:]:
+        candidate = resolved / part
+        if candidate.is_symlink():
+            key = str(candidate)
+            if key in _seen:
+                raise OSError(f"Symlink loop detected while resolving {path!r}")
+            target = candidate.readlink()
+            if not target.is_absolute():
+                target = resolved / target
+            resolved = _resolve_local_path(target, _seen | {key})
+        else:
+            resolved = candidate
+    return resolved
 
 
 def is_writable_path(path: UPath) -> bool:

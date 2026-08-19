@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- Fixed that local dataset/layer/mag/attachment path resolution on Windows converted mapped/substituted network drives (e.g. `Z:\...`) to their UNC form (`\\server\share\...`), which TensorStore's local file driver rejected. [#1501](https://github.com/scalableminds/webknossos-libs/issues/1501)
 
 
 ## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12
