@@ -23,7 +23,7 @@ api_client_converter = cattrs.Converter()
 # However, the case conversion should happen only for the attrs classes,
 # and not for dicts that may contain user data (e.g. user experiences)
 
-# Fields that may exceed the JS-safe integer range are wrapped/unwrapped in special biging envelope in JSON.
+# Fields that may exceed the JS-safe integer range are wrapped/unwrapped in special bigint envelope in JSON.
 # Matching on field names for this is currently sufficient.
 _BIGINT_ENVELOPE_FIELD_NAMES = {"largest_segment_id", "segment_id"}
 
