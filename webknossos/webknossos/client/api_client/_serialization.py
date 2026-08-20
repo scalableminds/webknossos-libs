@@ -6,6 +6,10 @@ from attrs import fields as attr_fields
 from attrs import has as is_attr_class
 
 from ...dataset_properties import DatasetProperties
+from ...dataset_properties._bigint_envelope import (
+    structure_int_or_bigint_envelope,
+    unstructure_int_maybe_as_bigint_envelope,
+)
 from ...dataset_properties.structuring import get_dataset_converter
 from ...utils import snake_to_camel_case
 from .models import ApiUnusableDataSource
@@ -19,13 +23,24 @@ api_client_converter = cattrs.Converter()
 # However, the case conversion should happen only for the attrs classes,
 # and not for dicts that may contain user data (e.g. user experiences)
 
+# Fields that may exceed the JS-safe integer range and are therefore
+# (un-)wrapped from/to the bigint envelope, see _bigint_envelope.py. Names are
+# unique enough across apiclient.models that matching by name (rather than
+# per-class) is sufficient.
+_BIGINT_ENVELOPE_FIELD_NAMES = {"largest_segment_id", "segment_id"}
+
 
 def attr_to_camel_case_structure(cl: type[T]) -> Callable[[Mapping[str, Any], Any], T]:
     return cattrs.gen.make_dict_structure_fn(
         cl,
         api_client_converter,
         **{
-            a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
+            a.name: cattrs.gen.override(
+                rename=snake_to_camel_case(a.name),
+                struct_hook=structure_int_or_bigint_envelope
+                if a.name in _BIGINT_ENVELOPE_FIELD_NAMES
+                else None,
+            )
             # https://github.com/python/mypy/issues/16254
             for a in attr_fields(cl)  # type: ignore[arg-type,misc]
         },
@@ -37,7 +52,12 @@ def attr_to_camel_case_unstructure(cl: type[T]) -> Callable[[T], dict[str, Any]]
         cl,
         api_client_converter,
         **{
-            a.name: cattrs.gen.override(rename=snake_to_camel_case(a.name))
+            a.name: cattrs.gen.override(
+                rename=snake_to_camel_case(a.name),
+                unstruct_hook=unstructure_int_maybe_as_bigint_envelope
+                if a.name in _BIGINT_ENVELOPE_FIELD_NAMES
+                else None,
+            )
             # https://github.com/python/mypy/issues/16254
             for a in attr_fields(cl)  # type: ignore[arg-type,misc]
         },

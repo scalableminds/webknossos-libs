@@ -20,6 +20,10 @@ from ..dataset_properties import (
     SegmentationLayerProperties,
     length_unit_from_str,
 )
+from ..dataset_properties._bigint_envelope import (
+    structure_int_or_bigint_envelope,
+    unstructure_int_maybe_as_bigint_envelope,
+)
 from ..dataset_properties.dataset_properties import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import Mag, NormalizedBoundingBox, Vec3Float, Vec3Int
 from ..utils import snake_to_camel_case
@@ -240,6 +244,8 @@ def get_dataset_converter() -> cattr.Converter:
             ),
         )
 
+    # largest_segment_id may exceed the JS-safe integer range and is then
+    # (un-)wrapped from/to the bigint envelope, see _bigint_envelope.py.
     for cls in [
         LayerProperties,
         SegmentationLayerProperties,
@@ -252,7 +258,11 @@ def get_dataset_converter() -> cattr.Converter:
                     dataset_converter,
                     **{
                         a.name: override(
-                            omit_if_default=True, rename=snake_to_camel_case(a.name)
+                            omit_if_default=True,
+                            rename=snake_to_camel_case(a.name),
+                            unstruct_hook=unstructure_int_maybe_as_bigint_envelope
+                            if a.name == "largest_segment_id"
+                            else None,
                         )
                         for a in attr.fields(cls)  # type: ignore
                     },
@@ -266,7 +276,12 @@ def get_dataset_converter() -> cattr.Converter:
                     cls,
                     dataset_converter,
                     **{
-                        a.name: override(rename=snake_to_camel_case(a.name))
+                        a.name: override(
+                            rename=snake_to_camel_case(a.name),
+                            struct_hook=structure_int_or_bigint_envelope
+                            if a.name == "largest_segment_id"
+                            else None,
+                        )
                         for a in attr.fields(cls)  # type: ignore
                     },
                 )

@@ -75,7 +75,7 @@ from .api_client import (
 
 load_dotenv()
 
-LIBRARY_SUPPORTED_API_VERSIONS = {13, 14}
+LIBRARY_SUPPORTED_API_VERSIONS = {13, 14, 15}
 
 
 @cache
@@ -138,19 +138,31 @@ class _WebknossosContext:
 
     @cached_property
     def api_client(self) -> WkApiClient:
-        cls = WkApiClientV13 if self.api_version == 13 else WkApiClient
-        return cls(
+        if self.api_version == 13:
+            return WkApiClientV13(
+                base_wk_url=self.url,
+                headers={} if self.token is None else {"X-Auth-Token": self.token},
+                timeout_seconds=self.timeout,
+            )
+        return WkApiClient(
             base_wk_url=self.url,
             headers={} if self.token is None else {"X-Auth-Token": self.token},
             timeout_seconds=self.timeout,
+            webknossos_api_version=self.api_version,
         )
 
     def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
-        cls = DatastoreApiClientV13 if self.api_version == 13 else DatastoreApiClient
-        return cls(
+        if self.api_version == 13:
+            return DatastoreApiClientV13(
+                datastore_base_url=datastore_url,
+                headers={} if self.token is None else {"X-Auth-Token": self.token},
+                timeout_seconds=self.timeout,
+            )
+        return DatastoreApiClient(
             datastore_base_url=datastore_url,
             headers={} if self.token is None else {"X-Auth-Token": self.token},
             timeout_seconds=self.timeout,
+            webknossos_api_version=self.api_version,
         )
 
     def get_tracingstore_api_client(self) -> TracingStoreApiClient:
