@@ -244,8 +244,6 @@ def get_dataset_converter() -> cattr.Converter:
             ),
         )
 
-    # largest_segment_id may exceed the JS-safe integer range and is then
-    # (un-)wrapped from/to the bigint envelope, see _bigint_envelope.py.
     for cls in [
         LayerProperties,
         SegmentationLayerProperties,

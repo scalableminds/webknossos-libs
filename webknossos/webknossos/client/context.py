@@ -144,6 +144,7 @@ class _WebknossosContext:
                 headers={} if self.token is None else {"X-Auth-Token": self.token},
                 timeout_seconds=self.timeout,
             )
+        # The v14 client can fully handle v15 server, so no special code is needed there.
         return WkApiClient(
             base_wk_url=self.url,
             headers={} if self.token is None else {"X-Auth-Token": self.token},
@@ -158,6 +159,7 @@ class _WebknossosContext:
                 headers={} if self.token is None else {"X-Auth-Token": self.token},
                 timeout_seconds=self.timeout,
             )
+        # The v14 client can fully handle v15 server, so no special code is needed there.
         return DatastoreApiClient(
             datastore_base_url=datastore_url,
             headers={} if self.token is None else {"X-Auth-Token": self.token},
