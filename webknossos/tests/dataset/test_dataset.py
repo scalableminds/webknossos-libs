@@ -3226,6 +3226,77 @@ def test_get_largest_segment_id() -> None:
     assure_exported_properties(ds)
 
 
+def _largest_segment_id_on_disk(ds: Dataset, layer_name: str) -> int | dict[str, str]:
+    properties = json.loads((ds.path / PROPERTIES_FILE_NAME).read_text())
+    layer = next(
+        layer for layer in properties["dataLayers"] if layer["name"] == layer_name
+    )
+    return layer["largestSegmentId"]
+
+
+def test_largest_segment_id_bigint_envelope() -> None:
+    # Segment ids above 2**53 - 1 (the largest integer JS can represent exactly)
+    # are written as {"customJsonEncoding": "bigint", "value": "<decimal string>"}
+    # instead of a plain JSON number, see _bigint_envelope.py.
+    js_max_safe_integer = 2**53 - 1
+    huge_segment_id = 2**64 - 1  # full uint64 range
+
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    segmentation_layer = ds.add_layer(
+        "segmentation",
+        SEGMENTATION_CATEGORY,
+        dtype="uint64",
+        largest_segment_id=huge_segment_id,
+    ).as_segmentation_layer()
+
+    assert segmentation_layer.largest_segment_id == huge_segment_id
+    assert _largest_segment_id_on_disk(ds, "segmentation") == {
+        "customJsonEncoding": "bigint",
+        "value": str(huge_segment_id),
+    }
+    assure_exported_properties(ds)
+
+    # a value that still fits into a JS-safe integer keeps the plain number format
+    segmentation_layer.largest_segment_id = js_max_safe_integer
+    assert _largest_segment_id_on_disk(ds, "segmentation") == js_max_safe_integer
+    assure_exported_properties(ds)
+
+    # one above the threshold switches back to the envelope
+    segmentation_layer.largest_segment_id = js_max_safe_integer + 1
+    assert _largest_segment_id_on_disk(ds, "segmentation") == {
+        "customJsonEncoding": "bigint",
+        "value": str(js_max_safe_integer + 1),
+    }
+    assure_exported_properties(ds)
+
+
+def test_read_largest_segment_id_bigint_envelope() -> None:
+    # A datasource-properties.json written by a newer WEBKNOSSOS version may
+    # already contain the envelope; the python client must understand it too.
+    huge_segment_id = 2**64 - 1
+
+    ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
+    ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    ds.add_layer(
+        "segmentation", SEGMENTATION_CATEGORY, dtype="uint64", largest_segment_id=1
+    )
+
+    properties_path = ds.path / PROPERTIES_FILE_NAME
+    properties = json.loads(properties_path.read_text())
+    for layer in properties["dataLayers"]:
+        if layer["name"] == "segmentation":
+            layer["largestSegmentId"] = {
+                "customJsonEncoding": "bigint",
+                "value": str(huge_segment_id),
+            }
+    properties_path.write_text(json.dumps(properties))
+
+    reopened_ds = Dataset.open(ds.path)
+    segmentation_layer = reopened_ds.get_segmentation_layer("segmentation")
+    assert segmentation_layer.largest_segment_id == huge_segment_id
+
+
 def test_refresh_largest_segment_id() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
