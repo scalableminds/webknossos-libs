@@ -25,7 +25,7 @@ class AbstractApiClient(ABC):
         self,
         timeout_seconds: float,
         headers: dict[str, str] | None = None,
-        webknossos_api_version: int = 14,
+        webknossos_api_version: int = 15,
     ):
         self.headers = headers
         self.timeout_seconds = timeout_seconds
