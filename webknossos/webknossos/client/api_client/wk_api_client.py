@@ -60,9 +60,8 @@ class WkApiClient(AbstractApiClient):
         base_wk_url: str,
         timeout_seconds: float,
         headers: dict[str, str] | None = None,
-        webknossos_api_version: int = 15,
     ):
-        super().__init__(timeout_seconds, headers, webknossos_api_version)
+        super().__init__(timeout_seconds, headers)
         self.base_wk_url = base_wk_url.rstrip("/")
 
     @property
@@ -512,3 +511,19 @@ class WkApiClientV13(WkApiClient):
             headers=headers,
         )
         self.webknossos_api_version = 13
+
+
+class WkApiClientV14(WkApiClient):
+    def __init__(
+        self,
+        *,
+        base_wk_url: str,
+        timeout_seconds: float,
+        headers: dict[str, str] | None = None,
+    ):
+        super().__init__(
+            base_wk_url=base_wk_url,
+            timeout_seconds=timeout_seconds,
+            headers=headers,
+        )
+        self.webknossos_api_version = 14
