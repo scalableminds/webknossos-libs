@@ -146,7 +146,7 @@ def write_zarr_v2_array(path: UPath, data: np.ndarray) -> None:
     via tensorstore, for tests of readers that consume a bare `.zarray`."""
     array = ts.open(
         {
-            "driver": "zarr",
+            "driver": "zarr2",
             "kvstore": {"driver": "file", "path": str(path)},
             "metadata": {
                 "shape": list(data.shape),
