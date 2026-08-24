@@ -1406,7 +1406,7 @@ def test_open_dataset_without_num_channels_in_properties() -> None:
 @pytest.mark.skip_on_windows
 def test_explore_and_add_remote() -> None:
     remote_ds = RemoteDataset.explore_and_add_remote(
-        "http://localhost:9000/data/v9/zarr/Organization_X/l4_sample/",
+        "http://localhost:9000/data/zarr/Organization_X/l4_sample/",
         "added_remote_ds",
         folder=RemoteFolder.get_by_path("Organization_X"),
     )
