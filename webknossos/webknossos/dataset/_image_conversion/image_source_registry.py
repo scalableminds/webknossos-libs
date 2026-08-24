@@ -150,9 +150,6 @@ def open_image_source(images: UPath | list[UPath], options: ReadOptions) -> Imag
     if isinstance(images, UPath):
         cls = _find_chunked_image_source_class(images)
         if cls is not None:
-            # Remote UPaths deliberately do reach the image source, which
-            # raises its own "must be a local file path" error via
-            # is_remote_path, for sources that need one.
             return cls(images, options)
     return SlicedImageSource(images, options)
 
@@ -224,9 +221,7 @@ def _import_readers() -> str | None:
     import_exceptions = []
 
     # No optional dependency beyond imageio, which is a hard requirement — but
-    # imported here so that every reader registers in one place. The
-    # tensorstore-backed readers need no optional dependency either:
-    # tensorstore is a base (non-optional) dependency of this package.
+    # imported here so that every reader registers in one place.
     from . import (
         common_slice_readers,  # noqa: F401 unused-import
         dm_slice_reader,  # noqa: F401 unused-import

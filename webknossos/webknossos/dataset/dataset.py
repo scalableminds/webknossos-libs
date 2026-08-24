@@ -1159,7 +1159,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         * `dtype`: the read image data will be convertoed to this dtype using `numpy.ndarray.astype`
         * `channel`: may be used to select a single channel, if multiple are available
         * `czi_channel`: may be used to select a channel for .czi images, which differs from normal color-channels
-        * `scale`: may be used to select a resolution level for a multiscale source (Zarr/OME-Zarr, `.ozx`, N5, neuroglancer-precomputed), 0 = finest (the default). A multiscale source always contributes a single level, never one layer per level.
+        * `scale`: may be used to select a resolution level for a multiscale source (Zarr/OME-Zarr, `.ozx`, N5, neuroglancer-precomputed), 0 = finest (the default).
         * `batch_size`: size to process the images (influences RAM consumption), must be a multiple of the chunk-size z-axis for uncompressed and the shard-size z-axis for compressed layers, default is the chunk-size or shard-size respectively
         * `allow_multiple_layers`: set to `True` if channels may result in multiple layers being added (only the first is returned)
         * `max_layers`: only applies if `allow_multiple_layers=True`, limits the number of layers added via different channels

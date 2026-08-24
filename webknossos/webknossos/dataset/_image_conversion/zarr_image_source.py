@@ -76,7 +76,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
 
         try:
             driver = (
-                "zarr3" if (resolved_path / ZARR_JSON_FILE_NAME).is_file() else "zarr"
+                "zarr3" if (resolved_path / ZARR_JSON_FILE_NAME).is_file() else "zarr2"
             )
             self._ts_spec = {"driver": driver, "kvstore": _make_kvstore(resolved_path)}
             array = ts.open(
