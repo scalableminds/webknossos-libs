@@ -111,7 +111,11 @@ class Attachment:
 
 
 class MeshAttachment(Attachment):
-    data_format: Literal[AttachmentDataFormat.Zarr3, AttachmentDataFormat.HDF5]
+    data_format: Literal[
+        AttachmentDataFormat.Zarr3,
+        AttachmentDataFormat.HDF5,
+        AttachmentDataFormat.NeuroglancerPrecomputed,
+    ]
     container_name = "meshes"
     type_name = "mesh"
 

@@ -313,7 +313,18 @@ The entire `attachments` object is omitted from the JSON if all sub-fields are e
 |---|---|---|---|
 | `name` | `string` | Yes | Display name of the attachment. |
 | `path` | `string` | Yes | Relative path to the attachment data. |
-| `dataFormat` | `"zarr3"`, `"hdf5"`, or `"json"` | Yes | Storage format of the attachment. |
+| `dataFormat` | `string` | Yes | Storage format of the attachment. Allowed values depend on the attachment's container (see below). |
+
+The allowed `dataFormat` values depend on which `AttachmentsProperties` field the attachment lives in:
+
+| Container | Allowed `dataFormat` values |
+|---|---|
+| `meshes` | `"zarr3"`, `"hdf5"`, `"neuroglancerPrecomputed"` |
+| `agglomerates` | `"zarr3"`, `"hdf5"` |
+| `segmentIndex` | `"zarr3"`, `"hdf5"` |
+| `segmentStatistics` | `"zarr3"` |
+| `cumsum` | `"zarr3"`, `"json"` |
+| `connectomes` | `"zarr3"`, `"hdf5"` |
 
 ---
 
