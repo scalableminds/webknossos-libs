@@ -68,14 +68,16 @@ from ._defaults import DEFAULT_HTTP_TIMEOUT, DEFAULT_WEBKNOSSOS_URL
 from .api_client import (
     DatastoreApiClient,
     DatastoreApiClientV13,
+    DatastoreApiClientV14,
     TracingStoreApiClient,
     WkApiClient,
     WkApiClientV13,
+    WkApiClientV14,
 )
 
 load_dotenv()
 
-LIBRARY_SUPPORTED_API_VERSIONS = {13, 14}
+LIBRARY_SUPPORTED_API_VERSIONS = {13, 14, 15}
 
 
 @cache
@@ -138,7 +140,10 @@ class _WebknossosContext:
 
     @cached_property
     def api_client(self) -> WkApiClient:
-        cls = WkApiClientV13 if self.api_version == 13 else WkApiClient
+        cls: type[WkApiClient] = {
+            13: WkApiClientV13,
+            14: WkApiClientV14,
+        }.get(self.api_version, WkApiClient)
         return cls(
             base_wk_url=self.url,
             headers={} if self.token is None else {"X-Auth-Token": self.token},
@@ -146,7 +151,10 @@ class _WebknossosContext:
         )
 
     def get_datastore_api_client(self, datastore_url: str) -> DatastoreApiClient:
-        cls = DatastoreApiClientV13 if self.api_version == 13 else DatastoreApiClient
+        cls: type[DatastoreApiClient] = {
+            13: DatastoreApiClientV13,
+            14: DatastoreApiClientV14,
+        }.get(self.api_version, DatastoreApiClient)
         return cls(
             datastore_base_url=datastore_url,
             headers={} if self.token is None else {"X-Auth-Token": self.token},
