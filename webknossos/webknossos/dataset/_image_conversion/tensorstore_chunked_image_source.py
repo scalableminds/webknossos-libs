@@ -91,8 +91,7 @@ class TensorStoreChunkedImageSource(ChunkedImageSource):
 
     _ts_spec: dict[str, Any]
     _axes: tuple[str, ...]
-    # Set by subclasses via compute_channel_selection(), same as
-    # CziImageSource/ImsImageSource.
+    # Set by subclasses via compute_channel_selection()
     _first_n_channels: int | None
 
     def __init__(self, path: UPath, options: ReadOptions) -> None:

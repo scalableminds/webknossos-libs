@@ -121,9 +121,6 @@ def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
 
 
 def _find_chunked_image_source_class(path: UPath) -> type[ChunkedImageSource] | None:
-    """The registered chunked image source that would open `path`, by
-    extension or, for a directory that no extension matches, by
-    `probe_directory`. None if none claims it."""
     extension = path.suffix.lstrip(".").lower()
     for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
         if extension in cls.supported_file_extensions():
@@ -136,10 +133,6 @@ def _find_chunked_image_source_class(path: UPath) -> type[ChunkedImageSource] | 
 
 
 def is_chunked_source_directory(path: UPath) -> bool:
-    """Whether `path` is a directory a registered chunked image source
-    recognizes as one store (by extension or by `probe_directory`) — so a
-    caller walking a directory tree should treat it as a single leaf entry
-    rather than descend into it."""
     return path.is_dir() and _find_chunked_image_source_class(path) is not None
 
 

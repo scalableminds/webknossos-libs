@@ -136,9 +136,7 @@ class ImageSource(ABC):
 
     def layer_split_label(self, key: str, value: int) -> str:
         """A layer-name suffix component for one `get_layer_split_options()`
-        split entry. Defaults to `f"{key}{value}"`; a format may override
-        this with something more descriptive, e.g. an OME-Zarr channel's
-        `omero` label."""
+        split entry."""
         return f"{key}{value}"
 
     @property
