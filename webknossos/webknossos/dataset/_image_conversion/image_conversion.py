@@ -352,7 +352,8 @@ def from_images(
         z_slices_sort_key = natsort_keygen()
 
     # input_upath is replaced with its parent directory below for a single
-    # convertible file, so keep the original around to report in the error.
+    # convertible file or store directory, so keep the original around to
+    # report in the error.
     original_input_upath = input_upath
     input_is_file = input_upath.is_file()
     if input_is_file:
@@ -362,6 +363,14 @@ def from_images(
         else:
             # No reader handles this file.
             input_files = []
+    elif is_chunked_source_directory(input_upath):
+        # input_upath is itself one store (e.g. a Zarr/N5/neuroglancer-
+        # precomputed root), not a directory of inputs to walk — the same
+        # single-entry case as a convertible file above, since
+        # _iter_convertible_paths only recognizes such a store among a
+        # directory's children, never the root it was called with.
+        input_files = [UPath(input_upath.name)]
+        input_upath = input_upath.parent
     else:
         input_files = [
             i.relative_to(input_upath)

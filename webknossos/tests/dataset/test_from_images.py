@@ -445,6 +445,30 @@ def test_from_images_zarr_directories_are_not_descended_into(tmp_upath: UPath) -
     )
 
 
+def test_from_images_input_path_is_itself_a_store_directory(tmp_upath: UPath) -> None:
+    # Pointing from_images() directly at a chunked store's root — rather than
+    # at a parent directory containing it — must still work: input_upath
+    # cannot be walked with _iter_convertible_paths, which only recognizes a
+    # store directory among another directory's children, never the root it
+    # was called with.
+    data = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8)
+    zarr_path = tmp_upath / "test.zarr"
+    write_zarr_v3_array(zarr_path, data, dimension_names=["z", "y", "x"])
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            zarr_path,
+            tmp_upath / "ds",
+            voxel_size=(1, 1, 1),
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"test.zarr"}
+    np.testing.assert_array_equal(
+        ds.layers["test.zarr"].get_finest_mag().read()[0], data.transpose(2, 1, 0)
+    )
+
+
 def test_valid_chunked_image_source_extensions_include_zarr_and_n5() -> None:
     from webknossos.dataset._image_conversion.image_source_registry import (
         get_valid_chunked_image_source_extensions,
