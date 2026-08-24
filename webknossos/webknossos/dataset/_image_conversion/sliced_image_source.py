@@ -13,7 +13,6 @@ from ...geometry.bounding_box import BoundingBox
 from ...geometry.mag import Mag
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec3_int import Vec3Int
-from ...geometry.vec_int import VecInt
 from ..errors import (
     CorruptImageError,
     UnsupportedImageFormatError,
@@ -408,7 +407,8 @@ class SlicedImageSource(ImageSource):
         one slice's extent, which a later slice may exceed; the axes stepped
         through are exact, since the reader counted them.
 
-        Always carries an explicit "c" axis sized `num_channels`."""
+        Carries an explicit "c" axis sized `num_channels` whenever there is
+        more than one channel. A single-channel source may omit it."""
         with self._open_slice_reader() as images:
             sizes = images.sizes
             x_size, y_size = sizes["x"], sizes["y"]
@@ -424,10 +424,8 @@ class SlicedImageSource(ImageSource):
                 )
 
             # Several axes are stepped through (e.g. "t" and "z"), so each one
-            # has to be named in the box. "c" is already one of them whenever
-            # there is more than one raw channel, sized self.num_channels
-            # below — matches what self.num_channels reports for every other
-            # branch here, so no further normalization is needed.
+            # has to be named in the box; "c" is included when there is more
+            # than one raw channel.
             axes_names = self._iter_axes + self._bundle_axes
             axes_sizes = [sizes[axis] for axis in axes_names]
             axes_sizes[axes_names.index("x")] = x_size
@@ -438,12 +436,7 @@ class SlicedImageSource(ImageSource):
                 # `channel` selects one, and _first_n_channels truncates to the
                 # first three).
                 axes_sizes[axes_names.index("c")] = self.num_channels
-            return NormalizedBoundingBox(
-                VecInt.zeros(tuple(axes_names)),
-                VecInt(axes_sizes, axes=axes_names),
-                axes_names,
-                VecInt(list(range(len(axes_names))), axes=axes_names),
-            )
+            return NormalizedBoundingBox.from_axes(axes_names, axes_sizes)
 
     def initial_layer_bounding_box(
         self, mag1_expected_bbox: NormalizedBoundingBox

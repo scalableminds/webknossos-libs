@@ -295,6 +295,12 @@ class NDBoundingBox:
         return (self.topleft[index], self.topleft[index] + self.size[index])
 
     @classmethod
+    def from_axes(cls: type[_T], axes: Iterable[str], sizes: Iterable[int]) -> _T:
+        """Builds a box with a zero topleft and the given per-axis sizes."""
+        axes = tuple(axes)
+        return cls(VecInt.zeros(axes), VecInt(sizes, axes=axes), axes)
+
+    @classmethod
     def group_boxes_with_aligned_mag(
         cls, bounding_boxes: "Iterable[NDBoundingBox]", aligning_mag: Mag
     ) -> "dict[NDBoundingBox, list[NDBoundingBox]]":

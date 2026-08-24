@@ -10,7 +10,6 @@ from upath import UPath
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.mag import Mag
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
-from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
 from .image_source import ChunkResult, ImageSource, ReadOptions
 
@@ -106,17 +105,10 @@ class ChunkedImageSource(ImageSource):
         axes = ["t", "x", "y", "z"]
         sizes = [self._t, x_size, y_size, self._z]
         if self.num_channels > 1:
-            # "c" goes right after "t", matching the axis order
-            # copy_chunk_to_view's block ends up in below (it prepends "t" to
-            # a block that already has "c" as its leading axis).
+            # "c" is placed right after "t" in the axis order.
             axes = ["t", "c", "x", "y", "z"]
             sizes = [self._t, self.num_channels, x_size, y_size, self._z]
-        return NormalizedBoundingBox(
-            VecInt.zeros(tuple(axes)),
-            VecInt(sizes, axes=axes),
-            axes,
-            VecInt(list(range(len(axes))), axes=axes),
-        )
+        return NormalizedBoundingBox.from_axes(axes, sizes)
 
     def copy_chunk_to_view(
         self,

@@ -262,11 +262,10 @@ class View:
         assert abs_mag1_offset is not None, "No offset was supplied."
         assert mag1_size is not None, "No size was supplied."
 
-        assert self.bounding_box.axes == ("x", "y", "z") or self.bounding_box.axes == (
-            "c",
-            "x",
-            "y",
-            "z",
+        assert self.bounding_box.axes in (
+            ("x", "y", "z"),
+            ("c", "x", "y", "z"),
+            ("t", "c", "x", "y", "z"),
         ), "The delivered offset and size are only usable for 3D views."
 
         return self.normalized_bounding_box.with_topleft_xyz(
