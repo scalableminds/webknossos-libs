@@ -318,8 +318,8 @@ class RemoteAttachments(AbstractAttachments):
         """Returns a view of these attachments that resolves paths for `access_mode`.
 
         Note that `RemoteAccessMode.ZARR_STREAMING` is not supported, since attachments
-        are not part of the served datasource-properties.json; it raises when an
-        attachment path is resolved.
+        are not part of the served datasource-properties.json; the returned view has no
+        attachments at all rather than raising.
         """
         return RemoteAttachments(self._layer, access_mode)
 

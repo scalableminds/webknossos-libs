@@ -184,9 +184,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         # loaded below from a served datasource-properties.json, whose mag/attachment
         # paths are relative to `access_mode`'s base path and contain no direct paths.
         self._properties_are_direct = dataset_properties is not None
-        # Lazily fetched and cached by _get_dataset_properties_for_mode() for any
-        # access mode other than DIRECT_PATH when self._properties is already
-        # api-sourced (in which case DIRECT_PATH resolves to self._properties there).
+        # Lazily fetched and cached per access mode, except when this mode is
+        # DIRECT_PATH and self._properties is already api-sourced, in which case
+        # DIRECT_PATH resolves to self._properties directly instead.
         self._properties_by_mode: dict[RemoteAccessMode, DatasetProperties | None] = {}
 
         if dataset_properties is None:
@@ -412,10 +412,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 return None
             return api_dataset_info.data_source
 
-        # Not caught here: _base_path raises ValueError with a specific reason for
-        # PROXY_PATH on an annotation, which only supports ZARR_STREAMING. Letting it
-        # propagate keeps that reason, rather than collapsing it into a generic
-        # "not available" message.
+        # A ValueError here (e.g. PROXY_PATH on an annotation) is intentionally left
+        # uncaught, so its specific reason reaches the caller.
         base_path = self._base_path(access_mode)
         assert base_path is not None  # for mypy
         try:
