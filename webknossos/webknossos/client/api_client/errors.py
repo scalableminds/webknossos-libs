@@ -1,7 +1,20 @@
+from typing import Any
+
 import httpx
 
 
+def _reconstruct_api_client_error(cls: type, args: tuple) -> "ApiClientError":
+    # Bypasses the subclasses' __init__ (which requires a live httpx.Response)
+    # since pickle reconstructs exceptions from their formatted message only.
+    exc: ApiClientError = Exception.__new__(cls)
+    Exception.__init__(exc, *args)
+    return exc
+
+
 class ApiClientError(Exception):
+    def __reduce__(self) -> tuple[Any, ...]:
+        return (_reconstruct_api_client_error, (self.__class__, self.args))
+
     def message_for_response_body(self, response: httpx.Response) -> str:
         response_limit_chars = 2000
 

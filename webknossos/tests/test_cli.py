@@ -18,12 +18,12 @@ from typer.testing import CliRunner
 from upath import UPath
 
 from tests.constants import (
-    MINIO_PORT,
-    MINIO_ROOT_PASSWORD,
-    MINIO_ROOT_USER,
     REMOTE_TESTOUTPUT_DIR,
+    S3_PORT,
+    S3_ROOT_PASSWORD,
+    S3_ROOT_USER,
     TESTDATA_DIR,
-    use_minio,
+    use_moto,
 )
 from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos import BoundingBox, DataFormat, Dataset, Mag
@@ -54,8 +54,8 @@ def tmp_cwd() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True, scope="module")
-def minio_docker() -> Iterator[None]:
-    with use_minio():
+def moto_server() -> Iterator[None]:
+    with use_moto():
         yield
 
 
@@ -92,9 +92,9 @@ def test_tiff_cubing_zarr_s3(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests zarr support when performing tiff cubing."""
 
     out_path = REMOTE_TESTOUTPUT_DIR / "tiff_cubing"
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", MINIO_ROOT_PASSWORD)
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", MINIO_ROOT_USER)
-    monkeypatch.setenv("S3_ENDPOINT_URL", f"http://localhost:{MINIO_PORT}")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", S3_ROOT_PASSWORD)
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", S3_ROOT_USER)
+    monkeypatch.setenv("S3_ENDPOINT_URL", f"http://localhost:{S3_PORT}")
 
     random.seed(1)
     _tiff_cubing(out_path, DataFormat.Zarr3)

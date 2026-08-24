@@ -38,7 +38,10 @@ if TYPE_CHECKING:
 
 
 def _maybe_add_suffix(attachment_name: str, data_format: AttachmentDataFormat) -> str:
-    if data_format == AttachmentDataFormat.Zarr3:
+    if data_format in (
+        AttachmentDataFormat.Zarr3,
+        AttachmentDataFormat.NeuroglancerPrecomputed,
+    ):
         return attachment_name
     return f"{attachment_name}.{data_format.value.lower()}"
 
