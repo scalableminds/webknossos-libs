@@ -38,7 +38,7 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
         if isinstance(tags, str):
             tags = [tags]
 
-        dataset_compact_infos = client.dataset_list_compact(
+        dataset_infos = client.dataset_list(
             is_active=True,
             organization_id=organization_id,
             name=name,
@@ -47,7 +47,7 @@ class RemoteDatasetRegistry(LazyReadOnlyDict[str, "RemoteDataset"]):
 
         datasets_ids = []
 
-        for dataset_info in dataset_compact_infos:
+        for dataset_info in dataset_infos:
             tags_match = tags is None or any(tag in tags for tag in dataset_info.tags)
             name_match = name is None or name == dataset_info.name
             if tags_match and name_match:

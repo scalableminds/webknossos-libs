@@ -75,7 +75,7 @@ def test_dataset_info(client: WkApiClient) -> None:
 
 
 def test_dataset_list(client: WkApiClient) -> None:
-    api_datasets = client.dataset_list_compact(
+    api_datasets = client.dataset_list(
         is_active=True,
         organization_id="Organization_X",
         name=None,

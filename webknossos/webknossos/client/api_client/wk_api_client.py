@@ -98,7 +98,7 @@ class WkApiClient(AbstractApiClient):
         route = f"/datasets/disambiguate/{organization_id}/{directory_name}/toId"
         return self._get_json(route, ApiDatasetId).id
 
-    def dataset_list_compact(
+    def dataset_list(
         self,
         *,
         is_active: bool | None,
