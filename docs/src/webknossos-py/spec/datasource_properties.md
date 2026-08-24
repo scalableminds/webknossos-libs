@@ -317,14 +317,14 @@ The entire `attachments` object is omitted from the JSON if all sub-fields are e
 
 The allowed `dataFormat` values depend on which `AttachmentsProperties` field the attachment lives in:
 
-| Container | Attachment type | Allowed `dataFormat` values |
-|---|---|---|
-| `meshes` | Mesh | `"zarr3"`, `"hdf5"`, `"neuroglancerPrecomputed"` |
-| `agglomerates` | Agglomerate | `"zarr3"`, `"hdf5"` |
-| `segmentIndex` | Segment index | `"zarr3"`, `"hdf5"` |
-| `segmentStatistics` | Segment statistics | `"zarr3"` |
-| `cumsum` | Cumulative sum | `"zarr3"`, `"json"` |
-| `connectomes` | Connectome | `"zarr3"`, `"hdf5"` |
+| Container | Allowed `dataFormat` values |
+|---|---|
+| `meshes` | `"zarr3"`, `"hdf5"`, `"neuroglancerPrecomputed"` |
+| `agglomerates` | `"zarr3"`, `"hdf5"` |
+| `segmentIndex` | `"zarr3"`, `"hdf5"` |
+| `segmentStatistics` | `"zarr3"` |
+| `cumsum` | `"zarr3"`, `"json"` |
+| `connectomes` | `"zarr3"`, `"hdf5"` |
 
 ---
 
