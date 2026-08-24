@@ -61,7 +61,7 @@ class ChunkedImageSource(ImageSource):
         return self._channel
 
     @abstractmethod
-    def get_possible_layers(self) -> dict[str, list[int]] | None:
+    def get_layer_split_options(self) -> dict[str, list[int]] | None:
         """The ways this source could be split across several layers, or None
         when there is nothing to split."""
 

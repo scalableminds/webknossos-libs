@@ -115,7 +115,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
         if possible_channels is not None:
             self._possible_layers["channel"] = possible_channels
 
-    def get_possible_layers(self) -> dict[str, list[int]] | None:
+    def get_layer_split_options(self) -> dict[str, list[int]] | None:
         if len(self._possible_layers) == 0:
             return None
         return self._possible_layers

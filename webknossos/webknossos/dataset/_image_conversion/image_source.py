@@ -123,7 +123,7 @@ class ImageSource(ABC):
         """The pinned channel, or None if all are written."""
 
     @abstractmethod
-    def get_possible_layers(self) -> dict[str, list[int]] | None:
+    def get_layer_split_options(self) -> dict[str, list[int]] | None:
         """The ways this source could be split across several layers, e.g.
         `{"channel": [0, 1, 2]}`, or None when there is nothing to split."""
 
@@ -135,7 +135,7 @@ class ImageSource(ABC):
         return None
 
     def layer_split_label(self, key: str, value: int) -> str:
-        """A layer-name suffix component for one `get_possible_layers()`
+        """A layer-name suffix component for one `get_layer_split_options()`
         split entry. Defaults to `f"{key}{value}"`; a format may override
         this with something more descriptive, e.g. an OME-Zarr channel's
         `omero` label."""

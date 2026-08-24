@@ -39,7 +39,7 @@ def test_plain_zarr_v2_array_uses_positional_axes(tmp_upath: UPath) -> None:
 
     assert source.dtype == np.dtype("uint16")
     assert source.num_channels == 1
-    assert source.get_possible_layers() is None
+    assert source.get_layer_split_options() is None
     assert (source._z, source._y, source._x) == (3, 5, 7)
 
     block = source._read_source_box(
@@ -78,7 +78,7 @@ def test_plain_zarr_v3_array_with_dimension_names_uses_labels(tmp_upath: UPath) 
     # Two raw channels are offered as a layer split (one pinned by default),
     # not written together — see compute_channel_selection.
     assert source.num_channels == 1
-    assert source.get_possible_layers() == {"channel": [0, 1]}
+    assert source.get_layer_split_options() == {"channel": [0, 1]}
 
     block = source._read_source_box(
         timepoint=0, z=slice(0, z), y=slice(0, y), x=slice(0, x)
@@ -107,7 +107,7 @@ def test_ome_zarr_group_picks_finest_resolution(tmp_upath: UPath, writer: Any) -
 
     assert (source._z, source._y, source._x) == (4, 8, 8)
     assert source.num_channels == 1
-    assert source.get_possible_layers() == {"channel": [0, 1], "scale": [0, 1]}
+    assert source.get_layer_split_options() == {"channel": [0, 1], "scale": [0, 1]}
 
     block = source._read_source_box(
         timepoint=0, z=slice(0, 4), y=slice(0, 8), x=slice(0, 8)
@@ -148,7 +148,7 @@ def test_single_resolution_ome_zarr_group_reports_no_scale_choice(
     write_ome_zarr_v2_group(group_path, [("0", data, [1.0, 1.0, 1.0])], _AXES_CZYX[1:])
 
     source = _open(group_path)
-    assert source.get_possible_layers() is None
+    assert source.get_layer_split_options() is None
 
 
 def test_probe_directory_recognizes_bare_zarr_directories(tmp_upath: UPath) -> None:

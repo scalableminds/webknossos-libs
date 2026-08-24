@@ -172,7 +172,7 @@ def suggested_view_configuration(
 def layer_split_label(
     channels: tuple[OmeChannelMetadata, ...] | None, key: str, value: int
 ) -> str | None:
-    """A layer-name suffix component for one `get_possible_layers()` split
+    """A layer-name suffix component for one `get_layer_split_options()` split
     entry, from the channel's `omero` label. Only resolves anything for
     `key == "channel"`; None when there's no usable label, so the caller
     falls back to its own default naming."""

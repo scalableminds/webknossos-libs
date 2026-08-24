@@ -23,7 +23,7 @@ def test_plain_n5_dataset(tmp_upath: UPath) -> None:
 
     assert source.dtype == np.dtype("uint16")
     assert source.num_channels == 1
-    assert source.get_possible_layers() is None
+    assert source.get_layer_split_options() is None
     assert (source._z, source._y, source._x) == (3, 5, 7)
 
     block = source._read_source_box(
@@ -42,7 +42,7 @@ def test_n5_pyramid_picks_finest_level(tmp_upath: UPath) -> None:
     source = _open(group_path)
 
     assert (source._z, source._y, source._x) == (4, 8, 8)
-    assert source.get_possible_layers() == {"scale": [0, 1]}
+    assert source.get_layer_split_options() == {"scale": [0, 1]}
     block = source._read_source_box(
         timepoint=0, z=slice(0, 4), y=slice(0, 8), x=slice(0, 8)
     )

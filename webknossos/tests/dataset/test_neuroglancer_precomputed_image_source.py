@@ -27,7 +27,7 @@ def test_single_scale_volume(tmp_upath: UPath) -> None:
 
     assert source.dtype == np.dtype("uint8")
     assert source.num_channels == 1
-    assert source.get_possible_layers() is None
+    assert source.get_layer_split_options() is None
     assert (source._x, source._y, source._z) == (x, y, z)
 
     block = source._read_source_box(
@@ -48,7 +48,7 @@ def test_multi_scale_volume_picks_finest(tmp_upath: UPath) -> None:
     source = _open(path)
 
     assert (source._x, source._y, source._z) == (8, 6, 4)
-    assert source.get_possible_layers() == {"scale": [0, 1]}
+    assert source.get_layer_split_options() == {"scale": [0, 1]}
     block = source._read_source_box(
         timepoint=0, z=slice(0, 4), y=slice(0, 6), x=slice(0, 8)
     )
@@ -82,7 +82,7 @@ def test_multi_channel_volume(tmp_upath: UPath) -> None:
     # Three raw channels of a non-RGB-flagged format are offered as a split
     # (truncated to the first 3), same convention as every other reader.
     assert source.num_channels == 3
-    assert source.get_possible_layers() == {"channel": [0, 1, 2]}
+    assert source.get_layer_split_options() == {"channel": [0, 1, 2]}
 
 
 def test_probe_directory_requires_info_with_scales(tmp_upath: UPath) -> None:

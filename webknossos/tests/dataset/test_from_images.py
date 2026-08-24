@@ -254,7 +254,7 @@ def test_rgb_image_creates_a_single_rgb_layer(tmp_upath: UPath, mode: str) -> No
 
 def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     # brain_crop3.ims has 2 channels and no explicit channel is selected, so
-    # ImsImageSource.get_possible_layers() reports {"channel": [0, 1]} and
+    # ImsImageSource.get_layer_split_options() reports {"channel": [0, 1]} and
     # from_images() (which always passes allow_multiple_layers=True) should
     # split it into one layer per channel instead of picking just the first.
     ims_path = download_wklibs_sample_archive("brain_crop3.ims")
@@ -289,7 +289,7 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
 ) -> None:
     # from_images() always passes allow_multiple_layers=True internally, so a
     # multi-channel + multi-timepoint .ims file should split into one layer
-    # per channel (via get_possible_layers()'s {"channel": [...]} report),
+    # per channel (via get_layer_split_options()'s {"channel": [...]} report),
     # each keeping its own "t" axis for all timepoints, rather than raising
     # the "multiple timepoints and multiple channels" ValueError that firing
     # on the unpinned from_images() discovery probe would otherwise cause.
@@ -345,7 +345,7 @@ def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
     assert reader.dtype == np.dtype("float32")
     assert reader.num_channels == 1
     assert reader.channel is None
-    assert reader.get_possible_layers() is None
+    assert reader.get_layer_split_options() is None
     assert reader.expected_bbox.size.to_tuple() == (X, Y, Z)
 
 

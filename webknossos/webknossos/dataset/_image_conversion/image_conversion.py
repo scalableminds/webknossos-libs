@@ -539,7 +539,7 @@ def add_layer_from_images(
     )
 
     image_source: ImageSource = open_image_source(image_paths, read_options)
-    possible_layers = image_source.get_possible_layers()
+    possible_layers = image_source.get_layer_split_options()
     # The dtype the layer will be written with decides whether its channels can
     # share one layer, so an explicit `dtype` argument counts here too.
     layer_dtype = np.dtype(dtype) if dtype is not None else np.dtype(image_source.dtype)
