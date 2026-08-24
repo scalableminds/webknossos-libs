@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Fixed that local dataset/layer/mag/attachment path resolution on Windows converted mapped/substituted network drives (e.g. `Z:\...`) to their UNC form (`\\server\share\...`), which TensorStore's local file driver rejected. [#1513](https://github.com/scalableminds/webknossos-libs/issues/1513)
+- Fixed that renaming a layer of a zarr-streamed `RemoteDataset` (where layer metadata cannot be persisted) raised an opaque `StopIteration` instead of the expected `RuntimeError` explaining that the layer is read-only.
 
 
 ## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12
