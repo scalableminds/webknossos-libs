@@ -74,6 +74,17 @@ def test_dataset_info(client: WkApiClient) -> None:
     ]
 
 
+def test_dataset_list(client: WkApiClient) -> None:
+    api_datasets = client.dataset_list_compact(
+        is_active=True,
+        organization_id="Organization_X",
+        name=None,
+        folder_id=None,
+    )
+    assert isinstance(api_datasets, list)
+    assert any(dataset.name == "l4_sample" for dataset in api_datasets)
+
+
 def test_build_info(client: WkApiClient) -> None:
     api_build_info = client.build_info()
     assert api_build_info.webknossos.name == "webknossos"
