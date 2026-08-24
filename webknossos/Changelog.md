@@ -16,12 +16,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Added
 - Added support for WEBKNOSSOS API version 15, which allows segment ids to use the full uint64 range. Such ids may now be serialized as `{"customJsonEncoding": "bigint", "value": "<decimal string>"}` instead of a plain JSON number, both in API responses and in `datasource-properties.json`.
+- Added `neuroglancerPrecomputed` as a valid `AttachmentDataFormat` for `MeshAttachment`s. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
 
 ### Changed
 
 ### Fixed
 - Fixed that local dataset/layer/mag/attachment path resolution on Windows converted mapped/substituted network drives (e.g. `Z:\...`) to their UNC form (`\\server\share\...`), which TensorStore's local file driver rejected. [#1513](https://github.com/scalableminds/webknossos-libs/issues/1513)
-- Fixed that `UnexpectedStatusError` and `CannotHandleResponseError` raised an `AttributeError` when unpickled (e.g. when raised inside a `ProcessPoolExecutor` worker), instead of reproducing the original error.
+- Fixed that renaming a layer of a zarr-streamed `RemoteDataset` (where layer metadata cannot be persisted) raised an opaque `StopIteration` instead of the expected `RuntimeError` explaining that the layer is read-only. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
+- Fixed that `UnexpectedStatusError` and `CannotHandleResponseError` raised an `AttributeError` when unpickled (e.g. when raised inside a `ProcessPoolExecutor` worker), instead of reproducing the original error. [#1517](https://github.com/scalableminds/webknossos-libs/pull/1517)
 
 
 ## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12

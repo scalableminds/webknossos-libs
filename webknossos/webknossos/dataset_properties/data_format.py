@@ -16,6 +16,7 @@ class AttachmentDataFormat(Enum):
     Zarr3 = "zarr3"
     HDF5 = "hdf5"
     JSON = "json"
+    NeuroglancerPrecomputed = "neuroglancerPrecomputed"
 
     def __str__(self) -> str:
         return self.value
