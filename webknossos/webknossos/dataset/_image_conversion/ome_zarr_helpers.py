@@ -162,8 +162,8 @@ def suggested_view_configuration(
     channel_index: int | None,
     num_channels: int,
 ) -> LayerViewConfiguration | None:
-    """The `omero`-derived view configuration for the channel this source
-    writes: `channel_index` if pinned, else channel 0 when there is only a
+    """The `omero`-derived view configuration for the channel:
+    `channel_index` if pinned, else channel 0 when there is only a
     single output channel. None if there's no matching `omero` entry."""
     channel = _omero_channel_at(channels, channel_index, num_channels)
     return channel.view_configuration if channel else None
