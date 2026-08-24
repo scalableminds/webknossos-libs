@@ -1,6 +1,6 @@
 import pytest
 
-from webknossos.client.api_client import WkApiClient, WkApiClientV13
+from webknossos.client.api_client import WkApiClient, WkApiClientV13, WkApiClientV14
 from webknossos.client.context import (
     _get_context,
     _WebknossosContext,
@@ -39,11 +39,14 @@ def test_login() -> None:
 
 
 @pytest.mark.parametrize(
-    "api_version,api_client_class", [(13, WkApiClientV13), (14, WkApiClient)]
+    "api_version,api_client_class",
+    [(13, WkApiClientV13), (14, WkApiClientV14), (15, WkApiClient)],
 )
 def test_webknossos_context_api_version(
     api_version: int, api_client_class: type
 ) -> None:
     with webknossos_context(api_version=api_version):
         assert _get_context().api_version == api_version
-        assert isinstance(_get_context().api_client, api_client_class)
+        api_client = _get_context().api_client
+        assert isinstance(api_client, api_client_class)
+        assert api_client.webknossos_api_version == api_version

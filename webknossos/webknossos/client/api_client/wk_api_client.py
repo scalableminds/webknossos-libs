@@ -511,3 +511,19 @@ class WkApiClientV13(WkApiClient):
             headers=headers,
         )
         self.webknossos_api_version = 13
+
+
+class WkApiClientV14(WkApiClient):
+    def __init__(
+        self,
+        *,
+        base_wk_url: str,
+        timeout_seconds: float,
+        headers: dict[str, str] | None = None,
+    ):
+        super().__init__(
+            base_wk_url=base_wk_url,
+            timeout_seconds=timeout_seconds,
+            headers=headers,
+        )
+        self.webknossos_api_version = 14

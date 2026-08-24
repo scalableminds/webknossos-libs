@@ -390,7 +390,7 @@ class SlicedImageSource(ImageSource):
 
                 return ChunkResult(dimwise_max(shapes), max_value)
 
-    def get_possible_layers(self) -> dict["str", list[int]] | None:
+    def get_layer_split_options(self) -> dict["str", list[int]] | None:
         if len(self._possible_layers) == 0:
             return None
         else:

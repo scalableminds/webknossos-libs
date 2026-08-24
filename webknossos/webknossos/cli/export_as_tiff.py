@@ -76,7 +76,9 @@ def _apply_mapping(data: np.ndarray, mapping_array: TensorStore) -> np.ndarray:
     unique_ids = fastremap.unique(data)
     in_bounds = [i for i in unique_ids if i < mapping_array.shape[0]]
     out_of_bounds = [i for i in unique_ids if i >= mapping_array.shape[0]]
-    mapped_ids = mapping_array[in_bounds].read().result() if in_bounds else []
+    mapped_ids: np.ndarray | list[int] = (
+        mapping_array[in_bounds].read().result() if in_bounds else []
+    )
     mapping = {**dict(zip(in_bounds, mapped_ids)), **{i: 0 for i in out_of_bounds}}
     result = fastremap.remap(data, mapping, preserve_missing_labels=False)
     return result.astype(mapping_array.dtype.numpy_dtype)

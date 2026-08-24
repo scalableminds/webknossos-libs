@@ -10,7 +10,7 @@ from __future__ import annotations
 import colorsys
 import logging
 import warnings
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Generator, Iterator, Sequence
 from contextlib import contextmanager
 from enum import Enum, unique
 from itertools import product
@@ -59,6 +59,7 @@ from .image_source_registry import (
     describe_missing_extras,
     get_unavailable_extensions,
     get_valid_extensions,
+    is_chunked_source_directory,
     open_image_source,
 )
 from .segmentation_recognition import (
@@ -191,6 +192,22 @@ class ConversionLayerMapping(Enum):
                 return lambda p: input_path.name if p.parent == UPath() else p.parts[-2]
         else:
             raise ValueError(f"Got unexpected ConversionLayerMapping value: {self}")
+
+
+def _iter_convertible_paths(root: UPath, valid_extensions: set[str]) -> Iterator[UPath]:
+    """Walks `root`, yielding files with a supported extension and, as single
+    leaf entries, directories a chunked image source recognizes as its own store
+    (e.g. a Zarr/N5/neuroglancer-precomputed root) — those are never descended
+    into, since their contents are the store's internal chunks, not more
+    input files."""
+    for child in root.iterdir():
+        if child.is_dir():
+            if is_chunked_source_directory(child):
+                yield child
+            else:
+                yield from _iter_convertible_paths(child, valid_extensions)
+        elif child.suffix.lstrip(".").lower() in valid_extensions:
+            yield child
 
 
 def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
@@ -335,7 +352,8 @@ def from_images(
         z_slices_sort_key = natsort_keygen()
 
     # input_upath is replaced with its parent directory below for a single
-    # convertible file, so keep the original around to report in the error.
+    # convertible file or store directory, so keep the original around to
+    # report in the error.
     original_input_upath = input_upath
     input_is_file = input_upath.is_file()
     if input_is_file:
@@ -345,11 +363,18 @@ def from_images(
         else:
             # No reader handles this file.
             input_files = []
+    elif is_chunked_source_directory(input_upath):
+        # input_upath is itself one store (e.g. a Zarr/N5/neuroglancer-
+        # precomputed root), not a directory of inputs to walk — the same
+        # single-entry case as a convertible file above, since
+        # _iter_convertible_paths only recognizes such a store among a
+        # directory's children, never the root it was called with.
+        input_files = [UPath(input_upath.name)]
+        input_upath = input_upath.parent
     else:
         input_files = [
             i.relative_to(input_upath)
-            for i in input_upath.glob("**/*")
-            if i.is_file() and i.suffix.lstrip(".").lower() in valid_extensions
+            for i in _iter_convertible_paths(input_upath, valid_extensions)
         ]
 
     if len(input_files) == 0:
@@ -486,6 +511,7 @@ def add_layer_from_images(
     dtype: DTypeLike | None = None,
     channel: int | None = None,
     czi_channel: int | None = None,
+    scale: int | None = None,
     batch_size: int | None = None,  # defaults to shard-size z
     allow_multiple_layers: bool = False,
     max_layers: int = 20,
@@ -512,18 +538,19 @@ def add_layer_from_images(
     else:
         user_set_category = True
 
-    # czi_channel is meaningful to one reader only; the rest ignore the name.
+    # czi_channel/scale are each meaningful to some readers only; the rest
+    # ignore the name.
     read_options = ReadOptions(
         channel=channel,
         swap_xy=swap_xy,
         flip_x=flip_x,
         flip_y=flip_y,
         flip_z=flip_z,
-        format_options={"czi_channel": czi_channel},
+        format_options={"czi_channel": czi_channel, "scale": scale},
     )
 
     image_source: ImageSource = open_image_source(image_paths, read_options)
-    possible_layers = image_source.get_possible_layers()
+    possible_layers = image_source.get_layer_split_options()
     # The dtype the layer will be written with decides whether its channels can
     # share one layer, so an explicit `dtype` argument counts here too.
     layer_dtype = np.dtype(dtype) if dtype is not None else np.dtype(image_source.dtype)
@@ -576,7 +603,10 @@ def add_layer_from_images(
             # Timepoints are never split this way: readers that can address
             # them expose all timepoints on a "t" axis within a single layer.
             suffix_with_open_kwargs_per_layer = {
-                "__" + "_".join(f"{k}{v}" for k, v in sorted(pairs)): dict(pairs)
+                "__"
+                + "_".join(
+                    image_source.layer_split_label(k, v) for k, v in sorted(pairs)
+                ): dict(pairs)
                 for pairs in product(
                     *(
                         [(key, value) for value in values]
@@ -640,14 +670,26 @@ def add_layer_from_images(
             # problem with the input rather than a programming error.
             raise UnsupportedImageDataError(str(e)) from e
 
-        if splitting_channels_into_layers and category == "color":
-            # layer_selection["channel"] is set for every layer here (it is
-            # one of the keys that produced suffix_with_open_kwargs_per_layer's
-            # combinations), pinning this layer to the channel it was split
-            # off from.
-            layer.default_view_configuration = LayerViewConfiguration(
-                color=_channel_layer_color(layer_selection["channel"])
-            )
+        if category == "color":
+            # A format may suggest its own display defaults for the channel
+            # this layer was written from (e.g. OME-Zarr's `omero` channel
+            # metadata) — used as is when pinned to a single channel, or
+            # merged with the split colors below.
+            suggested = image_source.suggested_view_configuration
+            if splitting_channels_into_layers:
+                # layer_selection["channel"] is set for every layer here (it
+                # is one of the keys that produced
+                # suffix_with_open_kwargs_per_layer's combinations), pinning
+                # this layer to the channel it was split off from.
+                fallback_color = _channel_layer_color(layer_selection["channel"])
+                color = (suggested.color if suggested else None) or fallback_color
+                layer.default_view_configuration = (
+                    attr.evolve(suggested, color=color)
+                    if suggested is not None
+                    else LayerViewConfiguration(color=color)
+                )
+            elif suggested is not None:
+                layer.default_view_configuration = suggested
 
         expected_bbox = image_source.expected_bbox
 

@@ -24,7 +24,7 @@ class MrcImageSource(ChunkedImageSource):
     and written to mag_view.
 
     MRC files have neither channels nor timepoints, so num_channels is
-    always 1 and get_possible_layers() always returns None.
+    always 1 and get_layer_split_options() always returns None.
     """
 
     @classmethod
@@ -83,7 +83,7 @@ class MrcImageSource(ChunkedImageSource):
 
         self.num_channels = 1
 
-    def get_possible_layers(self) -> dict[str, list[int]] | None:
+    def get_layer_split_options(self) -> dict[str, list[int]] | None:
         return None
 
     def _read_source_box(

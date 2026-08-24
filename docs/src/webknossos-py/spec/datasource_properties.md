@@ -81,9 +81,24 @@ When `category` is `"segmentation"`, the following additional fields are availab
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `largestSegmentId` | `integer` | No | `null` | Highest segment ID present in the layer. Used by WEBKNOSSOS for ID management. |
+| `largestSegmentId` | `integer` or [BigIntEnvelope](#bigintenvelope) | No | `null` | Highest segment ID present in the layer. Used by WEBKNOSSOS for ID management. Values above `2^53 - 1` are written in a `BigIntEnvelope` instead of a number for compatibility with JavaScript. |
 | `mappings` | `string[]` | No | `[]` | List of available ID mapping names (e.g. for agglomerate mappings). |
 | `attachments` | [AttachmentsProperties](#attachmentsproperties) | No | `null` | References to auxiliary data files associated with this segmentation layer. Omitted if all sub-fields are empty. |
+
+#### BigIntEnvelope
+
+Segment IDs above `2^53 - 1` cannot be represented by JavaScript’s `number` type, so for compatibility they are wrapped in this envelope format in JSON instead of using a plain number:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `customJsonEncoding` | `"bigint"` | Yes | Discriminator identifying this envelope. |
+| `value` | `string` | Yes | The id as a decimal string. |
+
+```json
+{ "largestSegmentId": { "customJsonEncoding": "bigint", "value": "18446744073709551615" } }
+```
+
+Values that fit safely (`<= 9007199254740991`) are still written as a plain integer. Both forms are always accepted when reading.
 
 ### N-Dimensional / 4D Layer Fields
 
@@ -298,7 +313,18 @@ The entire `attachments` object is omitted from the JSON if all sub-fields are e
 |---|---|---|---|
 | `name` | `string` | Yes | Display name of the attachment. |
 | `path` | `string` | Yes | Relative path to the attachment data. |
-| `dataFormat` | `"zarr3"`, `"hdf5"`, or `"json"` | Yes | Storage format of the attachment. |
+| `dataFormat` | `string` | Yes | Storage format of the attachment. Allowed values depend on the attachment's container (see below). |
+
+The allowed `dataFormat` values depend on which `AttachmentsProperties` field the attachment lives in:
+
+| Container | Allowed `dataFormat` values |
+|---|---|
+| `meshes` | `"zarr3"`, `"hdf5"`, `"neuroglancerPrecomputed"` |
+| `agglomerates` | `"zarr3"`, `"hdf5"` |
+| `segmentIndex` | `"zarr3"`, `"hdf5"` |
+| `segmentStatistics` | `"zarr3"` |
+| `cumsum` | `"zarr3"`, `"json"` |
+| `connectomes` | `"zarr3"`, `"hdf5"` |
 
 ---
 
