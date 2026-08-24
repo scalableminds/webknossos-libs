@@ -62,7 +62,7 @@ class CziImageSource(ChunkedImageSource):
                 f"Cannot open CZI file from {path}. The path must be a local file path."
             )
         # A format-specific option: only this reader knows what czi_channel
-        # means, and it is the name get_possible_layers() reports it under.
+        # means, and it is the name get_layer_split_options() reports it under.
         czi_channel = options.format_option("czi_channel")
         self.czi_channel = 0 if czi_channel is None else czi_channel
 
@@ -139,7 +139,7 @@ class CziImageSource(ChunkedImageSource):
         with czi_file as opened:
             yield opened
 
-    def get_possible_layers(self) -> dict[str, list[int]] | None:
+    def get_layer_split_options(self) -> dict[str, list[int]] | None:
         if len(self._possible_layers) == 0:
             return None
         return self._possible_layers

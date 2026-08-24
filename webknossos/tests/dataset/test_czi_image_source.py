@@ -8,7 +8,7 @@ from upath import UPath
 
 pytest.importorskip("pylibCZIrw")
 
-from tests.utils import create_synthetic_czi  # noqa: E402
+from tests.data_fixtures import create_synthetic_czi  # noqa: E402
 from webknossos.dataset import UnsupportedImageDataError  # noqa: E402
 from webknossos.dataset._image_conversion.czi_image_source import (
     CziImageSource,  # noqa: E402
@@ -32,7 +32,7 @@ def test_czi_image_source_metadata(tmp_upath: UPath) -> None:
     # A CZI "C" holds separate acquisitions, so it is offered as a layer split
     # rather than written as RGB channels: one channel per layer.
     assert source.num_channels == 1
-    assert source.get_possible_layers() == {"czi_channel": [0, 1]}
+    assert source.get_layer_split_options() == {"czi_channel": [0, 1]}
     assert source.expected_bbox.size.to_tuple() == (10, 8, 4)
 
 
@@ -42,7 +42,7 @@ def test_czi_image_source_multi_timepoint_gets_a_t_axis(tmp_upath: UPath) -> Non
 
     source = _open_czi_image_source(czi_path)
 
-    assert source.get_possible_layers() is None
+    assert source.get_layer_split_options() is None
     assert source.expected_bbox.axes == ("t", "x", "y", "z")
     assert source.expected_bbox.size.to_tuple() == (3, 10, 8, 2)
 

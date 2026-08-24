@@ -13,6 +13,7 @@ import h5py
 import mrcfile
 import numpy as np
 import pytest
+import tensorstore as ts
 from cluster_tools import SequentialExecutor, get_executor
 from numpy.typing import DTypeLike
 from PIL import Image
@@ -22,15 +23,16 @@ from upath import UPath
 import webknossos as wk
 from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import (
+    create_synthetic_czi,
     create_synthetic_multi_timepoint_ims,
     download_wklibs_sample_archive,
+    write_n5_array,
+    write_neuroglancer_precomputed_scale,
+    write_ome_zarr_v3_group,
+    write_ozx_file,
+    write_zarr_v3_array,
 )
-from tests.utils import (
-    HAS_PYLIBCZIRW,
-    PYLIBCZIRW_EXPECTED,
-    create_synthetic_czi,
-    requires_pylibczirw,
-)
+from tests.utils import HAS_PYLIBCZIRW, PYLIBCZIRW_EXPECTED, requires_pylibczirw
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -1292,6 +1294,394 @@ def _test_test_images(
         assert l_normal.num_channels == num_channels
         assert l_normal.bounding_box.size.to_tuple() == size
     return ds
+
+
+def test_zarr_array_from_images(tmp_upath: UPath) -> None:
+    Z, Y, X = 6, 24, 32
+    data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
+    zarr_path = tmp_upath / "test.zarr"
+    write_zarr_v3_array(zarr_path, data, dimension_names=["z", "y", "x"])
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            zarr_path,
+            layer_name="zarr_layer",
+            executor=executor,
+        )
+
+    assert layer.dtype == np.dtype("uint16")
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]  # drop channel dim
+    np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
+
+    layer.downsample()
+    assert len(layer.mags) > 1
+
+
+def test_ome_zarr_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
+    Z, Y, X = 4, 16, 16
+    finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    write_ome_zarr_v3_group(
+        group_path,
+        [
+            ("1", coarse, [1.0, 2.0, 2.0]),  # listed first, but coarser
+            ("0", finest, [1.0, 1.0, 1.0]),
+        ],
+        axes,
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            group_path,
+            layer_name="ome_zarr_layer",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
+
+
+def test_ome_zarr_from_images_scale_option_picks_specified_level(
+    tmp_upath: UPath,
+) -> None:
+    Z, Y, X = 4, 16, 16
+    finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    write_ome_zarr_v3_group(
+        group_path,
+        [("0", finest, [1.0, 1.0, 1.0]), ("1", coarse, [1.0, 2.0, 2.0])],
+        axes,
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            group_path,
+            layer_name="ome_zarr_layer",
+            scale=1,
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X // 2, Y // 2, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, coarse.transpose(2, 1, 0))
+
+
+def test_ome_zarr_from_images_allow_multiple_layers_never_splits_by_scale(
+    tmp_upath: UPath,
+) -> None:
+    # A multiscale, multi-channel source: allow_multiple_layers=True must
+    # split by channel only, never additionally by resolution level — every
+    # split-off layer converts a single (the finest) level.
+    Z, Y, X = 2, 8, 8
+    finest = np.arange(4 * Z * Y * X, dtype="uint8").reshape(4, Z, Y, X)
+    coarse = np.zeros((4, Z, Y // 2, X // 2), dtype="uint8")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "c", "type": "channel"},
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    write_ome_zarr_v3_group(
+        group_path,
+        [
+            ("0", finest, [1.0, 1.0, 1.0, 1.0]),
+            ("1", coarse, [1.0, 1.0, 2.0, 2.0]),
+        ],
+        axes,
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            group_path,
+            layer_name="test",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {
+        "test__channel0",
+        "test__channel1",
+        "test__channel2",
+        "test__channel3",
+    }
+    for i in range(4):
+        layer = ds.layers[f"test__channel{i}"]
+        assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+        read_data = layer.get_finest_mag().read()[0]
+        np.testing.assert_array_equal(read_data, finest[i].transpose(2, 1, 0))
+
+
+def test_ozx_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
+    Z, Y, X = 4, 16, 16
+    finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
+    ozx_path = tmp_upath / "test.ozx"
+    axes = [
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    write_ozx_file(
+        ozx_path,
+        [
+            ("1", coarse, [1.0, 2.0, 2.0]),  # listed first, but coarser
+            ("0", finest, [1.0, 1.0, 1.0]),
+        ],
+        axes,
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ozx_path,
+            layer_name="ozx_layer",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
+
+
+def test_ome_zarr_omero_channel_metadata_applied_when_splitting(
+    tmp_upath: UPath,
+) -> None:
+    Z, Y, X = 2, 8, 8
+    data = np.zeros((4, Z, Y, X), dtype="uint16")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "c", "type": "channel"},
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    omero = {
+        "channels": [
+            {
+                "color": "0000FF",
+                "window": {"min": 0.0, "max": 65535.0, "start": 10.0, "end": 500.0},
+                "label": "DAPI",
+                "active": True,
+            },
+            {
+                "window": {"min": 0.0, "max": 65535.0, "start": 0.0, "end": 100.0},
+                "active": False,
+            },
+            {
+                "color": "FF0000",
+                "window": {"start": 5.0, "end": 200.0},
+                "label": "Hyb probe!",
+            },
+            # Channel 3 has no matching omero entry at all.
+        ]
+    }
+    write_ome_zarr_v3_group(
+        group_path, [("0", data, [1.0, 1.0, 1.0, 1.0])], axes, omero
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            group_path,
+            layer_name="test",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    # Channels with a usable omero label are named from it (with disallowed
+    # characters stripped); channels without one fall back to "channel{N}".
+    assert set(ds.layers.keys()) == {
+        "test__DAPI",
+        "test__channel1",
+        "test__Hybprobe",
+        "test__channel3",
+    }
+
+    dapi = ds.layers["test__DAPI"].default_view_configuration
+    assert dapi is not None
+    assert dapi.color == (0, 0, 255)
+    assert dapi.intensity_range == (10.0, 500.0)
+    assert dapi.min == 0.0
+    assert dapi.max == 65535.0
+    assert dapi.is_disabled is False
+
+    inactive = ds.layers["test__channel1"].default_view_configuration
+    assert inactive is not None
+    # No omero color for this channel, so it falls back to the usual
+    # red/green/blue default for the second split-off layer.
+    assert inactive.color == (0, 255, 0)
+    assert inactive.intensity_range == (0.0, 100.0)
+    assert inactive.is_disabled is True
+
+    hyb = ds.layers["test__Hybprobe"].default_view_configuration
+    assert hyb is not None
+    assert hyb.color == (255, 0, 0)
+    assert hyb.intensity_range == (5.0, 200.0)
+    assert hyb.min is None
+    assert hyb.max is None
+    assert hyb.is_disabled is None
+
+    fallback = ds.layers["test__channel3"].default_view_configuration
+    assert fallback is not None
+    fallback_color = fallback.color
+    assert fallback_color is not None
+    assert fallback_color not in {(0, 0, 255), (255, 0, 0)}
+    assert all(0 <= component <= 255 for component in fallback_color)
+    assert fallback.intensity_range is None
+
+
+def test_ome_zarr_omero_channel_metadata_applied_to_pinned_channel(
+    tmp_upath: UPath,
+) -> None:
+    Z, Y, X = 2, 8, 8
+    data = np.zeros((2, Z, Y, X), dtype="uint16")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "c", "type": "channel"},
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    omero = {
+        "channels": [
+            {"color": "00FF00", "window": {"start": 1.0, "end": 2.0}},
+            {
+                "color": "FF00FF",
+                "window": {"start": 3.0, "end": 4.0},
+                "label": "second",
+            },
+        ]
+    }
+    write_ome_zarr_v3_group(
+        group_path, [("0", data, [1.0, 1.0, 1.0, 1.0])], axes, omero
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            group_path, layer_name="pinned", channel=1, executor=executor
+        )
+
+    # channel=<index> pins a single layer, so the omero label plays no part
+    # in naming it — only the view configuration is applied.
+    assert layer.name == "pinned"
+    view_configuration = layer.default_view_configuration
+    assert view_configuration is not None
+    assert view_configuration.color == (255, 0, 255)
+    assert view_configuration.intensity_range == (3.0, 4.0)
+
+
+def test_n5_pyramid_from_images_picks_finest_level(tmp_upath: UPath) -> None:
+    Z, Y, X = 4, 16, 16
+    finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
+    group_path = tmp_upath / "test.n5"
+    write_n5_array(group_path / "s0", finest, downsampling_factors=[1, 1, 1])
+    write_n5_array(group_path / "s1", coarse, downsampling_factors=[1, 2, 2])
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            group_path,
+            layer_name="n5_layer",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
+
+
+def test_neuroglancer_precomputed_from_images_picks_finest_scale(
+    tmp_upath: UPath,
+) -> None:
+    X, Y, Z = 16, 16, 4
+    finest = np.arange(X * Y * Z, dtype="uint8").reshape(X, Y, Z, 1)
+    coarse = np.zeros((X // 2, Y // 2, Z, 1), dtype="uint8")
+    volume_path = tmp_upath / "precomputed"
+    write_neuroglancer_precomputed_scale(
+        volume_path, finest, resolution=(4.0, 4.0, 4.0)
+    )
+    write_neuroglancer_precomputed_scale(
+        volume_path, coarse, resolution=(8.0, 8.0, 4.0)
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            volume_path,
+            layer_name="neuroglancer_layer",
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    # Precomputed's native axis order is already (x, y, z) — same as wK storage.
+    np.testing.assert_array_equal(read_data, finest[:, :, :, 0])
+
+
+def test_real_ome_zarr_sample_conversion(tmp_upath: UPath) -> None:
+    # A real published OME-Zarr v3 (NGFF 0.5) sample, not a synthetic
+    # fixture: 5D (t, c, z, y, x), sharded, 3 resolution levels, with
+    # dimension_names on both the group's OME axes and each array's own
+    # zarr.json, plus a "consolidated_metadata" key this reader must ignore.
+    sample_path = download_wklibs_sample_archive("13457537.zarr")
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            sample_path,
+            layer_name="sample",
+            channel=0,
+            executor=executor,
+        )
+
+    assert layer.dtype == np.dtype("uint16")
+    assert layer.bounding_box.axes == ("t", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (18, 198, 223, 12)
+
+    # The sample's omero metadata for channel 0 ("cy 1"):
+    # {"color": "FFFFFF", "window": {"min": 0.0, "max": 65535.0, "start": 0.0, "end": 1200.0}}
+    view_configuration = layer.default_view_configuration
+    assert view_configuration is not None
+    assert view_configuration.color == (255, 255, 255)
+    assert view_configuration.intensity_range == (0.0, 1200.0)
+    assert view_configuration.min == 0.0
+    assert view_configuration.max == 65535.0
+
+    # Compares against the finest level's channel 0 read directly, rather
+    # than trusting the converter's own read path.
+    finest_array = ts.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {"driver": "file", "path": str(sample_path / "0")},
+        },
+        open=True,
+        context=ts.Context(),
+    ).result()
+    # (t, c, z, y, x), channel 0 -> (t, z, y, x) -> (t, x, y, z)
+    expected = np.asarray(finest_array[:, 0].read().result()).transpose(0, 3, 2, 1)
+    actual = layer.get_finest_mag().read()  # (t, x, y, z), channel dim dropped
+    np.testing.assert_array_equal(actual, expected)
 
 
 @pytest.mark.parametrize(

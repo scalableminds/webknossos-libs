@@ -18,6 +18,7 @@ from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
     download_wklibs_sample_archive,
+    write_zarr_v3_array,
 )
 from webknossos.dataset import (
     Dataset,
@@ -253,7 +254,7 @@ def test_rgb_image_creates_a_single_rgb_layer(tmp_upath: UPath, mode: str) -> No
 
 def test_multi_channel_ims_creates_multiple_layers(tmp_upath: UPath) -> None:
     # brain_crop3.ims has 2 channels and no explicit channel is selected, so
-    # ImsImageSource.get_possible_layers() reports {"channel": [0, 1]} and
+    # ImsImageSource.get_layer_split_options() reports {"channel": [0, 1]} and
     # from_images() (which always passes allow_multiple_layers=True) should
     # split it into one layer per channel instead of picking just the first.
     ims_path = download_wklibs_sample_archive("brain_crop3.ims")
@@ -288,7 +289,7 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
 ) -> None:
     # from_images() always passes allow_multiple_layers=True internally, so a
     # multi-channel + multi-timepoint .ims file should split into one layer
-    # per channel (via get_possible_layers()'s {"channel": [...]} report),
+    # per channel (via get_layer_split_options()'s {"channel": [...]} report),
     # each keeping its own "t" axis for all timepoints, rather than raising
     # the "multiple timepoints and multiple channels" ValueError that firing
     # on the unpinned from_images() discovery probe would otherwise cause.
@@ -344,7 +345,7 @@ def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
     assert reader.dtype == np.dtype("float32")
     assert reader.num_channels == 1
     assert reader.channel is None
-    assert reader.get_possible_layers() is None
+    assert reader.get_layer_split_options() is None
     assert reader.expected_bbox.size.to_tuple() == (X, Y, Z)
 
 
@@ -402,6 +403,80 @@ def test_no_slashes_in_layername(tmp_upath: UPath) -> None:
             )
 
             assert all("/" not in layername for layername in dataset.layers)
+
+
+def test_from_images_zarr_directories_are_not_descended_into(tmp_upath: UPath) -> None:
+    # A directory tree with a suffixed and a bare Zarr layer, plus a plain
+    # TIFF: the two Zarr directories must each become a single input entry —
+    # not be walked into for their internal chunk files, and not silently
+    # dropped either (the old plain-glob walk did the latter, since none of a
+    # Zarr array's own chunk files carry a recognized extension).
+    input_dir = tmp_upath / "input"
+    input_dir.mkdir(parents=True)
+
+    suffixed = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8)
+    write_zarr_v3_array(
+        input_dir / "layer_a.zarr", suffixed, dimension_names=["z", "y", "x"]
+    )
+    bare = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8) + 1
+    write_zarr_v3_array(input_dir / "layer_b", bare, dimension_names=["z", "y", "x"])
+    tiff_data = np.arange(8 * 8, dtype="uint8").reshape(8, 8).astype("uint8")
+    imwrite(str(input_dir / "layer_c.tif"), tiff_data)
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            input_dir,
+            tmp_upath / "ds",
+            voxel_size=(1, 1, 1),
+            map_filepath_to_layer_name=Dataset.ConversionLayerMapping.ENFORCE_LAYER_PER_FILE,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"layer_a.zarr", "layer_b", "layer_c.tif"}
+    np.testing.assert_array_equal(
+        ds.layers["layer_a.zarr"].get_finest_mag().read()[0],
+        suffixed.transpose(2, 1, 0),
+    )
+    np.testing.assert_array_equal(
+        ds.layers["layer_b"].get_finest_mag().read()[0], bare.transpose(2, 1, 0)
+    )
+    np.testing.assert_array_equal(
+        ds.layers["layer_c.tif"].get_finest_mag().read()[0, :, :, 0], tiff_data.T
+    )
+
+
+def test_from_images_input_path_is_itself_a_store_directory(tmp_upath: UPath) -> None:
+    # Pointing from_images() directly at a chunked store's root — rather than
+    # at a parent directory containing it — must still work: input_upath
+    # cannot be walked with _iter_convertible_paths, which only recognizes a
+    # store directory among another directory's children, never the root it
+    # was called with.
+    data = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8)
+    zarr_path = tmp_upath / "test.zarr"
+    write_zarr_v3_array(zarr_path, data, dimension_names=["z", "y", "x"])
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            zarr_path,
+            tmp_upath / "ds",
+            voxel_size=(1, 1, 1),
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {"test.zarr"}
+    np.testing.assert_array_equal(
+        ds.layers["test.zarr"].get_finest_mag().read()[0], data.transpose(2, 1, 0)
+    )
+
+
+def test_valid_chunked_image_source_extensions_include_zarr_and_n5() -> None:
+    from webknossos.dataset._image_conversion.image_source_registry import (
+        get_valid_chunked_image_source_extensions,
+    )
+
+    extensions = get_valid_chunked_image_source_extensions()
+    assert "zarr" in extensions
+    assert "n5" in extensions
 
 
 def test_remote_dataset_from_images() -> None:
