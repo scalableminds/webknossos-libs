@@ -24,6 +24,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed that local dataset/layer/mag/attachment path resolution on Windows converted mapped/substituted network drives (e.g. `Z:\...`) to their UNC form (`\\server\share\...`), which TensorStore's local file driver rejected. [#1513](https://github.com/scalableminds/webknossos-libs/issues/1513)
 - Fixed that renaming a layer of a zarr-streamed `RemoteDataset` (where layer metadata cannot be persisted) raised an opaque `StopIteration` instead of the expected `RuntimeError` explaining that the layer is read-only. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
 - Fixed that `UnexpectedStatusError` and `CannotHandleResponseError` raised an `AttributeError` when unpickled (e.g. when raised inside a `ProcessPoolExecutor` worker), instead of reproducing the original error. [#1517](https://github.com/scalableminds/webknossos-libs/pull/1517)
+- Fixed that `View.num_channels` returned `0` instead of `1` for a view whose bounding box has no channel axis. [#1519](https://github.com/scalableminds/webknossos-libs/pull/1519)
 
 
 ## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12
