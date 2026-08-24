@@ -28,6 +28,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
     - `CorruptImageError`: the format is supported but the file could not be read, which usually means it is damaged or was uploaded incompletely. Previously a reader-specific error, or an aggregate of all readers' errors. Missing files and permission errors keep raising `FileNotFoundError`/`PermissionError`.
     - `UnsupportedImageDataError`: the images were read, but their data cannot be stored as requested, e.g. a float image converted into a segmentation layer, or extra axes with `data_format="wkw"`. Previously a `ValueError` or `RuntimeError`.
 - `Dataset.add_layer_from_images`/`from_images` now set a default layer color when splitting a multi-channel image into one layer per channel. [#1496](https://github.com/scalableminds/webknossos-libs/pull/1496)
+- Added support for WEBKNOSSOS API version 15, which allows segment ids to use the full uint64 range. Such ids may now be serialized as `{"customJsonEncoding": "bigint", "value": "<decimal string>"}` instead of a plain JSON number, both in API responses and in `datasource-properties.json`.
+- Added `neuroglancerPrecomputed` as a valid `AttachmentDataFormat` for `MeshAttachment`s. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
 
 ### Changed
 - `.czi` conversion is faster and uses less memory: only the data needed for each chunk is read, rather than whole image planes. Multi-timepoint `.czi` files now convert into a single layer with a `t` axis. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
@@ -49,6 +51,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed `flip_x`/`flip_y` mirroring each shard individually instead of the whole image when converting `.ims` or MRC files that span more than one shard in x or y, which scrambled the output into mirrored tiles. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Fixed the bounding box reported for multi-channel n-dimensional images (e.g. a multi-channel, multi-timepoint file) contradicting the layer's channel count, which caused a spurious "Some images are larger than expected" warning and a bounding box that disagreed with the written data. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Fixed the OME-NGFF `axes`/`coordinateTransformations.scale` metadata written for layers with additional axes (e.g. time): it previously always hard-coded 4 entries (c, x, y, z) regardless of the layer's actual dimensionality, producing a spec-invalid document whose axes count didn't match the array's shape. [#1502](https://github.com/scalableminds/webknossos-libs/pull/1502)
+- Fixed that local dataset/layer/mag/attachment path resolution on Windows converted mapped/substituted network drives (e.g. `Z:\...`) to their UNC form (`\\server\share\...`), which TensorStore's local file driver rejected. [#1513](https://github.com/scalableminds/webknossos-libs/issues/1513)
+- Fixed that renaming a layer of a zarr-streamed `RemoteDataset` (where layer metadata cannot be persisted) raised an opaque `StopIteration` instead of the expected `RuntimeError` explaining that the layer is read-only. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
+- Fixed that `UnexpectedStatusError` and `CannotHandleResponseError` raised an `AttributeError` when unpickled (e.g. when raised inside a `ProcessPoolExecutor` worker), instead of reproducing the original error. [#1517](https://github.com/scalableminds/webknossos-libs/pull/1517)
 
 
 ## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12

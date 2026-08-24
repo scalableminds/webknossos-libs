@@ -28,6 +28,21 @@ def _is_power_of_two(num: int) -> bool:
     return num & (num - 1) == 0
 
 
+def _chunk_dim(shape: tuple[int | None, ...] | None, index: int) -> int:
+    """Reads a single dimension from a tensorstore chunk shape, which is
+    expected to be fully specified for arrays opened by this module."""
+    value = shape[index] if shape is not None else None
+    assert value is not None, f"Expected a fully specified chunk shape, got {shape}"
+    return value
+
+
+def _codec_json(array: tensorstore.TensorStore) -> dict[str, Any]:
+    """Reads the codec spec of an opened array as json, which is expected
+    to always be present."""
+    assert array.codec is not None, "Expected the array to have a codec spec."
+    return array.codec.to_json()
+
+
 class ArrayException(Exception):
     pass
 
@@ -432,23 +447,39 @@ class TensorStoreArray(BaseArray):
         if all(a == "" for a in axes):
             if len(array.shape) == 2:
                 dimension_names = ("x", "y")
-                chunk_shape = Vec3Int(array_chunk_shape[0], array_chunk_shape[1], 1)
-                shard_shape = Vec3Int(array_shard_shape[0], array_shard_shape[1], 1)
+                chunk_shape = Vec3Int(
+                    _chunk_dim(array_chunk_shape, 0),
+                    _chunk_dim(array_chunk_shape, 1),
+                    1,
+                )
+                shard_shape = Vec3Int(
+                    _chunk_dim(array_shard_shape, 0),
+                    _chunk_dim(array_shard_shape, 1),
+                    1,
+                )
             elif len(array.shape) == 3:
                 dimension_names = ("x", "y", "z")
                 chunk_shape = Vec3Int(
-                    array_chunk_shape[0], array_chunk_shape[1], array_chunk_shape[2]
+                    _chunk_dim(array_chunk_shape, 0),
+                    _chunk_dim(array_chunk_shape, 1),
+                    _chunk_dim(array_chunk_shape, 2),
                 )
                 shard_shape = Vec3Int(
-                    array_shard_shape[0], array_shard_shape[1], array_shard_shape[2]
+                    _chunk_dim(array_shard_shape, 0),
+                    _chunk_dim(array_shard_shape, 1),
+                    _chunk_dim(array_shard_shape, 2),
                 )
             elif len(array.shape) == 4:
                 dimension_names = ("c", "x", "y", "z")
                 chunk_shape = Vec3Int(
-                    array_chunk_shape[1], array_chunk_shape[2], array_chunk_shape[3]
+                    _chunk_dim(array_chunk_shape, 1),
+                    _chunk_dim(array_chunk_shape, 2),
+                    _chunk_dim(array_chunk_shape, 3),
                 )
                 shard_shape = Vec3Int(
-                    array_shard_shape[1], array_shard_shape[2], array_shard_shape[3]
+                    _chunk_dim(array_shard_shape, 1),
+                    _chunk_dim(array_shard_shape, 2),
+                    _chunk_dim(array_shard_shape, 3),
                 )
             else:
                 raise ArrayException(
@@ -464,24 +495,24 @@ class TensorStoreArray(BaseArray):
                 if "z" in dimension_names:
                     z_index = dimension_names.index("z")
                     chunk_shape = Vec3Int(
-                        array_chunk_shape[x_index],
-                        array_chunk_shape[y_index],
-                        array_chunk_shape[z_index],
+                        _chunk_dim(array_chunk_shape, x_index),
+                        _chunk_dim(array_chunk_shape, y_index),
+                        _chunk_dim(array_chunk_shape, z_index),
                     )
                     shard_shape = Vec3Int(
-                        array_shard_shape[x_index],
-                        array_shard_shape[y_index],
-                        array_shard_shape[z_index],
+                        _chunk_dim(array_shard_shape, x_index),
+                        _chunk_dim(array_shard_shape, y_index),
+                        _chunk_dim(array_shard_shape, z_index),
                     )
                 else:
                     chunk_shape = Vec3Int(
-                        array_chunk_shape[x_index],
-                        array_chunk_shape[y_index],
+                        _chunk_dim(array_chunk_shape, x_index),
+                        _chunk_dim(array_chunk_shape, y_index),
                         1,
                     )
                     shard_shape = Vec3Int(
-                        array_shard_shape[x_index],
-                        array_shard_shape[y_index],
+                        _chunk_dim(array_shard_shape, x_index),
+                        _chunk_dim(array_shard_shape, y_index),
                         1,
                     )
             else:
@@ -660,6 +691,7 @@ class TensorStoreArray(BaseArray):
 
     def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
         kvstore = self._array.kvstore
+        assert kvstore is not None, "Expected the array to have a kvstore."
 
         if kvstore.spec().to_json()["driver"] == "s3":
             raise NotImplementedError(
@@ -730,7 +762,7 @@ class Zarr3Array(TensorStoreArray):
     @property
     def info(self) -> Zarr3ArrayInfo:
         array = self._array
-        array_codecs = array.codec.to_json()["codecs"]
+        array_codecs = _codec_json(array)["codecs"]
         chunk_key_encoding = array.spec().to_json()["metadata"]["chunk_key_encoding"]
 
         chunk_shape, shard_shape, shape = self._get_array_dimensions(array)
@@ -855,7 +887,7 @@ class Zarr2Array(TensorStoreArray):
         return ArrayInfo(
             data_format=DataFormat.Zarr,
             voxel_type=array.dtype.numpy_dtype,
-            compression_mode=array.codec.to_json()["compressor"] is not None,
+            compression_mode=_codec_json(array)["compressor"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
             bounding_box=shape,
@@ -940,7 +972,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
         return ArrayInfo(
             data_format=DataFormat.NeuroglancerPrecomputed,
             voxel_type=array.dtype.numpy_dtype,
-            compression_mode=array.codec.to_json()["encoding"] is not None,
+            compression_mode=_codec_json(array)["encoding"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
             bounding_box=shape,
@@ -985,7 +1017,7 @@ class N5Array(TensorStoreArray):
         return ArrayInfo(
             data_format=DataFormat.N5,
             voxel_type=array.dtype.numpy_dtype,
-            compression_mode=array.codec.to_json()["compression"] is not None,
+            compression_mode=_codec_json(array)["compression"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
             bounding_box=shape,
