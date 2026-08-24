@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added support for WEBKNOSSOS API version 15, which allows segment ids to use the full uint64 range. Such ids may now be serialized as `{"customJsonEncoding": "bigint", "value": "<decimal string>"}` instead of a plain JSON number, both in API responses and in `datasource-properties.json`.
 
 ### Changed
 
