@@ -24,9 +24,9 @@ from .._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from ..errors import CorruptImageError, UnsupportedImageFormatError
 from .image_source import ReadOptions, compute_channel_selection
 from .image_source_registry import register_chunked_image_source
-from .ome_zarr_multiscale import layer_split_label as _ome_layer_split_label
-from .ome_zarr_multiscale import resolve_ome_multiscale
-from .ome_zarr_multiscale import (
+from .ome_zarr_helpers import layer_split_label as _ome_layer_split_label
+from .ome_zarr_helpers import resolve_ome_multiscale
+from .ome_zarr_helpers import (
     suggested_view_configuration as _ome_suggested_view_configuration,
 )
 from .tensorstore_chunked_image_source import TensorStoreChunkedImageSource, guess_axes
