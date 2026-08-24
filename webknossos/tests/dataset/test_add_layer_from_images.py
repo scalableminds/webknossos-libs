@@ -1351,6 +1351,85 @@ def test_ome_zarr_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
 
 
+def test_ome_zarr_from_images_scale_option_picks_specified_level(
+    tmp_upath: UPath,
+) -> None:
+    Z, Y, X = 4, 16, 16
+    finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    write_ome_zarr_v3_group(
+        group_path,
+        [("0", finest, [1.0, 1.0, 1.0]), ("1", coarse, [1.0, 2.0, 2.0])],
+        axes,
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            group_path,
+            layer_name="ome_zarr_layer",
+            scale=1,
+            executor=executor,
+        )
+
+    assert layer.bounding_box.size.to_tuple() == (X // 2, Y // 2, Z)
+    read_data = layer.get_finest_mag().read()[0]
+    np.testing.assert_array_equal(read_data, coarse.transpose(2, 1, 0))
+
+
+def test_ome_zarr_from_images_allow_multiple_layers_never_splits_by_scale(
+    tmp_upath: UPath,
+) -> None:
+    # A multiscale, multi-channel source: allow_multiple_layers=True must
+    # split by channel only, never additionally by resolution level — every
+    # split-off layer converts a single (the finest) level.
+    Z, Y, X = 2, 8, 8
+    finest = np.arange(4 * Z * Y * X, dtype="uint8").reshape(4, Z, Y, X)
+    coarse = np.zeros((4, Z, Y // 2, X // 2), dtype="uint8")
+    group_path = tmp_upath / "test.ome.zarr"
+    axes = [
+        {"name": "c", "type": "channel"},
+        {"name": "z", "type": "space"},
+        {"name": "y", "type": "space"},
+        {"name": "x", "type": "space"},
+    ]
+    write_ome_zarr_v3_group(
+        group_path,
+        [
+            ("0", finest, [1.0, 1.0, 1.0, 1.0]),
+            ("1", coarse, [1.0, 1.0, 2.0, 2.0]),
+        ],
+        axes,
+    )
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        ds.add_layer_from_images(
+            group_path,
+            layer_name="test",
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert set(ds.layers.keys()) == {
+        "test__channel0",
+        "test__channel1",
+        "test__channel2",
+        "test__channel3",
+    }
+    for i in range(4):
+        layer = ds.layers[f"test__channel{i}"]
+        assert layer.bounding_box.size.to_tuple() == (X, Y, Z)
+        read_data = layer.get_finest_mag().read()[0]
+        np.testing.assert_array_equal(read_data, finest[i].transpose(2, 1, 0))
+
+
 def test_ozx_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
     Z, Y, X = 4, 16, 16
     finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)

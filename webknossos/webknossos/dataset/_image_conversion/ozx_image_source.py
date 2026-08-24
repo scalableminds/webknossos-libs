@@ -101,9 +101,6 @@ class OzxImageSource(TensorStoreChunkedImageSource):
                 f"scale {rank} does not exist in {path}. Available: "
                 f"{list(range(len(multiscale.dataset_paths)))}."
             )
-        if len(multiscale.dataset_paths) > 1:
-            self._possible_layers["scale"] = list(range(len(multiscale.dataset_paths)))
-
         chosen_dataset_path = multiscale.dataset_paths[rank]
         self._ts_spec = {
             "driver": "zarr3",

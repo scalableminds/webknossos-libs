@@ -43,7 +43,9 @@ def test_ozx_group_picks_finest_resolution(tmp_upath: UPath) -> None:
 
     assert (source._z, source._y, source._x) == (4, 8, 8)
     assert source.num_channels == 1
-    assert source.get_layer_split_options() == {"channel": [0, 1], "scale": [0, 1]}
+    # "scale" is never offered as a layer split — only "channel" is; the
+    # resolution level always resolves to a single one, the finest by default.
+    assert source.get_layer_split_options() == {"channel": [0, 1]}
 
     block = source._read_source_box(
         timepoint=0, z=slice(0, 4), y=slice(0, 8), x=slice(0, 8)
@@ -200,7 +202,9 @@ def test_real_world_ozx_sample() -> None:
 
     assert source.dtype == np.dtype("uint16")
     assert source.num_channels == 1  # two raw channels, one pinned by default
-    assert source.get_layer_split_options() == {"channel": [0, 1], "scale": [0, 1, 2]}
+    # "scale" is never offered as a layer split — only "channel" is; the
+    # resolution level always resolves to a single one, the finest by default.
+    assert source.get_layer_split_options() == {"channel": [0, 1]}
     assert (source._z, source._y, source._x) == (236, 275, 271)
 
     block = source._read_source_box(

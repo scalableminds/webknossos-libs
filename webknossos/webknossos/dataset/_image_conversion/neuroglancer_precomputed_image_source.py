@@ -97,8 +97,6 @@ class NeuroglancerPrecomputedImageSource(TensorStoreChunkedImageSource):
             )
 
         self._possible_layers: dict[str, list[int]] = {}
-        if len(scales) > 1:
-            self._possible_layers["scale"] = list(range(len(scales)))
 
         chosen_scale = scales[ranked_indices[rank]]
         try:

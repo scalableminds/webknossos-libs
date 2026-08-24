@@ -191,9 +191,6 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
                 f"{list(range(len(multiscale.dataset_paths)))}."
             )
 
-        if len(multiscale.dataset_paths) > 1:
-            self._possible_layers["scale"] = list(range(len(multiscale.dataset_paths)))
-
         resolved_path = path / multiscale.dataset_paths[rank]
         axis_names = list(multiscale.axis_names) if multiscale.axis_names else None
         return resolved_path, axis_names, multiscale.channels

@@ -511,6 +511,7 @@ def add_layer_from_images(
     dtype: DTypeLike | None = None,
     channel: int | None = None,
     czi_channel: int | None = None,
+    scale: int | None = None,
     batch_size: int | None = None,  # defaults to shard-size z
     allow_multiple_layers: bool = False,
     max_layers: int = 20,
@@ -537,14 +538,15 @@ def add_layer_from_images(
     else:
         user_set_category = True
 
-    # czi_channel is meaningful to one reader only; the rest ignore the name.
+    # czi_channel/scale are each meaningful to some readers only; the rest
+    # ignore the name.
     read_options = ReadOptions(
         channel=channel,
         swap_xy=swap_xy,
         flip_x=flip_x,
         flip_y=flip_y,
         flip_z=flip_z,
-        format_options={"czi_channel": czi_channel},
+        format_options={"czi_channel": czi_channel, "scale": scale},
     )
 
     image_source: ImageSource = open_image_source(image_paths, read_options)

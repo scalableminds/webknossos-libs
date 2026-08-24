@@ -42,7 +42,9 @@ def test_n5_pyramid_picks_finest_level(tmp_upath: UPath) -> None:
     source = _open(group_path)
 
     assert (source._z, source._y, source._x) == (4, 8, 8)
-    assert source.get_layer_split_options() == {"scale": [0, 1]}
+    # A pyramid's levels are never offered as a layer split — only one level
+    # is ever converted, the finest by default.
+    assert source.get_layer_split_options() is None
     block = source._read_source_box(
         timepoint=0, z=slice(0, 4), y=slice(0, 8), x=slice(0, 8)
     )

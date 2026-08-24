@@ -145,8 +145,6 @@ class N5ImageSource(TensorStoreChunkedImageSource):
                 f"scale {rank} does not exist in {path}. Available: "
                 f"{list(range(len(levels)))}."
             )
-        if len(levels) > 1:
-            self._possible_layers["scale"] = list(range(len(levels)))
 
         return levels[rank][1]
 

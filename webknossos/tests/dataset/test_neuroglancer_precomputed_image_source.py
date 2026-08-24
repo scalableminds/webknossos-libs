@@ -48,7 +48,9 @@ def test_multi_scale_volume_picks_finest(tmp_upath: UPath) -> None:
     source = _open(path)
 
     assert (source._x, source._y, source._z) == (8, 6, 4)
-    assert source.get_layer_split_options() == {"scale": [0, 1]}
+    # A pyramid's scales are never offered as a layer split — only one scale
+    # is ever converted, the finest by default.
+    assert source.get_layer_split_options() is None
     block = source._read_source_box(
         timepoint=0, z=slice(0, 4), y=slice(0, 6), x=slice(0, 8)
     )
