@@ -81,6 +81,7 @@ def attach_agglomerate(seg_layer: SegmentationLayer) -> None:
 
 
 def reopen_dataset(dataset: RemoteDataset) -> RemoteDataset:
+    """Re-fetches `dataset` from the server, to check that writes persisted."""
     return dataset.reopen(access_mode=RemoteAccessMode.DIRECT_PATH)
 
 
@@ -363,6 +364,28 @@ def test_per_mag_access_mode() -> None:
             mag.with_access_mode(access_mode).path
             == layer.get_mag(1, access_mode=access_mode).path
         )
+
+
+def test_dataset_with_access_mode() -> None:
+    remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
+    assert remote_dataset.access_mode == RemoteAccessMode.ZARR_STREAMING
+
+    direct_dataset = remote_dataset.with_access_mode(RemoteAccessMode.DIRECT_PATH)
+    assert direct_dataset.access_mode == RemoteAccessMode.DIRECT_PATH
+    assert direct_dataset.dataset_id == remote_dataset.dataset_id
+    # Reuses the already-fetched properties instead of a new request.
+    assert direct_dataset._properties is remote_dataset._properties
+
+    # Reading through the new access mode returns the same data as reopen().
+    reopened_dataset = remote_dataset.reopen(access_mode=RemoteAccessMode.DIRECT_PATH)
+    np.testing.assert_array_equal(
+        direct_dataset.get_layer("color")
+        .get_mag(1)
+        .read(absolute_bounding_box=SAMPLE_BBOX),
+        reopened_dataset.get_layer("color")
+        .get_mag(1)
+        .read(absolute_bounding_box=SAMPLE_BBOX),
+    )
 
 
 def test_direct_path_available_in_zarr_streaming_mode() -> None:

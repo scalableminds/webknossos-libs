@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Mapping
 from os import PathLike
 from tempfile import TemporaryDirectory
@@ -56,7 +57,13 @@ class RemoteLayer(AbstractLayer):
             )
         except ValueError:
             # The default access mode's own served properties may legitimately not
-            # (yet) list this mag; skip it rather than failing the whole layer.
+            # (yet) list this mag; skip it rather than failing the whole layer, but
+            # warn since the mag then silently goes missing from `layer.mags`.
+            warnings.warn(
+                f"Mag {mag} of layer {self.name} is listed in the dataset's "
+                + f"properties, but not available via {self._dataset.access_mode}. "
+                + "It will be missing from `layer.mags`."
+            )
             return
         self._mags[mag] = mag_view
 
