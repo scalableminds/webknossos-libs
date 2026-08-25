@@ -335,16 +335,24 @@ class SlicedImageSource(ImageSource):
             with self._open_slice_reader() as images:
                 slices: SliceReader | _SlicedView = images
                 if len(self._iter_axes) > 1:
-                    # The sequence is a flat run over every iter axis, so narrow
-                    # it to the stretch this chunk's non-z coordinates select
-                    # before indexing z within it.
+                    # The sequence is a flat run over every iter axis. When the
+                    # last one is genuinely "z", it is batched (multiple
+                    # values per chunk) and narrowed to below; every other
+                    # axis is exactly one value per chunk (see the assert
+                    # above) and only selects where in the flat run this
+                    # chunk starts. Without a real "z" — the box's "z" is then
+                    # a singleton placeholder, not tied to any iterated axis —
+                    # every iter axis, including the last one, is one of those
+                    # single-valued selectors instead.
+                    has_real_z = "z" in self._iter_axes
+                    outer_axes = self._iter_axes[:-1] if has_real_z else self._iter_axes
                     lower_bounds = images.flat_index(
-                        {
-                            axis: relative_bbox.get_bounds(axis)[0]
-                            for axis in self._iter_axes[:-1]
-                        }
+                        {axis: relative_bbox.get_bounds(axis)[0] for axis in outer_axes}
                     )
-                    upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
+                    run_length = (
+                        mag_view.bounding_box.get_shape("z") if has_real_z else 1
+                    )
+                    upper_bounds = lower_bounds + run_length
                     slices = images[lower_bounds:upper_bounds]
                 if self._options.flip_z:
                     slices = slices[::-1]
@@ -425,16 +433,17 @@ class SlicedImageSource(ImageSource):
                 )
 
             # Several axes are stepped through (e.g. "t" and "z"), so each one
-            # has to be named in the box. The last one is always the
-            # fastest-varying, per-slice axis, so it becomes "z" — same as
-            # the single-axis branch above — whatever the reader calls it.
-            *outer_axes, z_axis = self._iter_axes
-            axes_names = [*outer_axes, "z"] + self._bundle_axes
-            axes_sizes = (
-                [sizes[axis] for axis in outer_axes]
-                + [sizes[z_axis]]
-                + [sizes[axis] for axis in self._bundle_axes]
-            )
+            # has to be named in the box.
+            axes_names = self._iter_axes + self._bundle_axes
+            axes_sizes = [sizes[axis] for axis in axes_names]
+            if "z" not in axes_names:
+                # No axis is genuinely called "z" (e.g. only "t" and "s" are
+                # stepped through). A singleton "z" is added instead of
+                # relabeling a real axis, which would corrupt its meaning —
+                # a real "t" axis reported as depth, say.
+                insert_at = len(self._iter_axes)
+                axes_names = axes_names[:insert_at] + ["z"] + axes_names[insert_at:]
+                axes_sizes = axes_sizes[:insert_at] + [1] + axes_sizes[insert_at:]
             axes_sizes[axes_names.index("x")] = x_size
             axes_sizes[axes_names.index("y")] = y_size
             if "c" in axes_names:

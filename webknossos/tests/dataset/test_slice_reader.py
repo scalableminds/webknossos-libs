@@ -7,6 +7,7 @@ import pytest
 from PIL import Image
 from upath import UPath
 
+import webknossos as wk
 from webknossos.dataset._image_conversion.common_slice_readers import (
     MultiImageSliceReader,
     SingleImageSliceReader,
@@ -23,6 +24,8 @@ from webknossos.dataset.errors import (
     ImageConversionError,
     UnsupportedImageFormatError,
 )
+from webknossos.geometry.mag import Mag
+from webknossos.geometry.normalized_bounding_box import NormalizedBoundingBox
 
 # A volume with distinct values everywhere, so a wrong axis order or a wrong
 # index cannot accidentally produce the expected result.
@@ -361,16 +364,74 @@ class _NoZImageSource(SlicedImageSource):
 
     @contextmanager
     def _open_slice_reader(self) -> Generator[SliceReader]:
-        yield _TsyxReader()
+        # Mirrors the base implementation's post-discovery setup (see
+        # SlicedImageSource._open_slice_reader), which this override skips by
+        # not going through the real file-opening machinery.
+        images = _TsyxReader()
+        if hasattr(self, "_bundle_axes"):
+            images.default_coords.update(self._default_coords)
+            images.bundle_axes = self._bundle_axes
+            images.iter_axes = self._iter_axes
+        yield images
 
 
-def test_expected_bbox_synthesizes_z_when_source_has_no_real_one() -> None:
+def test_no_real_z_axis_gets_a_singleton_without_relabeling_a_real_axis(
+    tmp_upath: UPath,
+) -> None:
     # Some formats step through 2+ axes besides "c" (here "t" and "s") but
-    # have no genuine "z" axis. The pipeline's 3D writing machinery still
-    # needs an explicit "z", so the last (fastest-varying) iterated axis
-    # fills that role instead — matching what the single-axis branch
-    # already does for its one iterated axis, regardless of its name.
+    # have no genuine "z" axis. expected_bbox must add a singleton "z"
+    # rather than relabeling a real axis (which would corrupt its meaning —
+    # a real time axis reported as depth), and copy_chunk_to_view must still
+    # read/write every (t, s) slice correctly despite "z" not corresponding
+    # to any real iteration.
     source = _NoZImageSource()
+    box = source.expected_bbox
 
-    assert source.expected_bbox.axes == ("c", "s", "z", "y", "x")
-    assert source.expected_bbox.size.to_tuple() == (1, 3, 2, 4, 5)
+    assert "z" in box.axes
+    assert box.size.z == 1
+    assert box.size.c == 1
+    assert box.size[box.axes.index("t")] == 2  # from _TsyxReader / _NO_Z_VOLUME
+    assert box.size[box.axes.index("s")] == 3
+
+    ds = wk.Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))
+    layer = ds.add_layer(
+        "test",
+        category="color",
+        dtype=source.dtype,
+        num_channels=1,
+        data_format="zarr3",
+    )
+    layer.bounding_box = source.initial_layer_bounding_box(box)
+    # A small explicit shard/chunk shape avoids padding every write out to
+    # the (1024, 1024, 1024) default, which is both wasteful and pushes the
+    # unrelated read path below to its limits for this tiny test volume.
+    mag_view = layer.add_mag(1, compress=False, chunk_shape=8, shard_shape=8)
+
+    # Captures what actually gets written, rather than reading it back
+    # through the storage backend — a 6-axis array (s, t, c, z, y, x) is not
+    # a combination the tensorstore-backed zarr3 reader supports, which is a
+    # storage-layer limitation unrelated to what this test verifies.
+    written: list[tuple[NormalizedBoundingBox, np.ndarray]] = []
+    real_write = mag_view._array.write
+
+    def _capture_write(bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
+        written.append((bbox, data.copy()))
+        real_write(bbox, data)
+
+    mag_view._array.write = _capture_write  # type: ignore[method-assign]
+
+    axes = layer.normalized_bounding_box.axes
+    t_index, s_index = axes.index("t"), axes.index("s")
+    chunks = source.chunk_grid(
+        layer.normalized_bounding_box, mag_view=mag_view, mag=Mag(1), batch_size=None
+    )
+    for chunk_bbox in chunks:
+        source.copy_chunk_to_view(chunk_bbox, mag_view=mag_view, dtype=None)
+
+    assert len(written) == 2 * 3  # one chunk per (t, s) combination
+
+    for chunk_bbox, data in written:
+        t = chunk_bbox.topleft[t_index]
+        s = chunk_bbox.topleft[s_index]
+        written_slice = data.reshape(4, 5)  # squeeze the size-1 s/t/c/z axes
+        np.testing.assert_array_equal(written_slice, _NO_Z_VOLUME[t, s])
