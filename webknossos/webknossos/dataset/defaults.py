@@ -30,4 +30,5 @@ DEFAULT_BIT_DEPTH = 8
 PROPERTIES_FILE_NAME = "datasource-properties.json"
 ZGROUP_FILE_NAME = ".zgroup"
 ZATTRS_FILE_NAME = ".zattrs"
+ZARRAY_FILE_NAME = ".zarray"
 ZARR_JSON_FILE_NAME = "zarr.json"

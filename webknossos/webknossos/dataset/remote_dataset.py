@@ -547,11 +547,18 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         # update existing layers
         for layer in self.layers.values():
             layer_properties = next(
-                layer_properties
-                for layer_properties in self._properties.data_layers
-                if layer_properties.name == layer.name
+                (
+                    layer_properties
+                    for layer_properties in self._properties.data_layers
+                    if layer_properties.name == layer.name
+                ),
+                None,
             )
-            layer._apply_properties(layer_properties, layer.read_only)
+            # layer_properties is None if a locally applied change (e.g. a rename) was
+            # not actually persisted on the server. Such layers are dropped below, in
+            # the "remove deleted layers" step.
+            if layer_properties is not None:
+                layer._apply_properties(layer_properties, layer.read_only)
 
         # add new layers
         for layer_properties in self._properties.data_layers:

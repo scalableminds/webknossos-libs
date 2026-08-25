@@ -455,6 +455,7 @@ class RemoteLayer(AbstractLayer):
         if layer_name == self.name:
             return
         self._ensure_metadata_writable()
+        self._ensure_writable()
         if layer_name in self.dataset.layers.keys():
             raise ValueError(
                 f"Failed to rename layer {self.name} to {layer_name}: The new name already exists."

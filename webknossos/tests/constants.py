@@ -1,89 +1,58 @@
-import os
-import shlex
-import subprocess
-import sys
+import threading
 from collections.abc import Generator
 from contextlib import contextmanager
-from time import sleep
 
+import waitress
+from moto.moto_server.werkzeug_app import (
+    DomainDispatcherApplication,
+    create_backend_app,
+)
 from upath import UPath
-
-from webknossos.utils import rmtree
 
 TESTDATA_DIR = UPath(__file__).parent.parent / "testdata"
 TESTOUTPUT_DIR = UPath(__file__).parent.parent / "testoutput"
 
 
-MINIO_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
-MINIO_ROOT_PASSWORD = "ANTN35UAENTS5UIAEATD"
-MINIO_PORT = "8000"
+S3_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
+S3_ROOT_PASSWORD = "ANTN35UAENTS5UIAEATD"
+S3_PORT = 8000
 
 REMOTE_TESTOUTPUT_DIR = UPath(
     "s3://testoutput",
-    key=MINIO_ROOT_USER,
-    secret=MINIO_ROOT_PASSWORD,
-    endpoint_url=f"http://localhost:{MINIO_PORT}",
+    key=S3_ROOT_USER,
+    secret=S3_ROOT_PASSWORD,
+    endpoint_url=f"http://localhost:{S3_PORT}",
 )
 
 
 @contextmanager
-def use_minio() -> Generator[None]:
-    """Minio is an S3 clone and is used as local test server"""
-    if sys.platform == "darwin":
-        minio_path = UPath("testoutput_minio")
-        rmtree(minio_path)
-        minio_process = subprocess.Popen(
-            shlex.split(f"minio server --address :8000 ./{minio_path}"),
-            env={
-                **os.environ,
-                "MINIO_ROOT_USER": MINIO_ROOT_USER,
-                "MINIO_ROOT_PASSWORD": MINIO_ROOT_PASSWORD,
-            },
-        )
-        sleep(3)
-        assert minio_process.poll() is None
-        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+def use_moto() -> Generator[None]:
+    """Moto mocks S3. It is used as local test server, which runs as a
+    background thread in the same process.
+
+    Serves moto's WSGI app via waitress instead of moto's own
+    ThreadedMotoServer (which uses werkzeug's single-threaded dev server):
+    waitress is a production-grade, cross-platform WSGI server and is
+    noticeably faster on Windows under the many small S3 requests this
+    test suite makes.
+    """
+    app = DomainDispatcherApplication(create_backend_app)
+    server = waitress.create_server(app, host="127.0.0.1", port=S3_PORT, threads=8)
+
+    def run_server() -> None:
         try:
-            yield
-        finally:
-            minio_process.terminate()
-            sleep(1)
-            rmtree(minio_path)
-    elif sys.platform == "win32":
-        minio_path = UPath("testoutput_minio")
-        rmtree(minio_path)
-        minio_process = subprocess.Popen(
-            shlex.split(f"minio.exe server --address :8000 {minio_path.absolute()}"),
-            env={
-                **os.environ,
-                "MINIO_ROOT_USER": MINIO_ROOT_USER,
-                "MINIO_ROOT_PASSWORD": MINIO_ROOT_PASSWORD,
-            },
-        )
-        sleep(3)
-        assert minio_process.poll() is None
+            server.run()
+        except OSError:
+            # Expected: closing the socket from the main thread interrupts
+            # the accept loop's select() call with a benign "bad file
+            # descriptor" error.
+            pass
+
+    thread = threading.Thread(target=run_server, daemon=True)
+    thread.start()
+    try:
         REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-        try:
-            yield
-        finally:
-            minio_process.terminate()
-            sleep(1)
-            rmtree(minio_path)
-    else:
-        container_name = "minio"
-        cmd = (
-            "docker run"
-            f" -p {MINIO_PORT}:9000"
-            f" -e MINIO_ROOT_USER={MINIO_ROOT_USER}"
-            f" -e MINIO_ROOT_PASSWORD={MINIO_ROOT_PASSWORD}"
-            f" --name {container_name}"
-            " --rm"
-            " -d"
-            " minio/minio server /data"
-        )
-        subprocess.check_output(shlex.split(cmd))
-        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
-        try:
-            yield
-        finally:
-            subprocess.check_output(["docker", "stop", container_name])
+        yield
+    finally:
+        server.close()
+        thread.join(timeout=5)

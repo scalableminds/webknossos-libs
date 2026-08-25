@@ -49,13 +49,19 @@ class ChunkedImageSource(ImageSource):
     def supported_file_extensions(cls) -> set[str]:
         """File extensions (without the dot, lowercase) this class can read."""
 
+    @classmethod
+    def probe_directory(cls, _path: UPath) -> bool:
+        """Whether this class can open `path` as a directory-based store, used
+        when no registered extension matches. Default: no directory sniffing."""
+        return False
+
     @property
     def channel(self) -> int | None:
         """The selected channel, or None if all channels are used."""
         return self._channel
 
     @abstractmethod
-    def get_possible_layers(self) -> dict[str, list[int]] | None:
+    def get_layer_split_options(self) -> dict[str, list[int]] | None:
         """The ways this source could be split across several layers, or None
         when there is nothing to split."""
 

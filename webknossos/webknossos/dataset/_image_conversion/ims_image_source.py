@@ -98,7 +98,7 @@ class ImsImageSource(ChunkedImageSource):
         self._include_t_axis = t > 1
         self._fixed_timepoint: int | None = None if self._include_t_axis else 0
 
-    def get_possible_layers(self) -> dict[str, list[int]] | None:
+    def get_layer_split_options(self) -> dict[str, list[int]] | None:
         if len(self._possible_layers) == 0:
             return None
         return self._possible_layers
