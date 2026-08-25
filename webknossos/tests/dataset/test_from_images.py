@@ -207,7 +207,7 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         "tiffs_test_C.tif__channel3": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
         "tiffs_test_C.tif__channel4": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
         "tiffs_test_I.tif": ("uint32", 1, VecInt(c=1, x=64, y=128, z=64)),
-        "tiffs_test_S.tif": ("uint16", 1, VecInt(s=3, z=64, x=128, y=128)),
+        "tiffs_test_S.tif": ("uint16", 1, VecInt(c=1, s=3, z=64, y=128, x=128)),
     }
 
     for layer_name, layer in ds.layers.items():
@@ -322,11 +322,11 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
     }
     for c in range(3):
         layer = ds.layers[f"multi__channel{c}"]
-        assert layer.bounding_box.axes == ("t", "x", "y", "z")
-        assert layer.bounding_box.size.to_tuple() == (2, 10, 8, 4)
-        data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
+        assert layer.bounding_box.axes == ("t", "c", "x", "y", "z")
+        assert layer.bounding_box.size.to_tuple() == (2, 1, 10, 8, 4)
+        data = layer.get_finest_mag().read()  # (t, c, x, y, z)
         for t in range(2):
-            assert (data[t] == t * 100 + c).all()
+            assert (data[t, 0] == t * 100 + c).all()
 
 
 def _open_mrc_chunked_images(mrc_path: UPath) -> MrcImageSource:

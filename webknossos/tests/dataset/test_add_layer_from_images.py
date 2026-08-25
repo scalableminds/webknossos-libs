@@ -489,11 +489,11 @@ def test_ims_from_images_multi_timepoint(
             executor=executor,
         )
 
-    assert layer.bounding_box.axes == ("t", "x", "y", "z")
-    assert layer.bounding_box.size.to_tuple() == (3, 10, 8, 4)
-    data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
+    assert layer.bounding_box.axes == ("t", "c", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (3, 1, 10, 8, 4)
+    data = layer.get_finest_mag().read()  # (t, c, x, y, z)
     for t in range(3):
-        assert (data[t] == t * 100).all()
+        assert (data[t, 0] == t * 100).all()
 
 
 @pytest.mark.parametrize(
@@ -875,11 +875,11 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
     }
     for c in range(3):
         layer = ds.layers[f"multi_t_multi_c__channel{c}"]
-        assert layer.bounding_box.axes == ("t", "x", "y", "z")
-        assert layer.bounding_box.size.to_tuple() == (2, 10, 8, 4)
-        data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
+        assert layer.bounding_box.axes == ("t", "c", "x", "y", "z")
+        assert layer.bounding_box.size.to_tuple() == (2, 1, 10, 8, 4)
+        data = layer.get_finest_mag().read()  # (t, c, x, y, z)
         for t in range(2):
-            assert (data[t] == t * 100 + c).all()
+            assert (data[t, 0] == t * 100 + c).all()
 
 
 # A single shard hides both the multi-shard flip bug and the mag/shard
@@ -946,11 +946,11 @@ def test_czi_from_images_multi_timepoint(tmp_upath: UPath) -> None:
             executor=executor,
         )
 
-    assert layer.bounding_box.axes == ("t", "x", "y", "z")
-    assert layer.bounding_box.size.to_tuple() == (3, 10, 8, 2)
+    assert layer.bounding_box.axes == ("t", "c", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (3, 1, 10, 8, 2)
     actual = layer.get_finest_mag().read()
     for t in range(3):
-        np.testing.assert_array_equal(actual[t], data[t, 0].transpose(2, 1, 0))
+        np.testing.assert_array_equal(actual[t, 0], data[t, 0].transpose(2, 1, 0))
 
 
 @requires_pylibczirw
@@ -1009,18 +1009,17 @@ def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
             str(four_d_series_tif),
             layer_name="color",
             category="color",
-            topleft=(2, 55, 100, 100),
+            topleft=(2, 0, 55, 100, 100),
             data_format="zarr3",
             chunk_shape=(8, 8, 8),
             shard_shape=(64, 64, 64),
             executor=executor,
         )
-    assert layer.bounding_box.topleft == wk.VecInt(t=2, z=55, y=100, x=100)
-    assert layer.bounding_box.size == wk.VecInt(t=7, z=5, y=167, x=439)
+    assert layer.bounding_box.topleft == wk.VecInt(t=2, c=0, z=55, y=100, x=100)
+    assert layer.bounding_box.size == wk.VecInt(t=7, c=1, z=5, y=167, x=439)
     read_with_tifffile_reader = TiffFile(str(four_d_series_tif)).asarray()
-    # For ND data without explicit channel axis, read() returns data directly
-    # without a channel wrapper dimension
-    read_from_dataset = layer.get_finest_mag().read()
+    # read() now carries an explicit, size-1 "c" axis right after "t".
+    read_from_dataset = layer.get_finest_mag().read()[:, 0]
     np.testing.assert_array_equal(read_with_tifffile_reader, read_from_dataset)
 
 
@@ -1157,7 +1156,7 @@ REPO_IMAGES_ARGS: list[
         "uint16",
         1,
         1,
-        wk.VecInt(s=3, x=64, y=128, z=128),
+        wk.VecInt(c=1, s=3, x=64, y=128, z=128),
     ),
     (
         _remote_repo_image_path("4D", "single_channel", "single-channel.ome.tiff"),
@@ -1711,8 +1710,8 @@ def test_real_ome_zarr_sample_conversion(tmp_upath: UPath) -> None:
         )
 
     assert layer.dtype == np.dtype("uint16")
-    assert layer.bounding_box.axes == ("t", "x", "y", "z")
-    assert layer.bounding_box.size.to_tuple() == (18, 198, 223, 12)
+    assert layer.bounding_box.axes == ("t", "c", "x", "y", "z")
+    assert layer.bounding_box.size.to_tuple() == (18, 1, 198, 223, 12)
 
     # The sample's omero metadata for channel 0 ("cy 1"):
     # {"color": "FFFFFF", "window": {"min": 0.0, "max": 65535.0, "start": 0.0, "end": 1200.0}}
@@ -1735,8 +1734,8 @@ def test_real_ome_zarr_sample_conversion(tmp_upath: UPath) -> None:
     ).result()
     # (t, c, z, y, x), channel 0 -> (t, z, y, x) -> (t, x, y, z)
     expected = np.asarray(finest_array[:, 0].read().result()).transpose(0, 3, 2, 1)
-    actual = layer.get_finest_mag().read()  # (t, x, y, z), channel dim dropped
-    np.testing.assert_array_equal(actual, expected)
+    actual = layer.get_finest_mag().read()  # (t, c, x, y, z)
+    np.testing.assert_array_equal(actual[:, 0], expected)
 
 
 @pytest.mark.parametrize(

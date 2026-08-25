@@ -9,9 +9,15 @@ from upath import UPath
 
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.mag import Mag
+from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ..layer.view import MagView
-from .image_source import ChunkResult, ImageSource, ReadOptions
+from .image_source import (
+    ChunkResult,
+    ImageSource,
+    ReadOptions,
+    with_explicit_channel_axis,
+)
 
 
 class ChunkedImageSource(ImageSource):
@@ -87,11 +93,7 @@ class ChunkedImageSource(ImageSource):
         The exact bounding box of the data, in the source's native Mag(1)
         space — never a placeholder, since these formats know their extents.
 
-        Carries an explicit "c" axis sized `num_channels` whenever there is
-        more than one channel. A single-channel source with an unpinned "t"
-        axis omits "c" instead, like every other ND layer bounding box that
-        relies on `add_layer()`'s `num_channels` argument to convey a
-        channel count of 1.
+        Always carries an explicit "c" axis sized `num_channels`.
         """
         x_size, y_size = self._x, self._y
         if self._options.swap_xy:
@@ -102,13 +104,10 @@ class ChunkedImageSource(ImageSource):
                 self.num_channels
             )
 
-        axes = ["t", "x", "y", "z"]
-        sizes = [self._t, x_size, y_size, self._z]
-        if self.num_channels > 1:
-            # "c" is placed right after "t" in the axis order.
-            axes = ["t", "c", "x", "y", "z"]
-            sizes = [self._t, self.num_channels, x_size, y_size, self._z]
-        return NormalizedBoundingBox.from_axes(axes, sizes)
+        box = NDBoundingBox.from_axes(
+            ["t", "x", "y", "z"], [self._t, x_size, y_size, self._z]
+        )
+        return with_explicit_channel_axis(box, self.num_channels)
 
     def copy_chunk_to_view(
         self,
@@ -201,8 +200,6 @@ class ChunkedImageSource(ImageSource):
             block = block.astype(dtype, order="F")
 
         max_value = int(block.max())
-        if self.num_channels == 1:
-            block = block[0]  # (x, y, z) — single-channel layers have no c axis
         if "t" in relative_bbox.axes:
             # Add back the size-1 "t" axis this chunk corresponds to.
             block = block[np.newaxis]

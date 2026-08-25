@@ -21,7 +21,9 @@ from numpy.typing import DTypeLike
 
 from ...dataset_properties import LayerViewConfiguration
 from ...geometry.mag import Mag
+from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
+from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
 
 
@@ -89,6 +91,37 @@ def compute_channel_selection(
     if raw_num_channels >= 3:
         return ChannelSelection(3, None, 3, list(range(raw_num_channels)))
     return ChannelSelection(raw_num_channels, None, None, None)
+
+
+def with_explicit_channel_axis(
+    box: NDBoundingBox, num_channels: int
+) -> NormalizedBoundingBox:
+    """Builds a `NormalizedBoundingBox` that always carries an explicit "c"
+    axis, sized `num_channels` — even when `box` doesn't have one and
+    `num_channels` is 1.
+
+    Unlike `NDBoundingBox.normalize_axes()` (which keeps a missing "c" axis
+    implicit, matching xyz-only boxes elsewhere, e.g. remote datasets),
+    image-conversion's own internal boxes are always meant to carry one, per
+    the codebase's `NormalizedBoundingBox` convention. A missing "c" axis is
+    inserted right after "t" if present, otherwise first.
+    """
+    if "c" in box.axes:
+        return box.normalize_axes(num_channels)
+    insert_at = box.axes.index("t") + 1 if "t" in box.axes else 0
+    axes = box.axes[:insert_at] + ("c",) + box.axes[insert_at:]
+    topleft = box.topleft.to_list()
+    topleft.insert(insert_at, 0)
+    size = box.size.to_list()
+    size.insert(insert_at, num_channels)
+    return NormalizedBoundingBox(
+        topleft=VecInt(topleft, axes=axes),
+        size=VecInt(size, axes=axes),
+        axes=axes,
+        name=box.name,
+        is_visible=box.is_visible,
+        color=box.color,
+    )
 
 
 class ChunkResult(NamedTuple):

@@ -1,3 +1,5 @@
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Any
 
 import numpy as np
@@ -9,11 +11,13 @@ from webknossos.dataset._image_conversion.common_slice_readers import (
     MultiImageSliceReader,
     SingleImageSliceReader,
 )
+from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.image_source_registry import open_slice_reader
 from webknossos.dataset._image_conversion.slice_reader import (
     SliceReader,
     _SlicedView,
 )
+from webknossos.dataset._image_conversion.sliced_image_source import SlicedImageSource
 from webknossos.dataset._image_conversion.tiff_slice_reader import TiffSliceReader
 from webknossos.dataset.errors import (
     ImageConversionError,
@@ -325,3 +329,48 @@ def test_image_sequence_reads_zip_archive(tmp_upath: UPath) -> None:
 def test_image_sequence_reports_missing_files(tmp_upath: UPath) -> None:
     with pytest.raises(OSError, match="No files were found"):
         MultiImageSliceReader(str(tmp_upath / "nothing_*.png"))
+
+
+# t, s, y, x — two non-"c" iterated axes and no "z" axis at all.
+_NO_Z_VOLUME = np.arange(2 * 3 * 4 * 5, dtype="uint16").reshape(2, 3, 4, 5)
+
+
+class _TsyxReader(SliceReader):
+    """Declares "t" and "s" as iterated axes; has no "z" axis."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        for axis, size in zip("tsyx", _NO_Z_VOLUME.shape):
+            self._init_axis(axis, size)
+        self._set_get_slice(self._get_slice, "tsyx")
+
+    def _get_slice(self, **ind: int) -> np.ndarray:
+        del ind
+        return _NO_Z_VOLUME
+
+    @property
+    def pixel_type(self) -> Any:
+        return _NO_Z_VOLUME.dtype
+
+
+class _NoZImageSource(SlicedImageSource):
+    """A SlicedImageSource backed by `_TsyxReader`, bypassing real file I/O."""
+
+    def __init__(self) -> None:
+        super().__init__(UPath("synthetic"), ReadOptions())
+
+    @contextmanager
+    def _open_slice_reader(self) -> Generator[SliceReader]:
+        yield _TsyxReader()
+
+
+def test_expected_bbox_synthesizes_z_when_source_has_no_real_one() -> None:
+    # Some formats step through 2+ axes besides "c" (here "t" and "s") but
+    # have no genuine "z" axis. The pipeline's 3D writing machinery still
+    # needs an explicit "z", so the last (fastest-varying) iterated axis
+    # fills that role instead — matching what the single-axis branch
+    # already does for its one iterated axis, regardless of its name.
+    source = _NoZImageSource()
+
+    assert source.expected_bbox.axes == ("c", "s", "z", "y", "x")
+    assert source.expected_bbox.size.to_tuple() == (1, 3, 2, 4, 5)

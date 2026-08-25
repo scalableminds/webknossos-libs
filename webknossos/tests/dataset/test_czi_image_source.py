@@ -44,8 +44,8 @@ def test_czi_image_source_multi_timepoint_gets_a_t_axis(tmp_upath: UPath) -> Non
     source = _open_czi_image_source(czi_path)
 
     assert source.get_layer_split_options() is None
-    assert source.expected_bbox.axes == ("t", "x", "y", "z")
-    assert source.expected_bbox.size.to_tuple() == (3, 10, 8, 2)
+    assert source.expected_bbox.axes == ("t", "c", "x", "y", "z")
+    assert source.expected_bbox.size.to_tuple() == (3, 1, 10, 8, 2)
 
 
 def test_czi_image_source_reads_only_the_requested_box(tmp_upath: UPath) -> None:

@@ -11,6 +11,7 @@ from upath import UPath
 from ...dataset_properties import DataFormat
 from ...geometry.bounding_box import BoundingBox
 from ...geometry.mag import Mag
+from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec3_int import Vec3Int
 from ..errors import (
@@ -24,6 +25,7 @@ from .image_source import (
     ImageSource,
     ReadOptions,
     compute_channel_selection,
+    with_explicit_channel_axis,
 )
 from .image_source_registry import (
     describe_missing_extras,
@@ -407,8 +409,7 @@ class SlicedImageSource(ImageSource):
         one slice's extent, which a later slice may exceed; the axes stepped
         through are exact, since the reader counted them.
 
-        Carries an explicit "c" axis sized `num_channels` whenever there is
-        more than one channel. A single-channel source may omit it."""
+        Always carries an explicit "c" axis sized `num_channels`."""
         with self._open_slice_reader() as images:
             sizes = images.sizes
             x_size, y_size = sizes["x"], sizes["y"]
@@ -424,10 +425,16 @@ class SlicedImageSource(ImageSource):
                 )
 
             # Several axes are stepped through (e.g. "t" and "z"), so each one
-            # has to be named in the box; "c" is included when there is more
-            # than one raw channel.
-            axes_names = self._iter_axes + self._bundle_axes
-            axes_sizes = [sizes[axis] for axis in axes_names]
+            # has to be named in the box. The last one is always the
+            # fastest-varying, per-slice axis, so it becomes "z" — same as
+            # the single-axis branch above — whatever the reader calls it.
+            *outer_axes, z_axis = self._iter_axes
+            axes_names = [*outer_axes, "z"] + self._bundle_axes
+            axes_sizes = (
+                [sizes[axis] for axis in outer_axes]
+                + [sizes[z_axis]]
+                + [sizes[axis] for axis in self._bundle_axes]
+            )
             axes_sizes[axes_names.index("x")] = x_size
             axes_sizes[axes_names.index("y")] = y_size
             if "c" in axes_names:
@@ -436,7 +443,8 @@ class SlicedImageSource(ImageSource):
                 # `channel` selects one, and _first_n_channels truncates to the
                 # first three).
                 axes_sizes[axes_names.index("c")] = self.num_channels
-            return NormalizedBoundingBox.from_axes(axes_names, axes_sizes)
+            box = NDBoundingBox.from_axes(axes_names, axes_sizes)
+            return with_explicit_channel_axis(box, self.num_channels)
 
     def initial_layer_bounding_box(
         self, mag1_expected_bbox: NormalizedBoundingBox
