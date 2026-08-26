@@ -32,11 +32,9 @@ class TiffSliceReader(SliceReader):
 
         with self.path.open("rb") as f:
             _tiff = tifffile.TiffFile(f).series[0]
-            self._tiff_axes = tuple(_tiff.axes.lower())  # All the axes in the tiff file
-            for axis, shape in zip(self._tiff_axes, _tiff.shape):
-                self._init_axis(axis, shape)
+            raw_axes = tuple(_tiff.axes.lower())  # All the axes in the tiff file
 
-            # Selecting the first page to get the dtype and shape
+            # Selecting the first page to get the dtype, shape and photometric tag
             if hasattr(_tiff, "pages"):
                 _tmp = _tiff.pages[0]
             else:
@@ -44,8 +42,32 @@ class TiffSliceReader(SliceReader):
             assert _tmp is not None, "No pages found in tiff file."
             self._dtype = _tmp.dtype or np.dtype("uint8")
             self._shape = _tmp.shape
+
+            # tifffile names the samples-per-pixel axis "S", only naming it "C"
+            # when the file carries explicit multi-channel axis metadata. A
+            # samples axis of 3 tagged as RGB is unambiguous colour, so it is
+            # treated as the channel axis rather than as extra z-slices,
+            # matching WEBKNOSSOS's own rule that only three uint8 channels
+            # display as RGB (see channels_fit_one_layer). "S" and "C" can
+            # both be present (e.g. ZCYXS); in that case "S" is left alone
+            # and stays a plain extra axis.
+            treat_s_as_c = (
+                "s" in raw_axes
+                and "c" not in raw_axes
+                and _tiff.shape[raw_axes.index("s")] == 3
+                and _tiff.keyframe.photometric == tifffile.PHOTOMETRIC.RGB
+                and self._dtype.name == "uint8"
+            )
+            axis_rename = {"s": "c"} if treat_s_as_c else {}
+            self.channels_are_rgb = treat_s_as_c
+
+            self._tiff_axes = tuple(axis_rename.get(a, a) for a in raw_axes)
+            for axis, shape in zip(self._tiff_axes, _tiff.shape):
+                self._init_axis(axis, shape)
+
+            page_axes = tuple(axis_rename.get(a, a) for a in _tmp.axes.lower())
             self._other_axes = tuple(
-                axis for axis in self._tiff_axes if axis not in _tmp.axes.lower()
+                axis for axis in self._tiff_axes if axis not in page_axes
             )  # Axes that are not present in a single tiff page
             self._page_axes = tuple(
                 axis for axis in self._tiff_axes if axis not in self._other_axes
@@ -140,6 +162,20 @@ class TiffSliceReader(SliceReader):
                             for axis in self._page_axes
                         )
                     ]
+
+                # page_data's remaining axes are in the page's on-disk order,
+                # which does not always match bundle_axes (e.g. the samples
+                # axis trails y/x on disk but leads as "c" in bundle_axes).
+                remaining_page_axes = [
+                    axis for axis in self._page_axes if axis not in extra_page_axes
+                ]
+                dest_axes = [
+                    axis for axis in self.bundle_axes if axis not in page_coords
+                ]
+                if remaining_page_axes != dest_axes:
+                    page_data = np.transpose(
+                        page_data, [remaining_page_axes.index(a) for a in dest_axes]
+                    )
 
                 # Write to the correct position in out
                 out[
