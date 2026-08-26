@@ -10,6 +10,7 @@ from upath import UPath
 
 from ...dataset_properties import DataFormat
 from ...geometry.bounding_box import BoundingBox
+from ...geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
@@ -90,19 +91,19 @@ class SlicedImageSource(ImageSource):
             self._default_coords = {}
 
             # A slice is a 2D image, channels first when there are several.
-            raw_num_channels = images.sizes.get("c", 1)
+            raw_num_channels = images.sizes.get(C_AXIS, 1)
             if raw_num_channels > 1:
-                bundle_axes = ["c", "y", "x"]
+                bundle_axes = [C_AXIS, Y_AXIS, C_AXIS]
             else:
-                if "c" in images.axes:
+                if C_AXIS in images.axes:
                     # In neither list, so coordinate 0 is what gets returned.
-                    self._default_coords["c"] = 0
-                bundle_axes = ["y", "x"]
+                    self._default_coords[C_AXIS] = 0
+                bundle_axes = [Y_AXIS, C_AXIS]
 
             # Every remaining axis is iterated over. "z" goes last, so it is
             # the fastest-varying one.
             self._iter_axes = sorted(
-                set(images.axes).difference({*bundle_axes, "c", "z"})
+                set(images.axes).difference({*bundle_axes, C_AXIS, "z"})
             )
             if "z" in images.axes:
                 self._iter_axes.append("z")
@@ -321,7 +322,7 @@ class SlicedImageSource(ImageSource):
             assert all(
                 size == 1
                 for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
-                if axis not in ("c", "x", "y", "z")
+                if axis not in CXYZ_AXES
             ), (
                 "The delivered BoundingBox has to be flat except for x,y and z dimension."
             )
@@ -365,10 +366,10 @@ class SlicedImageSource(ImageSource):
                     for image_slice in slices[z_start:z_end]:
                         image_slice = np.array(image_slice)
                         # place channels first
-                        if "c" in self._bundle_axes:
+                        if C_AXIS in self._bundle_axes:
                             image_slice = np.moveaxis(
                                 image_slice,
-                                source=self._bundle_axes.index("c"),
+                                source=self._bundle_axes.index(C_AXIS),
                                 destination=0,
                             )
                             if self._channel is not None:
@@ -420,7 +421,7 @@ class SlicedImageSource(ImageSource):
         Always carries an explicit "c" axis sized `num_channels`."""
         with self._open_slice_reader() as images:
             sizes = images.sizes
-            x_size, y_size = sizes["x"], sizes["y"]
+            x_size, y_size = sizes[X_AXIS], sizes[Y_AXIS]
             if self._options.swap_xy:
                 x_size, y_size = y_size, x_size
 
@@ -444,14 +445,14 @@ class SlicedImageSource(ImageSource):
                 insert_at = len(self._iter_axes)
                 axes_names = axes_names[:insert_at] + ["z"] + axes_names[insert_at:]
                 axes_sizes = axes_sizes[:insert_at] + [1] + axes_sizes[insert_at:]
-            axes_sizes[axes_names.index("x")] = x_size
-            axes_sizes[axes_names.index("y")] = y_size
-            if "c" in axes_names:
-                # sizes["c"] is the source's raw channel count, but only
+            axes_sizes[axes_names.index(X_AXIS)] = x_size
+            axes_sizes[axes_names.index(Y_AXIS)] = y_size
+            if C_AXIS in axes_names:
+                # sizes[C_AXIS] is the source's raw channel count, but only
                 # self.num_channels of them are actually written (a pinned
                 # `channel` selects one, and _first_n_channels truncates to the
                 # first three).
-                axes_sizes[axes_names.index("c")] = self.num_channels
+                axes_sizes[axes_names.index(C_AXIS)] = self.num_channels
             box = NDBoundingBox.from_axes(axes_names, axes_sizes)
             return with_explicit_channel_axis(box, self.num_channels)
 
@@ -461,8 +462,8 @@ class SlicedImageSource(ImageSource):
         """Deliberately oversized in x/y, since a write outside the layer's
         box would be rejected. Shrunk to the true extent afterwards."""
         safe_size = mag1_expected_bbox.size.with_replaced(
-            mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
-        ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
+            mag1_expected_bbox.axes.index(X_AXIS), SAFE_LARGE_XY
+        ).with_replaced(mag1_expected_bbox.axes.index(Y_AXIS), SAFE_LARGE_XY)
         return mag1_expected_bbox.with_size(safe_size)
 
     def chunk_grid(

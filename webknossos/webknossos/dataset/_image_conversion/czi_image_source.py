@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import numpy as np
 from upath import UPath
 
+from ...geometry.constants import TCXYZ_AXES
 from ...utils import WkImportError, is_remote_path
 from ..errors import CorruptImageError, UnsupportedImageDataError
 from .chunked_image_source import ChunkedImageSource
@@ -34,7 +35,7 @@ PIXEL_TYPES: dict[str, tuple[str, int]] = {
 # Dimensions this reader can place. "C" is deliberately absent: a CZI "C" is a
 # separate acquisition channel, selected with czi_channel, not a RGB
 # component of one image (those come from the pixel type instead).
-_SUPPORTED_DIMS = frozenset({"X", "Y", "Z", "T", "C"})
+_SUPPORTED_DIMS = frozenset(TCXYZ_AXES)
 
 
 @register_chunked_image_source

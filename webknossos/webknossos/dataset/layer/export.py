@@ -11,6 +11,12 @@ from upath import UPath
 
 from webknossos.dataset_properties import SEGMENTATION_CATEGORY
 from webknossos.geometry import (
+    C_AXIS,
+    CXYZ_AXES,
+    T_AXIS,
+    X_AXIS,
+    Y_AXIS,
+    Z_AXIS,
     Mag,
     NDBoundingBox,
     NormalizedBoundingBox,
@@ -37,7 +43,7 @@ OME_TIFF_DOWNSAMPLING_STEPS = 5
 OME_TIFF_DOWNSAMPLING_MIN_PIXEL = 16
 
 # OME-TIFF only supports this fixed set of axes.
-_OME_TIFF_AXIS_CODES = {"c": "C", "t": "T", "z": "Z", "y": "Y", "x": "X"}
+_OME_TIFF_AXIS_CODES = {C_AXIS: "C", T_AXIS: "T", Z_AXIS: "Z", Y_AXIS: "Y", X_AXIS: "X"}
 
 
 def _resolve_export_bbox(
@@ -46,7 +52,7 @@ def _resolve_export_bbox(
     """Resolves the region to export as a `NormalizedBoundingBox`, whose
     `.axes` always matches the axis order `mag_view.read()`/`.write()`
     actually use - unlike a plain `NDBoundingBox`/`BoundingBox`, which may
-    or may not include "c" depending on the layer.
+    or may not include C_AXIS depending on the layer.
     """
     if bounding_box is None:
         return layer.normalized_bounding_box
@@ -89,14 +95,14 @@ def _extract_tiff_stack_slice(
     reorders the rest to (c, x, y) - synthesizing a channel axis if the
     layer doesn't have one, so `_slice_to_image` always sees (C, X, Y).
     """
-    extra = [a for a in slice_axes if a not in ("c", "x", "y")]
+    extra = [a for a in slice_axes if a not in (C_AXIS, X_AXIS, Y_AXIS)]
     squeezed = np.squeeze(slice_data, axis=tuple(slice_axes.index(a) for a in extra))
     remaining = tuple(a for a in slice_axes if a not in extra)
-    target = tuple(a for a in ("c", "x", "y") if a in remaining)
+    target = tuple(a for a in (C_AXIS, X_AXIS, Y_AXIS) if a in remaining)
     reordered = np.moveaxis(
         squeezed, [remaining.index(a) for a in target], list(range(len(target)))
     )
-    if "c" not in target:
+    if C_AXIS not in target:
         reordered = np.expand_dims(reordered, axis=0)
     return reordered
 
@@ -114,8 +120,8 @@ def _ome_tiff_axes_and_permutation(
             f"as_ome_tiff does not support axis/axes {unsupported!r}; "
             "OME-TIFF only supports c, t, z, y, x."
         )
-    other = [a for a in data_axes if a not in ("x", "y")]
-    canonical = (*other, "y", "x")
+    other = [a for a in data_axes if a not in (X_AXIS, Y_AXIS)]
+    canonical = (*other, Y_AXIS, X_AXIS)
     return canonical, tuple(data_axes.index(a) for a in canonical)
 
 
@@ -366,7 +372,7 @@ class LayerExport:
         num_slices = bbox.in_mag(mag_view.mag).size_xyz.z
         digits = max(1, len(str(max(num_slices - 1, 0))))
 
-        extra_axes = sorted(a for a in bbox.axes if a not in ("c", "x", "y", "z"))
+        extra_axes = sorted(a for a in bbox.axes if a not in CXYZ_AXES)
         extra_digits = {
             a: max(1, len(str(max(bbox.get_shape(a) - 1, 0)))) for a in extra_axes
         }
@@ -375,7 +381,7 @@ class LayerExport:
             sub_bbox = bbox
             for axis, i in zip(extra_axes, combo):
                 sub_bbox = sub_bbox.with_bounds(axis, bbox.topleft[axis] + i, 1)
-            slice_axes = tuple(a for a in sub_bbox.axes if a != "z")
+            slice_axes = tuple(a for a in sub_bbox.axes if a != Z_AXIS)
 
             with mag_view.get_buffered_slice_reader(
                 absolute_bounding_box=sub_bbox
@@ -455,7 +461,7 @@ class LayerExport:
                 "PhysicalSizeZ": voxel_size_nm[2],
                 "PhysicalSizeZUnit": "nm",
             }
-            if "c" in canonical_axes:
+            if C_AXIS in canonical_axes:
                 metadata["Channel"] = {
                     "Name": [f"Channel {i}" for i in range(layer.num_channels)]
                 }

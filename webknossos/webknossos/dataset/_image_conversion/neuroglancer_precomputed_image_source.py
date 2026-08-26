@@ -10,6 +10,7 @@ from typing import Any
 import numpy as np
 from upath import UPath
 
+from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from .._utils.tensorstore_helpers import _make_kvstore
 from ..errors import CorruptImageError
 from .image_source import ReadOptions, compute_channel_selection
@@ -20,7 +21,7 @@ _INFO_FILE_NAME = "info"
 
 # Neuroglancer precomputed's physical axis order is always (x, y, z, channel)
 # per the format's own spec — no guessing needed, unlike Zarr/N5.
-_AXES = ("x", "y", "z", "c")
+_AXES = (X_AXIS, Y_AXIS, Z_AXIS, C_AXIS)
 
 
 def _read_info(path: UPath) -> Any:

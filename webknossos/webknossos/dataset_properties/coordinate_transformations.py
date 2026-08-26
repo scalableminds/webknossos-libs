@@ -17,11 +17,11 @@ from typing import Any, Literal
 import attr
 import numpy as np
 
-from ..geometry import Vec3Float, Vec3FloatLike
+from ..geometry import X_AXIS, Y_AXIS, Z_AXIS, Vec3Float, Vec3FloatLike
 
 Axis = Literal["x", "y", "z"]
 
-_AXIS_TO_INDEX: dict[str, int] = {"x": 0, "y": 1, "z": 2}
+_AXIS_TO_INDEX: dict[str, int] = {X_AXIS: 0, Y_AXIS: 1, Z_AXIS: 2}
 
 
 def _axis_index(axis: Axis) -> int:

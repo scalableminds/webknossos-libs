@@ -14,6 +14,7 @@ import numpy as np
 import tensorstore as ts
 from upath import UPath
 
+from ...geometry.constants import C_AXIS, T_AXIS, TCXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 from ...utils import is_remote_path
 from .._utils.tensorstore_helpers import TS_CONTEXT
 from ..errors import UnsupportedImageDataError
@@ -22,9 +23,9 @@ from .image_source import ReadOptions
 
 # Axis names, in the canonical order a `_read_source_box` result uses (t and c
 # are squeezed out again in that order once selected/sliced).
-_CANONICAL_AXIS_ORDER = ("t", "c", "z", "y", "x")
+_CANONICAL_AXIS_ORDER = TCXYZ_AXES
 _KNOWN_AXES = frozenset(_CANONICAL_AXIS_ORDER)
-_AXIS_ALIASES = {"channel": "c", "time": "t"}
+_AXIS_ALIASES = {"channel": C_AXIS, "time": T_AXIS}
 
 
 def normalize_axis(label: str, *, path: UPath) -> str:
@@ -65,13 +66,13 @@ def guess_axes(
         return axes
 
     if ndim == 2:
-        return ("y", "x")
+        return (Y_AXIS, X_AXIS)
     if ndim == 3:
-        return ("z", "y", "x")
+        return (Z_AXIS, Y_AXIS, X_AXIS)
     if ndim == 4:
-        return ("c", "z", "y", "x")
+        return (C_AXIS, Z_AXIS, Y_AXIS, X_AXIS)
     if ndim == 5:
-        return ("t", "c", "z", "y", "x")
+        return (T_AXIS, C_AXIS, Z_AXIS, Y_AXIS, X_AXIS)
     raise UnsupportedImageDataError(
         f"Cannot place the {ndim} axes of {path} — only 2 to 5 dimensional "
         "arrays are supported.",
@@ -128,9 +129,9 @@ class TensorStoreChunkedImageSource(ChunkedImageSource):
         else:
             channels_to_read = list(range(self.num_channels))
 
-        has_t = "t" in self._axes
-        has_c = "c" in self._axes
-        has_z = "z" in self._axes
+        has_t = T_AXIS in self._axes
+        has_c = C_AXIS in self._axes
+        has_z = Z_AXIS in self._axes
 
         # The order to transpose the read result into, and which of those
         # positions are the size-1 t/c axes to squeeze back out afterwards —
@@ -138,17 +139,17 @@ class TensorStoreChunkedImageSource(ChunkedImageSource):
         present_axes = [axis for axis in _CANONICAL_AXIS_ORDER if axis in self._axes]
         permutation = [self._axes.index(axis) for axis in present_axes]
         squeeze_positions = tuple(
-            i for i, axis in enumerate(present_axes) if axis in ("t", "c")
+            i for i, axis in enumerate(present_axes) if axis in (T_AXIS, C_AXIS)
         )
 
         array = self._open_array()
         slabs = []
         for channel_index in channels_to_read:
-            axis_to_slice: dict[str, slice] = {"y": y, "x": x}
+            axis_to_slice: dict[str, slice] = {Y_AXIS: y, X_AXIS: x}
             if has_t:
                 axis_to_slice["t"] = slice(timepoint, timepoint + 1)
             if has_z:
-                axis_to_slice["z"] = z
+                axis_to_slice[Z_AXIS] = z
             if has_c:
                 axis_to_slice["c"] = slice(channel_index, channel_index + 1)
             index = tuple(axis_to_slice[axis] for axis in self._axes)

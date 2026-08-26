@@ -42,6 +42,7 @@ from ...geometry import (
     Vec3IntLike,
     VecIntLike,
 )
+from ...geometry.constants import CXYZ_AXES
 from ...geometry.mag import MagLike
 from ...utils import named_partial, wait_and_ensure_success, wrap_executor
 from ..defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
@@ -729,9 +730,7 @@ def add_layer_from_images(
         )
 
         if (
-            additional_axes := set(layer.bounding_box.axes).difference(
-                "c", "x", "y", "z"
-            )
+            additional_axes := set(layer.bounding_box.axes).difference(*CXYZ_AXES)
         ) and layer.data_format == DataFormat.WKW:
             if all(layer.bounding_box.get_shape(axis) == 1 for axis in additional_axes):
                 warnings.warn(

@@ -8,6 +8,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ...geometry.bounding_box import BoundingBox
+from ...geometry.constants import T_AXIS, TXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
@@ -104,9 +105,7 @@ class ChunkedImageSource(ImageSource):
                 self.num_channels
             )
 
-        box = NDBoundingBox.from_axes(
-            ["t", "x", "y", "z"], [self._t, x_size, y_size, self._z]
-        )
+        box = NDBoundingBox.from_axes(TXYZ_AXES, [self._t, x_size, y_size, self._z])
         return with_explicit_channel_axis(box, self.num_channels)
 
     def copy_chunk_to_view(
@@ -123,7 +122,7 @@ class ChunkedImageSource(ImageSource):
         relative_bbox = bbox.offset(-mag_view.bounding_box.topleft)
 
         if "t" in relative_bbox.axes:
-            timepoint, _ = relative_bbox.get_bounds("t")
+            timepoint, _ = relative_bbox.get_bounds(T_AXIS)
         else:
             assert self._fixed_timepoint is not None
             timepoint = self._fixed_timepoint
@@ -135,9 +134,9 @@ class ChunkedImageSource(ImageSource):
         # bbox's x/y are the *output* extents, so with swap_xy set bbox.x holds
         # the source's y-extent and vice versa.
 
-        out_x_start, out_x_end = relative_bbox.get_bounds("x")
-        out_y_start, out_y_end = relative_bbox.get_bounds("y")
-        z_start, z_end = relative_bbox.get_bounds("z")
+        out_x_start, out_x_end = relative_bbox.get_bounds(X_AXIS)
+        out_y_start, out_y_end = relative_bbox.get_bounds(Y_AXIS)
+        z_start, z_end = relative_bbox.get_bounds(Z_AXIS)
         z_start, z_end = z_start // mag_vec.z, z_end // mag_vec.z
         if options.swap_xy:
             source_y_start, source_y_end = (

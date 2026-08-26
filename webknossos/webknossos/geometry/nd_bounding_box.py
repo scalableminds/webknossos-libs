@@ -10,6 +10,7 @@ from typing import (
 import attr
 import numpy as np
 
+from .constants import C_AXIS, CXYZ_AXES, X_AXIS, XYZ_AXES, Y_AXIS, Z_AXIS
 from .mag import Mag
 from .vec3_int import Vec3Int, Vec3IntLike
 from .vec_int import VecInt, VecIntLike
@@ -377,7 +378,7 @@ class NDBoundingBox:
     def _get_attr_xyz(self, attr_name: str) -> Vec3Int:
         attr_3d = []
 
-        for axis in ("x", "y", "z"):
+        for axis in XYZ_AXES:
             if axis in self.axes:
                 index = self.axes.index(axis)
                 attr_3d.append(getattr(self, attr_name)[index])
@@ -390,7 +391,7 @@ class NDBoundingBox:
         value = Vec3Int(xyz)
         modified_attr = getattr(self, attr_name).to_list()
 
-        for i, axis in enumerate(("x", "y", "z")):
+        for i, axis in enumerate(XYZ_AXES):
             if axis in self.axes:
                 index = self.axes.index(axis)
                 modified_attr[index] = value[i]
@@ -732,7 +733,7 @@ class NDBoundingBox:
             # axes.
             chunk_shape = Vec3Int(chunk_shape)
             chunk_shape = VecInt.ones(self.axes).with_xyz(chunk_shape)
-            if "c" in self.axes:
+            if C_AXIS in self.axes:
                 chunk_shape = chunk_shape.with_c(self.size.c)
             chunk_shape = chunk_shape.to_np()
         except AssertionError:
@@ -746,7 +747,7 @@ class NDBoundingBox:
                 chunk_border_alignments = VecInt.ones(self.axes).with_xyz(
                     chunk_border_alignments
                 )
-                if "c" in self.axes:
+                if C_AXIS in self.axes:
                     chunk_border_alignments = chunk_border_alignments.with_c(
                         self.size.c
                     )
@@ -806,9 +807,9 @@ class NDBoundingBox:
             data,
             [0, 1, 2],
             (
-                self.axes.index("x"),
-                self.axes.index("y"),
-                self.axes.index("z"),
+                self.axes.index(X_AXIS),
+                self.axes.index(Y_AXIS),
+                self.axes.index(Z_AXIS),
             ),
         )
         return data
@@ -865,8 +866,8 @@ class NDBoundingBox:
     def normalize_axes(self, num_channels: int) -> "NormalizedBoundingBox":
         from .normalized_bounding_box import NormalizedBoundingBox
 
-        if "c" in self.axes:
-            size = self.size.with_replaced("c", num_channels)
+        if C_AXIS in self.axes:
+            size = self.size.with_replaced(C_AXIS, num_channels)
         else:
             assert num_channels == 1
             size = self.size
@@ -899,8 +900,8 @@ def derive_nd_bounding_box_from_shape(
             axes=axes,
             index=tuple(range(len(axes))),
         )
-        if "c" in axes:
-            num_channels = data_shape[axes.index("c")]
+        if C_AXIS in axes:
+            num_channels = data_shape[axes.index(C_AXIS)]
         else:
             num_channels = 1
     else:
@@ -909,14 +910,14 @@ def derive_nd_bounding_box_from_shape(
         if data_ndim == 0:
             raise ValueError("Scalar values are not supported.")
         elif data_ndim <= 3:
-            axes = ("x", "y", "z")
+            axes = XYZ_AXES
             shape = data_shape
             while len(shape) < 3:
                 shape = shape + (1,)
             bbox = BoundingBox(absolute_offset or Vec3Int.zeros(), Vec3Int(shape))
             num_channels = 1
         elif data_ndim == 4:
-            axes = ("c", "x", "y", "z")
+            axes = CXYZ_AXES
             bbox = BoundingBox(
                 absolute_offset or Vec3Int.zeros(), Vec3Int(data_shape[1:])
             )

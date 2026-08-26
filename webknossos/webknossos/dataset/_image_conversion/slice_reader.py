@@ -18,6 +18,8 @@ from typing import Any
 import numpy as np
 from numpy.typing import DTypeLike
 
+from ...geometry.constants import X_AXIS, Y_AXIS
+
 GetSlice = Callable[..., np.ndarray]
 
 
@@ -182,7 +184,7 @@ class SliceReader(ABC):
         self._sizes: dict[str, int] = {}
         self._default_coords = DefaultCoordsDict()
         self._iter_axes: list[str] = []
-        self._bundle_axes: list[str] = ["y", "x"]
+        self._bundle_axes: list[str] = [Y_AXIS, X_AXIS]
         self._get_slice_wrapped: GetSlice | None = None
 
     def _init_axis(self, name: str, size: int, default: int = 0) -> None:
