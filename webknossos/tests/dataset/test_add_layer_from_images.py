@@ -632,7 +632,7 @@ def test_ims_three_uint8_channels_become_rgb_layer_without_allow_multiple_layers
 def test_ims_rgb_layer_with_multiple_timepoints(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # An input containing three uint8 channels at multiple timepoints should 
+    # An input containing three uint8 channels at multiple timepoints should
     # create an RGB layer (multiple channels, "c" axis) with an additional time ("t") axis.
     num_timepoints = 2
     num_channels = 3

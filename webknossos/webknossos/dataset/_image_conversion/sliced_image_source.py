@@ -353,9 +353,9 @@ class SlicedImageSource(ImageSource):
                         outer_axes = self._iter_axes[:-1]
                     else:
                         outer_axes = self._iter_axes
-                    lower_bounds = images.flat_index({
-                        axis: relative_bbox.get_bounds(axis)[0] for axis in outer_axes
-                    })
+                    lower_bounds = images.flat_index(
+                        {axis: relative_bbox.get_bounds(axis)[0] for axis in outer_axes}
+                    )
                     run_length = (
                         mag_view.bounding_box.get_shape(Z_AXIS) if has_real_z else 1
                     )
