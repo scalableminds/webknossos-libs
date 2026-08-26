@@ -147,11 +147,11 @@ class TensorStoreChunkedImageSource(ChunkedImageSource):
         for channel_index in channels_to_read:
             axis_to_slice: dict[str, slice] = {Y_AXIS: y, X_AXIS: x}
             if has_t:
-                axis_to_slice["t"] = slice(timepoint, timepoint + 1)
+                axis_to_slice[T_AXIS] = slice(timepoint, timepoint + 1)
             if has_z:
                 axis_to_slice[Z_AXIS] = z
             if has_c:
-                axis_to_slice["c"] = slice(channel_index, channel_index + 1)
+                axis_to_slice[C_AXIS] = slice(channel_index, channel_index + 1)
             index = tuple(axis_to_slice[axis] for axis in self._axes)
 
             block = np.asarray(array[index].read().result())

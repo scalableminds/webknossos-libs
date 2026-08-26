@@ -16,7 +16,7 @@ from ...client.api_client.models import (
     ApiDatasetComposeMag,
     ApiReserveMagUploadToPathParameters,
 )
-from ...geometry import Mag, MagLike, Vec3IntLike
+from ...geometry import C_AXIS, Mag, MagLike, Vec3IntLike
 from ...utils import enrich_path
 from ..transfer_mode import TransferMode
 from .abstract_layer import AbstractLayer, _validate_layer_name
@@ -97,7 +97,7 @@ class RemoteLayer(AbstractLayer):
                     foreign_layer_bbox.axes, foreign_layer_bbox.index
                 )
             }
-            channel_index = foreign_layer_bbox.topleft.get("c", None)
+            channel_index = foreign_layer_bbox.topleft.get(C_AXIS, None)
 
             if transfer_mode == TransferMode.HTTP:
                 from ...client._upload_dataset import upload_mag

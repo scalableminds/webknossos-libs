@@ -6,7 +6,7 @@ from webknossos.geometry import (
     NormalizedBoundingBox,
     VecInt,
 )
-from webknossos.geometry.constants import CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
+from webknossos.geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 from webknossos.geometry.normalized_bounding_box import _DEFAULT_AXIS_ORDER
 
 
@@ -117,7 +117,7 @@ def test_from_wkw_dict_with_additional_axes() -> None:
             "height": 10,
             "depth": 10,
             "additionalAxes": [{"name": "t", "bounds": [0, 5], "index": 4}],
-            "axisOrder": {"c": 0, X_AXIS: 1, Y_AXIS: 2, Z_AXIS: 3, "t": 4},
+            "axisOrder": {C_AXIS: 0, X_AXIS: 1, Y_AXIS: 2, Z_AXIS: 3, "t": 4},
             "numChannels": 1,
         }
     )
@@ -178,7 +178,7 @@ def test_to_wkw_dict_with_nondefault_axis_order() -> None:
         "width": 10,
         "height": 10,
         "depth": 10,
-        "axisOrder": {"c": 3, Z_AXIS: 0, Y_AXIS: 1, X_AXIS: 2},
+        "axisOrder": {C_AXIS: 3, Z_AXIS: 0, Y_AXIS: 1, X_AXIS: 2},
         "numChannels": 3,
     }
 

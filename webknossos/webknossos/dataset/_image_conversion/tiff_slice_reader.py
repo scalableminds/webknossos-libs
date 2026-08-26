@@ -3,6 +3,7 @@ from itertools import product
 import numpy as np
 from upath import UPath
 
+from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS
 from ...utils import WkImportError
 from .image_source_registry import register_slice_reader
 from .slice_reader import SliceReader
@@ -50,10 +51,10 @@ class TiffSliceReader(SliceReader):
                 axis for axis in self._tiff_axes if axis not in self._other_axes
             )
 
-            if "c" in self._tiff_axes:
-                self._set_get_slice(self.get_slice_2d, "cyx")
+            if C_AXIS in self._tiff_axes:
+                self._set_get_slice(self.get_slice_2d, (C_AXIS, Y_AXIS, X_AXIS))
             else:
-                self._set_get_slice(self.get_slice_2d, "yx")
+                self._set_get_slice(self.get_slice_2d, (Y_AXIS, X_AXIS))
 
     def get_slice_2d(self, **ind: int) -> np.ndarray:
         out_shape = tuple(self.sizes[axis] for axis in self.bundle_axes)

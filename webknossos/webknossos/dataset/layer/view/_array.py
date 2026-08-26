@@ -19,6 +19,7 @@ from webknossos.dataset._utils.tensorstore_helpers import TS_CONTEXT, _make_kvst
 from webknossos.dataset._utils.tinywkw import TinyWkwArray
 from webknossos.dataset_properties import DataFormat
 from webknossos.geometry import (
+    C_AXIS,
     CXYZ_AXES,
     X_AXIS,
     XY_AXES,
@@ -447,7 +448,7 @@ class TensorStoreArray(BaseArray):
         array: tensorstore.TensorStore,
     ) -> tuple[Vec3Int, Vec3Int, NormalizedBoundingBox]:
         axes = array.domain.labels
-        axes = tuple("c" if a == "channel" else a for a in axes)
+        axes = tuple(C_AXIS if a == "channel" else a for a in axes)
         array_chunk_shape = array.chunk_layout.read_chunk.shape
         array_shard_shape = array.chunk_layout.write_chunk.shape
 
@@ -681,7 +682,7 @@ class TensorStoreArray(BaseArray):
         for key in keys:
             key_parts = key.decode("utf-8").split(separator)
             if _type == "default":
-                if key_parts[0] != "c":
+                if key_parts[0] != C_AXIS:
                     continue
                 key_parts = key_parts[1:]
             if len(key_parts) != self._array.ndim:
@@ -690,7 +691,7 @@ class TensorStoreArray(BaseArray):
             if chunk_coords_list is None:
                 continue
 
-            if shape.axes[0] == "c":
+            if shape.axes[0] == C_AXIS:
                 chunk_coords = Vec3Int(chunk_coords_list[1:])
             else:
                 chunk_coords = Vec3Int(chunk_coords_list)
@@ -808,7 +809,7 @@ class Zarr3Array(TensorStoreArray):
         chunk_shape = tuple(
             (
                 array_info.bounding_box.size.c
-                if axis == "c"
+                if axis == C_AXIS
                 else array_info.chunk_shape.get(axis, 1)
             )
             for axis in array_info.bounding_box.axes
@@ -816,7 +817,7 @@ class Zarr3Array(TensorStoreArray):
         shard_shape = tuple(
             (
                 array_info.bounding_box.size.c
-                if axis == "c"
+                if axis == C_AXIS
                 else array_info.shard_shape.get(axis, 1)
             )
             for axis in array_info.bounding_box.axes
@@ -911,7 +912,7 @@ class Zarr2Array(TensorStoreArray):
         )
         chunk_shape = tuple(
             array_info.bounding_box.size.c
-            if axis == "c"
+            if axis == C_AXIS
             else getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.bounding_box.axes
         )

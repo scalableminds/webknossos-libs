@@ -7,7 +7,7 @@ from typing import Union, cast, overload
 import attr
 import numpy as np
 
-from .constants import X_AXIS, XYZ_AXES, Y_AXIS, Z_AXIS
+from .constants import C_AXIS, X_AXIS, XYZ_AXES, Y_AXIS, Z_AXIS
 from .mag import Mag
 from .nd_bounding_box import _DEFAULT_BBOX_NAME, NDBoundingBox
 from .normalized_bounding_box import NormalizedBoundingBox
@@ -592,7 +592,7 @@ class BoundingBox(NDBoundingBox):
         return NormalizedBoundingBox(
             topleft=(0,) + self.topleft.to_tuple(),
             size=(num_channels,) + self.size.to_tuple(),
-            axes=("c",) + self.axes,
+            axes=(C_AXIS,) + self.axes,
             index=(0,) + self.index.to_tuple(),
             name=self.name,
             is_visible=self.is_visible,

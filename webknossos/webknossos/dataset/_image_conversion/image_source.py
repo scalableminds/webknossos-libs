@@ -20,6 +20,7 @@ from typing import NamedTuple
 from numpy.typing import DTypeLike
 
 from ...dataset_properties import LayerViewConfiguration
+from ...geometry.constants import C_AXIS, T_AXIS
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
@@ -106,10 +107,10 @@ def with_explicit_channel_axis(
     the codebase's `NormalizedBoundingBox` convention. A missing "c" axis is
     inserted right after "t" if present, otherwise first.
     """
-    if "c" in box.axes:
+    if C_AXIS in box.axes:
         return box.normalize_axes(num_channels)
-    insert_at = box.axes.index("t") + 1 if "t" in box.axes else 0
-    axes = box.axes[:insert_at] + ("c",) + box.axes[insert_at:]
+    insert_at = box.axes.index(T_AXIS) + 1 if T_AXIS in box.axes else 0
+    axes = box.axes[:insert_at] + (C_AXIS,) + box.axes[insert_at:]
     topleft = box.topleft.to_list()
     topleft.insert(insert_at, 0)
     size = box.size.to_list()

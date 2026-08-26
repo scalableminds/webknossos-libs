@@ -19,7 +19,7 @@ from ....geometry import (
     Vec3IntLike,
     VecInt,
 )
-from ....geometry.constants import CXYZ_AXES, X_AXIS, XYZ_AXES, Y_AXIS, Z_AXIS
+from ....geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, XYZ_AXES, Y_AXIS, Z_AXIS
 from ....geometry.vec_int import VecIntLike
 from ....utils import (
     count_defined_values,
@@ -174,7 +174,7 @@ class View:
         Returns:
             int: Number of channels
         """
-        return self.normalized_bounding_box.size.get("c", 0)
+        return self.normalized_bounding_box.size.get(C_AXIS, 0)
 
     @property
     def mag(self) -> Mag:
@@ -404,7 +404,7 @@ class View:
                     f"The passed data has to have the dimensions (c, x, y, z) or (x, y, z), got shape {data.shape}"
                 )
         else:
-            if "c" in self_bbox.axes:
+            if C_AXIS in self_bbox.axes:
                 assert self_bbox.size.c == data.shape[self_bbox.index.c], (
                     f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
                 )
@@ -807,7 +807,7 @@ class View:
 
         data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
         # transform data to xyz order
-        if "c" in mag1_bbox.axes:
+        if C_AXIS in mag1_bbox.axes:
             data = np.moveaxis(
                 data,
                 (mag1_bbox.index.c,) + mag1_bbox.index_xyz.to_tuple(),

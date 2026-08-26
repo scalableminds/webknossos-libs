@@ -10,7 +10,7 @@ from upath import UPath
 
 from ...dataset_properties import DataFormat
 from ...geometry.bounding_box import BoundingBox
-from ...geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS
+from ...geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
@@ -103,10 +103,10 @@ class SlicedImageSource(ImageSource):
             # Every remaining axis is iterated over. "z" goes last, so it is
             # the fastest-varying one.
             self._iter_axes = sorted(
-                set(images.axes).difference({*bundle_axes, C_AXIS, "z"})
+                set(images.axes).difference({*bundle_axes, C_AXIS, Z_AXIS})
             )
-            if "z" in images.axes:
-                self._iter_axes.append("z")
+            if Z_AXIS in images.axes:
+                self._iter_axes.append(Z_AXIS)
             self._bundle_axes = bundle_axes
 
         self.num_channels, self._channel, self._first_n_channels, possible_channels = (
@@ -329,7 +329,7 @@ class SlicedImageSource(ImageSource):
 
             # z_start and z_end are relative to the bounding box of the mag_view
             # to access the correct data from the images
-            z_start, z_end = relative_bbox.get_bounds("z")
+            z_start, z_end = relative_bbox.get_bounds(Z_AXIS)
             shapes = []
             max_value = 0
 
@@ -345,13 +345,13 @@ class SlicedImageSource(ImageSource):
                     # a singleton placeholder, not tied to any iterated axis —
                     # every iter axis, including the last one, is one of those
                     # single-valued selectors instead.
-                    has_real_z = "z" in self._iter_axes
+                    has_real_z = Z_AXIS in self._iter_axes
                     outer_axes = self._iter_axes[:-1] if has_real_z else self._iter_axes
                     lower_bounds = images.flat_index(
                         {axis: relative_bbox.get_bounds(axis)[0] for axis in outer_axes}
                     )
                     run_length = (
-                        mag_view.bounding_box.get_shape("z") if has_real_z else 1
+                        mag_view.bounding_box.get_shape(Z_AXIS) if has_real_z else 1
                     )
                     upper_bounds = lower_bounds + run_length
                     slices = images[lower_bounds:upper_bounds]
@@ -360,7 +360,7 @@ class SlicedImageSource(ImageSource):
 
                 with mag_view.get_buffered_slice_writer(
                     absolute_bounding_box=absolute_bbox,
-                    buffer_size=absolute_bbox.get_shape("z"),
+                    buffer_size=absolute_bbox.get_shape(Z_AXIS),
                     allow_unaligned=True,
                 ) as writer:
                     for image_slice in slices[z_start:z_end]:
@@ -437,13 +437,13 @@ class SlicedImageSource(ImageSource):
             # has to be named in the box.
             axes_names = self._iter_axes + self._bundle_axes
             axes_sizes = [sizes[axis] for axis in axes_names]
-            if "z" not in axes_names:
+            if Z_AXIS not in axes_names:
                 # No axis is genuinely called "z" (e.g. only "t" and "s" are
                 # stepped through). A singleton "z" is added instead of
                 # relabeling a real axis, which would corrupt its meaning —
                 # a real "t" axis reported as depth, say.
                 insert_at = len(self._iter_axes)
-                axes_names = axes_names[:insert_at] + ["z"] + axes_names[insert_at:]
+                axes_names = axes_names[:insert_at] + [Z_AXIS] + axes_names[insert_at:]
                 axes_sizes = axes_sizes[:insert_at] + [1] + axes_sizes[insert_at:]
             axes_sizes[axes_names.index(X_AXIS)] = x_size
             axes_sizes[axes_names.index(Y_AXIS)] = y_size
@@ -518,7 +518,7 @@ class SlicedImageSource(ImageSource):
         """Replaces the placeholder x/y with the largest extent any chunk
         actually wrote."""
         return layer_bounding_box.with_size_xyz(
-            Vec3Int(dimwise_max(chunk_sizes) + (layer_bounding_box.get_shape("z"),))
+            Vec3Int(dimwise_max(chunk_sizes) + (layer_bounding_box.get_shape(Z_AXIS),))
             * mag.to_vec3_int().with_z(1)
         )
 
