@@ -13,7 +13,7 @@ from webknossos.dataset._image_conversion.ome_zarr_helpers import (
     suggested_view_configuration,
 )
 from webknossos.dataset_properties import LayerViewConfiguration
-from webknossos.geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
+from webknossos.geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 
 _PATH = UPath("test.ome.zarr")
 
@@ -66,7 +66,7 @@ def test_resolve_ome_multiscale_ranks_by_spatial_resolution_regardless_of_list_o
     multiscale = resolve_ome_multiscale(attributes, path=_PATH)
 
     assert multiscale.dataset_paths == ("0", "1")
-    assert multiscale.axis_names == CXYZ_AXES
+    assert multiscale.axis_names == (C_AXIS, Z_AXIS, Y_AXIS, X_AXIS)
     assert multiscale.channels is None
 
 
