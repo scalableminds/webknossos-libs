@@ -199,8 +199,9 @@ class ChunkedImageSource(ImageSource):
 
         max_value = int(block.max())
         if "t" in relative_bbox.axes:
-            # Add back the size-1 "t" axis this chunk corresponds to.
-            block = block[np.newaxis]
+            # Add back the size-1 "t" axis this chunk corresponds to, right
+            # after "c" to match the bbox's axis order.
+            block = np.expand_dims(block, axis=1)
 
         # allow_unaligned=True: border chunks are smaller than shard_shape,
         # since extents rarely divide evenly. Safe because parallel jobs write
