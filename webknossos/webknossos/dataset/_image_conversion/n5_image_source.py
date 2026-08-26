@@ -12,9 +12,7 @@ from typing import Any
 import tensorstore as ts
 from upath import UPath
 
-from webknossos.webknossos.dataset.ome_metadata import C_AXIS
-from webknossos.webknossos.geometry.constants import X_AXIS, Y_AXIS, Z_AXIS
-
+from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from .._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from ..errors import CorruptImageError
 from .image_source import ReadOptions, compute_channel_selection

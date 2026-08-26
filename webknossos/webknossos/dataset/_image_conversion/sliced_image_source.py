@@ -346,10 +346,16 @@ class SlicedImageSource(ImageSource):
                     # every iter axis, including the last one, is one of those
                     # single-valued selectors instead.
                     has_real_z = Z_AXIS in self._iter_axes
-                    outer_axes = self._iter_axes[:-1] if has_real_z else self._iter_axes
-                    lower_bounds = images.flat_index(
-                        {axis: relative_bbox.get_bounds(axis)[0] for axis in outer_axes}
-                    )
+                    if has_real_z:
+                        assert self._iter_axes[-1] == Z_AXIS, (
+                            "'z' must be the last iter axis (see __init__)."
+                        )
+                        outer_axes = self._iter_axes[:-1]
+                    else:
+                        outer_axes = self._iter_axes
+                    lower_bounds = images.flat_index({
+                        axis: relative_bbox.get_bounds(axis)[0] for axis in outer_axes
+                    })
                     run_length = (
                         mag_view.bounding_box.get_shape(Z_AXIS) if has_real_z else 1
                     )
@@ -418,7 +424,9 @@ class SlicedImageSource(ImageSource):
         one slice's extent, which a later slice may exceed; the axes stepped
         through are exact, since the reader counted them.
 
-        Always carries an explicit "c" axis sized `num_channels`."""
+        Always carries explicit x, y, z and "c" axes (sized `num_channels`).
+        Every other axis ("t", "s", ...) is left as-is; a missing "z" gets a
+        size-1 axis instead of relabeling a real one."""
         with self._open_slice_reader() as images:
             sizes = images.sizes
             x_size, y_size = sizes[X_AXIS], sizes[Y_AXIS]
@@ -439,9 +447,7 @@ class SlicedImageSource(ImageSource):
             axes_sizes = [sizes[axis] for axis in axes_names]
             if Z_AXIS not in axes_names:
                 # No axis is genuinely called "z" (e.g. only "t" and "s" are
-                # stepped through). A singleton "z" is added instead of
-                # relabeling a real axis, which would corrupt its meaning —
-                # a real "t" axis reported as depth, say.
+                # stepped through). A singleton "z" is added.
                 insert_at = len(self._iter_axes)
                 axes_names = axes_names[:insert_at] + [Z_AXIS] + axes_names[insert_at:]
                 axes_sizes = axes_sizes[:insert_at] + [1] + axes_sizes[insert_at:]
