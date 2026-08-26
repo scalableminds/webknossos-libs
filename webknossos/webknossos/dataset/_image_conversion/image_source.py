@@ -177,11 +177,6 @@ class ImageSource(ABC):
     def expected_bbox(self) -> NormalizedBoundingBox:
         """The bounding box the data is expected to occupy, in Mag(1). Exact,
         or an oversized placeholder.
-
-        Carries a "c" axis whenever there is more than one channel. A
-        single-channel source may still omit it, conveying that count
-        separately via `num_channels`, the same way every other ND layer
-        bounding box does.
         """
 
     @abstractmethod

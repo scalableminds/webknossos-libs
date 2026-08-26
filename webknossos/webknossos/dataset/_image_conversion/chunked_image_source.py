@@ -94,7 +94,6 @@ class ChunkedImageSource(ImageSource):
         The exact bounding box of the data, in the source's native Mag(1)
         space — never a placeholder, since these formats know their extents.
 
-        Always carries an explicit "c" axis sized `num_channels`.
         """
         x_size, y_size = self._x, self._y
         if self._options.swap_xy:

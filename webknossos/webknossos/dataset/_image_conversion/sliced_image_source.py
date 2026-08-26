@@ -439,9 +439,7 @@ class SlicedImageSource(ImageSource):
             axes_sizes = [sizes[axis] for axis in axes_names]
             if "z" not in axes_names:
                 # No axis is genuinely called "z" (e.g. only "t" and "s" are
-                # stepped through). A singleton "z" is added instead of
-                # relabeling a real axis, which would corrupt its meaning —
-                # a real "t" axis reported as depth, say.
+                # stepped through). A singleton "z" is added.
                 insert_at = len(self._iter_axes)
                 axes_names = axes_names[:insert_at] + ["z"] + axes_names[insert_at:]
                 axes_sizes = axes_sizes[:insert_at] + [1] + axes_sizes[insert_at:]
