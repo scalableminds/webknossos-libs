@@ -13,14 +13,15 @@ from webknossos.dataset._image_conversion.ome_zarr_helpers import (
     suggested_view_configuration,
 )
 from webknossos.dataset_properties import LayerViewConfiguration
+from webknossos.geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 
 _PATH = UPath("test.ome.zarr")
 
 _CZYX_AXES = [
-    {"name": "c", "type": "channel"},
-    {"name": "z", "type": "space"},
-    {"name": "y", "type": "space"},
-    {"name": "x", "type": "space"},
+    {"name": C_AXIS, "type": "channel"},
+    {"name": Z_AXIS, "type": "space"},
+    {"name": Y_AXIS, "type": "space"},
+    {"name": X_AXIS, "type": "space"},
 ]
 
 
@@ -65,7 +66,7 @@ def test_resolve_ome_multiscale_ranks_by_spatial_resolution_regardless_of_list_o
     multiscale = resolve_ome_multiscale(attributes, path=_PATH)
 
     assert multiscale.dataset_paths == ("0", "1")
-    assert multiscale.axis_names == ("c", "z", "y", "x")
+    assert multiscale.axis_names == CXYZ_AXES
     assert multiscale.channels is None
 
 
@@ -158,7 +159,7 @@ def test_resolve_ome_multiscale_rejects_unsupported_axis() -> None:
         [_dataset("0", [1.0, 1.0])],
         axes=[
             {"name": "q", "type": "space"},  # not one of t/c/z/y/x
-            {"name": "x", "type": "space"},
+            {"name": X_AXIS, "type": "space"},
         ],
     )
 

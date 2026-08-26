@@ -30,6 +30,7 @@ from webknossos.dataset.layer._transform_utils import (
 )
 from webknossos.dataset_properties import DatasetProperties
 from webknossos.dataset_properties.structuring import get_dataset_converter
+from webknossos.geometry.constants import X_AXIS, Y_AXIS, Z_AXIS
 
 # Small chunk/shard shapes so that the tests exercise multiple chunk jobs
 # (including bbox-truncated border chunks).
@@ -533,17 +534,23 @@ def _apply_affine(
 def test_affine_coordinate_transformation_builders() -> None:
     # The rotations must match the convention that WEBKNOSSOS uses, i.e. a rotation
     # around z has its sine at matrix[1][0].
-    assert AffineCoordinateTransformation.from_rotation("z", 90).matrix[1][0] == 1.0
+    assert AffineCoordinateTransformation.from_rotation(Z_AXIS, 90).matrix[1][0] == 1.0
     np.testing.assert_array_equal(
-        _apply_affine(AffineCoordinateTransformation.from_rotation("z", 90), (1, 0, 0)),
+        _apply_affine(
+            AffineCoordinateTransformation.from_rotation(Z_AXIS, 90), (1, 0, 0)
+        ),
         [0, 1, 0],
     )
     np.testing.assert_array_equal(
-        _apply_affine(AffineCoordinateTransformation.from_rotation("x", 90), (0, 1, 0)),
+        _apply_affine(
+            AffineCoordinateTransformation.from_rotation(X_AXIS, 90), (0, 1, 0)
+        ),
         [0, 0, 1],
     )
     np.testing.assert_array_equal(
-        _apply_affine(AffineCoordinateTransformation.from_rotation("y", 90), (0, 0, 1)),
+        _apply_affine(
+            AffineCoordinateTransformation.from_rotation(Y_AXIS, 90), (0, 0, 1)
+        ),
         [1, 0, 0],
     )
 
@@ -561,15 +568,15 @@ def test_affine_coordinate_transformation_builders() -> None:
     identity = AffineCoordinateTransformation.identity()
     assert identity.translate((10, 0, 0)) == identity.chain(translation)
     assert identity.scale((2, 2, 2)) == identity.chain(scaling)
-    assert identity.rotate("z", 90) == identity.chain(
-        AffineCoordinateTransformation.from_rotation("z", 90)
+    assert identity.rotate(Z_AXIS, 90) == identity.chain(
+        AffineCoordinateTransformation.from_rotation(Z_AXIS, 90)
     )
     np.testing.assert_array_equal(
-        _apply_affine(identity.rotate("z", 90).translate((5, 0, 0)), (1, 0, 0)),
+        _apply_affine(identity.rotate(Z_AXIS, 90).translate((5, 0, 0)), (1, 0, 0)),
         [5, 1, 0],
     )
     np.testing.assert_array_equal(
-        _apply_affine(identity.flip("y"), (3, 4, 5)), [3, -4, 5]
+        _apply_affine(identity.flip(Y_AXIS), (3, 4, 5)), [3, -4, 5]
     )
 
     # The builders return new objects and never modify the receiver

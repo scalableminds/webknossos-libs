@@ -6,6 +6,8 @@ import numpy as np
 import pytest
 from upath import UPath
 
+from webknossos.geometry.constants import TCXYZ_AXES
+
 pytest.importorskip("pylibCZIrw")
 
 from tests.data_fixtures import create_synthetic_czi  # noqa: E402
@@ -44,7 +46,7 @@ def test_czi_image_source_multi_timepoint_gets_a_t_axis(tmp_upath: UPath) -> Non
     source = _open_czi_image_source(czi_path)
 
     assert source.get_layer_split_options() is None
-    assert source.expected_bbox.axes == ("t", "c", "x", "y", "z")
+    assert source.expected_bbox.axes == TCXYZ_AXES
     assert source.expected_bbox.size.to_tuple() == (3, 1, 10, 8, 2)
 
 

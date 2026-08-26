@@ -6,15 +6,21 @@ from webknossos.geometry import (
     NormalizedBoundingBox,
     VecInt,
 )
+from webknossos.geometry.constants import CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 from webknossos.geometry.normalized_bounding_box import _DEFAULT_AXIS_ORDER
 
 
 def test_from_wkw_dict_simple() -> None:
     result = NormalizedBoundingBox.from_wkw_dict(
-        {"topLeft": [1, 2, 3], "width": 4, "height": 5, "depth": 6}
+        {
+            "topLeft": [1, 2, 3],
+            "width": 4,
+            "height": 5,
+            "depth": 6,
+        }
     )
     assert isinstance(result, NormalizedBoundingBox)
-    assert result.axes == ("c", "x", "y", "z")
+    assert result.axes == CXYZ_AXES
     assert result.topleft_xyz.to_list() == [1, 2, 3]
     assert result.size_xyz.to_list() == [4, 5, 6]
     assert result.size.c == 1
@@ -31,7 +37,7 @@ def test_from_wkw_dict_with_axis_order() -> None:
         }
     )
     assert isinstance(result, NormalizedBoundingBox)
-    assert result.axes == ("c", "x", "y", "z")
+    assert result.axes == CXYZ_AXES
     assert result.topleft_xyz.to_list() == [1, 2, 3]
     assert result.size_xyz.to_list() == [4, 5, 6]
     assert result.size.c == 1
@@ -44,11 +50,11 @@ def test_from_wkw_dict_with_axis_order_implicit_c() -> None:
             "width": 4,
             "height": 5,
             "depth": 6,
-            "axisOrder": {"x": 1, "y": 2, "z": 3},
+            "axisOrder": {X_AXIS: 1, Y_AXIS: 2, Z_AXIS: 3},
         }
     )
     assert isinstance(result, NormalizedBoundingBox)
-    assert result.axes == ("c", "x", "y", "z")
+    assert result.axes == CXYZ_AXES
     assert result.topleft_xyz.to_list() == [1, 2, 3]
     assert result.size_xyz.to_list() == [4, 5, 6]
     assert result.size.c == 1
@@ -61,11 +67,11 @@ def test_from_wkw_dict_with_axis_order_missing_c() -> None:
             "width": 4,
             "height": 5,
             "depth": 6,
-            "axisOrder": {"x": 2, "y": 1, "z": 0},
+            "axisOrder": {X_AXIS: 2, Y_AXIS: 1, Z_AXIS: 0},
         }
     )
     assert isinstance(result, NormalizedBoundingBox)
-    assert result.axes == ("z", "y", "x")
+    assert result.axes == (Z_AXIS, Y_AXIS, X_AXIS)
     assert result.topleft_xyz.to_list() == [1, 2, 3]
     assert result.size_xyz.to_list() == [4, 5, 6]
     with pytest.raises(KeyError):
@@ -111,7 +117,7 @@ def test_from_wkw_dict_with_additional_axes() -> None:
             "height": 10,
             "depth": 10,
             "additionalAxes": [{"name": "t", "bounds": [0, 5], "index": 4}],
-            "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3, "t": 4},
+            "axisOrder": {"c": 0, X_AXIS: 1, Y_AXIS: 2, Z_AXIS: 3, "t": 4},
             "numChannels": 1,
         }
     )
@@ -172,7 +178,7 @@ def test_to_wkw_dict_with_nondefault_axis_order() -> None:
         "width": 10,
         "height": 10,
         "depth": 10,
-        "axisOrder": {"c": 3, "z": 0, "y": 1, "x": 2},
+        "axisOrder": {"c": 3, Z_AXIS: 0, Y_AXIS: 1, X_AXIS: 2},
         "numChannels": 3,
     }
 
@@ -261,7 +267,12 @@ def test_round_trip_with_additional_axes() -> None:
 def test_from_wkw_dict_returns_nd_bounding_box_type() -> None:
     """from_wkw_dict is defined on NormalizedBoundingBox but returns NDBoundingBox subclass."""
     result = NormalizedBoundingBox.from_wkw_dict(
-        {"topLeft": [0, 0, 0], "width": 1, "height": 1, "depth": 1}
+        {
+            "topLeft": [0, 0, 0],
+            "width": 1,
+            "height": 1,
+            "depth": 1,
+        }
     )
     assert isinstance(result, NDBoundingBox)
     assert isinstance(result, NormalizedBoundingBox)

@@ -51,6 +51,13 @@ from webknossos.geometry import (
     Vec3Int,
     VecIntLike,
 )
+from webknossos.geometry.constants import (
+    C_AXIS,
+    T_AXIS,
+    X_AXIS,
+    Y_AXIS,
+    Z_AXIS,
+)
 from webknossos.utils import (
     copytree,
     dump_path,
@@ -351,7 +358,7 @@ def test_ome_ngff_0_5_metadata_nd() -> None:
         bounding_box=NDBoundingBox(
             (0, 0, 0, 0, 0),
             (1, 10, 10, 10, 3),
-            axes=("c", "x", "y", "z", "t"),
+            axes=(C_AXIS, X_AXIS, Y_AXIS, Z_AXIS, T_AXIS),
             index=(0, 1, 2, 3, 4),
         ),
     )
@@ -359,8 +366,8 @@ def test_ome_ngff_0_5_metadata_nd() -> None:
 
     zattrs = json.loads((ds_path / "color" / "zarr.json").read_bytes())["attributes"]
     axes = zattrs["ome"]["multiscales"][0]["axes"]
-    assert [a["name"] for a in axes] == ["c", "x", "y", "z", "t"]
-    assert axes[-1] == {"name": "t", "type": "time"}
+    assert [a["name"] for a in axes] == [C_AXIS, X_AXIS, Y_AXIS, Z_AXIS, T_AXIS]
+    assert axes[-1] == {"name": T_AXIS, "type": "time"}
     assert zattrs["ome"]["multiscales"][0]["datasets"][0]["coordinateTransformations"][
         0
     ]["scale"] == [1, 11, 11, 28, 1]
@@ -750,14 +757,20 @@ def test_read_write_cxyz_bounding_box_with_extra_axes(
         "segmentation",
         SEGMENTATION_CATEGORY,
         bounding_box=NDBoundingBox(
-            (0, 0, 0, 0), (10, 10, 10, 1), axes=("x", "y", "z", "t"), index=(0, 1, 2, 3)
+            (0, 0, 0, 0),
+            (10, 10, 10, 1),
+            axes=(X_AXIS, Y_AXIS, Z_AXIS, T_AXIS),
+            index=(0, 1, 2, 3),
         ),
         data_format=data_format,
         num_channels=1,
     )
     mag = layer.add_mag("1")
     layer_bbox = NDBoundingBox(
-        (0, 0, 0, 0), (10, 10, 10, 1), axes=("x", "y", "z", "t"), index=(0, 1, 2, 3)
+        (0, 0, 0, 0),
+        (10, 10, 10, 1),
+        axes=(X_AXIS, Y_AXIS, Z_AXIS, T_AXIS),
+        index=(0, 1, 2, 3),
     )
 
     # read_cxyz with BoundingBox must not raise a rank mismatch with the 4D (x,y,z,t) array
@@ -786,8 +799,12 @@ def test_read_write_cxyz_bounding_box_with_extra_axes(
     "layer_bbox,write_bbox,write_data,expected_shape",
     [
         (
-            NDBoundingBox(topleft=(0, 0), size=(10, 20), axes=("x", "y"), index=(0, 1)),
-            NDBoundingBox(topleft=(0, 0), size=(10, 20), axes=("x", "y"), index=(0, 1)),
+            NDBoundingBox(
+                topleft=(0, 0), size=(10, 20), axes=(X_AXIS, Y_AXIS), index=(0, 1)
+            ),
+            NDBoundingBox(
+                topleft=(0, 0), size=(10, 20), axes=(X_AXIS, Y_AXIS), index=(0, 1)
+            ),
             np.arange(200, dtype=np.uint8).reshape(1, 10, 20, 1),
             (1, 10, 20, 1),
         ),
@@ -795,13 +812,13 @@ def test_read_write_cxyz_bounding_box_with_extra_axes(
             NDBoundingBox(
                 topleft=(0, 0, 0, 0, 0),
                 size=(1, 4, 4, 4, 2),
-                axes=("c", "x", "y", "z", "t"),
+                axes=(C_AXIS, X_AXIS, Y_AXIS, Z_AXIS, T_AXIS),
                 index=(0, 1, 2, 3, 4),
             ),
             NDBoundingBox(
                 topleft=(0, 0, 0, 0, 0),
                 size=(1, 4, 4, 4, 1),
-                axes=("c", "x", "y", "z", "t"),
+                axes=(C_AXIS, X_AXIS, Y_AXIS, Z_AXIS, T_AXIS),
                 index=(0, 1, 2, 3, 4),
             ),
             np.zeros((1, 4, 4, 4), dtype=np.uint8),
@@ -811,13 +828,13 @@ def test_read_write_cxyz_bounding_box_with_extra_axes(
             NDBoundingBox(
                 topleft=(0, 0, 0),
                 size=(10, 20, 5),
-                axes=("x", "y", "z"),
+                axes=(X_AXIS, Y_AXIS, Z_AXIS),
                 index=(0, 1, 2),
             ),
             NDBoundingBox(
                 topleft=(0, 0, 0),
                 size=(10, 20, 5),
-                axes=("x", "y", "z"),
+                axes=(X_AXIS, Y_AXIS, Z_AXIS),
                 index=(0, 1, 2),
             ),
             (np.arange(1000, dtype=np.uint8)).reshape(1, 10, 20, 5),
@@ -1274,7 +1291,7 @@ def test_write_layer_5d(
         category=COLOR_CATEGORY,
         data=data,
         data_format=data_format,
-        axes=("c", "t", "x", "y", "z"),
+        axes=(C_AXIS, T_AXIS, X_AXIS, Y_AXIS, Z_AXIS),
         shard_shape=(128, 128, 128),
         absolute_offset=absolute_offset,
     )
@@ -1530,7 +1547,7 @@ def test_properties_with_segmentation() -> None:
         assert layer["numChannels"] == 1
         layer.pop("numChannels", None)
         for mag in layer["mags"]:
-            assert mag["axisOrder"] == {"c": 0, "x": 1, "y": 2, "z": 3}
+            assert mag["axisOrder"] == {C_AXIS: 0, X_AXIS: 1, Y_AXIS: 2, Z_AXIS: 3}
             mag.pop("axisOrder", None)
 
     assert input_data == output_data
@@ -4072,8 +4089,8 @@ def test_remote_dataset_access_metadata() -> None:
     ds.metadata["number"] = 42
     assert ds.metadata["number"] == 42
 
-    ds.metadata["list"] = ["a", "b", "c"]
-    assert ds.metadata["list"] == ["a", "b", "c"]
+    ds.metadata["list"] = ["a", "b", C_AXIS]
+    assert ds.metadata["list"] == ["a", "b", C_AXIS]
 
     assert len(ds.folder.metadata) == 1
 
