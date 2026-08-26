@@ -335,12 +335,14 @@ def test_image_sequence_reports_missing_files(tmp_upath: UPath) -> None:
         MultiImageSliceReader(str(tmp_upath / "nothing_*.png"))
 
 
-# t, s, y, x — two non-C_AXIS iterated axes and no Z_AXIS axis at all.
+# t, s, y, x — two non-"c" axes that are stepped through slice by slice
+# (iterated, as opposed to "y"/"x", which are bundled into each slice), and
+# no "z" axis at all.
 _NO_Z_VOLUME = np.arange(2 * 3 * 4 * 5, dtype="uint16").reshape(2, 3, 4, 5)
 
 
 class _TsyxReader(SliceReader):
-    """Declares "t" and "s" as iterated axes; has no Z_AXIS axis."""
+    """Declares "t" and "s" as iterated axes; has no "z" axis."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -376,15 +378,17 @@ class _NoZImageSource(SlicedImageSource):
         yield images
 
 
-def test_no_real_z_axis_gets_a_singleton_without_relabeling_a_real_axis(
+def test_no_real_z_axis_gets_a_size_one_axis_without_relabeling_a_real_axis(
     tmp_upath: UPath,
 ) -> None:
-    # Some formats step through 2+ axes besides C_AXIS (here "t" and "s") but
-    # have no genuine Z_AXIS axis. expected_bbox must add a singleton Z_AXIS
-    # rather than relabeling a real axis (which would corrupt its meaning —
-    # a real time axis reported as depth), and copy_chunk_to_view must still
-    # read/write every (t, s) slice correctly despite Z_AXIS not corresponding
-    # to any real iteration.
+    # The pipeline always wants explicit x, y and z axes (plus "c" for
+    # channels); every other axis ("t", "s", ...) is iterated/split into
+    # separate outputs instead. Some formats step through 2+ axes besides
+    # "c" (here "t" and "s") but have no genuine "z" axis. expected_bbox must
+    # add a size-1 "z" axis rather than relabeling a real axis (which would
+    # corrupt its meaning — a real time axis reported as depth), and
+    # copy_chunk_to_view must still read/write every (t, s) slice correctly
+    # despite "z" not corresponding to any real iteration.
     source = _NoZImageSource()
     box = source.expected_bbox
 

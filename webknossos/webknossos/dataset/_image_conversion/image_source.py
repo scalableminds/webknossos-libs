@@ -103,8 +103,13 @@ def with_explicit_channel_axis(
     Unlike `NDBoundingBox.normalize_axes()` (which keeps a missing "c" axis
     implicit, matching xyz-only boxes elsewhere, e.g. remote datasets),
     image-conversion's own internal boxes are always meant to carry one, per
-    the codebase's `NormalizedBoundingBox` convention. A missing "c" axis is
-    inserted right after "t" if present, otherwise first.
+    the codebase's `NormalizedBoundingBox` convention.
+
+    "t" is the only axis treated specially here, not some other iterated
+    axis (e.g. "s"): the codebase already has a fixed t,c,x,y,z axis order
+    (`TCXYZ_AXES`) for the timepoint-carrying formats this matters for
+    (tiffs, OME-Zarr, ...), so a missing "c" is inserted right after "t"
+    when "t" is present, to match that order, and first otherwise.
     """
     if "c" in box.axes:
         return box.normalize_axes(num_channels)
