@@ -403,15 +403,10 @@ def test_no_real_z_axis_gets_a_singleton_without_relabeling_a_real_axis(
         data_format="zarr3",
     )
     layer.bounding_box = source.initial_layer_bounding_box(box)
-    # A small explicit shard/chunk shape avoids padding every write out to
-    # the (1024, 1024, 1024) default, which is both wasteful and pushes the
-    # unrelated read path below to its limits for this tiny test volume.
+    # tiny chunk/shard shape to reduce IO in tests
     mag_view = layer.add_mag(1, compress=False, chunk_shape=8, shard_shape=8)
 
-    # Captures what actually gets written, rather than reading it back
-    # through the storage backend — a 6-axis array (s, t, c, z, y, x) is not
-    # a combination the tensorstore-backed zarr3 reader supports, which is a
-    # storage-layer limitation unrelated to what this test verifies.
+    # Capture the output without going through any actual storage layer or doing file IO
     written: list[tuple[NormalizedBoundingBox, np.ndarray]] = []
     real_write = mag_view._array.write
 
