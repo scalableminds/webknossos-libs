@@ -482,10 +482,6 @@ class SlicedImageSource(ImageSource):
     ) -> list[NormalizedBoundingBox]:
         """Batches of z-slices spanning the full x/y extent, which cannot be
         split while it is still the placeholder."""
-        # _resolve_batch_size returns a count of mag-native voxels (it
-        # defaults to and validates against the view's own chunk/shard z
-        # size), but layer_bounding_box is in mag1 space, so it has to be
-        # scaled up by the mag factor before it can chunk that box.
         batch_size_mag1 = (
             self._resolve_batch_size(mag_view, batch_size) * mag.to_vec3_int().z
         )
