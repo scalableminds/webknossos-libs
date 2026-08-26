@@ -93,12 +93,12 @@ class SlicedImageSource(ImageSource):
             # A slice is a 2D image, channels first when there are several.
             raw_num_channels = images.sizes.get(C_AXIS, 1)
             if raw_num_channels > 1:
-                bundle_axes = [C_AXIS, Y_AXIS, C_AXIS]
+                bundle_axes = [C_AXIS, Y_AXIS, X_AXIS]
             else:
                 if C_AXIS in images.axes:
                     # In neither list, so coordinate 0 is what gets returned.
                     self._default_coords[C_AXIS] = 0
-                bundle_axes = [Y_AXIS, C_AXIS]
+                bundle_axes = [Y_AXIS, X_AXIS]
 
             # Every remaining axis is iterated over. "z" goes last, so it is
             # the fastest-varying one.

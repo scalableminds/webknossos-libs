@@ -14,7 +14,7 @@ import numpy as np
 import tensorstore as ts
 from upath import UPath
 
-from ...geometry.constants import C_AXIS, T_AXIS, TCXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
+from ...geometry.constants import C_AXIS, T_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from ...utils import is_remote_path
 from .._utils.tensorstore_helpers import TS_CONTEXT
 from ..errors import UnsupportedImageDataError
@@ -23,7 +23,7 @@ from .image_source import ReadOptions
 
 # Axis names, in the canonical order a `_read_source_box` result uses (t and c
 # are squeezed out again in that order once selected/sliced).
-_CANONICAL_AXIS_ORDER = TCXYZ_AXES
+_CANONICAL_AXIS_ORDER = (T_AXIS, C_AXIS, Z_AXIS, Y_AXIS, X_AXIS)
 _KNOWN_AXES = frozenset(_CANONICAL_AXIS_ORDER)
 _AXIS_ALIASES = {"channel": C_AXIS, "time": T_AXIS}
 

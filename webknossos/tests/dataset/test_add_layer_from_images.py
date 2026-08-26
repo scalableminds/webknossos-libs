@@ -35,7 +35,7 @@ from tests.data_fixtures import (
 from tests.utils import HAS_PYLIBCZIRW, PYLIBCZIRW_EXPECTED, requires_pylibczirw
 from webknossos.geometry.constants import (
     C_AXIS,
-    CTXYZ_AXES,
+    TCXYZ_AXES,
     X_AXIS,
     XYZ_AXES,
     Y_AXIS,
@@ -497,11 +497,11 @@ def test_ims_from_images_multi_timepoint(
             executor=executor,
         )
 
-    assert layer.bounding_box.axes == CTXYZ_AXES
-    assert layer.bounding_box.size.to_tuple() == (1, 3, 10, 8, 4)
-    data = layer.get_finest_mag().read()  # (c, t, x, y, z)
+    assert layer.bounding_box.axes == TCXYZ_AXES
+    assert layer.bounding_box.size.to_tuple() == (3, 1, 10, 8, 4)
+    data = layer.get_finest_mag().read()  # (t, c, x, y, z)
     for t in range(3):
-        assert (data[0, t] == t * 100).all()
+        assert (data[t, 0] == t * 100).all()
 
 
 @pytest.mark.parametrize(
@@ -666,18 +666,18 @@ def test_ims_rgb_layer_with_multiple_timepoints(
         )
 
     assert layer.num_channels == num_channels
-    assert layer.bounding_box.axes == CTXYZ_AXES
+    assert layer.bounding_box.axes == TCXYZ_AXES
     assert layer.bounding_box.size.to_tuple() == (
-        num_channels,
         num_timepoints,
+        num_channels,
         10,
         8,
         4,
     )
-    data = layer.get_finest_mag().read()  # (c, t, x, y, z)
+    data = layer.get_finest_mag().read()  # (t, c, x, y, z)
     for t in range(num_timepoints):
         for c in range(num_channels):
-            assert (data[c, t] == t * 100 + c).all()
+            assert (data[t, c] == t * 100 + c).all()
 
 
 @pytest.mark.parametrize(
@@ -879,11 +879,11 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
     }
     for c in range(3):
         layer = ds.layers[f"multi_t_multi_c__channel{c}"]
-        assert layer.bounding_box.axes == CTXYZ_AXES
-        assert layer.bounding_box.size.to_tuple() == (1, 2, 10, 8, 4)
-        data = layer.get_finest_mag().read()  # (c, t, x, y, z)
+        assert layer.bounding_box.axes == TCXYZ_AXES
+        assert layer.bounding_box.size.to_tuple() == (2, 1, 10, 8, 4)
+        data = layer.get_finest_mag().read()  # (t, c, x, y, z)
         for t in range(2):
-            assert (data[0, t] == t * 100 + c).all()
+            assert (data[t, 0] == t * 100 + c).all()
 
 
 # A single shard hides both the multi-shard flip bug and the mag/shard
@@ -950,11 +950,11 @@ def test_czi_from_images_multi_timepoint(tmp_upath: UPath) -> None:
             executor=executor,
         )
 
-    assert layer.bounding_box.axes == CTXYZ_AXES
-    assert layer.bounding_box.size.to_tuple() == (1, 3, 10, 8, 2)
+    assert layer.bounding_box.axes == TCXYZ_AXES
+    assert layer.bounding_box.size.to_tuple() == (3, 1, 10, 8, 2)
     actual = layer.get_finest_mag().read()
     for t in range(3):
-        np.testing.assert_array_equal(actual[0, t], data[t, 0].transpose(2, 1, 0))
+        np.testing.assert_array_equal(actual[t, 0], data[t, 0].transpose(2, 1, 0))
 
 
 @requires_pylibczirw
@@ -1714,8 +1714,8 @@ def test_real_ome_zarr_sample_conversion(tmp_upath: UPath) -> None:
         )
 
     assert layer.dtype == np.dtype("uint16")
-    assert layer.bounding_box.axes == CTXYZ_AXES
-    assert layer.bounding_box.size.to_tuple() == (1, 18, 198, 223, 12)
+    assert layer.bounding_box.axes == TCXYZ_AXES
+    assert layer.bounding_box.size.to_tuple() == (18, 1, 198, 223, 12)
 
     # The sample's omero metadata for channel 0 ("cy 1"):
     # {"color": "FFFFFF", "window": {"min": 0.0, "max": 65535.0, "start": 0.0, "end": 1200.0}}
@@ -1738,8 +1738,8 @@ def test_real_ome_zarr_sample_conversion(tmp_upath: UPath) -> None:
     ).result()
     # (t, c, z, y, x), channel 0 -> (t, z, y, x) -> (t, x, y, z)
     expected = np.asarray(finest_array[:, 0].read().result()).transpose(0, 3, 2, 1)
-    actual = layer.get_finest_mag().read()  # (c, t, x, y, z)
-    np.testing.assert_array_equal(actual[0], expected)
+    actual = layer.get_finest_mag().read()  # (t, c, x, y, z)
+    np.testing.assert_array_equal(actual[:, 0], expected)
 
 
 @pytest.mark.parametrize(

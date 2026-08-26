@@ -20,7 +20,7 @@ from typing import NamedTuple
 from numpy.typing import DTypeLike
 
 from ...dataset_properties import LayerViewConfiguration
-from ...geometry.constants import C_AXIS
+from ...geometry.constants import C_AXIS, T_AXIS
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
@@ -104,14 +104,22 @@ def with_explicit_channel_axis(
     Unlike `NDBoundingBox.normalize_axes()` (which keeps a missing "c" axis
     implicit, matching xyz-only boxes elsewhere, e.g. remote datasets),
     image-conversion's own internal boxes are always meant to carry one, per
-    the codebase's `NormalizedBoundingBox` convention. A missing "c" axis is
-    inserted first, ahead of every other axis.
+    the codebase's `NormalizedBoundingBox` convention.
+
+    "t" is the only axis treated specially here, not some other iterated
+    axis (e.g. "s"): the codebase already has a fixed t,c,x,y,z axis order
+    (`TCXYZ_AXES`) for the timepoint-carrying formats this matters for
+    (tiffs, OME-Zarr, ...), so a missing "c" is inserted right after "t"
+    when "t" is present, to match that order, and first otherwise.
     """
     if C_AXIS in box.axes:
         return box.normalize_axes(num_channels)
-    axes = (C_AXIS, *box.axes)
-    topleft = [0, *box.topleft.to_list()]
-    size = [num_channels, *box.size.to_list()]
+    insert_at = box.axes.index(T_AXIS) + 1 if T_AXIS in box.axes else 0
+    axes = box.axes[:insert_at] + (C_AXIS,) + box.axes[insert_at:]
+    topleft = box.topleft.to_list()
+    topleft.insert(insert_at, 0)
+    size = box.size.to_list()
+    size.insert(insert_at, num_channels)
     return NormalizedBoundingBox(
         topleft=VecInt(topleft, axes=axes),
         size=VecInt(size, axes=axes),
