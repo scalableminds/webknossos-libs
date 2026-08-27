@@ -43,23 +43,23 @@ class TiffSliceReader(SliceReader):
             self._dtype = _tmp.dtype or np.dtype("uint8")
             self._shape = _tmp.shape
 
-            # tifffile names the samples-per-pixel axis "S", only naming it "C"
-            # when the file carries explicit multi-channel axis metadata. A
-            # samples axis of 3 tagged as RGB is unambiguous colour, so it is
-            # treated as the channel axis rather than as extra z-slices,
-            # matching WEBKNOSSOS's own rule that only three uint8 channels
-            # display as RGB (see channels_fit_one_layer). "S" and "C" can
-            # both be present (e.g. ZCYXS); in that case "S" is left alone
-            # and stays a plain extra axis.
-            treat_s_as_c = (
+            # A tiff tagged photometric=rgb with 3 uint8 samples is
+            # unambiguous colour, matching WEBKNOSSOS's own rule that only
+            # three uint8 channels display as RGB (see channels_fit_one_layer).
+            # tifffile calls those samples "S", only naming them "C" when the
+            # file carries explicit multi-channel axis metadata, so such an
+            # RGB tiff's "S" axis is renamed to the channel axis here. "S"
+            # and a real "C" axis can both be present (e.g. ZCYXS); in that
+            # case "S" is left alone as a plain extra axis.
+            is_rgb_tiff = (
                 "s" in raw_axes
                 and "c" not in raw_axes
                 and _tiff.shape[raw_axes.index("s")] == 3
                 and _tiff.keyframe.photometric == tifffile.PHOTOMETRIC.RGB
                 and self._dtype.name == "uint8"
             )
-            axis_rename = {"s": "c"} if treat_s_as_c else {}
-            self.channels_are_rgb = treat_s_as_c
+            axis_rename = {"s": "c"} if is_rgb_tiff else {}
+            self.channels_are_rgb = is_rgb_tiff
 
             self._tiff_axes = tuple(axis_rename.get(a, a) for a in raw_axes)
             for axis, shape in zip(self._tiff_axes, _tiff.shape):
