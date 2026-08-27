@@ -106,11 +106,8 @@ def with_explicit_channel_axis(
     image-conversion's own internal boxes are always meant to carry one, per
     the codebase's `NormalizedBoundingBox` convention.
 
-    "t" is the only axis treated specially here, not some other iterated
-    axis (e.g. "s"): the codebase already has a fixed t,c,x,y,z axis order
-    (`TCXYZ_AXES`) for the timepoint-carrying formats this matters for
-    (tiffs, OME-Zarr, ...), so a missing "c" is inserted right after "t"
-    when "t" is present, to match that order, and first otherwise.
+    If there is a "t" axis a fixed t,c,x,y,z axis order will be used, because that is a
+    common convention. Other axes can appear at arbitrary locations.
     """
     if C_AXIS in box.axes:
         return box.normalize_axes(num_channels)
