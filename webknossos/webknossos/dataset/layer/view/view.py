@@ -19,6 +19,7 @@ from ....geometry import (
     Vec3IntLike,
     VecInt,
 )
+from ....geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, XYZ_AXES, Y_AXIS, Z_AXIS
 from ....geometry.vec_int import VecIntLike
 from ....utils import (
     count_defined_values,
@@ -182,7 +183,7 @@ class View:
         Returns:
             int: Number of channels
         """
-        return self.normalized_bounding_box.size.get("c", 0)
+        return self.normalized_bounding_box.size.get(C_AXIS, 0)
 
     @property
     def mag(self) -> Mag:
@@ -271,12 +272,9 @@ class View:
         assert abs_mag1_offset is not None, "No offset was supplied."
         assert mag1_size is not None, "No size was supplied."
 
-        assert self.bounding_box.axes == ("x", "y", "z") or self.bounding_box.axes == (
-            "c",
-            "x",
-            "y",
-            "z",
-        ), "The delivered offset and size are only usable for 3D views."
+        assert {X_AXIS, Y_AXIS, Z_AXIS} <= set(self.bounding_box.axes), (
+            "The delivered offset and size require the view to have x, y and z axes."
+        )
 
         return self.normalized_bounding_box.with_topleft_xyz(
             abs_mag1_offset
@@ -400,7 +398,7 @@ class View:
             data_shape = Vec3Int(data.shape[-3:])
 
         self_bbox = self.normalized_bounding_box
-        if self_bbox.axes == ("c", "x", "y", "z"):
+        if self_bbox.axes == CXYZ_AXES:
             if len(data.shape) == 3:
                 assert self_bbox.size.c == 1, (
                     f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data (1)"
@@ -415,7 +413,7 @@ class View:
                     f"The passed data has to have the dimensions (c, x, y, z) or (x, y, z), got shape {data.shape}"
                 )
         else:
-            if "c" in self_bbox.axes:
+            if C_AXIS in self_bbox.axes:
                 assert self_bbox.size.c == data.shape[self_bbox.index.c], (
                     f"The number of channels of the dataset ({self_bbox.size.c}) does not match the number of channels of the passed data ({data.shape[self_bbox.index.c]})"
                 )
@@ -472,7 +470,7 @@ class View:
         for non-standard axes the bbox is resolved to an absolute_bounding_box.
         """
         self_bbox = self.normalized_bounding_box
-        if self_bbox.axes in (("c", "x", "y", "z"), ("x", "y", "z")):
+        if self_bbox.axes in (CXYZ_AXES, XYZ_AXES):
             return View._reorder_cxyz_to_storage(data, self_bbox.axes), dict(
                 relative_offset=relative_offset,
                 absolute_offset=absolute_offset,
@@ -549,22 +547,23 @@ class View:
         Cxyz axes absent from ``storage_axes`` are squeezed (they must have size 1).
         Extra non-cxyz axes in ``storage_axes`` are inserted as size-1 dimensions.
         """
-        cxyz = ("c", "x", "y", "z")
         # validate: cxyz axes absent from storage must be size 1 in input
-        for i, axis in enumerate(cxyz):
+        for i, axis in enumerate(CXYZ_AXES):
             if axis not in storage_axes:
                 assert data.shape[i] == 1, (
                     f"Cannot write '{axis}' axis (size {data.shape[i]}) "
                     f"to a layer that has no '{axis}' axis"
                 )
         # squeeze missing cxyz axes from the input
-        axes_to_squeeze = tuple(i for i, a in enumerate(cxyz) if a not in storage_axes)
+        axes_to_squeeze = tuple(
+            i for i, a in enumerate(CXYZ_AXES) if a not in storage_axes
+        )
         if axes_to_squeeze:
             data = data.squeeze(axis=axes_to_squeeze)
         # remaining axes in data are the cxyz axes present in storage, in cxyz order
-        remaining = [a for a in cxyz if a in storage_axes]
+        remaining = [a for a in CXYZ_AXES if a in storage_axes]
         # extra storage axes (non-cxyz) get new size-1 dimensions appended
-        extra = [a for a in storage_axes if a not in set(cxyz)]
+        extra = [a for a in storage_axes if a not in set(CXYZ_AXES)]
         for _ in extra:
             data = np.expand_dims(data, axis=-1)
         # reorder from [remaining..., extra...] to storage order
@@ -817,7 +816,7 @@ class View:
 
         data = self._read_without_checks(mag1_bbox.in_mag(self._mag))
         # transform data to xyz order
-        if "c" in mag1_bbox.axes:
+        if C_AXIS in mag1_bbox.axes:
             data = np.moveaxis(
                 data,
                 (mag1_bbox.index.c,) + mag1_bbox.index_xyz.to_tuple(),
@@ -831,7 +830,7 @@ class View:
                 [1, 2, 3],
             )
         # all additional axes have been moved to the end; they must all be size 1
-        extra_axes = [a for a in mag1_bbox.axes if a not in ("c", "x", "y", "z")]
+        extra_axes = [a for a in mag1_bbox.axes if a not in CXYZ_AXES]
         for i, axis in enumerate(extra_axes):
             size = data.shape[4 + i]
             if size != 1:
@@ -904,7 +903,7 @@ class View:
         storage_axes = mag1_bbox.axes
         source_positions = []
         next_appended = len(storage_axes)
-        for axis in ("c", "x", "y", "z"):
+        for axis in CXYZ_AXES:
             if axis in storage_axes:
                 source_positions.append(storage_axes.index(axis))
             else:
@@ -914,7 +913,7 @@ class View:
         data = np.moveaxis(data, source_positions, [0, 1, 2, 3])
         # squeeze any extra non-cxyz axes that were moved to positions 4+;
         # they must all be size 1 or the data can't be collapsed to (c, x, y, z)
-        extra_axes = [a for a in storage_axes if a not in ("c", "x", "y", "z")]
+        extra_axes = [a for a in storage_axes if a not in CXYZ_AXES]
         for i, axis in enumerate(extra_axes):
             size = data.shape[4 + i]
             if size != 1:
@@ -1100,7 +1099,7 @@ class View:
     def get_buffered_slice_writer(
         self,
         buffer_size: int | None = None,
-        dimension: str | int = "z",
+        dimension: str | int = Z_AXIS,
         *,
         relative_offset: Vec3IntLike | None = None,  # in mag1
         absolute_offset: Vec3IntLike | None = None,  # in mag1
@@ -1189,7 +1188,7 @@ class View:
     def get_buffered_slice_reader(
         self,
         buffer_size: int | None = None,
-        dimension: str | int = "z",
+        dimension: str | int = Z_AXIS,
         *,
         relative_bounding_box: NDBoundingBox | None = None,  # in mag1
         absolute_bounding_box: NDBoundingBox | None = None,  # in mag1

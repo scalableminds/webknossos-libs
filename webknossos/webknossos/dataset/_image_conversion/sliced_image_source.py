@@ -10,10 +10,11 @@ from upath import UPath
 
 from ...dataset_properties import DataFormat
 from ...geometry.bounding_box import BoundingBox
+from ...geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
+from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec3_int import Vec3Int
-from ...geometry.vec_int import VecInt
 from ..errors import (
     CorruptImageError,
     UnsupportedImageFormatError,
@@ -25,6 +26,7 @@ from .image_source import (
     ImageSource,
     ReadOptions,
     compute_channel_selection,
+    with_explicit_channel_axis,
 )
 from .image_source_registry import (
     describe_missing_extras,
@@ -89,22 +91,22 @@ class SlicedImageSource(ImageSource):
             self._default_coords = {}
 
             # A slice is a 2D image, channels first when there are several.
-            raw_num_channels = images.sizes.get("c", 1)
+            raw_num_channels = images.sizes.get(C_AXIS, 1)
             if raw_num_channels > 1:
-                bundle_axes = ["c", "y", "x"]
+                bundle_axes = [C_AXIS, Y_AXIS, X_AXIS]
             else:
-                if "c" in images.axes:
+                if C_AXIS in images.axes:
                     # In neither list, so coordinate 0 is what gets returned.
-                    self._default_coords["c"] = 0
-                bundle_axes = ["y", "x"]
+                    self._default_coords[C_AXIS] = 0
+                bundle_axes = [Y_AXIS, X_AXIS]
 
             # Every remaining axis is iterated over. "z" goes last, so it is
             # the fastest-varying one.
             self._iter_axes = sorted(
-                set(images.axes).difference({*bundle_axes, "c", "z"})
+                set(images.axes).difference({*bundle_axes, C_AXIS, Z_AXIS})
             )
-            if "z" in images.axes:
-                self._iter_axes.append("z")
+            if Z_AXIS in images.axes:
+                self._iter_axes.append(Z_AXIS)
             self._bundle_axes = bundle_axes
 
         self.num_channels, self._channel, self._first_n_channels, possible_channels = (
@@ -299,7 +301,7 @@ class SlicedImageSource(ImageSource):
 
     def copy_chunk_to_view(
         self,
-        bbox: BoundingBox | NDBoundingBox,
+        bbox: NormalizedBoundingBox,
         mag_view: MagView,
         dtype: DTypeLike | None = None,
     ) -> ChunkResult:
@@ -320,46 +322,60 @@ class SlicedImageSource(ImageSource):
             assert all(
                 size == 1
                 for size, axis in zip(absolute_bbox.size, absolute_bbox.axes)
-                if axis not in ("c", "x", "y", "z")
+                if axis not in CXYZ_AXES
             ), (
                 "The delivered BoundingBox has to be flat except for x,y and z dimension."
             )
 
             # z_start and z_end are relative to the bounding box of the mag_view
             # to access the correct data from the images
-            z_start, z_end = relative_bbox.get_bounds("z")
+            z_start, z_end = relative_bbox.get_bounds(Z_AXIS)
             shapes = []
             max_value = 0
 
             with self._open_slice_reader() as images:
                 slices: SliceReader | _SlicedView = images
                 if len(self._iter_axes) > 1:
-                    # The sequence is a flat run over every iter axis, so narrow
-                    # it to the stretch this chunk's non-z coordinates select
-                    # before indexing z within it.
+                    # The sequence is a flat run over every iter axis. When the
+                    # last one is genuinely "z", it is batched (multiple
+                    # values per chunk) and narrowed to below; every other
+                    # axis is exactly one value per chunk (see the assert
+                    # above) and only selects where in the flat run this
+                    # chunk starts. Without a real "z" — the box's "z" is then
+                    # a singleton placeholder, not tied to any iterated axis —
+                    # every iter axis, including the last one, is one of those
+                    # single-valued selectors instead.
+                    has_real_z = Z_AXIS in self._iter_axes
+                    if has_real_z:
+                        assert self._iter_axes[-1] == Z_AXIS, (
+                            "'z' must be the last iter axis (see __init__)."
+                        )
+                        outer_axes = self._iter_axes[:-1]
+                    else:
+                        outer_axes = self._iter_axes
                     lower_bounds = images.flat_index(
-                        {
-                            axis: relative_bbox.get_bounds(axis)[0]
-                            for axis in self._iter_axes[:-1]
-                        }
+                        {axis: relative_bbox.get_bounds(axis)[0] for axis in outer_axes}
                     )
-                    upper_bounds = lower_bounds + mag_view.bounding_box.get_shape("z")
+                    run_length = (
+                        mag_view.bounding_box.get_shape(Z_AXIS) if has_real_z else 1
+                    )
+                    upper_bounds = lower_bounds + run_length
                     slices = images[lower_bounds:upper_bounds]
                 if self._options.flip_z:
                     slices = slices[::-1]
 
                 with mag_view.get_buffered_slice_writer(
                     absolute_bounding_box=absolute_bbox,
-                    buffer_size=absolute_bbox.get_shape("z"),
+                    buffer_size=absolute_bbox.get_shape(Z_AXIS),
                     allow_unaligned=True,
                 ) as writer:
                     for image_slice in slices[z_start:z_end]:
                         image_slice = np.array(image_slice)
                         # place channels first
-                        if "c" in self._bundle_axes:
+                        if C_AXIS in self._bundle_axes:
                             image_slice = np.moveaxis(
                                 image_slice,
-                                source=self._bundle_axes.index("c"),
+                                source=self._bundle_axes.index(C_AXIS),
                                 destination=0,
                             )
                             if self._channel is not None:
@@ -403,13 +419,17 @@ class SlicedImageSource(ImageSource):
         return self._channel
 
     @property
-    def expected_bbox(self) -> NDBoundingBox:
+    def expected_bbox(self) -> NormalizedBoundingBox:
         """The extents the reader reports. Only x/y is a placeholder — it is
         one slice's extent, which a later slice may exceed; the axes stepped
-        through are exact, since the reader counted them."""
+        through are exact, since the reader counted them.
+
+        Always carries explicit x, y, z and "c" axes (sized `num_channels`).
+        Every other axis ("t", "s", ...) is left as-is; a missing "z" gets a
+        size-1 axis instead of relabeling a real one."""
         with self._open_slice_reader() as images:
             sizes = images.sizes
-            x_size, y_size = sizes["x"], sizes["y"]
+            x_size, y_size = sizes[X_AXIS], sizes[Y_AXIS]
             if self._options.swap_xy:
                 x_size, y_size = y_size, x_size
 
@@ -417,45 +437,49 @@ class SlicedImageSource(ImageSource):
                 # One axis at most, so it is the z of a plain 3D box —
                 # whatever the reader happens to call it.
                 z_size = sizes[self._iter_axes[0]] if self._iter_axes else 1
-                return BoundingBox((0, 0, 0), (x_size, y_size, z_size))
+                return BoundingBox((0, 0, 0), (x_size, y_size, z_size)).normalize_axes(
+                    self.num_channels
+                )
 
             # Several axes are stepped through (e.g. "t" and "z"), so each one
             # has to be named in the box.
             axes_names = self._iter_axes + self._bundle_axes
             axes_sizes = [sizes[axis] for axis in axes_names]
-            axes_sizes[axes_names.index("x")] = x_size
-            axes_sizes[axes_names.index("y")] = y_size
-            if "c" in axes_names:
-                # sizes["c"] is the source's raw channel count, but only
+            if Z_AXIS not in axes_names:
+                # No axis is genuinely called "z" (e.g. only "t" and "s" are
+                # stepped through). A singleton "z" is added.
+                insert_at = len(self._iter_axes)
+                axes_names = axes_names[:insert_at] + [Z_AXIS] + axes_names[insert_at:]
+                axes_sizes = axes_sizes[:insert_at] + [1] + axes_sizes[insert_at:]
+            axes_sizes[axes_names.index(X_AXIS)] = x_size
+            axes_sizes[axes_names.index(Y_AXIS)] = y_size
+            if C_AXIS in axes_names:
+                # sizes[C_AXIS] is the source's raw channel count, but only
                 # self.num_channels of them are actually written (a pinned
                 # `channel` selects one, and _first_n_channels truncates to the
                 # first three).
-                axes_sizes[axes_names.index("c")] = self.num_channels
-            return NDBoundingBox(
-                VecInt.zeros(tuple(axes_names)),
-                VecInt(axes_sizes, axes=axes_names),
-                axes_names,
-                VecInt(list(range(len(axes_names))), axes=axes_names),
-            )
+                axes_sizes[axes_names.index(C_AXIS)] = self.num_channels
+            box = NDBoundingBox.from_axes(axes_names, axes_sizes)
+            return with_explicit_channel_axis(box, self.num_channels)
 
     def initial_layer_bounding_box(
-        self, mag1_expected_bbox: NDBoundingBox
-    ) -> NDBoundingBox:
+        self, mag1_expected_bbox: NormalizedBoundingBox
+    ) -> NormalizedBoundingBox:
         """Deliberately oversized in x/y, since a write outside the layer's
         box would be rejected. Shrunk to the true extent afterwards."""
         safe_size = mag1_expected_bbox.size.with_replaced(
-            mag1_expected_bbox.axes.index("x"), SAFE_LARGE_XY
-        ).with_replaced(mag1_expected_bbox.axes.index("y"), SAFE_LARGE_XY)
+            mag1_expected_bbox.axes.index(X_AXIS), SAFE_LARGE_XY
+        ).with_replaced(mag1_expected_bbox.axes.index(Y_AXIS), SAFE_LARGE_XY)
         return mag1_expected_bbox.with_size(safe_size)
 
     def chunk_grid(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         mag_view: MagView,
         mag: Mag,
         batch_size: int | None,
-    ) -> list[NDBoundingBox]:
+    ) -> list[NormalizedBoundingBox]:
         """Batches of z-slices spanning the full x/y extent, which cannot be
         split while it is still the placeholder."""
         del mag
@@ -492,15 +516,15 @@ class SlicedImageSource(ImageSource):
 
     def final_bounding_box(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         chunk_sizes: Sequence[tuple[int, int]],
         mag: Mag,
-    ) -> NDBoundingBox:
+    ) -> NormalizedBoundingBox:
         """Replaces the placeholder x/y with the largest extent any chunk
         actually wrote."""
         return layer_bounding_box.with_size_xyz(
-            Vec3Int(dimwise_max(chunk_sizes) + (layer_bounding_box.get_shape("z"),))
+            Vec3Int(dimwise_max(chunk_sizes) + (layer_bounding_box.get_shape(Z_AXIS),))
             * mag.to_vec3_int().with_z(1)
         )
 

@@ -19,7 +19,7 @@ from webknossos.dataset_properties import (
 from webknossos.dataset_properties.structuring import (
     MagViewProperties,
 )
-from webknossos.geometry import NDBoundingBox, NormalizedBoundingBox
+from webknossos.geometry import C_AXIS, NDBoundingBox, NormalizedBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
 
 from ...utils import warn_deprecated
@@ -277,7 +277,7 @@ class AbstractLayer:
             AssertionError: If num_channels is not set in properties
         """
 
-        return self.normalized_bounding_box.size.get("c", 1)
+        return self.normalized_bounding_box.size.get(C_AXIS, 1)
 
     @property
     def data_format(self) -> DataFormat:

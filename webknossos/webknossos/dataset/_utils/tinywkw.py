@@ -10,7 +10,7 @@ import lz4.block
 import numpy as np
 from upath import UPath
 
-from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
+from webknossos.geometry import CXYZ_AXES, BoundingBox, NormalizedBoundingBox, Vec3Int
 
 VOXEL_TYPES: dict[int, np.dtype] = {
     0x01: np.dtype("uint8"),
@@ -188,7 +188,7 @@ class TinyWkwArray:
         Returns array of shape (num_channels, x, y, z) in Fortran order.
         Out-of-bounds regions are zero-filled.
         """
-        assert bbox.axes == ("c", "x", "y", "z")
+        assert bbox.axes == CXYZ_AXES
         bbox_xyz = bbox.denormalize()
         assert isinstance(bbox_xyz, BoundingBox)
         header = self._header
@@ -336,7 +336,7 @@ class TinyWkwArray:
 
         `data` must have shape (num_channels, x, y, z) in Fortran order.
         """
-        assert bbox.axes == ("c", "x", "y", "z")
+        assert bbox.axes == CXYZ_AXES
         assert data.shape[0] == self.header.num_channels, (
             f"data must have shape (num_channels, x, y, z), got {data.shape[0]} channels."
         )

@@ -42,6 +42,7 @@ from ...geometry import (
     Vec3IntLike,
     VecIntLike,
 )
+from ...geometry.constants import CXYZ_AXES, Z_AXIS
 from ...geometry.mag import MagLike
 from ...utils import named_partial, wait_and_ensure_success, wrap_executor
 from ..defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
@@ -314,7 +315,9 @@ def _channels_are_one_rgb_layer(
 
 def _has_image_z_dimension(filepath: UPath) -> bool:
     # No option affects the z extent, so the defaults will do.
-    return open_image_source(filepath, ReadOptions()).expected_bbox.get_shape("z") > 1
+    return (
+        open_image_source(filepath, ReadOptions()).expected_bbox.get_shape(Z_AXIS) > 1
+    )
 
 
 def from_images(
@@ -708,7 +711,10 @@ def add_layer_from_images(
         if not _shard_shape_user_specified and layer.data_format == DataFormat.Zarr3:
             shard_shape = chunk_shape * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
         # When the expected bbox is 2D the chunk_shape is set to 2D too.
-        if expected_bbox.get_shape("z") == 1 and layer.data_format == DataFormat.Zarr3:
+        if (
+            expected_bbox.get_shape(Z_AXIS) == 1
+            and layer.data_format == DataFormat.Zarr3
+        ):
             chunk_shape = chunk_shape.with_z(1)
             shard_shape = shard_shape.with_z(1)
 
@@ -729,9 +735,7 @@ def add_layer_from_images(
         )
 
         if (
-            additional_axes := set(layer.bounding_box.axes).difference(
-                "c", "x", "y", "z"
-            )
+            additional_axes := set(layer.bounding_box.axes).difference(*CXYZ_AXES)
         ) and layer.data_format == DataFormat.WKW:
             if all(layer.bounding_box.get_shape(axis) == 1 for axis in additional_axes):
                 warnings.warn(
@@ -745,7 +749,10 @@ def add_layer_from_images(
                 )
 
         args = image_source.chunk_grid(
-            layer.bounding_box, mag_view=mag_view, mag=mag, batch_size=batch_size
+            layer.normalized_bounding_box,
+            mag_view=mag_view,
+            mag=mag,
+            batch_size=batch_size,
         )
 
         with warnings.catch_warnings():
@@ -770,7 +777,7 @@ def add_layer_from_images(
                 max_id = max(max_ids)
                 cast(SegmentationLayer, layer).largest_segment_id = max_id
             layer.bounding_box = image_source.final_bounding_box(
-                layer.bounding_box, chunk_sizes=shapes, mag=mag
+                layer.normalized_bounding_box, chunk_sizes=shapes, mag=mag
             )
         if expected_bbox != layer.bounding_box:
             warnings.warn(

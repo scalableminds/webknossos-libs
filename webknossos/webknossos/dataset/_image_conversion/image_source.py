@@ -20,8 +20,11 @@ from typing import NamedTuple
 from numpy.typing import DTypeLike
 
 from ...dataset_properties import LayerViewConfiguration
+from ...geometry.constants import C_AXIS, T_AXIS
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
+from ...geometry.normalized_bounding_box import NormalizedBoundingBox
+from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
 
 
@@ -91,6 +94,39 @@ def compute_channel_selection(
     return ChannelSelection(raw_num_channels, None, None, None)
 
 
+def with_explicit_channel_axis(
+    box: NDBoundingBox, num_channels: int
+) -> NormalizedBoundingBox:
+    """Builds a `NormalizedBoundingBox` that always carries an explicit "c"
+    axis, sized `num_channels` — even when `box` doesn't have one and
+    `num_channels` is 1.
+
+    Unlike `NDBoundingBox.normalize_axes()` (which keeps a missing "c" axis
+    implicit, matching xyz-only boxes elsewhere, e.g. remote datasets),
+    image-conversion's own internal boxes are always meant to carry one, per
+    the codebase's `NormalizedBoundingBox` convention.
+
+    If there is a "t" axis a fixed t,c,x,y,z axis order will be used, because that is a
+    common convention. Other axes can appear at arbitrary locations.
+    """
+    if C_AXIS in box.axes:
+        return box.normalize_axes(num_channels)
+    insert_at = box.axes.index(T_AXIS) + 1 if T_AXIS in box.axes else 0
+    axes = box.axes[:insert_at] + (C_AXIS,) + box.axes[insert_at:]
+    topleft = box.topleft.to_list()
+    topleft.insert(insert_at, 0)
+    size = box.size.to_list()
+    size.insert(insert_at, num_channels)
+    return NormalizedBoundingBox(
+        topleft=VecInt(topleft, axes=axes),
+        size=VecInt(size, axes=axes),
+        axes=axes,
+        name=box.name,
+        is_visible=box.is_visible,
+        color=box.color,
+    )
+
+
 class ChunkResult(NamedTuple):
     """What copying one chunk reported back."""
 
@@ -141,14 +177,15 @@ class ImageSource(ABC):
 
     @property
     @abstractmethod
-    def expected_bbox(self) -> NDBoundingBox:
+    def expected_bbox(self) -> NormalizedBoundingBox:
         """The bounding box the data is expected to occupy, in Mag(1). Exact,
-        or an oversized placeholder."""
+        or an oversized placeholder.
+        """
 
     @abstractmethod
     def copy_chunk_to_view(
         self,
-        bbox: NDBoundingBox,
+        bbox: NormalizedBoundingBox,
         mag_view: MagView,
         dtype: DTypeLike | None = None,
     ) -> ChunkResult:
@@ -170,30 +207,30 @@ class ImageSource(ABC):
 
     @abstractmethod
     def initial_layer_bounding_box(
-        self, mag1_expected_bbox: NDBoundingBox
-    ) -> NDBoundingBox:
+        self, mag1_expected_bbox: NormalizedBoundingBox
+    ) -> NormalizedBoundingBox:
         """The bounding box to give the layer before conversion starts. A
         placeholder is oversized so writes are never out of bounds."""
 
     @abstractmethod
     def chunk_grid(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         mag_view: MagView,
         mag: Mag,
         batch_size: int | None,
-    ) -> list[NDBoundingBox]:
+    ) -> list[NormalizedBoundingBox]:
         """The units of work, one per `copy_chunk_to_view` call. `batch_size`
         is honoured only by strategies that chunk along z."""
 
     @abstractmethod
     def final_bounding_box(
         self,
-        layer_bounding_box: NDBoundingBox,
+        layer_bounding_box: NormalizedBoundingBox,
         *,
         chunk_sizes: Sequence[tuple[int, int]],
         mag: Mag,
-    ) -> NDBoundingBox:
+    ) -> NormalizedBoundingBox:
         """The layer's bounding box once every chunk has been written.
         Unchanged for a source that started out exact."""

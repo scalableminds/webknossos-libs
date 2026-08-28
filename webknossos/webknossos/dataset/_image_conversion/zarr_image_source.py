@@ -17,6 +17,7 @@ import tensorstore as ts
 from upath import UPath
 
 from ...dataset_properties import LayerViewConfiguration
+from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from .._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from ..defaults import (
     ZARR_JSON_FILE_NAME,
@@ -95,10 +96,10 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
 
         shape = array.domain.exclusive_max
         axis_to_size = dict(zip(self._axes, shape))
-        self._x = axis_to_size.get("x", 1)
-        self._y = axis_to_size.get("y", 1)
-        self._z = axis_to_size.get("z", 1)
-        raw_num_channels = axis_to_size.get("c", 1)
+        self._x = axis_to_size.get(X_AXIS, 1)
+        self._y = axis_to_size.get(Y_AXIS, 1)
+        self._z = axis_to_size.get(Z_AXIS, 1)
+        raw_num_channels = axis_to_size.get(C_AXIS, 1)
         self.dtype = array.dtype.numpy_dtype
 
         t = axis_to_size.get("t", 1)

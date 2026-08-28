@@ -28,7 +28,16 @@ from webknossos.dataset import (
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.mrc_image_source import MrcImageSource
 from webknossos.dataset._image_conversion.tiff_slice_reader import TiffSliceReader
-from webknossos.geometry import BoundingBox, Vec3Int, VecInt
+from webknossos.geometry import (
+    C_AXIS,
+    T_AXIS,
+    X_AXIS,
+    Y_AXIS,
+    Z_AXIS,
+    BoundingBox,
+    Vec3Int,
+    VecInt,
+)
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -103,8 +112,8 @@ def test_imagej_virtual_stack_tiff(tmp_upath: UPath) -> None:
     assert t.series[0].shape == (Z, Y, X)
 
     reader = TiffSliceReader(tif_path)
-    reader.bundle_axes = ["y", "x"]
-    reader.iter_axes = ["z"]
+    reader.bundle_axes = [Y_AXIS, X_AXIS]
+    reader.iter_axes = [Z_AXIS]
 
     assert reader.shape == (Z, Y, X)
     assert reader.slice_shape == (Y, X)
@@ -143,8 +152,8 @@ def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
     # With CZYX ordering (C=3, Z=2) pages are laid out as: c=0→[pg0,pg1], c=1→[pg2,pg3], c=2→[pg4,pg5]
     # so z=0 corresponds to pages 0, 2, 4 and z=1 to pages 1, 3, 5.
     reader = TiffSliceReader(tif_path)
-    reader.bundle_axes = ["c", "y", "x"]
-    reader.iter_axes = ["z"]
+    reader.bundle_axes = [C_AXIS, Y_AXIS, X_AXIS]
+    reader.iter_axes = [Z_AXIS]
 
     pages_read: list[int] = []
     original_asarray = tifffile_module.TiffPage.asarray
@@ -207,7 +216,7 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         "tiffs_test_C.tif__channel3": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
         "tiffs_test_C.tif__channel4": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
         "tiffs_test_I.tif": ("uint32", 1, VecInt(c=1, x=64, y=128, z=64)),
-        "tiffs_test_S.tif": ("uint16", 1, VecInt(s=3, z=64, x=128, y=128)),
+        "tiffs_test_S.tif": ("uint16", 1, VecInt(c=1, s=3, z=64, y=128, x=128)),
     }
 
     for layer_name, layer in ds.layers.items():
@@ -322,11 +331,11 @@ def test_multi_channel_multi_timepoint_ims_creates_multiple_layers_with_t_axis(
     }
     for c in range(3):
         layer = ds.layers[f"multi__channel{c}"]
-        assert layer.bounding_box.axes == ("t", "x", "y", "z")
-        assert layer.bounding_box.size.to_tuple() == (2, 10, 8, 4)
-        data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
+        assert layer.bounding_box.axes == (T_AXIS, C_AXIS, X_AXIS, Y_AXIS, Z_AXIS)
+        assert layer.bounding_box.size.to_tuple() == (2, 1, 10, 8, 4)
+        data = layer.get_finest_mag().read()  # (t, c, x, y, z)
         for t in range(2):
-            assert (data[t] == t * 100 + c).all()
+            assert (data[t, 0] == t * 100 + c).all()
 
 
 def _open_mrc_chunked_images(mrc_path: UPath) -> MrcImageSource:
@@ -346,7 +355,8 @@ def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
     assert reader.num_channels == 1
     assert reader.channel is None
     assert reader.get_layer_split_options() is None
-    assert reader.expected_bbox.size.to_tuple() == (X, Y, Z)
+    assert reader.expected_bbox.size_xyz.to_tuple() == (X, Y, Z)
+    assert reader.expected_bbox.size.c == 1
 
 
 def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
@@ -376,7 +386,7 @@ def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
 
     with patch("mrcfile.mmap", counting_mmap):
         for z in range(Z):
-            bbox = BoundingBox((0, 0, z), (X, Y, 1))
+            bbox = BoundingBox((0, 0, z), (X, Y, 1)).normalize_axes(1)
             reader.copy_chunk_to_view(bbox, mag_view=mag_view, dtype=None)
 
     assert open_count == Z, (
@@ -416,10 +426,12 @@ def test_from_images_zarr_directories_are_not_descended_into(tmp_upath: UPath) -
 
     suffixed = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8)
     write_zarr_v3_array(
-        input_dir / "layer_a.zarr", suffixed, dimension_names=["z", "y", "x"]
+        input_dir / "layer_a.zarr", suffixed, dimension_names=[Z_AXIS, Y_AXIS, X_AXIS]
     )
     bare = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8) + 1
-    write_zarr_v3_array(input_dir / "layer_b", bare, dimension_names=["z", "y", "x"])
+    write_zarr_v3_array(
+        input_dir / "layer_b", bare, dimension_names=[Z_AXIS, Y_AXIS, X_AXIS]
+    )
     tiff_data = np.arange(8 * 8, dtype="uint8").reshape(8, 8).astype("uint8")
     imwrite(str(input_dir / "layer_c.tif"), tiff_data)
 
@@ -453,7 +465,7 @@ def test_from_images_input_path_is_itself_a_store_directory(tmp_upath: UPath) ->
     # was called with.
     data = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8)
     zarr_path = tmp_upath / "test.zarr"
-    write_zarr_v3_array(zarr_path, data, dimension_names=["z", "y", "x"])
+    write_zarr_v3_array(zarr_path, data, dimension_names=[Z_AXIS, Y_AXIS, X_AXIS])
 
     with SequentialExecutor() as executor:
         ds = Dataset.from_images(

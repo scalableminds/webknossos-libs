@@ -2,11 +2,12 @@ from collections.abc import Sequence
 
 import attr
 
+from .constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 from .nd_bounding_box import NDBoundingBox
 from .vec_int import VecInt
 
-_DEFAULT_AXIS_ORDER = {"c": 0, "x": 1, "y": 2, "z": 3}
-_DEFAULT_AXIS_ORDER_MISSING_C = {"x": 1, "y": 2, "z": 3}
+_DEFAULT_AXIS_ORDER = {C_AXIS: 0, X_AXIS: 1, Y_AXIS: 2, Z_AXIS: 3}
+_DEFAULT_AXIS_ORDER_MISSING_C = {X_AXIS: 1, Y_AXIS: 2, Z_AXIS: 3}
 
 
 @attr.frozen
@@ -26,7 +27,7 @@ def _find_index_by_name(axes: Sequence[Axis], name: str) -> int:
 
 class NormalizedBoundingBox(NDBoundingBox):
     def denormalize(self) -> NDBoundingBox:
-        if self.axes == ("c", "x", "y", "z"):
+        if self.axes == CXYZ_AXES:
             from .bounding_box import BoundingBox
 
             return BoundingBox(
@@ -153,14 +154,14 @@ class NormalizedBoundingBox(NDBoundingBox):
 
         axes = [
             Axis(
-                name="c",
+                name=C_AXIS,
                 min=bbox.get("channelIndex", 0),
                 size=num_channels,
                 index=0,
             ),
-            Axis(name="x", min=bbox["topLeft"][0], size=bbox["width"], index=1),
-            Axis(name="y", min=bbox["topLeft"][1], size=bbox["height"], index=2),
-            Axis(name="z", min=bbox["topLeft"][2], size=bbox["depth"], index=3),
+            Axis(name=X_AXIS, min=bbox["topLeft"][0], size=bbox["width"], index=1),
+            Axis(name=Y_AXIS, min=bbox["topLeft"][1], size=bbox["height"], index=2),
+            Axis(name=Z_AXIS, min=bbox["topLeft"][2], size=bbox["depth"], index=3),
         ]
 
         if "additionalAxes" in bbox:
@@ -212,7 +213,7 @@ class NormalizedBoundingBox(NDBoundingBox):
         Returns:
             dict: A json dictionary representing the bounding box.
         """
-        if self.axes == ("c", "x", "y", "z"):
+        if self.axes == CXYZ_AXES:
             out = {
                 "topLeft": self.topleft_xyz.to_list(),
                 "width": self.size.x,
@@ -230,16 +231,16 @@ class NormalizedBoundingBox(NDBoundingBox):
         additional_axes = []
         for i, axis in enumerate(self.axes):
             index = self.index[i]
-            if axis == "x":
+            if axis == X_AXIS:
                 topleft[0] = self.topleft[index]
                 width = self.size[index]
-            elif axis == "y":
+            elif axis == Y_AXIS:
                 topleft[1] = self.topleft[index]
                 height = self.size[index]
-            elif axis == "z":
+            elif axis == Z_AXIS:
                 topleft[2] = self.topleft[index]
                 depth = self.size[index]
-            elif axis == "c":
+            elif axis == C_AXIS:
                 pass
             else:
                 additional_axes.append(
@@ -267,9 +268,9 @@ class NormalizedBoundingBox(NDBoundingBox):
         if len(axis_order) > 0:
             out["axisOrder"] = axis_order
 
-        if "c" in self.axes and self.topleft.c != 0:
+        if C_AXIS in self.axes and self.topleft.c != 0:
             out["channelIndex"] = self.topleft.c
-        if "c" in self.axes:
+        if C_AXIS in self.axes:
             out["numChannels"] = self.size.c
 
         return out

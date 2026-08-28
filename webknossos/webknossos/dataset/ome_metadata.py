@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from ..dataset_properties import DataFormat
+from ..geometry.constants import C_AXIS, T_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from ..utils import is_writable_path
 from .defaults import ZARR_JSON_FILE_NAME, ZATTRS_FILE_NAME, ZGROUP_FILE_NAME
 
@@ -12,13 +13,13 @@ if TYPE_CHECKING:
     from .layer import Layer, MagView
 
 _AXIS_TYPES = {
-    "c": "channel",
-    "t": "time",
-    "x": "space",
-    "y": "space",
-    "z": "space",
+    C_AXIS: "channel",
+    T_AXIS: "time",
+    X_AXIS: "space",
+    Y_AXIS: "space",
+    Z_AXIS: "space",
 }
-_SPACE_AXES = ("x", "y", "z")
+_SPACE_AXES = (X_AXIS, Y_AXIS, "z")
 
 
 def _ome_axes(axes_order: tuple[str, ...]) -> list[dict[str, Any]]:

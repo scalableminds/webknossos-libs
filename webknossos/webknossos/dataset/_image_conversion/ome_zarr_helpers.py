@@ -13,6 +13,7 @@ from typing import Any
 from upath import UPath
 
 from ...dataset_properties import LayerViewConfiguration
+from ...geometry.constants import C_AXIS, T_AXIS
 from ..errors import (
     CorruptImageError,
     UnsupportedImageDataError,
@@ -59,9 +60,9 @@ def _ome_axis_name(axis: dict[str, Any], *, path: UPath) -> str:
     (channel/time/space) and, for a space axis, its `name`."""
     axis_type = axis.get("type")
     if axis_type == "channel":
-        return "c"
+        return C_AXIS
     if axis_type == "time":
-        return "t"
+        return T_AXIS
     if axis_type in ("space", None):
         return normalize_axis(axis.get("name", ""), path=path)
     raise UnsupportedImageDataError(

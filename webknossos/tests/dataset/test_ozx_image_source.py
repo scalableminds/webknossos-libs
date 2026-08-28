@@ -11,6 +11,7 @@ from tests.data_fixtures import download_wklibs_sample_archive, write_ozx_file
 from webknossos.dataset import CorruptImageError, UnsupportedImageFormatError
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.ozx_image_source import OzxImageSource
+from webknossos.geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 
 
 def _open(path: UPath, **options: Any) -> OzxImageSource:
@@ -19,10 +20,10 @@ def _open(path: UPath, **options: Any) -> OzxImageSource:
 
 # Standard OME axes metadata (name/type), reused across the tests.
 _AXES_CZYX = [
-    {"name": "c", "type": "channel"},
-    {"name": "z", "type": "space"},
-    {"name": "y", "type": "space"},
-    {"name": "x", "type": "space"},
+    {"name": C_AXIS, "type": "channel"},
+    {"name": Z_AXIS, "type": "space"},
+    {"name": Y_AXIS, "type": "space"},
+    {"name": X_AXIS, "type": "space"},
 ]
 
 
@@ -174,10 +175,10 @@ def test_axis_names_come_from_ome_axes_metadata(tmp_upath: UPath) -> None:
     # come from the OME metadata, not from position.
     ozx_path = tmp_upath / "labeled.ozx"
     axes = [
-        {"name": "c", "type": "channel"},
-        {"name": "x", "type": "space"},
-        {"name": "y", "type": "space"},
-        {"name": "z", "type": "space"},
+        {"name": C_AXIS, "type": "channel"},
+        {"name": X_AXIS, "type": "space"},
+        {"name": Y_AXIS, "type": "space"},
+        {"name": Z_AXIS, "type": "space"},
     ]
     c, x, y, z = 1, 7, 5, 3
     data = np.arange(c * x * y * z, dtype=np.uint8).reshape(c, x, y, z)
