@@ -9,10 +9,8 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ...dataset_properties import DataFormat
-from ...geometry.bounding_box import BoundingBox
 from ...geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 from ...geometry.mag import Mag
-from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec3_int import Vec3Int
 from ..errors import (
@@ -435,8 +433,8 @@ class SlicedImageSource(ImageSource):
                 # One axis at most, so it is the z of a plain 3D box —
                 # whatever the reader happens to call it.
                 z_size = sizes[self._iter_axes[0]] if self._iter_axes else 1
-                return BoundingBox((0, 0, 0), (x_size, y_size, z_size)).normalize_axes(
-                    self.num_channels
+                return NormalizedBoundingBox.from_axes(
+                    CXYZ_AXES, [self.num_channels, x_size, y_size, z_size]
                 )
 
             # Several axes are stepped through (e.g. "t" and "z"), so each one
@@ -445,11 +443,11 @@ class SlicedImageSource(ImageSource):
             axes_sizes = [sizes[axis] for axis in axes_names]
             axes_sizes[axes_names.index(X_AXIS)] = x_size
             axes_sizes[axes_names.index(Y_AXIS)] = y_size
-            # A "c" among them is the source's raw channel count; normalizing
-            # replaces it with the number actually written.
-            return NDBoundingBox.from_axes(axes_names, axes_sizes).normalize_axes(
-                self.num_channels
-            )
+            if C_AXIS in axes_names:
+                # The reader reports the raw channel count, but only
+                # num_channels of them are written.
+                axes_sizes[axes_names.index(C_AXIS)] = self.num_channels
+            return NormalizedBoundingBox.from_axes(axes_names, axes_sizes)
 
     def initial_layer_bounding_box(
         self, mag1_expected_bbox: NormalizedBoundingBox
