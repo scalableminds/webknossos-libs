@@ -26,6 +26,8 @@ from .image_source import (
     ImageSource,
     ReadOptions,
     compute_channel_selection,
+    merge_value_ranges,
+    value_range_of,
     with_explicit_channel_axis,
 )
 from .image_source_registry import (
@@ -332,6 +334,7 @@ class SlicedImageSource(ImageSource):
             z_start, z_end = relative_bbox.get_bounds(Z_AXIS)
             shapes = []
             max_value = 0
+            value_range: tuple[float, float] | None = None
 
             with self._open_slice_reader() as images:
                 slices: SliceReader | _SlicedView = images
@@ -398,13 +401,16 @@ class SlicedImageSource(ImageSource):
                             image_slice = image_slice.astype(dtype, order="F")
 
                         max_value = max(max_value, image_slice.max())
+                        value_range = merge_value_ranges(
+                            value_range, value_range_of(image_slice)
+                        )
                         if self._options.swap_xy is False:
                             image_slice = np.moveaxis(image_slice, -1, -2)
 
                         shapes.append(image_slice.shape[-2:])
                         writer.send(image_slice)
 
-                return ChunkResult(dimwise_max(shapes), max_value)
+                return ChunkResult(dimwise_max(shapes), max_value, value_range)
 
     def get_layer_split_options(self) -> dict["str", list[int]] | None:
         if len(self._possible_layers) == 0:

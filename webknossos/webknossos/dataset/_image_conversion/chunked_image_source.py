@@ -17,6 +17,7 @@ from .image_source import (
     ChunkResult,
     ImageSource,
     ReadOptions,
+    value_range_of,
     with_explicit_channel_axis,
 )
 
@@ -198,6 +199,7 @@ class ChunkedImageSource(ImageSource):
             block = block.astype(dtype, order="F")
 
         max_value = int(block.max())
+        value_range = value_range_of(block)
         if "t" in relative_bbox.axes:
             # Add back the size-1 "t" axis this chunk corresponds to.
             block = block[np.newaxis]
@@ -208,7 +210,7 @@ class ChunkedImageSource(ImageSource):
         mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
 
         return ChunkResult(
-            (out_x_end - out_x_start, out_y_end - out_y_start), max_value
+            (out_x_end - out_x_start, out_y_end - out_y_start), max_value, value_range
         )
 
     def initial_layer_bounding_box(

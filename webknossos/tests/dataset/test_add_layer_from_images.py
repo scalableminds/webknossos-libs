@@ -1594,8 +1594,10 @@ def test_ome_zarr_omero_channel_metadata_applied_when_splitting(
     assert hyb is not None
     assert hyb.color == (255, 0, 0)
     assert hyb.intensity_range == (5.0, 200.0)
-    assert hyb.min is None
-    assert hyb.max is None
+    # No omero window min/max for this channel, so the observed data range
+    # fills them in.
+    assert hyb.min == 0.0
+    assert hyb.max == 0.0
     assert hyb.is_disabled is None
 
     fallback = ds.layers["test__channel3"].default_view_configuration
@@ -1759,6 +1761,71 @@ def test_test_images(
     size: tuple[int, int, int],
 ) -> None:
     _test_test_images(tmp_upath, name, path, kwargs, dtype, num_channels, size)
+
+
+def test_view_configuration_min_max_from_data(tmp_upath: UPath) -> None:
+    # The conversion reads all the data anyway, so the observed value range
+    # ends up in the layer's view configuration.
+    data = np.zeros((4, 8, 16), dtype="uint16")
+    data[0, 0, 0] = 7
+    data[3, 7, 15] = 4242
+    tiff_path = tmp_upath / "stack.tif"
+    imwrite(str(tiff_path), data, photometric="minisblack", metadata={"axes": "ZYX"})
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path, layer_name="color", executor=executor
+        )
+
+    view_configuration = layer.default_view_configuration
+    assert view_configuration is not None
+    assert view_configuration.min == 0.0
+    assert view_configuration.max == 4242.0
+    # WEBKNOSSOS derives the intensity range from a histogram itself.
+    assert view_configuration.intensity_range is None
+
+
+def test_view_configuration_min_max_ignores_nan(tmp_upath: UPath) -> None:
+    data = np.zeros((4, 8, 16), dtype="float32")
+    data[0, 0, 0] = np.nan
+    data[1, 1, 1] = -1.5
+    data[2, 2, 2] = 3.5
+    tiff_path = tmp_upath / "floats.tif"
+    imwrite(str(tiff_path), data, photometric="minisblack", metadata={"axes": "ZYX"})
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path, layer_name="color", executor=executor
+        )
+
+    view_configuration = layer.default_view_configuration
+    assert view_configuration is not None
+    assert view_configuration.min == -1.5
+    assert view_configuration.max == 3.5
+
+
+def test_view_configuration_min_max_not_set_for_segmentation(
+    tmp_upath: UPath,
+) -> None:
+    data = np.zeros((4, 8, 16), dtype="uint32")
+    data[3, 7, 15] = 42
+    tiff_path = tmp_upath / "seg.tif"
+    imwrite(str(tiff_path), data, photometric="minisblack", metadata={"axes": "ZYX"})
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path,
+            layer_name="segmentation",
+            category="segmentation",
+            executor=executor,
+        )
+
+    assert isinstance(layer, wk.SegmentationLayer)
+    assert layer.largest_segment_id == 42
+    assert layer.default_view_configuration is None
 
 
 if __name__ == "__main__":
