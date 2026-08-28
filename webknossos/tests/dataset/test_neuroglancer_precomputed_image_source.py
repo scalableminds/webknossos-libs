@@ -126,6 +126,6 @@ def test_corrupt_info_raises_corrupt_image_error(tmp_upath: UPath) -> None:
 
 def test_remote_path_warns() -> None:
     # The warning fires before the path is read, so a missing one still hits it.
-    with pytest.warns(UserWarning, match="not well tested"):
+    with pytest.warns(UserWarning, match="remote path"):
         with pytest.raises(CorruptImageError):
             _open(UPath("memory://some/path"))
