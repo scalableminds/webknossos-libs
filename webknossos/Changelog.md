@@ -34,7 +34,6 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `neuroglancerPrecomputed` as a valid `AttachmentDataFormat` for `MeshAttachment`s. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
 
 ### Changed
-- Converting a Zarr, N5 or Neuroglancer precomputed dataset from a remote path (`s3://`, `gs://`, `http(s)://`) now warns instead of raising. Format detection goes through fsspec while the data is read by tensorstore, so credentials may need to be configured for both. [#1524](https://github.com/scalableminds/webknossos-libs/pull/1524)
 - `.czi` conversion is faster and uses less memory: only the data needed for each chunk is read, rather than whole image planes. Multi-timepoint `.czi` files now convert into a single layer with a `t` axis. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
 - Converting a file whose format needs an optional dependency now names the extra to install (e.g. `webknossos[czi]`, `webknossos[tifffile]`) instead of reporting the format as unsupported. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
 - `Dataset.add_layer_from_images` accepts any sequence of paths, not only a `list`. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
