@@ -22,7 +22,6 @@ from numpy.typing import DTypeLike
 from ...dataset_properties import LayerViewConfiguration
 from ...geometry.constants import C_AXIS, CXYZ_AXES, T_AXIS, XYZ_AXES
 from ...geometry.mag import Mag
-from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
@@ -94,14 +93,12 @@ def compute_channel_selection(
     return ChannelSelection(raw_num_channels, None, None, None)
 
 
-def with_canonical_axes(box: NDBoundingBox, num_channels: int) -> NormalizedBoundingBox:
+def with_canonical_axes(
+    box: NormalizedBoundingBox, num_channels: int
+) -> NormalizedBoundingBox:
     """Builds the `NormalizedBoundingBox` a converted layer gets, in the
-    canonical axis order `(...extras..., t, c, x, y, z)`.
-
-    Any of "c", "x", "y", "z" the source does not carry is added as a size-1
-    axis ("c" is sized `num_channels`), so a converted layer always has all
-    four. A "t" axis, when present, is placed directly before "c"; every other
-    axis is prepended, keeping its relative order.
+    canonical axis order `([...extras], [t], c, x, y, z)`. Any of "c", "x", "y", "z"
+    the source does not carry is added as a singleton axis.
 
     Unlike `NDBoundingBox.normalize_axes()` (which keeps a missing "c" axis
     implicit, matching xyz-only boxes elsewhere, e.g. remote datasets),
@@ -179,18 +176,16 @@ class ImageSource(ABC):
     def expected_bbox(self) -> NormalizedBoundingBox:
         """The bounding box the data is expected to occupy, in Mag(1). Exact,
         or an oversized placeholder.
-
-        Always in the canonical `(...extras..., t, c, x, y, z)` axis order,
-        whatever axes the source itself reports.
         """
         return with_canonical_axes(self._raw_expected_bbox, self.num_channels)
 
     @property
     @abstractmethod
-    def _raw_expected_bbox(self) -> NDBoundingBox:
-        """The expected extents in whatever axes the source natively has.
-        `expected_bbox` puts them into canonical order, so subclasses neither
-        add a "c" axis nor care about ordering.
+    def _raw_expected_bbox(self) -> NormalizedBoundingBox:
+        """The expected extents in the source's own axes, carrying a "c" axis
+        when the source intrinsically has channels. `expected_bbox` reorders
+        them and fills in whichever of c/x/y/z is missing, so subclasses do
+        not have to.
         """
 
     @abstractmethod

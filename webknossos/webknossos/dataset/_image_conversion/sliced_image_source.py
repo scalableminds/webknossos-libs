@@ -418,7 +418,7 @@ class SlicedImageSource(ImageSource):
         return self._channel
 
     @property
-    def _raw_expected_bbox(self) -> NDBoundingBox:
+    def _raw_expected_bbox(self) -> NormalizedBoundingBox:
         """The extents the reader reports. Only x/y is a placeholder — it is
         one slice's extent, which a later slice may exceed; the axes stepped
         through are exact, since the reader counted them.
@@ -435,7 +435,9 @@ class SlicedImageSource(ImageSource):
                 # One axis at most, so it is the z of a plain 3D box —
                 # whatever the reader happens to call it.
                 z_size = sizes[self._iter_axes[0]] if self._iter_axes else 1
-                return BoundingBox((0, 0, 0), (x_size, y_size, z_size))
+                return BoundingBox((0, 0, 0), (x_size, y_size, z_size)).normalize_axes(
+                    self.num_channels
+                )
 
             # Several axes are stepped through (e.g. "t" and "z"), so each one
             # has to be named in the box.
@@ -443,7 +445,11 @@ class SlicedImageSource(ImageSource):
             axes_sizes = [sizes[axis] for axis in axes_names]
             axes_sizes[axes_names.index(X_AXIS)] = x_size
             axes_sizes[axes_names.index(Y_AXIS)] = y_size
-            return NDBoundingBox.from_axes(axes_names, axes_sizes)
+            # A "c" among them is the source's raw channel count; normalizing
+            # replaces it with the number actually written.
+            return NDBoundingBox.from_axes(axes_names, axes_sizes).normalize_axes(
+                self.num_channels
+            )
 
     def initial_layer_bounding_box(
         self, mag1_expected_bbox: NormalizedBoundingBox

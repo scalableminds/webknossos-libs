@@ -8,7 +8,7 @@ from numpy.typing import DTypeLike
 from upath import UPath
 
 from ...geometry.bounding_box import BoundingBox
-from ...geometry.constants import T_AXIS, TXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
+from ...geometry.constants import T_AXIS, TCXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
@@ -84,7 +84,7 @@ class ChunkedImageSource(ImageSource):
         """
 
     @property
-    def _raw_expected_bbox(self) -> NDBoundingBox:
+    def _raw_expected_bbox(self) -> NormalizedBoundingBox:
         """
         The exact bounding box of the data, in the source's native Mag(1)
         space — never a placeholder, since these formats know their extents.
@@ -94,9 +94,13 @@ class ChunkedImageSource(ImageSource):
             x_size, y_size = y_size, x_size
 
         if not self._include_t_axis:
-            return BoundingBox((0, 0, 0), (x_size, y_size, self._z))
+            return BoundingBox((0, 0, 0), (x_size, y_size, self._z)).normalize_axes(
+                self.num_channels
+            )
 
-        return NDBoundingBox.from_axes(TXYZ_AXES, [self._t, x_size, y_size, self._z])
+        return NDBoundingBox.from_axes(
+            TCXYZ_AXES, [self._t, self.num_channels, x_size, y_size, self._z]
+        ).normalize_axes(self.num_channels)
 
     def copy_chunk_to_view(
         self,
