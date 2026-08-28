@@ -26,7 +26,6 @@ from .image_source import (
     ImageSource,
     ReadOptions,
     compute_channel_selection,
-    with_explicit_channel_axis,
 )
 from .image_source_registry import (
     describe_missing_extras,
@@ -419,14 +418,13 @@ class SlicedImageSource(ImageSource):
         return self._channel
 
     @property
-    def expected_bbox(self) -> NormalizedBoundingBox:
+    def _raw_expected_bbox(self) -> NDBoundingBox:
         """The extents the reader reports. Only x/y is a placeholder — it is
         one slice's extent, which a later slice may exceed; the axes stepped
         through are exact, since the reader counted them.
 
-        Always carries explicit x, y, z and "c" axes (sized `num_channels`).
-        Every other axis ("t", "s", ...) is left as-is; a missing "z" gets a
-        size-1 axis instead of relabeling a real one."""
+        A missing "z" is not filled in here, so a real axis is never relabeled
+        as depth."""
         with self._open_slice_reader() as images:
             sizes = images.sizes
             x_size, y_size = sizes[X_AXIS], sizes[Y_AXIS]
@@ -437,30 +435,15 @@ class SlicedImageSource(ImageSource):
                 # One axis at most, so it is the z of a plain 3D box —
                 # whatever the reader happens to call it.
                 z_size = sizes[self._iter_axes[0]] if self._iter_axes else 1
-                return BoundingBox((0, 0, 0), (x_size, y_size, z_size)).normalize_axes(
-                    self.num_channels
-                )
+                return BoundingBox((0, 0, 0), (x_size, y_size, z_size))
 
             # Several axes are stepped through (e.g. "t" and "z"), so each one
             # has to be named in the box.
             axes_names = self._iter_axes + self._bundle_axes
             axes_sizes = [sizes[axis] for axis in axes_names]
-            if Z_AXIS not in axes_names:
-                # No axis is genuinely called "z" (e.g. only "t" and "s" are
-                # stepped through). A singleton "z" is added.
-                insert_at = len(self._iter_axes)
-                axes_names = axes_names[:insert_at] + [Z_AXIS] + axes_names[insert_at:]
-                axes_sizes = axes_sizes[:insert_at] + [1] + axes_sizes[insert_at:]
             axes_sizes[axes_names.index(X_AXIS)] = x_size
             axes_sizes[axes_names.index(Y_AXIS)] = y_size
-            if C_AXIS in axes_names:
-                # sizes[C_AXIS] is the source's raw channel count, but only
-                # self.num_channels of them are actually written (a pinned
-                # `channel` selects one, and _first_n_channels truncates to the
-                # first three).
-                axes_sizes[axes_names.index(C_AXIS)] = self.num_channels
-            box = NDBoundingBox.from_axes(axes_names, axes_sizes)
-            return with_explicit_channel_axis(box, self.num_channels)
+            return NDBoundingBox.from_axes(axes_names, axes_sizes)
 
     def initial_layer_bounding_box(
         self, mag1_expected_bbox: NormalizedBoundingBox

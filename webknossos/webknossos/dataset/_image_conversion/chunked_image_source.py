@@ -13,12 +13,7 @@ from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ..layer.view import MagView
-from .image_source import (
-    ChunkResult,
-    ImageSource,
-    ReadOptions,
-    with_explicit_channel_axis,
-)
+from .image_source import ChunkResult, ImageSource, ReadOptions
 
 
 class ChunkedImageSource(ImageSource):
@@ -89,23 +84,19 @@ class ChunkedImageSource(ImageSource):
         """
 
     @property
-    def expected_bbox(self) -> NormalizedBoundingBox:
+    def _raw_expected_bbox(self) -> NDBoundingBox:
         """
         The exact bounding box of the data, in the source's native Mag(1)
         space — never a placeholder, since these formats know their extents.
-
         """
         x_size, y_size = self._x, self._y
         if self._options.swap_xy:
             x_size, y_size = y_size, x_size
 
         if not self._include_t_axis:
-            return BoundingBox((0, 0, 0), (x_size, y_size, self._z)).normalize_axes(
-                self.num_channels
-            )
+            return BoundingBox((0, 0, 0), (x_size, y_size, self._z))
 
-        box = NDBoundingBox.from_axes(TXYZ_AXES, [self._t, x_size, y_size, self._z])
-        return with_explicit_channel_axis(box, self.num_channels)
+        return NDBoundingBox.from_axes(TXYZ_AXES, [self._t, x_size, y_size, self._z])
 
     def copy_chunk_to_view(
         self,
@@ -120,7 +111,7 @@ class ChunkedImageSource(ImageSource):
         options = self._options
         relative_bbox = bbox.offset(-mag_view.bounding_box.topleft)
 
-        if "t" in relative_bbox.axes:
+        if T_AXIS in relative_bbox.axes:
             timepoint, _ = relative_bbox.get_bounds(T_AXIS)
         else:
             assert self._fixed_timepoint is not None
@@ -198,7 +189,7 @@ class ChunkedImageSource(ImageSource):
             block = block.astype(dtype, order="F")
 
         max_value = int(block.max())
-        if "t" in relative_bbox.axes:
+        if T_AXIS in relative_bbox.axes:
             # Add back the size-1 "t" axis this chunk corresponds to.
             block = block[np.newaxis]
 

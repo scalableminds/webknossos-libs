@@ -1013,17 +1013,18 @@ def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
             str(four_d_series_tif),
             layer_name="color",
             category="color",
-            topleft=(2, 0, 55, 100, 100),
+            topleft=(2, 0, 100, 100, 55),
             data_format="zarr3",
             chunk_shape=(8, 8, 8),
             shard_shape=(64, 64, 64),
             executor=executor,
         )
-    assert layer.bounding_box.topleft == wk.VecInt(t=2, c=0, z=55, y=100, x=100)
-    assert layer.bounding_box.size == wk.VecInt(t=7, c=1, z=5, y=167, x=439)
+    assert layer.bounding_box.axes == TCXYZ_AXES
+    assert layer.bounding_box.topleft == wk.VecInt(t=2, c=0, x=100, y=100, z=55)
+    assert layer.bounding_box.size == wk.VecInt(t=7, c=1, x=439, y=167, z=5)
     read_with_tifffile_reader = TiffFile(str(four_d_series_tif)).asarray()
-    # read() now carries an explicit, size-1 "c" axis right after "t".
-    read_from_dataset = layer.get_finest_mag().read()[:, 0]
+    # read() is (t, c, x, y, z); tifffile reports (t, z, y, x).
+    read_from_dataset = layer.get_finest_mag().read()[:, 0].transpose(0, 3, 2, 1)
     np.testing.assert_array_equal(read_with_tifffile_reader, read_from_dataset)
 
 
@@ -1127,7 +1128,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         5,
-        wk.VecInt(s=3, x=64, c=1, y=128, z=128),
+        wk.VecInt(s=3, c=1, x=128, y=128, z=64),
     ),
     (
         _remote_repo_image_path("various_tiff_formats", "test_C.tif"),
@@ -1160,7 +1161,7 @@ REPO_IMAGES_ARGS: list[
         "uint16",
         1,
         1,
-        wk.VecInt(c=1, s=3, x=64, y=128, z=128),
+        wk.VecInt(s=3, c=1, x=128, y=128, z=64),
     ),
     (
         _remote_repo_image_path("4D", "single_channel", "single-channel.ome.tiff"),
