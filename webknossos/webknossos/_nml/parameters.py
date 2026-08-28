@@ -6,6 +6,7 @@ from loxun import XmlWriter
 from ..dataset_properties import VoxelSize, length_unit_from_str
 from ..geometry import BoundingBox, NDBoundingBox
 from ..geometry.bounding_box import _DEFAULT_BBOX_NAME
+from ..geometry.constants import X_AXIS, Y_AXIS, Z_AXIS
 from .utils import Vector3, enforce_not_null, filter_none_values
 
 DEFAULT_BOUNDING_BOX_COLOR = [0.2, 0.5, 0.1, 1]
@@ -96,9 +97,9 @@ class Parameters(NamedTuple):
         xf.tag(
             "scale",
             {
-                "x": str(float(self.scale.factor[0])),
-                "y": str(float(self.scale.factor[1])),
-                "z": str(float(self.scale.factor[2])),
+                X_AXIS: str(float(self.scale.factor[0])),
+                Y_AXIS: str(float(self.scale.factor[1])),
+                Z_AXIS: str(float(self.scale.factor[2])),
                 "unit": self.scale.unit.value,
             },
         )
@@ -107,9 +108,9 @@ class Parameters(NamedTuple):
             xf.tag(
                 "offset",
                 {
-                    "x": str(float(self.offset[0])),
-                    "y": str(float(self.offset[1])),
-                    "z": str(float(self.offset[2])),
+                    X_AXIS: str(float(self.offset[0])),
+                    Y_AXIS: str(float(self.offset[1])),
+                    Z_AXIS: str(float(self.offset[2])),
                 },
             )
 
@@ -119,9 +120,9 @@ class Parameters(NamedTuple):
             xf.tag(
                 "editPosition",
                 {
-                    "x": str(float(self.editPosition[0])),
-                    "y": str(float(self.editPosition[1])),
-                    "z": str(float(self.editPosition[2])),
+                    X_AXIS: str(float(self.editPosition[0])),
+                    Y_AXIS: str(float(self.editPosition[1])),
+                    Z_AXIS: str(float(self.editPosition[2])),
                 },
             )
         if self.editRotation is not None:
@@ -191,9 +192,9 @@ class Parameters(NamedTuple):
         if nml_parameters.find("offset") is not None:
             offset_element = enforce_not_null(nml_parameters.find("offset"))
             offset = (
-                float(offset_element.get("x", 0)),
-                float(offset_element.get("y", 0)),
-                float(offset_element.get("z", 0)),
+                float(offset_element.get(X_AXIS, 0)),
+                float(offset_element.get(Y_AXIS, 0)),
+                float(offset_element.get(Z_AXIS, 0)),
             )
 
         editRotation = None
@@ -211,13 +212,13 @@ class Parameters(NamedTuple):
         if nml_parameters.find("editPosition") is not None:
             editPosition = (
                 float(
-                    enforce_not_null(nml_parameters.find("editPosition")).get("x", 0)
+                    enforce_not_null(nml_parameters.find("editPosition")).get(X_AXIS, 0)
                 ),
                 float(
-                    enforce_not_null(nml_parameters.find("editPosition")).get("y", 0)
+                    enforce_not_null(nml_parameters.find("editPosition")).get(Y_AXIS, 0)
                 ),
                 float(
-                    enforce_not_null(nml_parameters.find("editPosition")).get("z", 0)
+                    enforce_not_null(nml_parameters.find("editPosition")).get(Z_AXIS, 0)
                 ),
             )
 
@@ -245,9 +246,9 @@ class Parameters(NamedTuple):
             dataset_id=experiment_element.get("datasetId"),
             scale=VoxelSize(
                 factor=(
-                    float(scale_element.get("x", 0)),
-                    float(scale_element.get("y", 0)),
-                    float(scale_element.get("z", 0)),
+                    float(scale_element.get(X_AXIS, 0)),
+                    float(scale_element.get(Y_AXIS, 0)),
+                    float(scale_element.get(Z_AXIS, 0)),
                 ),
                 unit=length_unit_from_str(scale_element.get("unit", "nm")),
             ),

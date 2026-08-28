@@ -18,7 +18,18 @@ from upath import UPath
 from webknossos.dataset._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from webknossos.dataset._utils.tinywkw import TinyWkwArray
 from webknossos.dataset_properties import DataFormat
-from webknossos.geometry import BoundingBox, NormalizedBoundingBox, Vec3Int
+from webknossos.geometry import (
+    C_AXIS,
+    CXYZ_AXES,
+    X_AXIS,
+    XY_AXES,
+    XYZ_AXES,
+    Y_AXIS,
+    Z_AXIS,
+    BoundingBox,
+    NormalizedBoundingBox,
+    Vec3Int,
+)
 from webknossos.utils import call_with_retries, is_fs_path
 
 logger = getLogger(__name__)
@@ -55,7 +66,7 @@ class ArrayInfo:
     shard_shape: Vec3Int
     bounding_box: NormalizedBoundingBox = field(
         default_factory=lambda: NormalizedBoundingBox(
-            (0, 0, 0, 0), (1, 1, 1, 1), axes=("c", "x", "y", "z")
+            (0, 0, 0, 0), (1, 1, 1, 1), axes=CXYZ_AXES
         )
     )
     compression_mode: bool = False
@@ -277,14 +288,14 @@ class WKWArray(BaseArray):
             bounding_box=NormalizedBoundingBox(
                 (0, 0, 0, 0),
                 (header.num_channels, 0, 0, 0),
-                axes=("c", "x", "y", "z"),
+                axes=CXYZ_AXES,
             ),
         )
 
     @classmethod
     def create(cls, path: UPath, array_info: ArrayInfo) -> "WKWArray":
         assert array_info.data_format == cls.data_format
-        assert array_info.bounding_box.axes == ("c", "x", "y", "z")
+        assert array_info.bounding_box.axes == CXYZ_AXES
 
         assert array_info.chunk_shape.is_uniform(), (
             f"`chunk_shape` needs to be uniform for WKW storage. Got {array_info.chunk_shape}."
@@ -350,11 +361,11 @@ class WKWArray(BaseArray):
         return WKWArray(path)
 
     def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
-        assert bbox.axes == ("c", "x", "y", "z")
+        assert bbox.axes == CXYZ_AXES
         return self._wkw_dataset.read(bbox.topleft.xyz, bbox.size.xyz)
 
     def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
-        assert bbox.axes == ("c", "x", "y", "z")
+        assert bbox.axes == CXYZ_AXES
         self._wkw_dataset.write(bbox.topleft.xyz, data)
 
     def resize(self, new_bbox: NormalizedBoundingBox) -> None:
@@ -437,7 +448,7 @@ class TensorStoreArray(BaseArray):
         array: tensorstore.TensorStore,
     ) -> tuple[Vec3Int, Vec3Int, NormalizedBoundingBox]:
         axes = array.domain.labels
-        axes = tuple("c" if a == "channel" else a for a in axes)
+        axes = tuple(C_AXIS if a == "channel" else a for a in axes)
         array_chunk_shape = array.chunk_layout.read_chunk.shape
         array_shard_shape = array.chunk_layout.write_chunk.shape
 
@@ -446,7 +457,7 @@ class TensorStoreArray(BaseArray):
         dimension_names: tuple[str, ...] = ()
         if all(a == "" for a in axes):
             if len(array.shape) == 2:
-                dimension_names = ("x", "y")
+                dimension_names = XY_AXES
                 chunk_shape = Vec3Int(
                     _chunk_dim(array_chunk_shape, 0),
                     _chunk_dim(array_chunk_shape, 1),
@@ -458,7 +469,7 @@ class TensorStoreArray(BaseArray):
                     1,
                 )
             elif len(array.shape) == 3:
-                dimension_names = ("x", "y", "z")
+                dimension_names = XYZ_AXES
                 chunk_shape = Vec3Int(
                     _chunk_dim(array_chunk_shape, 0),
                     _chunk_dim(array_chunk_shape, 1),
@@ -470,7 +481,7 @@ class TensorStoreArray(BaseArray):
                     _chunk_dim(array_shard_shape, 2),
                 )
             elif len(array.shape) == 4:
-                dimension_names = ("c", "x", "y", "z")
+                dimension_names = CXYZ_AXES
                 chunk_shape = Vec3Int(
                     _chunk_dim(array_chunk_shape, 1),
                     _chunk_dim(array_chunk_shape, 2),
@@ -487,13 +498,13 @@ class TensorStoreArray(BaseArray):
                 )
         else:
             dimension_names = axes
-            if "x" in dimension_names and "y" in dimension_names:
+            if X_AXIS in dimension_names and Y_AXIS in dimension_names:
                 x_index, y_index = (
-                    dimension_names.index("x"),
-                    dimension_names.index("y"),
+                    dimension_names.index(X_AXIS),
+                    dimension_names.index(Y_AXIS),
                 )
-                if "z" in dimension_names:
-                    z_index = dimension_names.index("z")
+                if Z_AXIS in dimension_names:
+                    z_index = dimension_names.index(Z_AXIS)
                     chunk_shape = Vec3Int(
                         _chunk_dim(array_chunk_shape, x_index),
                         _chunk_dim(array_chunk_shape, y_index),
@@ -671,7 +682,7 @@ class TensorStoreArray(BaseArray):
         for key in keys:
             key_parts = key.decode("utf-8").split(separator)
             if _type == "default":
-                if key_parts[0] != "c":
+                if key_parts[0] != C_AXIS:
                     continue
                 key_parts = key_parts[1:]
             if len(key_parts) != self._array.ndim:
@@ -680,7 +691,7 @@ class TensorStoreArray(BaseArray):
             if chunk_coords_list is None:
                 continue
 
-            if shape.axes[0] == "c":
+            if shape.axes[0] == C_AXIS:
                 chunk_coords = Vec3Int(chunk_coords_list[1:])
             else:
                 chunk_coords = Vec3Int(chunk_coords_list)
@@ -700,7 +711,7 @@ class TensorStoreArray(BaseArray):
 
         _, shard_shape, shape = self._get_array_dimensions(self._array)
 
-        if shape.axes != ("c", "x", "y", "z") and shape.axes != ("x", "y", "z"):
+        if shape.axes != CXYZ_AXES and shape.axes != XYZ_AXES:
             raise NotImplementedError(
                 "list_bounding_boxes() is not supported for non 3-D arrays."
             )
@@ -798,7 +809,7 @@ class Zarr3Array(TensorStoreArray):
         chunk_shape = tuple(
             (
                 array_info.bounding_box.size.c
-                if axis == "c"
+                if axis == C_AXIS
                 else array_info.chunk_shape.get(axis, 1)
             )
             for axis in array_info.bounding_box.axes
@@ -806,7 +817,7 @@ class Zarr3Array(TensorStoreArray):
         shard_shape = tuple(
             (
                 array_info.bounding_box.size.c
-                if axis == "c"
+                if axis == C_AXIS
                 else array_info.shard_shape.get(axis, 1)
             )
             for axis in array_info.bounding_box.axes
@@ -901,7 +912,7 @@ class Zarr2Array(TensorStoreArray):
         )
         chunk_shape = tuple(
             array_info.bounding_box.size.c
-            if axis == "c"
+            if axis == C_AXIS
             else getattr(array_info.chunk_shape, axis, 1)
             for axis in array_info.bounding_box.axes
         )
@@ -989,7 +1000,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
         raise RuntimeError("Neuroglancer precomputed arrays cannot be written to.")
 
     def _requested_domain(self, bbox: NormalizedBoundingBox) -> tensorstore.IndexDomain:
-        assert bbox.axes == ("c", "x", "y", "z")
+        assert bbox.axes == CXYZ_AXES
         return tensorstore.IndexDomain(
             bbox.ndim,
             inclusive_min=bbox.topleft_xyz.to_tuple() + (0,),

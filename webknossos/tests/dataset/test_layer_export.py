@@ -9,6 +9,7 @@ from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos import COLOR_CATEGORY, Dataset, Layer
 from webknossos.dataset._utils.tensorstore_helpers import read_zarr3_array
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
+from webknossos.geometry.constants import C_AXIS, T_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 
 
 def make_layer(dataset_path: UPath) -> tuple[Dataset, Layer, np.ndarray]:
@@ -250,7 +251,7 @@ def test_as_ozx_nd_layer_ome_metadata(tmp_upath: UPath) -> None:
     with zipfile.ZipFile(str(zip_path)) as zip_file:
         root_attrs = json.loads(zip_file.read("zarr.json"))["attributes"]
         axes = root_attrs["ome"]["multiscales"][0]["axes"]
-        assert [a["name"] for a in axes] == ["c", "t", "z", "y", "x"]
+        assert [a["name"] for a in axes] == [C_AXIS, T_AXIS, Z_AXIS, Y_AXIS, X_AXIS]
 
         mag_shape = json.loads(zip_file.read("1/zarr.json"))["shape"]
         # the OME axes count must match the exported array's ndim
@@ -298,7 +299,10 @@ def test_as_ome_tiff_unsupported_axis_raises(tmp_upath: UPath) -> None:
 
     dataset = Dataset(tmp_upath / "bad_axis", voxel_size=(10, 10, 10))
     bbox = NDBoundingBox(
-        (0, 0, 0, 0), (2, 4, 4, 4), axes=("w", "x", "y", "z"), index=(0, 1, 2, 3)
+        (0, 0, 0, 0),
+        (2, 4, 4, 4),
+        axes=("w", X_AXIS, Y_AXIS, Z_AXIS),
+        index=(0, 1, 2, 3),
     )
     layer = dataset.add_layer(
         "color", COLOR_CATEGORY, dtype="uint8", data_format="zarr3", bounding_box=bbox
@@ -317,7 +321,10 @@ def test_as_tiff_stack_nd_layer_no_channel_axis(tmp_upath: UPath) -> None:
 
     dataset = Dataset(tmp_upath / "no_channel_axis", voxel_size=(10, 10, 10))
     bbox = NDBoundingBox(
-        (0, 0, 0, 0), (2, 3, 4, 5), axes=("t", "z", "y", "x"), index=(0, 1, 2, 3)
+        (0, 0, 0, 0),
+        (2, 3, 4, 5),
+        axes=(T_AXIS, Z_AXIS, Y_AXIS, X_AXIS),
+        index=(0, 1, 2, 3),
     )
     layer = dataset.add_layer(
         "color", COLOR_CATEGORY, dtype="uint8", data_format="zarr3", bounding_box=bbox

@@ -11,6 +11,7 @@ from webknossos.client.api_client.models import (
     ApiPrecomputedMeshInfo,
     ApiReserveDatasetUploadInformationV13,
 )
+from webknossos.geometry.constants import X_AXIS, Y_AXIS, Z_AXIS
 
 from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
 
@@ -142,9 +143,9 @@ class DatastoreApiClient(AbstractApiClient):
         route = f"/datasets/{dataset_id}/layers/{data_layer_name}/data"
         query: Query = {
             "mag": mag,
-            "x": x,
-            "y": y,
-            "z": z,
+            X_AXIS: x,
+            Y_AXIS: y,
+            Z_AXIS: z,
             "width": width,
             "height": height,
             "depth": depth,

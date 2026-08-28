@@ -20,6 +20,7 @@ from imageio import v2 as iio
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 
+from ...geometry.constants import Z_AXIS
 from ..errors import UnsupportedImageDataError
 from .image_source_registry import register_slice_reader
 from .slice_reader import SliceReader
@@ -138,14 +139,14 @@ class MultiImageSliceReader(SliceReader):
             first_extension in SingleImageSliceReader.supported_file_extensions()
         )
 
-        self._init_axis("z", len(self._filepaths))
+        self._init_axis(Z_AXIS, len(self._filepaths))
         plane_axes = _plane_axes(first_slice, self._filepaths[0])
         for axis, size in zip(plane_axes, first_slice.shape):
             self._init_axis(axis, size)
         # The declared axes are one file's; `z` picks the file, reaching
         # _read_file through the coords every get_slice call carries.
         self._set_get_slice(self._read_file, plane_axes)
-        self.iter_axes = ["z"]
+        self.iter_axes = [Z_AXIS]
 
     def imread(self, filename: str, **kwargs: Any) -> np.ndarray:
         if self._zipfile is not None:
@@ -153,7 +154,7 @@ class MultiImageSliceReader(SliceReader):
         return imread(filename, **kwargs)
 
     def _read_file(self, **coords: int) -> np.ndarray:
-        return self.imread(self._filepaths[coords["z"]], **self.kwargs)
+        return self.imread(self._filepaths[coords[Z_AXIS]], **self.kwargs)
 
     def close(self) -> None:
         if self._zipfile is not None:

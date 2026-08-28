@@ -33,6 +33,14 @@ from tests.data_fixtures import (
     write_zarr_v3_array,
 )
 from tests.utils import HAS_PYLIBCZIRW, PYLIBCZIRW_EXPECTED, requires_pylibczirw
+from webknossos.geometry.constants import (
+    C_AXIS,
+    TCXYZ_AXES,
+    X_AXIS,
+    XYZ_AXES,
+    Y_AXIS,
+    Z_AXIS,
+)
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -489,11 +497,11 @@ def test_ims_from_images_multi_timepoint(
             executor=executor,
         )
 
-    assert layer.bounding_box.axes == ("t", "x", "y", "z")
-    assert layer.bounding_box.size.to_tuple() == (3, 10, 8, 4)
-    data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
+    assert layer.bounding_box.axes == TCXYZ_AXES
+    assert layer.bounding_box.size.to_tuple() == (3, 1, 10, 8, 4)
+    data = layer.get_finest_mag().read()  # (t, c, x, y, z)
     for t in range(3):
-        assert (data[t] == t * 100).all()
+        assert (data[t, 0] == t * 100).all()
 
 
 @pytest.mark.parametrize(
@@ -561,7 +569,7 @@ def test_ims_multi_channel_needs_one_layer_per_channel(
         layer = ds.layers[f"multi_c__channel{c}"]
         assert layer.num_channels == 1
         assert layer.dtype == np.dtype(dtype)
-        assert layer.bounding_box.axes == ("x", "y", "z")
+        assert layer.bounding_box.axes == XYZ_AXES
         assert (layer.get_finest_mag().read()[0] == c).all()
 
 
@@ -619,6 +627,57 @@ def test_ims_three_uint8_channels_become_rgb_layer_without_allow_multiple_layers
         split_layer = ds.layers[f"multi_c_split__channel{c}"]
         assert split_layer.num_channels == 1
         assert split_layer.dtype == np.dtype(dtype)
+
+
+def test_ims_rgb_layer_with_multiple_timepoints(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # An input containing three uint8 channels at multiple timepoints should
+    # create an RGB layer (multiple channels, "c" axis) with an additional time ("t") axis.
+    num_timepoints = 2
+    num_channels = 3
+    dtype = np.uint8
+    ims_path = tmp_upath / "synthetic_multi_t_c.ims"
+    create_synthetic_multi_timepoint_ims(
+        ims_path,
+        num_timepoints=num_timepoints,
+        num_channels=num_channels,
+        z=4,
+        y=8,
+        x=10,
+        dtype=dtype,
+    )
+    ims_image_source = importlib.import_module(
+        "webknossos.dataset._image_conversion.ims_image_source"
+    )
+    monkeypatch.setattr(
+        ims_image_source,
+        "_read_ims_metadata_quietly",
+        lambda _path: (
+            (num_timepoints, num_channels, 4, 8, 10),
+            np.dtype(dtype),
+        ),
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            ims_path, layer_name="rgb_t", data_format="zarr3", executor=executor
+        )
+
+    assert layer.num_channels == num_channels
+    assert layer.bounding_box.axes == TCXYZ_AXES
+    assert layer.bounding_box.size.to_tuple() == (
+        num_timepoints,
+        num_channels,
+        10,
+        8,
+        4,
+    )
+    data = layer.get_finest_mag().read()  # (t, c, x, y, z)
+    for t in range(num_timepoints):
+        for c in range(num_channels):
+            assert (data[t, c] == t * 100 + c).all()
 
 
 @pytest.mark.parametrize(
@@ -820,11 +879,11 @@ def test_ims_from_images_multi_timepoint_multi_channel_creates_multiple_layers(
     }
     for c in range(3):
         layer = ds.layers[f"multi_t_multi_c__channel{c}"]
-        assert layer.bounding_box.axes == ("t", "x", "y", "z")
-        assert layer.bounding_box.size.to_tuple() == (2, 10, 8, 4)
-        data = layer.get_finest_mag().read()  # (t, x, y, z), no channel dim
+        assert layer.bounding_box.axes == TCXYZ_AXES
+        assert layer.bounding_box.size.to_tuple() == (2, 1, 10, 8, 4)
+        data = layer.get_finest_mag().read()  # (t, c, x, y, z)
         for t in range(2):
-            assert (data[t] == t * 100 + c).all()
+            assert (data[t, 0] == t * 100 + c).all()
 
 
 # A single shard hides both the multi-shard flip bug and the mag/shard
@@ -891,11 +950,11 @@ def test_czi_from_images_multi_timepoint(tmp_upath: UPath) -> None:
             executor=executor,
         )
 
-    assert layer.bounding_box.axes == ("t", "x", "y", "z")
-    assert layer.bounding_box.size.to_tuple() == (3, 10, 8, 2)
+    assert layer.bounding_box.axes == TCXYZ_AXES
+    assert layer.bounding_box.size.to_tuple() == (3, 1, 10, 8, 2)
     actual = layer.get_finest_mag().read()
     for t in range(3):
-        np.testing.assert_array_equal(actual[t], data[t, 0].transpose(2, 1, 0))
+        np.testing.assert_array_equal(actual[t, 0], data[t, 0].transpose(2, 1, 0))
 
 
 @requires_pylibczirw
@@ -954,18 +1013,17 @@ def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
             str(four_d_series_tif),
             layer_name="color",
             category="color",
-            topleft=(2, 55, 100, 100),
+            topleft=(2, 0, 55, 100, 100),
             data_format="zarr3",
             chunk_shape=(8, 8, 8),
             shard_shape=(64, 64, 64),
             executor=executor,
         )
-    assert layer.bounding_box.topleft == wk.VecInt(t=2, z=55, y=100, x=100)
-    assert layer.bounding_box.size == wk.VecInt(t=7, z=5, y=167, x=439)
+    assert layer.bounding_box.topleft == wk.VecInt(t=2, c=0, z=55, y=100, x=100)
+    assert layer.bounding_box.size == wk.VecInt(t=7, c=1, z=5, y=167, x=439)
     read_with_tifffile_reader = TiffFile(str(four_d_series_tif)).asarray()
-    # For ND data without explicit channel axis, read() returns data directly
-    # without a channel wrapper dimension
-    read_from_dataset = layer.get_finest_mag().read()
+    # read() now carries an explicit, size-1 "c" axis right after "t".
+    read_from_dataset = layer.get_finest_mag().read()[:, 0]
     np.testing.assert_array_equal(read_with_tifffile_reader, read_from_dataset)
 
 
@@ -1102,7 +1160,7 @@ REPO_IMAGES_ARGS: list[
         "uint16",
         1,
         1,
-        wk.VecInt(s=3, x=64, y=128, z=128),
+        wk.VecInt(c=1, s=3, x=64, y=128, z=128),
     ),
     (
         _remote_repo_image_path("4D", "single_channel", "single-channel.ome.tiff"),
@@ -1300,7 +1358,7 @@ def test_zarr_array_from_images(tmp_upath: UPath) -> None:
     Z, Y, X = 6, 24, 32
     data = np.arange(Z * Y * X, dtype="uint16").reshape(Z, Y, X)
     zarr_path = tmp_upath / "test.zarr"
-    write_zarr_v3_array(zarr_path, data, dimension_names=["z", "y", "x"])
+    write_zarr_v3_array(zarr_path, data, dimension_names=[Z_AXIS, Y_AXIS, X_AXIS])
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
     with SequentialExecutor() as executor:
@@ -1325,9 +1383,9 @@ def test_ome_zarr_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
     coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
     group_path = tmp_upath / "test.ome.zarr"
     axes = [
-        {"name": "z", "type": "space"},
-        {"name": "y", "type": "space"},
-        {"name": "x", "type": "space"},
+        {"name": Z_AXIS, "type": "space"},
+        {"name": Y_AXIS, "type": "space"},
+        {"name": X_AXIS, "type": "space"},
     ]
     write_ome_zarr_v3_group(
         group_path,
@@ -1359,9 +1417,9 @@ def test_ome_zarr_from_images_scale_option_picks_specified_level(
     coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
     group_path = tmp_upath / "test.ome.zarr"
     axes = [
-        {"name": "z", "type": "space"},
-        {"name": "y", "type": "space"},
-        {"name": "x", "type": "space"},
+        {"name": Z_AXIS, "type": "space"},
+        {"name": Y_AXIS, "type": "space"},
+        {"name": X_AXIS, "type": "space"},
     ]
     write_ome_zarr_v3_group(
         group_path,
@@ -1394,10 +1452,10 @@ def test_ome_zarr_from_images_allow_multiple_layers_never_splits_by_scale(
     coarse = np.zeros((4, Z, Y // 2, X // 2), dtype="uint8")
     group_path = tmp_upath / "test.ome.zarr"
     axes = [
-        {"name": "c", "type": "channel"},
-        {"name": "z", "type": "space"},
-        {"name": "y", "type": "space"},
-        {"name": "x", "type": "space"},
+        {"name": C_AXIS, "type": "channel"},
+        {"name": Z_AXIS, "type": "space"},
+        {"name": Y_AXIS, "type": "space"},
+        {"name": X_AXIS, "type": "space"},
     ]
     write_ome_zarr_v3_group(
         group_path,
@@ -1436,9 +1494,9 @@ def test_ozx_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
     coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
     ozx_path = tmp_upath / "test.ozx"
     axes = [
-        {"name": "z", "type": "space"},
-        {"name": "y", "type": "space"},
-        {"name": "x", "type": "space"},
+        {"name": Z_AXIS, "type": "space"},
+        {"name": Y_AXIS, "type": "space"},
+        {"name": X_AXIS, "type": "space"},
     ]
     write_ozx_file(
         ozx_path,
@@ -1469,10 +1527,10 @@ def test_ome_zarr_omero_channel_metadata_applied_when_splitting(
     data = np.zeros((4, Z, Y, X), dtype="uint16")
     group_path = tmp_upath / "test.ome.zarr"
     axes = [
-        {"name": "c", "type": "channel"},
-        {"name": "z", "type": "space"},
-        {"name": "y", "type": "space"},
-        {"name": "x", "type": "space"},
+        {"name": C_AXIS, "type": "channel"},
+        {"name": Z_AXIS, "type": "space"},
+        {"name": Y_AXIS, "type": "space"},
+        {"name": X_AXIS, "type": "space"},
     ]
     omero = {
         "channels": [
@@ -1556,10 +1614,10 @@ def test_ome_zarr_omero_channel_metadata_applied_to_pinned_channel(
     data = np.zeros((2, Z, Y, X), dtype="uint16")
     group_path = tmp_upath / "test.ome.zarr"
     axes = [
-        {"name": "c", "type": "channel"},
-        {"name": "z", "type": "space"},
-        {"name": "y", "type": "space"},
-        {"name": "x", "type": "space"},
+        {"name": C_AXIS, "type": "channel"},
+        {"name": Z_AXIS, "type": "space"},
+        {"name": Y_AXIS, "type": "space"},
+        {"name": X_AXIS, "type": "space"},
     ]
     omero = {
         "channels": [
@@ -1656,8 +1714,8 @@ def test_real_ome_zarr_sample_conversion(tmp_upath: UPath) -> None:
         )
 
     assert layer.dtype == np.dtype("uint16")
-    assert layer.bounding_box.axes == ("t", "x", "y", "z")
-    assert layer.bounding_box.size.to_tuple() == (18, 198, 223, 12)
+    assert layer.bounding_box.axes == TCXYZ_AXES
+    assert layer.bounding_box.size.to_tuple() == (18, 1, 198, 223, 12)
 
     # The sample's omero metadata for channel 0 ("cy 1"):
     # {"color": "FFFFFF", "window": {"min": 0.0, "max": 65535.0, "start": 0.0, "end": 1200.0}}
@@ -1680,8 +1738,8 @@ def test_real_ome_zarr_sample_conversion(tmp_upath: UPath) -> None:
     ).result()
     # (t, c, z, y, x), channel 0 -> (t, z, y, x) -> (t, x, y, z)
     expected = np.asarray(finest_array[:, 0].read().result()).transpose(0, 3, 2, 1)
-    actual = layer.get_finest_mag().read()  # (t, x, y, z), channel dim dropped
-    np.testing.assert_array_equal(actual, expected)
+    actual = layer.get_finest_mag().read()  # (t, c, x, y, z)
+    np.testing.assert_array_equal(actual[:, 0], expected)
 
 
 @pytest.mark.parametrize(

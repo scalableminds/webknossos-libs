@@ -14,6 +14,7 @@ from tests.data_fixtures import (
 from webknossos.dataset import CorruptImageError, UnsupportedImageFormatError
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.zarr_image_source import ZarrImageSource
+from webknossos.geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 
 
 def _open(path: UPath, **options: Any) -> ZarrImageSource:
@@ -22,10 +23,10 @@ def _open(path: UPath, **options: Any) -> ZarrImageSource:
 
 # Standard OME axes metadata (name/type), reused across the OME-Zarr tests.
 _AXES_CZYX = [
-    {"name": "c", "type": "channel"},
-    {"name": "z", "type": "space"},
-    {"name": "y", "type": "space"},
-    {"name": "x", "type": "space"},
+    {"name": C_AXIS, "type": "channel"},
+    {"name": Z_AXIS, "type": "space"},
+    {"name": Y_AXIS, "type": "space"},
+    {"name": X_AXIS, "type": "space"},
 ]
 
 
@@ -70,7 +71,7 @@ def test_plain_zarr_v3_array_with_dimension_names_uses_labels(tmp_upath: UPath) 
     array_path = tmp_upath / "labeled_v3"
     c, x, y, z = 2, 7, 5, 3
     data = np.arange(c * x * y * z, dtype=np.uint8).reshape(c, x, y, z)
-    write_zarr_v3_array(array_path, data, dimension_names=["c", "x", "y", "z"])
+    write_zarr_v3_array(array_path, data, dimension_names=list(CXYZ_AXES))
 
     source = _open(array_path)
 

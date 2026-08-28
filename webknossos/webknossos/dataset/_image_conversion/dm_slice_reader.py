@@ -4,6 +4,7 @@ from contextlib import closing, contextmanager
 import numpy as np
 from upath import UPath
 
+from ...geometry.constants import X_AXIS, Y_AXIS, Z_AXIS
 from .image_source_registry import register_slice_reader
 from .slice_reader import SliceReader
 from .vendor.dm3 import DM3  # type: ignore[attr-defined]
@@ -25,13 +26,13 @@ class Dm3SliceReader(SliceReader):
         self.path = UPath(path)
         super().__init__()
         dm3_file = DM3(self.path)
-        self._init_axis("x", dm3_file.width)
-        self._init_axis("y", dm3_file.height)
+        self._init_axis(X_AXIS, dm3_file.width)
+        self._init_axis(Y_AXIS, dm3_file.height)
         if dm3_file.depth > 1:
-            self._init_axis("z", dm3_file.depth)
-            self._set_get_slice(self._get_slice, "zyx")
+            self._init_axis(Z_AXIS, dm3_file.depth)
+            self._set_get_slice(self._get_slice, (Z_AXIS, Y_AXIS, X_AXIS))
         else:
-            self._set_get_slice(self._get_slice, "yx")
+            self._set_get_slice(self._get_slice, (Y_AXIS, X_AXIS))
 
     @property  # potential @cached_property for py3.8+
     def pixel_type(self) -> np.dtype:
@@ -73,13 +74,13 @@ class Dm4SliceReader(SliceReader):
                 raise ValueError(
                     f"DM4 file {self.path} has incompatible number of dimensions, got shape {self._shape}."
                 )
-            self._init_axis("x", self._shape[0])
-            self._init_axis("y", self._shape[1])
+            self._init_axis(X_AXIS, self._shape[0])
+            self._init_axis(Y_AXIS, self._shape[1])
             if len(self._shape) == 2:
-                self._set_get_slice(self._get_slice, "yx")
+                self._set_get_slice(self._get_slice, (Y_AXIS, X_AXIS))
             else:
-                self._init_axis("z", self._shape[2])
-                self._set_get_slice(self._get_slice, "zyx")
+                self._init_axis(Z_AXIS, self._shape[2])
+                self._set_get_slice(self._get_slice, (Z_AXIS, Y_AXIS, X_AXIS))
 
     @contextmanager
     def dm4_file(self) -> Generator[DM4File]:

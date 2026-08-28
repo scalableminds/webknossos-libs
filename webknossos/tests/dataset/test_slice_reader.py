@@ -1,3 +1,5 @@
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Any
 
 import numpy as np
@@ -5,20 +7,26 @@ import pytest
 from PIL import Image
 from upath import UPath
 
+import webknossos as wk
 from webknossos.dataset._image_conversion.common_slice_readers import (
     MultiImageSliceReader,
     SingleImageSliceReader,
 )
+from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.image_source_registry import open_slice_reader
 from webknossos.dataset._image_conversion.slice_reader import (
     SliceReader,
     _SlicedView,
 )
+from webknossos.dataset._image_conversion.sliced_image_source import SlicedImageSource
 from webknossos.dataset._image_conversion.tiff_slice_reader import TiffSliceReader
 from webknossos.dataset.errors import (
     ImageConversionError,
     UnsupportedImageFormatError,
 )
+from webknossos.geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
+from webknossos.geometry.mag import Mag
+from webknossos.geometry.normalized_bounding_box import NormalizedBoundingBox
 
 # A volume with distinct values everywhere, so a wrong axis order or a wrong
 # index cannot accidentally produce the expected result.
@@ -48,15 +56,15 @@ class _YxcReader(SliceReader):
 
     def __init__(self) -> None:
         super().__init__()
-        self._init_axis("z", _VOLUME.shape[0])
-        self._init_axis("y", _VOLUME.shape[2])
-        self._init_axis("x", _VOLUME.shape[3])
-        self._init_axis("c", _VOLUME.shape[1])
+        self._init_axis(Z_AXIS, _VOLUME.shape[0])
+        self._init_axis(Y_AXIS, _VOLUME.shape[2])
+        self._init_axis(X_AXIS, _VOLUME.shape[3])
+        self._init_axis(C_AXIS, _VOLUME.shape[1])
         self._set_get_slice(self._get_slice, "yxc")
 
     def _get_slice(self, **ind: int) -> np.ndarray:
         # (c, y, x) -> (y, x, c) for the requested z
-        return np.moveaxis(_VOLUME[ind["z"]], 0, -1)
+        return np.moveaxis(_VOLUME[ind[Z_AXIS]], 0, -1)
 
     @property
     def pixel_type(self) -> Any:
@@ -66,16 +74,16 @@ class _YxcReader(SliceReader):
 def test_axis_bookkeeping() -> None:
     reader = _ZcyxReader()
 
-    assert reader.axes == ["z", "c", "y", "x"]
-    assert reader.sizes == {"z": 2, "c": 3, "y": 4, "x": 5}
+    assert reader.axes == [Z_AXIS, C_AXIS, Y_AXIS, X_AXIS]
+    assert reader.sizes == {Z_AXIS: 2, C_AXIS: 3, Y_AXIS: 4, X_AXIS: 5}
     assert reader.ndim == 4
     assert reader.dtype == np.dtype("uint16")
 
     # Without iter axes the sequence has exactly one slice.
     assert len(reader) == 1
 
-    reader.bundle_axes = ["c", "y", "x"]
-    reader.iter_axes = ["z"]
+    reader.bundle_axes = [C_AXIS, Y_AXIS, X_AXIS]
+    reader.iter_axes = [Z_AXIS]
     assert len(reader) == 2
     assert reader.slice_shape == (3, 4, 5)
     assert reader.shape == (2, 3, 4, 5)
@@ -84,7 +92,7 @@ def test_axis_bookkeeping() -> None:
 def test_init_axis_rejects_duplicates() -> None:
     reader = _ZcyxReader()
     with pytest.raises(ValueError, match="already exists"):
-        reader._init_axis("z", 7)
+        reader._init_axis(Z_AXIS, 7)
 
 
 def test_default_coords_rejects_unknown_axis() -> None:
@@ -96,22 +104,22 @@ def test_default_coords_rejects_unknown_axis() -> None:
 def test_bundle_and_iter_axes_reject_unknown_axes() -> None:
     reader = _ZcyxReader()
     with pytest.raises(ValueError, match="do not exist"):
-        reader.bundle_axes = ["y", "q"]
+        reader.bundle_axes = [Y_AXIS, "q"]
     with pytest.raises(ValueError, match="do not exist"):
         reader.iter_axes = ["q"]
 
 
 def test_bundle_axes_removes_axis_from_iter_axes() -> None:
     reader = _ZcyxReader()
-    reader.iter_axes = ["z", "c"]
-    reader.bundle_axes = ["c", "y", "x"]
-    assert reader.iter_axes == ["z"]
+    reader.iter_axes = [Z_AXIS, C_AXIS]
+    reader.bundle_axes = [C_AXIS, Y_AXIS, X_AXIS]
+    assert reader.iter_axes == [Z_AXIS]
 
 
 def test_iter_axes_last_axis_varies_fastest() -> None:
     reader = _ZcyxReader()
-    reader.bundle_axes = ["y", "x"]
-    reader.iter_axes = ["z", "c"]
+    reader.bundle_axes = [Y_AXIS, X_AXIS]
+    reader.iter_axes = [Z_AXIS, C_AXIS]
 
     assert len(reader) == 2 * 3
     # index i maps to (z, c) = (i // 3, i % 3)
@@ -124,9 +132,9 @@ def test_adapter_drops_surplus_axes() -> None:
     # the iter coordinate and default_coords respectively. This is the path
     # the DM3/DM4 readers rely on.
     reader = _ZcyxReader()
-    reader.bundle_axes = ["y", "x"]
-    reader.iter_axes = ["z"]
-    reader.default_coords["c"] = 2
+    reader.bundle_axes = [Y_AXIS, X_AXIS]
+    reader.iter_axes = [Z_AXIS]
+    reader.default_coords[C_AXIS] = 2
 
     for z in range(2):
         np.testing.assert_array_equal(reader.get_slice(z), _VOLUME[z, 2])
@@ -135,27 +143,27 @@ def test_adapter_drops_surplus_axes() -> None:
 def test_adapter_transposes_to_requested_order() -> None:
     # "yxc" declared, "cyx" requested.
     reader = _YxcReader()
-    reader.bundle_axes = ["c", "y", "x"]
-    reader.iter_axes = ["z"]
+    reader.bundle_axes = [C_AXIS, Y_AXIS, X_AXIS]
+    reader.iter_axes = [Z_AXIS]
 
     for z in range(2):
         np.testing.assert_array_equal(reader.get_slice(z), _VOLUME[z])
 
 
 def test_adapter_rejects_axes_the_reader_cannot_produce() -> None:
-    # "yxc" declared, but "z" is asked for as part of the slice. A reader
+    # "yxc" declared, but Z_AXIS is asked for as part of the slice. A reader
     # declares one method covering every axis it can produce, so this is a
     # reader bug rather than something to paper over by looping — refusing
     # keeps it from surfacing later as a silently mis-shaped array.
     reader = _YxcReader()
     with pytest.raises(ValueError, match=r"\['z'\] were requested"):
-        reader.bundle_axes = ["z", "c", "y", "x"]
+        reader.bundle_axes = [Z_AXIS, C_AXIS, Y_AXIS, X_AXIS]
 
 
 def test_get_slice_rejects_out_of_range_index() -> None:
     reader = _ZcyxReader()
-    reader.bundle_axes = ["c", "y", "x"]
-    reader.iter_axes = ["z"]
+    reader.bundle_axes = [C_AXIS, Y_AXIS, X_AXIS]
+    reader.iter_axes = [Z_AXIS]
     with pytest.raises(IndexError):
         reader.get_slice(2)
 
@@ -165,14 +173,14 @@ class _RangeSequence(SliceReader):
 
     def __init__(self, length: int = 6) -> None:
         super().__init__()
-        self._init_axis("z", length)
-        self._init_axis("y", 1)
-        self._init_axis("x", 1)
+        self._init_axis(Z_AXIS, length)
+        self._init_axis(Y_AXIS, 1)
+        self._init_axis(X_AXIS, 1)
         self._set_get_slice(self._read, "yx")
-        self.iter_axes = ["z"]
+        self.iter_axes = [Z_AXIS]
 
     def _read(self, **coords: int) -> np.ndarray:
-        return np.full((1, 1), coords["z"], dtype="uint8")
+        return np.full((1, 1), coords[Z_AXIS], dtype="uint8")
 
     @property
     def pixel_type(self) -> Any:
@@ -325,3 +333,105 @@ def test_image_sequence_reads_zip_archive(tmp_upath: UPath) -> None:
 def test_image_sequence_reports_missing_files(tmp_upath: UPath) -> None:
     with pytest.raises(OSError, match="No files were found"):
         MultiImageSliceReader(str(tmp_upath / "nothing_*.png"))
+
+
+# t, s, y, x — two non-"c" axes that are stepped through slice by slice
+# (iterated, as opposed to "y"/"x", which are bundled into each slice), and
+# no "z" axis at all.
+_NO_Z_VOLUME = np.arange(2 * 3 * 4 * 5, dtype="uint16").reshape(2, 3, 4, 5)
+
+
+class _TsyxReader(SliceReader):
+    """Declares "t" and "s" as iterated axes; has no "z" axis."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        for axis, size in zip("tsyx", _NO_Z_VOLUME.shape):
+            self._init_axis(axis, size)
+        self._set_get_slice(self._get_slice, "tsyx")
+
+    def _get_slice(self, **ind: int) -> np.ndarray:
+        del ind
+        return _NO_Z_VOLUME
+
+    @property
+    def pixel_type(self) -> Any:
+        return _NO_Z_VOLUME.dtype
+
+
+class _NoZImageSource(SlicedImageSource):
+    """A SlicedImageSource backed by `_TsyxReader`, bypassing real file I/O."""
+
+    def __init__(self) -> None:
+        super().__init__(UPath("synthetic"), ReadOptions())
+
+    @contextmanager
+    def _open_slice_reader(self) -> Generator[SliceReader]:
+        # Mirrors the base implementation's post-discovery setup (see
+        # SlicedImageSource._open_slice_reader), which this override skips by
+        # not going through the real file-opening machinery.
+        images = _TsyxReader()
+        if hasattr(self, "_bundle_axes"):
+            images.default_coords.update(self._default_coords)
+            images.bundle_axes = self._bundle_axes
+            images.iter_axes = self._iter_axes
+        yield images
+
+
+def test_no_real_z_axis_gets_a_size_one_axis_without_relabeling_a_real_axis(
+    tmp_upath: UPath,
+) -> None:
+    # The pipeline always wants explicit x, y and z axes (plus "c" for
+    # channels); every other axis ("t", "s", ...) is iterated/split into
+    # separate outputs instead. Some formats step through 2+ axes besides
+    # "c" (here "t" and "s") but have no genuine "z" axis. expected_bbox must
+    # add a size-1 "z" axis rather than relabeling a real axis (which would
+    # corrupt its meaning — a real time axis reported as depth), and
+    # copy_chunk_to_view must still read/write every (t, s) slice correctly
+    # despite "z" not corresponding to any real iteration.
+    source = _NoZImageSource()
+    box = source.expected_bbox
+
+    assert Z_AXIS in box.axes
+    assert box.size.z == 1
+    assert box.size.c == 1
+    assert box.size[box.axes.index("t")] == 2  # from _TsyxReader / _NO_Z_VOLUME
+    assert box.size[box.axes.index("s")] == 3
+
+    ds = wk.Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))
+    layer = ds.add_layer(
+        "test",
+        category="color",
+        dtype=source.dtype,
+        num_channels=1,
+        data_format="zarr3",
+    )
+    layer.bounding_box = source.initial_layer_bounding_box(box)
+    # tiny chunk/shard shape to reduce IO in tests
+    mag_view = layer.add_mag(1, compress=False, chunk_shape=8, shard_shape=8)
+
+    # Capture the output without going through any actual storage layer or doing file IO
+    written: list[tuple[NormalizedBoundingBox, np.ndarray]] = []
+    real_write = mag_view._array.write
+
+    def _capture_write(bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
+        written.append((bbox, data.copy()))
+        real_write(bbox, data)
+
+    mag_view._array.write = _capture_write  # type: ignore[method-assign]
+
+    axes = layer.normalized_bounding_box.axes
+    t_index, s_index = axes.index("t"), axes.index("s")
+    chunks = source.chunk_grid(
+        layer.normalized_bounding_box, mag_view=mag_view, mag=Mag(1), batch_size=None
+    )
+    for chunk_bbox in chunks:
+        source.copy_chunk_to_view(chunk_bbox, mag_view=mag_view, dtype=None)
+
+    assert len(written) == 2 * 3  # one chunk per (t, s) combination
+
+    for chunk_bbox, data in written:
+        t = chunk_bbox.topleft[t_index]
+        s = chunk_bbox.topleft[s_index]
+        written_slice = data.reshape(4, 5)  # squeeze the size-1 s/t/c/z axes
+        np.testing.assert_array_equal(written_slice, _NO_Z_VOLUME[t, s])

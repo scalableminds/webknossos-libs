@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from ...geometry import NDBoundingBox
+from ...geometry import Z_AXIS, NDBoundingBox
 from .buffered_slice_writer import _parse_dimension
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ class BufferedSliceReader:
         view: "View",
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
-        dimension: str | int = "z",
+        dimension: str | int = Z_AXIS,
         *,
         relative_bounding_box: NDBoundingBox | None = None,  # in mag1
         absolute_bounding_box: NDBoundingBox | None = None,  # in mag1

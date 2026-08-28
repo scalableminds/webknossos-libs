@@ -6,6 +6,8 @@ import numpy as np
 import pytest
 from upath import UPath
 
+from webknossos.geometry.constants import TCXYZ_AXES
+
 pytest.importorskip("pylibCZIrw")
 
 from tests.data_fixtures import create_synthetic_czi  # noqa: E402
@@ -33,7 +35,8 @@ def test_czi_image_source_metadata(tmp_upath: UPath) -> None:
     # rather than written as RGB channels: one channel per layer.
     assert source.num_channels == 1
     assert source.get_layer_split_options() == {"czi_channel": [0, 1]}
-    assert source.expected_bbox.size.to_tuple() == (10, 8, 4)
+    assert source.expected_bbox.size_xyz.to_tuple() == (10, 8, 4)
+    assert source.expected_bbox.size.c == 1
 
 
 def test_czi_image_source_multi_timepoint_gets_a_t_axis(tmp_upath: UPath) -> None:
@@ -43,8 +46,8 @@ def test_czi_image_source_multi_timepoint_gets_a_t_axis(tmp_upath: UPath) -> Non
     source = _open_czi_image_source(czi_path)
 
     assert source.get_layer_split_options() is None
-    assert source.expected_bbox.axes == ("t", "x", "y", "z")
-    assert source.expected_bbox.size.to_tuple() == (3, 10, 8, 2)
+    assert source.expected_bbox.axes == TCXYZ_AXES
+    assert source.expected_bbox.size.to_tuple() == (3, 1, 10, 8, 2)
 
 
 def test_czi_image_source_reads_only_the_requested_box(tmp_upath: UPath) -> None:
