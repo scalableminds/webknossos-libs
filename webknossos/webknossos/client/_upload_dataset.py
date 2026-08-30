@@ -12,6 +12,7 @@ from upath import UPath
 from .. import LayerToLink
 from ..dataset import Attachment, Dataset, MagView
 from ..datastore import Datastore
+from ..geometry import Mag
 from ..utils import get_rich_progress
 from ._resumable import Resumable
 from .api_client.models import (
@@ -76,6 +77,7 @@ def upload_mag(
     dataset_id: str,
     layer_name: str,
     mag: MagView,
+    target_mag: Mag | None = None,
     axis_order: dict[str, int],
     channel_index: int | None,
     datastore_url: str | None = None,
@@ -101,7 +103,7 @@ def upload_mag(
             dataset_id=dataset_id,
             layer_name=layer_name,
             mag=ApiMagProperties(
-                mag=mag.mag.to_tuple(),
+                mag=(target_mag or mag.mag).to_tuple(),
                 channel_index=channel_index,
                 axis_order=axis_order,
             ),
