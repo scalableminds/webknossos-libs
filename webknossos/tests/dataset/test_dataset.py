@@ -4049,6 +4049,13 @@ def test_remote_dataset_urls() -> None:
     ds_open_with_id = RemoteDataset.open(dataset_id=dataset_id)
     assert ds_open_with_id.url == ds.url
 
+    ds_open_with_positional_id = RemoteDataset.open(dataset_id)
+    assert ds_open_with_positional_id.url == ds.url
+
+    # An id-shaped argument that is neither an existing id nor name
+    with pytest.raises(ValueError):
+        RemoteDataset.open("0" * 24, organization_id="Organization_X")
+
     # Test different variants of the URL
     # 1. deprecated url: "http://localhost:9000/datasets/Organization_X/l4_sample"
 

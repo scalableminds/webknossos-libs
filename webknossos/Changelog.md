@@ -17,6 +17,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Added
 - Added support for WEBKNOSSOS API version 15, which allows segment ids to use the full uint64 range. Such ids may now be serialized as `{"customJsonEncoding": "bigint", "value": "<decimal string>"}` instead of a plain JSON number, both in API responses and in `datasource-properties.json`.
 - Added `neuroglancerPrecomputed` as a valid `AttachmentDataFormat` for `MeshAttachment`s. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
+- Added support for passing a dataset id as the first argument of `RemoteDataset.open` (and `Dataset.download`, `RemoteDataset.trigger_reload_in_datastore`), in addition to a dataset name or url. If no dataset with that id exists, the argument is resolved as a dataset name as before.
 
 ### Changed
 

@@ -28,6 +28,7 @@ from webknossos.client.api_client.models import (
 from webknossos.dataset._metadata import DatasetMetadata
 from webknossos.dataset.abstract_dataset import (
     _DATASET_DEPRECATED_URL_REGEX,
+    _DATASET_ID_REGEX,
     _DATASET_URL_REGEX,
     AbstractDataset,
     AttachmentRenaming,
@@ -205,7 +206,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         via the respective `RemoteDataset` properties.
 
         Args:
-            dataset_name_or_url: Either dataset name or full URL to dataset view, e.g.
+            dataset_name_or_url: Either dataset name, dataset ID or full URL to dataset view, e.g.
                 https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view
             organization_id: Optional organization ID if using dataset name. Can be found [here](https://webknossos.org/account/token)
             sharing_token: Optional sharing token for dataset access
@@ -1296,6 +1297,22 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         return possible_ids[0]
 
     @classmethod
+    def _dataset_id_exists(
+        cls,
+        dataset_id: str,
+        sharing_token: str | None = None,
+    ) -> bool:
+        from ..client.context import _get_api_client
+
+        try:
+            _get_api_client().dataset_info(
+                dataset_id=dataset_id, sharing_token=sharing_token
+            )
+        except UnexpectedStatusError:
+            return False
+        return True
+
+    @classmethod
     def _parse_remote(
         cls,
         *,
@@ -1377,7 +1394,14 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 dataset_name = dataset_name_or_url
                 organization_id = organization_id or current_context.organization_id
 
-                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+                # An id-shaped argument is treated as a dataset id, unless no such
+                # dataset exists. Then it is resolved as a dataset name.
+                if _DATASET_ID_REGEX.fullmatch(dataset_name) and cls._dataset_id_exists(
+                    dataset_name, sharing_token=sharing_token
+                ):
+                    dataset_id = dataset_name
+                else:
+                    dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
 
         if webknossos_url is None:
             webknossos_url = current_context.url
@@ -1416,7 +1440,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         Cannot be used for local datasets.
 
         Args:
-            dataset_name_or_url: Name or URL of dataset to reload
+            dataset_name_or_url: Name, ID or URL of dataset to reload
             dataset_id: ID of dataset to reload
             organization_id: Organization ID where dataset is located
             datastore_url: Optional URL to the datastore
