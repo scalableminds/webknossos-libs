@@ -17,6 +17,7 @@ from .image_source import (
     ChunkResult,
     ImageSource,
     ReadOptions,
+    convert_for_write,
     with_explicit_channel_axis,
 )
 
@@ -194,8 +195,7 @@ class ChunkedImageSource(ImageSource):
             else block.transpose(0, 2, 3, 1)
         )
 
-        if dtype is not None:
-            block = block.astype(dtype, order="F")
+        block = convert_for_write(block, dtype, mag_view.layer.data_format)
 
         max_value = int(block.max())
         if "t" in relative_bbox.axes:

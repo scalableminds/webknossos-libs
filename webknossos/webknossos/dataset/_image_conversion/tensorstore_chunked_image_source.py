@@ -161,4 +161,8 @@ class TensorStoreChunkedImageSource(ChunkedImageSource):
             if not has_z:
                 block = block[np.newaxis]  # add a size-1 z axis
             slabs.append(block)
+        if len(slabs) == 1:
+            # Adding the channel axis is a view; np.stack would copy the whole
+            # block just to prepend an axis of size 1.
+            return slabs[0][np.newaxis]
         return np.stack(slabs, axis=0)  # (c, z, y, x)
