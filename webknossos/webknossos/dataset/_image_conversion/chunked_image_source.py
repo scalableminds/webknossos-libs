@@ -17,7 +17,6 @@ from .image_source import (
     ChunkResult,
     ImageSource,
     ReadOptions,
-    convert_for_write,
     with_explicit_channel_axis,
 )
 
@@ -195,7 +194,12 @@ class ChunkedImageSource(ImageSource):
             else block.transpose(0, 2, 3, 1)
         )
 
-        block = convert_for_write(block, dtype, mag_view.layer.data_format)
+        # Only the dtype is forced, never the memory layout: each BaseArray
+        # backend arranges the chunk the way its format needs (tinywkw gathers
+        # its chunks with `tobytes(order="F")`, tensorstore consumes arbitrary
+        # strides), and materializing a large shard here just to reorder it is
+        # the most expensive step of the whole conversion.
+        block = np.asarray(block, dtype=dtype)
 
         max_value = int(block.max())
         if "t" in relative_bbox.axes:

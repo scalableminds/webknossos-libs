@@ -17,35 +17,15 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import NamedTuple
 
-import numpy as np
 from numpy.typing import DTypeLike
 
-from ...dataset_properties import DataFormat, LayerViewConfiguration
+from ...dataset_properties import LayerViewConfiguration
 from ...geometry.constants import C_AXIS, T_AXIS
 from ...geometry.mag import Mag
 from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
-
-
-def convert_for_write(
-    data: np.ndarray, dtype: DTypeLike | None, data_format: DataFormat
-) -> np.ndarray:
-    """Converts a chunk to `dtype` in the memory layout `data_format` wants.
-
-    WKW serializes its chunk buffers with `tobytes(order="F")`, so handing it
-    Fortran-ordered data saves it a copy. Every other format is written through
-    tensorstore, which consumes arbitrary strides itself — forcing Fortran order
-    there would only add a full transposing copy of the chunk, which for a large
-    shard is the most expensive step of the whole conversion. `np.asarray` keeps
-    the array untouched when the dtype already matches.
-    """
-    if dtype is None:
-        return data
-    if data_format == DataFormat.WKW:
-        return data.astype(dtype, order="F")
-    return np.asarray(data, dtype=dtype)
 
 
 @dataclass(frozen=True)
@@ -222,7 +202,9 @@ class ImageSource(ABC):
         * `ReadOptions.flip_x` mirrors the source's **y** axis and `ReadOptions.flip_y` its **x** axis
           — the axes are named for the output, not the source. Each flip
           mirrors the whole extent, never one chunk in isolation.
-        * When `dtype` is given, data is converted with `convert_for_write`.
+        * When `dtype` is given, data is converted to it. The memory layout
+          is left alone — each `BaseArray` backend arranges the chunk the way
+          its format needs.
         """
 
     @abstractmethod
