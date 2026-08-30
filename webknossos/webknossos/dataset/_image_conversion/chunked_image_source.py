@@ -194,10 +194,8 @@ class ChunkedImageSource(ImageSource):
             else block.transpose(0, 2, 3, 1)
         )
 
-        # Only the dtype is forced, never the memory layout: each BaseArray
-        # backend arranges the chunk the way its format needs (tinywkw gathers
-        # its chunks with `tobytes(order="F")`, tensorstore consumes arbitrary
-        # strides), and materializing a large shard here just to reorder it is
+        # Only the dtype is forced, never the memory layout.
+        # Materializing a large shard here just to reorder would be
         # the most expensive step of the whole conversion.
         block = np.asarray(block, dtype=dtype)
 

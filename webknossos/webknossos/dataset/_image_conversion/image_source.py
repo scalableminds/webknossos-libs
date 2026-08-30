@@ -202,9 +202,8 @@ class ImageSource(ABC):
         * `ReadOptions.flip_x` mirrors the source's **y** axis and `ReadOptions.flip_y` its **x** axis
           — the axes are named for the output, not the source. Each flip
           mirrors the whole extent, never one chunk in isolation.
-        * When `dtype` is given, data is converted to it. The memory layout
-          is left alone — each `BaseArray` backend arranges the chunk the way
-          its format needs.
+        * When `dtype` is given, data is converted to it, but the memory layout
+          is left alone.
         """
 
     @abstractmethod
