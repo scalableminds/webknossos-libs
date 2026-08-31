@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import sys
 import warnings
@@ -11,6 +12,7 @@ from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
 from webknossos.dataset.layer import _downsampling_utils
 from webknossos.dataset.layer._downsampling_utils import (
     InterpolationModes,
+    _mode,
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
@@ -20,16 +22,7 @@ from webknossos.dataset.layer._downsampling_utils import (
 )
 from webknossos.dataset.sampling_modes import SamplingModes
 
-try:
-    from webknossos.dataset.layer._downsampling_numba import _mode
-
-    HAS_NUMBA = True
-except ImportError:
-    HAS_NUMBA = False
-
-requires_numba = pytest.mark.skipif(
-    not HAS_NUMBA, reason="numba is an optional dependency"
-)
+HAS_NUMBA = importlib.util.find_spec("numba") is not None
 
 BUFFER_SHAPE = Vec3Int.full(256)
 
@@ -48,7 +41,6 @@ def test_downsample_cube() -> None:
     assert np.all(output[:, :, :] == np.arange(0, BUFFER_SHAPE.x, 2))
 
 
-@requires_numba
 def test_downsample_mode() -> None:
     a = np.array([[1, 3, 4, 2, 2, 7], [5, 2, 2, 1, 4, 1], [3, 3, 2, 2, 1, 1]])
 
@@ -174,21 +166,6 @@ def test_missing_numba_does_not_warn_when_available(
     assert len([w for w in caught if "numba" in str(w.message)]) == expected
 
 
-def test_downsample_slab_boundaries(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The numpy implementation processes the buffer in slabs; a slab size that does
-    not divide the target must not change the result."""
-    monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
-    monkeypatch.setattr(_downsampling_utils, "_SLAB_VOXELS", 1)
-    rng = np.random.default_rng(11)
-    buffer = np.asfortranarray(rng.integers(0, 4, size=(8, 8, 14)).astype(np.uint8))
-    for interpolation_mode in (InterpolationModes.MEDIAN, InterpolationModes.MODE):
-        expected = reference_downsample(buffer, [2, 2, 2], interpolation_mode)
-        assert np.array_equal(
-            downsample_cube(buffer, [2, 2, 2], interpolation_mode), expected
-        )
-
-
-@requires_numba
 def test_non_linear_filter_reshape() -> None:
     a = np.array([[[1, 3], [1, 4]], [[4, 2], [3, 1]]], dtype=np.uint8)
 

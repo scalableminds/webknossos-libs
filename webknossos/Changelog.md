@@ -20,7 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Sped up the layer downsampling (`median` and `mode` filters), by 3x-6x with less peak memory consumed. [#1529](https://github.com/scalableminds/webknossos-libs/pull/1529)
-- `numba` is now an optional dependency and is no longer installed by default, which removes about 130 MB (mostly `llvmlite`) from the base installation. Install it with `pip install webknossos[numba]` or `pip install webknossos[all]`. Without it, the `median` and `mode` downsampling filters use numpy implementations that produce identical results. The `median` filter is about as fast either way, the `mode` filter used for segmentation layers is roughly 5x slower without numba. [#1529](https://github.com/scalableminds/webknossos-libs/pull/1529)
+- `numba` is now an optional dependency and is no longer installed by default, which removes about 130 MB (mostly `llvmlite`) from the base installation. Install it with `pip install webknossos[numba]` or `pip install webknossos[all]`. Without it, the `median` and `mode` downsampling filters use numpy implementations that produce identical results. Without numba these filters are roughly as fast as they were before this release. [#1529](https://github.com/scalableminds/webknossos-libs/pull/1529)
 
 ### Fixed
 - Fixed that local dataset/layer/mag/attachment path resolution on Windows converted mapped/substituted network drives (e.g. `Z:\...`) to their UNC form (`\\server\share\...`), which TensorStore's local file driver rejected. [#1513](https://github.com/scalableminds/webknossos-libs/issues/1513)

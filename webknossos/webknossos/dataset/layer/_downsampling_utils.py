@@ -1,7 +1,7 @@
 import logging
 import math
 import warnings
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from enum import Enum
 from itertools import product
 from os import environ
@@ -222,91 +222,23 @@ def _median(x: np.ndarray) -> np.ndarray:
     return np.median(x, axis=0).astype(x.dtype)
 
 
-# Numpy fallbacks for the non-linear filters, used when numba is not installed.
-# Within a block the elements are ordered `dy + fy * dx + fx * fy * dz`, which is the
-# order `non_linear_filter_3d` produces and which determines how the mode filter
-# breaks ties. The work is done in slabs to bound the size of the temporaries.
-
-_SLAB_VOXELS = 4 * 1024 * 1024
-
-# Batcher odd-even merge network for 8 elements, reduced to the comparators needed to
-# place the 4th and 5th smallest element.
-_MEDIAN_NETWORK_8 = [
-    (0, 1), (2, 3), (4, 5), (6, 7),
-    (0, 2), (1, 3), (4, 6), (5, 7),
-    (1, 2), (5, 6),
-    (0, 4), (1, 5), (2, 6), (3, 7),
-    (2, 4), (3, 5),
-    (3, 4),
-]  # fmt: skip
-
-
-def _block_views(data: np.ndarray, factors: list[int]) -> list[np.ndarray]:
-    fx, fy, fz = factors
-    return [
-        data[dx::fx, dy::fy, dz::fz]
-        for dz in range(fz)
-        for dx in range(fx)
-        for dy in range(fy)
-    ]
-
-
-def _empty_target(data: np.ndarray, factors: list[int]) -> np.ndarray:
-    assert not any(d % factor > 0 for (d, factor) in zip(data.shape, factors))
-    fx, fy, fz = factors
-    return np.empty(
-        (data.shape[0] // fx, data.shape[1] // fy, data.shape[2] // fz),
-        dtype=data.dtype,
-        order="F",
-    )
-
-
-def _slabs(target: np.ndarray) -> Iterator[tuple[int, int]]:
-    plane_voxels = max(target.shape[0] * target.shape[1], 1)
-    planes = max(_SLAB_VOXELS // plane_voxels, 1)
-    for z in range(0, target.shape[2], planes):
-        yield z, min(z + planes, target.shape[2])
-
-
-def _median_numpy_2x2x2(data: np.ndarray) -> np.ndarray:
-    target = _empty_target(data, [2, 2, 2])
-    views = _block_views(data, [2, 2, 2])
-    for z_start, z_stop in _slabs(target):
-        block = [np.array(view[:, :, z_start:z_stop]) for view in views]
-        scratch = np.empty_like(block[0])
-        for i, j in _MEDIAN_NETWORK_8:
-            np.minimum(block[i], block[j], out=scratch)
-            np.maximum(block[i], block[j], out=block[j])
-            block[i], scratch = scratch, block[i]
-        # np.median averages the two middle elements in float64 and truncates.
-        middle = (block[3].astype(np.float64) + block[4].astype(np.float64)) / 2.0
-        target[:, :, z_start:z_stop] = middle.astype(data.dtype)
-    return target
-
-
-def _mode_numpy(data: np.ndarray, factors: list[int]) -> np.ndarray:
-    target = _empty_target(data, factors)
-    views = _block_views(data, factors)
-    num_elements = len(views)
-    for z_start, z_stop in _slabs(target):
-        block = [view[:, :, z_start:z_stop] for view in views]
-        # Each element counts only the matches that follow it, so the first occurrence
-        # of a value carries its full count and ties are won by the earliest element.
-        best = np.array(block[0])
-        best_count = np.ones(best.shape, dtype=np.uint16)
-        for j in range(1, num_elements):
-            best_count += block[0] == block[j]
-        count = np.empty_like(best_count)
-        # The last element always has a count of 1 and can never win.
-        for i in range(1, num_elements - 1):
-            count[...] = 1
-            for j in range(i + 1, num_elements):
-                count += block[i] == block[j]
-            wins = count > best_count
-            np.copyto(best, block[i], where=wins)
-            np.copyto(best_count, count, where=wins)
-        target[:, :, z_start:z_stop] = best
-    return target
+def _mode(x: np.ndarray) -> np.ndarray:
+    # Each row counts only the matches that follow it, so the first occurrence of a
+    # value carries its full count and ties are won by the earliest row.
+    best = np.array(x[0])
+    best_count = np.ones(x.shape[1], dtype=np.uint16)
+    for j in range(1, x.shape[0]):
+        best_count += x[0] == x[j]
+    count = np.empty_like(best_count)
+    # The last row always has a count of 1 and can never win.
+    for i in range(1, x.shape[0] - 1):
+        count[...] = 1
+        for j in range(i + 1, x.shape[0]):
+            count += x[i] == x[j]
+        wins = count > best_count
+        np.copyto(best, x[i], where=wins)
+        np.copyto(best_count, count, where=wins)
+    return best
 
 
 def _supports_fast_path(data: np.ndarray, factors: list[int]) -> bool:
@@ -343,16 +275,15 @@ def _downsample_median(data: np.ndarray, factors: list[int]) -> np.ndarray:
         if _downsampling_numba is not None:
             return _downsampling_numba.median_downsample(data, factors)
         _warn_once_about_missing_numba()
-        if factors == [2, 2, 2]:
-            return _median_numpy_2x2x2(data)
     return non_linear_filter_3d(data, factors, _median)
 
 
 def _downsample_mode(data: np.ndarray, factors: list[int]) -> np.ndarray:
-    if _downsampling_numba is not None and _supports_fast_path(data, factors):
-        return _downsampling_numba.mode_downsample(data, factors)
-    _warn_once_about_missing_numba()
-    return _mode_numpy(data, factors)
+    if _supports_fast_path(data, factors):
+        if _downsampling_numba is not None:
+            return _downsampling_numba.mode_downsample(data, factors)
+        _warn_once_about_missing_numba()
+    return non_linear_filter_3d(data, factors, _mode)
 
 
 def downsample_unpadded_data(

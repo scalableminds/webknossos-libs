@@ -9,35 +9,6 @@ from collections.abc import Callable
 import numba
 import numpy as np
 
-
-@numba.jit(nopython=True, nogil=True)
-def _mode(input_array: np.ndarray) -> np.ndarray:
-    values = np.zeros(input_array.shape[0], dtype=input_array.dtype)
-    counter = np.zeros(input_array.shape[0], dtype=np.uint8)
-    output_array = np.zeros(input_array.shape[1], dtype=input_array.dtype)
-    for row_index in range(input_array.shape[1]):
-        values[0] = input_array[0, row_index]
-        counter[:] = 1
-        value_offset = 1
-        for col_index in range(1, input_array.shape[0]):
-            value = input_array[col_index, row_index]
-            found_value = False
-            for i in range(
-                value_offset
-            ):  # Only iterate the values that were already seen
-                if value == values[i]:
-                    counter[i] = counter[i] + 1
-                    found_value = True
-                    break
-            if not found_value:
-                values[value_offset] = value
-                value_offset += 1
-        mode = values[np.argmax(counter)]
-        output_array[row_index] = mode
-
-    return output_array
-
-
 # These kernels read the source buffer directly, which avoids the three full copies
 # that reshaping it into an (elements-per-block, num-blocks) array costs.
 # Within a block the elements are visited in the order `dy + fy * dx + fx * fy * dz`,
