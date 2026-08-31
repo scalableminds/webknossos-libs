@@ -94,9 +94,11 @@ def test_invalid_scale_option_raises(tmp_upath: UPath) -> None:
         _open(ozx_path, format_options={"scale": 1})
 
 
-def test_remote_path_is_rejected() -> None:
-    with pytest.raises(ValueError, match="local file path"):
-        _open(UPath("memory://some/path.ozx"))
+def test_remote_path_warns() -> None:
+    # The warning fires before the path is read, so a missing one still hits it.
+    with pytest.warns(UserWarning, match="remote path"):
+        with pytest.raises(CorruptImageError):
+            _open(UPath("memory://some/path.ozx"))
 
 
 def test_not_a_zip_file_raises_corrupt_image_error(tmp_upath: UPath) -> None:

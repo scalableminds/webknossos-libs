@@ -8,6 +8,7 @@ regardless of driver — that shared logic lives here.
 
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import numpy as np
@@ -97,19 +98,15 @@ class TensorStoreChunkedImageSource(ChunkedImageSource):
 
     def __init__(self, path: UPath, options: ReadOptions) -> None:
         super().__init__(path, options)
-        # Tensorstore itself can read s3://, gs:// and http(s):// just fine,
-        # but conversion from remote paths isn't supported for these formats
-        # yet — restricted here, once, for every subclass.
         if is_remote_path(path):
-            raise ValueError(
-                f"Cannot open {path}. Remote paths (s3://, gs://, http(s)://) "
-                "are not supported yet; the path must be a local file path."
+            warnings.warn(
+                f"[WARNING] Attempting to read {path} from a remote path "
+                "(s3://, gs://, http(s)://). Additional credentials may be "
+                "required and conversion may be slow or incur egress costs.",
+                stacklevel=2,
             )
 
     def _open_array(self) -> ts.TensorStore:
-        # Reopened on every call rather than cached: chunks are read from
-        # separate worker processes, so no tensorstore handle can cross that
-        # boundary (mirrors MrcImageSource's per-call mmap reopen).
         return ts.open(
             self._ts_spec, open=True, context=TS_CONTEXT, recheck_cached="open"
         ).result()
@@ -161,4 +158,6 @@ class TensorStoreChunkedImageSource(ChunkedImageSource):
             if not has_z:
                 block = block[np.newaxis]  # add a size-1 z axis
             slabs.append(block)
+        if len(slabs) == 1:
+            return slabs[0][np.newaxis]
         return np.stack(slabs, axis=0)  # (c, z, y, x)

@@ -392,11 +392,11 @@ def test_no_real_z_axis_gets_a_size_one_axis_without_relabeling_a_real_axis(
     source = _NoZImageSource()
     box = source.expected_bbox
 
-    assert Z_AXIS in box.axes
-    assert box.size.z == 1
-    assert box.size.c == 1
-    assert box.size[box.axes.index("t")] == 2  # from _TsyxReader / _NO_Z_VOLUME
-    assert box.size[box.axes.index("s")] == 3
+    # Canonical order: the extra "s" axis is prepended, "t" sits before "c",
+    # and x/y/z close it out — with "z" the size-1 axis added here.
+    assert box.axes == ("s", "t", C_AXIS, X_AXIS, Y_AXIS, Z_AXIS)
+    # sizes from _TsyxReader / _NO_Z_VOLUME: s=3, t=2, y=4, x=5
+    assert box.size.to_tuple() == (3, 2, 1, 5, 4, 1)
 
     ds = wk.Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))
     layer = ds.add_layer(
@@ -422,6 +422,7 @@ def test_no_real_z_axis_gets_a_size_one_axis_without_relabeling_a_real_axis(
 
     axes = layer.normalized_bounding_box.axes
     t_index, s_index = axes.index("t"), axes.index("s")
+    y_index, x_index = axes.index(Y_AXIS), axes.index(X_AXIS)
     chunks = source.chunk_grid(
         layer.normalized_bounding_box, mag_view=mag_view, mag=Mag(1), batch_size=None
     )
@@ -433,5 +434,6 @@ def test_no_real_z_axis_gets_a_size_one_axis_without_relabeling_a_real_axis(
     for chunk_bbox, data in written:
         t = chunk_bbox.topleft[t_index]
         s = chunk_bbox.topleft[s_index]
-        written_slice = data.reshape(4, 5)  # squeeze the size-1 s/t/c/z axes
+        # pull y/x to the front, squeezing the size-1 s/t/c/z axes
+        written_slice = np.moveaxis(data, [y_index, x_index], [0, 1]).reshape(4, 5)
         np.testing.assert_array_equal(written_slice, _NO_Z_VOLUME[t, s])

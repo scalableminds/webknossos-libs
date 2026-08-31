@@ -19,7 +19,7 @@ _AXIS_TYPES = {
     Y_AXIS: "space",
     Z_AXIS: "space",
 }
-_SPACE_AXES = (X_AXIS, Y_AXIS, "z")
+_SPACE_AXES = (X_AXIS, Y_AXIS, Z_AXIS)
 
 
 def _ome_axes(axes_order: tuple[str, ...]) -> list[dict[str, Any]]:

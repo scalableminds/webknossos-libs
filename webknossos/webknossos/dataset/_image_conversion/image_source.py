@@ -20,9 +20,8 @@ from typing import NamedTuple
 from numpy.typing import DTypeLike
 
 from ...dataset_properties import LayerViewConfiguration
-from ...geometry.constants import C_AXIS, T_AXIS
+from ...geometry.constants import C_AXIS, CXYZ_AXES, T_AXIS, XYZ_AXES
 from ...geometry.mag import Mag
-from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
@@ -95,32 +94,30 @@ def compute_channel_selection(
     return ChannelSelection(raw_num_channels, None, None, None)
 
 
-def with_explicit_channel_axis(
-    box: NDBoundingBox, num_channels: int
+def with_canonical_axes(
+    box: NormalizedBoundingBox, num_channels: int
 ) -> NormalizedBoundingBox:
-    """Builds a `NormalizedBoundingBox` that always carries an explicit "c"
-    axis, sized `num_channels` — even when `box` doesn't have one and
-    `num_channels` is 1.
+    """Builds the `NormalizedBoundingBox` a converted layer gets, in the
+    canonical axis order `([...extras], [t], c, x, y, z)`. Any of "c", "x", "y", "z"
+    the source does not carry is added as a singleton axis.
 
     Unlike `NDBoundingBox.normalize_axes()` (which keeps a missing "c" axis
     implicit, matching xyz-only boxes elsewhere, e.g. remote datasets),
-    image-conversion's own internal boxes are always meant to carry one, per
-    the codebase's `NormalizedBoundingBox` convention.
-
-    If there is a "t" axis a fixed t,c,x,y,z axis order will be used, because that is a
-    common convention. Other axes can appear at arbitrary locations.
+    image-conversion's own internal boxes always carry one.
     """
-    if C_AXIS in box.axes:
-        return box.normalize_axes(num_channels)
-    insert_at = box.axes.index(T_AXIS) + 1 if T_AXIS in box.axes else 0
-    axes = box.axes[:insert_at] + (C_AXIS,) + box.axes[insert_at:]
-    topleft = box.topleft.to_list()
-    topleft.insert(insert_at, 0)
-    size = box.size.to_list()
-    size.insert(insert_at, num_channels)
+    bounds = {
+        axis: (topleft, size)
+        for axis, topleft, size in zip(box.axes, box.topleft, box.size)
+    }
+    bounds[C_AXIS] = (bounds.get(C_AXIS, (0, 0))[0], num_channels)
+    for axis in XYZ_AXES:
+        bounds.setdefault(axis, (0, 1))
+
+    extras = [axis for axis in box.axes if axis not in CXYZ_AXES and axis != T_AXIS]
+    axes = tuple(extras) + ((T_AXIS,) if T_AXIS in box.axes else ()) + CXYZ_AXES
     return NormalizedBoundingBox(
-        topleft=VecInt(topleft, axes=axes),
-        size=VecInt(size, axes=axes),
+        topleft=VecInt([bounds[axis][0] for axis in axes], axes=axes),
+        size=VecInt([bounds[axis][1] for axis in axes], axes=axes),
         axes=axes,
         name=box.name,
         is_visible=box.is_visible,
@@ -182,10 +179,19 @@ class ImageSource(ABC):
         return f"{key}{value}"
 
     @property
-    @abstractmethod
     def expected_bbox(self) -> NormalizedBoundingBox:
         """The bounding box the data is expected to occupy, in Mag(1). Exact,
         or an oversized placeholder.
+        """
+        return with_canonical_axes(self._raw_expected_bbox, self.num_channels)
+
+    @property
+    @abstractmethod
+    def _raw_expected_bbox(self) -> NormalizedBoundingBox:
+        """The expected extents in the source's own axes, carrying a "c" axis
+        when the source intrinsically has channels. `expected_bbox` reorders
+        them and fills in whichever of c/x/y/z is missing, so subclasses do
+        not have to.
         """
 
     @abstractmethod
@@ -208,7 +214,8 @@ class ImageSource(ABC):
         * `ReadOptions.flip_x` mirrors the source's **y** axis and `ReadOptions.flip_y` its **x** axis
           — the axes are named for the output, not the source. Each flip
           mirrors the whole extent, never one chunk in isolation.
-        * When `dtype` is given, data is converted with `order="F"`.
+        * When `dtype` is given, data is converted to it, but the memory layout
+          is left alone.
         """
 
     @abstractmethod
