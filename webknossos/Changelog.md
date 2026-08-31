@@ -32,6 +32,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Converting an OME-Zarr file (0.4, 0.5 or `.ozx`) that carries `omero` channel metadata now uses it to set each converted layer's default view configuration (color, intensity range, min/max, and whether it starts disabled) and, when channels are split into one layer each, to name the layers from the channel's label instead of `channel{N}`. [#1512](https://github.com/scalableminds/webknossos-libs/pull/1512)
 - Added support for WEBKNOSSOS API version 15, which allows segment ids to use the full uint64 range. Such ids may now be serialized as `{"customJsonEncoding": "bigint", "value": "<decimal string>"}` instead of a plain JSON number, both in API responses and in `datasource-properties.json`.
 - Added `neuroglancerPrecomputed` as a valid `AttachmentDataFormat` for `MeshAttachment`s. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
+- Added a `gcs` extra (`pip install "webknossos[gcs]"`, also part of `webknossos[all]`) providing `gcsfs`, which is needed to detect the format of a dataset stored on Google Cloud Storage. [#1524](https://github.com/scalableminds/webknossos-libs/pull/1524)
 
 ### Changed
 - `.czi` conversion is faster and uses less memory: only the data needed for each chunk is read, rather than whole image planes. Multi-timepoint `.czi` files now convert into a single layer with a `t` axis. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
@@ -58,6 +59,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed that `UnexpectedStatusError` and `CannotHandleResponseError` raised an `AttributeError` when unpickled (e.g. when raised inside a `ProcessPoolExecutor` worker), instead of reproducing the original error. [#1517](https://github.com/scalableminds/webknossos-libs/pull/1517)
 - Fixed RGB TIFFs converting into a single-channel z-stack (the 3 channels read as z-slices) instead of one RGB layer, since `tifffile` names the samples-per-pixel axis `S`, not `C`. A samples axis of exactly 3 tagged `photometric=rgb` with `uint8` data is now recognized as the channel axis, matching how the same pixels convert from a `.png`. [#1499](https://github.com/scalableminds/webknossos-libs/issues/1499) [#1522](https://github.com/scalableminds/webknossos-libs/pull/1522)
 - Fixed converting a single 2D multi-channel image (e.g. an RGB `.png`) at `mag` greater than 1: it crashed with a mag-alignment `AssertionError`, since the batch size used to chunk the placeholder bounding box was in mag-native voxels but applied directly to the mag-1 box without scaling by the mag factor. [#1522](https://github.com/scalableminds/webknossos-libs/pull/1522)
+- Fixed that `View.num_channels` returned `0` instead of `1` for a view whose bounding box has no channel axis. [#1519](https://github.com/scalableminds/webknossos-libs/pull/1519)
 
 
 ## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12

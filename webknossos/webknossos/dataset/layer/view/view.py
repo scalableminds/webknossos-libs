@@ -174,7 +174,7 @@ class View:
         Returns:
             int: Number of channels
         """
-        return self.normalized_bounding_box.size.get(C_AXIS, 0)
+        return self.normalized_bounding_box.size.get(C_AXIS, 1)
 
     @property
     def mag(self) -> Mag:

@@ -81,6 +81,7 @@ mrcfile = [
 ]
 ims = ["imaris-ims-file-reader >=0.1.8"]
 s3 = ["s3fs >=2026.2.0"]
+gcs = ["gcsfs >=2026.2.0"]
 examples = [
     "webknossos[fastremap]",
     "pandas ~=3.0.3; python_version >= '3.11'",
@@ -97,6 +98,7 @@ all = [
     "webknossos[mrcfile]",
     "webknossos[ims]",
     "webknossos[s3]",
+    "webknossos[gcs]",
     "webknossos[examples]",
 ]
 
