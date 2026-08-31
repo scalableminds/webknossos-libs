@@ -170,9 +170,11 @@ def test_probe_directory_recognizes_bare_zarr_directories(tmp_upath: UPath) -> N
     assert not ZarrImageSource.probe_directory(tmp_upath / "not_a_store")
 
 
-def test_remote_path_is_rejected() -> None:
-    with pytest.raises(ValueError, match="local file path"):
-        _open(UPath("memory://some/path.zarr"))
+def test_remote_path_warns() -> None:
+    # The warning fires before the path is read, so a missing one still hits it.
+    with pytest.warns(UserWarning, match="remote path"):
+        with pytest.raises(CorruptImageError):
+            _open(UPath("memory://some/path.zarr"))
 
 
 def test_not_a_zarr_store_raises_corrupt_image_error(tmp_upath: UPath) -> None:

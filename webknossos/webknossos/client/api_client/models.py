@@ -119,6 +119,13 @@ class ApiDataset:
 
 
 @attr.s(auto_attribs=True)
+class ApiDatasetCompact:
+    id: str
+    name: str
+    tags: list[str]
+
+
+@attr.s(auto_attribs=True)
 class ApiDatasetId:
     id: str
     name: str
