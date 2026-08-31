@@ -36,12 +36,7 @@ from .image_source_registry import (
     open_slice_reader,
 )
 from .slice_reader import SliceReader, _SlicedView
-from .value_statistics import (
-    combine_histograms,
-    histogram_of,
-    merge_value_ranges,
-    value_range_of,
-)
+from .value_statistics import ValueStatistics
 
 # The x/y extent is only discovered while reading, so the layer starts out
 # deliberately oversized and is cut back down once reading is complete.
@@ -338,8 +333,7 @@ class SlicedImageSource(ImageSource):
             z_start, z_end = relative_bbox.get_bounds(Z_AXIS)
             shapes = []
             max_value = 0
-            value_range: tuple[float, float] | None = None
-            histograms = []
+            statistics = []
 
             with self._open_slice_reader() as images:
                 slices: SliceReader | _SlicedView = images
@@ -406,10 +400,7 @@ class SlicedImageSource(ImageSource):
                             image_slice = image_slice.astype(dtype, order="F")
 
                         max_value = max(max_value, image_slice.max())
-                        value_range = merge_value_ranges(
-                            value_range, value_range_of(image_slice)
-                        )
-                        histograms.append(histogram_of(image_slice))
+                        statistics.append(ValueStatistics.of(image_slice))
                         if self._options.swap_xy is False:
                             image_slice = np.moveaxis(image_slice, -1, -2)
 
@@ -419,8 +410,7 @@ class SlicedImageSource(ImageSource):
                 return ChunkResult(
                     dimwise_max(shapes),
                     max_value,
-                    value_range,
-                    combine_histograms(histograms),
+                    ValueStatistics.combined(statistics),
                 )
 
     def get_layer_split_options(self) -> dict["str", list[int]] | None:

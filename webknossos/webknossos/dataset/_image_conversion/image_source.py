@@ -26,7 +26,7 @@ from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
-from .value_statistics import ValueHistogram
+from .value_statistics import ValueStatistics
 
 
 @dataclass(frozen=True)
@@ -139,16 +139,11 @@ class ChunkResult(NamedTuple):
     """The largest value seen, for `largest_segment_id` on segmentation layers.
     None when the source cannot report one."""
 
-    value_range: tuple[float, float] | None = None
-    """The smallest and largest value written, for the layer's default view
-    configuration. Separate from `max_value`, which stays an exact integer
-    because uint64 segment ids do not survive a round trip through `float`.
-    None when the chunk held no usable values."""
-
-    histogram: ValueHistogram | None = None
-    """How the written values are distributed, for the intensity range of the
-    layer's default view configuration. None when the chunk was empty or all
-    zero."""
+    statistics: ValueStatistics | None = None
+    """The range and distribution of the written values, for the layer's
+    default view configuration. Separate from `max_value`, which stays an exact
+    integer because uint64 segment ids do not survive a round trip through
+    `float`. None when the chunk held no usable value."""
 
 
 class ImageSource(ABC):

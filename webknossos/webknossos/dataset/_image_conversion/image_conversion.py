@@ -13,7 +13,6 @@ import warnings
 from collections.abc import Callable, Generator, Iterator, Sequence
 from contextlib import contextmanager
 from enum import Enum, unique
-from functools import reduce
 from itertools import product
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -68,7 +67,7 @@ from .segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
 )
-from .value_statistics import clip_histogram, combine_histograms, merge_value_ranges
+from .value_statistics import ValueStatistics
 
 if TYPE_CHECKING:
     from ..dataset import Dataset
@@ -775,12 +774,9 @@ def add_layer_from_images(
                 )
             shapes = [result.xy_size for result in chunk_results]
             max_ids = [result.max_value for result in chunk_results]
-            value_range = reduce(
-                merge_value_ranges,
-                (result.value_range for result in chunk_results),
-                None,
+            statistics = ValueStatistics.combined(
+                result.statistics for result in chunk_results
             )
-            histogram = combine_histograms(result.histogram for result in chunk_results)
             if category == "segmentation":
                 max_id = max(max_ids)
                 cast(SegmentationLayer, layer).largest_segment_id = max_id
@@ -835,17 +831,13 @@ def add_layer_from_images(
 
         # The category guess may have replaced the layer object.
         final_layer = dataset._layers[layer.name]
-        if final_layer.category == COLOR_CATEGORY and value_range is not None:
+        if final_layer.category == COLOR_CATEGORY and statistics is not None:
             # The observed value range becomes the layer's min/max, and the
             # histogram gathered along with it an intensity range clipped the
             # way WEBKNOSSOS clips it.
-            low, high = value_range
-            intensity_range = (
-                None
-                if histogram is None
-                else clip_histogram(
-                    histogram, integral=np.issubdtype(current_dtype, np.integer)
-                )
+            low, high = statistics.value_range
+            intensity_range = statistics.clipped_range(
+                integral=np.issubdtype(current_dtype, np.integer)
             )
             view_configuration = final_layer.default_view_configuration
             if view_configuration is None:
