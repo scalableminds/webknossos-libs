@@ -482,12 +482,13 @@ class SlicedImageSource(ImageSource):
     ) -> list[NormalizedBoundingBox]:
         """Batches of z-slices spanning the full x/y extent, which cannot be
         split while it is still the placeholder."""
-        del mag
-        batch_size = self._resolve_batch_size(mag_view, batch_size)
+        batch_size_mag1 = (
+            self._resolve_batch_size(mag_view, batch_size) * mag.to_vec3_int().z
+        )
         return list(
             layer_bounding_box.chunk(
-                layer_bounding_box.size_xyz.with_z(batch_size),
-                Vec3Int(1, 1, batch_size),
+                layer_bounding_box.size_xyz.with_z(batch_size_mag1),
+                Vec3Int(1, 1, batch_size_mag1),
             )
         )
 
