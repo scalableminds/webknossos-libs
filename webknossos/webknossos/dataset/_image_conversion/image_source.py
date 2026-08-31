@@ -142,8 +142,7 @@ class ChunkResult(NamedTuple):
     statistics: ValueStatistics | None = None
     """The range and distribution of the written values, for the layer's
     default view configuration. Separate from `max_value`, which stays an exact
-    integer because uint64 segment ids do not survive a round trip through
-    `float`. None when the chunk held no usable value."""
+    integer for segmentations. None when the chunk held no usable value."""
 
 
 class ImageSource(ABC):
