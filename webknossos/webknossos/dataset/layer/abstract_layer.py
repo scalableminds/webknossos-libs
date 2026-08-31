@@ -105,6 +105,7 @@ class AbstractLayer:
         Subclasses resolve the mag's path (and, for remote layers, its access mode)
         and register the resulting `MagView` in `self._mags`.
         """
+        pass
 
     def _ensure_metadata_writable(self) -> None:
         if self.dataset.read_only:
