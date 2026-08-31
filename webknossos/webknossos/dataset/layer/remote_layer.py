@@ -19,7 +19,11 @@ from ...client.api_client.models import (
 from ...geometry import Mag, MagLike, Vec3IntLike
 from ...utils import enrich_path
 from ..transfer_mode import TransferMode
-from .abstract_layer import AbstractLayer, _validate_layer_name
+from .abstract_layer import (
+    AbstractLayer,
+    _rescaled_foreign_bounding_box,
+    _validate_layer_name,
+)
 from .view import MagView, Zarr3Config
 
 if TYPE_CHECKING:
@@ -72,6 +76,7 @@ class RemoteLayer(AbstractLayer):
         self,
         foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
+        mag: MagLike | None = None,
         extend_layer_bounding_box: bool = True,
         transfer_mode: TransferMode = TransferMode.COPY,
         common_storage_path_prefix: str | None = None,
@@ -81,9 +86,14 @@ class RemoteLayer(AbstractLayer):
         Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
         to the current remote dataset. Additionally, the relevant information from the
         `datasource-properties.json` of the other dataset are copied, too.
+
+        If `mag` is given, the copied data is registered under that mag instead of the
+        mag it has in the source dataset. The voxel data is not resampled, so the copied
+        mag covers a different extent in Mag(1) than the source mag does.
         """
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
+        target_mag = Mag(mag) if mag is not None else foreign_mag_view.mag
 
         from ...client.context import _get_api_client
 
@@ -106,6 +116,7 @@ class RemoteLayer(AbstractLayer):
                     dataset_id=self.dataset.dataset_id,
                     layer_name=self.name,
                     mag=foreign_mag_view,
+                    target_mag=target_mag,
                     axis_order=axis_order,
                     channel_index=channel_index,
                     overwrite_pending=overwrite_pending,
@@ -113,7 +124,7 @@ class RemoteLayer(AbstractLayer):
             else:
                 reserve_parameters = ApiReserveMagUploadToPathParameters(
                     layer_name=self.name,
-                    mag=foreign_mag_view.mag.to_list(),
+                    mag=target_mag.to_list(),
                     axis_order=axis_order,
                     channel_index=channel_index,
                     path_prefix=common_storage_path_prefix,
@@ -127,7 +138,7 @@ class RemoteLayer(AbstractLayer):
                 transfer_mode.transfer(
                     foreign_mag_view.path,
                     path,
-                    progress_desc_label=f"{self.name}/{foreign_mag_view.mag}",
+                    progress_desc_label=f"{self.name}/{target_mag}",
                 )
                 client.finish_mag_upload_to_paths(
                     self._dataset.dataset_id, reserve_parameters
@@ -136,9 +147,9 @@ class RemoteLayer(AbstractLayer):
         self._apply_server_layer_properties()
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
-                foreign_mag_view.layer.bounding_box
+                _rescaled_foreign_bounding_box(foreign_mag_view, target_mag)
             )
-        return self.get_mag(foreign_mag_view.mag)
+        return self.get_mag(target_mag)
 
     def add_mag_as_ref(
         self,
@@ -198,7 +209,7 @@ class RemoteLayer(AbstractLayer):
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
-                foreign_mag_view.layer.bounding_box
+                _rescaled_foreign_bounding_box(foreign_mag_view, mag)
             )
 
         return self.get_mag(mag)
