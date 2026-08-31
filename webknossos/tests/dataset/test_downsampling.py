@@ -9,6 +9,7 @@ from upath import UPath
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
 from webknossos.dataset.layer._downsampling_utils import (
     InterpolationModes,
+    _median,
     _mode,
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
@@ -52,6 +53,35 @@ def test_downsample_median() -> None:
     expected_result = np.array([3, 3, 2, 2, 2, 1])
 
     assert np.all(result == expected_result)
+
+
+@pytest.mark.parametrize("dtype", ["uint8", "uint16", "uint32", "uint64", "int32"])
+@pytest.mark.parametrize(
+    "factors", [[2, 2, 2], [2, 2, 1], [4, 4, 1], [1, 2, 4], [3, 1, 1]]
+)
+@pytest.mark.parametrize(
+    "interpolation_mode", [InterpolationModes.MEDIAN, InterpolationModes.MODE]
+)
+def test_downsample_cube_matches_non_linear_filter(
+    dtype: str, factors: list[int], interpolation_mode: InterpolationModes
+) -> None:
+    """downsample_cube must stay bit-identical to non_linear_filter_3d,
+    including the tie-breaking of the mode filter."""
+    rng = np.random.default_rng(42)
+    shape = tuple(12 * factor for factor in factors)
+    func = _median if interpolation_mode == InterpolationModes.MEDIAN else _mode
+    # A narrow value range provokes ties, a wide one yields distinct values.
+    for high in (4, 60000):
+        buffer = np.asfortranarray(
+            rng.integers(0, high, size=shape).astype(np.dtype(dtype))
+        )
+        expected = non_linear_filter_3d(buffer.copy(), factors, func)
+        result = downsample_cube(buffer, factors, interpolation_mode)
+        assert result.dtype == buffer.dtype
+        assert result.shape == expected.shape
+        assert np.array_equal(result, expected), (
+            f"mismatch for {dtype}, {factors}, {interpolation_mode}, high={high}"
+        )
 
 
 def test_non_linear_filter_reshape() -> None:
