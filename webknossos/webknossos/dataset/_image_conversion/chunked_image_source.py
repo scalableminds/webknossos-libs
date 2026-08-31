@@ -194,18 +194,19 @@ class ChunkedImageSource(ImageSource):
             else block.transpose(0, 2, 3, 1)
         )
 
-        if dtype is not None:
-            block = block.astype(dtype, order="F")
+        block = np.asarray(block, dtype=dtype)
 
         max_value = int(block.max())
         if "t" in relative_bbox.axes:
             # Add back the size-1 "t" axis this chunk corresponds to.
             block = block[np.newaxis]
 
-        # allow_unaligned=True: border chunks are smaller than shard_shape,
-        # since extents rarely divide evenly. Safe because parallel jobs write
-        # disjoint regions.
-        mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
+        # Skipping empty shards is safe, because the mag was just created and, therefore, is empty.
+        if block.any():
+            # allow_unaligned=True: border chunks are smaller than shard_shape,
+            # since extents rarely divide evenly. Safe because parallel jobs
+            # write disjoint regions.
+            mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
 
         return ChunkResult(
             (out_x_end - out_x_start, out_y_end - out_y_start), max_value

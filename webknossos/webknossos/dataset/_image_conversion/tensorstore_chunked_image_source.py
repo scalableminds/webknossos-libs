@@ -158,4 +158,6 @@ class TensorStoreChunkedImageSource(ChunkedImageSource):
             if not has_z:
                 block = block[np.newaxis]  # add a size-1 z axis
             slabs.append(block)
+        if len(slabs) == 1:
+            return slabs[0][np.newaxis]
         return np.stack(slabs, axis=0)  # (c, z, y, x)
