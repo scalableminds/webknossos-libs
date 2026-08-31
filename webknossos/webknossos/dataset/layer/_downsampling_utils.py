@@ -4,6 +4,7 @@ import warnings
 from collections.abc import Callable, Iterator
 from enum import Enum
 from itertools import product
+from os import environ
 from typing import TYPE_CHECKING, Union
 
 import numpy as np
@@ -24,7 +25,6 @@ except ImportError:
     _downsampling_numba = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
-_warned_about_missing_numba = False
 
 
 class InterpolationModes(Enum):
@@ -314,14 +314,26 @@ def _supports_fast_path(data: np.ndarray, factors: list[int]) -> bool:
 
 
 def _warn_once_about_missing_numba() -> None:
-    global _warned_about_missing_numba
-    if not _warned_about_missing_numba:
-        _warned_about_missing_numba = True
-        logger.info(
-            "Downsampling uses the numpy implementation of the non-linear filters. "
-            "Install the optional `numba` dependency (`pip install webknossos[numba]`) "
-            "for a significantly faster implementation."
+    # The environment is inherited by worker processes, so they stay quiet as well.
+    if environ.get("WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING", "False") == "False":
+        environ["WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING"] = "True"
+        warnings.warn(
+            "[INFO] Downsampling uses the numpy implementation of the non-linear "
+            "filters. Install the optional numba dependency with "
+            "'pip install webknossos[numba]' for a faster implementation.",
+            category=UserWarning,
+            stacklevel=2,
         )
+
+
+def warn_if_numba_is_missing(interpolation_mode: InterpolationModes) -> None:
+    """Emits the warning in this process, so that worker processes started afterwards
+    inherit the environment flag and stay quiet."""
+    if _downsampling_numba is None and interpolation_mode in (
+        InterpolationModes.MEDIAN,
+        InterpolationModes.MODE,
+    ):
+        _warn_once_about_missing_numba()
 
 
 def _downsample_median(data: np.ndarray, factors: list[int]) -> np.ndarray:

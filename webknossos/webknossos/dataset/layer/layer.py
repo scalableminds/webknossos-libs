@@ -26,6 +26,7 @@ from ._downsampling_utils import (
     determine_upsample_buffer_shape,
     downsample_cube_job,
     parse_interpolation_mode,
+    warn_if_numba_is_missing,
 )
 from ._upsampling_utils import upsample_cube_job
 from .abstract_layer import AbstractLayer
@@ -1138,6 +1139,7 @@ class Layer(AbstractLayer):
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.category
         )
+        warn_if_numba_is_missing(parsed_interpolation_mode)
 
         if not (from_mag <= target_mag):  # note, not the same as from_mag > target_mag
             raise ValueError(

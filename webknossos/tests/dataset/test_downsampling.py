@@ -1,3 +1,4 @@
+import os
 import sys
 import warnings
 
@@ -146,6 +147,31 @@ def test_downsample_cube_float(
         result = downsample_cube(buffer, [2, 2, 2], interpolation_mode)
         assert result.dtype == buffer.dtype
         assert np.array_equal(result, expected)
+
+
+def test_missing_numba_warns_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
+    monkeypatch.delenv("WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING", raising=False)
+    buffer = np.zeros((4, 4, 4), dtype=np.uint8)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        for _ in range(3):
+            downsample_cube(buffer, [2, 2, 2], InterpolationModes.MODE)
+    assert len([w for w in caught if "numba" in str(w.message)]) == 1
+    # The flag lives in the environment so that worker processes inherit it.
+    assert os.environ["WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING"] == "True"
+
+
+def test_missing_numba_does_not_warn_when_available(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING", raising=False)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        _downsampling_utils.warn_if_numba_is_missing(InterpolationModes.MODE)
+    expected = 0 if HAS_NUMBA else 1
+    assert len([w for w in caught if "numba" in str(w.message)]) == expected
 
 
 def test_downsample_slab_boundaries(monkeypatch: pytest.MonkeyPatch) -> None:
