@@ -201,7 +201,7 @@ class ChunkedImageSource(ImageSource):
             # Add back the size-1 "t" axis this chunk corresponds to.
             block = block[np.newaxis]
 
-        # Safe because the mag was just created and the jobs write disjoint regions.
+        # Skipping empty shards is safe, because the mag was just created and, therefore, is empty.
         if block.any():
             # allow_unaligned=True: border chunks are smaller than shard_shape,
             # since extents rarely divide evenly. Safe because parallel jobs
