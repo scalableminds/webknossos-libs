@@ -30,8 +30,7 @@ WEBKNOSSOS's own histogram clipping."""
 HISTOGRAM_SAMPLE_SIZE = 65_536
 """How many values are binned per call at least, when there are that many.
 Everything above is sampled, which keeps the cost down while leaving far more
-values than the clipping threshold needs. WEBKNOSSOS samples too, from three
-viewport planes."""
+values than the clipping threshold needs."""
 
 HISTOGRAM_SAMPLE_DIVISOR = 64
 """How much of a large input is binned: one value in this many, whenever that

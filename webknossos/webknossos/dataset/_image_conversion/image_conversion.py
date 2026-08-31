@@ -832,9 +832,6 @@ def add_layer_from_images(
         # The category guess may have replaced the layer object.
         final_layer = dataset._layers[layer.name]
         if final_layer.category == COLOR_CATEGORY and statistics is not None:
-            # The observed value range becomes the layer's min/max, and the
-            # histogram gathered along with it an intensity range clipped the
-            # way WEBKNOSSOS clips it.
             low, high = statistics.value_range
             intensity_range = statistics.clipped_range(
                 integral=np.issubdtype(current_dtype, np.integer)
