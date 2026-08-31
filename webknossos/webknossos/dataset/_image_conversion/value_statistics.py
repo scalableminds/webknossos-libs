@@ -42,17 +42,19 @@ class ValueStatistics(NamedTuple):
     distributed within it."""
 
     value_range: tuple[float, float]
-    """The smallest and largest value, for the layer's `min`/`max`."""
+    """The smallest and largest finite value, for the layer's `min`/`max`."""
 
     counts: np.ndarray
     """`HISTOGRAM_BINS` counts over equally wide bins spanning `low` to `high`
-    inclusive. Counted from a sample of the data for large inputs. All zero
-    when there was nothing to bin."""
+    inclusive. Counted from a sample of the data for large inputs, and all zero
+    when there was nothing to bin. `of` keeps these narrow (`uint32`), since
+    every chunk hands them back to the parent process; `combined` widens them
+    to `int64`, which summing many chunks cannot overflow."""
 
     low: float
     high: float
-    """The histogram's range. Narrower than `value_range` when the data holds
-    infinities, which cannot be binned."""
+    """The histogram's range. Narrower than `value_range` once statistics are
+    combined, since data that is entirely zero contributes no bins."""
 
     @classmethod
     def of(cls, array: np.ndarray) -> ValueStatistics | None:
@@ -62,10 +64,10 @@ class ValueStatistics(NamedTuple):
         sample of them, but always spans the whole range.
 
         Zeros are left out of the histogram, as they are background rather than
-        signal in almost every image; NaNs and infinities are left out because
-        they cannot be binned. They all still count towards the value range,
-        except for NaNs, which would otherwise wipe out the range of an
-        otherwise ordinary image.
+        signal in almost every image, but still count towards the value range.
+        NaNs and infinities are left out of both: they cannot be binned, and an
+        infinite value is no use as a display bound either. Data with nothing
+        but those has no statistics.
         """
         value_range = _value_range_of(array)
         if value_range is None:
@@ -74,8 +76,9 @@ class ValueStatistics(NamedTuple):
         if not (np.isfinite(low) and np.isfinite(high)):
             finite = array[np.isfinite(array)]
             if finite.size == 0:
-                return cls._unbinned(value_range)
+                return None
             low, high = float(finite.min()), float(finite.max())
+            value_range = (low, high)
         sample = _sample(array)
         counts, edges = np.histogram(sample, bins=HISTOGRAM_BINS, range=(low, high))
         zeros = sample.size - np.count_nonzero(sample)
@@ -101,7 +104,8 @@ class ValueStatistics(NamedTuple):
         if len(present) == 0:
             return None
         if len(present) == 1:
-            return present[0]
+            entry = present[0]
+            return entry._replace(counts=entry.counts.astype(np.int64))
         value_range = (
             min(entry.value_range[0] for entry in present),
             max(entry.value_range[1] for entry in present),

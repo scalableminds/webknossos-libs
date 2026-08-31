@@ -1908,9 +1908,13 @@ def test_view_configuration_intensity_range_clips_outliers(tmp_upath: UPath) -> 
     assert intensity_range[1] == pytest.approx(199.0, abs=32.0)
 
 
-def test_view_configuration_min_max_ignores_nan(tmp_upath: UPath) -> None:
+def test_view_configuration_min_max_ignores_non_finite(tmp_upath: UPath) -> None:
+    # An infinite bound would be written to datasource-properties.json as
+    # invalid JSON, so only finite values may reach the view configuration.
     data = np.zeros((4, 8, 16), dtype="float32")
     data[0, 0, 0] = np.nan
+    data[0, 0, 1] = np.inf
+    data[0, 0, 2] = -np.inf
     data[1, 1, 1] = -1.5
     data[2, 2, 2] = 3.5
     tiff_path = tmp_upath / "floats.tif"
@@ -1926,6 +1930,8 @@ def test_view_configuration_min_max_ignores_nan(tmp_upath: UPath) -> None:
     assert view_configuration is not None
     assert view_configuration.min == -1.5
     assert view_configuration.max == 3.5
+    assert view_configuration.intensity_range is not None
+    assert all(np.isfinite(view_configuration.intensity_range))
 
 
 def test_view_configuration_min_max_not_set_for_segmentation(

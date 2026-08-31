@@ -54,14 +54,17 @@ def test_histogram_skips_zeros() -> None:
     assert all_zero.clipped_range(integral=True) is None
 
 
-def test_histogram_skips_non_finite() -> None:
+def test_non_finite_values_are_left_out() -> None:
     statistics = ValueStatistics.of(
         np.array([np.nan, np.inf, -np.inf, 1.0, 2.0], dtype="float32")
     )
     assert statistics is not None
-    assert statistics.value_range == (-np.inf, np.inf)
     assert statistics.counts.sum() == 2
     assert (statistics.low, statistics.high) == (1.0, 2.0)
+    # An infinity is no use as a display bound, and would not survive being
+    # written to datasource-properties.json either.
+    assert statistics.value_range == (1.0, 2.0)
+    assert ValueStatistics.of(np.array([np.inf, -np.inf], dtype="float32")) is None
 
 
 def test_combined_covers_every_part() -> None:
@@ -80,6 +83,18 @@ def test_combined_covers_every_part() -> None:
     assert len(combined.counts) == HISTOGRAM_BINS
     assert ValueStatistics.combined([]) is None
     assert ValueStatistics.combined([None, None]) is None
+
+
+def test_combined_counts_are_wide_whatever_it_combined() -> None:
+    # Chunk counts are narrow to keep them cheap to hand back, but summing
+    # them must not depend on how many chunks there were.
+    one = ValueStatistics.of(np.full(100, 10, dtype="uint16"))
+    assert one is not None
+    assert one.counts.dtype == np.uint32
+    for entries in ([one], [one, one]):
+        combined = ValueStatistics.combined(entries)
+        assert combined is not None
+        assert combined.counts.dtype == np.int64
 
 
 @pytest.mark.parametrize(
