@@ -43,9 +43,7 @@ class TiffSliceReader(SliceReader):
             self._dtype = _tmp.dtype or np.dtype("uint8")
             self._shape = _tmp.shape
 
-            # A tiff tagged photometric=rgb with 3 uint8 samples is
-            # unambiguous colour, matching WEBKNOSSOS's own rule that only
-            # three uint8 channels display as RGB (see channels_fit_one_layer).
+            # A tiff tagged photometric=rgb with 3 uint8 samples should propagate as rgb/uint24 to the output.
             # tifffile calls those samples "S", only naming them "C" when the
             # file carries explicit multi-channel axis metadata, so such an
             # RGB tiff's "S" axis is renamed to the channel axis here. "S"
