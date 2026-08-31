@@ -45,7 +45,6 @@ dependencies = [
     "loxun ~=2.0.0",
     "natsort ~=8.4.0",
     "networkx ~=3.2.1",
-    "numba ~=0.61",
     "numpy >=2.0.0,<3.0.0",
     "scm-pims ~=0.7.1",
     "protobuf<7,>=3.12.0",
@@ -73,6 +72,7 @@ Changelog = "https://github.com/scalableminds/webknossos-libs/blob/master/webkno
 # A list of all of the optional dependencies. They can be opted into by other apps.
 [project.optional-dependencies]
 fastremap = ["fastremap ~=1.20.0"]
+numba = ["numba ~=0.61"]
 tifffile = ["tifffile >=2024.8.24"]
 imagecodecs = ["imagecodecs >=2021.11.20"]
 bioformats = ["JPype1 ~=1.7.0"]
@@ -90,6 +90,7 @@ examples = [
     "scikit-image ~=0.26.0; python_version >= '3.11'"
 ]
 all = [
+    "webknossos[numba]",
     "webknossos[tifffile]",
     "webknossos[fastremap]",
     "webknossos[imagecodecs]",

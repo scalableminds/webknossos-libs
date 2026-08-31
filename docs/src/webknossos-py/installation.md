@@ -17,6 +17,12 @@ For extended file format conversation support it is necessary to install the opt
 pip install "webknossos[all]"
 ```
 
+Downsampling uses numpy implementations of the `median` and `mode` filters by default. The optional `numba` dependency provides faster implementations of both, which is worthwhile when downsampling segmentation layers in particular:
+
+```bash
+pip install "webknossos[numba]"
+```
+
 For working with Zeiss CZI microscopy data utilizing the`pylibczirw` package run:
 
 ```bash

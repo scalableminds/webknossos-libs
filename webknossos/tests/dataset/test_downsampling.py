@@ -7,10 +7,9 @@ from cluster_tools import get_executor
 from upath import UPath
 
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
+from webknossos.dataset.layer import _downsampling_utils
 from webknossos.dataset.layer._downsampling_utils import (
     InterpolationModes,
-    _median,
-    _mode,
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
@@ -19,6 +18,17 @@ from webknossos.dataset.layer._downsampling_utils import (
     non_linear_filter_3d,
 )
 from webknossos.dataset.sampling_modes import SamplingModes
+
+try:
+    from webknossos.dataset.layer._downsampling_numba import _mode
+
+    HAS_NUMBA = True
+except ImportError:
+    HAS_NUMBA = False
+
+requires_numba = pytest.mark.skipif(
+    not HAS_NUMBA, reason="numba is an optional dependency"
+)
 
 BUFFER_SHAPE = Vec3Int.full(256)
 
@@ -37,6 +47,7 @@ def test_downsample_cube() -> None:
     assert np.all(output[:, :, :] == np.arange(0, BUFFER_SHAPE.x, 2))
 
 
+@requires_numba
 def test_downsample_mode() -> None:
     a = np.array([[1, 3, 4, 2, 2, 7], [5, 2, 2, 1, 4, 1], [3, 3, 2, 2, 1, 1]])
 
@@ -55,6 +66,36 @@ def test_downsample_median() -> None:
     assert np.all(result == expected_result)
 
 
+def reference_downsample(
+    data: np.ndarray, factors: list[int], interpolation_mode: InterpolationModes
+) -> np.ndarray:
+    """Straightforward reference for the non-linear filters, independent of numba.
+
+    Within a block the elements are ordered `dy + fy * dx + fx * fy * dz`, which is the
+    order `non_linear_filter_3d` produces and which decides how ties are broken.
+    """
+    fx, fy, fz = factors
+    target = np.empty(
+        (data.shape[0] // fx, data.shape[1] // fy, data.shape[2] // fz),
+        dtype=data.dtype,
+    )
+    for x in range(target.shape[0]):
+        for y in range(target.shape[1]):
+            for z in range(target.shape[2]):
+                block = [
+                    data[x * fx + dx, y * fy + dy, z * fz + dz]
+                    for dz in range(fz)
+                    for dx in range(fx)
+                    for dy in range(fy)
+                ]
+                if interpolation_mode == InterpolationModes.MODE:
+                    counts = [block.count(value) for value in block]
+                    target[x, y, z] = block[counts.index(max(counts))]
+                else:
+                    target[x, y, z] = np.median(np.array(block)).astype(data.dtype)
+    return target
+
+
 @pytest.mark.parametrize("dtype", ["uint8", "uint16", "uint32", "uint64", "int32"])
 @pytest.mark.parametrize(
     "factors", [[2, 2, 2], [2, 2, 1], [4, 4, 1], [1, 2, 4], [3, 1, 1]]
@@ -62,20 +103,26 @@ def test_downsample_median() -> None:
 @pytest.mark.parametrize(
     "interpolation_mode", [InterpolationModes.MEDIAN, InterpolationModes.MODE]
 )
+@pytest.mark.parametrize("with_numba", [True, False])
 def test_downsample_cube_matches_non_linear_filter(
-    dtype: str, factors: list[int], interpolation_mode: InterpolationModes
+    dtype: str,
+    factors: list[int],
+    interpolation_mode: InterpolationModes,
+    with_numba: bool,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """downsample_cube must stay bit-identical to non_linear_filter_3d,
-    including the tie-breaking of the mode filter."""
+    """Both the numba and the numpy implementation must stay bit-identical to
+    non_linear_filter_3d, including the tie-breaking of the mode filter."""
+    if not with_numba:
+        monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
     rng = np.random.default_rng(42)
-    shape = tuple(12 * factor for factor in factors)
-    func = _median if interpolation_mode == InterpolationModes.MEDIAN else _mode
+    shape = tuple(6 * factor for factor in factors)
     # A narrow value range provokes ties, a wide one yields distinct values.
     for high in (4, 60000):
         buffer = np.asfortranarray(
             rng.integers(0, high, size=shape).astype(np.dtype(dtype))
         )
-        expected = non_linear_filter_3d(buffer.copy(), factors, func)
+        expected = reference_downsample(buffer, factors, interpolation_mode)
         result = downsample_cube(buffer, factors, interpolation_mode)
         assert result.dtype == buffer.dtype
         assert result.shape == expected.shape
@@ -84,6 +131,38 @@ def test_downsample_cube_matches_non_linear_filter(
         )
 
 
+@pytest.mark.parametrize("dtype", ["float32", "float64"])
+@pytest.mark.parametrize("with_numba", [True, False])
+def test_downsample_cube_float(
+    dtype: str, with_numba: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Float layers must produce the same result with and without numba."""
+    if not with_numba:
+        monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
+    rng = np.random.default_rng(7)
+    buffer = np.asfortranarray(rng.integers(0, 5, size=(16, 16, 16)).astype(dtype))
+    for interpolation_mode in (InterpolationModes.MEDIAN, InterpolationModes.MODE):
+        expected = reference_downsample(buffer, [2, 2, 2], interpolation_mode)
+        result = downsample_cube(buffer, [2, 2, 2], interpolation_mode)
+        assert result.dtype == buffer.dtype
+        assert np.array_equal(result, expected)
+
+
+def test_downsample_slab_boundaries(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The numpy implementation processes the buffer in slabs; a slab size that does
+    not divide the target must not change the result."""
+    monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
+    monkeypatch.setattr(_downsampling_utils, "_SLAB_VOXELS", 1)
+    rng = np.random.default_rng(11)
+    buffer = np.asfortranarray(rng.integers(0, 4, size=(8, 8, 14)).astype(np.uint8))
+    for interpolation_mode in (InterpolationModes.MEDIAN, InterpolationModes.MODE):
+        expected = reference_downsample(buffer, [2, 2, 2], interpolation_mode)
+        assert np.array_equal(
+            downsample_cube(buffer, [2, 2, 2], interpolation_mode), expected
+        )
+
+
+@requires_numba
 def test_non_linear_filter_reshape() -> None:
     a = np.array([[[1, 3], [1, 4]], [[4, 2], [3, 1]]], dtype=np.uint8)
 
