@@ -45,12 +45,11 @@ class RemoteMagView(MagView["RemoteLayer"]):
         Do not use this constructor manually. Instead use `RemoteLayer.get_mag()`.
         """
         self._access_mode = access_mode
-        # The properties document actually served by access_mode is the only source
-        # that reliably describes what it serves: the datastore may derive a
-        # materially different representation for one mode than another mode's
-        # document describes (e.g. splitting a multi-channel source into
-        # single-channel layers), so bounding_box, data_format and the mag path all
-        # come from this single document, never mixed across modes.
+
+        # The datastore might make changes to the mag views for different access modes
+        # (e.g. different data_formats). The properties document needs to be fetched
+        # from the server for each access mode. It is not sufficient to rely on the
+        # properties that are served via the dataset API endpoint.
         self._layer_properties = layer.dataset._get_layer_properties_for_mode(
             layer.name, access_mode
         )
