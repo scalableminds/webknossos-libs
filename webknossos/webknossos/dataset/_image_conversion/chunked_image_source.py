@@ -194,9 +194,6 @@ class ChunkedImageSource(ImageSource):
             else block.transpose(0, 2, 3, 1)
         )
 
-        # Only the dtype is forced, never the memory layout.
-        # Materializing a large shard here just to reorder would be
-        # the most expensive step of the whole conversion.
         block = np.asarray(block, dtype=dtype)
 
         max_value = int(block.max())
