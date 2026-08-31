@@ -1653,9 +1653,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         new_layer = self.add_layer_like(foreign_layer, new_layer_name)
         mag_views = list(foreign_layer.mags.values())
         if len(mag_views) > 0:
-            # A remote layer's data_format describes its underlying storage, but
-            # referencing its mags references the paths of the layer's access mode,
-            # which may serve a different format (zarr streaming always serves Zarr).
             mag_data_formats = {mag_view.data_format for mag_view in mag_views}
             if len(mag_data_formats) > 1:
                 raise ValueError(

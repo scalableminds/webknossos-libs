@@ -302,7 +302,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             )
 
     def with_access_mode(self, access_mode: RemoteAccessMode) -> "RemoteDataset":
-        """Returns this dataset with a different default access mode, without a new request.
+        """Returns this dataset with a different default access mode.
 
         Raises:
             ValueError: If `access_mode` is not supported for this dataset, e.g. a

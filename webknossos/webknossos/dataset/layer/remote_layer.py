@@ -97,12 +97,13 @@ class RemoteLayer(AbstractLayer):
 
         Raises:
             IndexError: If specified magnification does not exist
-            ValueError: If the requested access mode is not available for this dataset
+            ValueError: If the requested access mode is not available for this mag
 
         Examples:
             ```
-            mag1 = layer.get_mag(1, access_mode=RemoteAccessMode.DIRECT_PATH)
-            mag2 = layer.get_mag(2, access_mode=RemoteAccessMode.PROXY_PATH)
+            mag1 = layer.get_mag(1)
+            mag2 = layer.get_mag(2, access_mode=RemoteAccessMode.DIRECT_PATH)
+            mag4 = layer.get_mag(4, access_mode=RemoteAccessMode.PROXY_PATH)
             ```
         """
         mag = Mag(mag)

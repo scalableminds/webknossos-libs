@@ -39,14 +39,6 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_upload_resumable_url(self) -> str:
         return f"{self.url_prefix}/datasets/upload/dataset"
 
-    # Routes to the datasource-properties.json documents that describe a dataset's
-    # served representation for a given access mode. Kept here, so that a route change
-    # for a future api version only has to be reflected in one place. Everything within
-    # such a document (mag/attachment paths, bounding box, axis order) always comes
-    # from the document itself, never computed: the datastore can derive a materially
-    # different representation than another mode's document describes (e.g. splitting
-    # a multi-channel source into single-channel layers), so paths within a document
-    # are not safely predictable from a formula.
     def zarr_streaming_dataset_url(self, dataset_id: str) -> str:
         return f"{self.url_prefix}/zarr/{dataset_id}/"
 
