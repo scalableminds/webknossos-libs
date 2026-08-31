@@ -39,6 +39,15 @@ class DatastoreApiClient(AbstractApiClient):
     def dataset_upload_resumable_url(self) -> str:
         return f"{self.url_prefix}/datasets/upload/dataset"
 
+    def zarr_streaming_dataset_url(self, dataset_id: str) -> str:
+        return f"{self.url_prefix}/zarr/{dataset_id}/"
+
+    def zarr_streaming_annotation_url(self, annotation_id: str) -> str:
+        return f"{self.url_prefix}/annotations/zarr/{annotation_id}/"
+
+    def proxy_dataset_url(self, dataset_id: str) -> str:
+        return f"{self.url_prefix}/datasets/{dataset_id}/proxy/"
+
     def dataset_upload_resumable_query(
         self, _organization_id: str, _dataset_name: str, total_file_count: int
     ) -> dict:

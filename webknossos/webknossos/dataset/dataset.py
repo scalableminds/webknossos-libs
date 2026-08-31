@@ -1651,7 +1651,16 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
 
         new_layer = self.add_layer_like(foreign_layer, new_layer_name)
-        for mag_view in foreign_layer.mags.values():
+        mag_views = list(foreign_layer.mags.values())
+        if len(mag_views) > 0:
+            mag_data_formats = {mag_view.data_format for mag_view in mag_views}
+            if len(mag_data_formats) > 1:
+                raise ValueError(
+                    f"Cannot reference layer {foreign_layer.name}, because its mags have "
+                    + f"differing data formats: {sorted(str(i) for i in mag_data_formats)}."
+                )
+            new_layer._properties.data_format = mag_data_formats.pop()
+        for mag_view in mag_views:
             new_layer.add_mag_as_ref(mag_view, extend_layer_bounding_box=False)
 
         # reference-copy all attachments

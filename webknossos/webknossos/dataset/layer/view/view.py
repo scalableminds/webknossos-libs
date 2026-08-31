@@ -116,6 +116,15 @@ class View:
         self._mag = mag
 
     @property
+    def data_format(self) -> DataFormat:
+        """The data format that this view reads and writes.
+
+        Usually this is the `data_format` of the layer. For remote mags it depends on
+        how the mag is accessed, e.g. zarr streaming always serves `DataFormat.Zarr`.
+        """
+        return self._data_format
+
+    @property
     def info(self) -> ArrayInfo:
         """Get information about the array structure and properties.
 

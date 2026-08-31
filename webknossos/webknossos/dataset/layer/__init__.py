@@ -24,6 +24,7 @@ from .view import (
     ArrayInfo,
     BaseArray,
     MagView,
+    RemoteMagView,
     TensorStoreArray,
     View,
     Zarr3ArrayInfo,
