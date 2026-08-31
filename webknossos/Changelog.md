@@ -32,6 +32,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Converting an OME-Zarr file (0.4, 0.5 or `.ozx`) that carries `omero` channel metadata now uses it to set each converted layer's default view configuration (color, intensity range, min/max, and whether it starts disabled) and, when channels are split into one layer each, to name the layers from the channel's label instead of `channel{N}`. [#1512](https://github.com/scalableminds/webknossos-libs/pull/1512)
 - Added support for WEBKNOSSOS API version 15, which allows segment ids to use the full uint64 range. Such ids may now be serialized as `{"customJsonEncoding": "bigint", "value": "<decimal string>"}` instead of a plain JSON number, both in API responses and in `datasource-properties.json`.
 - Added `neuroglancerPrecomputed` as a valid `AttachmentDataFormat` for `MeshAttachment`s. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
+- Added a `gcs` extra (`pip install "webknossos[gcs]"`, also part of `webknossos[all]`) providing `gcsfs`, which is needed to detect the format of a dataset stored on Google Cloud Storage. [#1524](https://github.com/scalableminds/webknossos-libs/pull/1524)
 
 ### Changed
 - `.czi` conversion is faster and uses less memory: only the data needed for each chunk is read, rather than whole image planes. Multi-timepoint `.czi` files now convert into a single layer with a `t` axis. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
