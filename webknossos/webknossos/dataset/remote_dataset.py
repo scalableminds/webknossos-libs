@@ -1349,6 +1349,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         else:
             annotation_id = None
 
+        dataset_name: str | None = None
         if dataset_id is None:
             assert dataset_name_or_url is not None, (
                 f"Please supply either a dataset_id or a dataset name or url to Dataset.{caller}()."
@@ -1388,20 +1389,9 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
                 assert organization_id is not None
                 assert dataset_name is not None
-
-                dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
             else:
                 dataset_name = dataset_name_or_url
                 organization_id = organization_id or current_context.organization_id
-
-                # An id-shaped argument is treated as a dataset id, unless no such
-                # dataset exists. Then it is resolved as a dataset name.
-                if _DATASET_ID_REGEX.fullmatch(dataset_name) and cls._dataset_id_exists(
-                    dataset_name, sharing_token=sharing_token
-                ):
-                    dataset_id = dataset_name
-                else:
-                    dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
 
         if webknossos_url is None:
             webknossos_url = current_context.url
@@ -1417,6 +1407,19 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                     + "Please see https://docs.webknossos.org/api/webknossos/client/context.html to adapt the URL and token."
                 )
                 context_manager = webknossos_context(webknossos_url, None)
+
+        if dataset_id is None:
+            assert dataset_name is not None and organization_id is not None
+            with context_manager:
+                # An id-shaped argument is treated as a dataset id, unless no such
+                # dataset exists. Then it is resolved as a dataset name.
+                if _DATASET_ID_REGEX.fullmatch(dataset_name) and cls._dataset_id_exists(
+                    dataset_name, sharing_token=sharing_token
+                ):
+                    dataset_id = dataset_name
+                else:
+                    dataset_id = cls._disambiguate_remote(dataset_name, organization_id)
+
         return (context_manager, dataset_id, annotation_id, sharing_token)
 
     @classmethod
