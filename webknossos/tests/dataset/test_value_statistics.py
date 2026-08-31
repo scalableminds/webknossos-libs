@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from webknossos.dataset._image_conversion import value_statistics
 from webknossos.dataset._image_conversion.value_statistics import (
     HISTOGRAM_BINS,
     ValueStatistics,
@@ -85,48 +86,92 @@ def test_combined_covers_every_part() -> None:
     "name",
     ["gaussian_uint8", "gaussian_uint16", "sparse_outliers", "float32", "mostly_zeros"],
 )
-def test_clipped_range_approximates_webknossos(name: str) -> None:
+def test_clipped_range_approximates_webknossos(
+    name: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    data = _distribution(name)
+    integral = np.issubdtype(data.dtype, np.integer)
+    expected_low, expected_high = _reference_clip(data)
+    span = expected_high - expected_low
+
+    def clip_of_chunks() -> tuple[tuple[float, float], float]:
+        # Chunked the way a conversion would be, so the re-binning is
+        # exercised.
+        statistics = ValueStatistics.combined(
+            ValueStatistics.of(chunk) for chunk in np.array_split(data, 7)
+        )
+        assert statistics is not None
+        assert statistics.value_range == (float(data.min()), float(data.max()))
+        clipped = statistics.clipped_range(integral=integral)
+        assert clipped is not None
+        # Clipping only ever narrows the range.
+        assert clipped[0] >= statistics.low
+        assert clipped[1] <= statistics.high
+        return clipped, (statistics.high - statistics.low) / HISTOGRAM_BINS
+
+    # A sampled quantile wobbles, so this is the accuracy of the whole thing.
+    sampled, _ = clip_of_chunks()
+    assert sampled[0] == pytest.approx(expected_low, abs=0.05 * span)
+    assert sampled[1] == pytest.approx(expected_high, abs=0.05 * span)
+
+    # Without sampling, only the bin width stands between this and the exact
+    # answer WEBKNOSSOS computes.
+    monkeypatch.setattr(value_statistics, "HISTOGRAM_SAMPLE_SIZE", data.size)
+    monkeypatch.setattr(value_statistics, "HISTOGRAM_SAMPLE_DIVISOR", 1)
+    complete, bin_width = clip_of_chunks()
+    tolerance = bin_width + (1.0 if integral else 0.0)
+    assert complete[0] == pytest.approx(expected_low, abs=tolerance)
+    assert complete[1] == pytest.approx(expected_high, abs=tolerance)
+
+
+def _distribution(name: str) -> np.ndarray:
     rng = np.random.default_rng(0)
     if name == "gaussian_uint8":
-        data = np.clip(rng.normal(128, 20, 500_000), 1, 255).astype("uint8")
-    elif name == "gaussian_uint16":
-        data = np.clip(rng.normal(3000, 400, 500_000), 1, 65535).astype("uint16")
-    elif name == "sparse_outliers":
+        return np.clip(rng.normal(128, 20, 500_000), 1, 255).astype("uint8")
+    if name == "gaussian_uint16":
+        return np.clip(rng.normal(3000, 400, 500_000), 1, 65535).astype("uint16")
+    if name == "sparse_outliers":
         # A handful of maxed-out voxels is exactly what clipping is for.
-        data = np.concatenate(
+        return np.concatenate(
             [
                 np.clip(rng.normal(3000, 400, 500_000), 1, 65535).astype("uint16"),
                 np.full(30, 65535, dtype="uint16"),
             ]
         )
-    elif name == "float32":
-        data = rng.normal(0.5, 0.1, 500_000).astype("float32")
-    else:
-        data = np.where(
-            rng.random(500_000) < 0.9, 0, rng.integers(100, 200, 500_000)
-        ).astype("uint16")
+    if name == "float32":
+        return rng.normal(0.5, 0.1, 500_000).astype("float32")
+    return np.where(
+        rng.random(500_000) < 0.9, 0, rng.integers(100, 200, 500_000)
+    ).astype("uint16")
 
-    # Chunked the way a conversion would be, so the re-binning is exercised.
-    statistics = ValueStatistics.combined(
-        ValueStatistics.of(chunk) for chunk in np.array_split(data, 7)
-    )
+
+def test_large_input_is_sampled(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(value_statistics, "HISTOGRAM_SAMPLE_SIZE", 50_000)
+    rng = np.random.default_rng(0)
+    data = np.clip(rng.normal(3000, 400, (20, 100, 250)), 1, 65535).astype("uint16")
+
+    statistics = ValueStatistics.of(data)
     assert statistics is not None
+    assert 0 < statistics.counts.sum() < data.size
+    # Only the histogram is sampled; the range still covers every value.
     assert statistics.value_range == (float(data.min()), float(data.max()))
-    integral = np.issubdtype(data.dtype, np.integer)
-    clipped = statistics.clipped_range(integral=integral)
-    assert clipped is not None
+    # Counts travel back from every chunk, so they stay narrow.
+    assert statistics.counts.dtype == np.uint32
 
-    expected_low, expected_high = _reference_clip(data)
-    # The bins make this an approximation; one bin of the combined range is
-    # the accuracy it can offer.
-    tolerance = (statistics.high - statistics.low) / HISTOGRAM_BINS + (
-        1.0 if integral else 0.0
-    )
-    assert clipped[0] == pytest.approx(expected_low, abs=tolerance)
-    assert clipped[1] == pytest.approx(expected_high, abs=tolerance)
-    # Clipping only ever narrows the range.
-    assert clipped[0] >= statistics.low
-    assert clipped[1] <= statistics.high
+    monkeypatch.setattr(value_statistics, "HISTOGRAM_SAMPLE_SIZE", data.size)
+    monkeypatch.setattr(value_statistics, "HISTOGRAM_SAMPLE_DIVISOR", 1)
+    complete = ValueStatistics.of(data)
+    assert complete is not None
+    assert complete.counts.sum() == data.size
+
+    sampled_clip = statistics.clipped_range(integral=True)
+    complete_clip = complete.clipped_range(integral=True)
+    assert sampled_clip is not None and complete_clip is not None
+    # A sampled quantile wobbles, but only by a fraction of the range it is
+    # estimating -- and this samples far harder than a conversion does.
+    tolerance = 0.05 * (complete_clip[1] - complete_clip[0])
+    assert sampled_clip[0] == pytest.approx(complete_clip[0], abs=tolerance)
+    assert sampled_clip[1] == pytest.approx(complete_clip[1], abs=tolerance)
 
 
 def test_clipped_range_of_constant_data() -> None:

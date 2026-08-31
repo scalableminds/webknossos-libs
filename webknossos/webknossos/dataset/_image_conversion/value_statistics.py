@@ -27,6 +27,16 @@ DEFAULT_THRESHOLD_RATIO = 0.0001
 """Share of the values clipped off, split between both ends. Same default as
 WEBKNOSSOS's own histogram clipping."""
 
+HISTOGRAM_SAMPLE_SIZE = 65_536
+"""How many values are binned per call at least, when there are that many.
+Everything above is sampled, which keeps the cost down while leaving far more
+values than the clipping threshold needs. WEBKNOSSOS samples too, from three
+viewport planes."""
+
+HISTOGRAM_SAMPLE_DIVISOR = 64
+"""How much of a large input is binned: one value in this many, whenever that
+is more than `HISTOGRAM_SAMPLE_SIZE`."""
+
 
 class ValueStatistics(NamedTuple):
     """What the values of some data look like: their range, and how they are
@@ -37,7 +47,8 @@ class ValueStatistics(NamedTuple):
 
     counts: np.ndarray
     """`HISTOGRAM_BINS` counts over equally wide bins spanning `low` to `high`
-    inclusive. All zero when there was nothing to bin."""
+    inclusive. Counted from a sample of the data for large inputs. All zero
+    when there was nothing to bin."""
 
     low: float
     high: float
@@ -47,6 +58,9 @@ class ValueStatistics(NamedTuple):
     @classmethod
     def of(cls, array: np.ndarray) -> ValueStatistics | None:
         """The statistics of `array`, or None when it holds no usable value.
+
+        The value range covers every value; the histogram is built from a
+        sample of them, but always spans the whole range.
 
         Zeros are left out of the histogram, as they are background rather than
         signal in almost every image; NaNs and infinities are left out because
@@ -63,14 +77,17 @@ class ValueStatistics(NamedTuple):
             if finite.size == 0:
                 return cls._unbinned(value_range)
             low, high = float(finite.min()), float(finite.max())
-        counts, edges = np.histogram(array, bins=HISTOGRAM_BINS, range=(low, high))
-        zeros = array.size - np.count_nonzero(array)
+        sample = _sample(array)
+        counts, edges = np.histogram(sample, bins=HISTOGRAM_BINS, range=(low, high))
+        zeros = sample.size - np.count_nonzero(sample)
         if zeros > 0 and low <= 0.0 <= high:
             zero_bin = min(
                 int(np.searchsorted(edges, 0.0, side="right")) - 1, len(counts) - 1
             )
             counts[zero_bin] = max(int(counts[zero_bin]) - zeros, 0)
-        return cls(value_range, counts, low, high)
+        # Every chunk hands its counts back to the parent process, so they are
+        # kept narrow. Combining them widens them again.
+        return cls(value_range, counts.astype(np.uint32), low, high)
 
     @classmethod
     def combined(
@@ -159,6 +176,24 @@ class ValueStatistics(NamedTuple):
         low = min(max(low, self.low), self.high)
         high = min(max(high, low), self.high)
         return (low, high)
+
+
+def _sample(array: np.ndarray) -> np.ndarray:
+    """The values of `array` to bin, as a view.
+
+    Sampling every n-th slice of the longest axis spreads the sample over the
+    whole array without copying it.
+    """
+    if array.ndim == 0:
+        return array
+    wanted = max(HISTOGRAM_SAMPLE_SIZE, array.size // HISTOGRAM_SAMPLE_DIVISOR)
+    stride = -(-array.size // wanted)
+    if stride <= 1:
+        return array
+    axis = int(np.argmax(array.shape))
+    index: list[slice] = [slice(None)] * array.ndim
+    index[axis] = slice(None, None, stride)
+    return array[tuple(index)]
 
 
 def _value_range_of(array: np.ndarray) -> tuple[float, float] | None:
