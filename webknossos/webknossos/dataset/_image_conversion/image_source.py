@@ -12,13 +12,11 @@ z only and correcting the final size from what was actually written.
 
 from __future__ import annotations
 
-import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import NamedTuple
 
-import numpy as np
 from numpy.typing import DTypeLike
 
 from ...dataset_properties import LayerViewConfiguration
@@ -28,6 +26,7 @@ from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
+from .value_statistics import ValueHistogram
 
 
 @dataclass(frozen=True)
@@ -146,35 +145,10 @@ class ChunkResult(NamedTuple):
     because uint64 segment ids do not survive a round trip through `float`.
     None when the chunk held no usable values."""
 
-
-def value_range_of(array: np.ndarray) -> tuple[float, float] | None:
-    """The `(min, max)` of `array` as floats, for `ChunkResult.value_range`.
-
-    NaNs are ignored, so a single NaN does not wipe out the range of an
-    otherwise ordinary image. None when the array is empty or all-NaN.
-    """
-    if array.size == 0:
-        return None
-    if np.issubdtype(array.dtype, np.floating):
-        with warnings.catch_warnings():
-            # An all-NaN array warns and yields NaN, which is handled below.
-            warnings.simplefilter("ignore", RuntimeWarning)
-            low, high = np.nanmin(array), np.nanmax(array)
-        if np.isnan(low):
-            return None
-        return (float(low), float(high))
-    return (float(array.min()), float(array.max()))
-
-
-def merge_value_ranges(
-    left: tuple[float, float] | None, right: tuple[float, float] | None
-) -> tuple[float, float] | None:
-    """The range covering both `left` and `right`, ignoring missing ones."""
-    if left is None:
-        return right
-    if right is None:
-        return left
-    return (min(left[0], right[0]), max(left[1], right[1]))
+    histogram: ValueHistogram | None = None
+    """How the written values are distributed, for the intensity range of the
+    layer's default view configuration. None when the chunk was empty or all
+    zero."""
 
 
 class ImageSource(ABC):

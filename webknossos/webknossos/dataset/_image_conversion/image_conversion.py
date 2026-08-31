@@ -56,7 +56,7 @@ from ..layer.abstract_layer import (
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
 from . import common_slice_readers, sliced_image_source
-from .image_source import ImageSource, ReadOptions, merge_value_ranges
+from .image_source import ImageSource, ReadOptions
 from .image_source_registry import (
     describe_missing_extras,
     get_unavailable_extensions,
@@ -68,6 +68,7 @@ from .segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
 )
+from .value_statistics import clip_histogram, combine_histograms, merge_value_ranges
 
 if TYPE_CHECKING:
     from ..dataset import Dataset
@@ -779,6 +780,7 @@ def add_layer_from_images(
                 (result.value_range for result in chunk_results),
                 None,
             )
+            histogram = combine_histograms(result.histogram for result in chunk_results)
             if category == "segmentation":
                 max_id = max(max_ids)
                 cast(SegmentationLayer, layer).largest_segment_id = max_id
@@ -834,16 +836,23 @@ def add_layer_from_images(
         # The category guess may have replaced the layer object.
         final_layer = dataset._layers[layer.name]
         if final_layer.category == COLOR_CATEGORY and value_range is not None:
-            # The observed value range becomes the layer's min/max.
-            # `intensity_range` is left alone: WEBKNOSSOS derives it from a
-            # histogram with outlier clipping.
+            # The observed value range becomes the layer's min/max, and the
+            # histogram gathered along with it an intensity range clipped the
+            # way WEBKNOSSOS clips it.
             low, high = value_range
+            intensity_range = (
+                None
+                if histogram is None
+                else clip_histogram(
+                    histogram, integral=np.issubdtype(current_dtype, np.integer)
+                )
+            )
             view_configuration = final_layer.default_view_configuration
             if view_configuration is None:
                 final_layer.default_view_configuration = LayerViewConfiguration(
-                    min=low, max=high
+                    min=low, max=high, intensity_range=intensity_range
                 )
-            elif view_configuration.min is None or view_configuration.max is None:
+            else:
                 # The format's own metadata wins, so only fill the gaps.
                 final_layer.default_view_configuration = attr.evolve(
                     view_configuration,
@@ -853,6 +862,8 @@ def add_layer_from_images(
                     max=view_configuration.max
                     if view_configuration.max is not None
                     else high,
+                    intensity_range=view_configuration.intensity_range
+                    or intensity_range,
                 )
 
         # Verify the properties are actually consistent now, instead of assuming so.
