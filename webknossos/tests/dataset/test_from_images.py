@@ -188,27 +188,27 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         "tiffs_test_CS.tif__channel0": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=1, y=128, z=128),
+            VecInt(s=3, c=1, x=128, y=128, z=64),
         ),
         "tiffs_test_CS.tif__channel1": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=1, y=128, z=128),
+            VecInt(s=3, c=1, x=128, y=128, z=64),
         ),
         "tiffs_test_CS.tif__channel2": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=1, y=128, z=128),
+            VecInt(s=3, c=1, x=128, y=128, z=64),
         ),
         "tiffs_test_CS.tif__channel3": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=1, y=128, z=128),
+            VecInt(s=3, c=1, x=128, y=128, z=64),
         ),
         "tiffs_test_CS.tif__channel4": (
             "uint8",
             1,
-            VecInt(s=3, x=64, c=1, y=128, z=128),
+            VecInt(s=3, c=1, x=128, y=128, z=64),
         ),
         "tiffs_test_C.tif__channel0": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
         "tiffs_test_C.tif__channel1": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
@@ -216,7 +216,7 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         "tiffs_test_C.tif__channel3": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
         "tiffs_test_C.tif__channel4": ("uint8", 1, VecInt(c=1, x=128, y=128, z=64)),
         "tiffs_test_I.tif": ("uint32", 1, VecInt(c=1, x=64, y=128, z=64)),
-        "tiffs_test_S.tif": ("uint16", 1, VecInt(c=1, s=3, z=64, y=128, x=128)),
+        "tiffs_test_S.tif": ("uint16", 1, VecInt(s=3, c=1, x=128, y=128, z=64)),
     }
 
     for layer_name, layer in ds.layers.items():
