@@ -36,6 +36,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added support for WEBKNOSSOS API version 15, which allows segment ids to use the full uint64 range. Such ids may now be serialized as `{"customJsonEncoding": "bigint", "value": "<decimal string>"}` instead of a plain JSON number, both in API responses and in `datasource-properties.json`. [#1516](https://github.com/scalableminds/webknossos-libs/pull/1516)
 - Added `neuroglancerPrecomputed` as a valid `AttachmentDataFormat` for `MeshAttachment`s. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
 - Added `RemoteDataset.with_access_mode()`, a cheaper alternative to `reopen()` that reuses the already-fetched properties instead of making a new request. [#1492](https://github.com/scalableminds/webknossos-libs/pull/1492)
+- Added a `gcs` extra (`pip install "webknossos[gcs]"`, also part of `webknossos[all]`) providing `gcsfs`, which is needed to detect the format of a dataset stored on Google Cloud Storage. [#1524](https://github.com/scalableminds/webknossos-libs/pull/1524)
 
 ### Changed
 - `RemoteDataset.zarr_streaming_path` is deprecated. Use the path of an individual mag instead, e.g. `layer.get_mag(mag, access_mode=RemoteAccessMode.ZARR_STREAMING).path`. [#1492](https://github.com/scalableminds/webknossos-libs/pull/1492)
@@ -62,6 +63,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Fixed that local dataset/layer/mag/attachment path resolution on Windows converted mapped/substituted network drives (e.g. `Z:\...`) to their UNC form (`\\server\share\...`), which TensorStore's local file driver rejected. [#1513](https://github.com/scalableminds/webknossos-libs/issues/1513)
 - Fixed that renaming a layer of a zarr-streamed `RemoteDataset` (where layer metadata cannot be persisted) raised an opaque `StopIteration` instead of the expected `RuntimeError` explaining that the layer is read-only. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
 - Fixed that `UnexpectedStatusError` and `CannotHandleResponseError` raised an `AttributeError` when unpickled (e.g. when raised inside a `ProcessPoolExecutor` worker), instead of reproducing the original error. [#1517](https://github.com/scalableminds/webknossos-libs/pull/1517)
+- Fixed that converted datasets always have c,x,y,z axes. [#1523](https://github.com/scalableminds/webknossos-libs/pull/1523)
+- Fixed RGB TIFFs converting into a single-channel z-stack (the 3 channels read as z-slices) instead of one RGB layer, since `tifffile` names the samples-per-pixel axis `S`, not `C`. A samples axis of exactly 3 tagged `photometric=rgb` with `uint8` data is now recognized as the channel axis, matching how the same pixels convert from a `.png`. [#1499](https://github.com/scalableminds/webknossos-libs/issues/1499) [#1522](https://github.com/scalableminds/webknossos-libs/pull/1522)
+- Fixed converting a single 2D multi-channel image (e.g. an RGB `.png`) at `mag` greater than 1: it crashed with a mag-alignment `AssertionError`, since the batch size used to chunk the placeholder bounding box was in mag-native voxels but applied directly to the mag-1 box without scaling by the mag factor. [#1522](https://github.com/scalableminds/webknossos-libs/pull/1522)
+- Fixed that `View.num_channels` returned `0` instead of `1` for a view whose bounding box has no channel axis. [#1519](https://github.com/scalableminds/webknossos-libs/pull/1519)
 
 
 ## [3.7.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v3.7.0) - 2026-08-12

@@ -8,6 +8,7 @@ from webknossos.client.api_client.models import (
     ApiAnnotation,
     ApiAnnotationUploadResult,
     ApiDataset,
+    ApiDatasetCompact,
     ApiDatasetComposeAttachment,
     ApiDatasetComposeLayer,
     ApiDatasetComposeMag,
@@ -104,16 +105,17 @@ class WkApiClient(AbstractApiClient):
         organization_id: str | None,
         name: str | None,
         folder_id: str | None,
-    ) -> list[ApiDataset]:
+    ) -> list[ApiDatasetCompact]:
         route = "/datasets"
         return self._get_json(
             route,
-            list[ApiDataset],
+            list[ApiDatasetCompact],
             query={
                 "isActive": is_active,
                 "organizationId": organization_id,
                 "searchQuery": name,
                 "folderId": folder_id,
+                "compact": True,
             },
         )
 

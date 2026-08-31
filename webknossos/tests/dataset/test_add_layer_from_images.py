@@ -710,6 +710,78 @@ def test_rgb_image_stays_a_single_layer(
         assert (read[channel] == channel + 1).all()
 
 
+def test_single_multi_channel_image_at_mag_above_one(tmp_upath: UPath) -> None:
+    # A single 2D multi-channel image has no z-stack to iterate, so
+    # chunk_grid's batch size (in mag-native voxels) has to be scaled up by
+    # the mag factor before it can chunk the mag1-space placeholder box —
+    # otherwise a mag>1 conversion produces a chunk whose z-extent isn't
+    # actually representable at that mag.
+    png_path = tmp_upath / "rgb.png"
+    data = np.zeros((8, 16, 3), dtype="uint8")
+    for channel in range(3):
+        data[..., channel] = channel + 1
+    Image.fromarray(data, mode="RGB").save(str(png_path))
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            png_path, layer_name="color", mag=2, executor=executor
+        )
+
+    assert layer.num_channels == 3
+    read = layer.get_finest_mag().read()
+    for channel in range(3):
+        assert (read[channel] == channel + 1).all()
+
+
+def test_rgb_tiff_stays_a_single_layer(tmp_upath: UPath) -> None:
+    # tifffile calls the samples-per-pixel axis "S", not "C" — a plain RGB
+    # tiff (axes YXS) must still convert into one RGB layer, exactly like the
+    # same pixels as a PNG, not into 3 z-slices of a single-channel layer.
+    tiff_path = tmp_upath / "rgb.tif"
+    data = np.zeros((8, 16, 3), dtype="uint8")
+    for channel in range(3):
+        data[..., channel] = channel + 1
+    imwrite(str(tiff_path), data, photometric="rgb")
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path, layer_name="color", executor=executor
+        )
+
+    assert set(ds.layers.keys()) == {"color"}
+    assert layer.num_channels == 3
+    assert layer.normalized_bounding_box.size == wk.VecInt(c=3, x=16, y=8, z=1)
+    read = layer.get_finest_mag().read()
+    for channel in range(3):
+        assert (read[channel] == channel + 1).all()
+
+
+def test_rgb_tiff_with_a_real_channel_axis_keeps_samples_separate(
+    tmp_upath: UPath,
+) -> None:
+    # When a tiff already has a real "C" axis (e.g. axes ZCYXS), the RGB
+    # samples axis "S" is left alone rather than folded into it — S and C can
+    # both be present and mean different things.
+    tiff_path = tmp_upath / "zcyxs.tif"
+    data = np.zeros((2, 3, 8, 16, 3), dtype="uint8")
+    imwrite(str(tiff_path), data, photometric="rgb", metadata={"axes": "ZCYXS"})
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path,
+            layer_name="color",
+            channel=0,
+            allow_multiple_layers=True,
+            executor=executor,
+        )
+
+    assert layer.num_channels == 1
+    assert layer.normalized_bounding_box.get_shape("z") == 2
+
+
 def test_multi_channel_16bit_tiff_needs_one_layer_per_channel(
     tmp_upath: UPath,
 ) -> None:
@@ -744,6 +816,28 @@ def test_multi_channel_16bit_tiff_needs_one_layer_per_channel(
         view_configuration = ds.layers[f"color__channel{c}"].default_view_configuration
         assert view_configuration is not None
         assert view_configuration.color == expected_color
+
+
+def test_rgb_tagged_16bit_tiff_samples_stay_a_plain_axis(tmp_upath: UPath) -> None:
+    # A samples axis of 3 tagged photometric=rgb is still only treated as
+    # colour for uint8, matching WEBKNOSSOS's own rule that only three uint8
+    # channels display as RGB — uint16 stays untouched, as it was before "S"
+    # was recognized as a channel axis at all.
+    tiff_path = tmp_upath / "rgb16.tif"
+    imwrite(
+        str(tiff_path),
+        np.zeros((8, 16, 3), dtype="uint16"),
+        photometric="rgb",
+    )
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path, layer_name="color", executor=executor
+        )
+
+    assert layer.num_channels == 1
+    assert layer.normalized_bounding_box.get_shape("z") == 3
 
 
 def test_multi_channel_tiff_layer_split_colors_beyond_rgb(
@@ -1013,17 +1107,18 @@ def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
             str(four_d_series_tif),
             layer_name="color",
             category="color",
-            topleft=(2, 0, 55, 100, 100),
+            topleft=(2, 0, 100, 100, 55),
             data_format="zarr3",
             chunk_shape=(8, 8, 8),
             shard_shape=(64, 64, 64),
             executor=executor,
         )
-    assert layer.bounding_box.topleft == wk.VecInt(t=2, c=0, z=55, y=100, x=100)
-    assert layer.bounding_box.size == wk.VecInt(t=7, c=1, z=5, y=167, x=439)
+    assert layer.bounding_box.axes == TCXYZ_AXES
+    assert layer.bounding_box.topleft == wk.VecInt(t=2, c=0, x=100, y=100, z=55)
+    assert layer.bounding_box.size == wk.VecInt(t=7, c=1, x=439, y=167, z=5)
     read_with_tifffile_reader = TiffFile(str(four_d_series_tif)).asarray()
-    # read() now carries an explicit, size-1 "c" axis right after "t".
-    read_from_dataset = layer.get_finest_mag().read()[:, 0]
+    # read() is (t, c, x, y, z); tifffile reports (t, z, y, x).
+    read_from_dataset = layer.get_finest_mag().read()[:, 0].transpose(0, 3, 2, 1)
     np.testing.assert_array_equal(read_with_tifffile_reader, read_from_dataset)
 
 
@@ -1079,12 +1174,14 @@ REPO_IMAGES_ARGS: list[
         wk.VecInt(c=1, x=265, y=265, z=3),
     ),
     (
+        # A plain RGB tiff (axes YXS): the 3 samples are one RGB layer, not
+        # 3 z-slices.
         "testdata/rgb_tiff/test_rgb.tif",
         {"mag": 2},
         "uint8",
+        3,
         1,
-        1,
-        wk.VecInt(c=1, x=64, y=64, z=6),
+        wk.VecInt(c=3, x=64, y=64, z=2),
     ),
     (
         "testdata/rgb_tiff",
@@ -1092,7 +1189,7 @@ REPO_IMAGES_ARGS: list[
         "uint32",
         1,
         1,
-        wk.VecInt(c=1, x=64, y=64, z=6),
+        wk.VecInt(c=1, x=64, y=64, z=2),
     ),
     (
         _remote_repo_image_path("temca2", "*", "*", "*.jpg"),
@@ -1127,7 +1224,7 @@ REPO_IMAGES_ARGS: list[
         "uint8",
         1,
         5,
-        wk.VecInt(s=3, x=64, c=1, y=128, z=128),
+        wk.VecInt(s=3, c=1, x=128, y=128, z=64),
     ),
     (
         _remote_repo_image_path("various_tiff_formats", "test_C.tif"),
@@ -1160,7 +1257,7 @@ REPO_IMAGES_ARGS: list[
         "uint16",
         1,
         1,
-        wk.VecInt(c=1, s=3, x=64, y=128, z=128),
+        wk.VecInt(s=3, c=1, x=128, y=128, z=64),
     ),
     (
         _remote_repo_image_path("4D", "single_channel", "single-channel.ome.tiff"),

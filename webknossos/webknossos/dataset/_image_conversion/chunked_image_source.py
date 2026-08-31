@@ -7,18 +7,18 @@ import numpy as np
 from numpy.typing import DTypeLike
 from upath import UPath
 
-from ...geometry.bounding_box import BoundingBox
-from ...geometry.constants import T_AXIS, TXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
+from ...geometry.constants import (
+    CXYZ_AXES,
+    T_AXIS,
+    TCXYZ_AXES,
+    X_AXIS,
+    Y_AXIS,
+    Z_AXIS,
+)
 from ...geometry.mag import Mag
-from ...geometry.nd_bounding_box import NDBoundingBox
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ..layer.view import MagView
-from .image_source import (
-    ChunkResult,
-    ImageSource,
-    ReadOptions,
-    with_explicit_channel_axis,
-)
+from .image_source import ChunkResult, ImageSource, ReadOptions
 
 
 class ChunkedImageSource(ImageSource):
@@ -89,23 +89,23 @@ class ChunkedImageSource(ImageSource):
         """
 
     @property
-    def expected_bbox(self) -> NormalizedBoundingBox:
+    def _raw_expected_bbox(self) -> NormalizedBoundingBox:
         """
         The exact bounding box of the data, in the source's native Mag(1)
         space — never a placeholder, since these formats know their extents.
-
         """
         x_size, y_size = self._x, self._y
         if self._options.swap_xy:
             x_size, y_size = y_size, x_size
 
         if not self._include_t_axis:
-            return BoundingBox((0, 0, 0), (x_size, y_size, self._z)).normalize_axes(
-                self.num_channels
+            return NormalizedBoundingBox.from_axes(
+                CXYZ_AXES, [self.num_channels, x_size, y_size, self._z]
             )
 
-        box = NDBoundingBox.from_axes(TXYZ_AXES, [self._t, x_size, y_size, self._z])
-        return with_explicit_channel_axis(box, self.num_channels)
+        return NormalizedBoundingBox.from_axes(
+            TCXYZ_AXES, [self._t, self.num_channels, x_size, y_size, self._z]
+        )
 
     def copy_chunk_to_view(
         self,
@@ -120,7 +120,7 @@ class ChunkedImageSource(ImageSource):
         options = self._options
         relative_bbox = bbox.offset(-mag_view.bounding_box.topleft)
 
-        if "t" in relative_bbox.axes:
+        if T_AXIS in relative_bbox.axes:
             timepoint, _ = relative_bbox.get_bounds(T_AXIS)
         else:
             assert self._fixed_timepoint is not None
@@ -194,18 +194,19 @@ class ChunkedImageSource(ImageSource):
             else block.transpose(0, 2, 3, 1)
         )
 
-        if dtype is not None:
-            block = block.astype(dtype, order="F")
+        block = np.asarray(block, dtype=dtype)
 
         max_value = int(block.max())
-        if "t" in relative_bbox.axes:
+        if T_AXIS in relative_bbox.axes:
             # Add back the size-1 "t" axis this chunk corresponds to.
             block = block[np.newaxis]
 
-        # allow_unaligned=True: border chunks are smaller than shard_shape,
-        # since extents rarely divide evenly. Safe because parallel jobs write
-        # disjoint regions.
-        mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
+        # Skipping empty shards is safe, because the mag was just created and, therefore, is empty.
+        if block.any():
+            # allow_unaligned=True: border chunks are smaller than shard_shape,
+            # since extents rarely divide evenly. Safe because parallel jobs
+            # write disjoint regions.
+            mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
 
         return ChunkResult(
             (out_x_end - out_x_start, out_y_end - out_y_start), max_value
