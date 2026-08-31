@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added `neuroglancerPrecomputed` as a valid `AttachmentDataFormat` for `MeshAttachment`s. [#1518](https://github.com/scalableminds/webknossos-libs/pull/1518)
 
 ### Changed
-- Sped up the `median` and `mode` downsampling filters. Both now read the source buffer directly instead of reshaping it into an (elements-per-block, num-blocks) array first, which cost three full copies of the buffer. Downsampling a uint8 color layer by a factor of 2 in each dimension is about 6x faster, a uint32 segmentation layer about 3x, and the peak memory per worker drops accordingly. The results are unchanged. [#1529](https://github.com/scalableminds/webknossos-libs/pull/1529)
+- Sped up the layer downsampling (`median` and `mode` filters), by 3x-6x with less peak memory consumed. [#1529](https://github.com/scalableminds/webknossos-libs/pull/1529)
 - `numba` is now an optional dependency and is no longer installed by default, which removes about 130 MB (mostly `llvmlite`) from the base installation. Install it with `pip install webknossos[numba]` or `pip install webknossos[all]`. Without it, the `median` and `mode` downsampling filters use numpy implementations that produce identical results. The `median` filter is about as fast either way, the `mode` filter used for segmentation layers is roughly 5x slower without numba. [#1529](https://github.com/scalableminds/webknossos-libs/pull/1529)
 
 ### Fixed

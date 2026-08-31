@@ -39,12 +39,6 @@ def _mode(input_array: np.ndarray) -> np.ndarray:
 
 
 # These kernels read the source buffer directly, which avoids the three full copies
-# that reshaping it into an (elements-per-block, num-blocks) array first costs.
-# Within a block the elements are visited in the order `dy + fy * dx + fx * fy * dz`,
-# which determines how the mode filter breaks ties.
-
-
-# These kernels read the source buffer directly, which avoids the three full copies
 # that reshaping it into an (elements-per-block, num-blocks) array costs.
 # Within a block the elements are visited in the order `dy + fy * dx + fx * fy * dz`,
 # which is the order `non_linear_filter_3d` produces and which determines how the
