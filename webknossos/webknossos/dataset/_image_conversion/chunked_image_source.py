@@ -18,8 +18,7 @@ from ...geometry.constants import (
 from ...geometry.mag import Mag
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ..layer.view import MagView
-from .image_source import ChunkResult, ImageSource, ReadOptions
-from .value_statistics import ValueStatistics
+from .image_source import ChunkResult, ImageSource, ReadOptions, value_range_of
 
 
 class ChunkedImageSource(ImageSource):
@@ -198,7 +197,7 @@ class ChunkedImageSource(ImageSource):
         block = np.asarray(block, dtype=dtype)
 
         max_value = int(block.max())
-        statistics = ValueStatistics.of(block)
+        value_range = value_range_of(block)
         if T_AXIS in relative_bbox.axes:
             # Add back the size-1 "t" axis this chunk corresponds to.
             block = block[np.newaxis]
@@ -211,7 +210,7 @@ class ChunkedImageSource(ImageSource):
             mag_view.write(block, absolute_bounding_box=bbox, allow_unaligned=True)
 
         return ChunkResult(
-            (out_x_end - out_x_start, out_y_end - out_y_start), max_value, statistics
+            (out_x_end - out_x_start, out_y_end - out_y_start), max_value, value_range
         )
 
     def initial_layer_bounding_box(

@@ -12,11 +12,13 @@ z only and correcting the final size from what was actually written.
 
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import NamedTuple
 
+import numpy as np
 from numpy.typing import DTypeLike
 
 from ...dataset_properties import LayerViewConfiguration
@@ -25,7 +27,6 @@ from ...geometry.mag import Mag
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ...geometry.vec_int import VecInt
 from ..layer.view import MagView
-from .value_statistics import ValueStatistics
 
 
 @dataclass(frozen=True)
@@ -136,10 +137,44 @@ class ChunkResult(NamedTuple):
     """The largest value seen, for `largest_segment_id` on segmentation layers.
     None when the source cannot report one."""
 
-    statistics: ValueStatistics | None = None
-    """The range and distribution of the written values, for the layer's
-    default view configuration. Separate from `max_value`, which stays an exact
-    integer for segmentations. None when the chunk held no usable value."""
+    value_range: tuple[float, float] | None = None
+    """The smallest and largest value written, for the layer's default view
+    configuration. Separate from `max_value`, which stays an exact integer for
+    segmentations. None when the chunk held no usable value."""
+
+
+def value_range_of(array: np.ndarray) -> tuple[float, float] | None:
+    """The `(min, max)` of `array` as floats, or None when it holds no usable
+    value.
+
+    NaNs and infinities are ignored: one of them should not wipe out the range
+    of an otherwise ordinary image, and neither is any use as a display bound.
+    """
+    if array.size == 0:
+        return None
+    if np.issubdtype(array.dtype, np.floating):
+        with warnings.catch_warnings():
+            # An all-NaN array warns and yields NaN, which is handled below.
+            warnings.simplefilter("ignore", RuntimeWarning)
+            low, high = float(np.nanmin(array)), float(np.nanmax(array))
+        if not (np.isfinite(low) and np.isfinite(high)):
+            finite = array[np.isfinite(array)]
+            if finite.size == 0:
+                return None
+            low, high = float(finite.min()), float(finite.max())
+        return (low, high)
+    return (float(array.min()), float(array.max()))
+
+
+def merge_value_ranges(
+    left: tuple[float, float] | None, right: tuple[float, float] | None
+) -> tuple[float, float] | None:
+    """The range covering both `left` and `right`, ignoring missing ones."""
+    if left is None:
+        return right
+    if right is None:
+        return left
+    return (min(left[0], right[0]), max(left[1], right[1]))
 
 
 class ImageSource(ABC):

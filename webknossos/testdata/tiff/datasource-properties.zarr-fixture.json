@@ -29,7 +29,6 @@
       ],
       "numChannels": 1,
       "defaultViewConfiguration": {
-        "intensityRange": [9.0, 254.0],
         "min": 9.0,
         "max": 255.0
       }

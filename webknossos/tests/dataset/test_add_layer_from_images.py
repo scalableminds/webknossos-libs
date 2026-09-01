@@ -1877,35 +1877,8 @@ def test_view_configuration_min_max_from_data(tmp_upath: UPath) -> None:
     assert view_configuration is not None
     assert view_configuration.min == 0.0
     assert view_configuration.max == float(data.max())
-    intensity_range = view_configuration.intensity_range
-    assert intensity_range is not None
-    # Evenly spread data has nothing to clip, so the range covers all of it.
-    assert intensity_range[0] == pytest.approx(0.0, abs=8.0)
-    assert intensity_range[1] == pytest.approx(float(data.max()), abs=8.0)
-
-
-def test_view_configuration_intensity_range_clips_outliers(tmp_upath: UPath) -> None:
-    rng = np.random.default_rng(0)
-    data = rng.integers(100, 200, size=(8, 128, 128)).astype("uint16")
-    # A single maxed-out voxel should not stretch the intensity range, while
-    # min/max still report it.
-    data[0, 0, 0] = 65535
-    tiff_path = tmp_upath / "outlier.tif"
-    imwrite(str(tiff_path), data, photometric="minisblack", metadata={"axes": "ZYX"})
-
-    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
-    with SequentialExecutor() as executor:
-        layer = ds.add_layer_from_images(
-            tiff_path, layer_name="color", executor=executor
-        )
-
-    view_configuration = layer.default_view_configuration
-    assert view_configuration is not None
-    assert view_configuration.max == 65535.0
-    intensity_range = view_configuration.intensity_range
-    assert intensity_range is not None
-    assert intensity_range[0] == pytest.approx(100.0, abs=32.0)
-    assert intensity_range[1] == pytest.approx(199.0, abs=32.0)
+    # WEBKNOSSOS derives the intensity range from a histogram itself.
+    assert view_configuration.intensity_range is None
 
 
 def test_view_configuration_min_max_ignores_non_finite(tmp_upath: UPath) -> None:
@@ -1930,8 +1903,6 @@ def test_view_configuration_min_max_ignores_non_finite(tmp_upath: UPath) -> None
     assert view_configuration is not None
     assert view_configuration.min == -1.5
     assert view_configuration.max == 3.5
-    assert view_configuration.intensity_range is not None
-    assert all(np.isfinite(view_configuration.intensity_range))
 
 
 def test_view_configuration_min_max_not_set_for_segmentation(

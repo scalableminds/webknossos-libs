@@ -13,6 +13,7 @@ import warnings
 from collections.abc import Callable, Generator, Iterator, Sequence
 from contextlib import contextmanager
 from enum import Enum, unique
+from functools import reduce
 from itertools import product
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -55,7 +56,7 @@ from ..layer.abstract_layer import (
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
 from . import common_slice_readers, sliced_image_source
-from .image_source import ImageSource, ReadOptions
+from .image_source import ImageSource, ReadOptions, merge_value_ranges
 from .image_source_registry import (
     describe_missing_extras,
     get_unavailable_extensions,
@@ -67,7 +68,6 @@ from .segmentation_recognition import (
     guess_category_from_view,
     guess_if_segmentation_path,
 )
-from .value_statistics import ValueStatistics
 
 if TYPE_CHECKING:
     from ..dataset import Dataset
@@ -774,8 +774,10 @@ def add_layer_from_images(
                 )
             shapes = [result.xy_size for result in chunk_results]
             max_ids = [result.max_value for result in chunk_results]
-            statistics = ValueStatistics.combined(
-                result.statistics for result in chunk_results
+            value_range = reduce(
+                merge_value_ranges,
+                (result.value_range for result in chunk_results),
+                None,
             )
             if category == "segmentation":
                 max_id = max(max_ids)
@@ -831,17 +833,14 @@ def add_layer_from_images(
 
         # The category guess may have replaced the layer object.
         final_layer = dataset._layers[layer.name]
-        if final_layer.category == COLOR_CATEGORY and statistics is not None:
-            low, high = statistics.value_range
-            intensity_range = statistics.clipped_range(
-                integral=np.issubdtype(current_dtype, np.integer)
-            )
+        if final_layer.category == COLOR_CATEGORY and value_range is not None:
+            low, high = value_range
             view_configuration = final_layer.default_view_configuration
             if view_configuration is None:
                 final_layer.default_view_configuration = LayerViewConfiguration(
-                    min=low, max=high, intensity_range=intensity_range
+                    min=low, max=high
                 )
-            else:
+            elif view_configuration.min is None or view_configuration.max is None:
                 # The format's own metadata wins, so only fill the gaps.
                 final_layer.default_view_configuration = attr.evolve(
                     view_configuration,
@@ -851,8 +850,6 @@ def add_layer_from_images(
                     max=view_configuration.max
                     if view_configuration.max is not None
                     else high,
-                    intensity_range=view_configuration.intensity_range
-                    or intensity_range,
                 )
 
         # Verify the properties are actually consistent now, instead of assuming so.
