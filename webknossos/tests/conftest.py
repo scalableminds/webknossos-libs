@@ -43,8 +43,14 @@ def pytest_make_parametrize_id(config: Any, val: Any, argname: str) -> Any:
     return None
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def ensure_gc() -> None:
+    """Opt-in full collection before a test.
+
+    Only worth its cost (~40-100ms per test) in modules that allocate large
+    image buffers. Request it per module with
+    `pytestmark = pytest.mark.usefixtures("ensure_gc")`.
+    """
     gc.collect()
 
 
@@ -85,7 +91,11 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 def clear_testoutput() -> Generator:
     TESTOUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     yield
-    rmtree(TESTOUTPUT_DIR)
+    # Most tests never write here, so skip the recursive walk when empty.
+    if next(TESTOUTPUT_DIR.iterdir(), None) is None:
+        TESTOUTPUT_DIR.rmdir()
+    else:
+        rmtree(TESTOUTPUT_DIR)
 
 
 @pytest.fixture(autouse=True, scope="function")

@@ -39,6 +39,10 @@ from webknossos.geometry import (
     VecInt,
 )
 
+# These modules convert whole images at a time; collecting between tests keeps
+# peak memory in check on CI runners.
+pytestmark = pytest.mark.usefixtures("ensure_gc")
+
 
 @pytest.fixture(autouse=True, scope="function")
 def ignore_warnings() -> Iterator:
