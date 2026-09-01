@@ -26,6 +26,7 @@ from ._downsampling_utils import (
     determine_upsample_buffer_shape,
     downsample_cube_job,
     parse_interpolation_mode,
+    warn_if_numba_is_missing,
 )
 from ._upsampling_utils import upsample_cube_job
 from .abstract_layer import AbstractLayer, _rescaled_foreign_bounding_box
@@ -1208,6 +1209,9 @@ class Layer(AbstractLayer):
 
         if only_setup_mag:
             return
+
+        # Emitted here so that the worker processes of the executor inherit the flag.
+        warn_if_numba_is_missing(parsed_interpolation_mode, self.dtype)
 
         bb_mag1 = self.bounding_box.align_with_mag(target_mag, ceil=True)
 

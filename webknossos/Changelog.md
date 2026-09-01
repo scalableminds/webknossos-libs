@@ -21,6 +21,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a `mag` keyword to `Layer.add_mag_as_copy` and `RemoteLayer.add_mag_as_copy` to register the copied data under a different resolution level than it has in the source dataset, matching the existing `mag` keyword of `add_mag_as_ref`. [#1526](https://github.com/scalableminds/webknossos-libs/pull/1526)
 
 ### Changed
+- Sped up the layer downsampling (`median` and `mode` filters), by 3x-6x with less peak memory consumed. [#1529](https://github.com/scalableminds/webknossos-libs/pull/1529)
+- `numba` is now an optional dependency and is no longer installed by default, which removes about 130 MB (mostly `llvmlite`) from the base installation. Install it with `pip install webknossos[numba]` or `pip install webknossos[all]`. Without it, the `median` and `mode` downsampling works, but is significantly slower. [#1529](https://github.com/scalableminds/webknossos-libs/pull/1529)
 - `Layer.add_mag_as_ref` and `RemoteLayer.add_mag_as_ref` now extend the layer bounding box by the foreign bounding box rescaled to the target mag when the `mag` keyword overrides the source mag. Previously the unscaled foreign bounding box was used, which did not match where the referenced voxels actually are in Mag(1). [#1526](https://github.com/scalableminds/webknossos-libs/pull/1526)
 
 ### Fixed

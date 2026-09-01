@@ -3953,7 +3953,6 @@ dependencies = [
     { name = "lz4" },
     { name = "natsort" },
     { name = "networkx" },
-    { name = "numba" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "protobuf" },
@@ -3981,6 +3980,7 @@ all = [
     { name = "imagecodecs", version = "2025.11.11", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "jpype1" },
     { name = "mrcfile" },
+    { name = "numba" },
     { name = "pandas", marker = "python_full_version >= '3.11'" },
     { name = "pooch" },
     { name = "pylibczirw", marker = "python_full_version < '3.14'" },
@@ -4014,6 +4014,9 @@ imagecodecs = [
 ]
 mrcfile = [
     { name = "mrcfile" },
+]
+numba = [
+    { name = "numba" },
 ]
 s3 = [
     { name = "s3fs" },
@@ -4064,7 +4067,7 @@ requires-dist = [
     { name = "mrcfile", marker = "extra == 'mrcfile'", specifier = ">=1.4.3" },
     { name = "natsort", specifier = "~=8.4.0" },
     { name = "networkx", specifier = "~=3.2.1" },
-    { name = "numba", specifier = "~=0.61" },
+    { name = "numba", marker = "extra == 'numba'", specifier = "~=0.61" },
     { name = "numpy", specifier = ">=2.0.0,<3.0.0" },
     { name = "pandas", marker = "python_full_version >= '3.11' and extra == 'examples'", specifier = "~=3.0.3" },
     { name = "pooch", marker = "extra == 'examples'", specifier = "~=1.5.2" },
@@ -4093,12 +4096,13 @@ requires-dist = [
     { name = "webknossos", extras = ["fastremap"], marker = "extra == 'examples'" },
     { name = "webknossos", extras = ["imagecodecs"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["mrcfile"], marker = "extra == 'all'" },
+    { name = "webknossos", extras = ["numba"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["s3"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["tifffile"], marker = "extra == 'all'" },
     { name = "wkw", specifier = "==1.1.24" },
     { name = "zipp", specifier = ">=3.5.0,<4.0.0" },
 ]
-provides-extras = ["fastremap", "tifffile", "imagecodecs", "bioformats", "czi", "mrcfile", "s3", "examples", "all"]
+provides-extras = ["fastremap", "numba", "tifffile", "imagecodecs", "bioformats", "czi", "mrcfile", "s3", "examples", "all"]
 
 [package.metadata.requires-dev]
 dev = [
