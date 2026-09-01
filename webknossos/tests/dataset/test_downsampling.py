@@ -173,14 +173,29 @@ def test_missing_numba_warns_once(monkeypatch: pytest.MonkeyPatch) -> None:
     assert os.environ["WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING"] == "True"
 
 
-def test_missing_numba_does_not_warn_when_available(
+@pytest.mark.parametrize(
+    ("interpolation_mode", "dtype", "warns_without_numba"),
+    [
+        (InterpolationModes.MODE, "uint32", True),
+        (InterpolationModes.MODE, "float32", True),
+        (InterpolationModes.MEDIAN, "uint8", True),
+        # numba does not speed up the median of floating point data.
+        (InterpolationModes.MEDIAN, "float32", False),
+    ],
+)
+def test_missing_numba_warning_conditions(
+    interpolation_mode: InterpolationModes,
+    dtype: str,
+    warns_without_numba: bool,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING", raising=False)
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        _downsampling_utils.warn_if_numba_is_missing(InterpolationModes.MODE)
-    expected = 0 if HAS_NUMBA else 1
+        _downsampling_utils.warn_if_numba_is_missing(
+            interpolation_mode, np.dtype(dtype)
+        )
+    expected = 1 if warns_without_numba and not HAS_NUMBA else 0
     assert len([w for w in caught if "numba" in str(w.message)]) == expected
 
 

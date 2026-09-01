@@ -260,10 +260,14 @@ def _warn_once_about_missing_numba() -> None:
         )
 
 
-def warn_if_numba_is_missing(interpolation_mode: InterpolationModes) -> None:
-    if _downsampling_numba is None and interpolation_mode in (
-        InterpolationModes.MEDIAN,
-        InterpolationModes.MODE,
+def warn_if_numba_is_missing(
+    interpolation_mode: InterpolationModes, dtype: np.dtype
+) -> None:
+    if _downsampling_numba is not None:
+        return
+    # The median filter of floating point data uses numpy either way.
+    if interpolation_mode == InterpolationModes.MODE or (
+        interpolation_mode == InterpolationModes.MEDIAN and dtype.kind in "iu"
     ):
         _warn_once_about_missing_numba()
 

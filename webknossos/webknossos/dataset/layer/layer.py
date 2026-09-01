@@ -1165,7 +1165,6 @@ class Layer(AbstractLayer):
         parsed_interpolation_mode = parse_interpolation_mode(
             interpolation_mode, self.category
         )
-        warn_if_numba_is_missing(parsed_interpolation_mode)
 
         if not (from_mag <= target_mag):  # note, not the same as from_mag > target_mag
             raise ValueError(
@@ -1210,6 +1209,9 @@ class Layer(AbstractLayer):
 
         if only_setup_mag:
             return
+
+        # Emitted here so that the worker processes of the executor inherit the flag.
+        warn_if_numba_is_missing(parsed_interpolation_mode, self.dtype)
 
         bb_mag1 = self.bounding_box.align_with_mag(target_mag, ceil=True)
 
