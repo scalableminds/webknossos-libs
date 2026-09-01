@@ -226,7 +226,10 @@ def _mode(x: np.ndarray) -> np.ndarray:
     # Each row counts only the matches that follow it, so the first occurrence of a
     # value carries its full count and ties are won by the earliest row.
     best = np.array(x[0])
-    best_count = np.ones(x.shape[1], dtype=np.uint16)
+    # The counter must hold the number of elements per block, which is the number of
+    # rows. A uint16 would wrap for the large factors of a multi-mag step.
+    counter_dtype = np.min_scalar_type(x.shape[0])
+    best_count = np.ones(x.shape[1], dtype=counter_dtype)
     for j in range(1, x.shape[0]):
         best_count += x[0] == x[j]
     count = np.empty_like(best_count)
@@ -242,7 +245,8 @@ def _mode(x: np.ndarray) -> np.ndarray:
 
 
 def _supports_fast_path(data: np.ndarray, factors: list[int]) -> bool:
-    return data.ndim == 3 and len(factors) == 3
+    # Numba rejects arrays with a non-native byte order, so those keep using numpy.
+    return data.ndim == 3 and len(factors) == 3 and data.dtype.isnative
 
 
 def _warn_once_about_missing_numba() -> None:

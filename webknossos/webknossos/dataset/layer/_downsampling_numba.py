@@ -16,7 +16,7 @@ import numpy as np
 # mode filter breaks ties.
 
 
-@numba.jit(nopython=True, nogil=True)
+@numba.jit(nopython=True, nogil=True, cache=True)
 def _median_kernel(
     source: np.ndarray, target: np.ndarray, fx: int, fy: int, fz: int
 ) -> None:
@@ -50,7 +50,7 @@ def _median_kernel(
                     ) / 2.0
 
 
-@numba.jit(nopython=True, nogil=True)
+@numba.jit(nopython=True, nogil=True, cache=True)
 def _median_kernel_2x2x2(source: np.ndarray, target: np.ndarray) -> None:
     # Batcher odd-even merge network for 8 elements, reduced to the comparators
     # needed to place the 4th and 5th smallest element.
@@ -102,7 +102,7 @@ def _median_kernel_2x2x2(source: np.ndarray, target: np.ndarray) -> None:
                 ) / 2.0
 
 
-@numba.jit(nopython=True, nogil=True)
+@numba.jit(nopython=True, nogil=True, cache=True)
 def _mode_kernel(
     source: np.ndarray, target: np.ndarray, fx: int, fy: int, fz: int
 ) -> None:
@@ -135,7 +135,7 @@ def _mode_kernel(
                 target[x, y, z] = values[best]
 
 
-@numba.jit(nopython=True, nogil=True)
+@numba.jit(nopython=True, nogil=True, cache=True)
 def _mode_kernel_2x2x2(source: np.ndarray, target: np.ndarray) -> None:
     # Each element counts only the matches that follow it, so the first occurrence
     # of a value carries its full count and ties are won by the earliest element.
@@ -196,12 +196,6 @@ def _mode_kernel_2x2x2(source: np.ndarray, target: np.ndarray) -> None:
                 if c6 > best_count:
                     best = a6
                 target[x, y, z] = best
-
-
-def _can_use_kernel(data: np.ndarray, factors: list[int]) -> bool:
-    # Floating point data uses the numpy implementation, because np.median
-    # accumulates in the input dtype for float32 and has its own NaN semantics.
-    return data.ndim == 3 and len(factors) == 3 and data.dtype.kind in "iu"
 
 
 def _apply_kernel(

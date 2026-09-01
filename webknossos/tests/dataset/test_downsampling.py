@@ -96,7 +96,16 @@ def reference_downsample(
 @pytest.mark.parametrize(
     "interpolation_mode", [InterpolationModes.MEDIAN, InterpolationModes.MODE]
 )
-@pytest.mark.parametrize("with_numba", [True, False])
+@pytest.mark.parametrize(
+    "with_numba",
+    [
+        pytest.param(
+            True,
+            marks=pytest.mark.skipif(not HAS_NUMBA, reason="numba is not installed"),
+        ),
+        False,
+    ],
+)
 def test_downsample_cube_matches_non_linear_filter(
     dtype: str,
     factors: list[int],
@@ -125,7 +134,16 @@ def test_downsample_cube_matches_non_linear_filter(
 
 
 @pytest.mark.parametrize("dtype", ["float32", "float64"])
-@pytest.mark.parametrize("with_numba", [True, False])
+@pytest.mark.parametrize(
+    "with_numba",
+    [
+        pytest.param(
+            True,
+            marks=pytest.mark.skipif(not HAS_NUMBA, reason="numba is not installed"),
+        ),
+        False,
+    ],
+)
 def test_downsample_cube_float(
     dtype: str, with_numba: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
