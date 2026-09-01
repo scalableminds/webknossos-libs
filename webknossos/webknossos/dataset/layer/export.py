@@ -9,6 +9,7 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
+from webknossos import utils
 from webknossos.dataset_properties import SEGMENTATION_CATEGORY
 from webknossos.geometry import (
     C_AXIS,
@@ -24,7 +25,7 @@ from webknossos.geometry import (
     Vec3IntLike,
     VecInt,
 )
-from webknossos.utils import WkImportError, wait_and_ensure_success, wrap_executor
+from webknossos.utils import WkImportError, wait_and_ensure_success
 
 from ..defaults import (
     DEFAULT_CHUNK_SHAPE,
@@ -309,7 +310,7 @@ class LayerExport:
                 # (in this mag's own voxel units) needs to be scaled up to
                 # Mag(1) before it can be used to chunk the bbox.
                 shard_shape_mag1 = mag_shard_shape * target_mag.to_vec3_int()
-                with wrap_executor(executor) as mag_executor:
+                with utils.wrap_executor(executor) as mag_executor:
                     jobs = [
                         (
                             source_mag_view.get_view(

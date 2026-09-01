@@ -2,10 +2,12 @@ import gc
 import sys
 import warnings
 from collections.abc import Generator, Iterator
+from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
 from typing import Any
 
 import pytest
+from cluster_tools import Executor, get_executor
 from hypothesis import strategies as st
 from upath import UPath
 
@@ -85,6 +87,40 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 
 
 ### PYTEST SETUP & TEARDOWN
+
+
+@pytest.fixture(scope="session")
+def shared_executor() -> Iterator[Executor]:
+    """One process pool for the whole session.
+
+    Constructing a `MultiprocessingExecutor` costs ~0.3s, which the tests
+    otherwise pay on every API call that does not get an executor passed in.
+    """
+    with get_executor("multiprocessing", max_workers=2) as executor:
+        yield executor
+
+
+@pytest.fixture(autouse=True)
+def reuse_executor(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Hands the shared pool to every `utils.wrap_executor` call.
+
+    Opt out with `@pytest.mark.own_executor` where the executor lifecycle
+    itself is under test.
+    """
+    if request.node.get_closest_marker("own_executor"):
+        return
+
+    def wrap_executor(executor: Executor | None = None) -> AbstractContextManager:
+        # Resolved lazily so tests that never spawn a job don't pay for the pool.
+        return nullcontext(
+            executor
+            if executor is not None
+            else request.getfixturevalue("shared_executor")
+        )
+
+    monkeypatch.setattr(wk.utils, "wrap_executor", wrap_executor)
 
 
 @pytest.fixture(scope="session")
