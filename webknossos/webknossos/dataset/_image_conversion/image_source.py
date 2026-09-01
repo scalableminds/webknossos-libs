@@ -12,11 +12,13 @@ z only and correcting the final size from what was actually written.
 
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import NamedTuple
 
+import numpy as np
 from numpy.typing import DTypeLike
 
 from ...dataset_properties import LayerViewConfiguration
@@ -124,6 +126,48 @@ def with_canonical_axes(
     )
 
 
+class ValueRange(NamedTuple):
+    """The smallest and largest value of some data, as the layer's `min`/`max`
+    are written from."""
+
+    min: float
+    max: float
+
+    @classmethod
+    def of(cls, array: np.ndarray) -> ValueRange | None:
+        """The range of `array`, or None when it holds no usable value.
+
+        NaNs and infinities are ignored: one of them should not wipe out the
+        range of an otherwise ordinary image, and neither is any use as a
+        display bound.
+        """
+        if array.size == 0:
+            return None
+        if np.issubdtype(array.dtype, np.floating):
+            with warnings.catch_warnings():
+                # An all-NaN array warns and yields NaN, handled below.
+                warnings.simplefilter("ignore", RuntimeWarning)
+                low, high = float(np.nanmin(array)), float(np.nanmax(array))
+            if not (np.isfinite(low) and np.isfinite(high)):
+                finite = array[np.isfinite(array)]
+                if finite.size == 0:
+                    return None
+                low, high = float(finite.min()), float(finite.max())
+            return cls(low, high)
+        return cls(float(array.min()), float(array.max()))
+
+    @classmethod
+    def combined(cls, ranges: Iterable[ValueRange | None]) -> ValueRange | None:
+        """The range covering all of `ranges`, ignoring the missing ones."""
+        present = [value_range for value_range in ranges if value_range is not None]
+        if len(present) == 0:
+            return None
+        return cls(
+            min(value_range.min for value_range in present),
+            max(value_range.max for value_range in present),
+        )
+
+
 class ChunkResult(NamedTuple):
     """What copying one chunk reported back."""
 
@@ -134,6 +178,11 @@ class ChunkResult(NamedTuple):
     max_value: int | None
     """The largest value seen, for `largest_segment_id` on segmentation layers.
     None when the source cannot report one."""
+
+    value_range: ValueRange | None = None
+    """The smallest and largest value written, for the layer's default view
+    configuration. Separate from `max_value`, which stays an exact integer for
+    segmentations. None when the chunk held no usable value."""
 
 
 class ImageSource(ABC):
