@@ -39,6 +39,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a `gcs` extra (`pip install "webknossos[gcs]"`, also part of `webknossos[all]`) providing `gcsfs`, which is needed to detect the format of a dataset stored on Google Cloud Storage. [#1524](https://github.com/scalableminds/webknossos-libs/pull/1524)
 
 ### Changed
+- Sped up the test suite. `wrap_executor` is now called as `utils.wrap_executor`, so it can be substituted in tests. [#1530](https://github.com/scalableminds/webknossos-libs/pull/1530)
 - `RemoteDataset.zarr_streaming_path` is deprecated. Use the path of an individual mag instead, e.g. `layer.get_mag(mag, access_mode=RemoteAccessMode.ZARR_STREAMING).path`. [#1492](https://github.com/scalableminds/webknossos-libs/pull/1492)
 - `.czi` conversion is faster and uses less memory: only the data needed for each chunk is read, rather than whole image planes. Multi-timepoint `.czi` files now convert into a single layer with a `t` axis. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
 - Converting a file whose format needs an optional dependency now names the extra to install (e.g. `webknossos[czi]`, `webknossos[tifffile]`) instead of reporting the format as unsupported. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)

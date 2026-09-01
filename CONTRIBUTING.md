@@ -140,9 +140,14 @@ This expects a local WEBKNOSSOS setup with specific test data, which is shipped 
 If you're starting and running WEBKNOSSOS manually, please use port 9000 (the default) and run the `tools/postgres/dbtool.js prepare-test-db` script in the WEBKNOSSOS repository (⚠️ this overwrites your local WEBKNOSSOS database).
 Alternatively, a `docker compose` setup is started automatically for the tests, see `uv run test.py` and `tests/docker-compose.yml` for details.
 
-`uv run test.py --store-durations` updates the durations for
+`uv run test.py` runs the tests in parallel via
+[`pytest-xdist`](https://pytest-xdist.readthedocs.io); pass `-n0` to run them in
+one process, e.g. when debugging a single test.
+
+`uv run test.py --store-durations -n0` updates the durations for
 [`pytest-split`](https://jerry-git.github.io/pytest-split),
-which is used in the CI to split the tests for different runners.
+which is used in the CI to split the tests for different runners. The nightly
+build uploads a fresh `.test_durations` as an artifact.
 
 
 #### `cluster_tools` package
