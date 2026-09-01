@@ -13,7 +13,6 @@ import warnings
 from collections.abc import Callable, Generator, Iterator, Sequence
 from contextlib import contextmanager
 from enum import Enum, unique
-from functools import reduce
 from itertools import product
 from os import PathLike
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -56,7 +55,7 @@ from ..layer.abstract_layer import (
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
 from . import common_slice_readers, sliced_image_source
-from .image_source import ImageSource, ReadOptions, merge_value_ranges
+from .image_source import ImageSource, ReadOptions, ValueRange
 from .image_source_registry import (
     describe_missing_extras,
     get_unavailable_extensions,
@@ -774,10 +773,8 @@ def add_layer_from_images(
                 )
             shapes = [result.xy_size for result in chunk_results]
             max_ids = [result.max_value for result in chunk_results]
-            value_range = reduce(
-                merge_value_ranges,
-                (result.value_range for result in chunk_results),
-                None,
+            value_range = ValueRange.combined(
+                result.value_range for result in chunk_results
             )
             if category == "segmentation":
                 max_id = max(max_ids)
@@ -834,11 +831,10 @@ def add_layer_from_images(
         # The category guess may have replaced the layer object.
         final_layer = dataset._layers[layer.name]
         if final_layer.category == COLOR_CATEGORY and value_range is not None:
-            low, high = value_range
             view_configuration = final_layer.default_view_configuration
             if view_configuration is None:
                 final_layer.default_view_configuration = LayerViewConfiguration(
-                    min=low, max=high
+                    min=value_range.min, max=value_range.max
                 )
             elif view_configuration.min is None or view_configuration.max is None:
                 # The format's own metadata wins, so only fill the gaps.
@@ -846,10 +842,10 @@ def add_layer_from_images(
                     view_configuration,
                     min=view_configuration.min
                     if view_configuration.min is not None
-                    else low,
+                    else value_range.min,
                     max=view_configuration.max
                     if view_configuration.max is not None
-                    else high,
+                    else value_range.max,
                 )
 
         # Verify the properties are actually consistent now, instead of assuming so.
