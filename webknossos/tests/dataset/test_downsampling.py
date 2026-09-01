@@ -8,6 +8,7 @@ from upath import UPath
 
 from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
+from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
 from webknossos.dataset.layer._downsampling_utils import (
     InterpolationModes,
     _mode,
@@ -492,7 +493,7 @@ def test_downsample_default_shard_shapes(tmp_upath: UPath) -> None:
     """Downsampled mags should use the correct default shard shapes per format."""
     from webknossos.dataset_properties import DataFormat
 
-    # Zarr3 volumetric: default shard shape is (1024, 1024, 1024)
+    # Zarr3 volumetric: the default shard shape is used
     ds = Dataset(tmp_upath / "zarr3_volumetric", voxel_size=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
     mag1 = layer.add_mag(1, chunk_shape=32, shard_shape=1024)
@@ -501,8 +502,8 @@ def test_downsample_default_shard_shapes(tmp_upath: UPath) -> None:
     )
     with get_executor("sequential") as executor:
         layer.downsample(from_mag=Mag(1), coarsest_mag=Mag(2), executor=executor)
-    assert layer.get_mag(2).info.chunk_shape.xyz == Vec3Int.full(32)
-    assert layer.get_mag(2).info.shard_shape.xyz == Vec3Int.full(1024)
+    assert layer.get_mag(2).info.chunk_shape.xyz == DEFAULT_CHUNK_SHAPE
+    assert layer.get_mag(2).info.shard_shape.xyz == DEFAULT_SHARD_SHAPE
 
     # Zarr3 flat (z <= 32): default shard shape is (4096, 4096, 32)
     ds_flat = Dataset(tmp_upath / "zarr3_flat", voxel_size=(1, 1, 1))

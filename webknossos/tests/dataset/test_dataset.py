@@ -1,3 +1,4 @@
+import importlib
 import itertools
 import json
 import os
@@ -28,7 +29,12 @@ from webknossos.dataset import (
     View,
 )
 from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
-from webknossos.dataset.defaults import DEFAULT_DATA_FORMAT
+from webknossos.dataset.defaults import (
+    DEFAULT_CHUNK_SHAPE,
+    DEFAULT_CHUNKS_PER_SHARD,
+    DEFAULT_DATA_FORMAT,
+    DEFAULT_SHARD_SHAPE,
+)
 from webknossos.dataset.layer.view._array import Zarr3ArrayInfo, Zarr3Config
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
@@ -456,15 +462,47 @@ def test_create_default_mag(data_format: DataFormat) -> None:
     mag_view = layer.add_mag("1")
 
     assert layer.data_format == data_format
-    assert mag_view.info.chunk_shape.xyz == Vec3Int.full(32)
+    assert mag_view.info.chunk_shape.xyz == DEFAULT_CHUNK_SHAPE
     if data_format == DataFormat.Zarr:
-        assert mag_view.info.shard_shape.xyz == Vec3Int.full(32)
+        assert mag_view.info.shard_shape.xyz == DEFAULT_CHUNK_SHAPE
         assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(1)
     else:
-        assert mag_view.info.shard_shape.xyz == Vec3Int.full(1024)
-        assert mag_view.info.chunks_per_shard.xyz == Vec3Int.full(32)
+        assert mag_view.info.shard_shape.xyz == DEFAULT_SHARD_SHAPE
+        assert mag_view.info.chunks_per_shard.xyz == DEFAULT_CHUNKS_PER_SHARD
     assert mag_view.info.bounding_box.size.c == 1
     assert mag_view.info.compression_mode == True
+
+
+def test_shipped_default_shard_shape() -> None:
+    """The test session shrinks the default shard shape (see conftest.py), so
+    this asserts the shipped default and exercises it end to end."""
+    defaults = importlib.import_module("webknossos.dataset.defaults")
+    try:
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("WK_DEFAULT_CHUNKS_PER_SHARD", None)
+            shipped = importlib.reload(defaults)
+            shipped_shard_shape = shipped.DEFAULT_SHARD_SHAPE
+            shipped_chunks_per_shard = shipped.DEFAULT_CHUNKS_PER_SHARD
+    finally:
+        importlib.reload(defaults)
+
+    assert shipped_chunks_per_shard == Vec3Int.full(32)
+    assert shipped_shard_shape == Vec3Int.full(1024)
+
+    ds_path = prepare_dataset_path(DataFormat.Zarr3, TESTOUTPUT_DIR)
+    mag = (
+        Dataset(ds_path, voxel_size=(1, 1, 1))
+        .add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
+        .add_mag("1", shard_shape=shipped_shard_shape)
+    )
+    assert mag.info.shard_shape.xyz == shipped_shard_shape
+    assert mag.info.chunks_per_shard.xyz == shipped_chunks_per_shard
+
+    data = (np.random.rand(10, 20, 30) * 255).astype(np.uint8)
+    mag.write(data, absolute_offset=(60, 80, 100), allow_resize=True)
+    np.testing.assert_array_equal(
+        data, mag.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))[0]
+    )
 
 
 def test_dtype_per_channel() -> None:
@@ -524,16 +562,23 @@ def test_create_dataset_with_explicit_header_fields() -> None:
         64
     )
     assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
-    assert ds.get_layer("color").get_mag("2-2-1").info.chunk_shape.xyz == Vec3Int.full(
-        32
-    )  # defaults are used
-    assert ds.get_layer("color").get_mag("2-2-1").info.shard_shape.xyz == Vec3Int.full(
-        1024
-    )  # defaults are used
-    assert ds.get_layer("color").get_mag(
-        "2-2-1"
-    ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
-    assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
+    # defaults are used
+    assert (
+        ds.get_layer("color").get_mag("2-2-1").info.chunk_shape.xyz
+        == DEFAULT_CHUNK_SHAPE
+    )
+    assert (
+        ds.get_layer("color").get_mag("2-2-1").info.shard_shape.xyz
+        == DEFAULT_SHARD_SHAPE
+    )
+    assert (
+        ds.get_layer("color").get_mag("2-2-1").info.chunks_per_shard.xyz
+        == DEFAULT_CHUNKS_PER_SHARD
+    )
+    assert (
+        ds.get_layer("color").get_mag("2-2-1")._properties.cube_length
+        == DEFAULT_SHARD_SHAPE.x
+    )
 
     assure_exported_properties(ds)
 
@@ -571,16 +616,23 @@ def test_deprecated_chunks_per_shard() -> None:
             1
         ).info.chunks_per_shard.xyz == Vec3Int.full(64)
         assert ds.get_layer("color").get_mag(1)._properties.cube_length == 64 * 64
-        assert ds.get_layer("color").get_mag(
-            "2-2-1"
-        ).info.chunk_shape.xyz == Vec3Int.full(32)  # defaults are used
-        assert ds.get_layer("color").get_mag(
-            "2-2-1"
-        ).info.shard_shape.xyz == Vec3Int.full(1024)  # defaults are used
-        assert ds.get_layer("color").get_mag(
-            "2-2-1"
-        ).info.chunks_per_shard.xyz == Vec3Int.full(32)  # defaults are used
-        assert ds.get_layer("color").get_mag("2-2-1")._properties.cube_length == 32 * 32
+        # defaults are used
+        assert (
+            ds.get_layer("color").get_mag("2-2-1").info.chunk_shape.xyz
+            == DEFAULT_CHUNK_SHAPE
+        )
+        assert (
+            ds.get_layer("color").get_mag("2-2-1").info.shard_shape.xyz
+            == DEFAULT_SHARD_SHAPE
+        )
+        assert (
+            ds.get_layer("color").get_mag("2-2-1").info.chunks_per_shard.xyz
+            == DEFAULT_CHUNKS_PER_SHARD
+        )
+        assert (
+            ds.get_layer("color").get_mag("2-2-1")._properties.cube_length
+            == DEFAULT_SHARD_SHAPE.x
+        )
 
         assure_exported_properties(ds)
 
@@ -1136,7 +1188,9 @@ def test_chunked_compressed_write() -> None:
             "color",
             COLOR_CATEGORY,
             data_format=DataFormat.WKW,
-            bounding_box=BoundingBox(Vec3Int(1019, 1019, 1019), Vec3Int(10, 10, 10)),
+            bounding_box=BoundingBox(
+                DEFAULT_SHARD_SHAPE - Vec3Int(5, 5, 5), Vec3Int(10, 10, 10)
+            ),
         )
         .get_or_add_mag(
             "1",
@@ -3037,11 +3091,11 @@ def test_rechunking(data_format: DataFormat, output_path: UPath) -> None:
 
     assert mag1.info.data_format == data_format
     assert mag1._is_compressed()
-    assert mag1.info.chunk_shape == Vec3Int.full(32)
+    assert mag1.info.chunk_shape == DEFAULT_CHUNK_SHAPE
     if data_format == DataFormat.Zarr:
-        assert mag1.info.shard_shape == Vec3Int.full(32)
+        assert mag1.info.shard_shape == DEFAULT_CHUNK_SHAPE
     else:
-        assert mag1.info.shard_shape == Vec3Int.full(1024)
+        assert mag1.info.shard_shape == DEFAULT_SHARD_SHAPE
 
     np.testing.assert_array_equal(
         write_data, mag1.read(absolute_offset=(60, 80, 100), size=(10, 20, 30))
