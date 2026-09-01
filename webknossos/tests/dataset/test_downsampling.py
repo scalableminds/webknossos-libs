@@ -7,6 +7,11 @@ from cluster_tools import get_executor
 from upath import UPath
 
 from tests.data_fixtures import download_wklibs_sample_archive
+from tests.dataset._dataset_helpers import (
+    DATA_FORMATS_AND_OUTPUT_PATHS,
+    assure_exported_properties,
+    copy_simple_dataset,
+)
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
 from webknossos.dataset.layer._downsampling_utils import (
@@ -20,12 +25,16 @@ from webknossos.dataset.layer._downsampling_utils import (
     non_linear_filter_3d,
 )
 from webknossos.dataset.sampling_modes import SamplingModes
+from webknossos.dataset_properties import DataFormat
 
 rng = np.random.default_rng(1234)
 
 BUFFER_SHAPE = Vec3Int.full(256)
 
-pytestmark = [pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows")]
+pytestmark = [
+    pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows"),
+    pytest.mark.usefixtures("moto_server"),
+]
 
 
 def test_downsample_cube() -> None:
@@ -558,3 +567,136 @@ def test_downsample_custom_chunk_and_shard_shapes(tmp_upath: UPath) -> None:
     assert layer.get_mag(2).info.shard_shape.xyz == Vec3Int.full(512)
     assert layer.get_mag(4).info.chunk_shape.xyz == Vec3Int.full(64)
     assert layer.get_mag(4).info.shard_shape.xyz == Vec3Int.full(512)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_downsampling(data_format: DataFormat, output_path: UPath) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "downsampling")
+
+    color_layer = Dataset.open(ds_path).get_layer("color")
+    with get_executor("sequential") as executor:
+        color_layer.downsample(executor=executor)
+
+    assert (ds_path / "color" / "2").exists()
+    assert (ds_path / "color" / "4").exists()
+
+    if data_format == DataFormat.Zarr:
+        assert (ds_path / "color" / "2" / ".zarray").exists()
+        assert (ds_path / "color" / "4" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (ds_path / "color" / "2" / "zarr.json").exists()
+        assert (ds_path / "color" / "4" / "zarr.json").exists()
+    else:
+        assert (ds_path / "color" / "2" / "header.wkw").exists()
+        assert (ds_path / "color" / "4" / "header.wkw").exists()
+
+    assure_exported_properties(color_layer.dataset)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_aligned_downsampling(data_format: DataFormat, output_path: UPath) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "aligned_downsampling")
+    dataset = Dataset.open(ds_path)
+    input_layer = dataset.get_layer("color")
+    input_layer.downsample(coarsest_mag=Mag(2))
+    test_layer = dataset.add_layer(
+        layer_name="color_2",
+        category="color",
+        dtype="uint8",
+        num_channels=3,
+        data_format=input_layer.data_format,
+    )
+
+    shard_shape = None
+    if data_format == DataFormat.Zarr3:
+        # Writing compressed zarr with large shard shape is slow
+        # compare https://github.com/scalableminds/webknossos-libs/issues/964
+        shard_shape = (128, 128, 128)
+
+    test_mag = test_layer.add_mag("1", shard_shape=shard_shape)
+    test_mag.write(
+        absolute_offset=(0, 0, 0),
+        # assuming the layer has 3 channels:
+        data=rng.integers(0, 256, (3, 24, 24, 24), dtype=np.uint8),
+        allow_resize=True,
+    )
+    test_layer.downsample(coarsest_mag=Mag(2))
+
+    assert (ds_path / "color_2" / "1").exists()
+    assert (ds_path / "color_2" / "2").exists()
+
+    if data_format == DataFormat.Zarr:
+        assert (ds_path / "color_2" / "1" / ".zarray").exists()
+        assert (ds_path / "color_2" / "2" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (ds_path / "color_2" / "1" / "zarr.json").exists()
+        assert (ds_path / "color_2" / "2" / "zarr.json").exists()
+    else:
+        assert (ds_path / "color_2" / "1" / "header.wkw").exists()
+        assert (ds_path / "color_2" / "2" / "header.wkw").exists()
+
+    assure_exported_properties(dataset)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_guided_downsampling(data_format: DataFormat, output_path: UPath) -> None:
+    ds_path = copy_simple_dataset(data_format, output_path, "guided_downsampling")
+
+    input_dataset = Dataset.open(ds_path)
+    input_layer = input_dataset.get_layer("color")
+
+    shard_shape = None
+    if data_format == DataFormat.Zarr3:
+        # Writing compressed zarr with large shard shape is slow
+        # compare https://github.com/scalableminds/webknossos-libs/issues/964
+        shard_shape = (128, 128, 128)
+
+    # Adding additional mags to the input dataset for testing
+    input_layer.add_mag("2-2-1", shard_shape=shard_shape)
+    input_layer.redownsample()
+    assert len(input_layer.mags) == 2
+    # Use the mag with the best resolution
+    finest_input_mag = input_layer.get_finest_mag()
+
+    # Creating an empty dataset for testing
+    output_ds_path = ds_path.parent / (ds_path.name + "_output")
+    output_dataset = Dataset(output_ds_path, voxel_size=input_dataset.voxel_size)
+    output_layer = output_dataset.add_layer(
+        layer_name="color",
+        category="color",
+        dtype=input_layer.dtype,
+        num_channels=input_layer.num_channels,
+        data_format=input_layer.data_format,
+    )
+    # Create the same mag in the new output dataset
+    output_mag = output_layer.add_mag(finest_input_mag.mag, shard_shape=shard_shape)
+    # Copying some data into the output dataset
+    input_data = finest_input_mag.read(absolute_offset=(0, 0, 0), size=(24, 24, 24))
+    output_mag.write(absolute_offset=(0, 0, 0), data=input_data, allow_resize=True)
+    # Downsampling the layer to the magnification used in the input dataset
+    output_layer.downsample(
+        from_mag=output_mag.mag,
+        coarsest_mag=Mag("4-4-2"),
+        align_with_other_layers=input_dataset,
+    )
+    for mag in input_layer.mags:
+        assert output_layer.get_mag(mag)
+
+    assert (output_ds_path / "color" / "1").exists()
+    assert (output_ds_path / "color" / "2-2-1").exists()
+    assert (output_ds_path / "color" / "4-4-2").exists()
+
+    if data_format == DataFormat.Zarr:
+        assert (output_ds_path / "color" / "1" / ".zarray").exists()
+        assert (output_ds_path / "color" / "2-2-1" / ".zarray").exists()
+        assert (output_ds_path / "color" / "4-4-2" / ".zarray").exists()
+    elif data_format == DataFormat.Zarr3:
+        assert (output_ds_path / "color" / "1" / "zarr.json").exists()
+        assert (output_ds_path / "color" / "2-2-1" / "zarr.json").exists()
+        assert (output_ds_path / "color" / "4-4-2" / "zarr.json").exists()
+    else:
+        assert (output_ds_path / "color" / "1" / "header.wkw").exists()
+        assert (output_ds_path / "color" / "2-2-1" / "header.wkw").exists()
+        assert (output_ds_path / "color" / "4-4-2" / "header.wkw").exists()
+
+    assure_exported_properties(input_dataset)
