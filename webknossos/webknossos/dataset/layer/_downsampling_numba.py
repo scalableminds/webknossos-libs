@@ -1,9 +1,3 @@
-"""Numba implementations of the non-linear downsampling filters.
-
-This module is only imported when the optional `numba` dependency is installed;
-`_downsampling_utils` falls back to numpy implementations otherwise.
-"""
-
 from collections.abc import Callable
 
 import numba

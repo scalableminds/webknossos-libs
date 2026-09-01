@@ -21,7 +21,6 @@ from .view import ArrayInfo, View
 try:
     from . import _downsampling_numba
 except ImportError:
-    # numba is an optional dependency, the numpy implementations below are used instead.
     _downsampling_numba = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
@@ -250,12 +249,11 @@ def _supports_fast_path(data: np.ndarray, factors: list[int]) -> bool:
 
 
 def _warn_once_about_missing_numba() -> None:
-    # The environment is inherited by worker processes, so they stay quiet as well.
     if environ.get("WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING", "False") == "False":
         environ["WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING"] = "True"
         warnings.warn(
-            "[INFO] Downsampling uses the numpy implementation of the non-linear "
-            "filters. Install the optional numba dependency with "
+            "[INFO] Downsampling uses the numpy implementation, which is slow. "
+            "Install the optional numba dependency with "
             "'pip install webknossos[numba]' for a faster implementation.",
             category=UserWarning,
             stacklevel=2,
@@ -263,8 +261,6 @@ def _warn_once_about_missing_numba() -> None:
 
 
 def warn_if_numba_is_missing(interpolation_mode: InterpolationModes) -> None:
-    """Emits the warning in this process, so that worker processes started afterwards
-    inherit the environment flag and stay quiet."""
     if _downsampling_numba is None and interpolation_mode in (
         InterpolationModes.MEDIAN,
         InterpolationModes.MODE,
