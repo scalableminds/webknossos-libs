@@ -14,7 +14,7 @@ from webknossos.client._upload_dataset import _cached_get_upload_datastore
 from webknossos.client.context import _clear_all_context_caches
 from webknossos.utils import rmtree
 
-from .constants import TESTOUTPUT_DIR
+from .constants import TESTOUTPUT_DIR, use_moto
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -85,6 +85,16 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 
 
 ### PYTEST SETUP & TEARDOWN
+
+
+@pytest.fixture(scope="session")
+def moto_server() -> Generator:
+    """One in-process S3 server per test session.
+
+    Opt in per module with `pytestmark = pytest.mark.usefixtures("moto_server")`.
+    """
+    with use_moto():
+        yield
 
 
 @pytest.fixture(autouse=True, scope="function")

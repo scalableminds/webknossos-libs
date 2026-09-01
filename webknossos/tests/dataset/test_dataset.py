@@ -3,7 +3,6 @@ import itertools
 import json
 import os
 import pickle
-from collections.abc import Iterator
 from typing import cast
 from unittest import mock
 
@@ -17,7 +16,6 @@ from tests.constants import (
     REMOTE_TESTOUTPUT_DIR,
     TESTDATA_DIR,
     TESTOUTPUT_DIR,
-    use_moto,
 )
 from tests.utils import TestTemporaryDirectoryNonLocal
 from webknossos.dataset import (
@@ -77,10 +75,7 @@ from webknossos.utils import (
 rng = np.random.default_rng(1234)
 
 
-@pytest.fixture(autouse=True, scope="module")
-def start_moto() -> Iterator[None]:
-    with use_moto():
-        yield
+pytestmark = pytest.mark.usefixtures("moto_server")
 
 
 DATA_FORMATS = [DataFormat.WKW, DataFormat.Zarr, DataFormat.Zarr3]
