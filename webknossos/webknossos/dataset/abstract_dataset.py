@@ -51,6 +51,8 @@ _DATASET_DEPRECATED_URL_REGEX = re.compile(
     + r"(?P<organization_id>[^/]*)/(?P<dataset_name>[^/]*)(/(view)?)?"
     + r"(\?token=(?P<sharing_token>[^#]*))?"
 )
+# Dataset ids are hex-encoded object ids.
+_DATASET_ID_REGEX = re.compile(r"[0-9a-fA-F]{24}")
 
 LayerType = TypeVar("LayerType", bound=AbstractLayer)
 SegmentationLayerType = TypeVar(
