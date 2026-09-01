@@ -11,6 +11,8 @@ from webknossos.dataset._utils.tensorstore_helpers import read_zarr3_array
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
 from webknossos.geometry.constants import C_AXIS, T_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 
+rng = np.random.default_rng(1234)
+
 
 def make_layer(dataset_path: UPath) -> tuple[Dataset, Layer, np.ndarray]:
     dataset = Dataset(dataset_path / "test_layer_export", voxel_size=(11, 11, 25))
@@ -21,8 +23,7 @@ def make_layer(dataset_path: UPath) -> tuple[Dataset, Layer, np.ndarray]:
         data_format="zarr3",
         bounding_box=BoundingBox((0, 0, 0), (64, 64, 64)),
     )
-    np.random.seed(1234)
-    data = (np.random.rand(64, 64, 64) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (64, 64, 64), dtype=np.uint8)
     layer.add_mag(1).write(data=data)
     layer.downsample()
     return dataset, layer, data
@@ -35,7 +36,6 @@ def make_layer_with_mags(
     own, independent data, so tests can verify export methods pick the
     right mag rather than always defaulting to the finest one.
     """
-    np.random.seed(1234)
     dataset = Dataset(dataset_path / "test_layer_export_mags", voxel_size=(11, 11, 25))
     layer = dataset.add_layer(
         "color",
@@ -46,7 +46,7 @@ def make_layer_with_mags(
     )
     data_by_mag = {}
     for mag_name, size in [("1", (64, 64, 64)), ("2-2-2", (32, 32, 32))]:
-        data = (np.random.rand(*size) * 255).astype(np.uint8)
+        data = rng.integers(0, 256, tuple(size), dtype=np.uint8)
         layer.add_mag(mag_name).write(data=data)
         data_by_mag[Mag(mag_name)] = data
     return dataset, layer, data_by_mag
@@ -108,8 +108,7 @@ def make_odd_sized_layer(tmp_upath: UPath) -> tuple[Dataset, Layer, np.ndarray]:
         data_format="zarr3",
         bounding_box=BoundingBox((0, 0, 0), (65, 65, 65)),
     )
-    np.random.seed(1234)
-    data = (np.random.rand(65, 65, 65) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (65, 65, 65), dtype=np.uint8)
     layer.add_mag(1).write(data=data)
     layer.downsample()  # produces mag 2 (33**3) and mag 4 (17**3)
     return dataset, layer, data
@@ -329,8 +328,7 @@ def test_as_tiff_stack_nd_layer_no_channel_axis(tmp_upath: UPath) -> None:
     layer = dataset.add_layer(
         "color", COLOR_CATEGORY, dtype="uint8", data_format="zarr3", bounding_box=bbox
     )
-    np.random.seed(1234)
-    data = (np.random.rand(2, 3, 4, 5) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (2, 3, 4, 5), dtype=np.uint8)
     layer.add_mag(1).write(data=data, absolute_bounding_box=bbox)
     out_dir = tmp_upath / "no_channel_tiffs"
 

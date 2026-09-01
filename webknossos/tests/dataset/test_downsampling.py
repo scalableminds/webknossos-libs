@@ -21,6 +21,8 @@ from webknossos.dataset.layer._downsampling_utils import (
 )
 from webknossos.dataset.sampling_modes import SamplingModes
 
+rng = np.random.default_rng(1234)
+
 BUFFER_SHAPE = Vec3Int.full(256)
 
 pytestmark = [pytest.mark.skipif(sys.platform == "win32", reason="too slow on windows")]
@@ -343,7 +345,7 @@ def test_default_parameter(tmp_upath: UPath) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY, dtype="uint8", num_channels=3)
     mag = layer.add_mag("2")
     mag.write(
-        data=(np.random.rand(3, 10, 20, 30) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (3, 10, 20, 30), dtype=np.uint8), allow_resize=True
     )
     layer.downsample()
 
@@ -356,7 +358,7 @@ def test_default_anisotropic_voxel_size(tmp_upath: UPath) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
-        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (10, 20, 30), dtype=np.uint8), allow_resize=True
     )
 
     layer.downsample(from_mag=Mag(1), interpolation_mode="median", compress=True)
@@ -368,7 +370,7 @@ def test_downsample_mag_list(tmp_upath: UPath) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
-        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (10, 20, 30), dtype=np.uint8), allow_resize=True
     )
 
     target_mags = [Mag([4, 4, 8]), Mag(2), Mag([32, 32, 8]), Mag(32)]  # unsorted list
@@ -384,7 +386,7 @@ def test_downsample_mag_list_with_only_setup_mags(tmp_upath: UPath) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
-        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (10, 20, 30), dtype=np.uint8), allow_resize=True
     )
 
     target_mags = [Mag([4, 4, 8]), Mag(2), Mag([32, 32, 8]), Mag(32)]  # unsorted list
@@ -409,7 +411,7 @@ def test_downsample_with_invalid_mag_list(tmp_upath: UPath) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1)
     mag.write(
-        data=(np.random.rand(10, 20, 30) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (10, 20, 30), dtype=np.uint8), allow_resize=True
     )
 
     with pytest.raises(AssertionError):
@@ -424,7 +426,7 @@ def test_downsample_compressed(tmp_upath: UPath) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY)
     mag = layer.add_mag(1, chunk_shape=8, shard_shape=64, compress=False)
     mag.write(
-        data=(np.random.rand(80, 240, 15) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (80, 240, 15), dtype=np.uint8), allow_resize=True
     )
 
     assert not mag._is_compressed()
@@ -498,7 +500,7 @@ def test_downsample_default_shard_shapes(tmp_upath: UPath) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
     mag1 = layer.add_mag(1, chunk_shape=32, shard_shape=1024)
     mag1.write(
-        data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (64, 64, 64), dtype=np.uint8), allow_resize=True
     )
     with get_executor("sequential") as executor:
         layer.downsample(from_mag=Mag(1), coarsest_mag=Mag(2), executor=executor)
@@ -512,7 +514,7 @@ def test_downsample_default_shard_shapes(tmp_upath: UPath) -> None:
     )
     mag1_flat = layer_flat.add_mag(1, chunk_shape=32, shard_shape=1024)
     mag1_flat.write(
-        data=(np.random.rand(64, 64, 10) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (64, 64, 10), dtype=np.uint8), allow_resize=True
     )
     with get_executor("sequential") as executor:
         layer_flat.downsample(from_mag=Mag(1), coarsest_mag=Mag(2), executor=executor)
@@ -524,7 +526,7 @@ def test_downsample_default_shard_shapes(tmp_upath: UPath) -> None:
     layer_zarr = ds_zarr.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr)
     mag1_zarr = layer_zarr.add_mag(1)
     mag1_zarr.write(
-        data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (64, 64, 64), dtype=np.uint8), allow_resize=True
     )
     with get_executor("sequential") as executor:
         layer_zarr.downsample(from_mag=Mag(1), coarsest_mag=Mag(2), executor=executor)
@@ -540,7 +542,7 @@ def test_downsample_custom_chunk_and_shard_shapes(tmp_upath: UPath) -> None:
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
     mag1 = layer.add_mag(1, chunk_shape=32, shard_shape=1024)
     mag1.write(
-        data=(np.random.rand(64, 64, 64) * 255).astype(np.uint8), allow_resize=True
+        data=rng.integers(0, 256, (64, 64, 64), dtype=np.uint8), allow_resize=True
     )
 
     with get_executor("sequential") as executor:

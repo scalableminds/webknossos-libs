@@ -35,6 +35,8 @@ from webknossos.dataset.layer.segmentation_layer.attachments.attachments import 
 )
 from webknossos.utils import is_remote_path, rmtree
 
+rng = np.random.default_rng(1234)
+
 pytestmark = [pytest.mark.skip_on_windows]
 
 SAMPLE_BBOX = BoundingBox((3164, 3212, 1017), (10, 10, 10))
@@ -110,7 +112,7 @@ def test_remote_dataset_add_layer_as_copy(transfer_mode: TransferMode) -> None:
     )
     source_layer.add_mag(1).write(
         absolute_offset=(0, 0, 0),
-        data=(np.random.rand(16, 16, 16) * 255).astype(np.uint8),
+        data=rng.integers(0, 256, (16, 16, 16), dtype=np.uint8),
         allow_resize=True,
     )
 
@@ -140,7 +142,7 @@ def test_remote_dataset_add_mag_as_copy(transfer_mode: TransferMode) -> None:
     source_mag = source_layer.add_mag(1)
     source_mag.write(
         absolute_offset=(0, 0, 0),
-        data=(np.random.rand(16, 16, 16) * 255).astype(np.uint8),
+        data=rng.integers(0, 256, (16, 16, 16), dtype=np.uint8),
         allow_resize=True,
     )
 
@@ -482,7 +484,7 @@ def test_default_access_mode_reflects_writes_immediately() -> None:
     )
     source_layer.add_mag(1).write(
         absolute_offset=(0, 0, 0),
-        data=(np.random.rand(16, 16, 16) * 255).astype(np.uint8),
+        data=rng.integers(0, 256, (16, 16, 16), dtype=np.uint8),
         allow_resize=True,
     )
 
