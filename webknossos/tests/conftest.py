@@ -92,15 +92,6 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 @pytest.fixture(scope="session")
 def shared_executor() -> Iterator[Executor]:
     """One process pool for the whole session.
-
-    Library functions that take an optional `executor` (`Layer.downsample`,
-    `MagView.rechunk`, `View.map_chunk`, ...) build a fresh one whenever the
-    caller passes none. Constructing it is free, but the first submit spawns
-    the workers, and under both `spawn` and `forkserver` each of those has to
-    import webknossos again, which alone takes ~0.9s. That is ~1s for two
-    workers and ~1.4s for `cpu_count()` on a 10-core machine, every time.
-    Reusing one pool pays it once per session (per xdist worker) instead of
-    once per call; a warm submit is well under a millisecond.
     """
     with get_executor("multiprocessing", max_workers=2) as executor:
         yield executor
