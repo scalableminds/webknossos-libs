@@ -93,10 +93,12 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 def shared_executor() -> Iterator[Executor]:
     """One process pool for the whole session.
 
-    Constructing a `MultiprocessingExecutor` costs ~0.3s. Library functions
-    that take an optional `executor` (`Layer.downsample`, `MagView.rechunk`,
-    `View.map_chunk`, ...) build a fresh one whenever the caller passes none,
-    so without this the tests pay that cost once per such call.
+    Library functions that take an optional `executor` (`Layer.downsample`,
+    `MagView.rechunk`, `View.map_chunk`, ...) build a fresh one whenever the
+    caller passes none. Constructing it is free, but the first submit spawns
+    the workers, which costs ~1s for two of them and ~1.4s for `cpu_count()`
+    on a 10-core machine. Reusing one pool pays that once per session instead
+    of once per call; a warm submit is well under a millisecond.
     """
     with get_executor("multiprocessing", max_workers=2) as executor:
         yield executor
