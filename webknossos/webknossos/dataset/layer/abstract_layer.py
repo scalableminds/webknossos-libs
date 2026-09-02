@@ -42,6 +42,21 @@ def channels_fit_one_layer(num_channels: int, dtype: np.dtype) -> bool:
     return num_channels == 1 or (num_channels == 3 and dtype.name == "uint8")
 
 
+def _rescaled_foreign_bounding_box(
+    foreign_mag_view: MagView, target_mag: Mag
+) -> NDBoundingBox:
+    """Returns the bounding box of the foreign mag's layer, re-interpreted as if the
+    foreign voxel grid were at `target_mag` instead of the mag it actually has."""
+    bounding_box = foreign_mag_view.layer.bounding_box
+    if target_mag == foreign_mag_view.mag:
+        return bounding_box
+    return (
+        bounding_box.align_with_mag(foreign_mag_view.mag, ceil=True)
+        .in_mag(foreign_mag_view.mag)
+        .from_mag_to_mag1(target_mag)
+    )
+
+
 def _validate_layer_name(layer_name: str) -> None:
     if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
         raise ValueError(
@@ -226,6 +241,10 @@ class AbstractLayer:
         self._properties.bounding_box = bbox
         self._save_layer_properties()
         for mag in self.mags.values():
+            # Read-only mags may be owned by a foreign dataset, so their array must not
+            # be touched.
+            if mag.read_only:
+                continue
             mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
 
     @property

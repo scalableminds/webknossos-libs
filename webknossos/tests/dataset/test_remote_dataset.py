@@ -156,6 +156,41 @@ def test_remote_dataset_add_mag_as_copy(transfer_mode: TransferMode) -> None:
     np.testing.assert_array_equal(copied_mag.read(), source_mag.read())
 
 
+@pytest.mark.parametrize("transfer_mode", [TransferMode.HTTP, TransferMode.COPY])
+def test_remote_dataset_add_mag_as_copy_with_mag(transfer_mode: TransferMode) -> None:
+    ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_mag_with_mag_src")
+    source_ds = Dataset(ds_path, voxel_size=(2, 2, 1))
+    source_layer = source_ds.add_layer(
+        "color", COLOR_CATEGORY, data_format=DataFormat.Zarr3
+    )
+    source_mag = source_layer.add_mag(1)
+    source_mag.write(
+        absolute_offset=(0, 0, 0),
+        data=(np.random.rand(16, 16, 16) * 255).astype(np.uint8),
+        allow_resize=True,
+    )
+
+    remote_ds = source_ds.upload(
+        new_dataset_name="test_remote_dataset_add_mag_as_copy_with_mag"
+    )
+    remote_ds = reopen_dataset(remote_ds)
+    remote_layer = remote_ds.add_layer(
+        "color2", COLOR_CATEGORY, data_format=DataFormat.Zarr3
+    )
+    copied_mag = remote_layer.add_mag_as_copy(
+        source_mag,
+        mag="2",
+        transfer_mode=transfer_mode,
+        extend_layer_bounding_box=True,
+    )
+    assert Mag(2) in remote_layer.mags
+    assert Mag(1) not in remote_layer.mags
+    assert copied_mag.mag == Mag(2)
+    # the voxel grid is unchanged, so it covers twice the extent in Mag(1)
+    assert tuple(remote_layer.bounding_box.size) == (32, 32, 32)
+    np.testing.assert_array_equal(copied_mag.read(), source_mag.read())
+
+
 def test_add_remote_mags_from_mag_view(
     sample_downloaded_dataset: Dataset,
     sample_layer_and_mag_name: Iterable[tuple[str, str]],

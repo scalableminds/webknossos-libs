@@ -404,7 +404,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
     ) -> "Dataset":
         """Downloads a dataset and returns the Dataset instance.
 
-        * `dataset_name_or_url` may be a dataset name or a full URL to a dataset view, e.g.
+        * `dataset_name_or_url` may be a dataset name, a dataset ID or a full URL to a dataset view, e.g.
           `https://webknossos.org/datasets/scalable_minds/l4_sample_dev/view`
           If a URL is used, `organization_id`, `webknossos_url` and `sharing_token` must not be set.
         * `organization_id` may be supplied if a dataset name was used in the previous argument,

@@ -1,3 +1,5 @@
+import importlib.util
+import os
 import sys
 import warnings
 
@@ -8,6 +10,7 @@ from upath import UPath
 
 from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
+from webknossos.dataset.layer import _downsampling_utils
 from webknossos.dataset.layer._downsampling_utils import (
     InterpolationModes,
     _mode,
@@ -19,6 +22,8 @@ from webknossos.dataset.layer._downsampling_utils import (
     non_linear_filter_3d,
 )
 from webknossos.dataset.sampling_modes import SamplingModes
+
+HAS_NUMBA = importlib.util.find_spec("numba") is not None
 
 BUFFER_SHAPE = Vec3Int.full(256)
 
@@ -53,6 +58,146 @@ def test_downsample_median() -> None:
     expected_result = np.array([3, 3, 2, 2, 2, 1])
 
     assert np.all(result == expected_result)
+
+
+def reference_downsample(
+    data: np.ndarray, factors: list[int], interpolation_mode: InterpolationModes
+) -> np.ndarray:
+    """Straightforward reference for the non-linear filters, independent of numba.
+
+    Within a block the elements are ordered `dy + fy * dx + fx * fy * dz`, which is the
+    order `non_linear_filter_3d` produces and which decides how ties are broken.
+    """
+    fx, fy, fz = factors
+    target = np.empty(
+        (data.shape[0] // fx, data.shape[1] // fy, data.shape[2] // fz),
+        dtype=data.dtype,
+    )
+    for x in range(target.shape[0]):
+        for y in range(target.shape[1]):
+            for z in range(target.shape[2]):
+                block = [
+                    data[x * fx + dx, y * fy + dy, z * fz + dz]
+                    for dz in range(fz)
+                    for dx in range(fx)
+                    for dy in range(fy)
+                ]
+                if interpolation_mode == InterpolationModes.MODE:
+                    counts = [block.count(value) for value in block]
+                    target[x, y, z] = block[counts.index(max(counts))]
+                else:
+                    target[x, y, z] = np.median(np.array(block)).astype(data.dtype)
+    return target
+
+
+@pytest.mark.parametrize("dtype", ["uint8", "uint16", "uint32", "uint64", "int32"])
+@pytest.mark.parametrize(
+    "factors", [[2, 2, 2], [2, 2, 1], [4, 4, 1], [1, 2, 4], [3, 1, 1]]
+)
+@pytest.mark.parametrize(
+    "interpolation_mode", [InterpolationModes.MEDIAN, InterpolationModes.MODE]
+)
+@pytest.mark.parametrize(
+    "with_numba",
+    [
+        pytest.param(
+            True,
+            marks=pytest.mark.skipif(not HAS_NUMBA, reason="numba is not installed"),
+        ),
+        False,
+    ],
+)
+def test_downsample_cube_matches_non_linear_filter(
+    dtype: str,
+    factors: list[int],
+    interpolation_mode: InterpolationModes,
+    with_numba: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Both the numba and the numpy implementation must stay bit-identical to
+    non_linear_filter_3d, including the tie-breaking of the mode filter."""
+    if not with_numba:
+        monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
+    rng = np.random.default_rng(42)
+    shape = tuple(6 * factor for factor in factors)
+    # A narrow value range provokes ties, a wide one yields distinct values.
+    for high in (4, 60000):
+        buffer = np.asfortranarray(
+            rng.integers(0, high, size=shape).astype(np.dtype(dtype))
+        )
+        expected = reference_downsample(buffer, factors, interpolation_mode)
+        result = downsample_cube(buffer, factors, interpolation_mode)
+        assert result.dtype == buffer.dtype
+        assert result.shape == expected.shape
+        assert np.array_equal(result, expected), (
+            f"mismatch for {dtype}, {factors}, {interpolation_mode}, high={high}"
+        )
+
+
+@pytest.mark.parametrize("dtype", ["float32", "float64"])
+@pytest.mark.parametrize(
+    "with_numba",
+    [
+        pytest.param(
+            True,
+            marks=pytest.mark.skipif(not HAS_NUMBA, reason="numba is not installed"),
+        ),
+        False,
+    ],
+)
+def test_downsample_cube_float(
+    dtype: str, with_numba: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Float layers must produce the same result with and without numba."""
+    if not with_numba:
+        monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
+    rng = np.random.default_rng(7)
+    buffer = np.asfortranarray(rng.integers(0, 5, size=(16, 16, 16)).astype(dtype))
+    for interpolation_mode in (InterpolationModes.MEDIAN, InterpolationModes.MODE):
+        expected = reference_downsample(buffer, [2, 2, 2], interpolation_mode)
+        result = downsample_cube(buffer, [2, 2, 2], interpolation_mode)
+        assert result.dtype == buffer.dtype
+        assert np.array_equal(result, expected)
+
+
+def test_missing_numba_warns_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
+    monkeypatch.delenv("WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING", raising=False)
+    buffer = np.zeros((4, 4, 4), dtype=np.uint8)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        for _ in range(3):
+            downsample_cube(buffer, [2, 2, 2], InterpolationModes.MODE)
+    assert len([w for w in caught if "numba" in str(w.message)]) == 1
+    # The flag lives in the environment so that worker processes inherit it.
+    assert os.environ["WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING"] == "True"
+
+
+@pytest.mark.parametrize(
+    ("interpolation_mode", "dtype", "warns_without_numba"),
+    [
+        (InterpolationModes.MODE, "uint32", True),
+        (InterpolationModes.MODE, "float32", True),
+        (InterpolationModes.MEDIAN, "uint8", True),
+        # numba does not speed up the median of floating point data.
+        (InterpolationModes.MEDIAN, "float32", False),
+    ],
+)
+def test_missing_numba_warning_conditions(
+    interpolation_mode: InterpolationModes,
+    dtype: str,
+    warns_without_numba: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING", raising=False)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        _downsampling_utils.warn_if_numba_is_missing(
+            interpolation_mode, np.dtype(dtype)
+        )
+    expected = 1 if warns_without_numba and not HAS_NUMBA else 0
+    assert len([w for w in caught if "numba" in str(w.message)]) == expected
 
 
 def test_non_linear_filter_reshape() -> None:

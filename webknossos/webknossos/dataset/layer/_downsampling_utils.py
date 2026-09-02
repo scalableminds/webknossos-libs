@@ -4,9 +4,9 @@ import warnings
 from collections.abc import Callable
 from enum import Enum
 from itertools import product
+from os import environ
 from typing import TYPE_CHECKING, Union
 
-import numba
 import numpy as np
 from scipy.ndimage import zoom
 
@@ -17,6 +17,11 @@ from webknossos.dataset_properties import LayerCategoryType
 from webknossos.geometry import C_AXIS, Mag, Vec3FloatLike, Vec3Int, Vec3IntLike
 
 from .view import ArrayInfo, View
+
+try:
+    from . import _downsampling_numba
+except ImportError:
+    _downsampling_numba = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -216,32 +221,73 @@ def _median(x: np.ndarray) -> np.ndarray:
     return np.median(x, axis=0).astype(x.dtype)
 
 
-@numba.jit(nopython=True, nogil=True)
-def _mode(input_array: np.ndarray) -> np.ndarray:
-    values = np.zeros(input_array.shape[0], dtype=input_array.dtype)
-    counter = np.zeros(input_array.shape[0], dtype=np.uint8)
-    output_array = np.zeros(input_array.shape[1], dtype=input_array.dtype)
-    for row_index in range(input_array.shape[1]):
-        values[0] = input_array[0, row_index]
-        counter[:] = 1
-        value_offset = 1
-        for col_index in range(1, input_array.shape[0]):
-            value = input_array[col_index, row_index]
-            found_value = False
-            for i in range(
-                value_offset
-            ):  # Only iterate the values that were already seen
-                if value == values[i]:
-                    counter[i] = counter[i] + 1
-                    found_value = True
-                    break
-            if not found_value:
-                values[value_offset] = value
-                value_offset += 1
-        mode = values[np.argmax(counter)]
-        output_array[row_index] = mode
+def _mode(x: np.ndarray) -> np.ndarray:
+    # Each row counts only the matches that follow it, so the first occurrence of a
+    # value carries its full count and ties are won by the earliest row.
+    best = np.array(x[0])
+    # The counter must hold the number of elements per block, which is the number of
+    # rows. A uint16 would wrap for the large factors of a multi-mag step.
+    counter_dtype = np.min_scalar_type(x.shape[0])
+    best_count = np.ones(x.shape[1], dtype=counter_dtype)
+    for j in range(1, x.shape[0]):
+        best_count += x[0] == x[j]
+    count = np.empty_like(best_count)
+    # The last row always has a count of 1 and can never win.
+    for i in range(1, x.shape[0] - 1):
+        count[...] = 1
+        for j in range(i + 1, x.shape[0]):
+            count += x[i] == x[j]
+        wins = count > best_count
+        np.copyto(best, x[i], where=wins)
+        np.copyto(best_count, count, where=wins)
+    return best
 
-    return output_array
+
+def _supports_fast_path(data: np.ndarray, factors: list[int]) -> bool:
+    # Numba rejects arrays with a non-native byte order, so those keep using numpy.
+    return data.ndim == 3 and len(factors) == 3 and data.dtype.isnative
+
+
+def _warn_once_about_missing_numba() -> None:
+    if environ.get("WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING", "False") == "False":
+        environ["WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING"] = "True"
+        warnings.warn(
+            "[INFO] Downsampling uses the numpy implementation, which is slow. "
+            "Install the optional numba dependency with "
+            "'pip install webknossos[numba]' for a faster implementation.",
+            category=UserWarning,
+            stacklevel=2,
+        )
+
+
+def warn_if_numba_is_missing(
+    interpolation_mode: InterpolationModes, dtype: np.dtype
+) -> None:
+    if _downsampling_numba is not None:
+        return
+    # The median filter of floating point data uses numpy either way.
+    if interpolation_mode == InterpolationModes.MODE or (
+        interpolation_mode == InterpolationModes.MEDIAN and dtype.kind in "iu"
+    ):
+        _warn_once_about_missing_numba()
+
+
+def _downsample_median(data: np.ndarray, factors: list[int]) -> np.ndarray:
+    # Floating point data uses the numpy implementation, because np.median
+    # accumulates in the input dtype for float32 and has its own NaN semantics.
+    if _supports_fast_path(data, factors) and data.dtype.kind in "iu":
+        if _downsampling_numba is not None:
+            return _downsampling_numba.median_downsample(data, factors)
+        _warn_once_about_missing_numba()
+    return non_linear_filter_3d(data, factors, _median)
+
+
+def _downsample_mode(data: np.ndarray, factors: list[int]) -> np.ndarray:
+    if _supports_fast_path(data, factors):
+        if _downsampling_numba is not None:
+            return _downsampling_numba.mode_downsample(data, factors)
+        _warn_once_about_missing_numba()
+    return non_linear_filter_3d(data, factors, _mode)
 
 
 def downsample_unpadded_data(
@@ -270,9 +316,9 @@ def downsample_cube(
     cube_buffer: np.ndarray, factors: list[int], interpolation_mode: InterpolationModes
 ) -> np.ndarray:
     if interpolation_mode == InterpolationModes.MODE:
-        return non_linear_filter_3d(cube_buffer, factors, _mode)
+        return _downsample_mode(cube_buffer, factors)
     elif interpolation_mode == InterpolationModes.MEDIAN:
-        return non_linear_filter_3d(cube_buffer, factors, _median)
+        return _downsample_median(cube_buffer, factors)
     elif interpolation_mode == InterpolationModes.NEAREST:
         return linear_filter_3d(cube_buffer, factors, 0)
     elif interpolation_mode == InterpolationModes.BILINEAR:
@@ -328,7 +374,7 @@ def downsample_cube_job(
             for channel_index in range(num_channels):
                 cube_buffer = cube_buffer_channels[channel_index]
 
-                if not np.all(cube_buffer == 0):
+                if cube_buffer.any():
                     # Downsample the buffer
                     data_cube = downsample_cube(
                         cube_buffer,
