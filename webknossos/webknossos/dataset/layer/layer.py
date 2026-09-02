@@ -26,9 +26,10 @@ from ._downsampling_utils import (
     determine_upsample_buffer_shape,
     downsample_cube_job,
     parse_interpolation_mode,
+    warn_if_numba_is_missing,
 )
 from ._upsampling_utils import upsample_cube_job
-from .abstract_layer import AbstractLayer
+from .abstract_layer import AbstractLayer, _rescaled_foreign_bounding_box
 from .view import (
     ArrayException,
     MagView,
@@ -603,6 +604,7 @@ class Layer(AbstractLayer):
         self,
         foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
+        mag: MagLike | None = None,
         extend_layer_bounding_box: bool = True,
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
@@ -616,9 +618,14 @@ class Layer(AbstractLayer):
         Copies the data at `foreign_mag_view_or_path` which can belong to another dataset
         to the current dataset. Additionally, the relevant information from the
         `datasource-properties.json` of the other dataset are copied, too.
+
+        If `mag` is given, the copied data is registered under that mag instead of the
+        mag it has in the source dataset. The voxel data is not resampled, so the copied
+        mag covers a different extent in Mag(1) than the source mag does.
         """
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
+        target_mag = Mag(mag) if mag is not None else foreign_mag_view.mag
 
         if progress_desc is None:
             progress_desc = f"Copying mag {foreign_mag_view.mag.to_layer_name()} from {foreign_mag_view.layer} to {self}"
@@ -652,7 +659,7 @@ class Layer(AbstractLayer):
 
         uses_compatible_protocols = (
             foreign_mag_view.path.protocol in COPY_COMPATIBLE_PROTOCOLS
-            and (self.path / foreign_mag_view.mag.to_layer_name()).protocol
+            and (self.path / target_mag.to_layer_name()).protocol
             in COPY_COMPATIBLE_PROTOCOLS
         )
 
@@ -663,10 +670,11 @@ class Layer(AbstractLayer):
             and uses_compatible_protocols
         ):
             logger.debug(
-                f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{foreign_mag_view.mag} directly without re-encoding."
+                f"Optimization: Copying files from {foreign_mag_view.path} to {self.path}/{target_mag} directly without re-encoding."
             )
             return self._add_fs_copy_mag(
                 foreign_mag_view,
+                mag=target_mag,
                 extend_layer_bounding_box=extend_layer_bounding_box,
                 exists_ok=exists_ok,
                 progress_desc=progress_desc,
@@ -689,15 +697,15 @@ class Layer(AbstractLayer):
         shard_shape = shard_shape or foreign_mag_view.info.shard_shape
         if exists_ok:
             mag_view = self.get_or_add_mag(
-                mag=foreign_mag_view.mag,
+                mag=target_mag,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compress=compress,
             )
         else:
-            self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
+            self._assert_mag_does_not_exist_yet(target_mag)
             mag_view = self.add_mag(
-                mag=foreign_mag_view.mag,
+                mag=target_mag,
                 chunk_shape=chunk_shape,
                 shard_shape=shard_shape,
                 compress=compress,
@@ -705,18 +713,31 @@ class Layer(AbstractLayer):
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
-                foreign_mag_view.layer.bounding_box
+                _rescaled_foreign_bounding_box(foreign_mag_view, target_mag)
+            )
+
+        source_view = foreign_mag_view.get_view(read_only=True)
+        target_view: View = mag_view
+        if target_mag != foreign_mag_view.mag:
+            # The voxel grid is copied as-is, so the target region in Mag(1) is the
+            # source region re-interpreted at the target mag.
+            target_view = mag_view.get_view(
+                absolute_bounding_box=source_view.bounding_box.align_with_mag(
+                    foreign_mag_view.mag, ceil=True
+                )
+                .in_mag(foreign_mag_view.mag)
+                .from_mag_to_mag1(target_mag)
             )
 
         # use the target shard shape for the copy operation
-        copy_shape = mag_view.info.shard_shape * mag_view.mag.to_vec3_int()
-        foreign_mag_view.get_view(read_only=True).for_zipped_chunks(
+        source_view.for_zipped_chunks(
             func_per_chunk=_copy_job,
-            target_view=mag_view,
+            target_view=target_view,
             executor=executor,
             progress_desc=progress_desc,
-            source_chunk_shape=copy_shape,
-            target_chunk_shape=copy_shape,
+            source_chunk_shape=mag_view.info.shard_shape
+            * foreign_mag_view.mag.to_vec3_int(),
+            target_chunk_shape=mag_view.info.shard_shape * target_mag.to_vec3_int(),
         )
 
         return mag_view
@@ -811,6 +832,10 @@ class Layer(AbstractLayer):
         The relevant information from the `datasource-properties.json` of the other dataset is copied to this dataset.
         Note: If the other dataset modifies its bounding box afterwards, the change does not affect this properties
         (or vice versa).
+
+        If `mag` is given, the foreign data is registered under that mag instead of the
+        mag it has in the source dataset. The voxel data is not resampled, so the
+        referenced mag covers a different extent in Mag(1) than the source mag does.
         """
         self._ensure_writable()
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
@@ -840,7 +865,7 @@ class Layer(AbstractLayer):
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
-                foreign_mag_view.layer.bounding_box
+                _rescaled_foreign_bounding_box(foreign_mag_view, mag)
             )
 
         return self.get_mag(mag)
@@ -849,6 +874,7 @@ class Layer(AbstractLayer):
         self,
         foreign_mag_view_or_path: PathLike | UPath | str | MagView,
         *,
+        mag: MagLike | None = None,
         extend_layer_bounding_box: bool = True,
         exists_ok: bool = False,
         progress_desc: str | None = None,
@@ -856,29 +882,30 @@ class Layer(AbstractLayer):
         self._ensure_writable()
 
         foreign_mag_view = MagView._ensure_mag_view(foreign_mag_view_or_path)
-        self._assert_mag_does_not_exist_yet(foreign_mag_view.mag)
+        target_mag = Mag(mag) if mag is not None else foreign_mag_view.mag
+        self._assert_mag_does_not_exist_yet(target_mag)
 
         assert foreign_mag_view.info.data_format == self.data_format, (
             f"Cannot use file-based copy, because the foreign data format {foreign_mag_view.info.data_format} does not match the layer's data format {self.data_format}."
         )
 
-        mag_path = self.path / str(foreign_mag_view.mag)
+        mag_path = self.path / str(target_mag)
         if not exists_ok and mag_path.exists():
             raise FileExistsError(
                 f"Cannot copy {foreign_mag_view.path} to {mag_path} because it already exists."
             )
         copytree(foreign_mag_view.path, mag_path, progress_desc=progress_desc)
 
-        mag = self._add_mag_for_existing_files(
-            foreign_mag_view.mag, mag_path=mag_path, read_only=False
+        mag_view = self._add_mag_for_existing_files(
+            target_mag, mag_path=mag_path, read_only=False
         )
 
         if extend_layer_bounding_box:
             self.bounding_box = self.bounding_box.extended_by(
-                foreign_mag_view.layer.bounding_box
+                _rescaled_foreign_bounding_box(foreign_mag_view, target_mag)
             )
 
-        return mag
+        return mag_view
 
     def add_fs_copy_mag(
         self,
@@ -1186,6 +1213,9 @@ class Layer(AbstractLayer):
 
         if only_setup_mag:
             return
+
+        # Emitted here so that the worker processes of the executor inherit the flag.
+        warn_if_numba_is_missing(parsed_interpolation_mode, self.dtype)
 
         bb_mag1 = self.bounding_box.align_with_mag(target_mag, ceil=True)
 

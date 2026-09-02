@@ -245,6 +245,44 @@ def test_add_mag_as_ref(data_format: DataFormat, output_path: UPath) -> None:
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+def test_extending_bounding_box_leaves_referenced_mag_untouched(
+    data_format: DataFormat, output_path: UPath
+) -> None:
+    ds_path = prepare_dataset_path(data_format, output_path, "original")
+    new_path = prepare_dataset_path(data_format, output_path, "with_ref")
+
+    original_ds = Dataset(ds_path, voxel_size=(1, 1, 1))
+    original_layer = original_ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        data_format=data_format,
+        bounding_box=BoundingBox((0, 0, 0), (10, 20, 30)),
+    )
+    original_data = rng.integers(0, 256, (10, 20, 30), dtype=np.uint8)
+    original_mag = original_layer.add_mag(1)
+    original_mag.write(data=original_data)
+    original_array_bbox = original_mag.info.bounding_box
+
+    ds = Dataset(new_path, voxel_size=(1, 1, 1))
+    layer = ds.add_layer(
+        "color", COLOR_CATEGORY, dtype="uint8", data_format=data_format
+    )
+    assert layer.add_mag_as_ref(original_mag).read_only
+
+    layer.bounding_box = layer.bounding_box.extended_by(
+        BoundingBox((0, 0, 0), (100, 100, 100))
+    )
+
+    reopened_mag = Dataset.open(ds_path).get_layer("color").get_mag(1)
+    assert reopened_mag.info.bounding_box == original_array_bbox
+    np.testing.assert_array_equal(reopened_mag.read()[0], original_data)
+
+    assure_exported_properties(original_ds)
+    assure_exported_properties(ds)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_add_mag_as_ref_with_mag(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path, "original")
     new_path = prepare_dataset_path(data_format, output_path, "with_ref")
@@ -273,6 +311,8 @@ def test_add_mag_as_ref_with_mag(data_format: DataFormat, output_path: UPath) ->
     assert list(layer.mags.values())[0]._properties.path == dump_path(
         ds_path / "color" / "1", new_path
     )
+    # the referenced voxel grid covers twice the extent in Mag(1)
+    assert layer.bounding_box == BoundingBox((0, 0, 0), (20, 40, 60))
 
     assure_exported_properties(ds)
     assure_exported_properties(original_ds)
@@ -319,6 +359,63 @@ def test_add_mag_as_copy(data_format: DataFormat, output_path: UPath) -> None:
 
     np.testing.assert_array_equal(
         copy_mag.read(absolute_offset=(0, 0, 0), size=(5, 5, 5))[0], new_data
+    )
+    np.testing.assert_array_equal(original_mag.read()[0], original_data)
+
+    assure_exported_properties(original_ds)
+    assure_exported_properties(copy_ds)
+
+
+@pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
+@pytest.mark.parametrize("force_re_encode", [False, True])
+def test_add_mag_as_copy_with_mag(
+    data_format: DataFormat, output_path: UPath, force_re_encode: bool
+) -> None:
+    original_ds_path = prepare_dataset_path(data_format, output_path, "original")
+    copy_ds_path = prepare_dataset_path(data_format, output_path, "copy")
+
+    original_ds = Dataset(original_ds_path, voxel_size=(1, 1, 1))
+    original_layer = original_ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        data_format=data_format,
+        bounding_box=BoundingBox((6, 6, 6), (10, 20, 30)),
+    )
+    original_data = rng.integers(0, 256, (10, 20, 30), dtype=np.uint8)
+    original_mag = original_layer.add_mag(1)
+    original_mag.write(data=original_data, absolute_offset=(6, 6, 6))
+
+    copy_ds = Dataset(copy_ds_path, voxel_size=(1, 1, 1))
+    copy_layer = copy_ds.add_layer(
+        "color", COLOR_CATEGORY, dtype="uint8", data_format=data_format
+    )
+
+    with mock.patch.object(
+        copy_layer, "_add_fs_copy_mag", wraps=copy_layer._add_fs_copy_mag
+    ) as mocked_method:
+        copy_mag = copy_layer.add_mag_as_copy(
+            original_mag,
+            mag="2",
+            # a differing compression prevents the file-based copy
+            compress=False if force_re_encode else None,
+            extend_layer_bounding_box=True,
+        )
+        assert mocked_method.call_count == (0 if force_re_encode else 1)
+
+    assert copy_mag.mag == Mag("2")
+    assert not copy_mag.read_only
+    assert (copy_ds_path / "color" / "2").exists()
+    assert not (copy_ds_path / "color" / "1").exists()
+    assert len(copy_layer._properties.mags) == 1
+
+    # the voxel grid is unchanged, so it covers twice the extent in Mag(1)
+    assert tuple(copy_layer.bounding_box.topleft) == (12, 12, 12)
+    assert tuple(copy_layer.bounding_box.size) == (20, 40, 60)
+
+    np.testing.assert_array_equal(
+        copy_mag.read(absolute_offset=(12, 12, 12), size=(20, 40, 60))[0],
+        original_data,
     )
     np.testing.assert_array_equal(original_mag.read()[0], original_data)
 
