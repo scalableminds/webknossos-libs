@@ -2,10 +2,12 @@ import gc
 import sys
 import warnings
 from collections.abc import Generator, Iterator
+from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
 from typing import Any
 
 import pytest
+from cluster_tools import Executor, get_executor
 from hypothesis import strategies as st
 from upath import UPath
 
@@ -14,7 +16,7 @@ from webknossos.client._upload_dataset import _cached_get_upload_datastore
 from webknossos.client.context import _clear_all_context_caches
 from webknossos.utils import rmtree
 
-from .constants import TESTOUTPUT_DIR
+from .constants import TESTOUTPUT_DIR, use_moto
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -43,8 +45,14 @@ def pytest_make_parametrize_id(config: Any, val: Any, argname: str) -> Any:
     return None
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def ensure_gc() -> None:
+    """Opt-in full collection before a test.
+
+    Only worth its cost (~40-100ms per test) in modules that allocate large
+    image buffers. Request it per module with
+    `pytestmark = pytest.mark.usefixtures("ensure_gc")`.
+    """
     gc.collect()
 
 
@@ -79,6 +87,45 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 
 
 ### PYTEST SETUP & TEARDOWN
+
+
+@pytest.fixture(scope="session")
+def shared_executor() -> Iterator[Executor]:
+    """One process pool for the whole session."""
+    with get_executor("multiprocessing", max_workers=2) as executor:
+        yield executor
+
+
+@pytest.fixture(autouse=True)
+def reuse_executor(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Hands the shared pool to every `utils.wrap_executor` call.
+
+    An executor the caller passes explicitly is handed back untouched, so
+    tests that manage their own are unaffected.
+    """
+
+    def wrap_executor(executor: Executor | None = None) -> AbstractContextManager:
+        # Resolved lazily so tests that never reach one of those functions
+        # don't pay for starting the worker processes.
+        return nullcontext(
+            executor
+            if executor is not None
+            else request.getfixturevalue("shared_executor")
+        )
+
+    monkeypatch.setattr(wk.utils, "wrap_executor", wrap_executor)
+
+
+@pytest.fixture(scope="session")
+def moto_server() -> Generator:
+    """One in-process S3 server per test session.
+
+    Opt in per module with `pytestmark = pytest.mark.usefixtures("moto_server")`.
+    """
+    with use_moto():
+        yield
 
 
 @pytest.fixture(autouse=True, scope="function")

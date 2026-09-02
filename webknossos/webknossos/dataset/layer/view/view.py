@@ -9,6 +9,7 @@ import numpy as np
 from cluster_tools import Executor
 from upath import UPath
 
+from .... import utils
 from ....dataset_properties import DataFormat
 from ....geometry import (
     BoundingBox,
@@ -26,7 +27,6 @@ from ....utils import (
     get_rich_progress,
     wait_and_ensure_success,
     warn_deprecated,
-    wrap_executor,
 )
 from ._array import ArrayInfo, BaseArray
 
@@ -1414,7 +1414,7 @@ class View:
             job_args.append(chunk_view)
 
         # execute the work for each chunk
-        with wrap_executor(executor) as executor:
+        with utils.wrap_executor(executor) as executor:
             results = wait_and_ensure_success(
                 executor.map_to_futures(func_per_chunk, job_args),
                 executor=executor,
@@ -1619,7 +1619,7 @@ class View:
         """
         if self.bounding_box.size != other.bounding_box.size:
             return False
-        with wrap_executor(executor) as executor:
+        with utils.wrap_executor(executor) as executor:
             # read-only views are required for more flexible chunk shapes
             # otherwise, shard-aligned chunk shapes would be required
             read_only_self = self.get_view(read_only=True)

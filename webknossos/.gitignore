@@ -104,7 +104,7 @@ ENV/
 # MyPy
 .mypy_cache/
 
-testoutput
+testoutput*
 
 data
 tmp

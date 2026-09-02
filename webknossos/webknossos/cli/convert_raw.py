@@ -9,6 +9,7 @@ import typer
 from cluster_tools import Executor
 from upath import UPath
 
+from .. import utils
 from ..dataset import Dataset, MagView, SamplingModes
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
 from ..dataset_properties import DataFormat, VoxelSize
@@ -20,7 +21,6 @@ from ..utils import (
     time_start,
     time_stop,
     wait_and_ensure_success,
-    wrap_executor,
 )
 from ._utils import (
     DEFAULT_DATA_FORMAT_STR,
@@ -137,7 +137,7 @@ def convert_raw(
     )
 
     # Parallel chunk conversion
-    with wrap_executor(executor) as executor:
+    with utils.wrap_executor(executor) as executor:
         wait_and_ensure_success(
             executor.map_to_futures(
                 partial(

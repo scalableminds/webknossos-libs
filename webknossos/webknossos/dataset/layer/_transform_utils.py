@@ -7,9 +7,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 from cluster_tools import Executor
 
+from webknossos import utils
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox, Vec3Int, Vec3IntLike
 from webknossos.geometry.mag import MagLike
-from webknossos.utils import named_partial, wrap_executor
+from webknossos.utils import named_partial
 
 from .view import MagView, View
 
@@ -450,7 +451,7 @@ def transform(
         buffer_shape=buffer_shape,
         fill_value=fill_value,
     )
-    with wrap_executor(executor) as actual_executor:
+    with utils.wrap_executor(executor) as actual_executor:
         # The default chunk_shape is one shard per job and explicit chunk_shapes are
         # validated to be multiples of the shard shape. Since chunk borders are aligned
         # with absolute multiples of chunk_shape, parallel jobs never share a shard.

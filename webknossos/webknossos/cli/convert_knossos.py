@@ -14,12 +14,13 @@ import typer
 from cluster_tools import Executor
 from upath import UPath
 
+from .. import utils
 from ..dataset import Dataset, View
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
 from ..dataset_properties import COLOR_CATEGORY, DataFormat, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import time_start, time_stop, wrap_executor
+from ..utils import time_start, time_stop
 from ._utils import (
     DEFAULT_DATA_FORMAT_STR,
     ChunkShapeOption,
@@ -223,7 +224,7 @@ def convert_knossos(
         mag, chunk_shape=chunk_shape, shard_shape=shard_shape
     )
 
-    with wrap_executor(executor) as executor:
+    with utils.wrap_executor(executor) as executor:
         target_mag.for_each_chunk(
             partial(convert_cube_job, source_knossos_info),
             chunk_shape=shard_shape * mag,

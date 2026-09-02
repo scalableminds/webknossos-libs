@@ -24,6 +24,7 @@ from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
 
+from ... import utils
 from ...dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -44,7 +45,7 @@ from ...geometry import (
 )
 from ...geometry.constants import CXYZ_AXES, Z_AXIS
 from ...geometry.mag import MagLike
-from ...utils import named_partial, wait_and_ensure_success, wrap_executor
+from ...utils import named_partial, wait_and_ensure_success
 from ..defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
 from ..errors import UnsupportedImageDataError, UnsupportedImageFormatError
 from ..layer import Layer, SegmentationLayer
@@ -450,7 +451,7 @@ def from_images(
             filepaths_per_layer = {
                 f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
             }
-    with wrap_executor(executor) as executor:
+    with utils.wrap_executor(executor) as executor:
         with _quiet_reader_warnings():
             for layer_name, filepaths in filepaths_per_layer.items():
                 filepaths.sort(key=z_slices_sort_key)
@@ -765,7 +766,7 @@ def add_layer_from_images(
                 category=UserWarning,
                 module="webknossos",
             )
-            with wrap_executor(executor) as executor:
+            with utils.wrap_executor(executor) as executor:
                 chunk_results = wait_and_ensure_success(
                     executor.map_to_futures(func_per_chunk, args),
                     executor=executor,

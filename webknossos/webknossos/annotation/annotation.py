@@ -62,6 +62,7 @@ import webknossos._nml as wknml
 from webknossos.dataset import RemoteAccessMode, RemoteDataset
 from webknossos.geometry.mag import Mag, MagLike
 
+from .. import utils
 from ..client.api_client.models import (
     ApiAdHocMeshInfo,
     ApiAnnotation,
@@ -90,7 +91,6 @@ from ..skeleton import Skeleton
 from ..utils import (
     time_since_epoch_in_ms,
     warn_deprecated,
-    wrap_executor,
 )
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 from .volume_layer import SegmentInformation, VolumeLayer
@@ -784,7 +784,7 @@ class Annotation:
 
             if volume_layer.zip is None:
                 logger.info("No volume annotation found. Copy fallback layer.")
-                with wrap_executor(executor) as executor:
+                with utils.wrap_executor(executor) as executor:
                     output_dataset.add_layer_as_copy(
                         fallback_layer, compress=True, executor=executor
                     )
@@ -817,7 +817,7 @@ class Annotation:
                     fallback_layer, fallback_layer.name
                 )
 
-                with wrap_executor(executor) as executor:
+                with utils.wrap_executor(executor) as executor:
                     logger.info(
                         "Copy Mag %s from %s to %s",
                         fallback_mag.mag,
