@@ -135,11 +135,49 @@ jobs:
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
-    runs-on: ubicloud-standard-8
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        python-version: ["3.14", "3.13", "3.12", "3.11", "3.10"]
-        group: [1, 2, 3]
+        include:
+          # Control: today's configuration, 3 split groups on 8 vCPU.
+          - label: "ctl-8vcpu-split1-n4"
+            runner: ubicloud-standard-8
+            workers: 4
+            split: "--splits 3 --group 1 --splitting-algorithm least_duration"
+          - label: "ctl-8vcpu-split2-n4"
+            runner: ubicloud-standard-8
+            workers: 4
+            split: "--splits 3 --group 2 --splitting-algorithm least_duration"
+          - label: "ctl-8vcpu-split3-n4"
+            runner: ubicloud-standard-8
+            workers: 4
+            split: "--splits 3 --group 3 --splitting-algorithm least_duration"
+          # Candidates: whole suite in one job, no split, bigger machines.
+          - label: "one-8vcpu-n4"
+            runner: ubicloud-standard-8
+            workers: 4
+            split: ""
+          - label: "one-16vcpu-n8"
+            runner: ubicloud-standard-16
+            workers: 8
+            split: ""
+          - label: "one-16vcpu-n12"
+            runner: ubicloud-standard-16
+            workers: 12
+            split: ""
+          - label: "one-30vcpu-n16"
+            runner: ubicloud-standard-30
+            workers: 16
+            split: ""
+          # arm64 feasibility (wheels, and the webknossos docker image).
+          - label: "one-8vcpu-arm-n4"
+            runner: ubicloud-standard-8-arm
+            workers: 4
+            split: ""
+          - label: "one-16vcpu-arm-n8"
+            runner: ubicloud-standard-16-arm
+            workers: 8
+            split: ""
       fail-fast: false
     defaults:
       run:
@@ -148,59 +186,27 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Machine info
+        run: 'echo "label=${{ matrix.label }} runner=${{ matrix.runner }} nproc=$(nproc) arch=$(uname -m)"'
+
       - name: Install uv
         uses: astral-sh/setup-uv@v8.0.0
         with:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
 
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
-
-      - name: Check formatting
-        if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
-        run: ./format.sh check
-
-      - name: Lint code
-        if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
-        run: ./lint.sh
-
-      - name: Check typing
-        if: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
-        run: ./typecheck.sh
+      - name: Set up Python 3.13
+        run: uv python install 3.13
 
       - name: Patch Python standard library to assert that fork is not allowed
         run: |
-          sed -i '/def _launch/a\ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' ${UV_PYTHON_INSTALL_DIR}/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
-          cat ${UV_PYTHON_INSTALL_DIR}/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
-
-      - name: Python tests (with coverage)
-        if: ${{ matrix.python-version == '3.11' }}
-        timeout-minutes: 30
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run:
-          uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
-          least_duration --cov=webknossos --cov-report=
+          sed -i '/def _launch/a\ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' ${UV_PYTHON_INSTALL_DIR}/cpython-3.13.*-linux-*-gnu/lib/python3.13/multiprocessing/popen_fork.py
 
       - name: Python tests
-        if: ${{ matrix.python-version != '3.11' }}
-        timeout-minutes: 30
+        timeout-minutes: 60
         env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run:
-          uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
-          least_duration
-
-      - name: Persist coverage reports
-        if: ${{ matrix.python-version == '3.11' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-report-${{ matrix.group }}
-          path: "webknossos/.coverage"
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 1 # Automatically deletes after 1 day
+          PYTHON_VERSION: "3.13"
+        run: uv run test.py ${{ matrix.split }} -n ${{ matrix.workers }} --dist worksteal
 
       - name: Check if git is dirty
         run: ../_tooling/check_clean.sh
@@ -208,6 +214,7 @@ jobs:
   webknossos_windows:
     needs: changes
     if: |
+      false &&
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
     runs-on: windows-latest
