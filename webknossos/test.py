@@ -169,11 +169,6 @@ def run_pytest(args: list[str]) -> None:
 def main(args: list[str]) -> None:
     python_version = os.environ.get("PYTHON_VERSION", "3.13")
 
-    # Using forkserver instead of spawn is faster. Fork should never be used due to potential deadlock problems.
-    os.environ["MULTIPROCESSING_DEFAULT_START_METHOD"] = os.environ.get(
-        "MULTIPROCESSING_DEFAULT_START_METHOD", "forkserver"
-    )
-
     # Export the necessary environment variables
     os.environ["WK_TOKEN"] = WK_TOKEN
     os.environ["WK_URL"] = WK_URL
