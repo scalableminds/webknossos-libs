@@ -91,8 +91,7 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 
 @pytest.fixture(scope="session")
 def shared_executor() -> Iterator[Executor]:
-    """One process pool for the whole session.
-    """
+    """One process pool for the whole session."""
     with get_executor("multiprocessing", max_workers=2) as executor:
         yield executor
 
