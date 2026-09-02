@@ -93,8 +93,10 @@ st.register_type_strategy(wk.Mag, _mag_strategy)
 def shared_executor() -> Iterator[Executor]:
     """One process pool for the whole session.
 
-    Constructing a `MultiprocessingExecutor` costs ~0.3s, which the tests
-    otherwise pay on every API call that does not get an executor passed in.
+    Constructing a `MultiprocessingExecutor` costs ~0.3s. Library functions
+    that take an optional `executor` (`Layer.downsample`, `MagView.rechunk`,
+    `View.map_chunk`, ...) build a fresh one whenever the caller passes none,
+    so without this the tests pay that cost once per such call.
     """
     with get_executor("multiprocessing", max_workers=2) as executor:
         yield executor
@@ -113,7 +115,8 @@ def reuse_executor(
         return
 
     def wrap_executor(executor: Executor | None = None) -> AbstractContextManager:
-        # Resolved lazily so tests that never spawn a job don't pay for the pool.
+        # Resolved lazily so tests that never reach one of those functions
+        # don't pay for starting the worker processes.
         return nullcontext(
             executor
             if executor is not None
@@ -137,11 +140,7 @@ def moto_server() -> Generator:
 def clear_testoutput() -> Generator:
     TESTOUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     yield
-    # Most tests never write here, so skip the recursive walk when empty.
-    if next(TESTOUTPUT_DIR.iterdir(), None) is None:
-        TESTOUTPUT_DIR.rmdir()
-    else:
-        rmtree(TESTOUTPUT_DIR)
+    rmtree(TESTOUTPUT_DIR)
 
 
 @pytest.fixture(autouse=True, scope="function")

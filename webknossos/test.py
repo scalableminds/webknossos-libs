@@ -174,11 +174,6 @@ def main(args: list[str]) -> None:
         "MULTIPROCESSING_DEFAULT_START_METHOD", "forkserver"
     )
 
-    # Shrink the default shard shape from 1024**3 to 256**3. See conftest.py.
-    os.environ["WK_DEFAULT_CHUNKS_PER_SHARD"] = os.environ.get(
-        "WK_DEFAULT_CHUNKS_PER_SHARD", "8,8,8"
-    )
-
     # Export the necessary environment variables
     os.environ["WK_TOKEN"] = WK_TOKEN
     os.environ["WK_URL"] = WK_URL
