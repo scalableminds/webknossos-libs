@@ -112,11 +112,9 @@ def reuse_executor(
 ) -> None:
     """Hands the shared pool to every `utils.wrap_executor` call.
 
-    Opt out with `@pytest.mark.own_executor` where the executor lifecycle
-    itself is under test.
+    An executor the caller passes explicitly is handed back untouched, so
+    tests that manage their own are unaffected.
     """
-    if request.node.get_closest_marker("own_executor"):
-        return
 
     def wrap_executor(executor: Executor | None = None) -> AbstractContextManager:
         # Resolved lazily so tests that never reach one of those functions

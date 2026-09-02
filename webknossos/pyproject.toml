@@ -205,10 +205,7 @@ indent-style = "space"
 line-ending = "auto"
 
 [tool.pytest.ini_options]
-markers = [
-    "skip_on_windows: Skip this test on Windows",
-    "own_executor: Do not hand this test the session-wide process pool",
-]
+markers = ["skip_on_windows: Skip this test on Windows"]
 testpaths = ["tests"]
 
 [build-system]
