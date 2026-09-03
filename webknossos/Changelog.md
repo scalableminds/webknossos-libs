@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
-- Opening a corrupt `.ims` file no longer emits an `AttributeError` from the reader's finalizer as an unraisable exception.
+- Opening a corrupt `.ims` file no longer emits an `AttributeError` from the reader's finalizer as an unraisable exception. [#1532](https://github.com/scalableminds/webknossos-libs/pull/1532)
 
 
 ## [4.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.0.0) - 2026-09-03
