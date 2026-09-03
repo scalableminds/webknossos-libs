@@ -10,7 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.7.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.0.0...HEAD)
+
+### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [4.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.0.0) - 2026-09-03
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.7.0...v4.0.0)
 
 ### Highlights
 - Image conversion rebuilt: TIFF, CZI, DM3/DM4, IMS, MRC, common 2D images are read through dedicated readers that are faster, require less memory, and handle channels, timepoints and extra axes consistently. Zarr, OME-Zarr (incl. `.ozx`), N5, and Neuroglancer precomputed can now be converted as well.
