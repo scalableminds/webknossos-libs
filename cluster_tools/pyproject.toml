@@ -105,3 +105,8 @@ namespace_packages = true
 strict_equality = true
 show_error_codes = true
 no_implicit_optional = true
+
+[tool.pytest.ini_options]
+markers = [
+    "requires_modified_slurm_config: Requires a slurm.conf with MaxArraySize=2 and JobAcctGatherFrequency=1",
+]

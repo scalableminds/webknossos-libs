@@ -48,6 +48,9 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
+          # Every matrix job resolves the same cache key, so let a single job
+          # write it instead of having the rest race and warn.
+          save-cache: false
       - run: uv python install ${{ matrix.python-version }}
       - name: Start Docker Cluster
         run: cd ./dockered-slurm && docker compose up -d
@@ -107,6 +110,7 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
+          save-cache: ${{ matrix.python-version == '3.11' }}
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
       - name: Install dependencies (without docker)
@@ -153,6 +157,9 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
+          # Every matrix job resolves the same cache key, so let a single job
+          # write it instead of having the rest race and warn.
+          save-cache: ${{ matrix.group == 1 && matrix.python-version == '3.11' }}
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -228,6 +235,7 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
+          save-cache: ${{ matrix.group == 1 }}
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
@@ -267,7 +275,7 @@ jobs:
           coverage xml -i -o ~/coverage-files/result.xml
 
       - name: Report coverage
-        uses: orgoro/coverage@v3.2
+        uses: orgoro/coverage@v3.3.1
         with:
           coverageFile: /home/runner/coverage-files/result.xml
           token: ${{ secrets.GITHUB_TOKEN }}

@@ -16,8 +16,15 @@ from .image_source_registry import register_chunked_image_source
 
 try:
     from imaris_ims_file_reader.ims import ims as ImsFile
+    from imaris_ims_file_reader.ims import ims_reader as _ImsReader
 except ImportError as e:
     raise WkImportError("imaris-ims-file-reader", "ims") from e
+
+# The reader only assigns `hf` once h5py has opened the file, so a corrupt file
+# leaves a half-built object whose __del__ raises AttributeError as an
+# unraisable exception. A class-level default makes close() a no-op instead.
+if not hasattr(_ImsReader, "hf"):
+    _ImsReader.hf = None
 
 
 def _read_ims_metadata_quietly(
