@@ -32,6 +32,8 @@ from webknossos.dataset_properties import DatasetProperties
 from webknossos.dataset_properties.structuring import get_dataset_converter
 from webknossos.geometry.constants import X_AXIS, Y_AXIS, Z_AXIS
 
+rng = np.random.default_rng(1234)
+
 # Small chunk/shard shapes so that the tests exercise multiple chunk jobs
 # (including bbox-truncated border chunks).
 CHUNK_SHAPE = Vec3Int.full(8)
@@ -73,7 +75,7 @@ def _make_output_layer(path: UPath, num_channels: int = 1) -> Layer:
 
 
 def test_transform_identity(tmp_upath: UPath) -> None:
-    data = (np.random.rand(64, 64, 64) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (64, 64, 64), dtype=np.uint8)
     # Offset (8, 8, 8) is not shard-aligned, so the transform processes
     # bbox-truncated border chunks.
     input_layer = _make_input_layer(tmp_upath / "in", data, offset=(8, 8, 8))
@@ -95,7 +97,7 @@ def test_transform_identity(tmp_upath: UPath) -> None:
 
 
 def test_transform_translation(tmp_upath: UPath) -> None:
-    data = (np.random.rand(64, 64, 64) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (64, 64, 64), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
     output_layer = _make_output_layer(tmp_upath / "out")
 
@@ -117,7 +119,7 @@ def test_transform_translation(tmp_upath: UPath) -> None:
 
 
 def test_transform_affine_rotation(tmp_upath: UPath) -> None:
-    data = (np.random.rand(32, 32, 16) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (32, 32, 16), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
     output_layer = _make_output_layer(tmp_upath / "out")
 
@@ -150,7 +152,7 @@ def test_transform_affine_rotation(tmp_upath: UPath) -> None:
 
 
 def test_transform_affine_scale(tmp_upath: UPath) -> None:
-    data = (np.random.rand(16, 16, 16) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (16, 16, 16), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
     output_layer = _make_output_layer(tmp_upath / "out")
 
@@ -176,7 +178,7 @@ def test_transform_affine_scale(tmp_upath: UPath) -> None:
 
 
 def test_transform_affine_against_scipy(tmp_upath: UPath) -> None:
-    data = (np.random.rand(48, 48, 32) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (48, 48, 32), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
     output_layer = _make_output_layer(tmp_upath / "out")
 
@@ -230,7 +232,7 @@ def test_transform_affine_against_scipy(tmp_upath: UPath) -> None:
 
 
 def test_transform_with_mask(tmp_upath: UPath) -> None:
-    data = (np.random.rand(2, 32, 32, 32) * 254 + 1).astype(np.uint8)
+    data = rng.integers(1, 255, (2, 32, 32, 32), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data, num_channels=2)
     mask_data = np.zeros((32, 32, 32), dtype=np.uint8)
     mask_data[:16, :, :] = 1
@@ -257,7 +259,7 @@ def test_transform_with_mask(tmp_upath: UPath) -> None:
 
 
 def test_transform_mag2(tmp_upath: UPath) -> None:
-    data = (np.random.rand(32, 32, 32) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (32, 32, 32), dtype=np.uint8)
     ds = Dataset(tmp_upath / "in", voxel_size=(1, 1, 1))
     input_layer = ds.add_layer("color", COLOR_CATEGORY)
     input_layer.add_mag(2, chunk_shape=CHUNK_SHAPE, shard_shape=SHARD_SHAPE).write(
@@ -285,7 +287,7 @@ def test_transform_mag2(tmp_upath: UPath) -> None:
 
 @pytest.mark.skip_on_windows
 def test_transform_multiprocessing(tmp_upath: UPath) -> None:
-    data = (np.random.rand(64, 64, 64) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (64, 64, 64), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
     output_layer = _make_output_layer(tmp_upath / "out")
 
@@ -306,7 +308,7 @@ def test_transform_multiprocessing(tmp_upath: UPath) -> None:
 
 @pytest.mark.parametrize("fill_value", [None, 0, 100])
 def test_transform_fill_value(tmp_upath: UPath, fill_value: int | None) -> None:
-    data = (np.random.rand(32, 32, 32) * 254 + 1).astype(np.uint8)
+    data = rng.integers(1, 255, (32, 32, 32), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
 
     # Pre-fill the output layer with nonzero data covering the whole output bbox.
@@ -338,7 +340,7 @@ def test_transform_fill_value(tmp_upath: UPath, fill_value: int | None) -> None:
 
 
 def test_transform_small_buffer_shape(tmp_upath: UPath) -> None:
-    data = (np.random.rand(64, 64, 64) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (64, 64, 64), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
     output_layer = _make_output_layer(tmp_upath / "out")
 
@@ -359,7 +361,7 @@ def test_transform_small_buffer_shape(tmp_upath: UPath) -> None:
 
 
 def test_transform_negative_output_bbox(tmp_upath: UPath) -> None:
-    data = (np.random.rand(32, 32, 32) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (32, 32, 32), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
     output_layer = _make_output_layer(tmp_upath / "out")
 
@@ -405,7 +407,7 @@ class _Shift(AbstractTransform):
 
 
 def test_transform_argument_validation(tmp_upath: UPath) -> None:
-    data = (np.random.rand(16, 16, 16) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (16, 16, 16), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
     output_layer = _make_output_layer(tmp_upath / "out")
 
@@ -424,7 +426,7 @@ def test_transform_argument_validation(tmp_upath: UPath) -> None:
 
 
 def test_transform_custom_abstract_transform(tmp_upath: UPath) -> None:
-    data = (np.random.rand(32, 32, 32) * 255).astype(np.uint8)
+    data = rng.integers(0, 256, (32, 32, 32), dtype=np.uint8)
     input_layer = _make_input_layer(tmp_upath / "in", data)
     output_layer = _make_output_layer(tmp_upath / "out")
 

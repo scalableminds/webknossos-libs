@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 
     from .segmentation_layer import SegmentationLayer
 
+from webknossos import utils
 from webknossos.dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD,
@@ -61,7 +62,6 @@ from webknossos.utils import (
     named_partial,
     rmtree,
     warn_deprecated,
-    wrap_executor,
 )
 
 logger = logging.getLogger(__name__)
@@ -1228,7 +1228,7 @@ class Layer(AbstractLayer):
         )
 
         # perform downsampling
-        with wrap_executor(executor) as executor:
+        with utils.wrap_executor(executor) as executor:
             if buffer_shape is None:
                 buffer_shape = determine_downsample_buffer_shape(target_view.info)
             else:
@@ -1491,7 +1491,7 @@ class Layer(AbstractLayer):
             target_view = target_mag_view.get_view(absolute_bounding_box=bbox_mag1)
 
             # perform upsampling
-            with wrap_executor(executor) as actual_executor:
+            with utils.wrap_executor(executor) as actual_executor:
                 if buffer_shape is None:
                     buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
                 else:

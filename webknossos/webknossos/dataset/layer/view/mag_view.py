@@ -15,7 +15,6 @@ from webknossos.utils import (
     strip_trailing_slash,
     wait_and_ensure_success,
     warn_deprecated,
-    wrap_executor,
 )
 
 from ....dataset_properties import DataFormat, MagViewProperties
@@ -40,6 +39,8 @@ if TYPE_CHECKING:
     import tensorstore
 
     from ..abstract_layer import AbstractLayer
+
+from webknossos import utils
 
 from .view import View
 
@@ -707,7 +708,7 @@ class MagView(View, Generic[LayerTypeT]):
                     ):
                         yield bbox
 
-        with wrap_executor(executor) as executor:
+        with utils.wrap_executor(executor) as executor:
             try:
                 bbox_iterator = self._array.list_bounding_boxes()
             except NotImplementedError:

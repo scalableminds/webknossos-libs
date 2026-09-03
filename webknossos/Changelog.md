@@ -50,6 +50,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Added a `mag` keyword to `Layer.add_mag_as_copy` and `RemoteLayer.add_mag_as_copy` to register the copied data under a different resolution level than it has in the source dataset, matching the existing `mag` keyword of `add_mag_as_ref`. [#1526](https://github.com/scalableminds/webknossos-libs/pull/1526)
 
 ### Changed
+- Sped up the test suite. [#1530](https://github.com/scalableminds/webknossos-libs/pull/1530)
 - `RemoteDataset.zarr_streaming_path` is deprecated. Use the path of an individual mag instead, e.g. `layer.get_mag(mag, access_mode=RemoteAccessMode.ZARR_STREAMING).path`. [#1492](https://github.com/scalableminds/webknossos-libs/pull/1492)
 - `.czi` conversion is faster and uses less memory: only the data needed for each chunk is read, rather than whole image planes. Multi-timepoint `.czi` files now convert into a single layer with a `t` axis. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
 - Converting a file whose format needs an optional dependency now names the extra to install (e.g. `webknossos[czi]`, `webknossos[tifffile]`) instead of reporting the format as unsupported. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)

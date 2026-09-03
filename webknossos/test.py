@@ -169,11 +169,6 @@ def run_pytest(args: list[str]) -> None:
 def main(args: list[str]) -> None:
     python_version = os.environ.get("PYTHON_VERSION", "3.13")
 
-    # Using forkserver instead of spawn is faster. Fork should never be used due to potential deadlock problems.
-    os.environ["MULTIPROCESSING_DEFAULT_START_METHOD"] = os.environ.get(
-        "MULTIPROCESSING_DEFAULT_START_METHOD", "forkserver"
-    )
-
     # Export the necessary environment variables
     os.environ["WK_TOKEN"] = WK_TOKEN
     os.environ["WK_URL"] = WK_URL
@@ -193,6 +188,16 @@ def main(args: list[str]) -> None:
         "--suppress-no-test-exit-code",
         "-vv",
     ]
+
+    # Run in parallel unless the caller picked their own worker count. Only half
+    # the cores, because each test may still spawn a process pool of its own and
+    # the storage backends use threads; oversubscribing is much slower than
+    # running serially. Work is very unevenly distributed across the suite, so
+    # worksteal matters more than the worker count. Not in `addopts`, so a bare
+    # `pytest` stays in-process.
+    if not any(a.startswith(("-n", "--numprocesses")) for a in args):
+        workers = max(2, min(4, (os.cpu_count() or 4) // 2))
+        pytest_cmd += ["-n", str(workers), "--dist", "worksteal"]
 
     if IS_WINDOWS:
         run_pytest(pytest_cmd + args)

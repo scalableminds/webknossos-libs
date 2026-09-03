@@ -49,7 +49,10 @@ def _extract_zip_preserving_symlinks(zip_file: ZipFile, dest_dir: str) -> None:
 def download_wklibs_sample_archive(name: str) -> UPath:
     """Downloads `{name}.zip` from the wklibs-samples bucket and extracts it
     into CACHE_DIR, once ever (subsequent calls, including from later test
-    runs, reuse the cached extraction)."""
+    runs, reuse the cached extraction).
+
+    Safe to call concurrently: workers racing on the same archive each
+    extract their own copy, and the first one to publish it wins."""
     dest_dir = CACHE_DIR / name
     if not dest_dir.exists():
         tmp_dir = _tmp_cache_path(name)
@@ -70,7 +73,14 @@ def download_wklibs_sample_archive(name: str) -> UPath:
             # os.replace is atomic (both paths are under CACHE_DIR, i.e. the
             # same filesystem), so a crash mid-download never leaves a
             # half-extracted dest_dir behind.
-            os.replace(str(tmp_dir / name), str(dest_dir))
+            try:
+                os.replace(str(tmp_dir / name), str(dest_dir))
+            except OSError:
+                # Under xdist another worker can extract the same archive
+                # concurrently; renaming onto its non-empty directory fails.
+                # Whoever won published a complete copy, so use that one.
+                if not dest_dir.exists():
+                    raise
         finally:
             rmtree(tmp_dir)  # a no-op if already moved away above
     return dest_dir

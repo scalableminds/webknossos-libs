@@ -19,6 +19,7 @@ from webknossos.dataset.layer import (
     SegmentationLayer,
 )
 
+from .. import utils
 from ..client.api_client.models import (
     ApiReserveDatasetUploadToPathsForPreliminaryParameters,
     ApiReserveDatasetUploadToPathsParameters,
@@ -56,7 +57,6 @@ from ..utils import (
     rmtree,
     strip_trailing_slash,
     warn_deprecated,
-    wrap_executor,
 )
 from ._image_conversion import image_conversion
 from ._image_conversion.infer_bounding_box_existing_files import (
@@ -1820,7 +1820,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         )
         new_dataset.default_view_configuration = self.default_view_configuration
 
-        with wrap_executor(executor) as executor:
+        with utils.wrap_executor(executor) as executor:
             for layer in self.layers.values():
                 if layers_to_ignore is not None and layer.name in layers_to_ignore:
                     continue
