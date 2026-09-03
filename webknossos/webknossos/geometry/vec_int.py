@@ -12,6 +12,8 @@ from typing import (
 
 import numpy as np
 
+from .constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
+
 if TYPE_CHECKING:
     from .vec3_int import Vec3Int
 
@@ -121,10 +123,10 @@ class VecInt(Sequence[int]):
         # Also see:
         # https://stackoverflow.com/questions/46283738/attributeerror-when-using-python-deepcopy
         self.axes = tuple(axes or kwargs.keys())
-        self._c_pos = self.axes.index("c") if "c" in self.axes else None
-        self._x_pos = self.axes.index("x") if "x" in self.axes else None
-        self._y_pos = self.axes.index("y") if "y" in self.axes else None
-        self._z_pos = self.axes.index("z") if "z" in self.axes else None
+        self._c_pos = self.axes.index(C_AXIS) if C_AXIS in self.axes else None
+        self._x_pos = self.axes.index(X_AXIS) if X_AXIS in self.axes else None
+        self._y_pos = self.axes.index(Y_AXIS) if Y_AXIS in self.axes else None
+        self._z_pos = self.axes.index(Z_AXIS) if Z_AXIS in self.axes else None
 
         return self
 

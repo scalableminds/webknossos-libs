@@ -240,7 +240,6 @@ nav:
       - Dataset Examples:
         - webknossos-py/examples/dataset_usage.md
         - webknossos-py/examples/upload_tiff_stack.md
-        - webknossos-py/examples/upload_dicom_stack.md
         - webknossos-py/examples/upload_image_data.md
         - webknossos-py/examples/create_dataset_from_images.md
         - webknossos-py/examples/image_stack_to_dataset.md
@@ -281,6 +280,7 @@ nav:
         - SegmentationLayer: api/webknossos/dataset/layer/segmentation_layer/segmentation_layer.md
         - Attachment: api/webknossos/dataset/layer/segmentation_layer/attachments/attachment.md
         - Attachments: api/webknossos/dataset/layer/segmentation_layer/attachments/attachments.md
+        - LayerExport: api/webknossos/dataset/layer/export.md
         - MagView: api/webknossos/dataset/layer/view/mag_view.md
         - View: api/webknossos/dataset/layer/view/view.md
         - RemoteDataset: api/webknossos/dataset/remote_dataset.md

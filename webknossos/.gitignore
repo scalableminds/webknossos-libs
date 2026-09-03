@@ -104,9 +104,7 @@ ENV/
 # MyPy
 .mypy_cache/
 
-testoutput
-# Unpacked version of WT1_wkw.tar.gz
-testdata/WT1_wkw
+testoutput*
 
 data
 tmp

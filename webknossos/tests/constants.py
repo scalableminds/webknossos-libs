@@ -1,5 +1,6 @@
+import os
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 
 import waitress
@@ -9,16 +10,24 @@ from moto.moto_server.werkzeug_app import (
 )
 from upath import UPath
 
-TESTDATA_DIR = UPath(__file__).parent.parent / "testdata"
-TESTOUTPUT_DIR = UPath(__file__).parent.parent / "testoutput"
+# Under pytest-xdist every worker runs in its own process and imports this
+# module separately, so deriving the shared paths and the moto port from the
+# worker id keeps the workers from clobbering each other. Empty when running
+# serially, which keeps the plain `testoutput` name and port 8000.
+_WORKER_ID = os.environ.get("PYTEST_XDIST_WORKER", "")
+_WORKER_INDEX = int(_WORKER_ID.removeprefix("gw") or 0)
 
+TESTDATA_DIR = UPath(__file__).parent.parent / "testdata"
+TESTOUTPUT_DIR = UPath(__file__).parent.parent / f"testoutput{_WORKER_ID}"
+
+TESTOUTPUT_BUCKET = f"testoutput{_WORKER_ID}"
 
 S3_ROOT_USER = "TtnuieannGt2rGuie2t8Tt7urarg5nauedRndrur"
 S3_ROOT_PASSWORD = "ANTN35UAENTS5UIAEATD"
-S3_PORT = 8000
+S3_PORT = 8000 + _WORKER_INDEX
 
 REMOTE_TESTOUTPUT_DIR = UPath(
-    "s3://testoutput",
+    f"s3://{TESTOUTPUT_BUCKET}",
     key=S3_ROOT_USER,
     secret=S3_ROOT_PASSWORD,
     endpoint_url=f"http://localhost:{S3_PORT}",
@@ -26,7 +35,7 @@ REMOTE_TESTOUTPUT_DIR = UPath(
 
 
 @contextmanager
-def use_moto() -> Iterator[None]:
+def use_moto() -> Generator[None]:
     """Moto mocks S3. It is used as local test server, which runs as a
     background thread in the same process.
 
@@ -51,7 +60,7 @@ def use_moto() -> Iterator[None]:
     thread = threading.Thread(target=run_server, daemon=True)
     thread.start()
     try:
-        REMOTE_TESTOUTPUT_DIR.fs.mkdirs("testoutput", exist_ok=True)
+        REMOTE_TESTOUTPUT_DIR.fs.mkdirs(TESTOUTPUT_BUCKET, exist_ok=True)
         yield
     finally:
         server.close()

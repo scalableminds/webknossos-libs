@@ -1,5 +1,6 @@
 # ruff: noqa: F401 imported but unused
 from .abstract_layer import AbstractLayer
+from .export import LayerExport
 from .layer import Layer
 from .layer_to_link import LayerToLink
 from .remote_layer import RemoteLayer
@@ -23,6 +24,7 @@ from .view import (
     ArrayInfo,
     BaseArray,
     MagView,
+    RemoteMagView,
     TensorStoreArray,
     View,
     Zarr3ArrayInfo,

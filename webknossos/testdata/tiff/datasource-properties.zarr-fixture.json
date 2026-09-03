@@ -27,7 +27,11 @@
           "axisOrder": {"c": 0, "x": 1, "y": 2, "z": 3}
         }
       ],
-      "numChannels": 1
+      "numChannels": 1,
+      "defaultViewConfiguration": {
+        "min": 9.0,
+        "max": 255.0
+      }
     }
   ]
 }

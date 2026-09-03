@@ -19,10 +19,11 @@ from webknossos.dataset_properties import (
 from webknossos.dataset_properties.structuring import (
     MagViewProperties,
 )
-from webknossos.geometry import NDBoundingBox, NormalizedBoundingBox
+from webknossos.geometry import C_AXIS, NDBoundingBox, NormalizedBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
 
 from ...utils import warn_deprecated
+from .export import LayerExport
 from .view import ArrayException, MagView
 
 if TYPE_CHECKING:
@@ -30,6 +31,15 @@ if TYPE_CHECKING:
     from .segmentation_layer.abstract_segmentation_layer import (
         AbstractSegmentationLayer,
     )
+
+
+def channels_fit_one_layer(num_channels: int, dtype: np.dtype) -> bool:
+    """
+    Whether WEBKNOSSOS can display `num_channels` channels of `dtype` within a
+    single layer: one channel always works, and three uint8 channels are shown
+    as RGB. Every other combination has to become one layer per channel.
+    """
+    return num_channels == 1 or (num_channels == 3 and dtype.name == "uint8")
 
 
 def _rescaled_foreign_bounding_box(
@@ -71,6 +81,7 @@ class AbstractLayer:
     ) -> None:
         self._dataset = dataset
         self._apply_properties(properties, read_only)
+        self._export = LayerExport(self)
 
     def _apply_properties(self, properties: LayerProperties, read_only: bool) -> None:
         # It is possible that the properties on disk do not contain the number of channels.
@@ -85,10 +96,7 @@ class AbstractLayer:
         self._read_only = read_only
 
         for mag in properties.mags:
-            mag_read_only, mag_path = self._determine_read_only_and_path_for_mag(mag)
-            self._setup_mag(
-                Mag(mag.mag), mag_path, read_only=read_only or mag_read_only
-            )
+            self._setup_mag_from_properties(mag, read_only=read_only)
 
         self._properties.mags = [
             res for res in self._properties.mags if Mag(res.mag) in self._mags
@@ -104,9 +112,14 @@ class AbstractLayer:
         pass
 
     @abstractmethod
-    def _determine_read_only_and_path_for_mag(
-        self, mag_properties: MagViewProperties
-    ) -> tuple[bool, UPath]:
+    def _setup_mag_from_properties(
+        self, mag_properties: MagViewProperties, read_only: bool
+    ) -> None:
+        """Initialize a single mag when opening the layer.
+
+        Subclasses resolve the mag's path (and, for remote layers, its access mode)
+        and register the resulting `MagView` in `self._mags`.
+        """
         pass
 
     def _ensure_metadata_writable(self) -> None:
@@ -284,7 +297,7 @@ class AbstractLayer:
             AssertionError: If num_channels is not set in properties
         """
 
-        return self.normalized_bounding_box.size.get("c", 1)
+        return self.normalized_bounding_box.size.get(C_AXIS, 1)
 
     @property
     def data_format(self) -> DataFormat:
@@ -368,6 +381,15 @@ class AbstractLayer:
         """
 
         return self._name
+
+    @property
+    def export(self) -> LayerExport:
+        """Export this layer's data to common bioimaging file formats.
+
+        Returns:
+            LayerExport
+        """
+        return self._export
 
     def get_mag(self, mag: MagLike) -> MagView:
         """Gets the MagView for the specified magnification level.
