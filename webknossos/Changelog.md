@@ -12,14 +12,22 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ## Unreleased
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.7.0...HEAD)
 
+### Highlights
+- Image conversion rebuilt: TIFF, CZI, DM3/DM4, IMS, MRC, common 2D images are read through dedicated readers that are faster, require less memory, and handle channels, timepoints and extra axes consistently. Zarr, OME-Zarr (incl. `.ozx`), N5, and Neuroglancer precomputed can now be converted as well.
+- `Layer.export` now writes OME-Zarr, TIFF stacks, and OME-TIFF.
+- Remote datasets gain per-mag and per-attachment access modes, which required changing how `RemoteDataset` is constructed.
+- Conversion failures now raise catchable `ImageConversionError` subclasses instead of generic errors.
+- `numba` and `tifffile` are no longer installed by default, making the base package roughly 130 MB smaller.
+- Bio-Formats support and a number of rarely used formats are gone from the image conversion.
+
 ### Breaking Changes
-- The arguments of `RemoteDataset.__init__` changed. Use `RemoteDataset.open` instead, as documented. [#1492](https://github.com/scalableminds/webknossos-libs/pull/1492)
 - Removed Bio-Formats support, including the `use_bioformats` argument of `Dataset.from_images`/`add_layer_from_images`/`RemoteDataset.from_images`, the `webknossos[bioformats]` extra (and its `JPype1`/JVM dependency), and the DICOM upload example. Formats that were only readable through Bio-Formats — among them `.dcm`/`.dicom`, `.nd2`, `.lif`, `.lsm`, `.zvi`, `.nii`, `.nrrd` and `.stk` — can no longer be converted. Formats with a dedicated reader (TIFF, CZI, DM3/DM4, `.ims`, MRC, and the common 2D image formats) are unaffected. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
 - Support for a number of conversion formats has been removed: `.jp2`/`.j2k`, `.webp`, `.ppm`/`.pgm`/`.pbm`, `.tga`, `.sgi`, `.exr`, `.hdr`, `.psd`, `.dds`, `.pcx`, `.ras`, `.xbm`/`.xpm`, `.lsm`, `.stk`, `.cine`, `.seq` and `.spe`. TIFF, CZI, DM3/DM4, `.png`/`.jpg`/`.jpeg`/`.gif`/`.bmp`/`.ico`, `.ims` and MRC are unaffected. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
-- `Dataset.add_layer_from_images` no longer accepts a `pims.FramesSequence` instance, only paths, glob strings and sequences of paths. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
-- `.czi` files with a rotation, illumination, phase, view or block dimension longer than 1 are no longer converted, and now raise `UnsupportedImageDataError`. Multi-scene `.czi` files are unaffected. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
 - `tifffile` is no longer installed as part of the base package. `scm-pims` required it unconditionally, so it happened to be present; TIFF conversion now needs the extra it has always been declared under, e.g. `pip install "webknossos[tifffile]"` or `webknossos[all]`. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
 - Removed the `timepoint` argument of `Dataset.add_layer_from_images`. Timeseries are now converted into a single layer with a `t` axis covering all timepoints, so selecting one only discarded data. Remove the argument from calls, and slice the `t` axis afterwards if you need a single timepoint. [#1477](https://github.com/scalableminds/webknossos-libs/pull/1477)
+- The arguments of `RemoteDataset.__init__` changed. Use `RemoteDataset.open` instead, as documented. [#1492](https://github.com/scalableminds/webknossos-libs/pull/1492)
+- `Dataset.add_layer_from_images` no longer accepts a `pims.FramesSequence` instance, only paths, glob strings and sequences of paths. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
+- `.czi` files with a rotation, illumination, phase, view or block dimension longer than 1 are no longer converted, and now raise `UnsupportedImageDataError`. Multi-scene `.czi` files are unaffected. [#1498](https://github.com/scalableminds/webknossos-libs/pull/1498)
 
 ### Added
 - The access mode can now be set on the level of mags and attachments, e.g. `RemoteLayer.get_mag(mag, access_mode=RemoteAccessMode.PROXY_PATH)`, `RemoteMagView.with_access_mode()`, `RemoteAttachments.with_access_mode()`. This allows remote datasets to be edited (e.g. adding/removing layers/mags) no matter the access mode. The default access mode is inherited from the `RemoteDataset`. [#1492](https://github.com/scalableminds/webknossos-libs/pull/1492)
