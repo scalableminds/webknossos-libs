@@ -15,6 +15,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added conversion support for OME-Zarr/NGFF 0.6 (`0.6rc1` and `0.6`), including its `coordinateSystems` axes and `sequence` coordinate transformations. Writing OME-Zarr metadata still produces 0.4/0.5. [#1533](https://github.com/scalableminds/webknossos-libs/pull/1533)
+- OME-Zarr coordinate transformations are now imported: `Dataset.from_images` derives the voxel size from the level's `scale` transform and the axes' `unit` when neither `voxel_size` nor `voxel_size_with_unit` is given, and the level's translation becomes an affine `Layer.coordinate_transformations`. [#1533](https://github.com/scalableminds/webknossos-libs/pull/1533)
 
 ### Changed
 

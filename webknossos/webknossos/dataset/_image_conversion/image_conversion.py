@@ -28,6 +28,8 @@ from ... import utils
 from ...dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
+    AffineCoordinateTransformation,
+    CoordinateTransformation,
     DataFormat,
     LayerCategoryType,
     LayerProperties,
@@ -321,6 +323,68 @@ def _has_image_z_dimension(filepath: UPath) -> bool:
     )
 
 
+def _voxel_size_from_images(
+    filepaths_per_layer: dict[str, list[UPath]],
+) -> VoxelSize | None:
+    """The voxel size the images report themselves, for callers that supplied
+    none. Layers that report nothing are skipped; if they disagree, the first
+    one wins. None when no layer reports one."""
+    suggestions: list[tuple[str, VoxelSize]] = []
+    with _quiet_reader_warnings():
+        for name, filepaths in filepaths_per_layer.items():
+            try:
+                source = open_image_source(
+                    filepaths[0] if len(filepaths) == 1 else sorted(filepaths),
+                    ReadOptions(),
+                )
+            except Exception:
+                # Opening it again below reports this properly.
+                continue
+            if (suggested := source.suggested_voxel_size) is not None:
+                suggestions.append((name, suggested))
+    if len(suggestions) == 0:
+        return None
+    first_name, first = suggestions[0]
+    differing = [
+        name
+        for name, suggested in suggestions[1:]
+        if not np.allclose(suggested.to_nanometer(), first.to_nanometer())
+    ]
+    if differing:
+        warnings.warn(
+            f"[INFO] The images report different voxel sizes. Using {first} from "
+            f"{first_name} for the whole dataset, also for {differing}."
+        )
+    return first
+
+
+def _in_dataset_voxels(
+    transformations: tuple[CoordinateTransformation, ...],
+    *,
+    suggested_voxel_size: VoxelSize | None,
+    dataset_voxel_size: VoxelSize,
+) -> list[CoordinateTransformation]:
+    """A source states its transformations in voxels of the voxel size it
+    suggests, while WEBKNOSSOS reads them in the dataset's voxels. Conjugating
+    by the ratio converts between the two."""
+    if suggested_voxel_size is None:
+        return list(transformations)
+    ratio = np.asarray(suggested_voxel_size.to_nanometer()) / np.asarray(
+        dataset_voxel_size.to_nanometer()
+    )
+    if np.allclose(ratio, 1.0):
+        return list(transformations)
+    scale = np.diag([*ratio, 1.0])
+    return [
+        AffineCoordinateTransformation(
+            matrix=scale @ transformation.matrix @ np.linalg.inv(scale)
+        )
+        if isinstance(transformation, AffineCoordinateTransformation)
+        else transformation
+        for transformation in transformations
+    ]
+
+
 def from_images(
     dataset_cls: type[Dataset],
     input_path: str | PathLike | UPath,
@@ -412,18 +476,6 @@ def from_images(
             )
     else:
         map_filepath_to_layer_name_func = map_filepath_to_layer_name
-    if voxel_size_with_unit is None:
-        assert voxel_size is not None, (
-            "Please supply either voxel_size or voxel_size_with_unit."
-        )
-        voxel_size_with_unit = VoxelSize(voxel_size)
-    else:
-        assert voxel_size is None, (
-            "Please supply either voxel_size or voxel_size_with_unit not both."
-        )
-
-    ds = dataset_cls(output_path, voxel_size_with_unit=voxel_size_with_unit, name=name)
-
     filepaths_per_layer: dict[str, list[UPath]] = {}
     for input_file in input_files:
         layer_name_from_mapping = map_filepath_to_layer_name_func(input_file)
@@ -451,6 +503,23 @@ def from_images(
             filepaths_per_layer = {
                 f"{layer_name}_{k}": v for k, v in filepaths_per_layer.items()
             }
+
+    if voxel_size_with_unit is None:
+        if voxel_size is None:
+            voxel_size_with_unit = _voxel_size_from_images(filepaths_per_layer)
+            assert voxel_size_with_unit is not None, (
+                "Please supply either voxel_size or voxel_size_with_unit. The "
+                "images carry no voxel size of their own."
+            )
+        else:
+            voxel_size_with_unit = VoxelSize(voxel_size)
+    else:
+        assert voxel_size is None, (
+            "Please supply either voxel_size or voxel_size_with_unit not both."
+        )
+
+    ds = dataset_cls(output_path, voxel_size_with_unit=voxel_size_with_unit, name=name)
+
     with utils.wrap_executor(executor) as executor:
         with _quiet_reader_warnings():
             for layer_name, filepaths in filepaths_per_layer.items():
@@ -694,6 +763,16 @@ def add_layer_from_images(
                 )
             elif suggested is not None:
                 layer.default_view_configuration = suggested
+
+        # OME-Zarr's coordinate transformations place the data in space. Only
+        # the layer's metadata records this — the data itself is written at the
+        # same position it would be without them.
+        if transformations := image_source.suggested_coordinate_transformations:
+            layer.coordinate_transformations = _in_dataset_voxels(
+                transformations,
+                suggested_voxel_size=image_source.suggested_voxel_size,
+                dataset_voxel_size=dataset.voxel_size_with_unit,
+            )
 
         expected_bbox = image_source.expected_bbox
 
