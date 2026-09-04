@@ -18,6 +18,7 @@ from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import (
     create_synthetic_multi_timepoint_ims,
     download_wklibs_sample_archive,
+    write_ome_zarr_v3_06_group,
     write_zarr_v3_array,
 )
 from webknossos.dataset import (
@@ -28,6 +29,11 @@ from webknossos.dataset import (
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.mrc_image_source import MrcImageSource
 from webknossos.dataset._image_conversion.tiff_slice_reader import TiffSliceReader
+from webknossos.dataset_properties import (
+    AffineCoordinateTransformation,
+    LengthUnit,
+    VoxelSize,
+)
 from webknossos.geometry import (
     C_AXIS,
     T_AXIS,
@@ -483,6 +489,77 @@ def test_from_images_input_path_is_itself_a_store_directory(tmp_upath: UPath) ->
     np.testing.assert_array_equal(
         ds.layers["test.zarr"].get_finest_mag().read()[0], data.transpose(2, 1, 0)
     )
+
+
+_OME_06_AXES = [
+    {"name": Z_AXIS, "type": "space", "unit": "micrometer"},
+    {"name": Y_AXIS, "type": "space", "unit": "micrometer"},
+    {"name": X_AXIS, "type": "space", "unit": "micrometer"},
+]
+
+
+def _write_ome_zarr_06_store(path: UPath, *, with_units: bool = True) -> np.ndarray:
+    data = np.arange(4 * 8 * 8, dtype="uint8").reshape(4, 8, 8)
+    axes = _OME_06_AXES if with_units else [dict(a, unit=None) for a in _OME_06_AXES]
+    axes = [{k: v for k, v in a.items() if v is not None} for a in axes]
+    write_ome_zarr_v3_06_group(
+        path,
+        [("0", data, [0.2, 0.5, 0.5])],
+        axes,
+        translations={"0": [0.4, 1.0, 1.5]},
+    )
+    return data
+
+
+def test_from_images_takes_voxel_size_and_transform_from_ome_zarr(
+    tmp_upath: UPath,
+) -> None:
+    store_path = tmp_upath / "transformed.zarr"
+    data = _write_ome_zarr_06_store(store_path)
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(store_path, tmp_upath / "ds", executor=executor)
+
+    assert ds.voxel_size_with_unit == VoxelSize((0.5, 0.5, 0.2), LengthUnit.MICROMETER)
+    layer = ds.layers["transformed.zarr"]
+    assert layer.coordinate_transformations == (
+        AffineCoordinateTransformation.from_translation((3.0, 2.0, 2.0)),
+    )
+    # The transformation is metadata only — the data still starts at the origin.
+    assert layer.bounding_box.topleft == Vec3Int(0, 0, 0)
+    np.testing.assert_array_equal(
+        layer.get_finest_mag().read()[0], data.transpose(2, 1, 0)
+    )
+
+
+def test_from_images_rescales_the_ome_zarr_transform_to_the_given_voxel_size(
+    tmp_upath: UPath,
+) -> None:
+    store_path = tmp_upath / "transformed.zarr"
+    _write_ome_zarr_06_store(store_path)
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            store_path,
+            tmp_upath / "ds",
+            voxel_size_with_unit=VoxelSize((1.0, 1.0, 0.4), LengthUnit.MICROMETER),
+            executor=executor,
+        )
+
+    # Twice as coarse voxels, so the same physical offset is half as many.
+    assert ds.layers["transformed.zarr"].coordinate_transformations == (
+        AffineCoordinateTransformation.from_translation((1.5, 1.0, 1.0)),
+    )
+
+
+def test_from_images_without_a_voxel_size_needs_one_from_the_images(
+    tmp_upath: UPath,
+) -> None:
+    store_path = tmp_upath / "unitless.zarr"
+    _write_ome_zarr_06_store(store_path, with_units=False)
+
+    with pytest.raises(AssertionError, match="voxel_size"):
+        Dataset.from_images(store_path, tmp_upath / "ds")
 
 
 def test_valid_chunked_image_source_extensions_include_zarr_and_n5() -> None:
