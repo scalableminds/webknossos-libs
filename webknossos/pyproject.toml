@@ -47,6 +47,7 @@ dependencies = [
     "natsort ~=8.4.0",
     "networkx ~=3.2.1",
     "numpy >=2.0.0,<3.0.0",
+    "packaging >=21.0",
     "protobuf<7,>=3.12.0",
     "google-api-python-client >= 2.0.0",
     "psutil ~=6.0.0",
