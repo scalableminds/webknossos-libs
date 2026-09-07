@@ -93,8 +93,6 @@ def export_tiff_slice_batch(
     mapping_path: UPath | None,
     view: View,
 ) -> None:
-    # Imported here, not at module level, so this module can be imported
-    # (e.g. for `webknossos --version`) without tifffile installed.
     from tifffile import imwrite
 
     tiff_bbox_mag1 = view.bounding_box
