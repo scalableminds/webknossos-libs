@@ -73,11 +73,12 @@ from .api_client import (
     WkApiClient,
     WkApiClientV13,
     WkApiClientV14,
+    WkApiClientV15,
 )
 
 load_dotenv()
 
-LIBRARY_SUPPORTED_API_VERSIONS = {13, 14, 15}
+LIBRARY_SUPPORTED_API_VERSIONS = {13, 14, 15, 16}
 
 
 @cache
@@ -143,6 +144,7 @@ class _WebknossosContext:
         cls: type[WkApiClient] = {
             13: WkApiClientV13,
             14: WkApiClientV14,
+            15: WkApiClientV15,
         }.get(self.api_version, WkApiClient)
         return cls(
             base_wk_url=self.url,
