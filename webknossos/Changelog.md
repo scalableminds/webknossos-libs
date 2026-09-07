@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
-
+- Fixed that the `webknossos --version` command failed if the tifffile extra dependency was not installed. [#1534](https://github.com/scalableminds/webknossos-libs/pull/1534)
 
 ## [4.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.0.0) - 2026-09-03
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v3.7.0...v4.0.0)
