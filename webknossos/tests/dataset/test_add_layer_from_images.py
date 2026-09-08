@@ -370,6 +370,26 @@ def test_add_layer_from_images_unsupported_format(tmp_upath: UPath) -> None:
     assert isinstance(error, ValueError)
 
 
+def test_add_layer_from_images_unsupported_directory(tmp_upath: UPath) -> None:
+    # A directory without a single convertible file is an unsupported format
+    # too, and names what it does contain — the directory itself has no
+    # extension to blame.
+    images = tmp_upath / "images"
+    images.mkdir()
+    for i in range(2):
+        (images / f"scan{i}.dcm").write_bytes(b"\x00" * 132)
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with pytest.raises(wk.UnsupportedImageFormatError) as excinfo:
+        ds.add_layer_from_images(images, layer_name="color")
+    error = excinfo.value
+    assert error.path == images
+    assert error.file_extension is None
+    assert error.found_file_extensions == ("dcm",)
+    assert error.missing_extras == ()
+    assert "Found .dcm files" in str(error)
+
+
 @pytest.mark.parametrize(
     "filename,contents,wraps_reader_error",
     [

@@ -58,7 +58,9 @@ from ..layer.layer import _get_shard_and_chunk_shapes
 from . import common_slice_readers, sliced_image_source
 from .image_source import ImageSource, ReadOptions, ValueRange
 from .image_source_registry import (
+    describe_found_formats,
     describe_missing_extras,
+    find_input_file_extensions,
     get_unavailable_extensions,
     get_valid_extensions,
     is_chunked_source_directory,
@@ -212,30 +214,20 @@ def _iter_convertible_paths(root: UPath, valid_extensions: set[str]) -> Iterator
             yield child
 
 
-def _find_unavailable_input_formats(input_upath: UPath) -> dict[str, str]:
+def _find_unavailable_input_formats(
+    found_file_extensions: tuple[str, ...],
+) -> dict[str, str]:
     """
-    Looks for files whose format a chunk-based reader would handle if its
-    optional dependency were installed, and maps their extension to the extra
-    that provides it. Empty if there are none.
-
-    Only runs on the "no supported image data" error path, so the extra
-    directory scan costs nothing in the normal case.
+    Narrows the extensions found in the input to those a reader would handle if
+    its optional dependency were installed, mapped to the extra that provides
+    it. Empty if there are none.
     """
     unavailable = get_unavailable_extensions()
-    if not unavailable:
-        return {}
-
-    if input_upath.is_file():
-        candidates = [input_upath]
-    else:
-        candidates = [p for p in input_upath.glob("**/*") if p.is_file()]
-
-    found: dict[str, str] = {}
-    for path in candidates:
-        extension = path.suffix.lstrip(".").lower()
-        if extension in unavailable:
-            found[extension] = unavailable[extension]
-    return found
+    return {
+        extension: unavailable[extension]
+        for extension in found_file_extensions
+        if extension in unavailable
+    }
 
 
 # Formats whose channels mean RGB rather than separate acquisitions: the
@@ -382,14 +374,20 @@ def from_images(
         ]
 
     if len(input_files) == 0:
-        message = (
-            "Could not find any supported image data. "
-            + f"The following extensions are supported: {sorted(valid_extensions)}"
-        )
+        found_file_extensions = find_input_file_extensions(original_input_upath)
         # A reader whose optional dependency is missing never registers, so its
-        # formats are simply absent from the list above. Without this the only
-        # clue is an import warning emitted much earlier, far from the failure.
-        missing = _find_unavailable_input_formats(original_input_upath)
+        # formats are simply absent from the supported list below. Without this
+        # the only clue is an import warning emitted much earlier, far from the
+        # failure. Those extensions are described by describe_missing_extras()
+        # instead, so they are left out of the "not supported" sentence.
+        missing = _find_unavailable_input_formats(found_file_extensions)
+        message = (
+            "Could not find any supported image data."
+            + describe_found_formats(
+                tuple(e for e in found_file_extensions if e not in missing)
+            )
+            + f" The following extensions are supported: {sorted(valid_extensions)}"
+        )
         if missing:
             message += describe_missing_extras(missing)
         raise UnsupportedImageFormatError(
@@ -401,6 +399,7 @@ def from_images(
                 else None
             ),
             supported_file_extensions=tuple(sorted(valid_extensions)),
+            found_file_extensions=found_file_extensions,
             missing_extras=tuple(sorted(set(missing.values()))),
         )
 

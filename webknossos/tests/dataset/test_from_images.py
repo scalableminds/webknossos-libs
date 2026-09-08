@@ -598,6 +598,7 @@ def test_from_images_names_missing_optional_dependency(
     # A non-empty missing_extras is how downstream tells "install this" apart
     # from "this format cannot be converted at all".
     assert excinfo.value.missing_extras == ("ims",)
+    assert excinfo.value.found_file_extensions == ("ims",)
 
 
 def test_from_images_error_unchanged_when_nothing_is_missing(
@@ -613,8 +614,39 @@ def test_from_images_error_unchanged_when_nothing_is_missing(
     assert error.missing_extras == ()
     # The input is a directory, so there is no single offending extension.
     assert error.file_extension is None
+    # …but the extensions it does contain are named, so that a caller can say
+    # what was wrong with the input instead of only what would have worked.
+    assert error.found_file_extensions == ("unsupported",)
+    assert ".unsupported" in str(error)
     assert error.path == tmp_upath
     assert "tif" in error.supported_file_extensions
+
+
+def test_from_images_directory_names_found_extensions(tmp_upath: UPath) -> None:
+    # The extensions of a directory are reported most common first, so the
+    # dominant format comes first in a message built from them.
+    for i in range(3):
+        (tmp_upath / f"scan{i}.dcm").write_bytes(b"x")
+    (tmp_upath / "notes.txt").write_bytes(b"x")
+    (tmp_upath / "no_extension").write_bytes(b"x")
+    (tmp_upath / "nested").mkdir()
+    (tmp_upath / "nested" / "scan3.dcm").write_bytes(b"x")
+
+    with pytest.raises(UnsupportedImageFormatError) as excinfo:
+        Dataset.from_images(tmp_upath, tmp_upath / "ds", voxel_size=(1, 1, 1))
+    error = excinfo.value
+    assert error.found_file_extensions == ("dcm", "txt")
+    assert "Found .dcm, .txt files" in str(error)
+
+
+def test_from_images_empty_directory(tmp_upath: UPath) -> None:
+    empty = tmp_upath / "empty"
+    empty.mkdir()
+    with pytest.raises(
+        UnsupportedImageFormatError, match="Could not find any supported image data"
+    ) as excinfo:
+        Dataset.from_images(empty, tmp_upath / "ds", voxel_size=(1, 1, 1))
+    assert excinfo.value.found_file_extensions == ()
 
 
 def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
@@ -630,6 +662,7 @@ def test_from_images_single_unsupported_file(tmp_upath: UPath) -> None:
         Dataset.from_images(unsupported, tmp_upath / "ds", voxel_size=(1, 1, 1))
     error = excinfo.value
     assert error.file_extension == "dcm"
+    assert error.found_file_extensions == ("dcm",)
     assert error.path == unsupported
     assert error.missing_extras == ()
     # Subclassing ValueError keeps `except ValueError` callers working.
