@@ -731,12 +731,16 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         Args:
             input_path: Path to input image files
             output_path: Output path for created dataset
-            voxel_size: Optional tuple of floats (x,y,z) for voxel size in nm
+            voxel_size: Optional tuple of floats (x,y,z) for voxel size in nm. When
+                neither this nor `voxel_size_with_unit` is given, it is read from the
+                images themselves where they carry one (currently OME-Zarr coordinate
+                transformations), and an error is raised otherwise
             name: Optional name for dataset
             map_filepath_to_layer_name: Strategy for mapping files to layers, either a ConversionLayerMapping
                 enum value or callable taking Path and returning str
             z_slices_sort_key: Optional key function for sorting z-slices
-            voxel_size_with_unit: Optional voxel size with unit specification
+            voxel_size_with_unit: Optional voxel size with unit specification, see
+                `voxel_size` for what happens when neither is given
             layer_name: Optional name for layer(s)
             layer_category: Optional category override (LayerCategoryType.color / LayerCategoryType.segmentation)
             data_format: Format to store data in ('wkw'/'zarr'/'zarr3)
@@ -1176,6 +1180,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         layers, the first three get `default_view_configuration.color` red,
         green and blue respectively (further channels get other, evenly
         spaced colors), so the layers overlay sensibly right away.
+
+        An OME-Zarr input's coordinate transformations are imported into
+        `Layer.coordinate_transformations`. Only the layer's metadata records
+        them — the data is written at the same position it would be without
+        them, and `topleft` is unaffected.
 
         Raises:
             UnsupportedImageFormatError: If no reader can convert `images`. Its
