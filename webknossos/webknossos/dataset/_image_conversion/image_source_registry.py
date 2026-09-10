@@ -14,6 +14,7 @@ from __future__ import annotations
 import glob
 import os
 import warnings
+from collections import Counter
 from os import environ
 from typing import NamedTuple
 
@@ -199,6 +200,39 @@ def get_unavailable_extensions() -> dict[str, str]:
     supported list.
     """
     return dict(_UNAVAILABLE_EXTENSIONS)
+
+
+def find_input_file_extensions(path: UPath) -> tuple[str, ...]:
+    """
+    The distinct extensions of the files under `path` — lowercase and without
+    the leading dot — most common first, ties in alphabetical order. A single
+    file yields its own extension; files without one are skipped.
+
+    Only called on error paths, so the directory scan costs nothing in the
+    normal case.
+    """
+    if path.is_file():
+        candidates = [path]
+    else:
+        candidates = [p for p in path.glob("**/*") if p.is_file()]
+
+    counts = Counter(
+        extension
+        for extension in (p.suffix.lstrip(".").lower() for p in candidates)
+        if extension
+    )
+    return tuple(sorted(counts, key=lambda extension: (-counts[extension], extension)))
+
+
+def describe_found_formats(found_file_extensions: tuple[str, ...]) -> str:
+    """Names the extensions the input actually contains. Appended to an error
+    message, where the supported ones are listed separately."""
+    if not found_file_extensions:
+        return ""
+    return (
+        f" Found {', '.join('.' + e for e in found_file_extensions)} files, "
+        + "none of which are supported."
+    )
 
 
 def describe_missing_extras(found: dict[str, str]) -> str:

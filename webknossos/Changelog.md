@@ -10,16 +10,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.0.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.0...HEAD)
 
 ### Breaking Changes
 
 ### Added
+- `UnsupportedImageFormatError` now carries `found_file_extensions`, the extensions actually present in the input (most common first), so that a failure on a directory can be reported as "found `.dcm` files, which aren't supported" instead of only listing the supported formats. The error message names them as well. [#1538](https://github.com/scalableminds/webknossos-libs/pull/1538)
 
 ### Changed
+- `Dataset.add_layer_from_images` now raises `UnsupportedImageFormatError` when given a directory that contains no convertible file, instead of a generic `ValueError` listing the errors of every attempted reader. [#1538](https://github.com/scalableminds/webknossos-libs/pull/1538)
 
 ### Fixed
 - Opening a corrupt `.ims` file no longer emits an `AttributeError` from the reader's finalizer as an unraisable exception. [#1532](https://github.com/scalableminds/webknossos-libs/pull/1532)
+
+
+## [4.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.0) - 2026-09-09
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.0.0...v4.1.0)
+
+### Added
+- Adapted to WEBKNOSSOS server API version 16. [#1535](https://github.com/scalableminds/webknossos-libs/pull/1535)
+
+### Fixed
+- Fixed that the `webknossos --version` command failed if the tifffile extra dependency was not installed. [#1534](https://github.com/scalableminds/webknossos-libs/pull/1534)
+- Added the missing `packaging` runtime dependency, which made `import webknossos` fail with `ModuleNotFoundError: No module named 'packaging'` in a clean install. [#1536](https://github.com/scalableminds/webknossos-libs/pull/1536)
 
 
 ## [4.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.0.0) - 2026-09-03

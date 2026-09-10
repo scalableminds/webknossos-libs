@@ -27,7 +27,9 @@ from .image_source import (
     compute_channel_selection,
 )
 from .image_source_registry import (
+    describe_found_formats,
     describe_missing_extras,
+    find_input_file_extensions,
     get_unavailable_extensions,
     get_valid_extensions,
     get_valid_slice_reader_extensions,
@@ -153,20 +155,40 @@ class SlicedImageSource(ImageSource):
         so files that open without a recognized extension are unaffected.
         """
         path = self._error_path()
-        # Only a file's extension says anything about which readers apply; a
-        # directory has none, or worse, a dot in its name.
-        extension = (
-            (path.suffix.lstrip(".").lower() or None)
-            if path is not None and not path.is_dir()
-            else None
-        )
-
         supported_extensions = get_valid_extensions()
+        unavailable = get_unavailable_extensions()
+
+        if path is not None and path.is_dir():
+            # A directory has no extension of its own — what it contains is
+            # what says whether any reader applies.
+            found = find_input_file_extensions(path)
+            if any(extension in supported_extensions for extension in found):
+                # There is convertible data in here; the failure is something
+                # else.
+                return None
+            missing = {e: unavailable[e] for e in found if e in unavailable}
+            message = (
+                f"Could not convert {path}: it contains no supported image data."
+                + describe_found_formats(tuple(e for e in found if e not in missing))
+                + f" The following extensions are supported: {sorted(supported_extensions)}"
+            )
+            if missing:
+                message += describe_missing_extras(missing)
+            return UnsupportedImageFormatError(
+                message,
+                path=path,
+                supported_file_extensions=tuple(sorted(supported_extensions)),
+                found_file_extensions=found,
+                missing_extras=tuple(sorted(set(missing.values()))),
+            )
+
+        extension = (
+            (path.suffix.lstrip(".").lower() or None) if path is not None else None
+        )
 
         if extension is None or extension in supported_extensions:
             return None
 
-        unavailable = get_unavailable_extensions()
         missing = (
             {extension: unavailable[extension]} if extension in unavailable else {}
         )

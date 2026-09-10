@@ -757,9 +757,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         Raises:
             UnsupportedImageFormatError: If the input contains no file that any
-                reader can convert. Its `missing_extras` attribute names the
-                extras to install when the format would be supported by an
-                optional dependency that is not installed.
+                reader can convert. Its `found_file_extensions` attribute names
+                the extensions that were actually found, and its
+                `missing_extras` attribute names the extras to install when the
+                format would be supported by an optional dependency that is not
+                installed.
             CorruptImageError: If a file of a supported format could not be
                 read, which usually means it is damaged or incomplete.
             UnsupportedImageDataError: If the images were read, but their data
@@ -1179,9 +1181,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         Raises:
             UnsupportedImageFormatError: If no reader can convert `images`. Its
-                `missing_extras` attribute names the extras to install when the
-                format would be supported by an optional dependency that is not
-                installed.
+                `found_file_extensions` attribute names the extensions that were
+                actually found, and its `missing_extras` attribute names the
+                extras to install when the format would be supported by an
+                optional dependency that is not installed.
             CorruptImageError: If a file of a supported format could not be
                 read, which usually means it is damaged or incomplete.
             UnsupportedImageDataError: If the images were read, but their data
