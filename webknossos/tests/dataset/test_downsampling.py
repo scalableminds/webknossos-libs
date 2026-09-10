@@ -28,8 +28,8 @@ from webknossos.dataset.layer._downsampling_utils import (
     non_linear_filter_3d,
 )
 from webknossos.dataset.sampling_modes import SamplingModes
-from webknossos.geometry import NDBoundingBox
 from webknossos.dataset_properties import DataFormat
+from webknossos.geometry import NDBoundingBox
 
 rng = np.random.default_rng(1234)
 
