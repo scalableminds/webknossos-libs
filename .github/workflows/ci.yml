@@ -48,10 +48,7 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
-          # Restore only: this job's key is identical to cluster_tools_other's
-          # (same runner and dependency glob), and that job is the writer.
-          # Nothing is installed on the runner here anyway — uv sync runs
-          # inside the containers.
+          # Restore only: The cache from `cluster_tools_other` is used.
           save-cache: false
       - run: uv python install ${{ matrix.python-version }}
       - name: Start Docker Cluster
