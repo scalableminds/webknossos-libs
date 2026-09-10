@@ -41,6 +41,12 @@ class UnsupportedImageFormatError(ImageConversionError):
             or unknown.
         supported_file_extensions: The extensions that can currently be
             converted, in the same lowercase, dot-less form.
+        found_file_extensions: The extensions actually present in the input, in
+            the same lowercase, dot-less form, most common first. For a
+            directory this is what it contains, which is what names the
+            offending format when `file_extension` is `None`; for a single file
+            it is just that file's extension. Empty when nothing was found,
+            e.g. for an empty directory.
         missing_extras: The `webknossos` extras that would add support for the
             input at hand, e.g. `("ims",)` when converting an `.ims` file
             without `webknossos[ims]` installed. Empty when the format is not
@@ -55,8 +61,9 @@ class UnsupportedImageFormatError(ImageConversionError):
         except wk.UnsupportedImageFormatError as e:
             if e.missing_extras:
                 print(f"Install webknossos[{','.join(e.missing_extras)}] to convert this file.")
-            else:
-                print(f"Cannot convert .{e.file_extension} files.")
+            elif e.found_file_extensions:
+                found = ", ".join("." + s for s in e.found_file_extensions)
+                print(f"Cannot convert {found} files.")
         ```
     """
 
@@ -67,11 +74,19 @@ class UnsupportedImageFormatError(ImageConversionError):
         path: UPath | None = None,
         file_extension: str | None = None,
         supported_file_extensions: tuple[str, ...] = (),
+        found_file_extensions: tuple[str, ...] | None = None,
         missing_extras: tuple[str, ...] = (),
     ) -> None:
         super().__init__(message, path=path)
         self.file_extension = file_extension
         self.supported_file_extensions = supported_file_extensions
+        # A single offending file is its own answer to "what was found", so
+        # only the directory case has to pass this explicitly.
+        self.found_file_extensions = (
+            found_file_extensions
+            if found_file_extensions is not None
+            else ((file_extension,) if file_extension is not None else ())
+        )
         self.missing_extras = missing_extras
 
 
