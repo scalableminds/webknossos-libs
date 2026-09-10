@@ -21,6 +21,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - `Dataset.add_layer_from_images` now raises `UnsupportedImageFormatError` when given a directory that contains no convertible file, instead of a generic `ValueError` listing the errors of every attempted reader. [#1538](https://github.com/scalableminds/webknossos-libs/pull/1538)
 
 ### Fixed
+- Opening a corrupt `.ims` file no longer emits an `AttributeError` from the reader's finalizer as an unraisable exception. [#1532](https://github.com/scalableminds/webknossos-libs/pull/1532)
 
 
 ## [4.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.0) - 2026-09-09
