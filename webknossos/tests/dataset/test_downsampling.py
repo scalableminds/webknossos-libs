@@ -21,6 +21,7 @@ from webknossos.dataset.layer._downsampling_utils import (
     non_linear_filter_3d,
 )
 from webknossos.dataset.sampling_modes import SamplingModes
+from webknossos.geometry import NDBoundingBox
 
 HAS_NUMBA = importlib.util.find_spec("numba") is not None
 
@@ -632,6 +633,33 @@ def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
     target_data = target_layer.get_mag("2").read()
 
     assert np.all(source_data == target_data)
+
+
+def test_downsample_single_channel_nd_layer(tmp_upath: UPath) -> None:
+    """Regression test: a single-channel layer with an additional axis (e.g. "t")
+    has no "c" axis in its bounding box at all, since num_channels=1 layers don't
+    get one. `downsample_cube_job` used to look up the channel count via
+    `target_view.info.bounding_box.size.c`, which raised
+    `KeyError: 'The vector does not have an c component.'` in that case.
+    """
+    ds = Dataset(tmp_upath / "nd_single_channel", voxel_size=(1, 1, 1))
+    layer = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        data_format="zarr3",
+        bounding_box=NDBoundingBox(
+            topleft=(0, 0, 0, 0), size=(16, 16, 4, 2), axes=("x", "y", "z", "t")
+        ),
+    )
+    layer.add_mag(1).write(
+        data=np.arange(16 * 16 * 4 * 2, dtype=np.uint8).reshape(16, 16, 4, 2),
+        absolute_bounding_box=layer.bounding_box,
+    )
+
+    layer.downsample(coarsest_mag=Mag(2))
+
+    assert Mag(2) in layer.mags
+    assert layer.get_mag(2).read().shape == (8, 8, 2, 2)
 
 
 def test_downsample_default_shard_shapes(tmp_upath: UPath) -> None:
