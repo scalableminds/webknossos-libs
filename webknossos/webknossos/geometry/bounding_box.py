@@ -7,6 +7,7 @@ from typing import Union, cast, overload
 import attr
 import numpy as np
 
+from .constants import C_AXIS, X_AXIS, XYZ_AXES, Y_AXIS, Z_AXIS
 from .mag import Mag
 from .nd_bounding_box import _DEFAULT_BBOX_NAME, NDBoundingBox
 from .normalized_bounding_box import NormalizedBoundingBox
@@ -44,7 +45,7 @@ class BoundingBox(NDBoundingBox):
 
     topleft: Vec3Int = attr.field(converter=Vec3Int)
     size: Vec3Int = attr.field(converter=Vec3Int)
-    axes: tuple[str, str, str] = attr.field(default=("x", "y", "z"))
+    axes: tuple[str, str, str] = attr.field(default=XYZ_AXES)
     index: Vec3Int = attr.field(default=Vec3Int(1, 2, 3))
     bottomright: Vec3Int = attr.field(init=False)
     name: str | None = _DEFAULT_BBOX_NAME
@@ -70,21 +71,21 @@ class BoundingBox(NDBoundingBox):
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.x optionally replaced and size.x optionally replaced."""
 
-        return cast(BoundingBox, self.with_bounds("x", new_topleft_x, new_size_x))
+        return cast(BoundingBox, self.with_bounds(X_AXIS, new_topleft_x, new_size_x))
 
     def with_bounds_y(
         self, new_topleft_y: int | None = None, new_size_y: int | None = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.y optionally replaced and size.y optionally replaced."""
 
-        return cast(BoundingBox, self.with_bounds("y", new_topleft_y, new_size_y))
+        return cast(BoundingBox, self.with_bounds(Y_AXIS, new_topleft_y, new_size_y))
 
     def with_bounds_z(
         self, new_topleft_z: int | None = None, new_size_z: int | None = None
     ) -> "BoundingBox":
         """Returns a copy of the bounding box with topleft.z optionally replaced and size.z optionally replaced."""
 
-        return cast(BoundingBox, self.with_bounds("z", new_topleft_z, new_size_z))
+        return cast(BoundingBox, self.with_bounds(Z_AXIS, new_topleft_z, new_size_z))
 
     @classmethod
     def from_config_dict(cls, bbox: dict) -> "BoundingBox":
@@ -591,7 +592,7 @@ class BoundingBox(NDBoundingBox):
         return NormalizedBoundingBox(
             topleft=(0,) + self.topleft.to_tuple(),
             size=(num_channels,) + self.size.to_tuple(),
-            axes=("c",) + self.axes,
+            axes=(C_AXIS,) + self.axes,
             index=(0,) + self.index.to_tuple(),
             name=self.name,
             is_visible=self.is_visible,

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from webknossos.dataset.dataset import Dataset, RemoteDataset
 
 from webknossos.dataset_properties import LayerCategoryType
-from webknossos.geometry import Mag, Vec3FloatLike, Vec3Int, Vec3IntLike
+from webknossos.geometry import C_AXIS, Mag, Vec3FloatLike, Vec3Int, Vec3IntLike
 
 from .view import ArrayInfo, View
 
@@ -385,14 +385,14 @@ def downsample_cube_job(
                     buffer_bbox = target_bbox.with_topleft_xyz(
                         target_offset
                     ).with_size_xyz(data_cube.shape)
-                    if "c" in buffer_bbox.axes:
-                        buffer_bbox = buffer_bbox.with_bounds("c", new_size=1)
+                    if C_AXIS in buffer_bbox.axes:
+                        buffer_bbox = buffer_bbox.with_bounds(C_AXIS, new_size=1)
 
                     # Add missing axes to the data_cube if bbox is nd
                     data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
 
                     slices: list[int | slice] = list(buffer_bbox.to_slices_xyz())
-                    if "c" in buffer_bbox.axes:
+                    if C_AXIS in buffer_bbox.axes:
                         slices[buffer_bbox.index.c] = channel_index
 
                     file_buffer[tuple(slices)] = data_cube

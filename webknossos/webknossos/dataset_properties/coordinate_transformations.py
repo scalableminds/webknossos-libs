@@ -12,19 +12,17 @@ applied in order.
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any
 
 import attr
 import numpy as np
 
-from ..geometry import Vec3Float, Vec3FloatLike
+from ..geometry import X_AXIS, Y_AXIS, Z_AXIS, Vec3Float, Vec3FloatLike, XYZAxis
 
-Axis = Literal["x", "y", "z"]
-
-_AXIS_TO_INDEX: dict[str, int] = {"x": 0, "y": 1, "z": 2}
+_AXIS_TO_INDEX: dict[str, int] = {X_AXIS: 0, Y_AXIS: 1, Z_AXIS: 2}
 
 
-def _axis_index(axis: Axis) -> int:
+def _axis_index(axis: XYZAxis) -> int:
     try:
         return _AXIS_TO_INDEX[axis]
     except KeyError:
@@ -143,7 +141,7 @@ class AffineCoordinateTransformation(CoordinateTransformation):
 
     @classmethod
     def from_rotation(
-        cls, axis: Axis, angle: float
+        cls, axis: XYZAxis, angle: float
     ) -> "AffineCoordinateTransformation":
         """Creates a transformation that rotates the layer around the origin.
 
@@ -180,14 +178,14 @@ class AffineCoordinateTransformation(CoordinateTransformation):
         """Returns a new transformation that additionally scales by `scale` around the origin."""
         return self.chain(self.from_scale(scale))
 
-    def rotate(self, axis: Axis, angle: float) -> "AffineCoordinateTransformation":
+    def rotate(self, axis: XYZAxis, angle: float) -> "AffineCoordinateTransformation":
         """Returns a new transformation that additionally rotates by `angle` degrees around `axis`.
 
         See `from_rotation` for the orientation of the rotation.
         """
         return self.chain(self.from_rotation(axis, angle))
 
-    def flip(self, axis: Axis) -> "AffineCoordinateTransformation":
+    def flip(self, axis: XYZAxis) -> "AffineCoordinateTransformation":
         """Returns a new transformation that additionally mirrors along `axis`.
 
         The layer is mirrored at the origin, i.e. the coordinates along `axis` change

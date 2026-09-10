@@ -10,7 +10,17 @@ from typing import TYPE_CHECKING
 import numpy as np
 import psutil
 
-from ...geometry import BoundingBox, NDBoundingBox, Vec3Int, Vec3IntLike
+from ...geometry import (
+    C_AXIS,
+    X_AXIS,
+    XYZ_AXES,
+    Y_AXIS,
+    Z_AXIS,
+    BoundingBox,
+    NDBoundingBox,
+    Vec3Int,
+    Vec3IntLike,
+)
 
 if TYPE_CHECKING:
     from ..layer.view import View
@@ -37,13 +47,13 @@ def _parse_dimension(dimension: str | int) -> str:
         )
         assert 0 <= dimension <= 2  # either x (0), y (1) or z (2)
         if dimension == 0:
-            return "x"
+            return X_AXIS
         elif dimension == 1:
-            return "y"
+            return Y_AXIS
         else:
-            return "z"
+            return Z_AXIS
     else:
-        assert dimension in ["x", "y", "z"]
+        assert dimension in XYZ_AXES
         return dimension
 
 
@@ -53,7 +63,7 @@ class BufferedSliceWriter:
         view: "View",
         # buffer_size specifies, how many slices should be aggregated until they are flushed.
         buffer_size: int = 32,
-        dimension: str | int = "z",  # z
+        dimension: str | int = Z_AXIS,  # z
         *,
         relative_offset: Vec3IntLike | None = None,  # in mag1
         absolute_offset: Vec3IntLike | None = None,  # in mag1
@@ -112,15 +122,15 @@ class BufferedSliceWriter:
                 raise ValueError(msg)
 
     def _get_other_axes(self) -> tuple[str, str]:
-        if self.dimension == "x":
-            width_axis = "y"
-            height_axis = "z"
-        elif self.dimension == "y":
-            width_axis = "x"
-            height_axis = "z"
+        if self.dimension == X_AXIS:
+            width_axis = Y_AXIS
+            height_axis = Z_AXIS
+        elif self.dimension == Y_AXIS:
+            width_axis = X_AXIS
+            height_axis = Z_AXIS
         else:
-            width_axis = "x"
-            height_axis = "y"
+            width_axis = X_AXIS
+            height_axis = Y_AXIS
         return width_axis, height_axis
 
     def _flush_buffer(self) -> None:
@@ -270,8 +280,8 @@ class BufferedSliceWriter:
             if len(data.shape) == 2:
                 axis_map = {width_axis: 0, height_axis: 1}
             elif len(data.shape) == 3:
-                assert "c" in self._bbox.axes
-                axis_map = {"c": 0, width_axis: 1, height_axis: 2}
+                assert C_AXIS in self._bbox.axes
+                axis_map = {C_AXIS: 0, width_axis: 1, height_axis: 2}
             else:
                 raise ValueError(f"Unsupported data shape: {data.shape}")
 

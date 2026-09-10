@@ -1,6 +1,7 @@
 # ruff: noqa: F401 imported but unused
 
 from .bounding_box import BoundingBox
+from .constants import *  # noqa: F403
 from .mag import Mag, MagLike
 from .nd_bounding_box import NDBoundingBox
 from .normalized_bounding_box import NormalizedBoundingBox

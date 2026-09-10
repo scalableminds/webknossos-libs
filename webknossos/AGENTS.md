@@ -15,7 +15,7 @@
 
 ## Testing
 
-* Run tests with `uv run test.py` (not `python -m pytest`). 
+* Run tests with `uv run test.py` (not `python -m pytest`). This is important so that all env vars and external dependencies (e.g. Webknossos server) are set up. You can also run individual tests with e.g. `uv run test.py tests/test_utils.py::test_call_with_retries_success`.
 * However, running all tests takes several minutes and should be done by the CI. Try to pick a small subset of tests to run.
 
 ## Format, lint, typecheck

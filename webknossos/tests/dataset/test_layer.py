@@ -4,6 +4,7 @@ from upath import UPath
 
 import webknossos as wk
 from webknossos import DataFormat
+from webknossos.geometry.constants import CXYZ_AXES, XYZ_AXES
 
 
 def test_add_mag_from_zarrarray3D(tmp_upath: UPath) -> None:
@@ -15,7 +16,7 @@ def test_add_mag_from_zarrarray3D(tmp_upath: UPath) -> None:
         wk.COLOR_CATEGORY,
         data_format="zarr3",
         bounding_box=wk.NDBoundingBox(
-            topleft=(0, 0, 0), size=(16, 16, 16), axes=("x", "y", "z"), index=(0, 1, 2)
+            topleft=(0, 0, 0), size=(16, 16, 16), axes=XYZ_AXES, index=(0, 1, 2)
         ),
     )
     zarr_mag_path = tmp_upath / "zarr_data" / "mag1.zarr"
@@ -58,7 +59,7 @@ def test_add_mag_from_zarrarray3D(tmp_upath: UPath) -> None:
     layer.add_mag_from_zarrarray("1", zarr_mag_path, extend_layer_bounding_box=False)
 
     assert layer.get_mag("1").read().shape == (16, 16, 16)
-    assert layer.get_mag("1").info.bounding_box.axes == ("x", "y", "z")
+    assert layer.get_mag("1").info.bounding_box.axes == XYZ_AXES
     np.testing.assert_array_equal(layer.get_mag("1").read(), zarr_data)
 
 
@@ -114,7 +115,7 @@ def test_add_mag_from_zarrarray4D(tmp_upath: UPath) -> None:
 
     assert layer.get_mag("1").read().shape == (3, 16, 16, 16)
     assert layer.get_mag("1").info.bounding_box.size.c == 3
-    assert layer.get_mag("1").info.bounding_box.axes == ("c", "x", "y", "z")
+    assert layer.get_mag("1").info.bounding_box.axes == CXYZ_AXES
     np.testing.assert_array_equal(layer.get_mag("1").read(), zarr_data)
 
 

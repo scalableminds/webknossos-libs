@@ -11,6 +11,7 @@ from webknossos.client.api_client.models import (
     ApiPrecomputedMeshInfo,
     ApiReserveDatasetUploadInformationV13,
 )
+from webknossos.geometry.constants import X_AXIS, Y_AXIS, Z_AXIS
 
 from ._abstract_api_client import LONG_TIMEOUT_SECONDS, AbstractApiClient, Query
 
@@ -37,6 +38,15 @@ class DatastoreApiClient(AbstractApiClient):
 
     def dataset_upload_resumable_url(self) -> str:
         return f"{self.url_prefix}/datasets/upload/dataset"
+
+    def zarr_streaming_dataset_url(self, dataset_id: str) -> str:
+        return f"{self.url_prefix}/zarr/{dataset_id}/"
+
+    def zarr_streaming_annotation_url(self, annotation_id: str) -> str:
+        return f"{self.url_prefix}/annotations/zarr/{annotation_id}/"
+
+    def proxy_dataset_url(self, dataset_id: str) -> str:
+        return f"{self.url_prefix}/datasets/{dataset_id}/proxy/"
 
     def dataset_upload_resumable_query(
         self, _organization_id: str, _dataset_name: str, total_file_count: int
@@ -142,9 +152,9 @@ class DatastoreApiClient(AbstractApiClient):
         route = f"/datasets/{dataset_id}/layers/{data_layer_name}/data"
         query: Query = {
             "mag": mag,
-            "x": x,
-            "y": y,
-            "z": z,
+            X_AXIS: x,
+            Y_AXIS: y,
+            Z_AXIS: z,
             "width": width,
             "height": height,
             "depth": depth,

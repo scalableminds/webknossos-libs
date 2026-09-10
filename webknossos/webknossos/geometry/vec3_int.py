@@ -4,6 +4,7 @@ from typing import Any, TypeAlias, Union, cast
 
 import numpy as np
 
+from .constants import X_AXIS, XYZ_AXES, Y_AXIS, Z_AXIS
 from .vec_int import VecInt
 
 _VALUE_ERROR = "Vector components must be three integers or a Vec3IntLike object."
@@ -17,7 +18,7 @@ class Vec3Int(VecInt):
     def __new__(
         cls,
         *args: Union["Vec3IntLike", Iterable[str], int],
-        axes: Iterable[str] | None = ("x", "y", "z"),
+        axes: Iterable[str] | None = XYZ_AXES,
         **kwargs: int,
     ) -> "Vec3Int":
         """A 3D vector class that inherits from tuple with additional vector operations.
@@ -41,7 +42,7 @@ class Vec3Int(VecInt):
         # `VecInt.__new__`, which together cost about seven times as much.
         # `type(...) is int` rather than `isinstance` deliberately leaves `bool` and the
         # numpy integer types on the general path, where `int()` converts them as before.
-        if cls is Vec3Int and not kwargs and axes == ("x", "y", "z"):
+        if cls is Vec3Int and not kwargs and axes == XYZ_AXES:
             values: tuple[Any, ...] | None = None
             if len(args) == 3:
                 values = args
@@ -59,22 +60,24 @@ class Vec3Int(VecInt):
             assert axes is not None, _VALUE_ERROR
 
             if isinstance(args[0], Iterable):
-                self = super().__new__(cls, *args[0], axes=("x", "y", "z"))
+                self = super().__new__(cls, *args[0], axes=XYZ_AXES)
                 assert self is not None and len(self) == 3, _VALUE_ERROR
 
                 return cast(Vec3Int, self)
 
             assert len(args) == 3 and len(tuple(axes)) == 3, _VALUE_ERROR
             assert kwargs is None or len(kwargs) == 0, _VALUE_ERROR
-            assert "x" in axes and "y" in axes and "z" in axes, _VALUE_ERROR
+            assert X_AXIS in axes and Y_AXIS in axes and Z_AXIS in axes, _VALUE_ERROR
             values, _ = zip(*sorted(zip(args, axes), key=lambda x: x[1]))
         else:
-            assert "x" in kwargs and "y" in kwargs and "z" in kwargs, _VALUE_ERROR
+            assert X_AXIS in kwargs and Y_AXIS in kwargs and Z_AXIS in kwargs, (
+                _VALUE_ERROR
+            )
             assert len(kwargs) == 3, _VALUE_ERROR
-            values = kwargs["x"], kwargs["y"], kwargs["z"]
+            values = kwargs[X_AXIS], kwargs[Y_AXIS], kwargs[Z_AXIS]
 
-        self = super().__new__(cls, *values, axes=("x", "y", "z"))
-        self.axes = ("x", "y", "z")
+        self = super().__new__(cls, *values, axes=XYZ_AXES)
+        self.axes = XYZ_AXES
 
         assert self is not None and len(self) == 3, _VALUE_ERROR
 
@@ -126,7 +129,7 @@ class Vec3Int(VecInt):
         # the tolerant (and potentially) slow Vec3Int.__new__ method.
         vec3int = object.__new__(Vec3Int)
         vec3int._data = (x, y, z)
-        vec3int.axes = ("x", "y", "z")
+        vec3int.axes = XYZ_AXES
         vec3int._c_pos = None
         vec3int._x_pos = 0
         vec3int._y_pos = 1
@@ -156,15 +159,15 @@ class Vec3Int(VecInt):
         return Vec3Int.full(int(string))
 
     @classmethod
-    def zeros(cls, _axes: tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
+    def zeros(cls, _axes: tuple[str, ...] = XYZ_AXES) -> "Vec3Int":
         return cls(0, 0, 0)
 
     @classmethod
-    def ones(cls, _axes: tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
+    def ones(cls, _axes: tuple[str, ...] = XYZ_AXES) -> "Vec3Int":
         return cls(1, 1, 1)
 
     @classmethod
-    def full(cls, an_int: int, _axes: tuple[str, ...] = ("x", "y", "z")) -> "Vec3Int":
+    def full(cls, an_int: int, _axes: tuple[str, ...] = XYZ_AXES) -> "Vec3Int":
         return cls(an_int, an_int, an_int)
 
     def __repr__(self) -> str:

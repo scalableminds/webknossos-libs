@@ -6,6 +6,7 @@ import pytest
 from cluster_tools import SequentialExecutor
 from upath import UPath
 
+from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -16,6 +17,8 @@ from webknossos import (
 )
 from webknossos.dataset.layer._upsampling_utils import upsample_cube, upsample_cube_job
 from webknossos.dataset.sampling_modes import SamplingModes
+
+rng = np.random.default_rng(1234)
 
 WKW_CUBE_SIZE = 1024
 BUFFER_SHAPE = Vec3Int.full(256)
@@ -34,7 +37,7 @@ def test_upsampling(tmp_upath: UPath) -> None:
     mag = layer.add_mag([4, 4, 2])
     mag.write(
         absolute_offset=(10 * 4, 20 * 4, 40 * 2),
-        data=(np.random.rand(46, 45, 27) * 255).astype(np.uint8),
+        data=rng.integers(0, 256, (46, 45, 27), dtype=np.uint8),
         allow_resize=True,
     )
     layer.upsample(
@@ -70,7 +73,7 @@ def upsample_test_helper(tmp_upath: UPath, use_compress: bool) -> None:
 
     mag2.write(
         absolute_offset=offset,
-        data=(np.random.rand(*BUFFER_SHAPE) * 255).astype(np.uint8),
+        data=rng.integers(0, 256, tuple(BUFFER_SHAPE), dtype=np.uint8),
         allow_resize=True,
     )
     mag1 = layer._initialize_mag_from_other_mag("1-1-2", mag2, use_compress)
@@ -173,7 +176,7 @@ def test_upsampling_non_aligned(tmp_upath: UPath) -> None:
 
 def test_upsample_from_mag_view(tmp_upath: UPath) -> None:
     """upsample with from_mag_view reads source data from another layer."""
-    source_data = (np.random.rand(1, 32, 32, 8) * 255).astype(np.uint8)
+    source_data = rng.integers(0, 256, (1, 32, 32, 8), dtype=np.uint8)
 
     source_ds = Dataset(tmp_upath / "source", voxel_size=(1, 1, 1))
     source_layer = source_ds.add_layer("color", COLOR_CATEGORY)
@@ -207,7 +210,7 @@ def test_upsample_from_mag_view_mag_mismatch(tmp_upath: UPath) -> None:
     source_layer = source_ds.add_layer("color", COLOR_CATEGORY)
     source_mag = source_layer.add_mag(Mag(4))
     source_mag.write(
-        (np.random.rand(1, 8, 8, 8) * 255).astype(np.uint8), allow_resize=True
+        rng.integers(0, 256, (1, 8, 8, 8), dtype=np.uint8), allow_resize=True
     )
 
     target_ds = Dataset(tmp_upath / "target", voxel_size=(1, 1, 1))
@@ -224,9 +227,7 @@ def test_upsample_from_mag_view_mag_mismatch(tmp_upath: UPath) -> None:
 
 
 def test_upsample_nd_dataset(tmp_upath: UPath) -> None:
-    source_path = (
-        UPath(__file__).parent.parent.parent / "testdata" / "4D" / "4D_series_zarr3"
-    )
+    source_path = download_wklibs_sample_archive("4D") / "4D_series_zarr3"
     target_path = tmp_upath / "upsample_test"
 
     source_ds = Dataset.open(source_path)

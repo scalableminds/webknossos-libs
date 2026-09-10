@@ -10,7 +10,6 @@ import typer
 from cluster_tools import Executor
 from scipy.ndimage import zoom
 from tensorstore import Context, TensorStore
-from tifffile import imwrite
 from upath import UPath
 
 from ..dataset import MagView, View
@@ -76,7 +75,9 @@ def _apply_mapping(data: np.ndarray, mapping_array: TensorStore) -> np.ndarray:
     unique_ids = fastremap.unique(data)
     in_bounds = [i for i in unique_ids if i < mapping_array.shape[0]]
     out_of_bounds = [i for i in unique_ids if i >= mapping_array.shape[0]]
-    mapped_ids = mapping_array[in_bounds].read().result() if in_bounds else []
+    mapped_ids: np.ndarray | list[int] = (
+        mapping_array[in_bounds].read().result() if in_bounds else []
+    )
     mapping = {**dict(zip(in_bounds, mapped_ids)), **{i: 0 for i in out_of_bounds}}
     result = fastremap.remap(data, mapping, preserve_missing_labels=False)
     return result.astype(mapping_array.dtype.numpy_dtype)
@@ -92,6 +93,8 @@ def export_tiff_slice_batch(
     mapping_path: UPath | None,
     view: View,
 ) -> None:
+    from tifffile import imwrite
+
     tiff_bbox_mag1 = view.bounding_box
     tiff_bbox = tiff_bbox_mag1.in_mag(view.mag)
     compression_arg = "zlib" if compress else None
@@ -291,6 +294,11 @@ def main(
     access_mode: AccessModeOption = None,
 ) -> None:
     """Export your WEBKNOSSOS dataset to TIFF image data."""
+
+    try:
+        import tifffile  # noqa: F401
+    except ImportError as e:
+        raise WkImportError("tifffile", "tifffile") from e
 
     mag_view: MagView | None = None
     mapping_path: UPath | None = None

@@ -8,4 +8,5 @@ from ._array import (
     Zarr3Config,
 )
 from .mag_view import MagView
+from .remote_mag_view import RemoteMagView
 from .view import View

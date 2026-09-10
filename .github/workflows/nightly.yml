@@ -34,7 +34,20 @@ jobs:
       - name: Python tests
         env:
           WK_TOKEN: ${{ secrets.WK_TOKEN }}
-        run: uv run test.py
+        # `-n0` disables xdist: pytest-split cannot collect durations from workers.
+        run: uv run test.py --store-durations -n0
+
+      # `.test_durations` decides how balanced the three CI groups are, so a
+      # fresh one is uploaded here to keep the drift visible.
+      - name: Persist test durations
+        if: ${{ matrix.python-version == '3.11' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-durations
+          path: "webknossos/.test_durations"
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
 
       - uses: slackapi/slack-github-action@v3.0.1
         if: failure() || cancelled()

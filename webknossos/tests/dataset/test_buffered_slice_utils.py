@@ -1,5 +1,4 @@
 import warnings
-from typing import Literal
 
 import numpy as np
 import pytest
@@ -7,6 +6,7 @@ from upath import UPath
 
 from tests.constants import TESTOUTPUT_DIR
 from webknossos import COLOR_CATEGORY, BoundingBox, Dataset, Mag, Vec3Int
+from webknossos.geometry.constants import X_AXIS, XYZ_AXES, Y_AXIS, XYZAxis
 from webknossos.utils import rmtree
 
 # This module effectively tests BufferedSliceWriter and
@@ -67,9 +67,9 @@ def test_buffered_slice_writer() -> None:
     )
 
 
-@pytest.mark.parametrize("dim", ["x", "y", "z"])
+@pytest.mark.parametrize("dim", XYZ_AXES)
 def test_buffered_slice_writer_along_different_axis(
-    tmp_upath: UPath, dim: Literal["x", "y", "z"]
+    tmp_upath: UPath, dim: XYZAxis
 ) -> None:
     test_cube = (np.random.random((3, 13, 13, 13)) * 100).astype(np.uint8)
     cube_size_without_channel = Vec3Int(test_cube.shape[1:])
@@ -90,9 +90,9 @@ def test_buffered_slice_writer_along_different_axis(
         absolute_offset=offset, buffer_size=5, dimension=dim, allow_unaligned=True
     ) as writer:
         for i in range(cube_size_without_channel.get(dim)):
-            if dim == "x":
+            if dim == X_AXIS:
                 current_slice = test_cube[:, i, :, :]
-            elif dim == "y":
+            elif dim == Y_AXIS:
                 current_slice = test_cube[:, :, i, :]
             else:  # dim == "z"
                 current_slice = test_cube[:, :, :, i]
@@ -108,7 +108,7 @@ def test_buffered_slice_reader_along_different_axis(tmp_upath: UPath) -> None:
     cube_size_without_channel = Vec3Int(test_cube.shape[1:])
     offset = Vec3Int(5, 10, 20)
 
-    for dim in ["x", "y", "z"]:
+    for dim in XYZ_AXES:
         ds = Dataset(tmp_upath / f"buffered_slice_reader_{dim}", voxel_size=(1, 1, 1))
         layer = ds.add_layer(
             "color",
@@ -131,9 +131,9 @@ def test_buffered_slice_reader_along_different_axis(tmp_upath: UPath) -> None:
         ):
             i = 0
             for slice_data_a, slice_data_b in zip(reader_a, reader_b):
-                if dim == "x":
+                if dim == X_AXIS:
                     original_slice = test_cube[:, i, :, :]
-                elif dim == "y":
+                elif dim == Y_AXIS:
                     original_slice = test_cube[:, :, i, :]
                 else:  # dim == "z"
                     original_slice = test_cube[:, :, :, i]

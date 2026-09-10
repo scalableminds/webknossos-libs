@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 
     from .segmentation_layer import SegmentationLayer
 
+from webknossos import utils
 from webknossos.dataset.defaults import (
     DEFAULT_CHUNK_SHAPE,
     DEFAULT_CHUNKS_PER_SHARD,
@@ -61,7 +62,6 @@ from webknossos.utils import (
     named_partial,
     rmtree,
     warn_deprecated,
-    wrap_executor,
 )
 
 logger = logging.getLogger(__name__)
@@ -189,9 +189,9 @@ class Layer(AbstractLayer):
         )
         super().__init__(dataset, properties, read_only)
 
-    def _determine_read_only_and_path_for_mag(
-        self, mag_properties: MagViewProperties
-    ) -> tuple[bool, UPath]:
+    def _setup_mag_from_properties(
+        self, mag_properties: MagViewProperties, read_only: bool
+    ) -> None:
         if mag_properties.path is None:
             mag_path = _find_mag_path(self.resolved_path, mag_properties.mag)
         else:
@@ -200,7 +200,11 @@ class Layer(AbstractLayer):
         mag_is_read_only = _is_foreign_mag(
             self.dataset.resolved_path, self.name, mag_path
         )
-        return mag_is_read_only, mag_path
+        self._setup_mag(
+            Mag(mag_properties.mag),
+            mag_path,
+            read_only=read_only or mag_is_read_only,
+        )
 
     @property
     def dataset(self) -> "Dataset":
@@ -1224,7 +1228,7 @@ class Layer(AbstractLayer):
         )
 
         # perform downsampling
-        with wrap_executor(executor) as executor:
+        with utils.wrap_executor(executor) as executor:
             if buffer_shape is None:
                 buffer_shape = determine_downsample_buffer_shape(target_view.info)
             else:
@@ -1487,7 +1491,7 @@ class Layer(AbstractLayer):
             target_view = target_mag_view.get_view(absolute_bounding_box=bbox_mag1)
 
             # perform upsampling
-            with wrap_executor(executor) as actual_executor:
+            with utils.wrap_executor(executor) as actual_executor:
                 if buffer_shape is None:
                     buffer_shape = determine_upsample_buffer_shape(prev_mag_view.info)
                 else:

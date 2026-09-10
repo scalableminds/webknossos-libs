@@ -3,6 +3,7 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
+from ..geometry.constants import X_AXIS, Y_AXIS, Z_AXIS
 from .utils import Vector3, enforce_not_null
 
 
@@ -32,9 +33,9 @@ class Node(NamedTuple):
     def _dump(self, xf: XmlWriter) -> None:
         attributes = {
             "id": str(self.id),
-            "x": str(float(self.position[0])),
-            "y": str(float(self.position[1])),
-            "z": str(float(self.position[2])),
+            X_AXIS: str(float(self.position[0])),
+            Y_AXIS: str(float(self.position[1])),
+            Z_AXIS: str(float(self.position[2])),
         }
 
         if self.radius is not None:
@@ -78,9 +79,9 @@ class Node(NamedTuple):
             if nml_node.get("radius") is not None
             else None,
             position=(
-                float(nml_node.get("x", 0)),
-                float(nml_node.get("y", 0)),
-                float(nml_node.get("z", 0)),
+                float(nml_node.get(X_AXIS, 0)),
+                float(nml_node.get(Y_AXIS, 0)),
+                float(nml_node.get(Z_AXIS, 0)),
             ),
             rotation=rotation,
             inVp=int(nml_node.get("inVp", 0))

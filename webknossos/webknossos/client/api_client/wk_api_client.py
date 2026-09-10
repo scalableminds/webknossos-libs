@@ -64,6 +64,7 @@ class WkApiClient(AbstractApiClient):
     ):
         super().__init__(timeout_seconds, headers)
         self.base_wk_url = base_wk_url.rstrip("/")
+        self.webknossos_api_version = 16
 
     @property
     def url_prefix(self) -> str:
@@ -115,7 +116,6 @@ class WkApiClient(AbstractApiClient):
                 "organizationId": organization_id,
                 "searchQuery": name,
                 "folderId": folder_id,
-                "compact": True,
             },
         )
 
@@ -499,7 +499,7 @@ class WkApiClient(AbstractApiClient):
         return ai_model
 
 
-class WkApiClientV13(WkApiClient):
+class WkApiClientV15(WkApiClient):
     def __init__(
         self,
         *,
@@ -512,10 +512,31 @@ class WkApiClientV13(WkApiClient):
             timeout_seconds=timeout_seconds,
             headers=headers,
         )
-        self.webknossos_api_version = 13
+        self.webknossos_api_version = 15
+
+    def dataset_list(
+        self,
+        *,
+        is_active: bool | None,
+        organization_id: str | None,
+        name: str | None,
+        folder_id: str | None,
+    ) -> list[ApiDatasetCompact]:
+        route = "/datasets"
+        return self._get_json(
+            route,
+            list[ApiDatasetCompact],
+            query={
+                "isActive": is_active,
+                "organizationId": organization_id,
+                "searchQuery": name,
+                "folderId": folder_id,
+                "compact": True,
+            },
+        )
 
 
-class WkApiClientV14(WkApiClient):
+class WkApiClientV14(WkApiClientV15):
     def __init__(
         self,
         *,
@@ -529,3 +550,19 @@ class WkApiClientV14(WkApiClient):
             headers=headers,
         )
         self.webknossos_api_version = 14
+
+
+class WkApiClientV13(WkApiClientV14):
+    def __init__(
+        self,
+        *,
+        base_wk_url: str,
+        timeout_seconds: float,
+        headers: dict[str, str] | None = None,
+    ):
+        super().__init__(
+            base_wk_url=base_wk_url,
+            timeout_seconds=timeout_seconds,
+            headers=headers,
+        )
+        self.webknossos_api_version = 13

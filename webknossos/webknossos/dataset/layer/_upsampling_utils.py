@@ -4,7 +4,7 @@ import numpy as np
 
 from webknossos.dataset.layer.view import View
 from webknossos.dataset_properties import DataFormat
-from webknossos.geometry import Vec3Int
+from webknossos.geometry import C_AXIS, Vec3Int
 
 logger = logging.getLogger(__name__)
 
@@ -65,11 +65,11 @@ def upsample_cube_job(
                     buffer_bbox = chunk.with_topleft_xyz(Vec3Int.zeros()).with_size_xyz(
                         data_cube.shape
                     )
-                    if "c" in buffer_bbox.axes:
-                        buffer_bbox = buffer_bbox.with_bounds("c", new_size=1)
+                    if C_AXIS in buffer_bbox.axes:
+                        buffer_bbox = buffer_bbox.with_bounds(C_AXIS, new_size=1)
                     data_cube = buffer_bbox.xyz_array_to_bbox_shape(data_cube)
                     slices: list[int | slice] = list(buffer_bbox.to_slices_xyz())
-                    if "c" in buffer_bbox.axes:
+                    if C_AXIS in buffer_bbox.axes:
                         slices[buffer_bbox.index.c] = channel_index
                     file_buffer[tuple(slices)] = data_cube
 

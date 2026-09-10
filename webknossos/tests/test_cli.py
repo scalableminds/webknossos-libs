@@ -4,7 +4,7 @@ import json
 import os
 import random
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from math import ceil
 from tempfile import TemporaryDirectory
@@ -23,8 +23,8 @@ from tests.constants import (
     S3_ROOT_PASSWORD,
     S3_ROOT_USER,
     TESTDATA_DIR,
-    use_moto,
 )
+from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos import BoundingBox, DataFormat, Dataset, Mag
 from webknossos.cli.export_as_tiff import _apply_mapping, _make_tiff_name
 from webknossos.cli.main import app
@@ -40,7 +40,7 @@ runner = CliRunner()
 
 
 @contextmanager
-def tmp_cwd() -> Iterator[None]:
+def tmp_cwd() -> Generator[None]:
     """Creates a temporary working directory to test side effects."""
 
     prev_cwd = os.getcwd()
@@ -52,10 +52,7 @@ def tmp_cwd() -> Iterator[None]:
             os.chdir(prev_cwd)
 
 
-@pytest.fixture(autouse=True, scope="module")
-def moto_server() -> Iterator[None]:
-    with use_moto():
-        yield
+pytestmark = pytest.mark.usefixtures("moto_server")
 
 
 def check_call(*args: str | int | UPath) -> None:
@@ -308,7 +305,7 @@ def test_convert_with_all_params() -> None:
     """Tests the functionality of convert subcommand."""
 
     with tmp_cwd():
-        origin_path = TESTDATA_DIR / "tiff_with_different_shapes"
+        origin_path = download_wklibs_sample_archive("tiff_with_different_shapes")
         wkw_path = UPath(f"wk_from_{origin_path.name}")
         with pytest.warns(UserWarning, match="Some images are larger than expected,"):
             result = runner.invoke(
