@@ -21,7 +21,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - `Dataset.add_layer_from_images` now raises `UnsupportedImageFormatError` when given a directory that contains no convertible file, instead of a generic `ValueError` listing the errors of every attempted reader. [#1538](https://github.com/scalableminds/webknossos-libs/pull/1538)
 
 ### Fixed
-- `Layer.export.as_ozx`, `as_tiff_stack` and `as_ome_tiff` no longer fail for layers whose bounding box lacks an axis of the underlying array. Remote layers can report a bounding box without the channel axis while the streamed array has one, which raised `Operation with two bboxes is only possible if they have the same axes`. The export region is now resolved in the axes of the mag's array. [#PR](https://github.com/scalableminds/webknossos-libs/pull/PR)
+- `Layer.export.as_ozx`, `as_tiff_stack` and `as_ome_tiff` no longer fail for layers whose bounding box lacks an axis of the underlying array. Remote layers can report a bounding box without the channel axis while the streamed array has one, which raised `Operation with two bboxes is only possible if they have the same axes`. The export region is now resolved in the axes of the mag's array. [#1541](https://github.com/scalableminds/webknossos-libs/pull/1541)
 - Opening a corrupt `.ims` file no longer emits an `AttributeError` from the reader's finalizer as an unraisable exception. [#1532](https://github.com/scalableminds/webknossos-libs/pull/1532)
 
 
