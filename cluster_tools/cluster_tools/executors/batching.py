@@ -12,6 +12,7 @@ from typing_extensions import ParamSpec
 
 from cluster_tools._utils.reflection import get_function_name
 from cluster_tools.executor_protocol import Executor
+from cluster_tools.executors.multiprocessing_ import OutputWriter
 
 _T = TypeVar("_T")
 _S = TypeVar("_S")
@@ -111,10 +112,11 @@ class BatchingExecutor:
         fn: Callable[[_S], _T],
         args: Iterable[_S],
         output_pickle_path_getter: Callable[[_S], PathLike] | None = None,
+        output_writer_getter: Callable[[_S], OutputWriter] | None = None,
     ) -> list[Future[_T]]:
-        if output_pickle_path_getter is not None:
+        if output_pickle_path_getter is not None or output_writer_getter is not None:
             raise NotImplementedError(
-                "BatchingExecutor does not support output_pickle_path_getter"
+                "BatchingExecutor does not support output_pickle_path_getter or output_writer_getter"
             )
 
         items = list(args)

@@ -14,7 +14,7 @@ from typing import (
     cast,
 )
 
-from typing_extensions import ParamSpec
+from typing_extensions import NotRequired, ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.multiprocessing_logging_handler import (
@@ -22,23 +22,75 @@ from cluster_tools._utils.multiprocessing_logging_handler import (
 )
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 
-# The module name includes a _-suffix to avoid name clashes with the standard library multiprocessing module.
-
-
-class CFutDict(TypedDict):
-    output_pickle_path: str
-
-
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
 _S = TypeVar("_S")
+
+
+# The module name includes a _-suffix to avoid name clashes with the standard library multiprocessing module.
+
+
+# A job's output is persisted as the pickled tuple `(True, result)` (only in the
+# success case, so that it can serve as a checkpoint): to a file at `output_pickle_path`
+# and/or by calling `output_writer` with the pickled bytes. At least one must be given.
+class CFutDict(TypedDict):
+    output_pickle_path: NotRequired[str | os.PathLike]
+    output_writer: NotRequired[Callable[[bytes], None]]
+
+
+OutputWriter = Callable[[bytes], None]
+
+
+def _parse_cfut_options(
+    kwargs: dict[str, Any],
+) -> tuple[os.PathLike | str | None, OutputWriter | None]:
+    """Removes `__cfut_options` from kwargs and returns (output_pickle_path, output_writer)."""
+    if "__cfut_options" not in kwargs:
+        return None, None
+    options = cast(CFutDict, kwargs["__cfut_options"])
+    del kwargs["__cfut_options"]
+    output_pickle_path = options.get("output_pickle_path")
+    output_writer = options.get("output_writer")
+    if output_pickle_path is None and output_writer is None:
+        raise ValueError(
+            "__cfut_options must contain output_pickle_path and/or output_writer."
+        )
+    return output_pickle_path, output_writer
+
+
+def cfut_options_kwargs(
+    arg: _S,
+    output_pickle_path_getter: Callable[[_S], os.PathLike] | None,
+    output_writer_getter: Callable[[_S], OutputWriter] | None,
+) -> dict[str, CFutDict]:
+    """Builds the `__cfut_options` kwarg for `submit` from the `map_to_futures` getters."""
+    options: CFutDict = {}
+    if output_pickle_path_getter is not None:
+        options["output_pickle_path"] = output_pickle_path_getter(arg)
+    if output_writer_getter is not None:
+        options["output_writer"] = output_writer_getter(arg)
+    return {"__cfut_options": options} if options else {}
+
+
+def persist_output(
+    output_pickle_path: Path | None,
+    output_writer: OutputWriter | None,
+    output: Any,
+) -> None:
+    """Persists the pickled `output` to the file and/or the writer."""
+    data = pickling.dumps(output)
+    if output_pickle_path is not None:
+        with output_pickle_path.open("wb") as file:
+            file.write(data)
+    if output_writer is not None:
+        output_writer(data)
 
 
 class MultiprocessingExecutor(ProcessPoolExecutor):
     """
     Wraps the ProcessPoolExecutor to add various features:
     - map_to_futures method
-    - pickling of job's output (see output_pickle_path_getter and output_pickle_path)
+    - pickling of job's output (see output_pickle_path_getter, output_writer_getter and CFutDict)
     """
 
     _mp_context: BaseContext
@@ -88,13 +140,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
-        if "__cfut_options" in kwargs:
-            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
-                "output_pickle_path"
-            ]
-            del kwargs["__cfut_options"]
-        else:
-            output_pickle_path = None
+        output_pickle_path, output_writer = _parse_cfut_options(kwargs)
 
         # Depending on the start_method and output_pickle_path, setup functions may need to be
         # executed in the new process context, before the actual code is ran.
@@ -102,12 +148,13 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         # that the next and last argument will be another function that is then called.
         # Eventually, the actually submitted function will be called.
 
-        if output_pickle_path is not None:
+        if output_pickle_path is not None or output_writer is not None:
             __fn = cast(
                 Callable[_P, _T],
                 partial(
                     MultiprocessingExecutor._execute_and_persist_function,
-                    Path(output_pickle_path),
+                    None if output_pickle_path is None else Path(output_pickle_path),
+                    output_writer,
                     __fn,
                 ),
             )
@@ -155,7 +202,8 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
     @staticmethod
     def _execute_and_persist_function(
-        output_pickle_path: Path,
+        output_pickle_path: Path | None,
+        output_writer: OutputWriter | None,
         fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
@@ -173,8 +221,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             # disk. However, the output will have a .preliminary prefix at first
             # which is only removed in the success case so that a checkpoint at
             # the desired target only exists if the job was successful.
-            with output_pickle_path.open("wb") as file:
-                pickling.dump((True, result), file)
+            persist_output(output_pickle_path, output_writer, (True, result))
             return result
 
     def map_to_futures(
@@ -182,22 +229,18 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         fn: Callable[[_S], _T],
         args: Iterable[_S],
         output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
+        output_writer_getter: Callable[[_S], OutputWriter] | None = None,
     ) -> list[Future[_T]]:
-        if output_pickle_path_getter is not None:
-            futs = [
-                self.submit(  # type: ignore[call-arg]
-                    fn,
-                    arg,
-                    __cfut_options={
-                        "output_pickle_path": output_pickle_path_getter(arg)
-                    },
-                )
-                for arg in args
-            ]
-        else:
-            futs = [self.submit(fn, arg) for arg in args]
-
-        return futs
+        return [
+            self.submit(  # type: ignore[call-arg]
+                fn,
+                arg,
+                **cfut_options_kwargs(
+                    arg, output_pickle_path_getter, output_writer_getter
+                ),
+            )
+            for arg in args
+        ]
 
     def forward_log(self, fut: Future[_T]) -> _T:
         """

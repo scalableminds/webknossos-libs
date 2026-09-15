@@ -20,7 +20,12 @@ from weakref import ReferenceType, ref
 from typing_extensions import ParamSpec
 
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing_ import CFutDict, MultiprocessingExecutor
+from cluster_tools.executors.multiprocessing_ import (
+    MultiprocessingExecutor,
+    OutputWriter,
+    _parse_cfut_options,
+    cfut_options_kwargs,
+)
 
 if TYPE_CHECKING:
     from distributed import Client
@@ -175,17 +180,14 @@ class DaskExecutor(futures.Executor):
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
-        if "__cfut_options" in kwargs:
-            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
-                "output_pickle_path"
-            ]
-            del kwargs["__cfut_options"]
-
+        output_pickle_path, output_writer = _parse_cfut_options(kwargs)
+        if output_pickle_path is not None or output_writer is not None:
             __fn = cast(
                 Callable[_P, _T],
                 partial(
                     MultiprocessingExecutor._execute_and_persist_function,
-                    Path(output_pickle_path),
+                    None if output_pickle_path is None else Path(output_pickle_path),
+                    output_writer,
                     __fn,
                 ),
             )
@@ -245,20 +247,18 @@ class DaskExecutor(futures.Executor):
             _S
         ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
         output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
+        output_writer_getter: Callable[[_S], OutputWriter] | None = None,
     ) -> list[Future[_T]]:
-        if output_pickle_path_getter is not None:
-            futs = [
-                self.submit(  # type: ignore[call-arg]
-                    fn,
-                    arg,
-                    __cfut_options={
-                        "output_pickle_path": output_pickle_path_getter(arg)
-                    },
-                )
-                for arg in args
-            ]
-        else:
-            futs = [self.submit(fn, arg) for arg in args]
+        futs = [
+            self.submit(  # type: ignore[call-arg]
+                fn,
+                arg,
+                **cfut_options_kwargs(
+                    arg, output_pickle_path_getter, output_writer_getter
+                ),
+            )
+            for arg in args
+        ]
 
         return futs
 

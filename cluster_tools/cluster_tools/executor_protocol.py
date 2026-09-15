@@ -31,6 +31,7 @@ class Executor(Protocol, AbstractContextManager["Executor"]):
         fn: Callable[[_S], _T],
         args: Iterable[_S],
         output_pickle_path_getter: Callable[[_S], PathLike] | None = None,
+        output_writer_getter: Callable[[_S], Callable[[bytes], None]] | None = None,
     ) -> list[Future[_T]]: ...
 
     def map(

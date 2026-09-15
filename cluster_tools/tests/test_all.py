@@ -1,5 +1,6 @@
 import logging
 import os
+import pickle
 import tempfile
 import time
 from enum import Enum
@@ -335,6 +336,83 @@ def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
                 assert future.result() == square(job_index)
 
         assert output_path.exists(), "Output pickle file should exist."
+
+
+class FileOutputWriter:
+    """Picklable stand-in for a writer that persists results elsewhere (e.g. a database)."""
+
+    def __init__(self, path: Path):
+        self.path = path
+
+    def __call__(self, data: bytes) -> None:
+        self.path.write_bytes(data)
+
+
+def output_writer_getter(tmp_dir: str, chunk: int) -> FileOutputWriter:
+    return FileOutputWriter(Path(tmp_dir) / f"written_{chunk}.pickle")
+
+
+def test_map_to_futures_with_output_writer(
+    exc_with_pickling: cluster_tools.Executor,
+) -> None:
+    exc = exc_with_pickling
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        with exc:
+            numbers = [2, 1]
+            futures = exc.map_to_futures(
+                square,
+                numbers,
+                output_writer_getter=partial(output_writer_getter, tmp_dir),
+            )
+            results = [f.result() for f in exc.as_completed(futures)]
+            assert set(results) == {1, 4}
+
+        for number in numbers:
+            written = output_writer_getter(tmp_dir, number).path
+            assert written.exists(), (
+                f"Writer should have been called for chunk {number}."
+            )
+            success, result = pickle.loads(written.read_bytes())
+            assert success and result == square(number)
+        # Without an output_pickle_path, no checkpoint files are written by the executor itself.
+        assert not list(Path(tmp_dir).glob("test_*.pickle"))
+
+
+def test_submit_with_output_writer(exc: cluster_tools.Executor) -> None:
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        with exc:
+            writer = FileOutputWriter(Path(tmp_dir) / "written.pickle")
+            future = exc.submit(square, 3, __cfut_options={"output_writer": writer})  # type: ignore[call-arg]
+            assert future.result() == 9
+        assert pickle.loads(writer.path.read_bytes()) == (True, 9)
+
+
+def raise_if_called(_data: bytes) -> None:
+    raise RuntimeError("writer failed")
+
+
+def test_failing_output_writer_fails_job(exc: cluster_tools.Executor) -> None:
+    # The sequential executor raises from submit already, others from result.
+    with exc, pytest.raises(Exception, match="writer failed"):
+        exc.submit(
+            square,
+            3,
+            __cfut_options={"output_writer": raise_if_called},  # type: ignore[call-arg]
+        ).result()
+
+
+def test_output_writer_not_called_on_failure(exc: cluster_tools.Executor) -> None:
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        with exc:
+            writer = FileOutputWriter(Path(tmp_dir) / "written.pickle")
+            with pytest.raises(Exception, match="job failed"):
+                exc.submit(
+                    raise_if,
+                    "job failed",
+                    True,
+                    __cfut_options={"output_writer": writer},  # type: ignore[call-arg]
+                ).result()
+        assert not writer.path.exists()
 
 
 def test_map(exc: cluster_tools.Executor) -> None:

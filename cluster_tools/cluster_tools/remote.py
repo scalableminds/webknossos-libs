@@ -61,8 +61,9 @@ def worker(
         custom_main_path = get_custom_main_path(workerid, executor)
         with open(input_file_name, "rb") as f:
             unpickled_tuple = pickling.load(f, custom_main_path)
-            assert len(unpickled_tuple) == 4, "Unexpected encoding"
-            fun_and_metadata, args, kwargs, output_pickle_path = unpickled_tuple
+            assert len(unpickled_tuple) in (4, 5), "Unexpected encoding"
+            fun_and_metadata, args, kwargs, output_pickle_path = unpickled_tuple[:4]
+            output_writer = unpickled_tuple[4] if len(unpickled_tuple) == 5 else None
 
         if isinstance(fun_and_metadata, str):
             with open(fun_and_metadata, "rb") as function_file:
@@ -78,6 +79,9 @@ def worker(
         result = True, fun(*args, **kwargs)
         logging.info("Job computation completed.")
         out = pickling.dumps(result)
+        if output_writer is not None:
+            # A failing writer fails the job, since the result would not be checkpointed.
+            output_writer(out)
 
     except Exception:
         result = False, format_remote_exc()

@@ -3,12 +3,17 @@ from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Executor, Future, as_completed
 from os import PathLike
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 
 from typing_extensions import ParamSpec
 
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing_ import CFutDict, MultiprocessingExecutor
+from cluster_tools.executors.multiprocessing_ import (
+    MultiprocessingExecutor,
+    OutputWriter,
+    _parse_cfut_options,
+    cfut_options_kwargs,
+)
 
 _T = TypeVar("_T")
 _S = TypeVar("_S")
@@ -33,13 +38,11 @@ class SequentialExecutor(Executor):
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
         fut: Future[_T] = Future()
-        if "__cfut_options" in kwargs:
-            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
-                "output_pickle_path"
-            ]
-            del kwargs["__cfut_options"]
+        output_pickle_path, output_writer = _parse_cfut_options(kwargs)
+        if output_pickle_path is not None or output_writer is not None:
             result = MultiprocessingExecutor._execute_and_persist_function(
-                Path(output_pickle_path),
+                None if output_pickle_path is None else Path(output_pickle_path),
+                output_writer,
                 __fn,
                 *args,
                 **kwargs,
@@ -60,22 +63,18 @@ class SequentialExecutor(Executor):
         fn: Callable[[_S], _T],
         args: Iterable[_S],
         output_pickle_path_getter: Callable[[_S], PathLike] | None = None,
+        output_writer_getter: Callable[[_S], OutputWriter] | None = None,
     ) -> list[Future[_T]]:
-        if output_pickle_path_getter is not None:
-            futs = [
-                self.submit(  # type: ignore[call-arg]
-                    fn,
-                    arg,
-                    __cfut_options={
-                        "output_pickle_path": output_pickle_path_getter(arg)
-                    },
-                )
-                for arg in args
-            ]
-        else:
-            futs = [self.submit(fn, arg) for arg in args]
-
-        return futs
+        return [
+            self.submit(  # type: ignore[call-arg]
+                fn,
+                arg,
+                **cfut_options_kwargs(
+                    arg, output_pickle_path_getter, output_writer_getter
+                ),
+            )
+            for arg in args
+        ]
 
     def map(  # type: ignore[override]
         self,

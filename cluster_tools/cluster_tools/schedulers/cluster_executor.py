@@ -16,7 +16,6 @@ from typing import (
     Any,
     Literal,
     TypeVar,
-    cast,
 )
 
 from typing_extensions import ParamSpec
@@ -30,7 +29,10 @@ from cluster_tools._utils.reflection import (
 from cluster_tools._utils.string_ import random_string, with_preliminary_postfix
 from cluster_tools._utils.tailf import Tail
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing_ import CFutDict
+from cluster_tools.executors.multiprocessing_ import (
+    OutputWriter,
+    _parse_cfut_options,
+)
 
 NOT_YET_SUBMITTED_STATE_TYPE = Literal["NOT_YET_SUBMITTED"]
 NOT_YET_SUBMITTED_STATE: NOT_YET_SUBMITTED_STATE_TYPE = "NOT_YET_SUBMITTED"
@@ -479,31 +481,31 @@ class ClusterExecutor(futures.Executor):
     ) -> Future[_T]:
         """
         Submit a job to the pool.
-        kwargs may contain __cfut_options which currently should look like:
+        kwargs may contain __cfut_options (see CFutDict):
         {
-            "output_pickle_path": str
+            "output_pickle_path": str,   # optional
+            "output_writer": Callable[[bytes], None],   # optional
         }
         output_pickle_path defines where the pickled result should be stored.
         That file will not be removed after the job has finished.
+        output_writer is called in the job with the pickled result if the job succeeded.
         """
         fut = self.create_enriched_future()
         workerid = random_string()
 
-        if "__cfut_options" in kwargs:
-            should_keep_output = True
-            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
-                "output_pickle_path"
-            ]
-            del kwargs["__cfut_options"]
-        else:
-            should_keep_output = False
-            output_pickle_path = self.format_outfile_name(self.cfut_dir, workerid)
+        custom_output_pickle_path, output_writer = _parse_cfut_options(kwargs)
+        should_keep_output = custom_output_pickle_path is not None
+        output_pickle_path = (
+            self.format_outfile_name(self.cfut_dir, workerid)
+            if custom_output_pickle_path is None
+            else str(custom_output_pickle_path)
+        )
 
         self.ensure_not_shutdown()
 
         # Start the job.
         serialized_function_info = pickling.dumps(
-            ((__fn, self.metadata), args, kwargs, output_pickle_path)
+            ((__fn, self.metadata), args, kwargs, output_pickle_path, output_writer)
         )
         with open(self.format_infile_name(self.cfut_dir, workerid), "wb") as f:
             f.write(serialized_function_info)
@@ -565,6 +567,7 @@ class ClusterExecutor(futures.Executor):
             _S
         ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
         output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
+        output_writer_getter: Callable[[_S], OutputWriter] | None = None,
     ) -> list[Future[_T]]:
         self.ensure_not_shutdown()
         args = list(args)
@@ -610,6 +613,7 @@ class ClusterExecutor(futures.Executor):
                     [arg],
                     {},
                     output_pickle_path,
+                    None if output_writer_getter is None else output_writer_getter(arg),
                 )
             )
             infile_name = self.format_infile_name(self.cfut_dir, workerid_with_index)
