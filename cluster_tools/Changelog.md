@@ -12,6 +12,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
+- Jobs can persist their pickled result via a callable in addition to (or instead of) a file: `map_to_futures(..., output_writer_getter=...)` and `submit(..., __cfut_options={"output_writer": ...})`. The writer receives the pickled `(True, result)` bytes in the job process and is only called if the job succeeded. [#1542](https://github.com/scalableminds/webknossos-libs/pull/1542)
 
 ### Changed
 
