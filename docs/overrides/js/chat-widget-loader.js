@@ -27,7 +27,12 @@
     },
   ];
 
-  var loaded = {};
+  // The embed script keeps a single popup instance: calling init() again
+  // replaces the popup that is currently in the DOM. So switching sections
+  // means re-initializing rather than toggling between two popups.
+  var modulePromise = null;
+  var currentId = null;
+  var initSeq = 0;
 
   function matches(widget) {
     return widget.prefixes.some(function (prefix) {
@@ -116,39 +121,45 @@
     };
   }
 
-  // The popup element is appended asynchronously by the embed script, so keep
-  // looking for untagged popups for a while and label them with their widget id.
-  function tagPopup(widget, attemptsLeft) {
-    var untagged = document.querySelectorAll('n8nchatui-popup:not([data-wk-chat])');
-    untagged.forEach(function (el) {
-      el.setAttribute('data-wk-chat', widget.id);
+  function setPopupVisible(visible) {
+    document.querySelectorAll("n8nchatui-popup").forEach(function (el) {
+      el.style.display = visible ? "" : "none";
     });
-    if (untagged.length > 0) {
-      updateWidget();
-      return;
-    }
-    if (attemptsLeft > 0) {
-      setTimeout(function () { tagPopup(widget, attemptsLeft - 1); }, 100);
-    }
   }
 
-  function loadWidget(widget) {
-    loaded[widget.id] = true;
-    import("https://cdn.n8nchatui.com/v1/embed.js").then(function (module) {
-      module.default.init(config(widget));
-      tagPopup(widget, 50);
-    });
+  // init() may create the popup asynchronously, and may reuse the element we
+  // just hid, so keep un-hiding for a moment after initializing.
+  function reveal(token, attemptsLeft) {
+    if (token !== initSeq) return;
+    setPopupVisible(true);
+    if (attemptsLeft > 0) {
+      setTimeout(function () { reveal(token, attemptsLeft - 1); }, 100);
+    }
   }
 
   function updateWidget() {
     var active = activeWidget();
-    if (active && !loaded[active.id]) {
-      loadWidget(active);
+    if (active == null) {
+      // Leaving the documented sections: keep the instance, just hide it.
+      initSeq++;
+      setPopupVisible(false);
       return;
     }
-    document.querySelectorAll('n8nchatui-popup[data-wk-chat]').forEach(function (el) {
-      var isActive = active != null && el.getAttribute('data-wk-chat') === active.id;
-      el.style.display = isActive ? '' : 'none';
+    if (active.id === currentId) {
+      setPopupVisible(true);
+      return;
+    }
+    currentId = active.id;
+    var token = ++initSeq;
+    setPopupVisible(false);
+    if (modulePromise == null) {
+      modulePromise = import("https://cdn.n8nchatui.com/v1/embed.js");
+    }
+    modulePromise.then(function (module) {
+      // A newer navigation happened while the module was loading.
+      if (token !== initSeq) return;
+      module.default.init(config(active));
+      reveal(token, 20);
     });
   }
 
