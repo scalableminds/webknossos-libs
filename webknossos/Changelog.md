@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added the `consensus_segmentation.py` example, which computes a consensus segmentation from the finished volume annotations of several tasks and uploads it as a new dataset. [#1337](https://github.com/scalableminds/webknossos-libs/pull/1337)
 - `UnsupportedImageFormatError` now carries `found_file_extensions`, the extensions actually present in the input (most common first), so that a failure on a directory can be reported as "found `.dcm` files, which aren't supported" instead of only listing the supported formats. The error message names them as well. [#1538](https://github.com/scalableminds/webknossos-libs/pull/1538)
 
 ### Changed
