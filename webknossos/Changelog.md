@@ -22,6 +22,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Opening a corrupt `.ims` file no longer emits an `AttributeError` from the reader's finalizer as an unraisable exception. [#1532](https://github.com/scalableminds/webknossos-libs/pull/1532)
+- Converting a tiff whose axes are unknown to tifffile (e.g. a plain 4D array, reported as `QQYX`) no longer fails with `axis 'q' already exists`. The innermost unknown axis is taken as z, the others become additional axes.
 
 
 ## [4.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.0) - 2026-09-09
