@@ -48,18 +48,47 @@ _OME_TIFF_AXIS_CODES = {C_AXIS: "C", T_AXIS: "T", Z_AXIS: "Z", Y_AXIS: "Y", X_AX
 
 
 def _resolve_export_bbox(
-    layer: "AbstractLayer", bounding_box: NDBoundingBox | None
+    layer: "AbstractLayer",
+    mag_view: "MagView",
+    bounding_box: NDBoundingBox | None,
 ) -> NormalizedBoundingBox:
-    """Resolves the region to export as a `NormalizedBoundingBox`, whose
-    `.axes` always matches the axis order `mag_view.read()`/`.write()`
-    actually use - unlike a plain `NDBoundingBox`/`BoundingBox`, which may
-    or may not include C_AXIS depending on the layer.
+    """Resolves the region to export as a `NormalizedBoundingBox` in the
+    axes of the mag's array, which is what `mag_view.read()` expects.
+
+    The layer's bounding box can't be used for that: for remote layers it may
+    lack the channel axis that the streamed array has (or vice versa). The
+    request is clipped to the layer per axis name, axes the array doesn't
+    have are ignored and the channel axis always spans all channels.
     """
+    layer_bbox = layer.normalized_bounding_box
     if bounding_box is None:
-        return layer.normalized_bounding_box
-    return bounding_box.normalize_axes(layer.num_channels).intersected_with(
-        layer.normalized_bounding_box
+        bounding_box = layer_bbox
+    array_axes = mag_view.info.bounding_box.axes
+    topleft, size = [], []
+    for axis in array_axes:
+        if axis == C_AXIS:
+            start, end = 0, layer.num_channels
+        elif axis in layer_bbox.axes:
+            start, end = layer_bbox.get_bounds(axis)
+            if axis in bounding_box.axes:
+                requested_start, requested_end = bounding_box.get_bounds(axis)
+                start, end = max(start, requested_start), min(end, requested_end)
+        elif axis in bounding_box.axes:
+            start, end = bounding_box.get_bounds(axis)
+        else:
+            raise ValueError(
+                f"Axis {axis!r} of mag {mag_view.mag} is neither part of the "
+                f"layer's bounding box {layer_bbox.axes} nor of the requested "
+                f"bounding box {bounding_box.axes}."
+            )
+        topleft.append(start)
+        size.append(max(end - start, 0))
+    result = NormalizedBoundingBox(topleft, size, axes=array_axes)
+    assert not result.is_empty(), (
+        f"The requested bounding box {bounding_box} does not intersect the "
+        f"layer's bounding box {layer_bbox}."
     )
+    return result
 
 
 def _resolve_export_mag(layer: "AbstractLayer", mag: Mag | None) -> "MagView":
@@ -262,9 +291,11 @@ class LayerExport:
             Vec3Int.from_vec_or_int(shard_shape) if shard_shape is not None else None
         )
         layer = self._layer
-        source_bbox = _resolve_export_bbox(layer, bounding_box)
-        target_bbox = source_bbox.with_topleft(VecInt.zeros(axes=source_bbox.axes))
         target_mags = sorted(m for m in layer.mags if mag is None or m >= mag)
+        source_bbox = _resolve_export_bbox(
+            layer, layer.get_mag(target_mags[0]), bounding_box
+        )
+        target_bbox = source_bbox.with_topleft(VecInt.zeros(axes=source_bbox.axes))
 
         with TemporaryDirectory() as tmpdir:
             from ..dataset import Dataset  # local import avoids a circular import
@@ -363,7 +394,7 @@ class LayerExport:
         # ceil-of-mag-factor extent of the layer's bounding box (see
         # Layer.add_mag), so floor-aligning here would silently drop the
         # last row/column/slice of real, already downsampled data.
-        bbox = _resolve_export_bbox(layer, bounding_box).align_with_mag(
+        bbox = _resolve_export_bbox(layer, mag_view, bounding_box).align_with_mag(
             mag_view.mag, ceil=True
         )
 
@@ -431,7 +462,7 @@ class LayerExport:
         # ceil-of-mag-factor extent of the layer's bounding box (see
         # Layer.add_mag), so floor-aligning here would silently drop the
         # last row/column/slice of real, already downsampled data.
-        bbox = _resolve_export_bbox(layer, bounding_box).align_with_mag(
+        bbox = _resolve_export_bbox(layer, mag_view, bounding_box).align_with_mag(
             mag_view.mag, ceil=True
         )
         compression = "zlib" if layer.category == SEGMENTATION_CATEGORY else None
