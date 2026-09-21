@@ -21,6 +21,10 @@ from typing import (
 from typing_extensions import ParamSpec
 
 from cluster_tools._utils import pickling
+from cluster_tools._utils.cfut_options import (
+    parse_cfut_options,
+    resolve_output_key_getter,
+)
 from cluster_tools._utils.output_wait_thread import OutputWaitThread
 from cluster_tools._utils.reflection import (
     file_path_to_absolute_module,
@@ -29,10 +33,6 @@ from cluster_tools._utils.reflection import (
 from cluster_tools._utils.string_ import random_string
 from cluster_tools._utils.tailf import Tail
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing_ import (
-    _parse_cfut_options,
-    _resolve_output_key_getter,
-)
 from cluster_tools.output_store import FileOutputStore, OutputStore
 
 NOT_YET_SUBMITTED_STATE_TYPE = Literal["NOT_YET_SUBMITTED"]
@@ -479,7 +479,7 @@ class ClusterExecutor(futures.Executor):
         fut = self.create_enriched_future()
         workerid = random_string()
 
-        custom_output_key = _parse_cfut_options(kwargs)
+        custom_output_key = parse_cfut_options(kwargs)
         should_keep_output = custom_output_key is not None
         output_key = (
             self.output_store.default_key(workerid)
@@ -560,7 +560,7 @@ class ClusterExecutor(futures.Executor):
         if len(args) == 0:
             return []
 
-        key_getter = _resolve_output_key_getter(
+        key_getter = resolve_output_key_getter(
             output_key_getter, output_pickle_path_getter
         )
         should_keep_output = key_getter is not None

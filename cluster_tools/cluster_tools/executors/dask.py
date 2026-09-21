@@ -18,12 +18,12 @@ from weakref import ReferenceType, ref
 
 from typing_extensions import ParamSpec
 
-from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing_ import (
-    MultiprocessingExecutor,
-    _parse_cfut_options,
+from cluster_tools._utils.cfut_options import (
     cfut_options_kwargs,
+    execute_and_persist,
+    parse_cfut_options,
 )
+from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 from cluster_tools.output_store import FileOutputStore, OutputStore
 
 if TYPE_CHECKING:
@@ -184,12 +184,12 @@ class DaskExecutor(futures.Executor):
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
-        output_key = _parse_cfut_options(kwargs)
+        output_key = parse_cfut_options(kwargs)
         if output_key is not None:
             __fn = cast(
                 Callable[_P, _T],
                 partial(
-                    MultiprocessingExecutor._execute_and_persist_function,
+                    execute_and_persist,
                     self.output_store,
                     output_key,
                     __fn,

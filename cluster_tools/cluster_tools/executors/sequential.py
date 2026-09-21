@@ -6,12 +6,12 @@ from typing import Any, TypeVar
 
 from typing_extensions import ParamSpec
 
-from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing_ import (
-    MultiprocessingExecutor,
-    _parse_cfut_options,
+from cluster_tools._utils.cfut_options import (
     cfut_options_kwargs,
+    execute_and_persist,
+    parse_cfut_options,
 )
+from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
 from cluster_tools.output_store import FileOutputStore, OutputStore
 
 _T = TypeVar("_T")
@@ -38,9 +38,9 @@ class SequentialExecutor(Executor):
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
         fut: Future[_T] = Future()
-        output_key = _parse_cfut_options(kwargs)
+        output_key = parse_cfut_options(kwargs)
         if output_key is not None:
-            result = MultiprocessingExecutor._execute_and_persist_function(
+            result = execute_and_persist(
                 self.output_store,
                 output_key,
                 __fn,
