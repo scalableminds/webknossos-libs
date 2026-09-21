@@ -12,10 +12,10 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Breaking Changes
 
 ### Added
-- Added the `OutputStore` interface (with `FileOutputStore` as the default) that executors use to persist job outputs and, for cluster executors, to poll for job completion and read results back. Passing a custom store via `get_executor(..., output_store=...)` allows storing results in non-filesystem storage (e.g. a database), in which case no output pickle files are written at all. Output locations are selected with `map_to_futures(..., output_key_getter=...)` and `submit(..., __cfut_options={"output_key": ...})`; `output_pickle_path_getter`/`output_pickle_path` are kept as aliases for the file store. [#1542](https://github.com/scalableminds/webknossos-libs/pull/1542)
+- Added the `OutputStore` interface (with `FileOutputStore` as the default) that executors use to persist job outputs and, for cluster executors, to poll for job completion and read results back. Passing a custom store via `get_executor(..., output_store=...)` allows storing results in non-filesystem storage (e.g. a database), in which case no output pickle files are written at all. Output locations are selected with `map_to_futures(..., output_key_getter=...)` and `submit(..., __cfut_options={"output_key": ...})`; `output_pickle_path_getter`/`output_pickle_path` are kept as aliases for the file store. [#1547](https://github.com/scalableminds/webknossos-libs/pull/1547)
 
 ### Changed
-- Cluster executors delete transient output files (jobs without a custom output key) right after reading the result instead of at executor shutdown. [#1542](https://github.com/scalableminds/webknossos-libs/pull/1542)
+- Cluster executors delete transient output files (jobs without a custom output key) right after reading the result instead of at executor shutdown. [#1547](https://github.com/scalableminds/webknossos-libs/pull/1547)
 
 ### Fixed
 
