@@ -6,7 +6,6 @@ from concurrent import futures
 from concurrent.futures import Future, ProcessPoolExecutor
 from functools import partial
 from multiprocessing.context import BaseContext
-from pathlib import Path
 from typing import (
     Any,
     TypedDict,
@@ -14,31 +13,85 @@ from typing import (
     cast,
 )
 
-from typing_extensions import ParamSpec
+from typing_extensions import NotRequired, ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.multiprocessing_logging_handler import (
     _MultiprocessingLoggingHandlerPool,
 )
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-
-# The module name includes a _-suffix to avoid name clashes with the standard library multiprocessing module.
-
-
-class CFutDict(TypedDict):
-    output_pickle_path: str
-
+from cluster_tools.output_store import FileOutputStore, OutputStore
 
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
 _S = TypeVar("_S")
 
 
+# The module name includes a _-suffix to avoid name clashes with the standard library multiprocessing module.
+
+
+# A job's output is persisted as the pickled tuple `(True, result)` in the executor's
+# `OutputStore` (only in the success case, so that it can serve as a checkpoint).
+# `output_key` selects where; for the default `FileOutputStore` it is a file path
+# and `output_pickle_path` is accepted as an alias.
+class CFutDict(TypedDict):
+    output_key: NotRequired[str]
+    output_pickle_path: NotRequired[str | os.PathLike]
+
+
+def _parse_cfut_options(kwargs: dict[str, Any]) -> str | None:
+    """Removes `__cfut_options` from kwargs and returns the output key, if any."""
+    if "__cfut_options" not in kwargs:
+        return None
+    options = cast(CFutDict, kwargs["__cfut_options"])
+    del kwargs["__cfut_options"]
+    output_key = options.get("output_key")
+    output_pickle_path = options.get("output_pickle_path")
+    if output_key is None and output_pickle_path is None:
+        raise ValueError("__cfut_options must contain output_key.")
+    if output_key is not None and output_pickle_path is not None:
+        raise ValueError(
+            "__cfut_options must not contain both output_key and output_pickle_path."
+        )
+    return output_key if output_key is not None else str(output_pickle_path)
+
+
+def _resolve_output_key_getter(
+    output_key_getter: Callable[[_S], str] | None,
+    output_pickle_path_getter: Callable[[_S], os.PathLike] | None,
+) -> Callable[[_S], str] | None:
+    """Merges the `map_to_futures` getters into a single key getter."""
+    if output_key_getter is not None and output_pickle_path_getter is not None:
+        raise ValueError(
+            "Specify either output_key_getter or output_pickle_path_getter, not both."
+        )
+    if output_key_getter is not None:
+        return output_key_getter
+    if output_pickle_path_getter is not None:
+        getter = output_pickle_path_getter
+        return lambda arg: str(getter(arg))
+    return None
+
+
+def cfut_options_kwargs(
+    arg: _S,
+    output_key_getter: Callable[[_S], str] | None,
+    output_pickle_path_getter: Callable[[_S], os.PathLike] | None,
+) -> dict[str, CFutDict]:
+    """Builds the `__cfut_options` kwarg for `submit` from the `map_to_futures` getters."""
+    key_getter = _resolve_output_key_getter(
+        output_key_getter, output_pickle_path_getter
+    )
+    if key_getter is None:
+        return {}
+    return {"__cfut_options": {"output_key": key_getter(arg)}}
+
+
 class MultiprocessingExecutor(ProcessPoolExecutor):
     """
     Wraps the ProcessPoolExecutor to add various features:
     - map_to_futures method
-    - pickling of job's output (see output_pickle_path_getter and output_pickle_path)
+    - pickling of job's output (see output_key_getter, output_store and CFutDict)
     """
 
     _mp_context: BaseContext
@@ -51,8 +104,10 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         mp_context: BaseContext | None = None,
         initializer: Callable | None = None,
         initargs: tuple = (),
+        output_store: OutputStore | None = None,
         **__kwargs: Any,
     ) -> None:
+        self.output_store = FileOutputStore() if output_store is None else output_store
         if mp_context is None:
             if start_method is not None:
                 mp_context = multiprocessing.get_context(start_method)
@@ -88,26 +143,21 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
-        if "__cfut_options" in kwargs:
-            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
-                "output_pickle_path"
-            ]
-            del kwargs["__cfut_options"]
-        else:
-            output_pickle_path = None
+        output_key = _parse_cfut_options(kwargs)
 
-        # Depending on the start_method and output_pickle_path, setup functions may need to be
+        # Depending on the start_method and output_key, setup functions may need to be
         # executed in the new process context, before the actual code is ran.
         # These wrapper functions consume their arguments from *args, **kwargs and assume
         # that the next and last argument will be another function that is then called.
         # Eventually, the actually submitted function will be called.
 
-        if output_pickle_path is not None:
+        if output_key is not None:
             __fn = cast(
                 Callable[_P, _T],
                 partial(
                     MultiprocessingExecutor._execute_and_persist_function,
-                    Path(output_pickle_path),
+                    self.output_store,
+                    output_key,
                     __fn,
                 ),
             )
@@ -155,7 +205,8 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
 
     @staticmethod
     def _execute_and_persist_function(
-        output_pickle_path: Path,
+        output_store: OutputStore,
+        output_key: str,
         fn: Callable[_P, _T],
         *args: _P.args,
         **kwargs: _P.kwargs,
@@ -166,38 +217,29 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
             logging.warning(f"Job computation failed with:\n{exc.__repr__()}")
             raise exc
         else:
-            # Only pickle the result in the success case, since the output
-            # is used as a checkpoint.
-            # Note that this behavior differs a bit from the cluster executor
-            # which will always serialize the output (even exceptions) to
-            # disk. However, the output will have a .preliminary prefix at first
-            # which is only removed in the success case so that a checkpoint at
-            # the desired target only exists if the job was successful.
-            with output_pickle_path.open("wb") as file:
-                pickling.dump((True, result), file)
+            # Only store the result in the success case, since the output
+            # is used as a checkpoint. The cluster executor also stores failures,
+            # since it needs them to transport the exception back.
+            output_store.write(output_key, pickling.dumps((True, result)), success=True)
             return result
 
     def map_to_futures(
         self,
         fn: Callable[[_S], _T],
         args: Iterable[_S],
+        output_key_getter: Callable[[_S], str] | None = None,
         output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
     ) -> list[Future[_T]]:
-        if output_pickle_path_getter is not None:
-            futs = [
-                self.submit(  # type: ignore[call-arg]
-                    fn,
-                    arg,
-                    __cfut_options={
-                        "output_pickle_path": output_pickle_path_getter(arg)
-                    },
-                )
-                for arg in args
-            ]
-        else:
-            futs = [self.submit(fn, arg) for arg in args]
-
-        return futs
+        return [
+            self.submit(  # type: ignore[call-arg]
+                fn,
+                arg,
+                **cfut_options_kwargs(
+                    arg, output_key_getter, output_pickle_path_getter
+                ),
+            )
+            for arg in args
+        ]
 
     def forward_log(self, fut: Future[_T]) -> _T:
         """

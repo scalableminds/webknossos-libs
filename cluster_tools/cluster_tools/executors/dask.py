@@ -7,7 +7,6 @@ from concurrent import futures
 from concurrent.futures import Future
 from functools import partial
 from multiprocessing import Queue, get_context
-from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -20,7 +19,12 @@ from weakref import ReferenceType, ref
 from typing_extensions import ParamSpec
 
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing_ import CFutDict, MultiprocessingExecutor
+from cluster_tools.executors.multiprocessing_ import (
+    MultiprocessingExecutor,
+    _parse_cfut_options,
+    cfut_options_kwargs,
+)
+from cluster_tools.output_store import FileOutputStore, OutputStore
 
 if TYPE_CHECKING:
     from distributed import Client
@@ -108,7 +112,10 @@ class DaskExecutor(futures.Executor):
     is_shutting_down = False
 
     def __init__(
-        self, client: "Client", job_resources: dict[str, Any] | None = None
+        self,
+        client: "Client",
+        job_resources: dict[str, Any] | None = None,
+        output_store: OutputStore | None = None,
     ) -> None:
         try:
             import distributed  # noqa: F401 unused import
@@ -127,6 +134,7 @@ class DaskExecutor(futures.Executor):
         self.client = client
         self.pending_futures = set()
         self.job_resources = job_resources
+        self.output_store = FileOutputStore() if output_store is None else output_store
 
         if self.job_resources is not None:
             # `mem` needs to be a number for dask, so we need to parse it
@@ -151,6 +159,7 @@ class DaskExecutor(futures.Executor):
     def from_config(
         cls,
         job_resources: dict[str, str],
+        output_store: OutputStore | None = None,
         **_kwargs: Any,
     ) -> "DaskExecutor":
         from distributed import Client
@@ -161,7 +170,7 @@ class DaskExecutor(futures.Executor):
             address = os.environ.get("DASK_ADDRESS", None)
 
         client = Client(address=address)
-        return cls(client, job_resources=job_resources)
+        return cls(client, job_resources=job_resources, output_store=output_store)
 
     @classmethod
     def as_completed(cls, futures: list[Future[_T]]) -> Iterator[Future[_T]]:
@@ -175,17 +184,14 @@ class DaskExecutor(futures.Executor):
         *args: _P.args,
         **kwargs: _P.kwargs,
     ) -> Future[_T]:
-        if "__cfut_options" in kwargs:
-            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
-                "output_pickle_path"
-            ]
-            del kwargs["__cfut_options"]
-
+        output_key = _parse_cfut_options(kwargs)
+        if output_key is not None:
             __fn = cast(
                 Callable[_P, _T],
                 partial(
                     MultiprocessingExecutor._execute_and_persist_function,
-                    Path(output_pickle_path),
+                    self.output_store,
+                    output_key,
                     __fn,
                 ),
             )
@@ -244,21 +250,19 @@ class DaskExecutor(futures.Executor):
         args: Iterable[
             _S
         ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
+        output_key_getter: Callable[[_S], str] | None = None,
         output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
     ) -> list[Future[_T]]:
-        if output_pickle_path_getter is not None:
-            futs = [
-                self.submit(  # type: ignore[call-arg]
-                    fn,
-                    arg,
-                    __cfut_options={
-                        "output_pickle_path": output_pickle_path_getter(arg)
-                    },
-                )
-                for arg in args
-            ]
-        else:
-            futs = [self.submit(fn, arg) for arg in args]
+        futs = [
+            self.submit(  # type: ignore[call-arg]
+                fn,
+                arg,
+                **cfut_options_kwargs(
+                    arg, output_key_getter, output_pickle_path_getter
+                ),
+            )
+            for arg in args
+        ]
 
         return futs
 
