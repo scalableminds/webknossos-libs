@@ -137,6 +137,37 @@ def test_imagej_virtual_stack_tiff(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(result, data.transpose(2, 1, 0))
 
 
+def test_tiff_with_several_unknown_axes(tmp_upath: UPath) -> None:
+    # tifffile names every unidentified axis "Q", so a plain 4D array
+    # decodes as "QQYX". The innermost one becomes z, the other one an
+    # additional axis.
+    Q, Z, Y, X = 3, 5, 16, 12
+    data = np.arange(Q * Z * Y * X, dtype="uint8").reshape(Q, Z, Y, X)
+    tif_path = tmp_upath / "test_unknown_axes.tif"
+    imwrite(str(tif_path), data)
+    assert TiffFile(str(tif_path)).series[0].axes == "QQYX"
+
+    reader = TiffSliceReader(tif_path)
+    assert reader.axes == ["q", Z_AXIS, Y_AXIS, X_AXIS]
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            tif_path,
+            tmp_upath / "ds",
+            (1, 1, 1),
+            executor=executor,
+        )
+    layer = ds.get_color_layers()[0]
+    assert layer.bounding_box.get_shape("q") == Q
+    assert layer.bounding_box.size_xyz == Vec3Int(x=X, y=Y, z=Z)
+    for q in range(Q):
+        result = layer.get_finest_mag().read(
+            absolute_bounding_box=layer.bounding_box.with_bounds("q", q, 1)
+        )
+        assert result.shape == (1, 1, X, Y, Z)
+        np.testing.assert_array_equal(result[0, 0], data[q].transpose(2, 1, 0))
+
+
 def test_tiled_CZYX_tiff(tmp_upath: UPath) -> None:
     import tifffile as tifffile_module
 
