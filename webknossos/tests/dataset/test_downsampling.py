@@ -745,12 +745,12 @@ def test_downsample_custom_chunk_and_shard_shapes(tmp_upath: UPath) -> None:
 
 def test_determine_downsample_buffer_shape(tmp_upath: UPath) -> None:
     """The buffer shape (in the target mag) is chosen so that the source read
-    stays within 1024³ vx, also for mag factors larger than 2 (#1545)."""
+    stays within 1024³ vx, also for mag factors larger than 2."""
     ds = Dataset(tmp_upath / "buffer_shape", voxel_size=(1, 1, 1))
     layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
     info = layer.add_mag(1, chunk_shape=32, shard_shape=1024).info
 
-    # common isotropic case is unchanged
+    # common isotropic case, results in isotropic buffer
     assert determine_downsample_buffer_shape(info, Vec3Int.full(2)) == Vec3Int.full(512)
     # anisotropic factors shrink the buffer along the affected axis
     assert determine_downsample_buffer_shape(info, Vec3Int(2, 2, 16)) == Vec3Int(
