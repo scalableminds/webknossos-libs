@@ -1230,7 +1230,9 @@ class Layer(AbstractLayer):
         # perform downsampling
         with utils.wrap_executor(executor) as executor:
             if buffer_shape is None:
-                buffer_shape = determine_downsample_buffer_shape(target_view.info)
+                buffer_shape = determine_downsample_buffer_shape(
+                    target_view.info, mag_factors
+                )
             else:
                 buffer_shape = Vec3Int.from_vec_or_int(buffer_shape)
             func = named_partial(

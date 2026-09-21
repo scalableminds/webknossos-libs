@@ -14,7 +14,7 @@ from tests.dataset._dataset_helpers import (
     assure_exported_properties,
     copy_simple_dataset,
 )
-from webknossos import COLOR_CATEGORY, Dataset, Mag, Vec3Int
+from webknossos import COLOR_CATEGORY, BoundingBox, Dataset, Mag, Vec3Int
 from webknossos.dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
 from webknossos.dataset.layer import _downsampling_utils
 from webknossos.dataset.layer._downsampling_utils import (
@@ -23,6 +23,7 @@ from webknossos.dataset.layer._downsampling_utils import (
     calculate_default_coarsest_mag,
     calculate_mags_to_downsample,
     calculate_mags_to_upsample,
+    determine_downsample_buffer_shape,
     downsample_cube,
     downsample_cube_job,
     non_linear_filter_3d,
@@ -740,6 +741,70 @@ def test_downsample_custom_chunk_and_shard_shapes(tmp_upath: UPath) -> None:
     assert layer.get_mag(2).info.shard_shape.xyz == Vec3Int.full(512)
     assert layer.get_mag(4).info.chunk_shape.xyz == Vec3Int.full(64)
     assert layer.get_mag(4).info.shard_shape.xyz == Vec3Int.full(512)
+
+
+def test_determine_downsample_buffer_shape(tmp_upath: UPath) -> None:
+    """The buffer shape (in the target mag) is chosen so that the source read
+    stays within 1024³ vx, also for mag factors larger than 2 (#1545)."""
+    ds = Dataset(tmp_upath / "buffer_shape", voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, data_format=DataFormat.Zarr3)
+    info = layer.add_mag(1, chunk_shape=32, shard_shape=1024).info
+
+    # common isotropic case is unchanged
+    assert determine_downsample_buffer_shape(info, Vec3Int.full(2)) == Vec3Int.full(512)
+    # anisotropic factors shrink the buffer along the affected axis
+    assert determine_downsample_buffer_shape(info, Vec3Int(2, 2, 16)) == Vec3Int(
+        512, 512, 64
+    )
+    # factors beyond 1024 still yield a positive shape
+    assert determine_downsample_buffer_shape(info, Vec3Int(1, 1, 2048)) == Vec3Int(
+        512, 512, 1
+    )
+    # the buffer never exceeds the target shard shape
+    small_info = layer.add_mag(2, chunk_shape=32, shard_shape=(256, 256, 32)).info
+    assert determine_downsample_buffer_shape(small_info, Vec3Int.full(2)) == Vec3Int(
+        256, 256, 32
+    )
+
+
+def test_downsample_anisotropic_mag_read_size(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Downsampling from 8-8-1 to 16 at an isotropic voxel size uses mag factors
+    (2, 2, 16). The source read per tile must not scale with the factors (#1545)."""
+    from webknossos.dataset.layer.view import View
+
+    ds = Dataset(tmp_upath / "aniso", voxel_size=(8, 8, 8))
+    layer = ds.add_layer(
+        "color", COLOR_CATEGORY, dtype="uint16", data_format=DataFormat.Zarr3
+    )
+    # Large bounding box, but no data is written, so nothing is on disk.
+    layer.bounding_box = BoundingBox((0, 0, 0), (18520, 18712, 36764))
+    layer.add_mag(Mag("8-8-1"), chunk_shape=(32, 32, 32), shard_shape=(4096, 4096, 32))
+
+    read_sizes: list[Vec3Int] = []
+
+    class _Stop(Exception):
+        pass
+
+    def spy(self: View, **kwargs: object) -> None:
+        bbox = kwargs["absolute_bounding_box"]
+        assert isinstance(bbox, NDBoundingBox)
+        read_sizes.append(bbox.in_mag(self.mag).size_xyz)
+        raise _Stop
+
+    monkeypatch.setattr(View, "read_cxyz", spy)
+
+    with get_executor("sequential") as executor, pytest.raises(_Stop):
+        layer.downsample(
+            from_mag=Mag("8-8-1"),
+            coarsest_mag=Mag(16),
+            shard_shape=1024,
+            executor=executor,
+        )
+
+    # Previously (512, 512, 64) * (2, 2, 16) -> (1024, 1024, 8192) = 16 GiB of uint16.
+    assert read_sizes == [Vec3Int(1024, 1024, 1024)]
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
