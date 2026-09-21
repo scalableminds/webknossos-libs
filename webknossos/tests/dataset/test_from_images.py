@@ -162,8 +162,9 @@ def test_tiff_with_several_unknown_axes(tmp_upath: UPath) -> None:
     assert layer.bounding_box.size_xyz == Vec3Int(x=X, y=Y, z=Z)
     for q in range(Q):
         result = layer.get_finest_mag().read(
-            absolute_bounding_box=layer.bounding_box.with_bounds("q", q, q + 1)
+            absolute_bounding_box=layer.bounding_box.with_bounds("q", q, 1)
         )
+        assert result.shape == (1, 1, X, Y, Z)
         np.testing.assert_array_equal(result[0, 0], data[q].transpose(2, 1, 0))
 
 
