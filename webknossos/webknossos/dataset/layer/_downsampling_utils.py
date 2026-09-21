@@ -36,12 +36,21 @@ class InterpolationModes(Enum):
     MIN = 6
 
 
-def determine_downsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:
-    # This is the shape of the data in the downsampling target magnification, so the
-    # data that is read is up to 1024³ vx in the source magnification. Using larger
-    # shapes uses a lot of RAM, especially for segmentation layers which use the mode filter.
+def determine_downsample_buffer_shape(
+    array_info: ArrayInfo, mag_factors: Vec3Int
+) -> Vec3Int:
+    # This is the shape of the data in the downsampling target magnification. It is
+    # chosen so that the data that is read is up to 1024³ vx in the source magnification,
+    # regardless of the mag factors (which can exceed 2 per axis for anisotropic mag
+    # ladders). Using larger shapes uses a lot of RAM, especially for segmentation
+    # layers which use the mode filter.
     # See https://scm.slack.com/archives/CMBMU5684/p1749771929954699 for more context.
-    return Vec3Int.full(512).pairmin(array_info.shard_shape)
+    return (
+        (Vec3Int.full(1024) // mag_factors)
+        .pairmax(Vec3Int.ones())
+        .pairmin(Vec3Int.full(512))
+        .pairmin(array_info.shard_shape)
+    )
 
 
 def determine_upsample_buffer_shape(array_info: ArrayInfo) -> Vec3Int:

@@ -23,6 +23,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Fixed
 - `Layer.export.as_ozx`, `as_tiff_stack` and `as_ome_tiff` no longer fail for layers whose bounding box lacks an axis of the underlying array. Remote layers can report a bounding box without the channel axis while the streamed array has one, which raised `Operation with two bboxes is only possible if they have the same axes`. The export region is now resolved in the axes of the mag's array. [#1541](https://github.com/scalableminds/webknossos-libs/pull/1541)
 - Opening a corrupt `.ims` file no longer emits an `AttributeError` from the reader's finalizer as an unraisable exception. [#1532](https://github.com/scalableminds/webknossos-libs/pull/1532)
+- `Layer.downsample` no longer reads far more than the intended 1024³ source voxels per tile when a downsampling step has mag factors larger than 2 in some axis (e.g. from `8-8-1` straight to `16-16-16` for isotropic voxel sizes, which used to allocate 16 GiB for a uint16 layer). The automatically chosen buffer shape now accounts for the mag factors. [#1546](https://github.com/scalableminds/webknossos-libs/pull/1546)
 - Converting a tiff whose axes are unknown to tifffile (e.g. a plain 4D array, reported as `QQYX`) no longer fails with `axis 'q' already exists`. The innermost unknown axis is taken as z, the others become additional axes. [#1544](https://github.com/scalableminds/webknossos-libs/pull/1544)
 
 
