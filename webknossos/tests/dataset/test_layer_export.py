@@ -340,3 +340,35 @@ def test_as_tiff_stack_nd_layer_no_channel_axis(tmp_upath: UPath) -> None:
         for z in range(3):
             image = tifffile.imread(str(out_dir / f"t{t}_z{z}.tiff"))
             assert np.array_equal(image, data[t, z])
+
+
+def test_export_layer_bbox_without_channel_axis_of_array(tmp_upath: UPath) -> None:
+    """Remote layers may report a bounding box without the channel axis
+    although the (streamed) array has one. Exports must use the array's axes.
+    """
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    _dataset, layer, data = make_layer(tmp_upath)
+    layer._properties.bounding_box = NDBoundingBox(
+        (0, 0, 0), (64, 64, 64), axes=(X_AXIS, Y_AXIS, Z_AXIS), index=(0, 1, 2)
+    ).normalize_axes(1)
+    assert layer.normalized_bounding_box.axes == (X_AXIS, Y_AXIS, Z_AXIS)
+    assert layer.get_mag(1).info.bounding_box.axes == (C_AXIS, X_AXIS, Y_AXIS, Z_AXIS)
+    crop = BoundingBox((16, 8, 4), (16, 24, 32))
+    expected = data[16:32, 8:32, 4:36]
+
+    ome_path = tmp_upath / "no_c.ome.tif"
+    layer.export.as_ome_tiff(output_path=ome_path, bounding_box=crop, mag=Mag(1))
+    assert np.array_equal(tifffile.imread(str(ome_path)), expected.transpose(2, 1, 0))
+
+    stack_dir = tmp_upath / "no_c_stack"
+    layer.export.as_tiff_stack(output_path=stack_dir, bounding_box=crop, mag=Mag(1))
+    files = sorted(stack_dir.glob("*.tiff"))
+    assert len(files) == 32
+    assert np.array_equal(tifffile.imread(str(files[0])), expected[:, :, 0].T)
+
+    ozx_path = tmp_upath / "no_c.ozx"
+    layer.export.as_ozx(output_path=ozx_path, bounding_box=crop, mag=Mag(1))
+    with zipfile.ZipFile(str(ozx_path)) as archive:
+        assert "zarr.json" in archive.namelist()

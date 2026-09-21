@@ -3,7 +3,7 @@ from itertools import product
 import numpy as np
 from upath import UPath
 
-from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS
+from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from ...utils import WkImportError
 from .image_source_registry import register_slice_reader
 from .slice_reader import SliceReader
@@ -12,6 +12,21 @@ try:
     import tifffile
 except ImportError as e:
     raise WkImportError("tifffile", "tifffile") from e
+
+
+def _name_unknown_axes(axes: tuple[str, ...]) -> tuple[str, ...]:
+    """tifffile calls every axis it cannot identify "q", so a file with
+    several of those has colliding names. The innermost unknown axis is
+    taken as "z" when there is none, the others are numbered."""
+    if axes.count("q") <= 1:
+        return axes
+    named = list(axes)
+    unknown = [i for i, axis in enumerate(axes) if axis == "q"]
+    if Z_AXIS not in axes:
+        named[unknown.pop()] = Z_AXIS
+    for n, i in enumerate(unknown):
+        named[i] = "q" if n == 0 else f"q{n}"
+    return tuple(named)
 
 
 @register_slice_reader
@@ -59,7 +74,9 @@ class TiffSliceReader(SliceReader):
             axis_rename = {"s": "c"} if is_rgb_tiff else {}
             self.channels_are_rgb = is_rgb_tiff
 
-            self._tiff_axes = tuple(axis_rename.get(a, a) for a in raw_axes)
+            self._tiff_axes = _name_unknown_axes(
+                tuple(axis_rename.get(a, a) for a in raw_axes)
+            )
             for axis, shape in zip(self._tiff_axes, _tiff.shape):
                 self._init_axis(axis, shape)
 
