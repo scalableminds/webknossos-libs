@@ -54,6 +54,7 @@ def worker(
     else:
         workerid_with_idx = worker_id
 
+    output_writer = None
     try:
         input_file_name = executor.format_infile_name(cfut_dir, workerid_with_idx)
         logging.debug(f"Trying to read: {input_file_name} (working dir: {os.getcwd()}")
@@ -78,15 +79,22 @@ def worker(
         )
         result = True, fun(*args, **kwargs)
         logging.info("Job computation completed.")
-        out = pickling.dumps(result)
-        if output_writer is not None:
-            # A failing writer fails the job, since the result would not be checkpointed.
-            output_writer(out)
-
     except Exception:
         result = False, format_remote_exc()
         logging.warning(f"Job computation failed with:\n\n{traceback.format_exc()}")
-        out = pickling.dumps(result)
+    out = pickling.dumps(result)
+
+    # Only successful results are checkpointed via the writer. A failing writer fails
+    # the job, since the result would not be checkpointed.
+    if result[0] and output_writer is not None:
+        try:
+            output_writer(out)
+        except Exception:
+            result = False, format_remote_exc()
+            logging.warning(
+                f"Writing the job output failed with:\n\n{traceback.format_exc()}"
+            )
+            out = pickling.dumps(result)
 
     # The .preliminary postfix is added since the output can
     # contain a serialized exception. If that is the case,

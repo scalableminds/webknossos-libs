@@ -401,6 +401,23 @@ def test_failing_output_writer_fails_job(exc: cluster_tools.Executor) -> None:
         ).result()
 
 
+def test_failing_output_writer_leaves_no_checkpoint_file(
+    exc: cluster_tools.Executor,
+) -> None:
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        output_pickle_path = Path(tmp_dir) / "checkpoint.pickle"
+        with exc, pytest.raises(Exception, match="writer failed"):
+            exc.submit(
+                square,
+                3,
+                __cfut_options={  # type: ignore[call-arg]
+                    "output_pickle_path": output_pickle_path,
+                    "output_writer": raise_if_called,
+                },
+            ).result()
+        assert not output_pickle_path.exists()
+
+
 def test_output_writer_not_called_on_failure(exc: cluster_tools.Executor) -> None:
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
         with exc:

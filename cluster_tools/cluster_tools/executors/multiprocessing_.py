@@ -77,13 +77,14 @@ def persist_output(
     output_writer: OutputWriter | None,
     output: Any,
 ) -> None:
-    """Persists the pickled `output` to the file and/or the writer."""
+    """Persists the pickled `output` to the writer and/or the file. The writer goes
+    first, so a failing writer does not leave a successful file checkpoint behind."""
     data = pickling.dumps(output)
+    if output_writer is not None:
+        output_writer(data)
     if output_pickle_path is not None:
         with output_pickle_path.open("wb") as file:
             file.write(data)
-    if output_writer is not None:
-        output_writer(data)
 
 
 class MultiprocessingExecutor(ProcessPoolExecutor):
