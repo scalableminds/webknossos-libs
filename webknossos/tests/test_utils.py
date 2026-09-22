@@ -1,3 +1,4 @@
+import pickle
 from shutil import ignore_patterns
 from unittest.mock import Mock, patch
 
@@ -12,6 +13,7 @@ from webknossos.utils import (
     copytree,
     dump_path,
     enrich_path,
+    named_partial,
 )
 
 
@@ -400,3 +402,13 @@ def test_enrich_path_aws_credentials_bare_missing_secret(
     assert upath.protocol == "s3"
     assert "key" not in upath.storage_options
     assert "secret" not in upath.storage_options
+
+
+def _add(a: int, b: int = 2) -> int:
+    return a + b
+
+
+def test_named_partial_is_picklable() -> None:
+    partial_func = named_partial(_add, 1)
+    assert partial_func.__name__ == "_add"
+    assert pickle.loads(pickle.dumps(partial_func))() == 3
