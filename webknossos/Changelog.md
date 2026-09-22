@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.1...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Fixed
+
+
+## [4.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.1) - 2026-09-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.0...v4.1.1)
 
 ### Added
 - `UnsupportedImageFormatError` now carries `found_file_extensions`, the extensions actually present in the input (most common first), so that a failure on a directory can be reported as "found `.dcm` files, which aren't supported" instead of only listing the supported formats. The error message names them as well. [#1538](https://github.com/scalableminds/webknossos-libs/pull/1538)
@@ -26,6 +36,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Opening a corrupt `.ims` file no longer emits an `AttributeError` from the reader's finalizer as an unraisable exception. [#1532](https://github.com/scalableminds/webknossos-libs/pull/1532)
 - `Layer.downsample` no longer reads far more than the intended 1024³ source voxels per tile when a downsampling step has mag factors larger than 2 in some axis (e.g. from `8-8-1` straight to `16-16-16` for isotropic voxel sizes, which used to allocate 16 GiB for a uint16 layer). The automatically chosen buffer shape now accounts for the mag factors. [#1546](https://github.com/scalableminds/webknossos-libs/pull/1546)
 - Converting a tiff whose axes are unknown to tifffile (e.g. a plain 4D array, reported as `QQYX`) no longer fails with `axis 'q' already exists`. The innermost unknown axis is taken as z, the others become additional axes. [#1544](https://github.com/scalableminds/webknossos-libs/pull/1544)
+
 
 
 ## [4.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.0) - 2026-09-09
