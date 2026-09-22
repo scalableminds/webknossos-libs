@@ -180,6 +180,8 @@ def named_partial(func: F, *args: Any, **kwargs: Any) -> F:
     if hasattr(func, "__annotations__"):
         # Generic types cannot be pickled in Python <= 3.6, see https://github.com/python/typing/issues/511
         partial_func.__annotations__ = {}
+    # Python 3.14 wraps the lazily evaluated annotations in a function that cannot be pickled either.
+    partial_func.__dict__.pop("__annotate__", None)
     return partial_func
 
 
