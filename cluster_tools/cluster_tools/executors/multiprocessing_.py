@@ -152,15 +152,15 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         self,
         fn: Callable[[_S], _T],
         args: Iterable[_S],
-        output_key_getter: Callable[[_S], str] | None = None,
         output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
+        output_key_getter: Callable[[_S], str] | None = None,
     ) -> list[Future[_T]]:
         return [
             self.submit(  # type: ignore[call-arg]
                 fn,
                 arg,
                 **cfut_options_kwargs(
-                    arg, output_key_getter, output_pickle_path_getter
+                    arg, output_pickle_path_getter, output_key_getter
                 ),
             )
             for arg in args

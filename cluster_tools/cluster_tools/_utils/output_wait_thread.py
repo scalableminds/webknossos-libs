@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from cluster_tools.output_store import OutputStore
     from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 
 
@@ -46,9 +47,24 @@ class OutputWaitThread(threading.Thread):
         with self.lock:
             self.waiting[key] = value
 
+    @staticmethod
+    def _poll_single(store: "OutputStore", key: str) -> set[str]:
+        try:
+            return store.poll([key])
+        except Exception:
+            logging.warning(
+                f"Polling the output store for {key} failed.", exc_info=True
+            )
+            return set()
+
     def run(self) -> None:
         def handle_completed_job(job_id: str, key: str, failed_early: bool) -> None:
-            self.callback(job_id, failed_early)
+            # The callback must not raise, since that would stop this thread and
+            # leave all other jobs pending.
+            try:
+                self.callback(job_id, failed_early)
+            except Exception:
+                logging.exception(f"Handling the completion of job {job_id} failed.")
             del self.waiting[key]
 
         while True:
@@ -66,8 +82,16 @@ class OutputWaitThread(threading.Thread):
                     for key, job_id in self.waiting.items()
                     if job_id not in pending_tasks
                 ]
-                # Check for outputs in one batch as a fast indicator for job completion
-                written_keys = store.poll(keys_to_check)
+                # Check for outputs in one batch as a fast indicator for job completion.
+                # A store can be remote, so a failing poll must not kill this thread;
+                # it is retried on the next iteration.
+                try:
+                    written_keys = store.poll(keys_to_check)
+                except Exception:
+                    logging.warning(
+                        "Polling the output store failed, retrying.", exc_info=True
+                    )
+                    written_keys = set()
 
                 for key in keys_to_check:
                     job_id = self.waiting[key]
@@ -78,7 +102,7 @@ class OutputWaitThread(threading.Thread):
                         status = self.executor.check_job_state(job_id)
 
                         # We have to re-check for the output since this could be written in the mean time
-                        if store.poll([key]):
+                        if key in self._poll_single(store, key):
                             handle_completed_job(job_id, key, False)
                         else:
                             if status == "completed":

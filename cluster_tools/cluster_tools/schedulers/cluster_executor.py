@@ -410,6 +410,7 @@ class ClusterExecutor(futures.Executor):
         # However, this can be customized by investigating the actual error
         # using `investigate_failed_job`.
         wrapping_exception_cls = RemoteException
+        read_error: Exception | None = None
         if failed_early:
             # If the job failed, but didn't write the error to an output file,
             # we handle this case separately.
@@ -432,20 +433,36 @@ class ClusterExecutor(futures.Executor):
                 ]
             )
         else:
-            success, result = pickling.loads(self.output_store.read(output_key))
+            try:
+                success, result = pickling.loads(self.output_store.read(output_key))
+            except Exception as exc:
+                # Report through the future instead of raising into the wait thread,
+                # which would leave all other jobs pending.
+                success, result, read_error = False, "", exc
 
-        if not should_keep_output and not failed_early:
+        if read_error is None and not should_keep_output and not failed_early:
             # Transient outputs are no checkpoints, so they are removed as soon as
-            # the result or the error has been read.
-            self.output_store.delete(output_key)
+            # the result or the error has been read. A failing clean up must not
+            # withhold the result.
+            try:
+                self.output_store.delete(output_key)
+            except Exception as exc:
+                logging.warning(
+                    f"Could not delete the output of job {jobid} at {output_key}: {exc}. Continuing..."
+                )
 
-        if success:
+        if read_error is not None:
+            error = RuntimeError(
+                f"Could not read the output of job {jobid} at {output_key}."
+            )
+            error.__cause__ = read_error
+            fut.set_exception(error)
+        elif success:
             fut.set_result(result)
         else:
             # A failed output at a custom key is kept for inspection. It is stored
             # apart from successful ones, so it cannot serve as a checkpoint.
-            remote_exc = wrapping_exception_cls(result, jobid)
-            fut.set_exception(remote_exc)
+            fut.set_exception(wrapping_exception_cls(result, jobid))
 
         # Clean up communication files.
 
@@ -556,8 +573,8 @@ class ClusterExecutor(futures.Executor):
         args: Iterable[
             _S
         ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
-        output_key_getter: Callable[[_S], str] | None = None,
         output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
+        output_key_getter: Callable[[_S], str] | None = None,
     ) -> list[Future[_T]]:
         self.ensure_not_shutdown()
         args = list(args)
@@ -565,7 +582,7 @@ class ClusterExecutor(futures.Executor):
             return []
 
         key_getter = resolve_output_key_getter(
-            output_key_getter, output_pickle_path_getter
+            output_pickle_path_getter, output_key_getter
         )
         should_keep_output = key_getter is not None
 

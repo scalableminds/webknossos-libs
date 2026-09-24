@@ -43,8 +43,8 @@ def parse_cfut_options(kwargs: dict[str, Any]) -> str | None:
 
 
 def resolve_output_key_getter(
-    output_key_getter: Callable[[_S], str] | None,
     output_pickle_path_getter: Callable[[_S], os.PathLike] | None,
+    output_key_getter: Callable[[_S], str] | None,
 ) -> Callable[[_S], str] | None:
     """Merges the `map_to_futures` getters into a single key getter."""
     if output_key_getter is not None and output_pickle_path_getter is not None:
@@ -61,11 +61,11 @@ def resolve_output_key_getter(
 
 def cfut_options_kwargs(
     arg: _S,
-    output_key_getter: Callable[[_S], str] | None,
     output_pickle_path_getter: Callable[[_S], os.PathLike] | None,
+    output_key_getter: Callable[[_S], str] | None,
 ) -> dict[str, CFutDict]:
     """Builds the `__cfut_options` kwarg for `submit` from the `map_to_futures` getters."""
-    key_getter = resolve_output_key_getter(output_key_getter, output_pickle_path_getter)
+    key_getter = resolve_output_key_getter(output_pickle_path_getter, output_key_getter)
     if key_getter is None:
         return {}
     return {"__cfut_options": {"output_key": key_getter(arg)}}

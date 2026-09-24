@@ -402,6 +402,19 @@ def output_key_getter(chunk: int) -> str:
     return f"chunk_{chunk}"
 
 
+# Only the cluster executors transport results through the store; the others keep
+# them in memory and use the store for checkpointing only.
+def transports_through_store(exc_key: str) -> bool:
+    return exc_key in ("slurm", "pbs", "kubernetes")
+
+
+def assert_no_output_files(cfut_dir: str = ".cfut") -> None:
+    """A custom store must not leave output pickles behind, neither at the default
+    file store location nor anywhere else the executor might write them."""
+    assert not list(Path(cfut_dir).glob("cfut.out.*"))
+    assert not list(Path(cfut_dir).glob("*.preliminary"))
+
+
 def test_map_to_futures_with_output_store(exc_key: str) -> None:
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
         store = SqliteOutputStore(Path(tmp_dir) / "outputs.sqlite")
@@ -418,7 +431,10 @@ def test_map_to_futures_with_output_store(exc_key: str) -> None:
                 True,
                 square(number),
             )
+        # The keys are no paths, so a regression falling back to files would write
+        # them to the executor's cfut dir, not next to the database.
         assert not list(Path(tmp_dir).glob("*.pickle*"))
+        assert_no_output_files()
 
 
 def test_submit_with_output_store_default_keys(exc_key: str) -> None:
@@ -433,8 +449,7 @@ def test_submit_with_output_store_default_keys(exc_key: str) -> None:
         # Outputs without a custom key are transient and deleted after being read,
         # no matter whether the job succeeded or failed.
         assert store.keys() == set()
-        # No output pickle files are written next to the input files.
-        assert not list(Path(".cfut").glob("cfut.out.*"))
+        assert_no_output_files()
 
 
 def test_output_store_keeps_failures(exc_key: str) -> None:
@@ -449,11 +464,16 @@ def test_output_store_keeps_failures(exc_key: str) -> None:
                     __cfut_options={"output_key": "failed"},  # type: ignore[call-arg]
                 ).result()
 
-        # Cluster executors transport the exception through the store, others don't
-        # store failures at all. Either way, no successful checkpoint exists.
-        if store.poll(["failed"]):
+        if transports_through_store(exc_key):
+            # The exception travels through the store and is kept for inspection,
+            # but must not count as a checkpoint.
+            assert store.poll(["failed"]) == {"failed"}
             success, traceback_str = pickle.loads(store.read("failed"))
             assert not success and "job failed" in traceback_str
+        else:
+            # The other executors raise directly and store nothing on failure.
+            assert store.poll(["failed"]) == set()
+        assert_no_output_files()
 
 
 def test_failing_output_store_fails_job(exc_key: str) -> None:

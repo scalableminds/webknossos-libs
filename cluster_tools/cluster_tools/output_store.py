@@ -2,14 +2,16 @@ import contextlib
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from uuid import uuid4
 
 
 class OutputStore(ABC):
     """Persists the pickled outputs of jobs and hands them back to the executor.
 
-    A job's output is the pickled tuple `(success, result_or_traceback)`. Successful
-    outputs serve as checkpoints, so implementations must keep them apart from failed ones
-    (e.g. under a different key), but `poll`/`read` must report both.
+    A job's output is the pickled tuple `(success, result_or_traceback)`. A key holds at
+    most one output, the last one written. Successful outputs serve as checkpoints, so
+    implementations must be able to tell them apart from failed ones, while `poll` and
+    `read` report both.
 
     Instances are pickled into the job processes, so they must be picklable and must not
     rely on state that is local to the submitting process.
@@ -39,7 +41,8 @@ class OutputStore(ABC):
 class FileOutputStore(OutputStore):
     """Stores outputs as files. Keys are file paths.
 
-    Successful outputs are written to `<key>`, failed ones to `<key>.preliminary`.
+    Successful outputs are written to `<key>`, failed ones to `<key>.preliminary`, so that
+    only a successful output can be used as a checkpoint by users of the cluster_tools.
     """
 
     def __init__(self, directory: str | os.PathLike | None = None):
@@ -57,10 +60,23 @@ class FileOutputStore(OutputStore):
 
     def write(self, key: str, data: bytes, *, success: bool) -> None:
         dest = key if success else self.preliminary_path(key)
-        tmp = f"{dest}.tmp"
-        with open(tmp, "wb") as f:
-            f.write(data)
-        os.rename(tmp, dest)
+        # A unique temporary file, so that concurrent writers cannot clobber each other.
+        # os.open with the default mode applies the umask, like open() would.
+        tmp = f"{dest}.{uuid4().hex}.tmp"
+        try:
+            fd = os.open(tmp, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            with os.fdopen(fd, "wb") as f:
+                f.write(data)
+            # os.replace overwrites an existing destination, also on Windows.
+            os.replace(tmp, dest)
+        except BaseException:
+            with contextlib.suppress(FileNotFoundError):
+                os.unlink(tmp)
+            raise
+        # Only the output written last is kept for a key.
+        other = self.preliminary_path(key) if success else key
+        with contextlib.suppress(FileNotFoundError):
+            os.unlink(other)
 
     def poll(self, keys: Iterable[str]) -> set[str]:
         return {
