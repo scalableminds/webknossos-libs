@@ -10,9 +10,16 @@ from webknossos.dataset._image_conversion.ome_zarr_helpers import (
     OmeChannelMetadata,
     layer_split_label,
     resolve_ome_multiscale,
+    suggested_coordinate_transformations,
     suggested_view_configuration,
+    suggested_voxel_size,
 )
-from webknossos.dataset_properties import LayerViewConfiguration
+from webknossos.dataset_properties import (
+    AffineCoordinateTransformation,
+    LayerViewConfiguration,
+    LengthUnit,
+    VoxelSize,
+)
 from webknossos.geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 
 _PATH = UPath("test.ome.zarr")
@@ -48,6 +55,59 @@ def _multiscale_attributes(
             }
         ]
     }
+    if omero is not None:
+        attributes["omero"] = omero
+    return attributes
+
+
+def _dataset_06(
+    path: str, scale: list[float], translation: list[float] | None = None
+) -> dict:
+    endpoints = {"input": {"path": path}, "output": {"name": "intrinsic"}}
+    if translation is None:
+        return {
+            "path": path,
+            "coordinateTransformations": [
+                {"type": "scale", "scale": scale, **endpoints}
+            ],
+        }
+    return {
+        "path": path,
+        "coordinateTransformations": [
+            {
+                "type": "sequence",
+                **endpoints,
+                "transformations": [
+                    {"type": "scale", "scale": scale},
+                    {"type": "translation", "translation": translation},
+                ],
+            }
+        ],
+    }
+
+
+def _multiscale_06_attributes(
+    datasets: list[dict],
+    *,
+    coordinate_systems: list[dict] | None = None,
+    version: str = "0.6",
+    version_in_multiscale: bool = False,
+    top_level_transformations: list[dict] | None = None,
+    omero: dict | None = None,
+) -> dict:
+    if coordinate_systems is None:
+        coordinate_systems = [{"name": "intrinsic", "axes": _CZYX_AXES}]
+    multiscale: dict = {
+        "coordinateSystems": coordinate_systems,
+        "datasets": datasets,
+    }
+    if top_level_transformations is not None:
+        multiscale["coordinateTransformations"] = top_level_transformations
+    attributes: dict = {"multiscales": [multiscale]}
+    if version_in_multiscale:
+        multiscale["version"] = version
+    else:
+        attributes["version"] = version
     if omero is not None:
         attributes["omero"] = omero
     return attributes
@@ -260,3 +320,268 @@ def test_layer_split_label_is_none_when_label_sanitizes_to_nothing() -> None:
     # stripped separately) falls back to the caller's default naming.
     channels = (OmeChannelMetadata(None, "...!!!"),)
     assert layer_split_label(channels, "channel", 0) is None
+
+
+def test_resolve_ome_multiscale_06_ranks_by_spatial_resolution() -> None:
+    attributes = _multiscale_06_attributes(
+        [
+            _dataset_06("2", [1.0, 4.0, 4.0, 4.0], [0.0, 1.5, 1.5, 1.5]),
+            _dataset_06("0", [1.0, 1.0, 1.0, 1.0]),
+            _dataset_06("1", [1.0, 2.0, 2.0, 2.0], [0.0, 0.5, 0.5, 0.5]),
+        ]
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.dataset_paths == ("0", "1", "2")
+    assert multiscale.axis_names == (C_AXIS, Z_AXIS, Y_AXIS, X_AXIS)
+    assert multiscale.transforms[1].scale == (1.0, 2.0, 2.0, 2.0)
+    assert multiscale.transforms[1].translation == (0.0, 0.5, 0.5, 0.5)
+
+
+@pytest.mark.parametrize("version", ["0.6", "0.6rc1"])
+def test_resolve_ome_multiscale_accepts_06_versions(version: str) -> None:
+    attributes = _multiscale_06_attributes(
+        [_dataset_06("0", [1.0, 1.0, 1.0, 1.0])], version=version
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.dataset_paths == ("0",)
+
+
+def test_resolve_ome_multiscale_rejects_06_version_inside_the_multiscale_entry() -> (
+    None
+):
+    attributes = _multiscale_06_attributes(
+        [_dataset_06("0", [1.0, 1.0, 1.0, 1.0])], version_in_multiscale=True
+    )
+
+    with pytest.raises(UnsupportedImageFormatError):
+        resolve_ome_multiscale(attributes, path=_PATH)
+
+
+def test_resolve_ome_multiscale_06_accepts_an_identity_transform() -> None:
+    attributes = _multiscale_06_attributes(
+        [{"path": "0", "coordinateTransformations": [{"type": "identity"}]}]
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.transforms[0].scale == (1.0, 1.0, 1.0, 1.0)
+    assert multiscale.transforms[0].translation == (0.0, 0.0, 0.0, 0.0)
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_resolve_ome_multiscale_06_flattens_a_sequence(reverse: bool) -> None:
+    scale = {"type": "scale", "scale": [1.0, 2.0, 2.0, 2.0]}
+    translation = {"type": "translation", "translation": [0.0, 3.0, 3.0, 3.0]}
+    transformations = [translation, scale] if reverse else [scale, translation]
+    attributes = _multiscale_06_attributes(
+        [
+            {
+                "path": "0",
+                "coordinateTransformations": [
+                    {"type": "sequence", "transformations": transformations}
+                ],
+            }
+        ]
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.transforms[0].scale == (1.0, 2.0, 2.0, 2.0)
+    # Scaling after the translation scales the translation too.
+    expected = (0.0, 6.0, 6.0, 6.0) if reverse else (0.0, 3.0, 3.0, 3.0)
+    assert multiscale.transforms[0].translation == expected
+
+
+def test_resolve_ome_multiscale_06_rejects_an_unsupported_transform() -> None:
+    attributes = _multiscale_06_attributes(
+        [
+            {
+                "path": "0",
+                "coordinateTransformations": [
+                    {"type": "affine", "affine": [[1, 0, 0, 0]]}
+                ],
+            }
+        ]
+    )
+
+    with pytest.raises(UnsupportedImageDataError):
+        resolve_ome_multiscale(attributes, path=_PATH)
+
+
+def test_resolve_ome_multiscale_06_takes_the_axes_of_the_named_coordinate_system() -> (
+    None
+):
+    attributes = _multiscale_06_attributes(
+        [_dataset_06("0", [1.0, 1.0, 1.0, 1.0])],
+        coordinate_systems=[
+            {"name": "physical", "axes": [{"name": "q", "type": "space"}]},
+            {"name": "intrinsic", "axes": _CZYX_AXES},
+        ],
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.axis_names == (C_AXIS, Z_AXIS, Y_AXIS, X_AXIS)
+
+
+def test_resolve_ome_multiscale_keeps_the_translation_of_a_0_4_dataset() -> None:
+    attributes = _multiscale_attributes(
+        [
+            {
+                "path": "0",
+                "coordinateTransformations": [
+                    {"type": "scale", "scale": [1.0, 1.0, 1.0, 1.0]},
+                    {"type": "translation", "translation": [0.0, 7.0, 8.0, 9.0]},
+                ],
+            }
+        ]
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.dataset_paths == ("0",)
+    assert multiscale.transforms[0].translation == (0.0, 7.0, 8.0, 9.0)
+
+
+_MICROMETER_AXES = [
+    {"name": C_AXIS, "type": "channel"},
+    {"name": Z_AXIS, "type": "space", "unit": "micrometer"},
+    {"name": Y_AXIS, "type": "space", "unit": "micrometer"},
+    {"name": X_AXIS, "type": "space", "unit": "micrometer"},
+]
+
+
+def _micrometer_multiscale() -> dict:
+    return _multiscale_06_attributes(
+        [
+            _dataset_06("0", [1.0, 0.1, 0.5, 0.5], [0.0, 0.2, 1.0, 1.5]),
+            _dataset_06("1", [1.0, 0.2, 1.0, 1.0], [0.0, 0.4, 2.0, 3.0]),
+        ],
+        coordinate_systems=[{"name": "intrinsic", "axes": _MICROMETER_AXES}],
+    )
+
+
+def test_suggested_voxel_size_uses_the_scale_of_the_requested_rank() -> None:
+    multiscale = resolve_ome_multiscale(_micrometer_multiscale(), path=_PATH)
+
+    assert suggested_voxel_size(multiscale, 0) == VoxelSize(
+        (0.5, 0.5, 0.1), LengthUnit.MICROMETER
+    )
+    assert suggested_voxel_size(multiscale, 1) == VoxelSize(
+        (1.0, 1.0, 0.2), LengthUnit.MICROMETER
+    )
+
+
+def test_suggested_voxel_size_normalizes_mixed_units() -> None:
+    axes = [
+        {"name": C_AXIS, "type": "channel"},
+        {"name": Z_AXIS, "type": "space", "unit": "micrometer"},
+        {"name": Y_AXIS, "type": "space", "unit": "nanometer"},
+        {"name": X_AXIS, "type": "space", "unit": "nanometer"},
+    ]
+    attributes = _multiscale_06_attributes(
+        [_dataset_06("0", [1.0, 0.1, 20.0, 20.0])],
+        coordinate_systems=[{"name": "intrinsic", "axes": axes}],
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert suggested_voxel_size(multiscale, 0) == VoxelSize(
+        (20.0, 20.0, 100.0), LengthUnit.NANOMETER
+    )
+
+
+def test_suggested_voxel_size_without_units_is_none() -> None:
+    multiscale = resolve_ome_multiscale(
+        _multiscale_06_attributes([_dataset_06("0", [1.0, 1.0, 1.0, 1.0])]),
+        path=_PATH,
+    )
+
+    assert suggested_voxel_size(multiscale, 0) is None
+
+
+def test_suggested_voxel_size_with_an_unknown_unit_is_none() -> None:
+    axes = [{"name": X_AXIS, "type": "space", "unit": "furlong"}]
+    attributes = _multiscale_06_attributes(
+        [_dataset_06("0", [1.0])],
+        coordinate_systems=[{"name": "intrinsic", "axes": axes}],
+    )
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    with pytest.warns(UserWarning, match="furlong"):
+        assert suggested_voxel_size(multiscale, 0) is None
+
+
+def test_suggested_voxel_size_of_a_2d_group_has_a_z_factor_of_one() -> None:
+    axes = [
+        {"name": Y_AXIS, "type": "space", "unit": "nanometer"},
+        {"name": X_AXIS, "type": "space", "unit": "nanometer"},
+    ]
+    attributes = _multiscale_06_attributes(
+        [_dataset_06("0", [11.0, 12.0])],
+        coordinate_systems=[{"name": "intrinsic", "axes": axes}],
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert suggested_voxel_size(multiscale, 0) == VoxelSize(
+        (12.0, 11.0, 1.0), LengthUnit.NANOMETER
+    )
+
+
+def test_suggested_coordinate_transformations_are_the_translation_in_voxels() -> None:
+    multiscale = resolve_ome_multiscale(_micrometer_multiscale(), path=_PATH)
+
+    transformations = suggested_coordinate_transformations(multiscale, 0)
+
+    assert transformations == (
+        AffineCoordinateTransformation.from_translation((3.0, 2.0, 2.0)),
+    )
+    # The coarse level sits at the same physical position, so its translation
+    # in its own (twice as large) voxels is the same.
+    assert suggested_coordinate_transformations(multiscale, 1) == transformations
+
+
+def test_suggested_coordinate_transformations_without_a_translation_are_none() -> None:
+    multiscale = resolve_ome_multiscale(
+        _multiscale_06_attributes([_dataset_06("0", [1.0, 1.0, 1.0, 1.0])]),
+        path=_PATH,
+    )
+
+    assert suggested_coordinate_transformations(multiscale, 0) is None
+
+
+def test_top_level_transformation_is_folded_in() -> None:
+    attributes = _multiscale_06_attributes(
+        [_dataset_06("0", [1.0, 1.0, 2.0, 2.0], [0.0, 0.0, 1.0, 1.0])],
+        coordinate_systems=[{"name": "intrinsic", "axes": _MICROMETER_AXES}],
+        top_level_transformations=[
+            {"type": "scale", "scale": [1.0, 1.0, 10.0, 10.0]},
+            {"type": "translation", "translation": [0.0, 0.0, 5.0, 5.0]},
+        ],
+    )
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert suggested_voxel_size(multiscale, 0) == VoxelSize(
+        (20.0, 20.0, 1.0), LengthUnit.MICROMETER
+    )
+    # (10 * 1 + 5) / (10 * 2) for x and y, nothing for z.
+    assert suggested_coordinate_transformations(multiscale, 0) == (
+        AffineCoordinateTransformation.from_translation((0.75, 0.75, 0.0)),
+    )
+
+
+def test_unsupported_top_level_transformation_is_ignored() -> None:
+    attributes = _multiscale_06_attributes(
+        [_dataset_06("0", [1.0, 1.0, 1.0, 1.0])],
+        top_level_transformations=[{"type": "rotation", "rotation": [0.0]}],
+    )
+
+    with pytest.warns(UserWarning, match="top-level"):
+        multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.top_level_transform is None

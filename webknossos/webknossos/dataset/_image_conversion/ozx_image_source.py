@@ -19,7 +19,11 @@ import zipfile
 import tensorstore as ts
 from upath import UPath
 
-from ...dataset_properties import LayerViewConfiguration
+from ...dataset_properties import (
+    CoordinateTransformation,
+    LayerViewConfiguration,
+    VoxelSize,
+)
 from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from .._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from ..errors import CorruptImageError, UnsupportedImageFormatError
@@ -28,8 +32,12 @@ from .image_source_registry import register_chunked_image_source
 from .ome_zarr_helpers import layer_split_label as _ome_layer_split_label
 from .ome_zarr_helpers import resolve_ome_multiscale
 from .ome_zarr_helpers import (
+    suggested_coordinate_transformations as _ome_suggested_coordinate_transformations,
+)
+from .ome_zarr_helpers import (
     suggested_view_configuration as _ome_suggested_view_configuration,
 )
+from .ome_zarr_helpers import suggested_voxel_size as _ome_suggested_voxel_size
 from .tensorstore_chunked_image_source import TensorStoreChunkedImageSource, guess_axes
 
 _ROOT_ZARR_JSON_KEY = "zarr.json"
@@ -94,6 +102,7 @@ class OzxImageSource(TensorStoreChunkedImageSource):
         ome = attributes.get("ome", attributes)
         multiscale = resolve_ome_multiscale(ome, path=path)
         self._omero_channels = multiscale.channels
+        self._ome_multiscale = multiscale
 
         rank = options.format_option("scale")
         rank = 0 if rank is None else rank
@@ -102,6 +111,7 @@ class OzxImageSource(TensorStoreChunkedImageSource):
                 f"scale {rank} does not exist in {path}. Available: "
                 f"{list(range(len(multiscale.dataset_paths)))}."
             )
+        self._ome_rank = rank
         chosen_dataset_path = multiscale.dataset_paths[rank]
         self._ts_spec = {
             "driver": "zarr3",
@@ -165,3 +175,15 @@ class OzxImageSource(TensorStoreChunkedImageSource):
         return _ome_layer_split_label(
             self._omero_channels, key, value
         ) or super().layer_split_label(key, value)
+
+    @property
+    def suggested_voxel_size(self) -> VoxelSize | None:
+        return _ome_suggested_voxel_size(self._ome_multiscale, self._ome_rank)
+
+    @property
+    def suggested_coordinate_transformations(
+        self,
+    ) -> tuple[CoordinateTransformation, ...] | None:
+        return _ome_suggested_coordinate_transformations(
+            self._ome_multiscale, self._ome_rank
+        )

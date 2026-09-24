@@ -11,12 +11,16 @@ picks a CZI acquisition channel.
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, NamedTuple
 
 import tensorstore as ts
 from upath import UPath
 
-from ...dataset_properties import LayerViewConfiguration
+from ...dataset_properties import (
+    CoordinateTransformation,
+    LayerViewConfiguration,
+    VoxelSize,
+)
 from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from .._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from ..defaults import (
@@ -28,12 +32,31 @@ from ..defaults import (
 from ..errors import CorruptImageError
 from .image_source import ReadOptions, compute_channel_selection
 from .image_source_registry import register_chunked_image_source
-from .ome_zarr_helpers import OmeChannelMetadata, resolve_ome_multiscale
+from .ome_zarr_helpers import (
+    OmeChannelMetadata,
+    OmeMultiscale,
+    resolve_ome_multiscale,
+)
 from .ome_zarr_helpers import layer_split_label as _ome_layer_split_label
+from .ome_zarr_helpers import (
+    suggested_coordinate_transformations as _ome_suggested_coordinate_transformations,
+)
 from .ome_zarr_helpers import (
     suggested_view_configuration as _ome_suggested_view_configuration,
 )
+from .ome_zarr_helpers import suggested_voxel_size as _ome_suggested_voxel_size
 from .tensorstore_chunked_image_source import TensorStoreChunkedImageSource, guess_axes
+
+
+class _ResolvedArray(NamedTuple):
+    """The array to open, plus what the OME-Zarr group it came out of said
+    about it. Everything but `path` is None for a plain Zarr array."""
+
+    path: UPath
+    axis_names: list[str] | None
+    channels: tuple[OmeChannelMetadata, ...] | None
+    multiscale: OmeMultiscale | None
+    rank: int
 
 
 def _read_json(path: UPath, *, path_for_errors: UPath) -> Any:
@@ -51,7 +74,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
     """
     ChunkedImageSource for plain Zarr arrays (v2 `.zarray`, v3 `zarr.json`
     array nodes) and OME-Zarr multiscale groups (NGFF 0.4 on Zarr v2, NGFF 0.5
-    on Zarr v3). For a multiscale group, the finest resolution level is opened
+    and 0.6 on Zarr v3). For a multiscale group, the finest resolution level is opened
     by default; only the first `multiscales` entry is considered.
     """
 
@@ -71,9 +94,12 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
         super().__init__(path, options)
         self._possible_layers: dict[str, list[int]] = {}
 
-        resolved_path, axis_name_hint, self._omero_channels = self._resolve_array_path(
-            path, options
-        )
+        resolved = self._resolve_array_path(path, options)
+        resolved_path = resolved.path
+        axis_name_hint = resolved.axis_names
+        self._omero_channels = resolved.channels
+        self._ome_multiscale = resolved.multiscale
+        self._ome_rank = resolved.rank
 
         try:
             driver = (
@@ -132,9 +158,23 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             self._omero_channels, key, value
         ) or super().layer_split_label(key, value)
 
-    def _resolve_array_path(
-        self, path: UPath, options: ReadOptions
-    ) -> tuple[UPath, list[str] | None, tuple[OmeChannelMetadata, ...] | None]:
+    @property
+    def suggested_voxel_size(self) -> VoxelSize | None:
+        if self._ome_multiscale is None:
+            return None
+        return _ome_suggested_voxel_size(self._ome_multiscale, self._ome_rank)
+
+    @property
+    def suggested_coordinate_transformations(
+        self,
+    ) -> tuple[CoordinateTransformation, ...] | None:
+        if self._ome_multiscale is None:
+            return None
+        return _ome_suggested_coordinate_transformations(
+            self._ome_multiscale, self._ome_rank
+        )
+
+    def _resolve_array_path(self, path: UPath, options: ReadOptions) -> _ResolvedArray:
         """
         Resolves `path` to the Zarr array to actually open: itself, if it is
         already a plain array, or — for an OME-Zarr multiscale group — the
@@ -151,7 +191,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             metadata = _read_json(zarr_json_path, path_for_errors=path)
             node_type = metadata.get("node_type")
             if node_type == "array":
-                return path, None, None
+                return _ResolvedArray(path, None, None, None, 0)
             if node_type == "group":
                 attributes = metadata.get("attributes", {})
                 ome = attributes.get("ome", attributes)
@@ -162,7 +202,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             )
 
         if zarray_path.is_file():
-            return path, None, None
+            return _ResolvedArray(path, None, None, None, 0)
 
         if zgroup_path.is_file():
             zattrs_path = path / ZATTRS_FILE_NAME
@@ -181,7 +221,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
 
     def _resolve_ome_multiscale(
         self, path: UPath, attributes: dict[str, Any], options: ReadOptions
-    ) -> tuple[UPath, list[str] | None, tuple[OmeChannelMetadata, ...] | None]:
+    ) -> _ResolvedArray:
         multiscale = resolve_ome_multiscale(attributes, path=path)
 
         rank = options.format_option("scale")
@@ -194,4 +234,6 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
 
         resolved_path = path / multiscale.dataset_paths[rank]
         axis_names = list(multiscale.axis_names) if multiscale.axis_names else None
-        return resolved_path, axis_names, multiscale.channels
+        return _ResolvedArray(
+            resolved_path, axis_names, multiscale.channels, multiscale, rank
+        )
