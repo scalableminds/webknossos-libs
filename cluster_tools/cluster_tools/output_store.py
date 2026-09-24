@@ -61,7 +61,9 @@ class FileOutputStore(OutputStore):
     def write(self, key: str, data: bytes, *, success: bool) -> None:
         dest = key if success else self.preliminary_path(key)
         # A unique temporary file, so that concurrent writers cannot clobber each other.
-        # os.open with the default mode applies the umask, like open() would.
+        # It has to stay in the destination's directory, since os.replace cannot move
+        # across filesystems. os.open with the default mode applies the umask, like
+        # open() would.
         tmp = f"{dest}.{uuid4().hex}.tmp"
         try:
             fd = os.open(tmp, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
