@@ -278,9 +278,9 @@ class LayerExport:
         contains that mag plus every coarser mag already present on the
         layer; if `mag` is None, the full mag pyramid is exported.
 
-        The output bounding box is translated to origin. Its topleft is
-        floored to the coarsest exported mag first, so that the voxel grids
-        of all exported mags line up with those of the source layer.
+        The output bounding box is translated to origin. It is first
+        enlarged to align with the coarsest exported mag, so that the voxel
+        grids of all exported mags line up with those of the source layer.
 
         `shard_shape` fixes the shard shape used for every exported mag. If
         omitted, a shard shape is picked per mag that just covers the
@@ -302,9 +302,7 @@ class LayerExport:
             max(m.y for m in target_mags),
             max(m.z for m in target_mags),
         )
-        source_bbox = source_bbox.with_topleft_xyz(
-            source_bbox.topleft_xyz // coarsest_mag * coarsest_mag
-        ).with_bottomright_xyz(source_bbox.bottomright_xyz)
+        source_bbox = source_bbox.align_with_mag(coarsest_mag, ceil=True)
         target_bbox = source_bbox.with_topleft(VecInt.zeros(axes=source_bbox.axes))
 
         with TemporaryDirectory() as tmpdir:

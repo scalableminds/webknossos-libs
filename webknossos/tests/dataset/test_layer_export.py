@@ -104,9 +104,7 @@ def test_as_ozx_unaligned_crop_matches_coarser_mags(tmp_upath: UPath) -> None:
 
     coarsest_mag = max(layer.mags).to_vec3_int()
     assert all(v != 0 for v in crop.topleft % coarsest_mag)
-    exported_bbox = crop.with_topleft(
-        crop.topleft // coarsest_mag * coarsest_mag
-    ).with_bottomright(crop.bottomright)
+    exported_bbox = crop.align_with_mag(coarsest_mag, ceil=True)
 
     with zipfile.ZipFile(str(zip_path)) as zip_file:
         zip_file.extractall(str(tmp_upath / "extracted"))
