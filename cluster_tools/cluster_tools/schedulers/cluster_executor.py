@@ -16,21 +16,24 @@ from typing import (
     Any,
     Literal,
     TypeVar,
-    cast,
 )
 
 from typing_extensions import ParamSpec
 
 from cluster_tools._utils import pickling
-from cluster_tools._utils.file_wait_thread import FileWaitThread
+from cluster_tools._utils.cfut_options import (
+    parse_cfut_options,
+    resolve_output_key_getter,
+)
+from cluster_tools._utils.output_wait_thread import OutputWaitThread
 from cluster_tools._utils.reflection import (
     file_path_to_absolute_module,
     get_function_name,
 )
-from cluster_tools._utils.string_ import random_string, with_preliminary_postfix
+from cluster_tools._utils.string_ import random_string
 from cluster_tools._utils.tailf import Tail
 from cluster_tools._utils.warning import enrich_future_with_uncaught_warning
-from cluster_tools.executors.multiprocessing_ import CFutDict
+from cluster_tools.output_store import FileOutputStore, OutputStore
 
 NOT_YET_SUBMITTED_STATE_TYPE = Literal["NOT_YET_SUBMITTED"]
 NOT_YET_SUBMITTED_STATE: NOT_YET_SUBMITTED_STATE_TYPE = "NOT_YET_SUBMITTED"
@@ -87,9 +90,13 @@ class ClusterExecutor(futures.Executor):
         job_resources: dict[str, Any] | None = None,
         job_name: str | None = None,
         additional_setup_lines: list[str] | None = None,
+        output_store: OutputStore | None = None,
         **kwargs: Any,
     ):
         """
+        `output_store` persists the job outputs and is polled for completion.
+        Defaults to a `FileOutputStore` in `cfut_dir`.
+
         `kwargs` can be the following optional parameters:
             `logging_config`: An object containing a `level` key specifying the desired log level and/or a
                 `format` key specifying the desired log format string. Cannot be specified together
@@ -107,12 +114,15 @@ class ClusterExecutor(futures.Executor):
             cfut_dir if cfut_dir is not None else os.getenv("CFUT_DIR", ".cfut")
         )
         self.files_to_clean_up: list[str] = []
+        self.output_store = (
+            FileOutputStore(self.cfut_dir) if output_store is None else output_store
+        )
 
         logging.info(
             f"Instantiating ClusterExecutor. Log files are stored in {self.cfut_dir}"
         )
 
-        # `jobs` maps from job id to (future, workerid, outfile_name, should_keep_output)
+        # `jobs` maps from job id to (future, workerid, output_key, should_keep_output)
         # In case, job arrays are used: job id and workerid are in the format of
         # `job_id-job_index` and `workerid-job_index`.
         self.jobs: dict[
@@ -124,7 +134,7 @@ class ClusterExecutor(futures.Executor):
         self.keep_logs = keep_logs
         self.is_shutting_down = False
 
-        self.wait_thread = FileWaitThread(self._completion, self)
+        self.wait_thread = OutputWaitThread(self._completion, self)
         self.wait_thread.start()
 
         os.makedirs(self.cfut_dir, exist_ok=True)
@@ -380,10 +390,6 @@ class ClusterExecutor(futures.Executor):
     def format_infile_name(cfut_dir: str, job_id: str) -> str:
         return os.path.join(cfut_dir, f"cfut.in.{job_id}.pickle")
 
-    @staticmethod
-    def format_outfile_name(cfut_dir: str, job_id: str) -> str:
-        return os.path.join(cfut_dir, f"cfut.out.{job_id}.pickle")
-
     def get_python_executable(self) -> str:
         return sys.executable
 
@@ -393,25 +399,18 @@ class ClusterExecutor(futures.Executor):
             job_info = self.jobs.pop(jobid)
             assert job_info != NOT_YET_SUBMITTED_STATE
 
-            if len(job_info) == 4:
-                fut, workerid, outfile_name, should_keep_output = job_info
-            else:
-                # Backwards compatibility
-                fut, workerid = job_info  # type: ignore[misc]
-                should_keep_output = False
-                outfile_name = self.format_outfile_name(self.cfut_dir, workerid)
+            fut, workerid, output_key, should_keep_output = job_info
 
             if not self.jobs:
                 self.jobs_empty_cond.notify_all()
         if self.debug:
             logging.debug(f"Job completed: {jobid}")
 
-        preliminary_outfile_name = with_preliminary_postfix(outfile_name)
-
         # By default, exceptions are wrapped by the RemoteException class.
         # However, this can be customized by investigating the actual error
         # using `investigate_failed_job`.
         wrapping_exception_cls = RemoteException
+        read_error: Exception | None = None
         if failed_early:
             # If the job failed, but didn't write the error to an output file,
             # we handle this case separately.
@@ -434,29 +433,41 @@ class ClusterExecutor(futures.Executor):
                 ]
             )
         else:
-            with open(preliminary_outfile_name, "rb") as f:
-                outdata = f.read()
-            success, result = pickling.loads(outdata)
+            try:
+                success, result = pickling.loads(self.output_store.read(output_key))
+            except Exception as exc:
+                # Report through the future instead of raising into the wait thread,
+                # which would leave all other jobs pending.
+                success, result, read_error = False, "", exc
 
-        if success:
-            # Remove the .preliminary postfix since the job was finished
-            # successfully. Therefore, the result can be used as a checkpoint
-            # by users of the clustertools.
-            os.rename(preliminary_outfile_name, outfile_name)
-            logging.debug(f"Pickle file renamed to {outfile_name}.")
+        if read_error is None and not should_keep_output and not failed_early:
+            # Transient outputs are no checkpoints, so they are removed as soon as
+            # the result or the error has been read. A failing clean up must not
+            # withhold the result.
+            try:
+                self.output_store.delete(output_key)
+            except Exception as exc:
+                logging.warning(
+                    f"Could not delete the output of job {jobid} at {output_key}: {exc}. Continuing..."
+                )
 
+        if read_error is not None:
+            error = RuntimeError(
+                f"Could not read the output of job {jobid} at {output_key}."
+            )
+            error.__cause__ = read_error
+            fut.set_exception(error)
+        elif success:
             fut.set_result(result)
         else:
-            # Don't remove the .preliminary postfix since the job failed.
-            remote_exc = wrapping_exception_cls(result, jobid)
-            fut.set_exception(remote_exc)
+            # A failed output at a custom key is kept for inspection. It is stored
+            # apart from successful ones, so it cannot serve as a checkpoint.
+            fut.set_exception(wrapping_exception_cls(result, jobid))
 
         # Clean up communication files.
 
         infile_name = self.format_infile_name(self.cfut_dir, workerid)
         self.files_to_clean_up.append(infile_name)
-        if not should_keep_output:
-            self.files_to_clean_up.append(outfile_name)
 
         self._maybe_mark_logs_for_cleanup(jobid)
 
@@ -479,43 +490,36 @@ class ClusterExecutor(futures.Executor):
     ) -> Future[_T]:
         """
         Submit a job to the pool.
-        kwargs may contain __cfut_options which currently should look like:
+        kwargs may contain __cfut_options (see CFutDict):
         {
-            "output_pickle_path": str
+            "output_key": str,   # optional
         }
-        output_pickle_path defines where the pickled result should be stored.
-        That file will not be removed after the job has finished.
+        output_key defines where in the output_store the pickled result is stored.
+        Such an output is kept after the job has finished (as a checkpoint).
         """
         fut = self.create_enriched_future()
         workerid = random_string()
 
-        if "__cfut_options" in kwargs:
-            should_keep_output = True
-            output_pickle_path = cast(CFutDict, kwargs["__cfut_options"])[
-                "output_pickle_path"
-            ]
-            del kwargs["__cfut_options"]
-        else:
-            should_keep_output = False
-            output_pickle_path = self.format_outfile_name(self.cfut_dir, workerid)
+        custom_output_key = parse_cfut_options(kwargs)
+        should_keep_output = custom_output_key is not None
+        output_key = (
+            self.output_store.default_key(workerid)
+            if custom_output_key is None
+            else custom_output_key
+        )
 
         self.ensure_not_shutdown()
 
         # Start the job.
         serialized_function_info = pickling.dumps(
-            ((__fn, self.metadata), args, kwargs, output_pickle_path)
+            ((__fn, self.metadata), args, kwargs, output_key, self.output_store)
         )
         with open(self.format_infile_name(self.cfut_dir, workerid), "wb") as f:
             f.write(serialized_function_info)
 
         self.store_main_path_to_meta_file(workerid)
 
-        preliminary_output_pickle_path = with_preliminary_postfix(output_pickle_path)
-        if os.path.exists(preliminary_output_pickle_path):
-            logging.warning(
-                f"Deleting stale output file at {preliminary_output_pickle_path}..."
-            )
-            os.unlink(preliminary_output_pickle_path)
+        self._delete_stale_output(output_key)
 
         job_name = get_function_name(__fn)
         jobids_futures, _ = self._start(workerid, job_name=job_name)
@@ -526,13 +530,18 @@ class ClusterExecutor(futures.Executor):
             logging.debug(f"Job submitted: {jobid}")
 
         # Thread will wait for it to finish.
-        self.wait_thread.waitFor(preliminary_output_pickle_path, jobid)
+        self.wait_thread.waitFor(output_key, jobid)
 
         with self.jobs_lock:
-            self.jobs[jobid] = (fut, workerid, output_pickle_path, should_keep_output)
+            self.jobs[jobid] = (fut, workerid, output_key, should_keep_output)
 
         fut.cluster_jobid = jobid  # type: ignore[attr-defined]
         return fut
+
+    def _delete_stale_output(self, output_key: str) -> None:
+        if self.output_store.poll([output_key]):
+            logging.warning(f"Deleting stale output for key {output_key}...")
+            self.output_store.delete(output_key)
 
     @classmethod
     def get_workerid_with_index(cls, workerid: str, index: int | str) -> str:
@@ -565,15 +574,19 @@ class ClusterExecutor(futures.Executor):
             _S
         ],  # TODO change: allow more than one arg per call # noqa FIX002 Line contains TODO
         output_pickle_path_getter: Callable[[_S], os.PathLike] | None = None,
+        output_key_getter: Callable[[_S], str] | None = None,
     ) -> list[Future[_T]]:
         self.ensure_not_shutdown()
         args = list(args)
         if len(args) == 0:
             return []
 
-        should_keep_output = output_pickle_path_getter is not None
+        key_getter = resolve_output_key_getter(
+            output_pickle_path_getter, output_key_getter
+        )
+        should_keep_output = key_getter is not None
 
-        futs_with_output_paths = []
+        futs_with_output_keys = []
         workerid = random_string()
 
         pickled_function_and_metadata_path = self.get_function_and_metadata_pickle_path(
@@ -588,28 +601,20 @@ class ClusterExecutor(futures.Executor):
             fut = self.create_enriched_future()
             workerid_with_index = self.get_workerid_with_index(workerid, index)
 
-            if output_pickle_path_getter is None:
-                output_pickle_path = self.format_outfile_name(
-                    self.cfut_dir, workerid_with_index
-                )
-            else:
-                output_pickle_path = str(output_pickle_path_getter(arg))
-
-            preliminary_output_pickle_path = with_preliminary_postfix(
-                output_pickle_path
+            output_key = (
+                self.output_store.default_key(workerid_with_index)
+                if key_getter is None
+                else key_getter(arg)
             )
-            if os.path.exists(preliminary_output_pickle_path):
-                logging.warning(
-                    f"Deleting stale output file at {preliminary_output_pickle_path}..."
-                )
-                os.unlink(preliminary_output_pickle_path)
+            self._delete_stale_output(output_key)
 
             serialized_function_info = pickling.dumps(
                 (
                     pickled_function_and_metadata_path,
                     [arg],
                     {},
-                    output_pickle_path,
+                    output_key,
+                    self.output_store,
                 )
             )
             infile_name = self.format_infile_name(self.cfut_dir, workerid_with_index)
@@ -617,12 +622,12 @@ class ClusterExecutor(futures.Executor):
             with open(infile_name, "wb") as f:
                 f.write(serialized_function_info)
 
-            futs_with_output_paths.append((fut, output_pickle_path))
+            futs_with_output_keys.append((fut, output_key))
 
         with self.jobs_lock:
             # Use a separate loop to avoid having to acquire the jobs_lock many times
             # or for the full duration of the above loop
-            for index in range(len(futs_with_output_paths)):
+            for index in range(len(futs_with_output_keys)):
                 workerid_with_index = self.get_workerid_with_index(workerid, index)
                 # Register the job in the jobs array, although the jobid is not known yet.
                 # Otherwise it might happen that self.jobs becomes empty, but some of the jobs were
@@ -640,7 +645,7 @@ class ClusterExecutor(futures.Executor):
             jobid_future.add_done_callback(
                 partial(
                     self.register_jobs,
-                    futs_with_output_paths[job_index_start:job_index_end],
+                    futs_with_output_keys[job_index_start:job_index_end],
                     workerid,
                     should_keep_output,
                     job_index_start,
@@ -648,11 +653,11 @@ class ClusterExecutor(futures.Executor):
                 )
             )
 
-        return [fut for (fut, _) in futs_with_output_paths]
+        return [fut for (fut, _) in futs_with_output_keys]
 
     def register_jobs(
         self,
-        futs_with_output_paths: list[tuple[Future, str]],
+        futs_with_output_keys: list[tuple[Future, str]],
         workerid: str,
         should_keep_output: bool,
         job_index_offset: int,
@@ -662,16 +667,14 @@ class ClusterExecutor(futures.Executor):
         jobid = jobid_future.result()
         if self.debug:
             logging.debug(
-                f"Submitted array job {batch_description} with JobId {jobid} and {len(futs_with_output_paths)} subjobs.",
+                f"Submitted array job {batch_description} with JobId {jobid} and {len(futs_with_output_keys)} subjobs.",
             )
 
-        for array_index, (fut, output_path) in enumerate(futs_with_output_paths):
+        for array_index, (fut, output_key) in enumerate(futs_with_output_keys):
             jobid_with_index = self.get_jobid_with_index(jobid, array_index)
 
             # Thread will wait for it to finish.
-            self.wait_thread.waitFor(
-                with_preliminary_postfix(output_path), jobid_with_index
-            )
+            self.wait_thread.waitFor(output_key, jobid_with_index)
 
             fut.cluster_jobid = jobid  # type: ignore[attr-defined]
             # fut.cluster_jobindex is only used for debugging:
@@ -685,7 +688,7 @@ class ClusterExecutor(futures.Executor):
                 self.jobs[jobid_with_index] = (
                     fut,
                     workerid_with_index,
-                    output_path,
+                    output_key,
                     should_keep_output,
                 )
 

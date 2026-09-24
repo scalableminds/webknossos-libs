@@ -7,7 +7,6 @@ import traceback
 from typing import Any
 
 from cluster_tools._utils import pickling
-from cluster_tools._utils.string_ import with_preliminary_postfix
 from cluster_tools.schedulers.cluster_executor import ClusterExecutor
 from cluster_tools.schedulers.kube import KubernetesExecutor
 from cluster_tools.schedulers.pbs import PBSExecutor
@@ -61,8 +60,8 @@ def worker(
         custom_main_path = get_custom_main_path(workerid, executor)
         with open(input_file_name, "rb") as f:
             unpickled_tuple = pickling.load(f, custom_main_path)
-            assert len(unpickled_tuple) == 4, "Unexpected encoding"
-            fun_and_metadata, args, kwargs, output_pickle_path = unpickled_tuple
+            assert len(unpickled_tuple) == 5, "Unexpected encoding"
+            fun_and_metadata, args, kwargs, output_key, output_store = unpickled_tuple
 
         if isinstance(fun_and_metadata, str):
             with open(fun_and_metadata, "rb") as function_file:
@@ -75,28 +74,28 @@ def worker(
         logging.info(
             f"Job computation started (jobid={executor.get_current_job_id()}, workerid_with_idx={workerid_with_idx})."
         )
-        result = True, fun(*args, **kwargs)
+        result = fun(*args, **kwargs)
         logging.info("Job computation completed.")
-        out = pickling.dumps(result)
+        success, out = True, pickling.dumps((True, result))
 
     except Exception:
-        result = False, format_remote_exc()
         logging.warning(f"Job computation failed with:\n\n{traceback.format_exc()}")
-        out = pickling.dumps(result)
+        success, out = False, pickling.dumps((False, format_remote_exc()))
 
-    # The .preliminary postfix is added since the output can
-    # contain a serialized exception. If that is the case,
-    # the file should not be used as a checkpoint by users
-    # of the clustertools. Therefore, the postfix is only
-    # removed by the polling party (ClusterExecutor) after
-    # the success case was recognized.
-    destfile = with_preliminary_postfix(output_pickle_path)
-    tempfile = str(destfile) + ".tmp"
-    with open(tempfile, "wb") as f:
-        f.write(out)
-    logging.debug(f"Pickle file written to {tempfile}.")
-    os.rename(tempfile, destfile)
-    logging.debug(f"Pickle file renamed to {destfile}.")
+    # The store keeps failed outputs apart from successful ones (which serve as
+    # checkpoints). The polling ClusterExecutor picks up both.
+    try:
+        output_store.write(output_key, out, success=success)
+    except Exception:
+        if not success:
+            raise
+        # A failing store fails the job, since the result would not be checkpointed.
+        logging.warning(f"Writing the output failed with:\n\n{traceback.format_exc()}")
+        output_store.write(
+            output_key, pickling.dumps((False, format_remote_exc())), success=False
+        )
+        success = False
+    logging.debug(f"Output written to store (key={output_key}, success={success}).")
 
 
 def setup_logging(

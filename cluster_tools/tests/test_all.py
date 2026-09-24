@@ -1,7 +1,10 @@
 import logging
 import os
+import pickle
+import sqlite3
 import tempfile
 import time
+from collections.abc import Iterable
 from enum import Enum
 from functools import partial
 from pathlib import Path
@@ -42,9 +45,12 @@ def raise_if(msg: str, _bool: bool) -> None:
 # should be called with all executors (including the pickling variants) and some with a subset (i.e., without the pickling variants).
 # In order to avoid redundant parameterization of each test, pytest_generate_tests is defined here.
 # If a spec uses an `exc_with_pickling` fixture (defined as a function parameter), that test is automatically parameterized with all executors. Analogous, parameterization happens with `exc`.
+# Specs that need to construct the executor themselves (e.g. with extra kwargs) use the `exc_key` fixture instead.
 # Regarding how this works in details: This function is called for each test and has access to the fixtures supplied
 # to the test and most importantly can parametrize those fixtures.
 def pytest_generate_tests(metafunc: Any) -> None:
+    if "exc_key" in metafunc.fixturenames:
+        metafunc.parametrize("exc_key", sorted(get_executor_keys()))
     if "exc" in metafunc.fixturenames or "exc_with_pickling" in metafunc.fixturenames:
         with_pickling = "exc_with_pickling" in metafunc.fixturenames
         executor_keys = get_executor_keys(with_pickling)
@@ -90,12 +96,12 @@ def get_executor_keys(with_pickling: bool = False) -> set[str]:
     return executor_keys
 
 
-def get_executor(environment: str) -> cluster_tools.Executor:
+def get_executor(environment: str, **kwargs: Any) -> cluster_tools.Executor:
     global _dask_cluster
 
     if environment == "slurm":
         return cluster_tools.get_executor(
-            "slurm", debug=True, job_resources={"mem": "100M"}
+            "slurm", debug=True, job_resources={"mem": "100M"}, **kwargs
         )
     if environment == "kubernetes":
         return cluster_tools.get_executor(
@@ -105,11 +111,12 @@ def get_executor(environment: str) -> cluster_tools.Executor:
                 "memory": "1G",
                 "image": "scalableminds/cluster-tools:latest",
             },
+            **kwargs,
         )
     if environment == "multiprocessing":
-        return cluster_tools.get_executor("multiprocessing", max_workers=5)
+        return cluster_tools.get_executor("multiprocessing", max_workers=5, **kwargs)
     if environment == "sequential":
-        return cluster_tools.get_executor("sequential")
+        return cluster_tools.get_executor("sequential", **kwargs)
     if environment == "dask":
         if not _dask_cluster:
             from distributed import LocalCluster, Worker
@@ -118,14 +125,14 @@ def get_executor(environment: str) -> cluster_tools.Executor:
                 worker_class=Worker, resources={"mem": 20e9, "cpus": 4}, nthreads=6
             )
         return cluster_tools.get_executor(
-            "dask", job_resources={"address": _dask_cluster}
+            "dask", job_resources={"address": _dask_cluster}, **kwargs
         )
     if environment == "multiprocessing_with_pickling":
-        return cluster_tools.get_executor("multiprocessing_with_pickling")
+        return cluster_tools.get_executor("multiprocessing_with_pickling", **kwargs)
     if environment == "pbs":
-        return cluster_tools.get_executor("pbs")
+        return cluster_tools.get_executor("pbs", **kwargs)
     if environment == "sequential_with_pickling":
-        return cluster_tools.get_executor("sequential_with_pickling")
+        return cluster_tools.get_executor("sequential_with_pickling", **kwargs)
     raise RuntimeError("No executor specified.")
 
 
@@ -335,6 +342,155 @@ def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
                 assert future.result() == square(job_index)
 
         assert output_path.exists(), "Output pickle file should exist."
+
+
+class SqliteOutputStore(cluster_tools.OutputStore):
+    """Stores outputs in a SQLite database, i.e. not as individual files."""
+
+    def __init__(self, db_path: Path, fail_on_success: bool = False):
+        self.db_path = str(db_path)
+        self.fail_on_success = fail_on_success
+        with self._connect() as conn:
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS outputs (key TEXT PRIMARY KEY, success INTEGER, data BLOB)"
+            )
+
+    def _connect(self) -> sqlite3.Connection:
+        return sqlite3.connect(self.db_path, timeout=30)
+
+    def default_key(self, job_id: str) -> str:
+        return job_id
+
+    def write(self, key: str, data: bytes, *, success: bool) -> None:
+        if success and self.fail_on_success:
+            raise RuntimeError("store failed")
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO outputs VALUES (?, ?, ?)",
+                (key, int(success), data),
+            )
+
+    def poll(self, keys: Iterable[str]) -> set[str]:
+        keys = list(keys)
+        if not keys:
+            return set()
+        placeholders = ",".join("?" * len(keys))
+        with self._connect() as conn:
+            rows = conn.execute(
+                f"SELECT key FROM outputs WHERE key IN ({placeholders})", keys
+            ).fetchall()
+        return {row[0] for row in rows}
+
+    def read(self, key: str) -> bytes:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT data FROM outputs WHERE key = ?", (key,)
+            ).fetchone()
+        assert row is not None, f"No output for key {key}"
+        return row[0]
+
+    def delete(self, key: str) -> None:
+        with self._connect() as conn:
+            conn.execute("DELETE FROM outputs WHERE key = ?", (key,))
+
+    def keys(self) -> set[str]:
+        with self._connect() as conn:
+            return {row[0] for row in conn.execute("SELECT key FROM outputs")}
+
+
+def output_key_getter(chunk: int) -> str:
+    return f"chunk_{chunk}"
+
+
+# Only the cluster executors transport results through the store; the others keep
+# them in memory and use the store for checkpointing only.
+def transports_through_store(exc_key: str) -> bool:
+    return exc_key in ("slurm", "pbs", "kubernetes")
+
+
+def assert_no_output_files(cfut_dir: str = ".cfut") -> None:
+    """A custom store must not leave output pickles behind, neither at the default
+    file store location nor anywhere else the executor might write them."""
+    assert not list(Path(cfut_dir).glob("cfut.out.*"))
+    assert not list(Path(cfut_dir).glob("*.preliminary"))
+
+
+def test_map_to_futures_with_output_store(exc_key: str) -> None:
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        store = SqliteOutputStore(Path(tmp_dir) / "outputs.sqlite")
+        with get_executor(exc_key, output_store=store) as exc:
+            numbers = [2, 1]
+            futures = exc.map_to_futures(
+                square, numbers, output_key_getter=output_key_getter
+            )
+            results = [f.result() for f in exc.as_completed(futures)]
+            assert set(results) == {1, 4}
+
+        for number in numbers:
+            assert pickle.loads(store.read(output_key_getter(number))) == (
+                True,
+                square(number),
+            )
+        # The keys are no paths, so a regression falling back to files would write
+        # them to the executor's cfut dir, not next to the database.
+        assert not list(Path(tmp_dir).glob("*.pickle*"))
+        assert_no_output_files()
+
+
+def test_submit_with_output_store_default_keys(exc_key: str) -> None:
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        store = SqliteOutputStore(Path(tmp_dir) / "outputs.sqlite")
+        with get_executor(exc_key, output_store=store) as exc:
+            futures = [exc.submit(square, n) for n in range(3)]
+            assert [fut.result() for fut in futures] == [0, 1, 4]
+            with pytest.raises(Exception, match="job failed"):
+                exc.submit(raise_if, "job failed", True).result()
+
+        # Outputs without a custom key are transient and deleted after being read,
+        # no matter whether the job succeeded or failed.
+        assert store.keys() == set()
+        assert_no_output_files()
+
+
+def test_output_store_keeps_failures(exc_key: str) -> None:
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        store = SqliteOutputStore(Path(tmp_dir) / "outputs.sqlite")
+        with get_executor(exc_key, output_store=store) as exc:
+            with pytest.raises(Exception, match="job failed"):
+                exc.submit(
+                    raise_if,
+                    "job failed",
+                    True,
+                    __cfut_options={"output_key": "failed"},  # type: ignore[call-arg]
+                ).result()
+
+        if transports_through_store(exc_key):
+            # The exception travels through the store and is kept for inspection,
+            # but must not count as a checkpoint.
+            assert store.poll(["failed"]) == {"failed"}
+            success, traceback_str = pickle.loads(store.read("failed"))
+            assert not success and "job failed" in traceback_str
+        else:
+            # The other executors raise directly and store nothing on failure.
+            assert store.poll(["failed"]) == set()
+        assert_no_output_files()
+
+
+def test_failing_output_store_fails_job(exc_key: str) -> None:
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        store = SqliteOutputStore(
+            Path(tmp_dir) / "outputs.sqlite", fail_on_success=True
+        )
+        # The sequential executor raises from submit already, others from result.
+        with (
+            get_executor(exc_key, output_store=store) as exc,
+            pytest.raises(Exception, match="store failed"),
+        ):
+            exc.submit(
+                square,
+                3,
+                __cfut_options={"output_key": "chunk"},  # type: ignore[call-arg]
+            ).result()
 
 
 def test_map(exc: cluster_tools.Executor) -> None:

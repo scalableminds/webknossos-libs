@@ -575,6 +575,32 @@ def test_preliminary_file_map() -> None:
                 )
 
 
+class FailingReadOutputStore(cluster_tools.FileOutputStore):
+    """Writes outputs normally, but fails when the executor reads them back."""
+
+    def read(self, key: str) -> bytes:  # noqa: ARG002 Unused method argument: `key`
+        raise RuntimeError("read failed")
+
+
+def test_failing_output_store_read_does_not_strand_futures() -> None:
+    """A failing store must surface through the future instead of killing the
+    polling thread, which would leave every other job pending."""
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        with cluster_tools.get_executor(
+            "slurm",
+            debug=True,
+            job_resources={"mem": "10M"},
+            output_store=FailingReadOutputStore(tmp_dir),
+        ) as executor:
+            fut = executor.submit(square, 3)
+            with pytest.raises(RuntimeError, match="Could not read the output"):
+                fut.result(timeout=120)
+
+            # The executor keeps working, i.e. the wait thread is still alive.
+            with pytest.raises(RuntimeError, match="Could not read the output"):
+                executor.submit(square, 4).result(timeout=120)
+
+
 def test_cpu_bind_regression() -> None:
     os.environ["SLURM_CPU_BIND"] = (
         "quiet,mask_cpu:0x000000000000040000000000000000040000"
