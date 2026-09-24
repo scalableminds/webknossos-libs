@@ -434,12 +434,16 @@ class ClusterExecutor(futures.Executor):
         else:
             success, result = pickling.loads(self.output_store.read(output_key))
 
+        if not should_keep_output and not failed_early:
+            # Transient outputs are no checkpoints, so they are removed as soon as
+            # the result or the error has been read.
+            self.output_store.delete(output_key)
+
         if success:
-            if not should_keep_output:
-                self.output_store.delete(output_key)
             fut.set_result(result)
         else:
-            # Keep the failed output in the store for inspection.
+            # A failed output at a custom key is kept for inspection. It is stored
+            # apart from successful ones, so it cannot serve as a checkpoint.
             remote_exc = wrapping_exception_cls(result, jobid)
             fut.set_exception(remote_exc)
 

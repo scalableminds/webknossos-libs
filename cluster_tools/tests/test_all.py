@@ -427,8 +427,11 @@ def test_submit_with_output_store_default_keys(exc_key: str) -> None:
         with get_executor(exc_key, output_store=store) as exc:
             futures = [exc.submit(square, n) for n in range(3)]
             assert [fut.result() for fut in futures] == [0, 1, 4]
+            with pytest.raises(Exception, match="job failed"):
+                exc.submit(raise_if, "job failed", True).result()
 
-        # Outputs without a custom key are transient and deleted after being read.
+        # Outputs without a custom key are transient and deleted after being read,
+        # no matter whether the job succeeded or failed.
         assert store.keys() == set()
         # No output pickle files are written next to the input files.
         assert not list(Path(".cfut").glob("cfut.out.*"))
