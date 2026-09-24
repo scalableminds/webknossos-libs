@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
 
 ### Fixed
+- `Layer.export.as_ozx` wrote misaligned data to the coarser mags when the bounding box's topleft wasn't a multiple of them. The exported region's topleft is now floored to the coarsest exported mag, so all mags line up with the source layer.
 
 
 ## [4.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.1) - 2026-09-22

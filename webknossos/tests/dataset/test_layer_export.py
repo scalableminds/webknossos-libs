@@ -95,6 +95,31 @@ def test_as_ozx_single_mag(tmp_upath: UPath) -> None:
         assert "2-2-1/zarr.json" in names
 
 
+def test_as_ozx_unaligned_crop_matches_coarser_mags(tmp_upath: UPath) -> None:
+    _dataset, layer, _data = make_layer(tmp_upath)
+    crop = BoundingBox((10, 6, 3), (20, 20, 20))
+    zip_path = tmp_upath / "color_unaligned.ozx"
+
+    layer.export.as_ozx(output_path=zip_path, bounding_box=crop)
+
+    coarsest_mag = max(layer.mags).to_vec3_int()
+    assert all(v != 0 for v in crop.topleft % coarsest_mag)
+    exported_bbox = crop.with_topleft(
+        crop.topleft // coarsest_mag * coarsest_mag
+    ).with_bottomright(crop.bottomright)
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        zip_file.extractall(str(tmp_upath / "extracted"))
+
+    for mag in layer.mags:
+        expected = layer.get_mag(mag).read(
+            absolute_bounding_box=exported_bbox.align_with_mag(mag, ceil=True)
+        )
+        got = read_zarr3_array(tmp_upath / "extracted" / mag.to_layer_name())
+        got = got[tuple(slice(0, s) for s in expected.shape)]
+        assert np.array_equal(got, expected), f"mismatch at mag {mag}"
+
+
 def make_odd_sized_layer(tmp_upath: UPath) -> tuple[Dataset, Layer, np.ndarray]:
     """A layer whose size (65) isn't an exact multiple of any of its
     coarser mags' factors, so mag 2 (33**3) and mag 4 (17**3) each have one
