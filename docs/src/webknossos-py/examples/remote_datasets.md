@@ -30,16 +30,16 @@ mag1 = layer.get_mag(1, access_mode=wk.RemoteAccessMode.DIRECT_PATH)
 mag2 = layer.get_mag(2, access_mode=wk.RemoteAccessMode.PROXY_PATH)
 ```
 
-Each mag knows all of its available paths, regardless of how it is currently accessed, via `mag.paths`, a `dict[RemoteAccessMode, UPath]`. A mode is missing from the dict if it isn't available for that mag (e.g. `DIRECT_PATH` when the server doesn't expose it):
+Each mag knows all of its available paths, regardless of how it is currently accessed, via `mag.paths_by_access_mode`, a `dict[RemoteAccessMode, UPath]`. A mode is missing from the dict if it isn't available for that mag (e.g. `DIRECT_PATH` when the server doesn't expose it):
 
 ```python
 mag = layer.get_mag(1)
-print(mag.paths)
+print(mag.paths_by_access_mode)
 # {RemoteAccessMode.ZARR_STREAMING: ..., RemoteAccessMode.PROXY_PATH: ..., RemoteAccessMode.DIRECT_PATH: ...}
-print(mag.paths.get(wk.RemoteAccessMode.DIRECT_PATH))  # e.g. s3://bucket/dataset/color/1, or None if not exposed
+print(mag.paths_by_access_mode.get(wk.RemoteAccessMode.DIRECT_PATH))  # e.g. s3://bucket/dataset/color/1, or None if not exposed
 print(mag.data_format)  # what this mag actually serves
 ```
 
-Only the direct path is stored in the dataset properties; the other paths in `mag.paths` are computed from the datastore URL.
+Only the direct path is stored in the dataset properties; the other paths in `mag.paths_by_access_mode` are computed from the datastore URL.
 
 Metadata (layer bounding boxes, view configurations, mags, attachments, ...) can be written back to the server under any access mode, as long as the dataset's properties stem from the WEBKNOSSOS api — which is the case unless the dataset is viewed through an annotation, or its data source is unusable. Reading and writing metadata is independent of which access mode is used to read the image data itself.

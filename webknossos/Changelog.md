@@ -10,9 +10,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.1...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+- Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
+
+### Fixed
+
+
+## [4.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.1) - 2026-09-22
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.0...v4.1.1)
 
 ### Added
 - `UnsupportedImageFormatError` now carries `found_file_extensions`, the extensions actually present in the input (most common first), so that a failure on a directory can be reported as "found `.dcm` files, which aren't supported" instead of only listing the supported formats. The error message names them as well. [#1538](https://github.com/scalableminds/webknossos-libs/pull/1538)
@@ -21,9 +32,12 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - `Dataset.add_layer_from_images` now raises `UnsupportedImageFormatError` when given a directory that contains no convertible file, instead of a generic `ValueError` listing the errors of every attempted reader. [#1538](https://github.com/scalableminds/webknossos-libs/pull/1538)
 
 ### Fixed
+- `named_partial` (used by all chunked layer operations) can be pickled on Python 3.14 again. [#1548](https://github.com/scalableminds/webknossos-libs/pull/1548)
 - `Layer.export.as_ozx`, `as_tiff_stack` and `as_ome_tiff` no longer fail for layers whose bounding box lacks an axis of the underlying array. Remote layers can report a bounding box without the channel axis while the streamed array has one, which raised `Operation with two bboxes is only possible if they have the same axes`. The export region is now resolved in the axes of the mag's array. [#1541](https://github.com/scalableminds/webknossos-libs/pull/1541)
 - Opening a corrupt `.ims` file no longer emits an `AttributeError` from the reader's finalizer as an unraisable exception. [#1532](https://github.com/scalableminds/webknossos-libs/pull/1532)
+- `Layer.downsample` no longer reads far more than the intended 1024³ source voxels per tile when a downsampling step has mag factors larger than 2 in some axis (e.g. from `8-8-1` straight to `16-16-16` for isotropic voxel sizes, which used to allocate 16 GiB for a uint16 layer). The automatically chosen buffer shape now accounts for the mag factors. [#1546](https://github.com/scalableminds/webknossos-libs/pull/1546)
 - Converting a tiff whose axes are unknown to tifffile (e.g. a plain 4D array, reported as `QQYX`) no longer fails with `axis 'q' already exists`. The innermost unknown axis is taken as z, the others become additional axes. [#1544](https://github.com/scalableminds/webknossos-libs/pull/1544)
+
 
 
 ## [4.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.0) - 2026-09-09
