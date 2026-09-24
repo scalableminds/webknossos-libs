@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from upath import UPath
 
 from ....geometry import Mag, NDBoundingBox, NormalizedBoundingBox
+from ....utils import warn_deprecated
 from ...remote_access_mode import RemoteAccessMode
 from .mag_view import MagView
 
@@ -93,7 +94,7 @@ class RemoteMagView(MagView["RemoteLayer"]):
         return self.normalized_bounding_box.size.get("c", 1)
 
     @property
-    def paths(self) -> Mapping[RemoteAccessMode, UPath]:
+    def paths_by_access_mode(self) -> Mapping[RemoteAccessMode, UPath]:
         """All paths at which this mag's data can be reached, keyed by access mode.
 
         Comparing these lets a caller pick which access mode to use for this mag, e.g.
@@ -111,6 +112,12 @@ class RemoteMagView(MagView["RemoteLayer"]):
             except ValueError:  # noqa: PERF203 only 3 iterations, clarity wins here
                 continue
         return MappingProxyType(result)
+
+    @property
+    def paths(self) -> Mapping[RemoteAccessMode, UPath]:
+        """Deprecated, use `paths_by_access_mode` instead."""
+        warn_deprecated("RemoteMagView.paths", "RemoteMagView.paths_by_access_mode")
+        return self.paths_by_access_mode
 
     def __repr__(self) -> str:
         return (
