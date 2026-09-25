@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- Added `RemoteAnnotation.get_proofread_agglomerate_graph_data()`, which returns the agglomerate graphs of all agglomerates touched by proofreading. The underlying steps are available as `RemoteAnnotation.get_edited_edges()` (all merged and split edges) and `RemoteAnnotation.get_agglomerate_ids_for_segments()`. [#1552](https://github.com/scalableminds/webknossos-libs/pull/1552)
 
 ### Changed
 - Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
