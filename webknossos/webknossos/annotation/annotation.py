@@ -42,13 +42,13 @@ See Also:
 import logging
 import re
 import warnings
-from collections.abc import Generator, Iterable
+from collections.abc import Generator, Iterable, Iterator
 from contextlib import AbstractContextManager, contextmanager, nullcontext
 from enum import Enum, unique
 from io import BytesIO
 from os import PathLike
 from tempfile import TemporaryDirectory
-from typing import IO, Literal, Union, overload
+from typing import IO, TYPE_CHECKING, Any, Literal, Union, overload
 from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
@@ -96,7 +96,12 @@ from ..utils import (
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
 from .volume_layer import SegmentInformation, VolumeLayer
 
+if TYPE_CHECKING:
+    from ..client.api_client.tracingstore_api_client import TracingStoreApiClient
+
 logger = logging.getLogger(__name__)
+
+_UPDATE_ACTION_LOG_PAGE_SIZE = 1000
 
 
 @attr.define
@@ -1558,16 +1563,17 @@ class RemoteAnnotation(Annotation):
             `edges` has shape (E, 2) and dtype uint64 and contains the segment ids
             of both ends of each edited edge, in the order the edits were made.
             `is_addition` has shape (E,) and dtype bool and is True for merges and
-            False for splits.
+            False for splits. Both are empty if the annotation was not proofread.
 
         Raises:
-            UnexpectedStatusError: If the annotation does not have an editable mapping (is not a proofreading annotation)
             AssertionError: If the annotation does not have exactly one volume layer
         """
         from ..client.context import _get_context
 
-        tracingstore_client = _get_context().get_tracingstore_api_client()
-        return tracingstore_client.get_edited_edges(self._get_proofreading_tracing_id())
+        return self._get_edited_edges(
+            _get_context().get_tracingstore_api_client(),
+            self._get_proofreading_tracing_id(),
+        )
 
     def get_agglomerate_ids_for_segments(
         self, segment_ids: Iterable[int]
@@ -1626,7 +1632,7 @@ class RemoteAnnotation(Annotation):
         tracingstore_client = _get_context().get_tracingstore_api_client()
         tracing_id = self._get_proofreading_tracing_id()
 
-        edges, _ = tracingstore_client.get_edited_edges(tracing_id)
+        edges, _ = self._get_edited_edges(tracingstore_client, tracing_id)
         if len(edges) == 0:
             return {}
         agglomerate_id_by_segment = (
@@ -1641,6 +1647,30 @@ class RemoteAnnotation(Annotation):
             )
             for agglomerate_id in agglomerate_ids
         }
+
+    def _get_edited_edges(
+        self, tracingstore_client: "TracingStoreApiClient", tracing_id: str
+    ) -> tuple[np.ndarray, np.ndarray]:
+        from ..proofreading.edited_edges import edited_edges_from_update_groups
+
+        assert self.annotation_id is not None, "Annotation ID must be set."
+        annotation_id = self.annotation_id
+        newest_version = tracingstore_client.annotation_newest_version(annotation_id)
+
+        def update_groups_newest_first() -> Iterator[tuple[int, list[dict[str, Any]]]]:
+            # Paged, since fetching a long history at once can fail on the server
+            for page_newest in range(newest_version, -1, -_UPDATE_ACTION_LOG_PAGE_SIZE):
+                yield from tracingstore_client.annotation_update_action_log(
+                    annotation_id=annotation_id,
+                    newest_version=page_newest,
+                    oldest_version=max(
+                        0, page_newest - _UPDATE_ACTION_LOG_PAGE_SIZE + 1
+                    ),
+                )
+
+        return edited_edges_from_update_groups(
+            update_groups_newest_first(), tracing_id=tracing_id
+        )
 
     def _get_proofreading_tracing_id(self) -> str:
         annotation_info = self._get_annotation_info()

@@ -1,11 +1,5 @@
-import io
-import tempfile
-import zipfile
 from collections.abc import Iterable, Iterator
-from pathlib import Path
-
-import numpy as np
-import tensorstore
+from typing import Any
 
 from webknossos.client.api_client.models import (
     ApiAdHocMeshInfo,
@@ -61,31 +55,25 @@ class TracingStoreApiClient(AbstractApiClient):
         agglomerate_graph = AgglomerateGraphData.from_proto(agglomerate_graph_proto)
         return agglomerate_graph
 
-    def get_edited_edges(self, tracing_id: str) -> tuple[np.ndarray, np.ndarray]:
-        # The response is a zip of two Zarr v3 arrays: "edges" (E, 2) uint64
-        # and "edgeIsAddition" (E,) bool.
-        route = f"/mapping/{tracing_id}/editedEdgesZip"
-        zip_bytes = self._get(route).content
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zip_file:
-                zip_file.extractall(tmp_dir)
+    def annotation_newest_version(self, annotation_id: str) -> int:
+        route = f"/annotation/{annotation_id}/newestVersion"
+        return int(self._get(route).json()["version"])
 
-            def read_array(name: str) -> np.ndarray:
-                array = tensorstore.open(
-                    {
-                        "driver": "zarr3",
-                        "kvstore": {
-                            "driver": "file",
-                            "path": str(Path(tmp_dir) / name),
-                        },
-                    },
-                    open=True,
-                ).result()
-                return array.read().result()
-
-            edges = read_array("edges").astype(np.uint64).reshape(-1, 2)
-            is_addition = read_array("edgeIsAddition").astype(bool).reshape(-1)
-        return edges, is_addition
+    def annotation_update_action_log(
+        self, annotation_id: str, newest_version: int, oldest_version: int
+    ) -> list[tuple[int, list[dict[str, Any]]]]:
+        """Returns the update groups in the version range, newest first."""
+        route = f"/annotation/{annotation_id}/updateActionLog"
+        query: Query = {
+            "newestVersion": newest_version,
+            "oldestVersion": oldest_version,
+        }
+        update_groups = self._get(route, query=query).json()
+        return sorted(
+            ((group["version"], group["value"]) for group in update_groups),
+            key=lambda group: group[0],
+            reverse=True,
+        )
 
     def get_agglomerate_ids_for_segments(
         self, tracing_id: str, annotation_id: str, segment_ids: Iterable[int]
