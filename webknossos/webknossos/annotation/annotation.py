@@ -1620,7 +1620,7 @@ class RemoteAnnotation(Annotation):
 
         Examples:
             ```python
-            annotation = wk.Annotation.download("annotation_id")
+            annotation = wk.Annotation.open_remote("annotation_id")
             for agglomerate_id, graph_data in annotation.get_proofread_agglomerate_graph_data().items():
                 graph = graph_data.to_agglomerate_graph()
                 print(agglomerate_id, graph)
