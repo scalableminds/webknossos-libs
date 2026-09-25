@@ -53,6 +53,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from zlib import Z_BEST_SPEED
 
 import attr
+import numpy as np
 from cluster_tools import Executor
 from numpy._typing import DTypeLike
 from upath import UPath
@@ -1540,17 +1541,114 @@ class RemoteAnnotation(Annotation):
 
         from ..client.context import _get_context
 
-        context = _get_context()
+        tracingstore_client = _get_context().get_tracingstore_api_client()
+        graph = tracingstore_client.get_agglomerate_graph(
+            self._get_proofreading_tracing_id(), agglomerate_id
+        )
+        return graph
+
+    def get_edited_edges(self) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Get all edges that were added (merges) or removed (splits) during proofreading.
+        Reverted edits are not included.
+        This works only for proofreading annotations that have only a single volume layer.
+
+        Returns:
+            tuple[np.ndarray, np.ndarray]: A tuple `(edges, is_addition)`.
+            `edges` has shape (E, 2) and dtype uint64 and contains the segment ids
+            of both ends of each edited edge, in the order the edits were made.
+            `is_addition` has shape (E,) and dtype bool and is True for merges and
+            False for splits.
+
+        Raises:
+            UnexpectedStatusError: If the annotation does not have an editable mapping (is not a proofreading annotation)
+            AssertionError: If the annotation does not have exactly one volume layer
+        """
+        from ..client.context import _get_context
+
+        tracingstore_client = _get_context().get_tracingstore_api_client()
+        return tracingstore_client.get_edited_edges(self._get_proofreading_tracing_id())
+
+    def get_agglomerate_ids_for_segments(
+        self, segment_ids: Iterable[int]
+    ) -> dict[int, int]:
+        """
+        Get the current agglomerate id of each of the given segment ids,
+        taking all proofreading edits into account.
+        This works only for proofreading annotations that have only a single volume layer.
+
+        Args:
+            segment_ids (Iterable[int]): The segment ids to look up.
+
+        Returns:
+            dict[int, int]: Maps each (deduplicated) segment id to its agglomerate id.
+
+        Raises:
+            UnexpectedStatusError: If the annotation does not have an editable mapping (is not a proofreading annotation)
+            AssertionError: If the annotation does not have exactly one volume layer
+        """
+        from ..client.context import _get_context
+
+        assert self.annotation_id is not None, "Annotation ID must be set."
+        tracingstore_client = _get_context().get_tracingstore_api_client()
+        return tracingstore_client.get_agglomerate_ids_for_segments(
+            tracing_id=self._get_proofreading_tracing_id(),
+            annotation_id=self.annotation_id,
+            segment_ids=segment_ids,
+        )
+
+    def get_proofread_agglomerate_graph_data(self) -> dict[int, AgglomerateGraphData]:
+        """
+        Get the agglomerate graph data of all agglomerates that were touched by proofreading.
+        These are the current agglomerates containing a segment of any merged or split edge
+        (see `get_edited_edges`).
+        This works only for proofreading annotations that have only a single volume layer.
+
+        Returns:
+            dict[int, AgglomerateGraphData]: Maps each touched agglomerate id to its graph data.
+            Use `AgglomerateGraphData.to_agglomerate_graph()` to get a networkx graph.
+
+        Raises:
+            UnexpectedStatusError: If the annotation does not have an editable mapping (is not a proofreading annotation)
+            AssertionError: If the annotation does not have exactly one volume layer
+
+        Examples:
+            ```python
+            annotation = wk.Annotation.download("annotation_id")
+            for agglomerate_id, graph_data in annotation.get_proofread_agglomerate_graph_data().items():
+                graph = graph_data.to_agglomerate_graph()
+                print(agglomerate_id, graph)
+            ```
+        """
+        from ..client.context import _get_context
+
+        assert self.annotation_id is not None, "Annotation ID must be set."
+        tracingstore_client = _get_context().get_tracingstore_api_client()
+        tracing_id = self._get_proofreading_tracing_id()
+
+        edges, _ = tracingstore_client.get_edited_edges(tracing_id)
+        if len(edges) == 0:
+            return {}
+        agglomerate_id_by_segment = (
+            tracingstore_client.get_agglomerate_ids_for_segments(
+                tracing_id, self.annotation_id, edges.ravel().tolist()
+            )
+        )
+        agglomerate_ids = sorted(set(agglomerate_id_by_segment.values()) - {0})
+        return {
+            agglomerate_id: tracingstore_client.get_agglomerate_graph(
+                tracing_id, agglomerate_id
+            )
+            for agglomerate_id in agglomerate_ids
+        }
+
+    def _get_proofreading_tracing_id(self) -> str:
         annotation_info = self._get_annotation_info()
         assert annotation_info.annotation_layers is not None, "Annotation has no layers"
-        tracingstore_client = context.get_tracingstore_api_client()
         volume_layer = [
             layer
             for layer in annotation_info.annotation_layers
             if layer.typ == "Volume"
         ]
         assert len(volume_layer) == 1, "Expected exactly one volume layer"
-        graph = tracingstore_client.get_agglomerate_graph(
-            volume_layer[0].tracing_id, agglomerate_id
-        )
-        return graph
+        return volume_layer[0].tracing_id
