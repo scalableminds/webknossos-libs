@@ -27,6 +27,7 @@ from webknossos.dataset.dataset import PROPERTIES_FILE_NAME
 from webknossos.dataset.defaults import (
     DEFAULT_DATA_FORMAT,
 )
+from webknossos.dataset.layer.view import RemoteMagView
 from webknossos.dataset_properties import (
     COLOR_CATEGORY,
     SEGMENTATION_CATEGORY,
@@ -280,6 +281,37 @@ def test_extending_bounding_box_leaves_referenced_mag_untouched(
 
     assure_exported_properties(original_ds)
     assure_exported_properties(ds)
+
+
+def test_add_mag_as_ref_does_not_open_remote_array(tmp_upath: UPath) -> None:
+    unreadable_path = REMOTE_TESTOUTPUT_DIR / "nonexistent_dataset" / "color" / "1"
+    remote_mag = mock.MagicMock(spec=RemoteMagView)
+    remote_mag.mag = Mag(1)
+    remote_mag.path = unreadable_path
+    remote_mag.data_format = DataFormat.Zarr3
+    remote_mag.layer.dtype = np.dtype("uint8")
+    remote_mag._properties.cube_length = None
+    type(remote_mag).info = mock.PropertyMock(
+        side_effect=AssertionError("The remote array must not be opened.")
+    )
+    remote_mag.get_dtype.side_effect = AssertionError(
+        "The remote array must not be opened."
+    )
+
+    ds = Dataset(tmp_upath / "with_ref", voxel_size=(1, 1, 1))
+    layer = ds.add_layer(
+        "color", COLOR_CATEGORY, dtype="uint8", data_format=DataFormat.Zarr3
+    )
+    layer.add_mag_as_ref(remote_mag, extend_layer_bounding_box=False)
+
+    assert layer.get_mag(1)._properties.path == dump_path(
+        unreadable_path, ds.resolved_path
+    )
+
+    with pytest.raises(AssertionError, match="dtype"):
+        ds.add_layer(
+            "color_uint16", COLOR_CATEGORY, dtype="uint16", data_format=DataFormat.Zarr3
+        ).add_mag_as_ref(remote_mag, extend_layer_bounding_box=False)
 
 
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
