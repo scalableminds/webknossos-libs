@@ -182,6 +182,11 @@ def test_as_tiff_stack_pixel_values(tmp_upath: UPath, mag: Mag | None) -> None:
     crop_in_mag = crop.in_mag(mag or Mag(1))
     files = sorted(out_dir.glob("*.tiff"))
     assert len(files) == crop_in_mag.size.z
+    # Named by the absolute Mag(1) z of each slice.
+    mag_z = (mag or Mag(1)).z
+    assert [f.name for f in files] == [
+        f"{crop.topleft.z + z * mag_z:02d}.tiff" for z in range(len(files))
+    ]
 
     for z, file in enumerate(files):
         image = tifffile.imread(str(file))
@@ -205,8 +210,8 @@ def test_as_tiff_stack_filename_prefix(tmp_upath: UPath) -> None:
     )
 
     files = sorted(f.name for f in out_dir.glob("*.tiff"))
-    # 3 slices -> single-digit indices are enough.
-    assert files == ["section_0.tiff", "section_1.tiff", "section_2.tiff"]
+    # Absolute z, padded to the layer's largest z (63).
+    assert files == ["section_08.tiff", "section_09.tiff", "section_10.tiff"]
 
 
 @pytest.mark.parametrize("mag", [None, Mag("2-2-2")])
