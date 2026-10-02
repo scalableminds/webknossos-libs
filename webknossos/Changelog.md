@@ -18,7 +18,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Changed
 - Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
-- `Layer.export.as_tiff_stack` now names each slice by its absolute z in Mag(1) coordinates instead of numbering the slices from 0, zero-padded to the width of the layer's largest z. A cutout starting at z=40 in mag 2 is written as `40.tiff`, `42.tiff`, ….
+- `Layer.export.as_tiff_stack` now names each slice by its absolute z in Mag(1) coordinates instead of numbering the slices from 0, zero-padded to the width of the layer's largest z. A cutout starting at z=40 in mag 2 is written as `40.tiff`, `42.tiff`, …. [#1557](https://github.com/scalableminds/webknossos-libs/pull/1557)
 
 ### Fixed
 
