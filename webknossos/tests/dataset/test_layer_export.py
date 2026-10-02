@@ -111,7 +111,8 @@ def test_as_ozx_without_downsample(tmp_upath: UPath) -> None:
 
 def test_as_ozx_coarser_mags_are_downsampled_from_export(tmp_upath: UPath) -> None:
     # The layer's own mag 2-2-2 holds data unrelated to mag 1, so the
-    # archive's mag 2-2-2 must be computed from the exported mag 1.
+    # archive's coarser mags must be computed from the exported mag 1,
+    # regardless of which mags the layer has.
     _dataset, layer, data_by_mag = make_layer_with_mags(tmp_upath)
     crop = BoundingBox((10, 6, 3), (20, 20, 20))
     zip_path = tmp_upath / "color_downsampled.ozx"
@@ -136,12 +137,21 @@ def test_as_ozx_coarser_mags_are_downsampled_from_export(tmp_upath: UPath) -> No
             crop.topleft.z : crop.bottomright.z,
         ]
     )
-    reference_layer.downsample_mag(from_mag=Mag(1), target_mag=Mag("2-2-2"))
-    expected = reference_layer.get_mag("2-2-2").read()[0]
+    reference_layer.downsample()
 
-    got = read_zarr3_array(tmp_upath / "extracted" / Mag("2-2-2").to_layer_name())[0]
-    got = got[tuple(slice(0, s) for s in expected.shape)]
-    assert np.array_equal(got, expected)
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        root_attrs = json.loads(zip_file.read("zarr.json"))["attributes"]
+    multiscale_paths = {
+        d["path"] for d in root_attrs["ome"]["multiscales"][0]["datasets"]
+    }
+    assert multiscale_paths == {m.to_layer_name() for m in reference_layer.mags}
+    assert "2-2-2" not in multiscale_paths
+
+    for target_mag, mag_view in reference_layer.mags.items():
+        expected = mag_view.read()[0]
+        got = read_zarr3_array(tmp_upath / "extracted" / target_mag.to_layer_name())[0]
+        got = got[tuple(slice(0, s) for s in expected.shape)]
+        assert np.array_equal(got, expected)
 
 
 def test_export_access_mode_requires_remote_layer(tmp_upath: UPath) -> None:

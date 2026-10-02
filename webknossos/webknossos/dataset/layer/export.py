@@ -21,6 +21,7 @@ from webknossos.geometry import (
     Mag,
     NDBoundingBox,
     NormalizedBoundingBox,
+    Vec3Float,
     Vec3Int,
     Vec3IntLike,
     VecInt,
@@ -34,6 +35,10 @@ from ..defaults import (
     DEFAULT_SHARD_SHAPE_FROM_IMAGES,
 )
 from ..remote_access_mode import RemoteAccessMode
+from ._downsampling_utils import (
+    calculate_default_coarsest_mag,
+    calculate_mags_to_downsample,
+)
 
 if TYPE_CHECKING:
     from .abstract_layer import AbstractLayer
@@ -105,19 +110,26 @@ def _resolve_export_mag(
     return layer.get_mag(mag, access_mode=access_mode)
 
 
-def _downsampling_source_mag(target_mag: Mag, available_mags: list[Mag]) -> Mag:
-    """The coarsest of `available_mags` that `target_mag` can be downsampled from."""
-    target = target_mag.to_vec3_int()
-    candidates = [
-        mag
-        for mag in available_mags
-        if all(t % m == 0 for t, m in zip(target, mag.to_vec3_int()))
-    ]
-    if not candidates:
-        raise ValueError(
-            f"Mag {target_mag} cannot be downsampled from any of {available_mags}."
-        )
-    return max(candidates)
+def _export_pyramid_mags(
+    export_mag: Mag, size_xyz: Vec3Int, voxel_size: Vec3Float
+) -> list[Mag]:
+    """The coarser mags to compute from `export_mag` for an export of
+    `size_xyz` (in Mag(1) voxels), sampled anisotropically (constant z for
+    2D data)."""
+    coarsest = calculate_default_coarsest_mag(size_xyz).to_vec3_int()
+    export = export_mag.to_vec3_int()
+    if size_xyz.z == 1:
+        coarsest = coarsest.with_z(export.z)
+        voxel_size_or_none: Vec3Float | None = None
+    else:
+        voxel_size_or_none = voxel_size
+    coarsest_mag = Mag(Vec3Int(*(max(c, e) for c, e in zip(coarsest, export))))
+    return calculate_mags_to_downsample(
+        from_mag=export_mag,
+        coarsest_mag=coarsest_mag,
+        dataset_to_align_with=None,
+        voxel_size=voxel_size_or_none,
+    )
 
 
 def _make_tiff_name(filename_prefix: str, slice_index: int, digits: int) -> str:
@@ -303,8 +315,9 @@ class LayerExport:
         If `bounding_box` is given, the export is cropped to it (intersected
         with the layer's own bounding box). Only `mag` (the finest mag if
         None) is read from the layer. If `downsample` is True, the archive
-        also contains every coarser mag present on the layer, computed by
-        downsampling the exported data, so all mags cover the same region.
+        also contains a pyramid of coarser mags computed by downsampling the
+        exported data (like `Layer.downsample` with the anisotropic sampling
+        mode), independent of which mags the layer itself has.
 
         The output bounding box is translated to origin.
 
@@ -324,13 +337,15 @@ class LayerExport:
         layer = self._layer
         source_mag_view = _resolve_export_mag(layer, mag, access_mode)
         export_mag = source_mag_view.mag
+        source_bbox = _resolve_export_bbox(layer, source_mag_view, bounding_box)
+        target_bbox = source_bbox.with_topleft(VecInt.zeros(axes=source_bbox.axes))
         coarser_mags = (
-            sorted(m for m in layer.mags if m >= export_mag and m != export_mag)
+            _export_pyramid_mags(
+                export_mag, target_bbox.size_xyz, layer.dataset.voxel_size
+            )
             if downsample
             else []
         )
-        source_bbox = _resolve_export_bbox(layer, source_mag_view, bounding_box)
-        target_bbox = source_bbox.with_topleft(VecInt.zeros(axes=source_bbox.axes))
 
         def shard_shape_for(target_mag: Mag) -> Vec3Int:
             if fixed_shard_shape is not None:
@@ -397,15 +412,15 @@ class LayerExport:
                     progress_desc=f"Exporting {export_mag}",
                 )
 
-            written_mags = [export_mag]
-            for target_mag in coarser_mags:
+            for prev_mag, target_mag in zip(
+                [export_mag] + coarser_mags[:-1], coarser_mags
+            ):
                 tmp_layer.downsample_mag(
-                    from_mag=_downsampling_source_mag(target_mag, written_mags),
+                    from_mag=prev_mag,
                     target_mag=target_mag,
                     shard_shape=shard_shape_for(target_mag),
                     executor=executor,
                 )
-                written_mags.append(target_mag)
 
             _write_ome_zarr_zip(tmp_layer.path, output_path, ome_version="0.5")
 
