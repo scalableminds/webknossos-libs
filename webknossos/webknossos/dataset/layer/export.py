@@ -381,8 +381,9 @@ class LayerExport:
         for plain 3D layers, or `{axis}NNN_..._zNNN.tiff` (one segment per
         additional axis, sorted by name, plus z; still prefixed with
         `filename_prefix` if given) for layers with additional axes.
-        The z number is the slice's absolute z in Mag(1) coordinates,
-        zero-padded to the width of the layer's largest z.
+        Each number is the slice's absolute coordinate along that axis (z in
+        Mag(1) coordinates), zero-padded to the width of the layer's largest
+        coordinate along it.
         """
         try:
             import tifffile
@@ -413,14 +414,20 @@ class LayerExport:
         digits = max(1, len(str(max(max_z, 0))))
 
         extra_axes = sorted(a for a in bbox.axes if a not in CXYZ_AXES)
-        extra_digits = {
-            a: max(1, len(str(max(bbox.get_shape(a) - 1, 0)))) for a in extra_axes
-        }
+        layer_bbox = layer.normalized_bounding_box
+        extra_digits = {}
+        for axis in extra_axes:
+            max_index = bbox.get_bounds(axis)[1] - 1
+            if axis in layer_bbox.axes:
+                max_index = max(max_index, layer_bbox.get_bounds(axis)[1] - 1)
+            extra_digits[axis] = max(1, len(str(max(max_index, 0))))
 
-        for combo in itertools.product(*(range(bbox.get_shape(a)) for a in extra_axes)):
+        for combo in itertools.product(
+            *(range(*bbox.get_bounds(a)) for a in extra_axes)
+        ):
             sub_bbox = bbox
             for axis, i in zip(extra_axes, combo):
-                sub_bbox = sub_bbox.with_bounds(axis, bbox.topleft[axis] + i, 1)
+                sub_bbox = sub_bbox.with_bounds(axis, i, 1)
             slice_axes = tuple(a for a in sub_bbox.axes if a != Z_AXIS)
 
             with mag_view.get_buffered_slice_reader(

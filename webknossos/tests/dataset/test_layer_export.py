@@ -281,6 +281,24 @@ def test_as_tiff_stack_nd_layer(tmp_upath: UPath) -> None:
         assert np.array_equal(image, expected)
 
 
+def test_as_tiff_stack_nd_layer_cropped_names_are_absolute(tmp_upath: UPath) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    layer = make_nd_layer()
+    data = layer.get_finest_mag().read()  # (c=1, t=7, z=5, y=167, x=439)
+    crop = layer.bounding_box.with_bounds(T_AXIS, 3, 2).with_bounds(Z_AXIS, 1, 2)
+    out_dir = tmp_upath / "nd_tiff_stack_cropped"
+
+    layer.export.as_tiff_stack(output_path=out_dir, bounding_box=crop)
+
+    files = sorted(f.name for f in out_dir.glob("*.tiff"))
+    assert files == ["t3_z1.tiff", "t3_z2.tiff", "t4_z1.tiff", "t4_z2.tiff"]
+    for t, z in [(3, 1), (4, 2)]:
+        image = tifffile.imread(str(out_dir / f"t{t}_z{z}.tiff"))
+        assert np.array_equal(image, data[0, t, z])
+
+
 def test_as_ome_tiff_nd_layer_roundtrip(tmp_upath: UPath) -> None:
     pytest.importorskip("tifffile")
     import tifffile
