@@ -52,13 +52,13 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
     transfer_mode: Annotated[
-        TransferMode | None,
+        TransferMode,
         typer.Option(
-            help="The transfer mode to use. Required for remote datasets. "
-            "Options: 'copy', 'move+symlink', 'symlink', 'http'.",
+            help="The transfer mode to use for remote datasets. 'http' is the default. "
+            "Other modes like 'copy', 'move+symlink', 'symlink' are for users with direct filesystem access to the WEBKNOSSOS datastore.",
             rich_help_panel="WEBKNOSSOS context",
         ),
-    ] = None,
+    ] = TransferMode.HTTP,
     access_mode: AccessModeOption = None,
 ) -> None:
     """Downsample your WEBKNOSSOS dataset."""
@@ -66,7 +66,7 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
     sampling_mode_parsed = SamplingModes.parse(sampling_mode.value)
 
     if access_mode is None:
-        if transfer_mode is not None and transfer_mode != TransferMode.HTTP:
+        if transfer_mode != TransferMode.HTTP:
             access_mode = RemoteAccessMode.DIRECT_PATH
         else:
             access_mode = RemoteAccessMode.PROXY_PATH
@@ -80,11 +80,6 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             job_resources=job_resources,
         ) as executor:
             if isinstance(dataset, RemoteDataset):
-                if transfer_mode is None:
-                    raise typer.BadParameter(
-                        "--transfer-mode is required for remote datasets.",
-                        param_hint="--transfer-mode",
-                    )
                 extra_kwargs: dict = {"transfer_mode": transfer_mode}
             else:
                 extra_kwargs = {}
