@@ -894,17 +894,13 @@ class Annotation:
             nml_str = buffer.getvalue().decode("utf-8")
         zipfile.writestr(self.name + ".nml", nml_str)
         for volume_layer in self._volume_layers:
-            if volume_layer.zip is None:
-                with BytesIO() as buffer:
-                    with ZipFile(buffer, mode="a"):
-                        pass
-                    layer_content = buffer.getvalue()
-            else:
-                layer_content = volume_layer.zip.read_bytes()
-            zipfile.writestr(
-                volume_layer._default_zip_name(),
-                layer_content,
-            )
+            # WEBKNOSSOS rejects data zips without any buckets.
+            if volume_layer._has_volume_data():
+                assert volume_layer.zip is not None
+                zipfile.writestr(
+                    volume_layer._default_zip_name(),
+                    volume_layer.zip.read_bytes(),
+                )
 
     def get_remote_annotation_dataset(self) -> RemoteDataset:
         """Returns a streamed dataset of the annotation from WEBKNOSSOS.
