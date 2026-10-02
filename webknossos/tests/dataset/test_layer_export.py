@@ -6,7 +6,7 @@ import pytest
 from upath import UPath
 
 from tests.data_fixtures import download_wklibs_sample_archive
-from webknossos import COLOR_CATEGORY, Dataset, Layer
+from webknossos import COLOR_CATEGORY, Dataset, Layer, RemoteAccessMode
 from webknossos.dataset._utils.tensorstore_helpers import read_zarr3_array
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
 from webknossos.geometry.constants import C_AXIS, T_AXIS, X_AXIS, Y_AXIS, Z_AXIS
@@ -93,6 +93,75 @@ def test_as_ozx_single_mag(tmp_upath: UPath) -> None:
         names = zip_file.namelist()
         assert "1/zarr.json" not in names
         assert "2-2-1/zarr.json" in names
+
+
+def test_as_ozx_without_downsample(tmp_upath: UPath) -> None:
+    _dataset, layer, _data = make_layer(tmp_upath)
+    zip_path = tmp_upath / "color_no_downsample.ozx"
+
+    layer.export.as_ozx(output_path=zip_path, downsample=False)
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        root_attrs = json.loads(zip_file.read("zarr.json"))["attributes"]
+        multiscale_paths = {
+            d["path"] for d in root_attrs["ome"]["multiscales"][0]["datasets"]
+        }
+    assert multiscale_paths == {"1"}
+
+
+def test_as_ozx_coarser_mags_are_downsampled_from_export(tmp_upath: UPath) -> None:
+    # The layer's own mag 2-2-2 holds data unrelated to mag 1, so the
+    # archive's coarser mags must be computed from the exported mag 1,
+    # regardless of which mags the layer has.
+    _dataset, layer, data_by_mag = make_layer_with_mags(tmp_upath)
+    crop = BoundingBox((10, 6, 3), (20, 20, 20))
+    zip_path = tmp_upath / "color_downsampled.ozx"
+
+    layer.export.as_ozx(output_path=zip_path, bounding_box=crop)
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        zip_file.extractall(str(tmp_upath / "extracted"))
+
+    reference = Dataset(tmp_upath / "reference", voxel_size=(11, 11, 25))
+    reference_layer = reference.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), crop.size),
+    )
+    reference_layer.add_mag(1).write(
+        data=data_by_mag[Mag(1)][
+            crop.topleft.x : crop.bottomright.x,
+            crop.topleft.y : crop.bottomright.y,
+            crop.topleft.z : crop.bottomright.z,
+        ]
+    )
+    reference_layer.downsample()
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        root_attrs = json.loads(zip_file.read("zarr.json"))["attributes"]
+    multiscale_paths = {
+        d["path"] for d in root_attrs["ome"]["multiscales"][0]["datasets"]
+    }
+    assert multiscale_paths == {m.to_layer_name() for m in reference_layer.mags}
+    assert "2-2-2" not in multiscale_paths
+
+    for target_mag, mag_view in reference_layer.mags.items():
+        expected = mag_view.read()[0]
+        got = read_zarr3_array(tmp_upath / "extracted" / target_mag.to_layer_name())[0]
+        got = got[tuple(slice(0, s) for s in expected.shape)]
+        assert np.array_equal(got, expected)
+
+
+def test_export_access_mode_requires_remote_layer(tmp_upath: UPath) -> None:
+    _dataset, layer, _data = make_layer(tmp_upath)
+
+    with pytest.raises(ValueError, match="access_mode"):
+        layer.export.as_ozx(
+            output_path=tmp_upath / "color.ozx",
+            access_mode=RemoteAccessMode.DIRECT_PATH,
+        )
 
 
 def make_odd_sized_layer(tmp_upath: UPath) -> tuple[Dataset, Layer, np.ndarray]:
@@ -232,6 +301,20 @@ def test_as_ome_tiff_readable(tmp_upath: UPath, mag: Mag | None) -> None:
         ].transpose((2, 1, 0))
         assert arr.shape == expected.shape
         assert np.array_equal(arr, expected)
+
+
+@pytest.mark.parametrize("downsample", [True, False])
+def test_as_ome_tiff_downsample(tmp_upath: UPath, downsample: bool) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    _dataset, layer, _data = make_layer(tmp_upath)
+    out_path = tmp_upath / "color.ome.tif"
+
+    layer.export.as_ome_tiff(output_path=out_path, downsample=downsample)
+
+    with tifffile.TiffFile(str(out_path)) as tif:
+        assert (len(tif.series[0].levels) > 1) == downsample
 
 
 def make_nd_layer() -> Layer:

@@ -21,6 +21,7 @@ from webknossos.geometry import (
     Mag,
     NDBoundingBox,
     NormalizedBoundingBox,
+    Vec3Float,
     Vec3Int,
     Vec3IntLike,
     VecInt,
@@ -32,6 +33,11 @@ from ..defaults import (
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_SHARD_SHAPE,
     DEFAULT_SHARD_SHAPE_FROM_IMAGES,
+)
+from ..remote_access_mode import RemoteAccessMode
+from ._downsampling_utils import (
+    calculate_default_coarsest_mag,
+    calculate_mags_to_downsample,
 )
 
 if TYPE_CHECKING:
@@ -91,8 +97,39 @@ def _resolve_export_bbox(
     return result
 
 
-def _resolve_export_mag(layer: "AbstractLayer", mag: Mag | None) -> "MagView":
-    return layer.get_mag(mag) if mag is not None else layer.get_finest_mag()
+def _resolve_export_mag(
+    layer: "AbstractLayer", mag: Mag | None, access_mode: RemoteAccessMode | None
+) -> "MagView":
+    from .remote_layer import RemoteLayer  # local import avoids a circular import
+
+    mag = mag if mag is not None else min(layer.mags)
+    if access_mode is None:
+        return layer.get_mag(mag)
+    if not isinstance(layer, RemoteLayer):
+        raise ValueError("access_mode can only be passed for remote layers.")
+    return layer.get_mag(mag, access_mode=access_mode)
+
+
+def _export_pyramid_mags(
+    export_mag: Mag, size_xyz: Vec3Int, voxel_size: Vec3Float
+) -> list[Mag]:
+    """The coarser mags to compute from `export_mag` for an export of
+    `size_xyz` (in Mag(1) voxels), sampled anisotropically (constant z for
+    2D data)."""
+    coarsest = calculate_default_coarsest_mag(size_xyz).to_vec3_int()
+    export = export_mag.to_vec3_int()
+    if size_xyz.z == 1:
+        coarsest = coarsest.with_z(export.z)
+        voxel_size_or_none: Vec3Float | None = None
+    else:
+        voxel_size_or_none = voxel_size
+    coarsest_mag = Mag(Vec3Int(*(max(c, e) for c, e in zip(coarsest, export))))
+    return calculate_mags_to_downsample(
+        from_mag=export_mag,
+        coarsest_mag=coarsest_mag,
+        dataset_to_align_with=None,
+        voxel_size=voxel_size_or_none,
+    )
 
 
 def _make_tiff_name(filename_prefix: str, slice_index: int, digits: int) -> str:
@@ -264,6 +301,8 @@ class LayerExport:
         output_path: str | PathLike | UPath,
         bounding_box: NDBoundingBox | None = None,
         mag: Mag | None = None,
+        downsample: bool = True,
+        access_mode: RemoteAccessMode | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         executor: Executor | None = None,
     ) -> None:
@@ -274,11 +313,16 @@ class LayerExport:
         layer's own axes.
 
         If `bounding_box` is given, the export is cropped to it (intersected
-        with the layer's own bounding box). If `mag` is given, the archive
-        contains that mag plus every coarser mag already present on the
-        layer; if `mag` is None, the full mag pyramid is exported.
+        with the layer's own bounding box). Only `mag` (the finest mag if
+        None) is read from the layer. If `downsample` is True, the archive
+        also contains a pyramid of coarser mags computed by downsampling the
+        exported data (like `Layer.downsample` with the anisotropic sampling
+        mode), independent of which mags the layer itself has.
 
         The output bounding box is translated to origin.
+
+        `access_mode` selects how a remote layer's data is read, defaulting
+        to the dataset's access mode. It can't be passed for local layers.
 
         `shard_shape` fixes the shard shape used for every exported mag. If
         omitted, a shard shape is picked per mag that just covers the
@@ -291,11 +335,35 @@ class LayerExport:
             Vec3Int.from_vec_or_int(shard_shape) if shard_shape is not None else None
         )
         layer = self._layer
-        target_mags = sorted(m for m in layer.mags if mag is None or m >= mag)
-        source_bbox = _resolve_export_bbox(
-            layer, layer.get_mag(target_mags[0]), bounding_box
-        )
+        source_mag_view = _resolve_export_mag(layer, mag, access_mode)
+        export_mag = source_mag_view.mag
+        source_bbox = _resolve_export_bbox(layer, source_mag_view, bounding_box)
         target_bbox = source_bbox.with_topleft(VecInt.zeros(axes=source_bbox.axes))
+        coarser_mags = (
+            _export_pyramid_mags(
+                export_mag, target_bbox.size_xyz, layer.dataset.voxel_size
+            )
+            if downsample
+            else []
+        )
+
+        def shard_shape_for(target_mag: Mag) -> Vec3Int:
+            if fixed_shard_shape is not None:
+                return fixed_shard_shape
+            # webknossos Zarr arrays always span from voxel 0, so a large
+            # fixed shard shape would pad a small crop's declared extent far
+            # beyond what was actually exported. Instead, size each shard to
+            # just cover the exported region per axis (one shard, if
+            # possible), capped at a sensible default so a large export
+            # doesn't fragment into more, smaller shards than necessary.
+            local_size = (
+                target_bbox.align_with_mag(target_mag, ceil=True)
+                .in_mag(target_mag)
+                .size_xyz
+            )
+            return _shard_shape_for_export(
+                local_size, _default_max_shard_shape(local_size)
+            )
 
         with TemporaryDirectory() as tmpdir:
             from ..dataset import Dataset  # local import avoids a circular import
@@ -314,54 +382,45 @@ class LayerExport:
                 bounding_box=target_bbox,
                 largest_segment_id=layer._get_largest_segment_id_maybe(),
             )
-            for target_mag in target_mags:
-                source_mag_view = layer.get_mag(target_mag)
-                source_local_bbox = source_bbox.align_with_mag(target_mag, ceil=True)
-                target_local_bbox = target_bbox.align_with_mag(target_mag, ceil=True)
-                if target_local_bbox.is_empty():
-                    continue
-                if fixed_shard_shape is not None:
-                    mag_shard_shape = fixed_shard_shape
-                else:
-                    # webknossos Zarr arrays always span from voxel 0, so a
-                    # large fixed shard shape would pad a small crop's
-                    # declared extent far beyond what was actually exported.
-                    # Instead, size each shard to just cover the exported
-                    # region per axis (one shard, if possible), capped at a
-                    # sensible default so a large export doesn't fragment
-                    # into more, smaller shards than necessary.
-                    local_size = target_local_bbox.in_mag(target_mag).size_xyz
-                    mag_shard_shape = _shard_shape_for_export(
-                        local_size, _default_max_shard_shape(local_size)
-                    )
-                target_mag_view = tmp_layer.add_mag(
-                    target_mag, shard_shape=mag_shard_shape
-                )
-                # target_local_bbox is in Mag(1) units, so the shard shape
-                # (in this mag's own voxel units) needs to be scaled up to
-                # Mag(1) before it can be used to chunk the bbox.
-                shard_shape_mag1 = mag_shard_shape * target_mag.to_vec3_int()
-                with utils.wrap_executor(executor) as mag_executor:
-                    jobs = [
-                        (
-                            source_mag_view.get_view(
-                                absolute_bounding_box=chunk_bbox.with_topleft(
-                                    chunk_bbox.topleft + source_local_bbox.topleft
-                                ),
-                                read_only=True,
+            source_local_bbox = source_bbox.align_with_mag(export_mag, ceil=True)
+            target_local_bbox = target_bbox.align_with_mag(export_mag, ceil=True)
+            mag_shard_shape = shard_shape_for(export_mag)
+            target_mag_view = tmp_layer.add_mag(export_mag, shard_shape=mag_shard_shape)
+            # target_local_bbox is in Mag(1) units, so the shard shape (in this
+            # mag's own voxel units) needs to be scaled up to Mag(1) before it
+            # can be used to chunk the bbox.
+            shard_shape_mag1 = mag_shard_shape * export_mag.to_vec3_int()
+            with utils.wrap_executor(executor) as copy_executor:
+                jobs = [
+                    (
+                        source_mag_view.get_view(
+                            absolute_bounding_box=chunk_bbox.with_topleft(
+                                chunk_bbox.topleft + source_local_bbox.topleft
                             ),
-                            target_mag_view,
-                            chunk_bbox,
-                        )
-                        for chunk_bbox in target_local_bbox.chunk(
-                            shard_shape_mag1, shard_shape_mag1
-                        )
-                    ]
-                    wait_and_ensure_success(
-                        mag_executor.map_to_futures(_copy, jobs),
-                        executor=mag_executor,
-                        progress_desc=f"Exporting {target_mag}",
+                            read_only=True,
+                        ),
+                        target_mag_view,
+                        chunk_bbox,
                     )
+                    for chunk_bbox in target_local_bbox.chunk(
+                        shard_shape_mag1, shard_shape_mag1
+                    )
+                ]
+                wait_and_ensure_success(
+                    copy_executor.map_to_futures(_copy, jobs),
+                    executor=copy_executor,
+                    progress_desc=f"Exporting {export_mag}",
+                )
+
+            for prev_mag, target_mag in zip(
+                [export_mag] + coarser_mags[:-1], coarser_mags
+            ):
+                tmp_layer.downsample_mag(
+                    from_mag=prev_mag,
+                    target_mag=target_mag,
+                    shard_shape=shard_shape_for(target_mag),
+                    executor=executor,
+                )
 
             _write_ome_zarr_zip(tmp_layer.path, output_path, ome_version="0.5")
 
@@ -372,6 +431,7 @@ class LayerExport:
         bounding_box: NDBoundingBox | None = None,
         mag: Mag | None = None,
         filename_prefix: str = "",
+        access_mode: RemoteAccessMode | None = None,
     ) -> None:
         """Exports the layer as a directory of per-slice TIFF files, one
         file per z-section (and per combination of any additional axes,
@@ -389,7 +449,7 @@ class LayerExport:
 
         output_path = UPath(output_path)
         layer = self._layer
-        mag_view = _resolve_export_mag(layer, mag)
+        mag_view = _resolve_export_mag(layer, mag, access_mode)
         # ceil=True: a coarser mag's own array always covers the
         # ceil-of-mag-factor extent of the layer's bounding box (see
         # Layer.add_mag), so floor-aligning here would silently drop the
@@ -444,11 +504,19 @@ class LayerExport:
         output_path: str | PathLike | UPath,
         bounding_box: NDBoundingBox | None = None,
         mag: Mag | None = None,
+        downsample: bool = True,
+        access_mode: RemoteAccessMode | None = None,
     ) -> None:
-        """Exports the layer as a single, pyramidal OME-TIFF file.
+        """Exports the layer as a single OME-TIFF file.
 
         Only layers whose axes are a subset of c, t, z, y, x are supported
         (OME-TIFF's own dimension model doesn't extend to other axes).
+
+        If `downsample` is True, the file also contains a pyramid of
+        downsampled levels (by factors of 2 in x and y).
+
+        `access_mode` selects how a remote layer's data is read, defaulting
+        to the dataset's access mode. It can't be passed for local layers.
         """
         try:
             import tifffile
@@ -457,7 +525,7 @@ class LayerExport:
 
         output_path = UPath(output_path)
         layer = self._layer
-        mag_view = _resolve_export_mag(layer, mag)
+        mag_view = _resolve_export_mag(layer, mag, access_mode)
         # ceil=True: a coarser mag's own array always covers the
         # ceil-of-mag-factor extent of the layer's bounding box (see
         # Layer.add_mag), so floor-aligning here would silently drop the
@@ -503,7 +571,8 @@ class LayerExport:
                 for factor in (
                     2 ** (step + 1) for step in range(OME_TIFF_DOWNSAMPLING_STEPS)
                 )
-                if data.shape[y_idx] // factor > OME_TIFF_DOWNSAMPLING_MIN_PIXEL
+                if downsample
+                and data.shape[y_idx] // factor > OME_TIFF_DOWNSAMPLING_MIN_PIXEL
                 and data.shape[x_idx] // factor > OME_TIFF_DOWNSAMPLING_MIN_PIXEL
             ]
 

@@ -15,8 +15,10 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- `Layer.export.as_ozx`, `as_tiff_stack` and `as_ome_tiff` take an `access_mode` to choose how a remote layer's data is read, instead of always using the dataset's access mode. `as_ozx` and `as_ome_tiff` take a `downsample` flag (default `True`); with `downsample=False`, only the requested mag is written, without coarser levels. [#1558](https://github.com/scalableminds/webknossos-libs/pull/1558)
 
 ### Changed
+- `Layer.export.as_ozx` now reads only the requested mag and computes a fresh pyramid of coarser mags by downsampling the exported data (anisotropic sampling), instead of copying the layer's existing mags. All mags in the archive now cover the same region, also for bounding boxes that aren't aligned with the coarser mags. [#1558](https://github.com/scalableminds/webknossos-libs/pull/1558)
 - Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
 
 ### Fixed
