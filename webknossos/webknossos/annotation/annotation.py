@@ -1552,7 +1552,7 @@ class RemoteAnnotation(Annotation):
         )
         return graph
 
-    def get_edited_edges(self) -> tuple[np.ndarray, np.ndarray]:
+    def _get_edited_edges(self) -> tuple[np.ndarray, np.ndarray]:
         """
         Get all edges that were added (merges) or removed (splits) during proofreading.
         Reverted edits are not included.
@@ -1570,12 +1570,12 @@ class RemoteAnnotation(Annotation):
         """
         from ..client.context import _get_context
 
-        return self._get_edited_edges(
+        return self._fetch_edited_edges(
             _get_context().get_tracingstore_api_client(),
             self._get_proofreading_tracing_id(),
         )
 
-    def get_agglomerate_ids_for_segments(
+    def _get_agglomerate_ids_for_segments(
         self, segment_ids: Iterable[int]
     ) -> dict[int, int]:
         """
@@ -1603,11 +1603,11 @@ class RemoteAnnotation(Annotation):
             segment_ids=segment_ids,
         )
 
-    def get_proofread_agglomerate_graph_data(self) -> dict[int, AgglomerateGraphData]:
+    def _get_proofread_agglomerate_graph_data(self) -> dict[int, AgglomerateGraphData]:
         """
         Get the agglomerate graph data of all agglomerates that were touched by proofreading.
         These are the current agglomerates containing a segment of any merged or split edge
-        (see `get_edited_edges`).
+        (see `_get_edited_edges`).
         This works only for proofreading annotations that have only a single volume layer.
 
         Returns:
@@ -1621,7 +1621,7 @@ class RemoteAnnotation(Annotation):
         Examples:
             ```python
             annotation = wk.Annotation.open_remote("annotation_id")
-            for agglomerate_id, graph_data in annotation.get_proofread_agglomerate_graph_data().items():
+            for agglomerate_id, graph_data in annotation._get_proofread_agglomerate_graph_data().items():
                 graph = graph_data.to_agglomerate_graph()
                 print(agglomerate_id, graph)
             ```
@@ -1632,7 +1632,7 @@ class RemoteAnnotation(Annotation):
         tracingstore_client = _get_context().get_tracingstore_api_client()
         tracing_id = self._get_proofreading_tracing_id()
 
-        edges, _ = self._get_edited_edges(tracingstore_client, tracing_id)
+        edges, _ = self._fetch_edited_edges(tracingstore_client, tracing_id)
         if len(edges) == 0:
             return {}
         agglomerate_id_by_segment = (
@@ -1648,7 +1648,7 @@ class RemoteAnnotation(Annotation):
             for agglomerate_id in agglomerate_ids
         }
 
-    def _get_edited_edges(
+    def _fetch_edited_edges(
         self, tracingstore_client: "TracingStoreApiClient", tracing_id: str
     ) -> tuple[np.ndarray, np.ndarray]:
         from ..proofreading.edited_edges import edited_edges_from_update_groups

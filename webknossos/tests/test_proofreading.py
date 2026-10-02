@@ -189,7 +189,7 @@ def fake_tracingstore(monkeypatch: pytest.MonkeyPatch) -> Iterator[FakeTracingSt
 
 @pytest.mark.usefixtures("fake_tracingstore")
 def test_get_edited_edges(annotation: RemoteAnnotation) -> None:
-    edges, is_addition = annotation.get_edited_edges()
+    edges, is_addition = annotation._get_edited_edges()
 
     assert edges.dtype == np.uint64
     assert is_addition.dtype == bool
@@ -204,7 +204,7 @@ def test_get_edited_edges_pages_the_update_log(
 ) -> None:
     monkeypatch.setattr(annotation_module, "_UPDATE_ACTION_LOG_PAGE_SIZE", 3)
 
-    edges, is_addition = annotation.get_edited_edges()
+    edges, is_addition = annotation._get_edited_edges()
 
     np.testing.assert_array_equal(edges, EXPECTED_EDGES)
     np.testing.assert_array_equal(is_addition, EXPECTED_IS_ADDITION)
@@ -220,7 +220,7 @@ def test_get_edited_edges_empty(
 ) -> None:
     fake_tracingstore.update_groups = {}
 
-    edges, is_addition = annotation.get_edited_edges()
+    edges, is_addition = annotation._get_edited_edges()
 
     assert edges.shape == (0, 2)
     assert is_addition.shape == (0,)
@@ -229,7 +229,7 @@ def test_get_edited_edges_empty(
 @pytest.mark.usefixtures("fake_tracingstore")
 def test_get_agglomerate_ids_for_segments(annotation: RemoteAnnotation) -> None:
     # Unsorted with duplicates, the request must be sorted and deduplicated
-    result = annotation.get_agglomerate_ids_for_segments([5, 1, 3, 1, 7])
+    result = annotation._get_agglomerate_ids_for_segments([5, 1, 3, 1, 7])
 
     assert result == {1: 10, 3: 10, 5: 20, 7: 0}
 
@@ -237,7 +237,7 @@ def test_get_agglomerate_ids_for_segments(annotation: RemoteAnnotation) -> None:
 def test_get_proofread_agglomerate_graph_data(
     annotation: RemoteAnnotation, fake_tracingstore: FakeTracingStore
 ) -> None:
-    graphs = annotation.get_proofread_agglomerate_graph_data()
+    graphs = annotation._get_proofread_agglomerate_graph_data()
 
     assert list(graphs.keys()) == [10, 20, 30]
     np.testing.assert_array_equal(graphs[20].segments, [2001, 2002])
@@ -265,7 +265,7 @@ def test_get_proofread_agglomerate_graph_data_without_edits(
 ) -> None:
     fake_tracingstore.update_groups = {0: UPDATE_GROUPS[0]}
 
-    assert annotation.get_proofread_agglomerate_graph_data() == {}
+    assert annotation._get_proofread_agglomerate_graph_data() == {}
     assert fake_tracingstore.requests_to("/agglomeratesForSegments") == []
 
 

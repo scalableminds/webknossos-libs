@@ -49,7 +49,7 @@ def edited_edges_from_update_groups(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Extracts the merged and split edges of a proofreading tracing from its update action log.
 
-    Returns (edges, is_addition), see RemoteAnnotation.get_edited_edges.
+    Returns (edges, is_addition), see RemoteAnnotation._get_edited_edges.
     """
     edges: list[tuple[int, int]] = []
     is_addition: list[bool] = []
