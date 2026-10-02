@@ -20,7 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
 
 ### Fixed
-- `Layer.add_mag_as_ref` and `Dataset.add_layer_as_ref` no longer open the array of a `RemoteMagView` to validate its data format and dtype, but use the remote layer's properties instead. Referencing a remote mag via its direct path therefore works without credentials for the underlying storage.
+- `Layer.add_mag_as_ref` and `Dataset.add_layer_as_ref` no longer open the array of a `RemoteMagView` to validate its data format and dtype, but use the remote layer's properties instead. Referencing a remote mag via its direct path therefore works without credentials for the underlying storage. [#1553](https://github.com/scalableminds/webknossos-libs/pull/1553)
 
 
 ## [4.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.1) - 2026-09-22
