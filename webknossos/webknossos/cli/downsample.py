@@ -55,7 +55,7 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
         TransferMode,
         typer.Option(
             help="The transfer mode to use for remote datasets. 'http' is the default. "
-            "Other modes like 'copy', 'move+symlink', 'symlink' are for users with direct filesystem access to the WEBKNOSSOS datastore.",
+            "Other modes like 'copy', 'move+symlink', 'symlink' are for users with direct access to the storage underlying the WEBKNOSSOS datastore.",
             rich_help_panel="WEBKNOSSOS context",
         ),
     ] = TransferMode.HTTP,
