@@ -1,4 +1,5 @@
 import atexit
+import copy
 import logging
 import math
 import os
@@ -117,6 +118,14 @@ class ClusterExecutor(futures.Executor):
         self.output_store = (
             FileOutputStore(self.cfut_dir) if output_store is None else output_store
         )
+        if (
+            isinstance(self.output_store, FileOutputStore)
+            and self.output_store.directory is None
+        ):
+            # Default keys of a FileOutputStore without a directory go to `cfut_dir`.
+            # Copy the store, so that the caller's instance is not modified.
+            self.output_store = copy.copy(self.output_store)
+            self.output_store.directory = self.cfut_dir
 
         logging.info(
             f"Instantiating ClusterExecutor. Log files are stored in {self.cfut_dir}"
