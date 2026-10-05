@@ -132,10 +132,10 @@ def _export_pyramid_mags(
     )
 
 
-def _make_tiff_name(filename_prefix: str, slice_index: int, digits: int) -> str:
+def _make_tiff_name(filename_prefix: str, z: int, digits: int) -> str:
     if not filename_prefix:
-        return f"{slice_index:0{digits}d}.tiff"
-    return f"{filename_prefix}_{slice_index:0{digits}d}.tiff"
+        return f"{z:0{digits}d}.tiff"
+    return f"{filename_prefix}_{z:0{digits}d}.tiff"
 
 
 def _make_tiff_stack_name(
@@ -143,13 +143,13 @@ def _make_tiff_stack_name(
     extra_axes: list[str],
     combo: tuple[int, ...],
     extra_digits: dict[str, int],
-    slice_index: int,
+    z: int,
     z_digits: int,
 ) -> str:
     segments = [
         f"{axis}{i:0{extra_digits[axis]}d}" for axis, i in zip(extra_axes, combo)
     ]
-    segments.append(f"z{slice_index:0{z_digits}d}")
+    segments.append(f"z{z:0{z_digits}d}")
     body = "_".join(segments)
     return f"{filename_prefix}_{body}.tiff" if filename_prefix else f"{body}.tiff"
 
@@ -441,6 +441,9 @@ class LayerExport:
         for plain 3D layers, or `{axis}NNN_..._zNNN.tiff` (one segment per
         additional axis, sorted by name, plus z; still prefixed with
         `filename_prefix` if given) for layers with additional axes.
+        Each number is the slice's absolute coordinate along that axis (z in
+        Mag(1) coordinates), zero-padded to the width of the layer's largest
+        coordinate along it.
         """
         try:
             import tifffile
@@ -461,24 +464,37 @@ class LayerExport:
         output_path.mkdir(parents=True, exist_ok=True)
         compression = "zlib" if layer.category == SEGMENTATION_CATEGORY else None
 
-        num_slices = bbox.in_mag(mag_view.mag).size_xyz.z
-        digits = max(1, len(str(max(num_slices - 1, 0))))
+        max_z = (
+            max(
+                layer.normalized_bounding_box.bottomright_xyz.z,
+                bbox.bottomright_xyz.z,
+            )
+            - 1
+        )
+        digits = max(1, len(str(max(max_z, 0))))
 
         extra_axes = sorted(a for a in bbox.axes if a not in CXYZ_AXES)
-        extra_digits = {
-            a: max(1, len(str(max(bbox.get_shape(a) - 1, 0)))) for a in extra_axes
-        }
+        layer_bbox = layer.normalized_bounding_box
+        extra_digits = {}
+        for axis in extra_axes:
+            max_index = bbox.get_bounds(axis)[1] - 1
+            if axis in layer_bbox.axes:
+                max_index = max(max_index, layer_bbox.get_bounds(axis)[1] - 1)
+            extra_digits[axis] = max(1, len(str(max(max_index, 0))))
 
-        for combo in itertools.product(*(range(bbox.get_shape(a)) for a in extra_axes)):
+        for combo in itertools.product(
+            *(range(*bbox.get_bounds(a)) for a in extra_axes)
+        ):
             sub_bbox = bbox
             for axis, i in zip(extra_axes, combo):
-                sub_bbox = sub_bbox.with_bounds(axis, bbox.topleft[axis] + i, 1)
+                sub_bbox = sub_bbox.with_bounds(axis, i, 1)
             slice_axes = tuple(a for a in sub_bbox.axes if a != Z_AXIS)
 
             with mag_view.get_buffered_slice_reader(
                 absolute_bounding_box=sub_bbox
             ) as reader:
                 for slice_index, slice_data in enumerate(reader):
+                    z = bbox.topleft_xyz.z + slice_index * mag_view.mag.z
                     image = _slice_to_image(
                         _extract_tiff_stack_slice(slice_data, slice_axes)
                     )
@@ -488,11 +504,11 @@ class LayerExport:
                             extra_axes,
                             combo,
                             extra_digits,
-                            slice_index,
+                            z,
                             digits,
                         )
                         if extra_axes
-                        else _make_tiff_name(filename_prefix, slice_index, digits)
+                        else _make_tiff_name(filename_prefix, z, digits)
                     )
                     tiff_path = output_path / name
                     with tiff_path.open("wb") as f:
