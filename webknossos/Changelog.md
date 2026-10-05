@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 - `webknossos downsample` and `webknossos upsample` no longer require `--transfer-mode` for remote datasets; it now defaults to `http`. [#1554](https://github.com/scalableminds/webknossos-libs/pull/1554)
 - Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
+- `Layer.export.as_tiff_stack` now names each slice by its absolute coordinates (z in Mag(1) coordinates, plus any additional axes) instead of numbering the slices from 0, zero-padded to the width of the layer's largest coordinate along each axis. A cutout starting at z=40 in mag 2 is written as `40.tiff`, `42.tiff`, …, and one starting at t=3 as `t3_z….tiff`. [#1557](https://github.com/scalableminds/webknossos-libs/pull/1557)
 
 ### Fixed
 - Volume layers without any voxel data (e.g. a fresh `add_volume_layer` with a fallback layer, used only to register segments) are now saved without a data zip, so uploading them to WEBKNOSSOS no longer fails with "Initializing without any mags". [#1555](https://github.com/scalableminds/webknossos-libs/pull/1555)
