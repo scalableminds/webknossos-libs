@@ -8,7 +8,7 @@ from upath import UPath
 
 import webknossos as wk
 from webknossos import Annotation, DataFormat, SegmentationLayer
-from webknossos.annotation.volume_layer import VolumeLayerEditMode
+from webknossos.annotation.volume_layer import SegmentInformation, VolumeLayerEditMode
 from webknossos.geometry import BoundingBox, Vec3Int
 
 from .constants import TESTDATA_DIR, TESTOUTPUT_DIR
@@ -543,6 +543,46 @@ def test_edited_volume_annotation_save_load(edit_mode: VolumeLayerEditMode) -> N
         mag = seg_layer.get_mag(1)
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
         np.testing.assert_array_equal(data, read_data)
+
+
+def test_volume_layer_without_data_save_load() -> None:
+    import zipfile
+
+    ann = wk.Annotation(
+        name="my_annotation",
+        dataset_name="sample_dataset",
+        voxel_size=(11.2, 11.2, 25.0),
+    )
+    volume_layer = ann.add_volume_layer(
+        name="segmentation", dtype=np.uint16, fallback_layer="nuclei"
+    )
+    volume_layer.segments[42] = SegmentInformation(
+        name="nucleus_42", anchor_position=(1, 2, 3), color=None, metadata={}
+    )
+    # Adding a mag without writing any data still counts as no data.
+    with volume_layer.edit() as seg_layer:
+        seg_layer.add_mag(1)
+
+    save_path = TESTOUTPUT_DIR / "annotation_without_volume_data.zip"
+    ann.save(save_path)
+
+    # WEBKNOSSOS rejects data zips without any buckets, so none must be written.
+    with save_path.open("rb") as f:
+        with zipfile.ZipFile(f) as zip_ref:
+            assert zip_ref.namelist() == ["my_annotation.nml"]
+            nml_str = zip_ref.read("my_annotation.nml").decode("utf-8")
+    assert 'fallbackLayer="nuclei"' in nml_str
+    assert "location=" not in nml_str
+
+    ann_loaded = Annotation.load(save_path)
+    volume_layer_loaded = ann_loaded.get_volume_layer("segmentation")
+    assert volume_layer_loaded.fallback_layer_name == "nuclei"
+    assert volume_layer_loaded.zip is None
+    assert volume_layer_loaded.segments == {
+        42: SegmentInformation(
+            name="nucleus_42", anchor_position=(1, 2, 3), color=None, metadata={}
+        )
+    }
 
 
 @pytest.mark.skip_on_windows

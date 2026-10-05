@@ -1046,7 +1046,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         *,
         data_format: str | DataFormat | None = None,
         exists_ok: bool = False,
-        transfer_mode: TransferMode = TransferMode.COPY,
+        transfer_mode: TransferMode = TransferMode.HTTP,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
         with_attachments: bool = True,
@@ -1061,7 +1061,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             new_layer_name: Optional name for the new layer, uses original name if None
             data_format: Optional format to store copied data ('zarr', 'zarr3', etc.)
             exists_ok: Whether to overwrite existing layers
-            transfer_mode: How data is transferred to remote storage. Defaults to COPY.
+            transfer_mode: How data is transferred to remote storage. Defaults to HTTP.
             common_storage_path_prefix: Optional path prefix to select one of the
                 available WEBKNOSSOS storages.
             overwrite_pending: If there are already pending/unfinished committed mags
@@ -1818,7 +1818,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         coarsest_mag: Mag | None = None,
         interpolation_mode: str = "default",
         compress: bool | Zarr3Config = True,
-        transfer_mode: TransferMode = TransferMode.COPY,
+        transfer_mode: TransferMode = TransferMode.HTTP,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
         executor: Executor | None = None,
@@ -1833,7 +1833,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             coarsest_mag: Optional maximum/coarsest magnification to generate
             interpolation_mode: Interpolation method to use. Defaults to "default" (= "mode" for segmentation, "median" for color).
             compress: Whether to compress generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
-            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to COPY
+            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to HTTP.
             common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
                                         to select one of the available WEBKNOSSOS storages.
             overwrite_pending (bool). If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
