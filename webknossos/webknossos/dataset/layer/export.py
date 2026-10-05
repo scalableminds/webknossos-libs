@@ -350,12 +350,12 @@ class LayerExport:
         def shard_shape_for(target_mag: Mag) -> Vec3Int:
             if fixed_shard_shape is not None:
                 return fixed_shard_shape
-            # webknossos Zarr arrays always span from voxel 0, so a large
-            # fixed shard shape would pad a small crop's declared extent far
-            # beyond what was actually exported. Instead, size each shard to
-            # just cover the exported region per axis (one shard, if
-            # possible), capped at a sensible default so a large export
-            # doesn't fragment into more, smaller shards than necessary.
+            # The array's declared shape is rounded up to a multiple of the
+            # shard shape, so a large default shard shape would make a small
+            # export's arrays much larger than the exported data. Instead,
+            # size each shard to just cover the exported region per axis
+            # (one shard, if possible), capped at a sensible default so a
+            # large export doesn't fragment into many small shards.
             local_size = (
                 target_bbox.align_with_mag(target_mag, ceil=True)
                 .in_mag(target_mag)
