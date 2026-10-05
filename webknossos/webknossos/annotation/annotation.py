@@ -668,9 +668,16 @@ class Annotation:
             f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
         )
         with nml_paths[0].open(mode="rb") as nml_f:
-            return cls._load_from_nml(
+            annotation = cls._load_from_nml(
                 nml_paths[0].stem, nml_f, possible_volume_paths=paths
             )
+        # Volume layer data is read lazily from the zip, so it can only be closed if unused.
+        if f is not content and all(
+            volume_layer.zip is None for volume_layer in annotation._volume_layers
+        ):
+            zipfile.close()
+            f.close()
+        return annotation
 
     def save(self, path: str | PathLike | UPath) -> None:
         """Saves the annotation to a file.
@@ -894,17 +901,13 @@ class Annotation:
             nml_str = buffer.getvalue().decode("utf-8")
         zipfile.writestr(self.name + ".nml", nml_str)
         for volume_layer in self._volume_layers:
-            if volume_layer.zip is None:
-                with BytesIO() as buffer:
-                    with ZipFile(buffer, mode="a"):
-                        pass
-                    layer_content = buffer.getvalue()
-            else:
-                layer_content = volume_layer.zip.read_bytes()
-            zipfile.writestr(
-                volume_layer._default_zip_name(),
-                layer_content,
-            )
+            # WEBKNOSSOS rejects data zips without any buckets.
+            if volume_layer._has_volume_data():
+                assert volume_layer.zip is not None
+                zipfile.writestr(
+                    volume_layer._default_zip_name(),
+                    volume_layer.zip.read_bytes(),
+                )
 
     def get_remote_annotation_dataset(self) -> RemoteDataset:
         """Returns a streamed dataset of the annotation from WEBKNOSSOS.
