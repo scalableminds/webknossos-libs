@@ -138,7 +138,7 @@ class RemoteLayer(AbstractLayer):
         *,
         mag: MagLike | None = None,
         extend_layer_bounding_box: bool = True,
-        transfer_mode: TransferMode = TransferMode.COPY,
+        transfer_mode: TransferMode = TransferMode.HTTP,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
     ) -> MagView["RemoteLayer"]:
@@ -287,7 +287,7 @@ class RemoteLayer(AbstractLayer):
         chunk_shape: Vec3IntLike | int | None = None,
         shard_shape: Vec3IntLike | int | None = None,
         force_sampling_scheme: bool = False,
-        transfer_mode: TransferMode = TransferMode.COPY,
+        transfer_mode: TransferMode = TransferMode.HTTP,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
         executor: Executor | None = None,
@@ -312,7 +312,7 @@ class RemoteLayer(AbstractLayer):
             chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage.
             shard_shape (Vec3IntLike | int | None): Shape of shards for storage.
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
-            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to COPY
+            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to HTTP.
             common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
                                         to select one of the available WEBKNOSSOS storages.
             overwrite_pending (bool). If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
@@ -380,7 +380,7 @@ class RemoteLayer(AbstractLayer):
         sampling_mode: str | SamplingModes = SamplingModes.ANISOTROPIC,
         align_with_other_layers: bool = True,
         buffer_shape: Vec3IntLike | None = None,
-        transfer_mode: TransferMode = TransferMode.COPY,
+        transfer_mode: TransferMode = TransferMode.HTTP,
         common_storage_path_prefix: str | None = None,
         overwrite_pending: bool = True,
         executor: Executor | None = None,
@@ -398,7 +398,7 @@ class RemoteLayer(AbstractLayer):
             sampling_mode (str | SamplingModes): How dimensions should be upsampled. Defaults to ANISOTROPIC.
             align_with_other_layers (bool): Whether to align mags with the dataset's other layers. Defaults to True.
             buffer_shape (Vec3IntLike | None): Shape of processing buffer. Defaults to None.
-            transfer_mode (TransferMode): How new mags are transferred to the remote storage. Defaults to COPY.
+            transfer_mode (TransferMode): How new mags are transferred to the remote storage. Defaults to HTTP.
             common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is COPY or MOVE_AND_SYMLINK.
             overwrite_pending (bool): If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True.
             executor (Executor | None): Executor for parallel processing. Defaults to None.
