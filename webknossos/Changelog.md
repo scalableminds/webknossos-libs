@@ -16,7 +16,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - The default `transfer_mode` of `RemoteDataset.add_layer_as_copy`, `RemoteDataset.downsample`, `RemoteLayer.add_mag_as_copy`, `RemoteLayer.downsample`, `RemoteLayer.upsample` and `RemoteAttachments.add_attachment_as_copy` is now `TransferMode.HTTP` instead of `TransferMode.COPY`, consistent with `Dataset.upload`. Pass `transfer_mode=TransferMode.COPY` explicitly to keep the previous behavior. [#1554](https://github.com/scalableminds/webknossos-libs/pull/1554)
 
 ### Added
-- Added `annotation_url`, `dataset_url` and `annotation_id_from_url`, which build links to annotations and datasets, optionally at a position, and parse annotation URLs, without contacting the server.
+- Added `annotation_url`, `dataset_url` and `annotation_id_from_url`, which build links to annotations and datasets, optionally at a position, and parse annotation URLs, without contacting the server. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
 
 ### Changed
 - `webknossos downsample` and `webknossos upsample` no longer require `--transfer-mode` for remote datasets; it now defaults to `http`. [#1554](https://github.com/scalableminds/webknossos-libs/pull/1554)
