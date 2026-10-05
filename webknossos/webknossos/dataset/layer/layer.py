@@ -848,7 +848,7 @@ class Layer(AbstractLayer):
             # Its path might not be readable from here, e.g. a direct path without
             # credentials for the underlying storage.
             foreign_data_format = foreign_mag_view.data_format
-            foreign_dtype = foreign_mag_view._layer_properties.dtype_np
+            foreign_dtype = foreign_mag_view.layer.dtype
         else:
             foreign_data_format = foreign_mag_view.info.data_format
             foreign_dtype = foreign_mag_view.get_dtype()
