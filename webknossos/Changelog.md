@@ -24,6 +24,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - Volume layers without any voxel data (e.g. a fresh `add_volume_layer` with a fallback layer, used only to register segments) are now saved without a data zip, so uploading them to WEBKNOSSOS no longer fails with "Initializing without any mags". [#1555](https://github.com/scalableminds/webknossos-libs/pull/1555)
+- `Annotation.add_volume_layer` now accepts a `RemoteLayer` as `fallback_layer` instead of only accepting its string representation. [#1559](https://github.com/scalableminds/webknossos-libs/pull/1559)
 
 
 ## [4.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.1) - 2026-09-22
