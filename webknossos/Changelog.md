@@ -13,14 +13,17 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.1...HEAD)
 
 ### Breaking Changes
+- The default `transfer_mode` of `RemoteDataset.add_layer_as_copy`, `RemoteDataset.downsample`, `RemoteLayer.add_mag_as_copy`, `RemoteLayer.downsample`, `RemoteLayer.upsample` and `RemoteAttachments.add_attachment_as_copy` is now `TransferMode.HTTP` instead of `TransferMode.COPY`, consistent with `Dataset.upload`. Pass `transfer_mode=TransferMode.COPY` explicitly to keep the previous behavior. [#1554](https://github.com/scalableminds/webknossos-libs/pull/1554)
 
 ### Added
 
 ### Changed
+- `webknossos downsample` and `webknossos upsample` no longer require `--transfer-mode` for remote datasets; it now defaults to `http`. [#1554](https://github.com/scalableminds/webknossos-libs/pull/1554)
 - Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
 
 ### Fixed
 - `Layer.add_mag_as_ref` and `Dataset.add_layer_as_ref` no longer open the array of a `RemoteMagView` to validate its data format and dtype, but use the remote layer's properties instead. Referencing a remote mag via its direct path therefore works without credentials for the underlying storage. [#1553](https://github.com/scalableminds/webknossos-libs/pull/1553)
+- Volume layers without any voxel data (e.g. a fresh `add_volume_layer` with a fallback layer, used only to register segments) are now saved without a data zip, so uploading them to WEBKNOSSOS no longer fails with "Initializing without any mags". [#1555](https://github.com/scalableminds/webknossos-libs/pull/1555)
 
 
 ## [4.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.1) - 2026-09-22
