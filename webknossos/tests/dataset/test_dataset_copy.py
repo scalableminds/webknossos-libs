@@ -289,7 +289,7 @@ def test_add_mag_as_ref_does_not_open_remote_array(tmp_upath: UPath) -> None:
     remote_mag.mag = Mag(1)
     remote_mag.path = unreadable_path
     remote_mag.data_format = DataFormat.Zarr3
-    remote_mag.layer.dtype = np.dtype("uint8")
+    remote_mag._layer_properties = mock.Mock(dtype_np=np.dtype("uint8"))
     remote_mag._properties.cube_length = None
     type(remote_mag).info = mock.PropertyMock(
         side_effect=AssertionError("The remote array must not be opened.")
