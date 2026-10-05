@@ -71,6 +71,7 @@ from ..client.api_client.models import (
 from ..dataset import (
     Dataset,
     Layer,
+    RemoteLayer,
     SegmentationLayer,
 )
 from ..dataset_properties import (
@@ -1021,7 +1022,7 @@ class Annotation:
         self,
         name: str,
         dtype: DTypeLike,
-        fallback_layer: Layer | str | None = None,
+        fallback_layer: Layer | RemoteLayer | str | None = None,
         volume_layer_id: int | None = None,
     ) -> VolumeLayer:
         """Adds a new volume layer to the annotation.
@@ -1033,7 +1034,7 @@ class Annotation:
             name: Name of the volume layer.
             dtype: Datatype of the volume layer.
             fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
-                          Can be Layer instance or layer name.
+                          Can be a Layer or RemoteLayer instance or a layer name.
             volume_layer_id: Optional explicit ID for the layer.
                            Auto-generated if not provided.
 
@@ -1062,7 +1063,7 @@ class Annotation:
                 f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
             )
         fallback_layer_name: str | None
-        if isinstance(fallback_layer, Layer):
+        if isinstance(fallback_layer, (Layer, RemoteLayer)):
             assert fallback_layer.category == SEGMENTATION_CATEGORY, (
                 "The fallback layer must be a segmentation layer."
             )
