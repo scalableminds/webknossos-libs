@@ -20,6 +20,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 - `webknossos downsample` and `webknossos upsample` no longer require `--transfer-mode` for remote datasets; it now defaults to `http`. [#1554](https://github.com/scalableminds/webknossos-libs/pull/1554)
 - Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
+- `Layer.export.as_tiff_stack` now names each slice by its absolute coordinates (z in Mag(1) coordinates, plus any additional axes) instead of numbering the slices from 0, zero-padded to the width of the layer's largest coordinate along each axis. A cutout starting at z=40 in mag 2 is written as `40.tiff`, `42.tiff`, …, and one starting at t=3 as `t3_z….tiff`. [#1557](https://github.com/scalableminds/webknossos-libs/pull/1557)
 
 ### Fixed
 - `Layer.add_mag_as_ref` and `Dataset.add_layer_as_ref` no longer open the array of a `RemoteMagView` to validate its data format and dtype, but use the remote layer's properties instead. Referencing a remote mag via its direct path therefore works without credentials for the underlying storage. [#1553](https://github.com/scalableminds/webknossos-libs/pull/1553)
