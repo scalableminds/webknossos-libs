@@ -407,6 +407,37 @@ def test_mag_view_write_rejects_shape_mismatch(
         mag_view.write(data, absolute_bounding_box=bbox)
 
 
+@pytest.mark.parametrize("mag", [2, 4])
+def test_mag_view_write_mag_aligned_bbox_shape(tmp_path: UPath, mag: int) -> None:
+    ds = Dataset(tmp_path / "ds", voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, dtype="uint8")
+    mag_view = layer.add_mag(mag)
+
+    bbox = BoundingBox((3, 3, 3), (30, 30, 30))
+    layer.bounding_box = bbox
+
+    with pytest.raises(AssertionError, match="not aligned with the mag"):
+        mag_view.write(
+            np.ones((1, 15, 15, 15), dtype="uint8"), absolute_bounding_box=bbox
+        )
+
+    aligned_bbox = bbox.align_with_mag(Mag(mag), ceil=True)
+    shape = tuple(int(s) for s in aligned_bbox.in_mag(Mag(mag)).size)
+
+    for size_delta in [-1, 1]:
+        with pytest.raises(ValueError, match="does not match the size"):
+            mag_view.write(
+                np.ones((1, *(s + size_delta for s in shape)), dtype="uint8"),
+                absolute_bounding_box=aligned_bbox,
+            )
+
+    mag_view.write(
+        np.ones((1, *shape), dtype="uint8"), absolute_bounding_box=aligned_bbox
+    )
+    assert np.all(mag_view.read(absolute_bounding_box=aligned_bbox) == 1)
+    assert layer.bounding_box == bbox
+
+
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_view_write_allow_resize(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)
