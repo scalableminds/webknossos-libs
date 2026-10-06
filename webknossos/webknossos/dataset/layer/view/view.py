@@ -434,6 +434,13 @@ class View:
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
+        if tuple(data.shape) != tuple(current_mag_bbox.size):
+            raise ValueError(
+                f"The shape of the passed data {data.shape} does not match the size "
+                f"of the bounding box to write {tuple(current_mag_bbox.size)} "
+                f"(axes {current_mag_bbox.axes}, in {self._mag})."
+            )
+
         if not allow_unaligned:
             if self._data_format == DataFormat.WKW and not self._is_compressed():
                 try:

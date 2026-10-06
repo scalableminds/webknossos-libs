@@ -388,6 +388,25 @@ def test_mag_view_write_out_of_bounds_mag2(
     assure_exported_properties(ds)
 
 
+@pytest.mark.parametrize("mag", [1, 2, 4])
+@pytest.mark.parametrize("size_delta", [-8, 8])
+def test_mag_view_write_rejects_shape_mismatch(
+    tmp_path: UPath, mag: int, size_delta: int
+) -> None:
+    ds = Dataset(tmp_path / "ds", voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, dtype="uint8")
+    mag_view = layer.add_mag(mag)
+
+    bbox = BoundingBox((0, 0, 0), (32, 32, 32))
+    layer.bounding_box = bbox
+
+    shape = tuple(int(s) + size_delta for s in bbox.in_mag(Mag(mag)).size)
+    data = np.ones((1, *shape), dtype="uint8")
+
+    with pytest.raises(ValueError, match="does not match the size"):
+        mag_view.write(data, absolute_bounding_box=bbox)
+
+
 @pytest.mark.parametrize("data_format,output_path", DATA_FORMATS_AND_OUTPUT_PATHS)
 def test_view_write_allow_resize(data_format: DataFormat, output_path: UPath) -> None:
     ds_path = prepare_dataset_path(data_format, output_path)

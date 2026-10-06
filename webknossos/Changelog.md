@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- `View.write` and `MagView.write` now raise a `ValueError` when the shape of the passed data does not match the size of the target bounding box. Previously, data larger than the bounding box was silently cropped. [#1556](https://github.com/scalableminds/webknossos-libs/issues/1556)
 
 
 ## [4.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.0) - 2026-10-05
