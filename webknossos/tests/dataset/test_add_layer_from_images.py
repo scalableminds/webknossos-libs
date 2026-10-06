@@ -1123,7 +1123,7 @@ def test_czi_from_images_selects_a_single_czi_channel(tmp_upath: UPath) -> None:
 
 def test_compare_nd_tifffile(tmp_upath: UPath) -> None:
     four_d_series_tif = (
-        download_wklibs_sample_archive("4D") / "4D_series" / "4D-series.ome.tif"
+        download_wklibs_sample_archive("4D_v2") / "4D_series" / "4D-series.ome.tif"
     )
     ds = wk.Dataset(tmp_upath, (1, 1, 1))
     with SequentialExecutor() as executor:

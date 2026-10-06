@@ -622,7 +622,7 @@ def test_downsample_2d(tmp_upath: UPath) -> None:
 
 
 def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
-    source_path = download_wklibs_sample_archive("4D") / "4D_series_zarr3"
+    source_path = download_wklibs_sample_archive("4D_v2") / "4D_series_zarr3"
     target_path = tmp_upath / "downsample_test"
 
     source_ds = Dataset.open(source_path)
@@ -641,11 +641,8 @@ def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
     target_layer.add_mag_as_copy(source_mag)
     target_layer.downsample(coarsest_mag=Mag(2))
 
-    # The reference mag 2 has zeros mixed in at the borders that aren't aligned with
-    # mag 2, so only the voxels fully inside of the bounding box are compared.
-    inner_bbox = source_layer.bounding_box.align_with_mag(Mag(2))
-    source_data = source_layer.get_mag("2").read(absolute_bounding_box=inner_bbox)
-    target_data = target_layer.get_mag("2").read(absolute_bounding_box=inner_bbox)
+    source_data = source_layer.get_mag("2").read()
+    target_data = target_layer.get_mag("2").read()
 
     assert np.all(source_data == target_data)
 
