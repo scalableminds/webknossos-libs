@@ -16,7 +16,7 @@ class AnnotationInfo:
     state: AnnotationState
     duration_in_seconds: float | None
     modified: int | None
-    created: int | None
+    created: int | None = None
 
     def download_annotation(self) -> Annotation:
         """Downloads and returns the annotation that is described by this AnnotationInfo object"""
