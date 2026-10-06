@@ -434,12 +434,7 @@ class View:
 
         current_mag_bbox = mag1_bbox.in_mag(self._mag)
 
-        if tuple(data.shape) != tuple(current_mag_bbox.size):
-            raise ValueError(
-                f"The shape of the passed data {data.shape} does not match the size "
-                f"of the bounding box to write {tuple(current_mag_bbox.size)} "
-                f"(axes {current_mag_bbox.axes}, in {self._mag})."
-            )
+        self._check_write_shape(data, mag1_bbox)
 
         if not allow_unaligned:
             if self._data_format == DataFormat.WKW and not self._is_compressed():
@@ -462,6 +457,28 @@ class View:
                 self._array.write(current_mag_bbox, chunked_data)
         else:
             self._array.write(current_mag_bbox, data)
+
+    def _check_write_shape(
+        self, data: np.ndarray, mag1_bbox: NormalizedBoundingBox
+    ) -> None:
+        current_mag_bbox = mag1_bbox.in_mag(self._mag)
+        c_index = current_mag_bbox.index.c if C_AXIS in current_mag_bbox.axes else None
+        expected_shape = tuple(current_mag_bbox.size)
+        data_shape = tuple(data.shape)
+        if c_index is not None and len(data_shape) + 1 == len(expected_shape):
+            # data without channel axis
+            data_shape = data_shape[:c_index] + (1,) + data_shape[c_index:]
+        # the number of channels is validated separately
+        if len(data_shape) != len(expected_shape) or any(
+            actual != expected
+            for i, (actual, expected) in enumerate(zip(data_shape, expected_shape))
+            if i != c_index
+        ):
+            raise ValueError(
+                f"The shape of the passed data {data.shape} does not match the size "
+                f"of the bounding box to write {expected_shape} "
+                f"(axes {current_mag_bbox.axes}, in {self._mag})."
+            )
 
     def _resolve_cxyz_write(
         self,

@@ -407,6 +407,23 @@ def test_mag_view_write_rejects_shape_mismatch(
         mag_view.write(data, absolute_bounding_box=bbox)
 
 
+def test_mag_view_write_shape_mismatch_does_not_resize(tmp_path: UPath) -> None:
+    ds = Dataset(tmp_path / "ds", voxel_size=(1, 1, 1))
+    layer = ds.add_layer("color", COLOR_CATEGORY, dtype="uint8")
+    mag_view = layer.add_mag(2)
+
+    bbox = BoundingBox((0, 0, 0), (32, 32, 32))
+    layer.bounding_box = bbox
+
+    with pytest.raises(ValueError, match="does not match the size"):
+        mag_view.write(
+            np.ones((1, 8, 8, 8), dtype="uint8"),
+            absolute_bounding_box=BoundingBox((0, 0, 0), (64, 64, 64)),
+            allow_resize=True,
+        )
+    assert layer.bounding_box == bbox
+
+
 @pytest.mark.parametrize("mag", [2, 4])
 def test_mag_view_write_mag_aligned_bbox_shape(tmp_path: UPath, mag: int) -> None:
     ds = Dataset(tmp_path / "ds", voxel_size=(1, 1, 1))
