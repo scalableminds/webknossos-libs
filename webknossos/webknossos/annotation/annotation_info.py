@@ -16,6 +16,7 @@ class AnnotationInfo:
     state: AnnotationState
     duration_in_seconds: float | None
     modified: int | None
+    created: int | None
 
     def download_annotation(self) -> Annotation:
         """Downloads and returns the annotation that is described by this AnnotationInfo object"""
@@ -35,6 +36,7 @@ class AnnotationInfo:
             if api_annotation.tracing_time is not None
             else None,
             modified=api_annotation.modified,
+            created=api_annotation.created,
         )
 
     @classmethod
