@@ -641,8 +641,12 @@ def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
     target_layer.add_mag_as_copy(source_mag)
     target_layer.downsample(coarsest_mag=Mag(2))
 
-    source_data = source_layer.get_mag("2").read()
-    target_data = target_layer.get_mag("2").read()
+    # The reference mag 2 was created with a version that mixed in the zeros outside
+    # of the bounding box (which isn't aligned with mag 2), so only the voxels that
+    # are fully inside of it can be compared.
+    inner_bbox = source_layer.bounding_box.align_with_mag(Mag(2))
+    source_data = source_layer.get_mag("2").read(absolute_bounding_box=inner_bbox)
+    target_data = target_layer.get_mag("2").read(absolute_bounding_box=inner_bbox)
 
     assert np.all(source_data == target_data)
 
@@ -938,3 +942,33 @@ def test_guided_downsampling(data_format: DataFormat, output_path: UPath) -> Non
         assert (output_ds_path / "color" / "4-4-2" / "header.wkw").exists()
 
     assure_exported_properties(input_dataset)
+
+
+@pytest.mark.parametrize(
+    "interpolation_mode", ["median", "mode", "nearest", "bilinear", "max", "min"]
+)
+def test_downsampling_does_not_mix_in_data_outside_of_bbox(
+    tmp_upath: UPath, interpolation_mode: str
+) -> None:
+    # A thin layer in z whose bounding box is not aligned with the coarser mags in
+    # any axis. Voxels outside of the bounding box used to be treated as zeros, which
+    # darkened the border voxels and, for thin layers, whole coarse mags.
+    value = 200
+    bbox = BoundingBox((3, 5, 0), (250, 200, 7))
+    ds = Dataset(tmp_upath / "ds", voxel_size=(10, 10, 10))
+    layer = ds.add_layer("color", COLOR_CATEGORY, dtype="uint8", bounding_box=bbox)
+    layer.add_mag(1).write(
+        np.full(bbox.size.to_tuple(), value, dtype="uint8"),
+        absolute_offset=bbox.topleft,
+    )
+
+    layer.downsample(
+        coarsest_mag=Mag(32),
+        interpolation_mode=interpolation_mode,
+        sampling_mode=SamplingModes.ISOTROPIC,
+    )
+
+    assert set(layer.mags.keys()) == {Mag(m) for m in (1, 2, 4, 8, 16, 32)}
+    for mag, mag_view in layer.mags.items():
+        data = mag_view.read(absolute_bounding_box=bbox.align_with_mag(mag, ceil=True))
+        assert np.all(data == value), f"Mag {mag} contains values != {value}"

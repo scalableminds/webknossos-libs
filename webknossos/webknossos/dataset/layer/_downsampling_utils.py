@@ -14,7 +14,14 @@ if TYPE_CHECKING:
     from webknossos.dataset.dataset import Dataset, RemoteDataset
 
 from webknossos.dataset_properties import LayerCategoryType
-from webknossos.geometry import C_AXIS, Mag, Vec3FloatLike, Vec3Int, Vec3IntLike
+from webknossos.geometry import (
+    C_AXIS,
+    Mag,
+    NDBoundingBox,
+    Vec3FloatLike,
+    Vec3Int,
+    Vec3IntLike,
+)
 
 from .view import ArrayInfo, View
 
@@ -299,28 +306,6 @@ def _downsample_mode(data: np.ndarray, factors: list[int]) -> np.ndarray:
     return non_linear_filter_3d(data, factors, _mode)
 
 
-def downsample_unpadded_data(
-    buffer: np.ndarray, target_mag: Mag, interpolation_mode: InterpolationModes
-) -> np.ndarray:
-    target_mag_np = np.array(target_mag.to_list())
-    current_dimension_size = np.array(buffer.shape[1:])
-    padding_size_for_downsampling = (
-        target_mag_np - (current_dimension_size % target_mag_np) % target_mag_np
-    )
-    padding_size_for_downsampling = list(zip([0, 0, 0], padding_size_for_downsampling))
-    buffer = np.pad(
-        buffer, pad_width=[(0, 0)] + padding_size_for_downsampling, mode="constant"
-    )
-    dimension_decrease = np.array([1] + target_mag.to_list())
-    downsampled_buffer_shape = np.array(buffer.shape) // dimension_decrease
-    downsampled_buffer = np.empty(dtype=buffer.dtype, shape=downsampled_buffer_shape)
-    for channel in range(buffer.shape[0]):
-        downsampled_buffer[channel] = downsample_cube(
-            buffer[channel], target_mag.to_list(), interpolation_mode
-        )
-    return downsampled_buffer
-
-
 def downsample_cube(
     cube_buffer: np.ndarray, factors: list[int], interpolation_mode: InterpolationModes
 ) -> np.ndarray:
@@ -347,8 +332,17 @@ def downsample_cube_job(
     mag_factors: Vec3Int,
     interpolation_mode: InterpolationModes,
     buffer_shape: Vec3Int,
+    valid_source_bbox: NDBoundingBox | None = None,
 ) -> None:
+    """Downsamples the data of `source_view` into `target_view`.
+
+    Source voxels outside of `valid_source_bbox` (in mag 1, aligned with the source
+    mag) are not read. Instead, the valid data is mirrored into that region, so that
+    the area outside of the layer's bounding box doesn't darken the border voxels of
+    the target mag.
+    """
     (source_view, target_view, _i) = args
+    source_mag = source_view.mag.to_vec3_int()
 
     try:
         source_bbox = source_view.normalized_bounding_box
@@ -376,9 +370,37 @@ def downsample_cube_job(
 
             bbox = source_bbox.offset(source_offset).with_size_xyz(source_size)
 
-            cube_buffer_channels = source_view.read_cxyz(
-                absolute_bounding_box=bbox,
-            )
+            if valid_source_bbox is None:
+                valid_topleft = bbox.topleft_xyz
+                valid_bottomright = bbox.bottomright_xyz
+            else:
+                valid_topleft = bbox.topleft_xyz.pairmax(valid_source_bbox.topleft_xyz)
+                valid_bottomright = bbox.bottomright_xyz.pairmin(
+                    valid_source_bbox.bottomright_xyz
+                )
+
+            if (
+                valid_topleft == bbox.topleft_xyz
+                and valid_bottomright == bbox.bottomright_xyz
+            ):
+                cube_buffer_channels = source_view.read_cxyz(
+                    absolute_bounding_box=bbox,
+                )
+            else:
+                cube_buffer_channels = source_view.read_cxyz(
+                    absolute_bounding_box=bbox.with_topleft_xyz(
+                        valid_topleft
+                    ).with_size_xyz(valid_bottomright - valid_topleft),
+                )
+                # Mirroring keeps a representative mix of the valid values, also when
+                # the padding is wider than the valid data (e.g. for large mag factors).
+                pad_before = (valid_topleft - bbox.topleft_xyz) // source_mag
+                pad_after = (bbox.bottomright_xyz - valid_bottomright) // source_mag
+                cube_buffer_channels = np.pad(
+                    cube_buffer_channels,
+                    [(0, 0)] + list(zip(pad_before, pad_after)),
+                    mode="symmetric",
+                )
 
             for channel_index in range(num_channels):
                 cube_buffer = cube_buffer_channels[channel_index]

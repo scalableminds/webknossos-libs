@@ -1250,6 +1250,9 @@ class Layer(AbstractLayer):
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
                 buffer_shape=buffer_shape,
+                # Source voxels outside of the layer's bounding box are not read,
+                # so that they don't darken the border voxels of the target mag.
+                valid_source_bbox=self.bounding_box.align_with_mag(from_mag, ceil=True),
             )
             # The downsampling computation is chunked using buffer_shape anyways.
             # The target_chunk_shape determines how many jobs are spawned. Increase it
