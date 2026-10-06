@@ -19,7 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
-- `Layer.add_mag_as_ref`, and so `Dataset.add_layer_as_ref` and `Dataset.shallow_copy_dataset`, validate the data format and dtype of any foreign mag against its properties instead of opening its array. Referencing a layer that itself references data this machine can't read, e.g. on S3 without credentials, no longer fails.
+- `Layer.add_mag_as_ref`, and so `Dataset.add_layer_as_ref` and `Dataset.shallow_copy_dataset`, validate the data format and dtype of any foreign mag against its properties instead of opening its array. Referencing a layer that itself references data this machine can't read, e.g. on S3 without credentials, no longer fails. [#1562](https://github.com/scalableminds/webknossos-libs/pull/1562)
 
 
 ## [4.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.0) - 2026-10-05
