@@ -15,6 +15,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
+- AnnotationInfo objects now expose a new field `created` (creation time of the annotation as unix timestamp). It will be None for old server versions that do not report it yet. [#1561](https://github.com/scalableminds/webknossos-libs/pull/1561)
 
 ### Changed
 
