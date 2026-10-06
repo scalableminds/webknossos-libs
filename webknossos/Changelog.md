@@ -19,6 +19,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+- `Layer.downsample` no longer mixes the area outside of the layer's bounding box into the coarser mags. Previously, those voxels were treated as zeros, which darkened the border voxels. [#1563](https://github.com/scalableminds/webknossos-libs/pull/1563)
 
 
 ## [4.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.0) - 2026-10-05

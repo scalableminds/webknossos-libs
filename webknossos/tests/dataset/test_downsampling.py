@@ -641,9 +641,8 @@ def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
     target_layer.add_mag_as_copy(source_mag)
     target_layer.downsample(coarsest_mag=Mag(2))
 
-    # The reference mag 2 was created with a version that mixed in the zeros outside
-    # of the bounding box (which isn't aligned with mag 2), so only the voxels that
-    # are fully inside of it can be compared.
+    # The reference mag 2 has zeros mixed in at the borders that aren't aligned with
+    # mag 2, so only the voxels fully inside of the bounding box are compared.
     inner_bbox = source_layer.bounding_box.align_with_mag(Mag(2))
     source_data = source_layer.get_mag("2").read(absolute_bounding_box=inner_bbox)
     target_data = target_layer.get_mag("2").read(absolute_bounding_box=inner_bbox)
@@ -951,13 +950,12 @@ def test_downsampling_does_not_mix_in_data_outside_of_bbox(
     tmp_upath: UPath, interpolation_mode: str
 ) -> None:
     # A thin layer in z whose bounding box is not aligned with the coarser mags in
-    # any axis. Voxels outside of the bounding box used to be treated as zeros, which
-    # darkened the border voxels and, for thin layers, whole coarse mags.
+    # any axis. The area outside of the bounding box must not darken the coarse mags.
     value = 200
     bbox = BoundingBox((3, 5, 0), (250, 200, 7))
     ds = Dataset(tmp_upath / "ds", voxel_size=(10, 10, 10))
     layer = ds.add_layer("color", COLOR_CATEGORY, dtype="uint8", bounding_box=bbox)
-    layer.add_mag(1).write(
+    layer.add_mag(1, chunk_shape=32, shard_shape=32).write(
         np.full(bbox.size.to_tuple(), value, dtype="uint8"),
         absolute_offset=bbox.topleft,
     )
@@ -966,6 +964,8 @@ def test_downsampling_does_not_mix_in_data_outside_of_bbox(
         coarsest_mag=Mag(32),
         interpolation_mode=interpolation_mode,
         sampling_mode=SamplingModes.ISOTROPIC,
+        chunk_shape=32,
+        shard_shape=32,
     )
 
     assert set(layer.mags.keys()) == {Mag(m) for m in (1, 2, 4, 8, 16, 32)}

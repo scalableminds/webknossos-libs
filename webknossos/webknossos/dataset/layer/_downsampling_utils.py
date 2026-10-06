@@ -17,7 +17,7 @@ from webknossos.dataset_properties import LayerCategoryType
 from webknossos.geometry import (
     C_AXIS,
     Mag,
-    NDBoundingBox,
+    NormalizedBoundingBox,
     Vec3FloatLike,
     Vec3Int,
     Vec3IntLike,
@@ -332,7 +332,7 @@ def downsample_cube_job(
     mag_factors: Vec3Int,
     interpolation_mode: InterpolationModes,
     buffer_shape: Vec3Int,
-    valid_source_bbox: NDBoundingBox | None = None,
+    valid_source_bbox: NormalizedBoundingBox | None = None,
 ) -> None:
     """Downsamples the data of `source_view` into `target_view`.
 
