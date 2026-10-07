@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective *Breaking Changes* sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.2...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,18 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 - Cluster executors delete transient outputs (jobs without a custom output key) right after reading the result or the error, instead of keeping them until executor shutdown. Failed ones were not deleted at all before. [#1547](https://github.com/scalableminds/webknossos-libs/pull/1547)
 
 ### Fixed
+
+
+## [4.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.2) - 2026-10-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.1...v4.2.2)
+
+
+## [4.2.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.1) - 2026-10-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.0...v4.2.1)
+
+
+## [4.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.0) - 2026-10-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.1...v4.2.0)
 
 
 ## [4.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.1) - 2026-09-22

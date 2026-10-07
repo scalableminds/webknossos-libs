@@ -395,6 +395,7 @@ class MagView(View, Generic[LayerTypeT]):
             rel_mag1_bbox=relative_bounding_box,
             current_mag_size=data_shape,
         )
+        self._check_write_shape(data, mag1_bbox)
 
         # Only update the layer's bbox if we are actually larger
         # than the mag-aligned, rounded up bbox (self.bounding_box):

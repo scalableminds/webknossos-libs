@@ -227,7 +227,7 @@ def test_upsample_from_mag_view_mag_mismatch(tmp_upath: UPath) -> None:
 
 
 def test_upsample_nd_dataset(tmp_upath: UPath) -> None:
-    source_path = download_wklibs_sample_archive("4D") / "4D_series_zarr3"
+    source_path = download_wklibs_sample_archive("4D_v2") / "4D_series_zarr3"
     target_path = tmp_upath / "upsample_test"
 
     source_ds = Dataset.open(source_path)

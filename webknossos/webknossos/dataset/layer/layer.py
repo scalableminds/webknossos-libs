@@ -33,6 +33,7 @@ from .abstract_layer import AbstractLayer, _rescaled_foreign_bounding_box
 from .view import (
     ArrayException,
     MagView,
+    RemoteMagView,
     TensorStoreArray,
     View,
     Zarr3ArrayInfo,
@@ -842,12 +843,20 @@ class Layer(AbstractLayer):
         mag = Mag(mag) if mag is not None else foreign_mag_view.mag
         self._assert_mag_does_not_exist_yet(mag)
 
-        assert self.data_format == foreign_mag_view.info.data_format, (
-            f"Cannot add a remote mag whose data format {foreign_mag_view.info.data_format} "
+        # Validated against the foreign properties without opening the foreign array,
+        # whose path might not be readable from here, e.g. a direct path without
+        # credentials for the underlying storage.
+        foreign_data_format = foreign_mag_view.data_format
+        if isinstance(foreign_mag_view, RemoteMagView):
+            foreign_dtype = foreign_mag_view._layer_properties.dtype_np
+        else:
+            foreign_dtype = foreign_mag_view.layer.dtype
+        assert self.data_format == foreign_data_format, (
+            f"Cannot add a remote mag whose data format {foreign_data_format} "
             + f"does not match the layers data format {self.data_format}"
         )
-        assert self.dtype == foreign_mag_view.get_dtype(), (
-            f"The dtype/elementClass of the remote mag {foreign_mag_view.get_dtype()} "
+        assert self.dtype == foreign_dtype, (
+            f"The dtype/elementClass of the remote mag {foreign_dtype} "
             + f"must match the layer's dtype {self.dtype}"
         )
 
@@ -1240,6 +1249,11 @@ class Layer(AbstractLayer):
                 mag_factors=mag_factors,
                 interpolation_mode=parsed_interpolation_mode,
                 buffer_shape=buffer_shape,
+                # Source voxels outside of the layer's bounding box are not read,
+                # so that they don't darken the border voxels of the target mag.
+                valid_source_bbox=self.normalized_bounding_box.align_with_mag(
+                    from_mag, ceil=True
+                ),
             )
             # The downsampling computation is chunked using buffer_shape anyways.
             # The target_chunk_shape determines how many jobs are spawned. Increase it
