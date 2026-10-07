@@ -324,7 +324,7 @@ def test_as_ome_tiff_downsample(tmp_upath: UPath, downsample: bool) -> None:
 
 def make_nd_layer() -> Layer:
     """Opens the ND (c,t,z,y,x) sample dataset."""
-    source_path = download_wklibs_sample_archive("4D") / "4D_series_zarr3"
+    source_path = download_wklibs_sample_archive("4D_v2") / "4D_series_zarr3"
     dataset = Dataset.open(source_path)
     return dataset.get_layer("color")
 
