@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.1...HEAD)
 
 ### Breaking Changes
 
@@ -20,6 +20,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 
 ### Fixed
 - `Layer.downsample` no longer mixes the area outside of the layer's bounding box into the coarser mags. Previously, those voxels were treated as zeros, which darkened the border voxels. [#1563](https://github.com/scalableminds/webknossos-libs/pull/1563)
+
+
+## [4.2.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.1) - 2026-10-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.0...v4.2.1)
+
+### Fixed
+- `Layer.add_mag_as_ref`, and so `Dataset.add_layer_as_ref` and `Dataset.shallow_copy_dataset`, validate the data format and dtype of any foreign mag against its properties instead of opening its array. Referencing a layer that itself references data this machine can't read, e.g. on S3 without credentials, no longer fails. [#1562](https://github.com/scalableminds/webknossos-libs/pull/1562)
+
 
 
 ## [4.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.0) - 2026-10-05
