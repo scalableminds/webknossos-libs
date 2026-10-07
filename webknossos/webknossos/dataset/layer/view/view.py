@@ -335,6 +335,7 @@ class View:
                 - Number of channels doesn't match the dataset
                 - Write region is outside the view's bounding box
                 - Multiple positioning parameters are provided
+            ValueError: If the data shape doesn't match the size of the target region.
 
         Examples:
             ```python
