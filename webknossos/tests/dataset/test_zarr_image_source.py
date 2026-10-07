@@ -7,6 +7,7 @@ from upath import UPath
 
 from tests.data_fixtures import (
     write_ome_zarr_v2_group,
+    write_ome_zarr_v3_06_group,
     write_ome_zarr_v3_group,
     write_zarr_v2_array,
     write_zarr_v3_array,
@@ -14,6 +15,11 @@ from tests.data_fixtures import (
 from webknossos.dataset import CorruptImageError, UnsupportedImageFormatError
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.zarr_image_source import ZarrImageSource
+from webknossos.dataset_properties import (
+    AffineCoordinateTransformation,
+    LengthUnit,
+    VoxelSize,
+)
 from webknossos.geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
 
 
@@ -90,7 +96,10 @@ def test_plain_zarr_v3_array_with_dimension_names_uses_labels(tmp_upath: UPath) 
     )  # (x, y, z) -> (z, y, x), channel 0 (the default pin)
 
 
-@pytest.mark.parametrize("writer", [write_ome_zarr_v2_group, write_ome_zarr_v3_group])
+@pytest.mark.parametrize(
+    "writer",
+    [write_ome_zarr_v2_group, write_ome_zarr_v3_group, write_ome_zarr_v3_06_group],
+)
 def test_ome_zarr_group_picks_finest_resolution(tmp_upath: UPath, writer: Any) -> None:
     group_path = tmp_upath / "multiscale"
     finest = np.arange(2 * 4 * 8 * 8, dtype=np.uint8).reshape(2, 4, 8, 8)
@@ -118,7 +127,10 @@ def test_ome_zarr_group_picks_finest_resolution(tmp_upath: UPath, writer: Any) -
     np.testing.assert_array_equal(block[0], finest[0])  # channel 0, the default pin
 
 
-@pytest.mark.parametrize("writer", [write_ome_zarr_v2_group, write_ome_zarr_v3_group])
+@pytest.mark.parametrize(
+    "writer",
+    [write_ome_zarr_v2_group, write_ome_zarr_v3_group, write_ome_zarr_v3_06_group],
+)
 def test_ome_zarr_group_scale_option_picks_other_level(
     tmp_upath: UPath, writer: Any
 ) -> None:
@@ -201,7 +213,10 @@ def test_corrupt_metadata_json_raises_corrupt_image_error(tmp_upath: UPath) -> N
         _open(array_path)
 
 
-@pytest.mark.parametrize("writer", [write_ome_zarr_v2_group, write_ome_zarr_v3_group])
+@pytest.mark.parametrize(
+    "writer",
+    [write_ome_zarr_v2_group, write_ome_zarr_v3_group, write_ome_zarr_v3_06_group],
+)
 def test_unsupported_ome_version_is_rejected(tmp_upath: UPath, writer: Any) -> None:
     group_path = tmp_upath / "future_version"
     data = np.zeros((4, 8, 8), dtype=np.uint8)
@@ -221,3 +236,78 @@ def test_unsupported_ome_version_is_rejected(tmp_upath: UPath, writer: Any) -> N
 
     with pytest.raises(UnsupportedImageFormatError, match="0.1"):
         _open(group_path)
+
+
+_AXES_ZYX_MICROMETER = [
+    {"name": Z_AXIS, "type": "space", "unit": "micrometer"},
+    {"name": Y_AXIS, "type": "space", "unit": "micrometer"},
+    {"name": X_AXIS, "type": "space", "unit": "micrometer"},
+]
+
+
+def _write_transformed_group(group_path: UPath) -> None:
+    write_ome_zarr_v3_06_group(
+        group_path,
+        [
+            ("0", np.ones((4, 8, 8), dtype=np.uint8), [0.2, 0.5, 0.5]),
+            ("1", np.ones((4, 4, 4), dtype=np.uint8), [0.4, 1.0, 1.0]),
+        ],
+        _AXES_ZYX_MICROMETER,
+        translations={"0": [0.4, 1.0, 1.5], "1": [0.4, 1.0, 1.5]},
+    )
+
+
+def test_ome_zarr_06_group_suggests_voxel_size_and_transformations(
+    tmp_upath: UPath,
+) -> None:
+    group_path = tmp_upath / "transformed"
+    _write_transformed_group(group_path)
+
+    source = _open(group_path)
+
+    assert source.suggested_voxel_size == VoxelSize(
+        (0.5, 0.5, 0.2), LengthUnit.MICROMETER
+    )
+    assert source.suggested_coordinate_transformations == (
+        AffineCoordinateTransformation.from_translation((3.0, 2.0, 2.0)),
+    )
+
+
+def test_ome_zarr_06_group_suggestions_follow_the_scale_option(
+    tmp_upath: UPath,
+) -> None:
+    group_path = tmp_upath / "transformed_coarse"
+    _write_transformed_group(group_path)
+
+    source = _open(group_path, format_options={"scale": 1})
+
+    assert source.suggested_voxel_size == VoxelSize(
+        (1.0, 1.0, 0.4), LengthUnit.MICROMETER
+    )
+    assert source.suggested_coordinate_transformations == (
+        AffineCoordinateTransformation.from_translation((1.5, 1.0, 1.0)),
+    )
+
+
+def test_plain_zarr_array_suggests_nothing(tmp_upath: UPath) -> None:
+    array_path = tmp_upath / "plain_suggestions"
+    write_zarr_v3_array(array_path, np.zeros((2, 2, 2), dtype=np.uint8))
+
+    source = _open(array_path)
+
+    assert source.suggested_voxel_size is None
+    assert source.suggested_coordinate_transformations is None
+
+
+def test_ome_zarr_group_without_units_suggests_no_voxel_size(tmp_upath: UPath) -> None:
+    group_path = tmp_upath / "unitless"
+    write_ome_zarr_v3_06_group(
+        group_path,
+        [("0", np.zeros((4, 8, 8), dtype=np.uint8), [1.0, 1.0, 1.0])],
+        _AXES_CZYX[1:],
+    )
+
+    source = _open(group_path)
+
+    assert source.suggested_voxel_size is None
+    assert source.suggested_coordinate_transformations is None

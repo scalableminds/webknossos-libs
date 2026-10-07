@@ -7,10 +7,19 @@ import pytest
 import tensorstore as ts
 from upath import UPath
 
-from tests.data_fixtures import download_wklibs_sample_archive, write_ozx_file
+from tests.data_fixtures import (
+    download_wklibs_sample_archive,
+    write_ozx_06_file,
+    write_ozx_file,
+)
 from webknossos.dataset import CorruptImageError, UnsupportedImageFormatError
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.ozx_image_source import OzxImageSource
+from webknossos.dataset_properties import (
+    AffineCoordinateTransformation,
+    LengthUnit,
+    VoxelSize,
+)
 from webknossos.geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 
 
@@ -231,3 +240,48 @@ def test_real_world_ozx_sample() -> None:
         .result()
     )
     np.testing.assert_array_equal(block[0], reference)
+
+
+def test_ozx_06_archive_suggests_voxel_size_and_transformations(
+    tmp_upath: UPath,
+) -> None:
+    ozx_path = tmp_upath / "transformed.ozx"
+    axes = [
+        {"name": Z_AXIS, "type": "space", "unit": "micrometer"},
+        {"name": Y_AXIS, "type": "space", "unit": "micrometer"},
+        {"name": X_AXIS, "type": "space", "unit": "micrometer"},
+    ]
+    write_ozx_06_file(
+        ozx_path,
+        [
+            ("0", np.ones((4, 8, 8), dtype=np.uint8), [0.2, 0.5, 0.5]),
+            ("1", np.ones((4, 4, 4), dtype=np.uint8), [0.4, 1.0, 1.0]),
+        ],
+        axes,
+        version="0.6rc1",
+        translations={"0": [0.4, 1.0, 1.5]},
+    )
+
+    source = _open(ozx_path)
+
+    assert (source._z, source._y, source._x) == (4, 8, 8)
+    assert source.suggested_voxel_size == VoxelSize(
+        (0.5, 0.5, 0.2), LengthUnit.MICROMETER
+    )
+    assert source.suggested_coordinate_transformations == (
+        AffineCoordinateTransformation.from_translation((3.0, 2.0, 2.0)),
+    )
+
+
+def test_ozx_archive_without_transformations_suggests_none(tmp_upath: UPath) -> None:
+    ozx_path = tmp_upath / "plain.ozx"
+    write_ozx_file(
+        ozx_path,
+        [("0", np.ones((4, 8, 8), dtype=np.uint8), [1.0, 1.0, 1.0])],
+        _AXES_CZYX[1:],
+    )
+
+    source = _open(ozx_path)
+
+    assert source.suggested_voxel_size is None
+    assert source.suggested_coordinate_transformations is None
