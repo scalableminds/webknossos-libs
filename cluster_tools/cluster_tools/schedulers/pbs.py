@@ -32,13 +32,13 @@ PBS_STATES: dict[str, list[str]] = {
 
 
 class PBSExecutor(ClusterExecutor):
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         warn(
             "The PBS executor is deprecated and will be removed in the next major release of cluster_tools.",
             category=DeprecationWarning,
             stacklevel=2,
         )
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
     @classmethod
     def executor_key(cls) -> str:
