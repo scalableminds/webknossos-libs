@@ -14,6 +14,7 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
+- Deprecated the `dask`, `kubernetes` and `pbs` executors. They will be removed in the next major release. [#1565](https://github.com/scalableminds/webknossos-libs/pull/1565)
 
 ### Fixed
 
