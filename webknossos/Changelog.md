@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MIN
 For upgrade instructions, please check the respective _Breaking Changes_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.2...HEAD)
 
 ### Breaking Changes
 
@@ -19,7 +19,14 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Changed
 
 ### Fixed
+
+
+## [4.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.2) - 2026-10-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.1...v4.2.2)
+
+### Fixed
 - `Layer.downsample` no longer mixes the area outside of the layer's bounding box into the coarser mags. Previously, those voxels were treated as zeros, which darkened the border voxels. [#1563](https://github.com/scalableminds/webknossos-libs/pull/1563)
+
 
 
 ## [4.2.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.1) - 2026-10-06
