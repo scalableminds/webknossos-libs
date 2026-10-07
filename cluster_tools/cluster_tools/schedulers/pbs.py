@@ -4,7 +4,8 @@ import logging
 import os
 import re
 from concurrent.futures import Future
-from typing import Literal
+from typing import Any, Literal
+from warnings import warn
 
 from cluster_tools._utils.call import call, chcall
 from cluster_tools._utils.string_ import random_string
@@ -31,6 +32,14 @@ PBS_STATES: dict[str, list[str]] = {
 
 
 class PBSExecutor(ClusterExecutor):
+    def __init__(self, **kwargs: Any) -> None:
+        warn(
+            "The PBS executor is deprecated and will be removed in the next major release of cluster_tools.",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(**kwargs)
+
     @classmethod
     def executor_key(cls) -> str:
         return "pbs"
