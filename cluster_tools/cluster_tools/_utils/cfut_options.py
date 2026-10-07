@@ -3,6 +3,7 @@ select where a job's output is persisted. Shared by all executors."""
 
 import logging
 import os
+import warnings
 from collections.abc import Callable
 from typing import Any, TypedDict, TypeVar, cast
 
@@ -18,8 +19,8 @@ _S = TypeVar("_S")
 
 # A job's output is persisted as the pickled tuple `(True, result)` in the executor's
 # `OutputStore` (only in the success case, so that it can serve as a checkpoint).
-# `output_key` selects where; for the default `FileOutputStore` it is a file path
-# and `output_pickle_path` is accepted as an alias.
+# `output_key` selects where; for the default `FileOutputStore` it is a file path.
+# `output_pickle_path` is a deprecated alias.
 class CFutDict(TypedDict):
     output_key: NotRequired[str]
     output_pickle_path: NotRequired[str | os.PathLike]
@@ -39,7 +40,15 @@ def parse_cfut_options(kwargs: dict[str, Any]) -> str | None:
         raise ValueError(
             "__cfut_options must not contain both output_key and output_pickle_path."
         )
-    return output_key if output_key is not None else str(output_pickle_path)
+    if output_key is not None:
+        return output_key
+    warnings.warn(
+        "The output_pickle_path option of __cfut_options is deprecated, "
+        "use output_key instead.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+    return str(output_pickle_path)
 
 
 def resolve_output_key_getter(
@@ -54,6 +63,12 @@ def resolve_output_key_getter(
     if output_key_getter is not None:
         return output_key_getter
     if output_pickle_path_getter is not None:
+        warnings.warn(
+            "The output_pickle_path_getter argument of map_to_futures is deprecated, "
+            "use output_key_getter instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
         getter = output_pickle_path_getter
         return lambda arg: str(getter(arg))
     return None

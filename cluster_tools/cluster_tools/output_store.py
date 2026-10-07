@@ -1,7 +1,7 @@
-import contextlib
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from pathlib import Path
 from uuid import uuid4
 
 
@@ -46,53 +46,51 @@ class FileOutputStore(OutputStore):
     """
 
     def __init__(self, directory: str | os.PathLike | None = None):
-        self.directory = None if directory is None else str(directory)
+        self.directory = None if directory is None else Path(directory)
 
     def default_key(self, job_id: str) -> str:
         assert self.directory is not None, (
             "FileOutputStore needs a directory to derive default keys."
         )
-        return os.path.join(self.directory, f"cfut.out.{job_id}.pickle")
+        return str(self.directory / f"cfut.out.{job_id}.pickle")
 
     @staticmethod
-    def preliminary_path(key: str) -> str:
-        return f"{key}.preliminary"
+    def preliminary_path(key: str) -> Path:
+        return Path(f"{key}.preliminary")
 
     def write(self, key: str, data: bytes, *, success: bool) -> None:
-        dest = key if success else self.preliminary_path(key)
+        dest = Path(key) if success else self.preliminary_path(key)
         # A unique temporary file, so that concurrent writers cannot clobber each other.
-        # It has to stay in the destination's directory, since os.replace cannot move
+        # It has to stay in the destination's directory, since a replace cannot move
         # across filesystems. os.open with the default mode applies the umask, like
         # open() would.
-        tmp = f"{dest}.{uuid4().hex}.tmp"
+        tmp = dest.with_name(f"{dest.name}.{uuid4().hex}.tmp")
         try:
             fd = os.open(tmp, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             with os.fdopen(fd, "wb") as f:
                 f.write(data)
-            # os.replace overwrites an existing destination, also on Windows.
-            os.replace(tmp, dest)
+            # Path.replace overwrites an existing destination, also on Windows.
+            tmp.replace(dest)
         except BaseException:
-            with contextlib.suppress(FileNotFoundError):
-                os.unlink(tmp)
+            tmp.unlink(missing_ok=True)
             raise
         # Only the output written last is kept for a key.
-        other = self.preliminary_path(key) if success else key
-        with contextlib.suppress(FileNotFoundError):
-            os.unlink(other)
+        other = self.preliminary_path(key) if success else Path(key)
+        other.unlink(missing_ok=True)
 
     def poll(self, keys: Iterable[str]) -> set[str]:
         return {
             key
             for key in keys
-            if os.path.exists(key) or os.path.exists(self.preliminary_path(key))
+            if Path(key).exists() or self.preliminary_path(key).exists()
         }
 
     def read(self, key: str) -> bytes:
-        path = key if os.path.exists(key) else self.preliminary_path(key)
-        with open(path, "rb") as f:
-            return f.read()
+        path = Path(key)
+        if not path.exists():
+            path = self.preliminary_path(key)
+        return path.read_bytes()
 
     def delete(self, key: str) -> None:
-        for path in (key, self.preliminary_path(key)):
-            with contextlib.suppress(FileNotFoundError):
-                os.unlink(path)
+        for path in (Path(key), self.preliminary_path(key)):
+            path.unlink(missing_ok=True)

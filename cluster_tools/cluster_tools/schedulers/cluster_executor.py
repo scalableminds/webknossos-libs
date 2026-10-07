@@ -12,6 +12,7 @@ from collections.abc import Callable, Iterable, Iterator
 from concurrent import futures
 from concurrent.futures import Future
 from functools import partial
+from pathlib import Path
 from types import FrameType, TracebackType
 from typing import (
     Any,
@@ -125,7 +126,7 @@ class ClusterExecutor(futures.Executor):
             # Default keys of a FileOutputStore without a directory go to `cfut_dir`.
             # Copy the store, so that the caller's instance is not modified.
             self.output_store = copy.copy(self.output_store)
-            self.output_store.directory = self.cfut_dir
+            self.output_store.directory = Path(self.cfut_dir)
 
         logging.info(
             f"Instantiating ClusterExecutor. Log files are stored in {self.cfut_dir}"

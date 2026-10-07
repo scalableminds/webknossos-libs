@@ -310,11 +310,14 @@ def test_map_to_futures_with_pickle_paths(
     with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
         with exc:
             numbers = [2, 1]
-            futures = exc.map_to_futures(
-                square,
-                numbers,
-                output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir),
-            )
+            with pytest.warns(DeprecationWarning, match="output_pickle_path_getter"):
+                futures = exc.map_to_futures(
+                    square,
+                    numbers,
+                    output_pickle_path_getter=partial(
+                        output_pickle_path_getter, tmp_dir
+                    ),
+                )
             results = [f.result() for f in exc.as_completed(futures)]
             assert set(results) == {1, 4}
 
@@ -334,9 +337,10 @@ def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
             for n in job_range:
                 output_path = Path(tmp_dir) / f"{n}.pickle"
                 cfut_options = {"output_pickle_path": output_path}
-                futures.append(
-                    exc.submit(square, n, __cfut_options=cfut_options)  # type: ignore[call-arg]
-                )
+                with pytest.warns(DeprecationWarning, match="output_pickle_path"):
+                    futures.append(
+                        exc.submit(square, n, __cfut_options=cfut_options)  # type: ignore[call-arg]
+                    )
 
             for future, job_index in zip(futures, job_range):
                 assert future.result() == square(job_index)
