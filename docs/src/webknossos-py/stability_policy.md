@@ -1,13 +1,13 @@
 # Stability Policy
 
-This project adheres to [Semantic Versioning](http://semver.org/) regarding the Python API
-compatibility, using the `MAJOR.MINOR.PATCH` version number format.
-To allow fast development of the WEBKNOSSOS server, the server-client interaction may need minor
-version upgrades to ensure full functionality. Starting from v1 and above, minor and patch upgrades won't require
-changes consuming the Python API as long as the following two points are followed:
+This project uses the `MAJOR.MINOR.PATCH` version number format, loosely following
+[Semantic Versioning](http://semver.org/) for the Python API.
 
-1. To ensure compatibility across minor and patch upgrades, please import everything directly
-   from the webknossos module, not from submodules, e.g. use
+## Public API
+
+Only the following is covered by this policy:
+
+1. Everything that is imported directly from the webknossos module, not from submodules, e.g.
    ```python
    import webknossos as wk
    wk.Skeleton()
@@ -17,3 +17,18 @@ changes consuming the Python API as long as the following two points are followe
    ```
 2. Methods, functions, classes and variables prefixed with an underscore are not part of the public API
    and may change anytime.
+
+## Versions
+
+- **Major** releases may contain breaking changes to commonly used parts of the API.
+  They are listed in the _Breaking Changes_ section of the [changelog](./changelog.md),
+  together with upgrade instructions.
+- **Minor** releases add features and deprecate APIs. They may also contain small breaking changes
+  to rarely used parts of the API, or changes needed to keep up with the WEBKNOSSOS server.
+  Such changes are listed in the _Changed_ section of the changelog and start with **Breaking:**.
+- **Patch** releases only contain bug fixes.
+
+Whether a breaking change is common enough to require a major release is decided case by case
+when it is added to the changelog. Where possible, APIs are deprecated with a warning first,
+listed in the _Deprecated_ section, and removed in a later release.
+To be notified of upcoming removals, watch for `DeprecationWarning`s in your code.

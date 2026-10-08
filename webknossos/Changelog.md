@@ -6,8 +6,9 @@ Please see the [Stability Policy](./stability_policy.md) for details about the v
 and compatibility implications.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
-For upgrade instructions, please check the respective _Breaking Changes_ sections.
+and this project uses `MAJOR.MINOR.PATCH` version numbers.
+For upgrade instructions, please check the respective _Breaking Changes_ sections and the entries starting with **Breaking:**
+in the _Changed_ sections.
 
 ## Unreleased
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.2...HEAD)
@@ -18,6 +19,8 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 - AnnotationInfo objects now expose a new field `created` (creation time of the annotation as unix timestamp). It will be None for old server versions that do not report it yet. [#1561](https://github.com/scalableminds/webknossos-libs/pull/1561)
 
 ### Changed
+
+### Deprecated
 
 ### Fixed
 - `View.write` and `MagView.write` now raise a `ValueError` when the shape of the passed data does not match the size of the target bounding box. Previously, data larger than the bounding box was silently cropped. [#1564](https://github.com/scalableminds/webknossos-libs/pull/1564)
@@ -42,17 +45,17 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ## [4.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.0) - 2026-10-05
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.1...v4.2.0)
 
-### Breaking Changes
-- The default `transfer_mode` of `RemoteDataset.add_layer_as_copy`, `RemoteDataset.downsample`, `RemoteLayer.add_mag_as_copy`, `RemoteLayer.downsample`, `RemoteLayer.upsample` and `RemoteAttachments.add_attachment_as_copy` is now `TransferMode.HTTP` instead of `TransferMode.COPY`, consistent with `Dataset.upload`. Pass `transfer_mode=TransferMode.COPY` explicitly to keep the previous behavior. [#1554](https://github.com/scalableminds/webknossos-libs/pull/1554)
-
 ### Added
 - `Layer.export.as_ozx`, `as_tiff_stack` and `as_ome_tiff` take an `access_mode` to choose how a remote layer's data is read, instead of always using the dataset's access mode. `as_ozx` and `as_ome_tiff` take a `downsample` flag (default `True`); with `downsample=False`, only the requested mag is written, without coarser levels. [#1558](https://github.com/scalableminds/webknossos-libs/pull/1558)
 
 ### Changed
+- **Breaking:** The default `transfer_mode` of `RemoteDataset.add_layer_as_copy`, `RemoteDataset.downsample`, `RemoteLayer.add_mag_as_copy`, `RemoteLayer.downsample`, `RemoteLayer.upsample` and `RemoteAttachments.add_attachment_as_copy` is now `TransferMode.HTTP` instead of `TransferMode.COPY`, consistent with `Dataset.upload`. Pass `transfer_mode=TransferMode.COPY` explicitly to keep the previous behavior. [#1554](https://github.com/scalableminds/webknossos-libs/pull/1554)
 - `Layer.export.as_ozx` now reads only the requested mag and computes a fresh pyramid of coarser mags by downsampling the exported data (anisotropic sampling), instead of copying the layer's existing mags. All mags in the archive now cover the same region, also for bounding boxes that aren't aligned with the coarser mags. [#1558](https://github.com/scalableminds/webknossos-libs/pull/1558)
 - `webknossos downsample` and `webknossos upsample` no longer require `--transfer-mode` for remote datasets; it now defaults to `http`. [#1554](https://github.com/scalableminds/webknossos-libs/pull/1554)
-- Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
 - `Layer.export.as_tiff_stack` now names each slice by its absolute coordinates (z in Mag(1) coordinates, plus any additional axes) instead of numbering the slices from 0, zero-padded to the width of the layer's largest coordinate along each axis. A cutout starting at z=40 in mag 2 is written as `40.tiff`, `42.tiff`, …, and one starting at t=3 as `t3_z….tiff`. [#1557](https://github.com/scalableminds/webknossos-libs/pull/1557)
+
+### Deprecated
+- `RemoteMagView.paths` is deprecated in favor of `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
 
 ### Fixed
 - `Layer.add_mag_as_ref` and `Dataset.add_layer_as_ref` no longer open the array of a `RemoteMagView` to validate its data format and dtype, but use the remote layer's properties instead. Referencing a remote mag via its direct path therefore works without credentials for the underlying storage. [#1553](https://github.com/scalableminds/webknossos-libs/pull/1553)
