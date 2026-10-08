@@ -18,7 +18,3 @@ def random_string(
     length: int = 32, chars: str = (string.ascii_letters + string.digits)
 ) -> str:
     return "".join(random_generator.choice(chars) for i in range(length))
-
-
-def with_preliminary_postfix(name: str) -> str:
-    return f"{name}.preliminary"

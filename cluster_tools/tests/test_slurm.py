@@ -478,8 +478,8 @@ def fail(_val: Any) -> None:
     raise Exception("Fail()")
 
 
-def output_pickle_path_getter(tmp_dir: str, chunk: int) -> Path:
-    return Path(tmp_dir) / f"test_{chunk}.pickle"
+def output_key_getter(tmp_dir: str, chunk: int) -> str:
+    return str(Path(tmp_dir) / f"test_{chunk}.pickle")
 
 
 def test_preliminary_file_submit() -> None:
@@ -493,7 +493,7 @@ def test_preliminary_file_submit() -> None:
             # Schedule failing job and verify that only a preliminary output exists
             fut = executor.submit(
                 partial(fail, None),
-                __cfut_options={"output_pickle_path": str(output_pickle_path)},
+                __cfut_options={"output_key": str(output_pickle_path)},
             )
             with pytest.raises(Exception):
                 fut.result()
@@ -506,7 +506,7 @@ def test_preliminary_file_submit() -> None:
             fut_2 = executor.submit(
                 square,
                 3,
-                __cfut_options={"output_pickle_path": str(output_pickle_path)},  # type: ignore[call-arg]
+                __cfut_options={"output_key": str(output_pickle_path)},  # type: ignore[call-arg]
             )
             assert fut_2.result() == 9
             assert output_pickle_path.exists(), "Final output file should exist"
@@ -540,14 +540,14 @@ def test_preliminary_file_map() -> None:
             futs = executor.map_to_futures(
                 fail,
                 list(a_range),
-                output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir),
+                output_key_getter=partial(output_key_getter, tmp_dir),
             )
             for fut in futs:
                 with pytest.raises(Exception):
                     fut.result()
 
             for idx in a_range:
-                output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))
+                output_pickle_path = Path(output_key_getter(tmp_dir, idx))
                 preliminary_output_path = Path(f"{output_pickle_path}.preliminary")
 
                 assert preliminary_output_path.exists(), (
@@ -561,18 +561,44 @@ def test_preliminary_file_map() -> None:
             futs_2 = executor.map_to_futures(
                 square,
                 list(a_range),
-                output_pickle_path_getter=partial(output_pickle_path_getter, tmp_dir),
+                output_key_getter=partial(output_key_getter, tmp_dir),
             )
             for fut_2, job_index in zip(futs_2, a_range):
                 assert fut_2.result() == square(job_index)
 
             for idx in a_range:
-                output_pickle_path = Path(output_pickle_path_getter(tmp_dir, idx))
+                output_pickle_path = Path(output_key_getter(tmp_dir, idx))
                 preliminary_output_path = Path(f"{output_pickle_path}.preliminary")
                 assert output_pickle_path.exists(), "Final output file should exist"
                 assert not preliminary_output_path.exists(), (
                     "Preliminary output file should not exist anymore"
                 )
+
+
+class FailingReadOutputStore(cluster_tools.FileOutputStore):
+    """Writes outputs normally, but fails when the executor reads them back."""
+
+    def read(self, key: str) -> bytes:  # noqa: ARG002 Unused method argument: `key`
+        raise RuntimeError("read failed")
+
+
+def test_failing_output_store_read_does_not_strand_futures() -> None:
+    """A failing store must surface through the future instead of killing the
+    polling thread, which would leave every other job pending."""
+    with tempfile.TemporaryDirectory(dir=".") as tmp_dir:
+        with cluster_tools.get_executor(
+            "slurm",
+            debug=True,
+            job_resources={"mem": "10M"},
+            output_store=FailingReadOutputStore(tmp_dir),
+        ) as executor:
+            fut = executor.submit(square, 3)
+            with pytest.raises(RuntimeError, match="Could not read the output"):
+                fut.result(timeout=120)
+
+            # The executor keeps working, i.e. the wait thread is still alive.
+            with pytest.raises(RuntimeError, match="Could not read the output"):
+                executor.submit(square, 4).result(timeout=120)
 
 
 def test_cpu_bind_regression() -> None:

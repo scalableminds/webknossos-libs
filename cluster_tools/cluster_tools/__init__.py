@@ -7,6 +7,10 @@ from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor
 from cluster_tools.executors.multiprocessing_pickle import MultiprocessingPickleExecutor
 from cluster_tools.executors.sequential import SequentialExecutor
 from cluster_tools.executors.sequential_pickle import SequentialPickleExecutor
+from cluster_tools.output_store import (
+    FileOutputStore,  # noqa: F401 unused import
+    OutputStore,  # noqa: F401 unused import
+)
 from cluster_tools.schedulers.cluster_executor import (
     ClusterExecutor,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
     RemoteOutOfMemoryException,  # noqa:  F401 `cluster_tools.schedulers.cluster_executor.ClusterExecutor` imported but unused;
@@ -108,7 +112,9 @@ def get_executor(environment: str, **kwargs: Any) -> "Executor":
         return KubernetesExecutor(**kwargs)
     elif environment == "dask":
         if "client" in kwargs:
-            return DaskExecutor(kwargs["client"])
+            return DaskExecutor(
+                kwargs["client"], output_store=kwargs.get("output_store")
+            )
         else:
             return DaskExecutor.from_config(**kwargs)
     elif environment == "multiprocessing":
