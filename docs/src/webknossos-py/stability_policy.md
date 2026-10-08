@@ -1,7 +1,10 @@
 # Stability Policy
 
-This project uses the `MAJOR.MINOR.PATCH` version number format, loosely following
-[Semantic Versioning](http://semver.org/) for the Python API.
+This project uses the `MAJOR.MINOR.PATCH` version number format and follows
+[Intended Effort Versioning (EffVer)](https://effver.org/) for the Python API:
+the version number tells you how much effort an upgrade is expected to take,
+not whether something is technically incompatible. This means that, unlike with
+[Semantic Versioning](http://semver.org/), minor releases may contain small breaking changes.
 
 ## Public API
 
