@@ -62,12 +62,10 @@ class FileOutputStore(OutputStore):
         dest = Path(key) if success else self.preliminary_path(key)
         # A unique temporary file, so that concurrent writers cannot clobber each other.
         # It has to stay in the destination's directory, since a replace cannot move
-        # across filesystems. os.open with the default mode applies the umask, like
-        # open() would.
+        # across filesystems. Mode "x" creates it exclusively.
         tmp = dest.with_name(f"{dest.name}.{uuid4().hex}.tmp")
         try:
-            fd = os.open(tmp, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            with os.fdopen(fd, "wb") as f:
+            with tmp.open("xb") as f:
                 f.write(data)
             # Path.replace overwrites an existing destination, also on Windows.
             tmp.replace(dest)

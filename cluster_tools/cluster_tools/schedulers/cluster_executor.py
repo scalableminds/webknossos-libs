@@ -539,13 +539,15 @@ class ClusterExecutor(futures.Executor):
         if self.debug:
             logging.debug(f"Job submitted: {jobid}")
 
-        # Thread will wait for it to finish.
-        self.wait_thread.waitFor(output_key, jobid)
-
+        # Register the job before waiting for it, since the wait thread may complete
+        # it right away and expects the entry to exist.
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid, output_key, should_keep_output)
 
         fut.cluster_jobid = jobid  # type: ignore[attr-defined]
+
+        # Thread will wait for it to finish.
+        self.wait_thread.waitFor(output_key, jobid)
         return fut
 
     def _delete_stale_output(self, output_key: str) -> None:
@@ -683,16 +685,15 @@ class ClusterExecutor(futures.Executor):
         for array_index, (fut, output_key) in enumerate(futs_with_output_keys):
             jobid_with_index = self.get_jobid_with_index(jobid, array_index)
 
-            # Thread will wait for it to finish.
-            self.wait_thread.waitFor(output_key, jobid_with_index)
-
             fut.cluster_jobid = jobid  # type: ignore[attr-defined]
             # fut.cluster_jobindex is only used for debugging:
             fut.cluster_jobindex = array_index  # type: ignore[attr-defined]
 
             job_index = job_index_offset + array_index
             workerid_with_index = self.get_workerid_with_index(workerid, job_index)
-            # Remove the pending jobs entry and add the correct one
+            # Remove the pending jobs entry and add the correct one. This has to
+            # happen before waiting for the job, since the wait thread may complete
+            # it right away and expects the entry to exist.
             with self.jobs_lock:
                 del self.jobs[workerid_with_index]
                 self.jobs[jobid_with_index] = (
@@ -701,6 +702,9 @@ class ClusterExecutor(futures.Executor):
                     output_key,
                     should_keep_output,
                 )
+
+            # Thread will wait for it to finish.
+            self.wait_thread.waitFor(output_key, jobid_with_index)
 
     # Overwrite the context manager __exit as it doesn't forward the information whether an exception was thrown or not otherwise
     # which may lead to a deadlock if an exception is thrown within a cluster executor with statement, because self.jobs_empty_cond.wait()
