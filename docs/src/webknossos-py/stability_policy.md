@@ -8,15 +8,19 @@ not whether something is technically incompatible. This means that, unlike with
 
 ## Public API
 
-Only the following is covered by this policy:
+This policy covers the `webknossos` and `cluster_tools` packages, which are released together
+with the same version number. Only the following is covered:
 
-1. Everything that is imported directly from the webknossos module, not from submodules, e.g.
+1. Everything that is imported directly from the webknossos or cluster_tools module, not from submodules, e.g.
    ```python
    import webknossos as wk
    wk.Skeleton()
    # or
    from webknossos import Dataset
    Dataset()
+   # or
+   import cluster_tools
+   cluster_tools.get_executor("multiprocessing")
    ```
 2. Methods, functions, classes and variables prefixed with an underscore are not part of the public API
    and may change anytime.
