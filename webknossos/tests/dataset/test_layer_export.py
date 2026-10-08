@@ -6,7 +6,7 @@ import pytest
 from upath import UPath
 
 from tests.data_fixtures import download_wklibs_sample_archive
-from webknossos import COLOR_CATEGORY, Dataset, Layer
+from webknossos import COLOR_CATEGORY, Dataset, Layer, RemoteAccessMode
 from webknossos.dataset._utils.tensorstore_helpers import read_zarr3_array
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
 from webknossos.geometry.constants import C_AXIS, T_AXIS, X_AXIS, Y_AXIS, Z_AXIS
@@ -93,6 +93,75 @@ def test_as_ozx_single_mag(tmp_upath: UPath) -> None:
         names = zip_file.namelist()
         assert "1/zarr.json" not in names
         assert "2-2-1/zarr.json" in names
+
+
+def test_as_ozx_without_downsample(tmp_upath: UPath) -> None:
+    _dataset, layer, _data = make_layer(tmp_upath)
+    zip_path = tmp_upath / "color_no_downsample.ozx"
+
+    layer.export.as_ozx(output_path=zip_path, downsample=False)
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        root_attrs = json.loads(zip_file.read("zarr.json"))["attributes"]
+        multiscale_paths = {
+            d["path"] for d in root_attrs["ome"]["multiscales"][0]["datasets"]
+        }
+    assert multiscale_paths == {"1"}
+
+
+def test_as_ozx_coarser_mags_are_downsampled_from_export(tmp_upath: UPath) -> None:
+    # The layer's own mag 2-2-2 holds data unrelated to mag 1, so the
+    # archive's coarser mags must be computed from the exported mag 1,
+    # regardless of which mags the layer has.
+    _dataset, layer, data_by_mag = make_layer_with_mags(tmp_upath)
+    crop = BoundingBox((10, 6, 3), (20, 20, 20))
+    zip_path = tmp_upath / "color_downsampled.ozx"
+
+    layer.export.as_ozx(output_path=zip_path, bounding_box=crop)
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        zip_file.extractall(str(tmp_upath / "extracted"))
+
+    reference = Dataset(tmp_upath / "reference", voxel_size=(11, 11, 25))
+    reference_layer = reference.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), crop.size),
+    )
+    reference_layer.add_mag(1).write(
+        data=data_by_mag[Mag(1)][
+            crop.topleft.x : crop.bottomright.x,
+            crop.topleft.y : crop.bottomright.y,
+            crop.topleft.z : crop.bottomright.z,
+        ]
+    )
+    reference_layer.downsample()
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        root_attrs = json.loads(zip_file.read("zarr.json"))["attributes"]
+    multiscale_paths = {
+        d["path"] for d in root_attrs["ome"]["multiscales"][0]["datasets"]
+    }
+    assert multiscale_paths == {m.to_layer_name() for m in reference_layer.mags}
+    assert "2-2-2" not in multiscale_paths
+
+    for target_mag, mag_view in reference_layer.mags.items():
+        expected = mag_view.read()[0]
+        got = read_zarr3_array(tmp_upath / "extracted" / target_mag.to_layer_name())[0]
+        got = got[tuple(slice(0, s) for s in expected.shape)]
+        assert np.array_equal(got, expected)
+
+
+def test_export_access_mode_requires_remote_layer(tmp_upath: UPath) -> None:
+    _dataset, layer, _data = make_layer(tmp_upath)
+
+    with pytest.raises(ValueError, match="access_mode"):
+        layer.export.as_ozx(
+            output_path=tmp_upath / "color.ozx",
+            access_mode=RemoteAccessMode.DIRECT_PATH,
+        )
 
 
 def make_odd_sized_layer(tmp_upath: UPath) -> tuple[Dataset, Layer, np.ndarray]:
@@ -182,6 +251,11 @@ def test_as_tiff_stack_pixel_values(tmp_upath: UPath, mag: Mag | None) -> None:
     crop_in_mag = crop.in_mag(mag or Mag(1))
     files = sorted(out_dir.glob("*.tiff"))
     assert len(files) == crop_in_mag.size.z
+    # Named by the absolute Mag(1) z of each slice.
+    mag_z = (mag or Mag(1)).z
+    assert [f.name for f in files] == [
+        f"{crop.topleft.z + z * mag_z:02d}.tiff" for z in range(len(files))
+    ]
 
     for z, file in enumerate(files):
         image = tifffile.imread(str(file))
@@ -205,8 +279,8 @@ def test_as_tiff_stack_filename_prefix(tmp_upath: UPath) -> None:
     )
 
     files = sorted(f.name for f in out_dir.glob("*.tiff"))
-    # 3 slices -> single-digit indices are enough.
-    assert files == ["section_0.tiff", "section_1.tiff", "section_2.tiff"]
+    # Absolute z, padded to the layer's largest z (63).
+    assert files == ["section_08.tiff", "section_09.tiff", "section_10.tiff"]
 
 
 @pytest.mark.parametrize("mag", [None, Mag("2-2-2")])
@@ -234,9 +308,23 @@ def test_as_ome_tiff_readable(tmp_upath: UPath, mag: Mag | None) -> None:
         assert np.array_equal(arr, expected)
 
 
+@pytest.mark.parametrize("downsample", [True, False])
+def test_as_ome_tiff_downsample(tmp_upath: UPath, downsample: bool) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    _dataset, layer, _data = make_layer(tmp_upath)
+    out_path = tmp_upath / "color.ome.tif"
+
+    layer.export.as_ome_tiff(output_path=out_path, downsample=downsample)
+
+    with tifffile.TiffFile(str(out_path)) as tif:
+        assert (len(tif.series[0].levels) > 1) == downsample
+
+
 def make_nd_layer() -> Layer:
     """Opens the ND (c,t,z,y,x) sample dataset."""
-    source_path = download_wklibs_sample_archive("4D") / "4D_series_zarr3"
+    source_path = download_wklibs_sample_archive("4D_v2") / "4D_series_zarr3"
     dataset = Dataset.open(source_path)
     return dataset.get_layer("color")
 
@@ -274,6 +362,24 @@ def test_as_tiff_stack_nd_layer(tmp_upath: UPath) -> None:
         image = tifffile.imread(str(out_dir / f"t{t}_z{z}.tiff"))
         expected = data[0, t, z]
         assert np.array_equal(image, expected)
+
+
+def test_as_tiff_stack_nd_layer_cropped_names_are_absolute(tmp_upath: UPath) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    layer = make_nd_layer()
+    data = layer.get_finest_mag().read()  # (c=1, t=7, z=5, y=167, x=439)
+    crop = layer.bounding_box.with_bounds(T_AXIS, 3, 2).with_bounds(Z_AXIS, 1, 2)
+    out_dir = tmp_upath / "nd_tiff_stack_cropped"
+
+    layer.export.as_tiff_stack(output_path=out_dir, bounding_box=crop)
+
+    files = sorted(f.name for f in out_dir.glob("*.tiff"))
+    assert files == ["t3_z1.tiff", "t3_z2.tiff", "t4_z1.tiff", "t4_z2.tiff"]
+    for t, z in [(3, 1), (4, 2)]:
+        image = tifffile.imread(str(out_dir / f"t{t}_z{z}.tiff"))
+        assert np.array_equal(image, data[0, t, z])
 
 
 def test_as_ome_tiff_nd_layer_roundtrip(tmp_upath: UPath) -> None:

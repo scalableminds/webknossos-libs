@@ -57,6 +57,16 @@ class SegmentInformation:
     metadata: dict[str, str | int | float | Sequence[str]]
 
 
+_VOLUME_METADATA_FILE_NAMES = {
+    PROPERTIES_FILE_NAME,
+    "zarr.json",
+    "header.wkw",
+    ".zarray",
+    ".zattrs",
+    ".zgroup",
+}
+
+
 class VolumeLayerEditMode(Enum):
     """Defines the edit mode for volume layers."""
 
@@ -103,6 +113,18 @@ class VolumeLayer:
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
+
+    def _has_volume_data(self) -> bool:
+        """Whether the volume layer zip contains any voxel data (chunks), not just metadata."""
+        if self.zip is None:
+            return False
+        with self.zip.open(mode="rb") as f:
+            with ZipFile(f) as volume_layer_zipfile:
+                return any(
+                    os.path.basename(name) not in _VOLUME_METADATA_FILE_NAMES
+                    for name in volume_layer_zipfile.namelist()
+                    if not name.endswith("/")
+                )
 
     def _write_dir_to_zip(self, source: str) -> None:
         """

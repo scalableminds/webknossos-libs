@@ -405,7 +405,7 @@ class RemoteAttachments(AbstractAttachments):
         self,
         attachment: Attachment,
         *,
-        transfer_mode: TransferMode = TransferMode.COPY,
+        transfer_mode: TransferMode = TransferMode.HTTP,
         common_storage_prefix: str | None = None,
         overwrite_pending: bool = True,
     ) -> Attachment:
@@ -460,7 +460,7 @@ class RemoteAttachments(AbstractAttachments):
         self,
         attachment: Attachment,
         *,
-        transfer_mode: TransferMode = TransferMode.COPY,
+        transfer_mode: TransferMode = TransferMode.HTTP,
         common_storage_prefix: str | None = None,
     ) -> Attachment:
         warn_deprecated("upload_attachment", "add_attachment_as_copy")
