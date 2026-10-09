@@ -241,6 +241,10 @@ class MagView(View, Generic[LayerTypeT]):
         """
         return self.layer.num_channels
 
+    def _get_dimension_names(self) -> tuple[str, ...]:
+        bbox = self.normalized_bounding_box
+        return tuple(axis for _, axis in sorted(zip(bbox.index, bbox.axes)))
+
     # Own methods:
 
     @property

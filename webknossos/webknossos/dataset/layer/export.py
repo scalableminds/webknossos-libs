@@ -64,7 +64,7 @@ def _resolve_export_bbox(
     The layer's bounding box can't be used for that: for remote layers it may
     lack the channel axis that the streamed array has (or vice versa). The
     request is clipped to the layer per axis name, axes the array doesn't
-    have are ignored and the channel axis always spans all channels.
+    have are ignored and the channel axis always spans all channels of the layer.
     """
     layer_bbox = layer.normalized_bounding_box
     if bounding_box is None:
@@ -73,7 +73,11 @@ def _resolve_export_bbox(
     topleft, size = [], []
     for axis in array_axes:
         if axis == C_AXIS:
-            start, end = 0, layer.num_channels
+            mag_bbox = mag_view.normalized_bounding_box
+            if C_AXIS in mag_bbox.axes:
+                start, end = mag_bbox.get_bounds(C_AXIS)
+            else:
+                start, end = 0, layer.num_channels
         elif axis in layer_bbox.axes:
             start, end = layer_bbox.get_bounds(axis)
             if axis in bounding_box.axes:
