@@ -1,0 +1,9 @@
+// This file was copied from webknossos: https://github.com/scalableminds/webknossos/blob/6e9456750e7ddd9c5e8162d70c4645cf98d2c577/webknossos-datastore/proto/ListOfLong.proto
+// update .py and .pyi files with: ( while being in webknossos-libs/webknossos): `protoc --proto_path webknossos/proofreading --python_out webknossos/proofreading/generated list_of_long.proto --pyi_out webknossos/proofreading/generated`
+syntax = "proto2";
+
+package com.scalableminds.webknossos.datastore;
+
+message ListOfLong {
+  repeated uint64 items = 1;
+}

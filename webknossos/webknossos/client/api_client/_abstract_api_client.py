@@ -77,6 +77,24 @@ class AbstractApiClient(ABC):
         proto_object.ParseFromString(protobuf_binary)
         return proto_object
 
+    def _post_protobuf_with_protobuf_response(
+        self,
+        route: str,
+        body: ProtobufMessage,
+        MessageType: type[ProtobufMessageType],
+        query: Query | None = None,
+    ) -> ProtobufMessageType:
+        response = self._request(
+            "POST",
+            route,
+            query=query,
+            body_bytes=body.SerializeToString(),
+            content_type="application/x-protobuf",
+        )
+        proto_object = MessageType()
+        proto_object.ParseFromString(response.content)
+        return proto_object
+
     def _put_json(self, route: str, body_structured: Any) -> None:
         body_json = self._prepare_for_json(body_structured)
         self._put(route, body_json)
@@ -295,6 +313,8 @@ class AbstractApiClient(ABC):
         body_json: Any | None = None,
         multipart_data: httpx._types.RequestData | None = None,
         files: httpx._types.RequestFiles | None = None,
+        body_bytes: bytes | None = None,
+        content_type: str | None = None,
         retry_count: int = 0,
         timeout_seconds: float | None = None,
     ) -> httpx.Response:
@@ -302,6 +322,9 @@ class AbstractApiClient(ABC):
             f"Cannot perform request with retry_count < 0, got {retry_count}"
         )
         url = self.url_from_route(route)
+        headers = self.headers
+        if content_type is not None:
+            headers = {**(self.headers or {}), "Content-Type": content_type}
         response = None
         for _ in range(retry_count + 1):
             response = httpx.request(
@@ -311,7 +334,8 @@ class AbstractApiClient(ABC):
                 json=body_json,
                 data=multipart_data,
                 files=files,
-                headers=self.headers,
+                content=body_bytes,
+                headers=headers,
                 timeout=timeout_seconds or self.timeout_seconds,
                 verify=SSL_CONTEXT,
             )
