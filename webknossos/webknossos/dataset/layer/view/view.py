@@ -81,6 +81,7 @@ class View:
         data_format: DataFormat,
         read_only: bool = False,
         cached_array: BaseArray | None = None,
+        dimension_names: tuple[str, ...] | None = None,
     ):
         """Initialize a View instance for accessing and manipulating dataset regions.
 
@@ -113,6 +114,7 @@ class View:
         self._normalized_bounding_box = bounding_box
         self._read_only = read_only
         self._cached_array = cached_array
+        self._dimension_names = dimension_names
         self._mag = mag
 
     @property
@@ -255,7 +257,19 @@ class View:
             )
 
         if abs_mag1_bbox is not None:
-            return abs_mag1_bbox.normalize_axes(self.num_channels)
+            normalized_bbox = abs_mag1_bbox.normalize_axes(self.num_channels)
+            if (
+                C_AXIS not in abs_mag1_bbox.axes
+                and C_AXIS in normalized_bbox.axes
+                and C_AXIS in self.normalized_bounding_box.axes
+            ):
+                # Start at the view's first channel, which is non-zero for
+                # layers with a `channelIndex`.
+                c_start = self.normalized_bounding_box.topleft.c
+                normalized_bbox = normalized_bbox.with_bounds(
+                    C_AXIS, c_start, self.num_channels
+                )
+            return normalized_bbox
 
         if rel_mag1_bbox is not None:
             return rel_mag1_bbox.normalize_axes(self.num_channels).offset(
@@ -1119,6 +1133,7 @@ class View:
             data_format=self._data_format,
             read_only=read_only,
             cached_array=self._cached_array,
+            dimension_names=self._get_dimension_names(),
         )
 
     def get_buffered_slice_writer(
@@ -1694,10 +1709,15 @@ class View:
     def _get_file_dimensions_mag1(self) -> Vec3Int:
         return Vec3Int(self._get_file_dimensions() * self.mag.to_vec3_int())
 
+    def _get_dimension_names(self) -> tuple[str, ...] | None:
+        return self._dimension_names
+
     @property
     def _array(self) -> BaseArray:
         if self._cached_array is None:
-            self._cached_array = BaseArray.get_class(self._data_format).open(self._path)
+            self._cached_array = BaseArray.get_class(self._data_format).open(
+                self._path, self._get_dimension_names()
+            )
         return self._cached_array
 
     @_array.deleter
