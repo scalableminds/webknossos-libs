@@ -3,8 +3,9 @@
 All notable changes to the cluster_tools library are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
-For upgrade instructions, please check the respective *Breaking Changes* sections.
+and this project uses `MAJOR.MINOR.PATCH` version numbers as described in the [Stability Policy](https://docs.webknossos.org/webknossos-py/stability_policy.html).
+For upgrade instructions, please check the respective _Breaking Changes_ sections and the entries starting with **Breaking:**
+in the _Changed_ sections.
 
 ## Unreleased
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.2...HEAD)
@@ -14,7 +15,9 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 ### Added
 
 ### Changed
-- Deprecated the `dask`, `kubernetes` and `pbs` executors. They will be removed in the next major release. [#1565](https://github.com/scalableminds/webknossos-libs/pull/1565)
+
+### Deprecated
+- The `dask`, `kubernetes` and `pbs` executors are deprecated. They will be removed in the next major release. [#1565](https://github.com/scalableminds/webknossos-libs/pull/1565)
 
 ### Fixed
 
