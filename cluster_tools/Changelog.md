@@ -8,7 +8,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.3...HEAD)
 
 ### Breaking Changes
 
@@ -17,9 +17,15 @@ in the _Changed_ sections.
 ### Changed
 
 ### Deprecated
-- The `dask`, `kubernetes` and `pbs` executors are deprecated. They will be removed in the next major release. [#1565](https://github.com/scalableminds/webknossos-libs/pull/1565)
 
 ### Fixed
+
+
+## [4.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.3) - 2026-10-12
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.2...v4.2.3)
+
+### Deprecated
+- The `dask`, `kubernetes` and `pbs` executors are deprecated. They will be removed in the next major release. [#1565](https://github.com/scalableminds/webknossos-libs/pull/1565)
 
 
 ## [4.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.2) - 2026-10-07
