@@ -180,3 +180,21 @@ def test_explicit_axis_order_takes_precedence_over_array_metadata(
 
     assert mag.info.bounding_box.axes == ("c", "z", "y", "x")
     assert np.array_equal(mag.read(), data)
+
+
+def test_add_mag_as_ref_keeps_axis_order(tmp_upath: UPath) -> None:
+    dataset, data = _make_bigstitcher_dataset(tmp_upath)
+    foreign_layer = dataset.get_layer("channel_1")
+
+    target = Dataset(tmp_upath / "target", voxel_size=(11, 11, 25))
+    layer = target.add_layer(
+        "channel_1",
+        "color",
+        dtype="uint16",
+        data_format="zarr3",
+        bounding_box=foreign_layer.bounding_box,
+    )
+    mag = layer.add_mag_as_ref(foreign_layer.get_mag(1))
+
+    assert mag.info.bounding_box.axes == ("t", "c", "z", "y", "x")
+    assert np.array_equal(mag.read(), data[:, 1:2])

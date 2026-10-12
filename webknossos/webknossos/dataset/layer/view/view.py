@@ -28,7 +28,7 @@ from ....utils import (
     wait_and_ensure_success,
     warn_deprecated,
 )
-from ._array import ArrayInfo, BaseArray
+from ._array import ArrayInfo, BaseArray, Zarr2Array, Zarr3Array
 
 if TYPE_CHECKING:
     from ..._utils.buffered_slice_reader import BufferedSliceReader
@@ -1719,9 +1719,14 @@ class View:
     @property
     def _array(self) -> BaseArray:
         if self._cached_array is None:
-            self._cached_array = BaseArray.get_class(self._data_format).open(
-                self._path, self._get_dimension_names()
-            )
+            array_class = BaseArray.get_class(self._data_format)
+            dimension_names = self._get_dimension_names()
+            if dimension_names is not None and issubclass(
+                array_class, (Zarr3Array, Zarr2Array)
+            ):
+                self._cached_array = array_class.open(self._path, dimension_names)
+            else:
+                self._cached_array = array_class.open(self._path)
         return self._cached_array
 
     @_array.deleter

@@ -204,13 +204,11 @@ class BaseArray(ABC):
 
     @classmethod
     @abstractmethod
-    def open(
-        _cls, path: UPath, dimension_names: tuple[str, ...] | None = None
-    ) -> "BaseArray":
+    def open(_cls, path: UPath) -> "BaseArray":
         classes = (WKWArray, Zarr3Array, Zarr2Array)
         for cls in classes:
             try:
-                array = cls.open(path, dimension_names)  # type: ignore[attr-defined]
+                array = cls.open(path)  # type: ignore[attr-defined]
                 return array
             except ArrayException:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 pass
@@ -266,10 +264,7 @@ class WKWArray(BaseArray):
         self._cached_wkw_dataset = None
 
     @classmethod
-    def open(
-        cls, path: UPath, dimension_names: tuple[str, ...] | None = None
-    ) -> "WKWArray":
-        del dimension_names  # WKW arrays always have the c, x, y, z axes
+    def open(cls, path: UPath) -> "WKWArray":
         header_path = path / "header.wkw"
 
         if header_path.exists() and header_path.is_file():
@@ -442,8 +437,6 @@ class TensorStoreArray(BaseArray):
     _cached_array: tensorstore.TensorStore | None
     _tensorstore_data_format: str
     _dimension_names: tuple[str, ...] | None
-    # Other drivers (e.g. neuroglancer precomputed) have a fixed axis order.
-    _supports_dimension_names: bool = False
 
     def __init__(
         self,
@@ -466,8 +459,7 @@ class TensorStoreArray(BaseArray):
         self, array: tensorstore.TensorStore
     ) -> tensorstore.TensorStore:
         if (
-            self._supports_dimension_names
-            and self._dimension_names is not None
+            self._dimension_names is not None
             and len(self._dimension_names) == array.rank
             and array.domain.labels != self._dimension_names
         ):
@@ -573,13 +565,11 @@ class TensorStoreArray(BaseArray):
         )
 
     @classmethod
-    def open(
-        cls, path: UPath, dimension_names: tuple[str, ...] | None = None
-    ) -> "TensorStoreArray":
+    def open(cls, path: UPath) -> "TensorStoreArray":
         classes = (Zarr3Array, Zarr2Array)
         for _cls in classes:
             try:
-                array = _cls.open(path, dimension_names)
+                array = _cls.open(path)
                 return array
             except ArrayException:  # noqa: PERF203
                 pass
@@ -801,7 +791,6 @@ class TensorStoreArray(BaseArray):
 class Zarr3Array(TensorStoreArray):
     data_format = DataFormat.Zarr3
     _tensorstore_data_format = "zarr3"
-    _supports_dimension_names = True
 
     @classmethod
     def open(
@@ -924,7 +913,6 @@ class Zarr3Array(TensorStoreArray):
 class Zarr2Array(TensorStoreArray):
     data_format = DataFormat.Zarr
     _tensorstore_data_format = "zarr"
-    _supports_dimension_names = True
 
     @classmethod
     def open(
@@ -1004,10 +992,8 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
     _tensorstore_data_format = "neuroglancer_precomputed"
 
     @classmethod
-    def open(
-        cls, path: UPath, dimension_names: tuple[str, ...] | None = None
-    ) -> "NeuroglancerPrecomputedArray":
-        return cls._open(path, dimension_names)
+    def open(cls, path: UPath) -> "NeuroglancerPrecomputedArray":
+        return cls._open(path)
 
     @classmethod
     def _open_spec(cls, path: UPath) -> dict[str, Any]:
@@ -1061,10 +1047,8 @@ class N5Array(TensorStoreArray):
     _tensorstore_data_format = "n5"
 
     @classmethod
-    def open(
-        cls, path: UPath, dimension_names: tuple[str, ...] | None = None
-    ) -> "N5Array":
-        return cls._open(path, dimension_names)
+    def open(cls, path: UPath) -> "N5Array":
+        return cls._open(path)
 
     @property
     def info(self) -> ArrayInfo:

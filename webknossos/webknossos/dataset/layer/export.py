@@ -74,10 +74,13 @@ def _resolve_export_bbox(
     for axis in array_axes:
         if axis == C_AXIS:
             mag_bbox = mag_view.normalized_bounding_box
+            array_start, array_end = mag_view.info.bounding_box.get_bounds(C_AXIS)
+            start, end = 0, layer.num_channels
             if C_AXIS in mag_bbox.axes:
-                start, end = mag_bbox.get_bounds(C_AXIS)
-            else:
-                start, end = 0, layer.num_channels
+                mag_start, mag_end = mag_bbox.get_bounds(C_AXIS)
+                # Streamed arrays might only contain the layer's channels.
+                if array_start <= mag_start and mag_end <= array_end:
+                    start, end = mag_start, mag_end
         elif axis in layer_bbox.axes:
             start, end = layer_bbox.get_bounds(axis)
             if axis in bounding_box.axes:
