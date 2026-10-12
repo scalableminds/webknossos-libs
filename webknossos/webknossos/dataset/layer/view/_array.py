@@ -436,12 +436,35 @@ class WKWArray(BaseArray):
 class TensorStoreArray(BaseArray):
     _cached_array: tensorstore.TensorStore | None
     _tensorstore_data_format: str
+    _dimension_names: tuple[str, ...] | None
 
     def __init__(
-        self, path: UPath, _cached_array: tensorstore.TensorStore | None = None
+        self,
+        path: UPath,
+        _cached_array: tensorstore.TensorStore | None = None,
+        dimension_names: tuple[str, ...] | None = None,
     ):
+        """`dimension_names` (e.g. from the `axisOrder` of the layer properties)
+        take precedence over the dimension names in the array's metadata, if their
+        number matches the array's rank."""
         super().__init__(path)
-        self._cached_array = _cached_array
+        self._dimension_names = dimension_names
+        self._cached_array = (
+            None
+            if _cached_array is None
+            else self._apply_dimension_names(_cached_array)
+        )
+
+    def _apply_dimension_names(
+        self, array: tensorstore.TensorStore
+    ) -> tensorstore.TensorStore:
+        if (
+            self._dimension_names is not None
+            and len(self._dimension_names) == array.rank
+            and array.domain.labels != self._dimension_names
+        ):
+            return array[tensorstore.d[:].label[self._dimension_names]]
+        return array
 
     @staticmethod
     def _get_array_dimensions(
@@ -560,7 +583,7 @@ class TensorStoreArray(BaseArray):
         }
 
     @classmethod
-    def _open(cls, path: UPath) -> Self:
+    def _open(cls, path: UPath, dimension_names: tuple[str, ...] | None = None) -> Self:
         try:
             _array = call_with_retries(
                 lambda: tensorstore.open(
@@ -572,7 +595,7 @@ class TensorStoreArray(BaseArray):
                 ).result(),
                 description="Opening tensorstore array",
             )  # check that everything exists
-            return cls(path, _array)
+            return cls(path, _array, dimension_names=dimension_names)
         except Exception as exc:
             raise ArrayException(f"Could not open array at {path}.") from exc
 
@@ -620,16 +643,18 @@ class TensorStoreArray(BaseArray):
 
         if new_domain != array.domain:
             # Check on-disk for changes to shape
-            current_array = call_with_retries(
-                lambda: tensorstore.open(
-                    {
-                        "driver": self._tensorstore_data_format,
-                        "kvstore": _make_kvstore(self._path),
-                    },
-                    context=TS_CONTEXT,
-                    recheck_cached="open",
-                ).result(),
-                description="Opening tensorstore array for resizing",
+            current_array = self._apply_dimension_names(
+                call_with_retries(
+                    lambda: tensorstore.open(
+                        {
+                            "driver": self._tensorstore_data_format,
+                            "kvstore": _make_kvstore(self._path),
+                        },
+                        context=TS_CONTEXT,
+                        recheck_cached="open",
+                    ).result(),
+                    description="Opening tensorstore array for resizing",
+                )
             )
             if array.domain != current_array.domain:
                 raise RuntimeError(
@@ -739,6 +764,7 @@ class TensorStoreArray(BaseArray):
                     ).result(),
                     description="Creating tensorstore array",
                 )
+                self._cached_array = self._apply_dimension_names(self._cached_array)
             except Exception as e:
                 raise ArrayException(
                     f"Exception while opening array for {_make_kvstore(self._path)}"
@@ -767,8 +793,10 @@ class Zarr3Array(TensorStoreArray):
     _tensorstore_data_format = "zarr3"
 
     @classmethod
-    def open(cls, path: UPath) -> "Zarr3Array":
-        return cls._open(path)
+    def open(
+        cls, path: UPath, dimension_names: tuple[str, ...] | None = None
+    ) -> "Zarr3Array":
+        return cls._open(path, dimension_names)
 
     @property
     def info(self) -> Zarr3ArrayInfo:
@@ -887,8 +915,10 @@ class Zarr2Array(TensorStoreArray):
     _tensorstore_data_format = "zarr"
 
     @classmethod
-    def open(cls, path: UPath) -> "Zarr2Array":
-        return cls._open(path)
+    def open(
+        cls, path: UPath, dimension_names: tuple[str, ...] | None = None
+    ) -> "Zarr2Array":
+        return cls._open(path, dimension_names)
 
     @property
     def info(self) -> ArrayInfo:

@@ -24,6 +24,9 @@ in the _Changed_ sections.
 
 ### Fixed
 - `View.write` and `MagView.write` now raise a `ValueError` when the shape of the passed data does not match the size of the target bounding box. Previously, data larger than the bounding box was silently cropped. [#1564](https://github.com/scalableminds/webknossos-libs/pull/1564)
+- An explicitly set `axisOrder` of a mag in the `datasource-properties.json` now takes precedence over the dimension names in the metadata of Zarr arrays, like in WEBKNOSSOS. This allows reading arrays with generic dimension names (e.g. `dim_0`, ... as written by BigStitcher-Spark). [#1569](https://github.com/scalableminds/webknossos-libs/pull/1569)
+- `webknossos export-as-tiff` now supports layers whose arrays aren't stored as (c, x, y, z), e.g. (c, t, x, y, z) with a size-1 `t` axis. [#1569](https://github.com/scalableminds/webknossos-libs/pull/1569)
+- Layers with a `channelIndex` now read and export that channel instead of the first one, also when reading with a 3D `BoundingBox` or via `Layer.export`. [#1569](https://github.com/scalableminds/webknossos-libs/pull/1569)
 
 
 ## [4.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.2) - 2026-10-07
