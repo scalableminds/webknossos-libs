@@ -93,6 +93,15 @@ class RemoteMagView(MagView["RemoteLayer"]):
     def num_channels(self) -> int:
         return self.normalized_bounding_box.size.get("c", 1)
 
+    def _get_layer_properties(self) -> "LayerProperties":
+        return self._layer_properties
+
+    def _get_dimension_names(self) -> tuple[str, ...] | None:
+        # Arrays served by the datastore have their own axis order.
+        if self._access_mode != RemoteAccessMode.DIRECT_PATH:
+            return None
+        return super()._get_dimension_names()
+
     @property
     def paths_by_access_mode(self) -> Mapping[RemoteAccessMode, UPath]:
         """All paths at which this mag's data can be reached, keyed by access mode.
