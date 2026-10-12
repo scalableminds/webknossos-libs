@@ -442,6 +442,8 @@ class TensorStoreArray(BaseArray):
     _cached_array: tensorstore.TensorStore | None
     _tensorstore_data_format: str
     _dimension_names: tuple[str, ...] | None
+    # Other drivers (e.g. neuroglancer precomputed) have a fixed axis order.
+    _supports_dimension_names: bool = False
 
     def __init__(
         self,
@@ -449,8 +451,9 @@ class TensorStoreArray(BaseArray):
         _cached_array: tensorstore.TensorStore | None = None,
         dimension_names: tuple[str, ...] | None = None,
     ):
-        """`dimension_names` (e.g. from the layer properties) are used for arrays
-        whose own metadata doesn't name the x and y dimensions."""
+        """`dimension_names` (e.g. from the `axisOrder` of the layer properties)
+        take precedence over the dimension names in the array's metadata, if their
+        number matches the array's rank."""
         super().__init__(path)
         self._dimension_names = dimension_names
         self._cached_array = (
@@ -462,11 +465,11 @@ class TensorStoreArray(BaseArray):
     def _apply_dimension_names(
         self, array: tensorstore.TensorStore
     ) -> tensorstore.TensorStore:
-        labels = array.domain.labels
         if (
-            self._dimension_names is not None
-            and not (X_AXIS in labels and Y_AXIS in labels)
+            self._supports_dimension_names
+            and self._dimension_names is not None
             and len(self._dimension_names) == array.rank
+            and array.domain.labels != self._dimension_names
         ):
             return array[tensorstore.d[:].label[self._dimension_names]]
         return array
@@ -798,6 +801,7 @@ class TensorStoreArray(BaseArray):
 class Zarr3Array(TensorStoreArray):
     data_format = DataFormat.Zarr3
     _tensorstore_data_format = "zarr3"
+    _supports_dimension_names = True
 
     @classmethod
     def open(
@@ -920,6 +924,7 @@ class Zarr3Array(TensorStoreArray):
 class Zarr2Array(TensorStoreArray):
     data_format = DataFormat.Zarr
     _tensorstore_data_format = "zarr"
+    _supports_dimension_names = True
 
     @classmethod
     def open(

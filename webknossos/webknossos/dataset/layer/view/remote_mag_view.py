@@ -10,7 +10,7 @@ from ...remote_access_mode import RemoteAccessMode
 from .mag_view import MagView
 
 if TYPE_CHECKING:
-    from ....dataset_properties import LayerProperties
+    from ....dataset_properties import LayerProperties, MagViewProperties
     from ..remote_layer import RemoteLayer
 
 
@@ -92,6 +92,16 @@ class RemoteMagView(MagView["RemoteLayer"]):
     @property
     def num_channels(self) -> int:
         return self.normalized_bounding_box.size.get("c", 1)
+
+    def _find_properties(self) -> "MagViewProperties | None":
+        return next(
+            (
+                mag_property
+                for mag_property in self._layer_properties.mags
+                if mag_property.mag == self._mag
+            ),
+            None,
+        )
 
     @property
     def paths_by_access_mode(self) -> Mapping[RemoteAccessMode, UPath]:

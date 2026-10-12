@@ -241,9 +241,23 @@ class MagView(View, Generic[LayerTypeT]):
         """
         return self.layer.num_channels
 
-    def _get_dimension_names(self) -> tuple[str, ...]:
-        bbox = self.normalized_bounding_box
-        return tuple(axis for _, axis in sorted(zip(bbox.index, bbox.axes)))
+    def _get_dimension_names(self) -> tuple[str, ...] | None:
+        # An explicit `axisOrder` takes precedence over the array's metadata.
+        # The bounding box's axes are sorted by their index in the array.
+        mag_properties = self._find_properties()
+        if mag_properties is None or mag_properties.axis_order is None:
+            return None
+        return self.normalized_bounding_box.axes
+
+    def _find_properties(self) -> MagViewProperties | None:
+        return next(
+            (
+                mag_property
+                for mag_property in self.layer._properties.mags
+                if mag_property.mag == self._mag
+            ),
+            None,
+        )
 
     # Own methods:
 

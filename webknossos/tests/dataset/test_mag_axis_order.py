@@ -150,3 +150,33 @@ def test_read_3d_bounding_box_with_channel_index(tmp_upath: UPath) -> None:
     )
     view = mag.get_view(relative_bounding_box=BoundingBox((8, 0, 0), (16, 32, 8)))
     assert np.array_equal(view.read(), data[1:2, 8:24])
+
+
+def test_explicit_axis_order_takes_precedence_over_array_metadata(
+    tmp_upath: UPath,
+) -> None:
+    # Stored as (c, z, y, x), but the array metadata claims (c, x, y, z).
+    data = rng.integers(0, 255, (1, 8, 32, 64), dtype=np.uint8)
+    array_path = tmp_upath / "mislabeled" / "1"
+    _write_zarr3_array(array_path, data, ["c", "x", "y", "z"])
+    layers = [
+        {
+            "name": "color",
+            "category": "color",
+            "dataFormat": "zarr3",
+            "elementClass": "uint8",
+            "numChannels": 1,
+            "boundingBox": {
+                "topLeft": [0, 0, 0],
+                "width": 64,
+                "height": 32,
+                "depth": 8,
+            },
+            "mags": [{"mag": [1, 1, 1], "axisOrder": {"c": 0, "x": 3, "y": 2, "z": 1}}],
+        }
+    ]
+    dataset = _make_dataset(tmp_upath / "dataset", layers, array_path)
+    mag = dataset.get_layer("color").get_mag(1)
+
+    assert mag.info.bounding_box.axes == ("c", "z", "y", "x")
+    assert np.array_equal(mag.read(), data)
