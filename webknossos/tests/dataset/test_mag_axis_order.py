@@ -144,3 +144,9 @@ def test_read_3d_bounding_box_with_channel_index(tmp_upath: UPath) -> None:
         mag.read(absolute_bounding_box=BoundingBox((8, 0, 0), (16, 32, 8))),
         data[1:2, 8:24],
     )
+    assert np.array_equal(
+        mag.read(relative_bounding_box=BoundingBox((8, 0, 0), (16, 32, 8))),
+        data[1:2, 8:24],
+    )
+    view = mag.get_view(relative_bounding_box=BoundingBox((8, 0, 0), (16, 32, 8)))
+    assert np.array_equal(view.read(), data[1:2, 8:24])

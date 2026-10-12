@@ -227,6 +227,22 @@ class View:
         """
         return self._read_only
 
+    def _normalize_axes_with_channel_start(
+        self, bbox: NDBoundingBox
+    ) -> NormalizedBoundingBox:
+        normalized_bbox = bbox.normalize_axes(self.num_channels)
+        if (
+            C_AXIS not in bbox.axes
+            and C_AXIS in normalized_bbox.axes
+            and C_AXIS in self.normalized_bounding_box.axes
+        ):
+            # Start at the view's first channel, which is non-zero for
+            # layers with a `channelIndex`.
+            normalized_bbox = normalized_bbox.with_bounds(
+                C_AXIS, self.normalized_bounding_box.topleft.c, self.num_channels
+            )
+        return normalized_bbox
+
     def _get_mag1_bbox(
         self,
         *,
@@ -257,22 +273,10 @@ class View:
             )
 
         if abs_mag1_bbox is not None:
-            normalized_bbox = abs_mag1_bbox.normalize_axes(self.num_channels)
-            if (
-                C_AXIS not in abs_mag1_bbox.axes
-                and C_AXIS in normalized_bbox.axes
-                and C_AXIS in self.normalized_bounding_box.axes
-            ):
-                # Start at the view's first channel, which is non-zero for
-                # layers with a `channelIndex`.
-                c_start = self.normalized_bounding_box.topleft.c
-                normalized_bbox = normalized_bbox.with_bounds(
-                    C_AXIS, c_start, self.num_channels
-                )
-            return normalized_bbox
+            return self._normalize_axes_with_channel_start(abs_mag1_bbox)
 
         if rel_mag1_bbox is not None:
-            return rel_mag1_bbox.normalize_axes(self.num_channels).offset(
+            return self._normalize_axes_with_channel_start(rel_mag1_bbox).offset(
                 self.bounding_box.topleft
             )
 
