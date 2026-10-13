@@ -11,7 +11,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.4...HEAD)
 
 ### Breaking Changes
 
@@ -22,7 +22,14 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+
+
+## [4.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.4) - 2026-10-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.3...v4.2.4)
+
+### Fixed
 - The explicit `axisOrder` of a mag is now also used when reading via `RemoteAccessMode.PROXY_PATH`, which serves the original arrays. Before, reading Zarr arrays with generic dimension names (e.g. from BigStitcher-Spark) via the proxy path still failed with `Zarr3 arrays without x and y dimensions are not supported`. [#1570](https://github.com/scalableminds/webknossos-libs/pull/1570)
+
 
 
 ## [4.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.3) - 2026-10-12
