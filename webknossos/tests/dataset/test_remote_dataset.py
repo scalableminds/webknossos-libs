@@ -8,6 +8,12 @@ import pytest
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
+from tests.dataset._dataset_helpers import (
+    GENERIC_DIMENSION_NAMES,
+    generic_dimension_names_layer,
+    write_layers_to_properties,
+    write_zarr3_array,
+)
 from webknossos import (
     COLOR_CATEGORY,
     AffineCoordinateTransformation,
@@ -353,6 +359,43 @@ def test_explored_remote_access_modes_return_same_data() -> None:
                     reference,
                     err_msg=f"{access_mode} returned different data than "
                     + f"{next(iter(RemoteAccessMode))}.",
+                )
+    finally:
+        remote_dataset.delete()
+
+
+def test_generic_dimension_names_all_access_modes(tmp_upath: UPath) -> None:
+    """The proxy path serves the original arrays, so it also has to use the
+    explicit `axisOrder` of arrays with generic dimension names."""
+    data = np.random.default_rng(0).integers(0, 65535, (1, 3, 8, 32, 64), "uint16")
+    dataset_path = tmp_upath / "generic_dimension_names"
+    Dataset(dataset_path, voxel_size=(11, 11, 25))
+    layers = []
+    for channel_index in range(3):
+        layer_properties = generic_dimension_names_layer(
+            f"channel_{channel_index}", channel_index
+        )
+        write_zarr3_array(
+            dataset_path / layer_properties["name"] / "1",
+            data,
+            GENERIC_DIMENSION_NAMES,
+        )
+        layers.append(layer_properties)
+    local_dataset = write_layers_to_properties(dataset_path, layers)
+    remote_dataset = local_dataset.upload(
+        new_dataset_name="test_generic_dimension_names_all_access_modes"
+    )
+    try:
+        for channel_index in range(3):
+            layer = remote_dataset.get_layer(f"channel_{channel_index}")
+            # (t, c, z, y, x) -> (c, x, y, z)
+            expected = data[0, channel_index : channel_index + 1].transpose(0, 3, 2, 1)
+            for access_mode in RemoteAccessMode:
+                mag = layer.get_mag(1, access_mode=access_mode)
+                np.testing.assert_array_equal(
+                    mag.read_cxyz(),
+                    expected,
+                    err_msg=f"{layer.name} via {access_mode.value}",
                 )
     finally:
         remote_dataset.delete()

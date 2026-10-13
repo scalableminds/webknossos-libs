@@ -868,7 +868,7 @@ class Layer(AbstractLayer):
                 mag=mag,
                 path=dump_path(foreign_mag_view.path, self.dataset.resolved_path),
                 cube_length=foreign_mag_view._properties.cube_length,
-                # Not set for remote mags whose arrays are served by the datastore.
+                # Not set for mags whose arrays are re-encoded by zarr streaming.
                 axis_order=(
                     foreign_mag_view._properties.axis_order
                     if foreign_mag_view._get_dimension_names() is not None
