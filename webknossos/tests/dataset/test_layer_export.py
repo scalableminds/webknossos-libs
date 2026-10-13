@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from upath import UPath
 
+from tests.constants import TESTDATA_DIR
 from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos import COLOR_CATEGORY, Dataset, Layer, RemoteAccessMode
 from webknossos.dataset._utils.tensorstore_helpers import read_zarr3_array
@@ -475,6 +476,37 @@ def test_export_layer_bbox_without_channel_axis_of_array(tmp_upath: UPath) -> No
     assert np.array_equal(tifffile.imread(str(files[0])), expected[:, :, 0].T)
 
     ozx_path = tmp_upath / "no_c.ozx"
+    layer.export.as_ozx(output_path=ozx_path, bounding_box=crop, mag=Mag(1))
+    with zipfile.ZipFile(str(ozx_path)) as archive:
+        assert "zarr.json" in archive.namelist()
+
+
+def test_export_neuroglancer_precomputed_layer(tmp_upath: UPath) -> None:
+    """Neuroglancer precomputed arrays store channels last (x, y, z, c)."""
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    layer = Dataset.open(TESTDATA_DIR / "simple_ng_dataset").get_layer("color")
+    data = layer.get_mag(1).read()
+    assert data.shape == (3, 24, 24, 24)
+    crop = BoundingBox((4, 8, 2), (12, 10, 6))
+    expected = data[:, 4:16, 8:18, 2:8]
+
+    ome_path = tmp_upath / "ng.ome.tif"
+    layer.export.as_ome_tiff(output_path=ome_path, bounding_box=crop, mag=Mag(1))
+    with tifffile.TiffFile(str(ome_path)) as tif:
+        assert tif.series[0].axes == "CZYX"
+        assert np.array_equal(tif.series[0].asarray(), expected.transpose(0, 3, 2, 1))
+
+    stack_dir = tmp_upath / "ng_stack"
+    layer.export.as_tiff_stack(output_path=stack_dir, bounding_box=crop, mag=Mag(1))
+    files = sorted(stack_dir.glob("*.tiff"))
+    assert len(files) == 6
+    assert np.array_equal(
+        tifffile.imread(str(files[0])), expected[:, :, :, 0].transpose(2, 1, 0)
+    )
+
+    ozx_path = tmp_upath / "ng.ozx"
     layer.export.as_ozx(output_path=ozx_path, bounding_box=crop, mag=Mag(1))
     with zipfile.ZipFile(str(ozx_path)) as archive:
         assert "zarr.json" in archive.namelist()

@@ -1009,6 +1009,12 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
     def info(self) -> ArrayInfo:
         array = self._array
         chunk_shape, shard_shape, shape = self._get_array_dimensions(array)
+        # The array is stored as (x, y, z, c), but read() returns (c, x, y, z).
+        bounding_box = NormalizedBoundingBox(
+            topleft=(0,) + shape.topleft_xyz.to_tuple(),
+            size=(shape.size.c,) + shape.size_xyz.to_tuple(),
+            axes=CXYZ_AXES,
+        )
 
         return ArrayInfo(
             data_format=DataFormat.NeuroglancerPrecomputed,
@@ -1016,7 +1022,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
             compression_mode=_codec_json(array)["encoding"] is not None,
             chunk_shape=chunk_shape,
             shard_shape=shard_shape,
-            bounding_box=shape,
+            bounding_box=bounding_box,
         )
 
     @classmethod

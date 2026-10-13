@@ -22,6 +22,7 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- Fixed `Layer.export` failing with an `AssertionError` for layers in the Neuroglancer precomputed format. [#PR]
 
 
 ## [4.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.4) - 2026-10-13
