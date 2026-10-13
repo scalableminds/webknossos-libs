@@ -1039,7 +1039,7 @@ class NeuroglancerPrecomputedArray(TensorStoreArray):
         assert bbox.axes == CXYZ_AXES
         return tensorstore.IndexDomain(
             bbox.ndim,
-            inclusive_min=bbox.topleft_xyz.to_tuple() + (0,),
+            inclusive_min=bbox.topleft_xyz.to_tuple() + (bbox.topleft.c,),
             # note the channels are at the back
             shape=bbox.size_xyz.to_tuple() + (bbox.size.c,),
         )
