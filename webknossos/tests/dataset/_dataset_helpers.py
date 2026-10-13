@@ -1,7 +1,10 @@
 """Shared fixtures, constants and job functions for the `test_dataset_*` modules."""
 
+import json
+
 import numpy as np
 import pytest
+import tensorstore
 from cluster_tools import get_executor
 from upath import UPath
 
@@ -174,3 +177,64 @@ def assure_exported_properties(ds: Dataset) -> None:
     assert ds._properties == reopened_ds._properties, (
         "The properties did not match after reopening the dataset. This might indicate that the properties were not exported after they were changed in memory."
     )
+
+
+def write_zarr3_array(
+    path: UPath, data: np.ndarray, dimension_names: list[str]
+) -> None:
+    array = tensorstore.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {"driver": "file", "path": str(path)},
+            "metadata": {
+                "shape": data.shape,
+                "data_type": str(data.dtype),
+                "dimension_names": dimension_names,
+                "chunk_grid": {
+                    "name": "regular",
+                    "configuration": {"chunk_shape": [1, 1, 8, 32, 32][-data.ndim :]},
+                },
+            },
+        },
+        create=True,
+    ).result()
+    array.write(data).result()
+
+
+def write_layers_to_properties(dataset_path: UPath, layers: list[dict]) -> Dataset:
+    """Creates (or opens) the dataset at `dataset_path` and replaces its layers
+    with the given raw layer properties."""
+    Dataset(dataset_path, voxel_size=(11, 11, 25), exist_ok=True)
+    properties_path = dataset_path / "datasource-properties.json"
+    properties = json.loads(properties_path.read_text())
+    properties["dataLayers"] = layers
+    properties_path.write_text(json.dumps(properties))
+    return Dataset.open(dataset_path)
+
+
+def generic_dimension_names_layer(
+    name: str, channel_index: int, path: str | None = None
+) -> dict:
+    """Properties of a layer that references one channel of a (t, c, z, y, x)
+    array with generic dimension names, like the OME-Zarrs of BigStitcher-Spark.
+    The axes are only known from the `axisOrder` and `additionalAxes`."""
+    return {
+        "name": name,
+        "category": "color",
+        "dataFormat": "zarr3",
+        "elementClass": "uint16",
+        "numChannels": 1,
+        "boundingBox": {"topLeft": [0, 0, 0], "width": 64, "height": 32, "depth": 8},
+        "additionalAxes": [{"name": "t", "bounds": [0, 1], "index": 0}],
+        "mags": [
+            {
+                "mag": [1, 1, 1],
+                "path": path if path is not None else f"./{name}/1",
+                "axisOrder": {"x": 4, "y": 3, "z": 2, "c": 1},
+                "channelIndex": channel_index,
+            }
+        ],
+    }
+
+
+GENERIC_DIMENSION_NAMES = ["dim_4", "dim_3", "dim_2", "dim_1", "dim_0"]

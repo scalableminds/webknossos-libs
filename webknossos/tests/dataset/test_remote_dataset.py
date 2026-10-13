@@ -8,6 +8,12 @@ import pytest
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
+from tests.dataset._dataset_helpers import (
+    GENERIC_DIMENSION_NAMES,
+    generic_dimension_names_layer,
+    write_layers_to_properties,
+    write_zarr3_array,
+)
 from webknossos import (
     COLOR_CATEGORY,
     AffineCoordinateTransformation,
@@ -358,45 +364,39 @@ def test_explored_remote_access_modes_return_same_data() -> None:
         remote_dataset.delete()
 
 
-def test_explored_generic_dimension_names_all_access_modes() -> None:
-    """The Zarr arrays of this BigStitcher-Spark OME-Zarr only have generic
-    dimension names (`dim_4`, ..., `dim_0`). Their axes are only known from the
-    `axisOrder` of the explored layers, which also have to be used for the proxy
-    path, since it serves the original arrays. Each of the 3 channels is
-    explored as its own layer with a `channelIndex`."""
-    remote_dataset = RemoteDataset.explore_and_add_remote(
-        "https://s3.janelia.org/keller-lab/s12b/samples_for_stitching/202607013_flyVNC_Josh/intensity_corrected/fused.ome.zarr",
-        "bigstitcher_generic_dimension_names",
-        folder=RemoteFolder.get_by_path("Organization_X"),
+def test_generic_dimension_names_all_access_modes(tmp_upath: UPath) -> None:
+    """The proxy path serves the original arrays, so it also has to use the
+    explicit `axisOrder` of arrays with generic dimension names."""
+    data = np.random.default_rng(0).integers(0, 65535, (1, 3, 8, 32, 64), "uint16")
+    dataset_path = tmp_upath / "generic_dimension_names"
+    Dataset(dataset_path, voxel_size=(11, 11, 25))
+    layers = []
+    for channel_index in range(3):
+        layer_properties = generic_dimension_names_layer(
+            f"channel_{channel_index}", channel_index
+        )
+        write_zarr3_array(
+            dataset_path / layer_properties["name"] / "1",
+            data,
+            GENERIC_DIMENSION_NAMES,
+        )
+        layers.append(layer_properties)
+    local_dataset = write_layers_to_properties(dataset_path, layers)
+    remote_dataset = local_dataset.upload(
+        new_dataset_name="test_generic_dimension_names_all_access_modes"
     )
     try:
-        layers = sorted(remote_dataset.layers.values(), key=lambda layer: layer.name)
-        assert len(layers) == 3
-        bbox = (
-            layers[0]
-            .bounding_box.with_topleft_xyz((25024, 50304, 3784))
-            .with_size_xyz((64, 64, 8))
-        )
-        per_layer = []
-        for layer in layers:
-            data_by_mode = [
-                layer.get_mag(1, access_mode=access_mode).read_cxyz(
-                    absolute_bounding_box=bbox
-                )
-                for access_mode in RemoteAccessMode
-            ]
-            for access_mode, data in zip(RemoteAccessMode, data_by_mode):
-                assert data.shape == (1, 64, 64, 8)
+        for channel_index in range(3):
+            layer = remote_dataset.get_layer(f"channel_{channel_index}")
+            # (t, c, z, y, x) -> (c, x, y, z)
+            expected = data[0, channel_index : channel_index + 1].transpose(0, 3, 2, 1)
+            for access_mode in RemoteAccessMode:
+                mag = layer.get_mag(1, access_mode=access_mode)
                 np.testing.assert_array_equal(
-                    data,
-                    data_by_mode[0],
-                    err_msg=f"{layer.name}: {access_mode} returned different "
-                    + f"data than {next(iter(RemoteAccessMode))}.",
+                    mag.read_cxyz(),
+                    expected,
+                    err_msg=f"{layer.name} via {access_mode.value}",
                 )
-            per_layer.append(data_by_mode[0])
-        assert per_layer[0].sum() > 0
-        assert not np.array_equal(per_layer[0], per_layer[1])
-        assert not np.array_equal(per_layer[1], per_layer[2])
     finally:
         remote_dataset.delete()
 
