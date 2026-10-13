@@ -358,6 +358,49 @@ def test_explored_remote_access_modes_return_same_data() -> None:
         remote_dataset.delete()
 
 
+def test_explored_generic_dimension_names_all_access_modes() -> None:
+    """The Zarr arrays of this BigStitcher-Spark OME-Zarr only have generic
+    dimension names (`dim_4`, ..., `dim_0`). Their axes are only known from the
+    `axisOrder` of the explored layers, which also have to be used for the proxy
+    path, since it serves the original arrays. Each of the 3 channels is
+    explored as its own layer with a `channelIndex`."""
+    remote_dataset = RemoteDataset.explore_and_add_remote(
+        "https://s3.janelia.org/keller-lab/s12b/samples_for_stitching/202607013_flyVNC_Josh/intensity_corrected/fused.ome.zarr",
+        "bigstitcher_generic_dimension_names",
+        folder=RemoteFolder.get_by_path("Organization_X"),
+    )
+    try:
+        layers = sorted(remote_dataset.layers.values(), key=lambda layer: layer.name)
+        assert len(layers) == 3
+        bbox = (
+            layers[0]
+            .bounding_box.with_topleft_xyz((25024, 50304, 3784))
+            .with_size_xyz((64, 64, 8))
+        )
+        per_layer = []
+        for layer in layers:
+            data_by_mode = [
+                layer.get_mag(1, access_mode=access_mode).read_cxyz(
+                    absolute_bounding_box=bbox
+                )
+                for access_mode in RemoteAccessMode
+            ]
+            for access_mode, data in zip(RemoteAccessMode, data_by_mode):
+                assert data.shape == (1, 64, 64, 8)
+                np.testing.assert_array_equal(
+                    data,
+                    data_by_mode[0],
+                    err_msg=f"{layer.name}: {access_mode} returned different "
+                    + f"data than {next(iter(RemoteAccessMode))}.",
+                )
+            per_layer.append(data_by_mode[0])
+        assert per_layer[0].sum() > 0
+        assert not np.array_equal(per_layer[0], per_layer[1])
+        assert not np.array_equal(per_layer[1], per_layer[2])
+    finally:
+        remote_dataset.delete()
+
+
 def test_per_mag_access_mode() -> None:
     remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     layer = remote_dataset.get_layer("color")

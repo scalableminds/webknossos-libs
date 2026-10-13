@@ -97,8 +97,9 @@ class RemoteMagView(MagView["RemoteLayer"]):
         return self._layer_properties
 
     def _get_dimension_names(self) -> tuple[str, ...] | None:
-        # Arrays served by the datastore have their own axis order.
-        if self._access_mode != RemoteAccessMode.DIRECT_PATH:
+        # Zarr streaming re-encodes the arrays with their own axis order. The proxy
+        # path serves the original arrays, like the direct path.
+        if self._access_mode == RemoteAccessMode.ZARR_STREAMING:
             return None
         return super()._get_dimension_names()
 
