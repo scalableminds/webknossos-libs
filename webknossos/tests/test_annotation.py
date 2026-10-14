@@ -328,6 +328,34 @@ def test_bounding_box_roundtrip() -> None:
     )
 
 
+@pytest.mark.skip_on_windows
+def test_remote_fallback_layer_roundtrip() -> None:
+    ds = wk.RemoteDataset.open("l4_sample")
+    fallback_layer = ds.get_segmentation_layer("segmentation")
+
+    annotation_before = wk.Annotation(
+        name="test_remote_fallback_layer_roundtrip",
+        dataset_name=ds.name,
+        voxel_size=ds.voxel_size,
+    )
+    volume_layer = annotation_before.add_volume_layer(
+        name="volume",
+        dtype=fallback_layer.dtype,
+        fallback_layer=fallback_layer,
+    )
+    assert volume_layer.fallback_layer_name == "segmentation"
+
+    with volume_layer.edit() as layer:
+        for mag in fallback_layer.mags:
+            layer.add_mag(mag)
+
+    annotation_after = wk.Annotation.download(annotation_before.upload())
+    assert (
+        annotation_after.get_volume_layer("volume").fallback_layer_name
+        == "segmentation"
+    )
+
+
 def test_empty_volume_annotation() -> None:
     a = wk.Annotation.load(TESTDATA_DIR / "annotations" / "empty_volume_annotation.zip")
     with a.temporary_volume_layer_copy() as layer:

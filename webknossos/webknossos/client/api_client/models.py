@@ -451,10 +451,11 @@ class ApiAnnotation:
     name: str
     description: str
     state: str
-    modified: int
     annotation_layers: list[ApiAnnotationLayer] | None
+    modified: int
     data_store: ApiDataStore | None = None
     tracing_time: int | None = None  # millis
+    created: int | None = None
 
 
 @attr.s(auto_attribs=True)

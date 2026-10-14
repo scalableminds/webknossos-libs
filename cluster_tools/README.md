@@ -38,6 +38,8 @@ pip install cluster_tools[kubernetes]
 pip install cluster_tools[dask]
 ```
 
+> **Deprecation notice:** The Dask, Kubernetes and PBS executors are deprecated and will be removed in the next major release of `cluster_tools`.
+
 ## Configuration
 
 ### Slurm

@@ -119,7 +119,7 @@ class DaskExecutor(futures.Executor):
             exit()
 
         warn(
-            "Dask support is deprecated and will be removed in a future version.",
+            "The Dask executor is deprecated and will be removed in the next major release of cluster_tools.",
             category=DeprecationWarning,
             stacklevel=2,
         )

@@ -5,8 +5,13 @@ import numpy as np
 import pytest
 from upath import UPath
 
-from tests.data_fixtures import download_wklibs_sample_archive
-from webknossos import COLOR_CATEGORY, Dataset, Layer
+from tests.constants import TESTDATA_DIR
+from tests.data_fixtures import (
+    download_wklibs_sample_archive,
+    write_neuroglancer_precomputed_scale,
+)
+from tests.dataset._dataset_helpers import write_layers_to_properties
+from webknossos import COLOR_CATEGORY, Dataset, Layer, RemoteAccessMode
 from webknossos.dataset._utils.tensorstore_helpers import read_zarr3_array
 from webknossos.geometry import BoundingBox, Mag, NDBoundingBox
 from webknossos.geometry.constants import C_AXIS, T_AXIS, X_AXIS, Y_AXIS, Z_AXIS
@@ -93,6 +98,75 @@ def test_as_ozx_single_mag(tmp_upath: UPath) -> None:
         names = zip_file.namelist()
         assert "1/zarr.json" not in names
         assert "2-2-1/zarr.json" in names
+
+
+def test_as_ozx_without_downsample(tmp_upath: UPath) -> None:
+    _dataset, layer, _data = make_layer(tmp_upath)
+    zip_path = tmp_upath / "color_no_downsample.ozx"
+
+    layer.export.as_ozx(output_path=zip_path, downsample=False)
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        root_attrs = json.loads(zip_file.read("zarr.json"))["attributes"]
+        multiscale_paths = {
+            d["path"] for d in root_attrs["ome"]["multiscales"][0]["datasets"]
+        }
+    assert multiscale_paths == {"1"}
+
+
+def test_as_ozx_coarser_mags_are_downsampled_from_export(tmp_upath: UPath) -> None:
+    # The layer's own mag 2-2-2 holds data unrelated to mag 1, so the
+    # archive's coarser mags must be computed from the exported mag 1,
+    # regardless of which mags the layer has.
+    _dataset, layer, data_by_mag = make_layer_with_mags(tmp_upath)
+    crop = BoundingBox((10, 6, 3), (20, 20, 20))
+    zip_path = tmp_upath / "color_downsampled.ozx"
+
+    layer.export.as_ozx(output_path=zip_path, bounding_box=crop)
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        zip_file.extractall(str(tmp_upath / "extracted"))
+
+    reference = Dataset(tmp_upath / "reference", voxel_size=(11, 11, 25))
+    reference_layer = reference.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), crop.size),
+    )
+    reference_layer.add_mag(1).write(
+        data=data_by_mag[Mag(1)][
+            crop.topleft.x : crop.bottomright.x,
+            crop.topleft.y : crop.bottomright.y,
+            crop.topleft.z : crop.bottomright.z,
+        ]
+    )
+    reference_layer.downsample()
+
+    with zipfile.ZipFile(str(zip_path)) as zip_file:
+        root_attrs = json.loads(zip_file.read("zarr.json"))["attributes"]
+    multiscale_paths = {
+        d["path"] for d in root_attrs["ome"]["multiscales"][0]["datasets"]
+    }
+    assert multiscale_paths == {m.to_layer_name() for m in reference_layer.mags}
+    assert "2-2-2" not in multiscale_paths
+
+    for target_mag, mag_view in reference_layer.mags.items():
+        expected = mag_view.read()[0]
+        got = read_zarr3_array(tmp_upath / "extracted" / target_mag.to_layer_name())[0]
+        got = got[tuple(slice(0, s) for s in expected.shape)]
+        assert np.array_equal(got, expected)
+
+
+def test_export_access_mode_requires_remote_layer(tmp_upath: UPath) -> None:
+    _dataset, layer, _data = make_layer(tmp_upath)
+
+    with pytest.raises(ValueError, match="access_mode"):
+        layer.export.as_ozx(
+            output_path=tmp_upath / "color.ozx",
+            access_mode=RemoteAccessMode.DIRECT_PATH,
+        )
 
 
 def make_odd_sized_layer(tmp_upath: UPath) -> tuple[Dataset, Layer, np.ndarray]:
@@ -182,6 +256,11 @@ def test_as_tiff_stack_pixel_values(tmp_upath: UPath, mag: Mag | None) -> None:
     crop_in_mag = crop.in_mag(mag or Mag(1))
     files = sorted(out_dir.glob("*.tiff"))
     assert len(files) == crop_in_mag.size.z
+    # Named by the absolute Mag(1) z of each slice.
+    mag_z = (mag or Mag(1)).z
+    assert [f.name for f in files] == [
+        f"{crop.topleft.z + z * mag_z:02d}.tiff" for z in range(len(files))
+    ]
 
     for z, file in enumerate(files):
         image = tifffile.imread(str(file))
@@ -205,8 +284,8 @@ def test_as_tiff_stack_filename_prefix(tmp_upath: UPath) -> None:
     )
 
     files = sorted(f.name for f in out_dir.glob("*.tiff"))
-    # 3 slices -> single-digit indices are enough.
-    assert files == ["section_0.tiff", "section_1.tiff", "section_2.tiff"]
+    # Absolute z, padded to the layer's largest z (63).
+    assert files == ["section_08.tiff", "section_09.tiff", "section_10.tiff"]
 
 
 @pytest.mark.parametrize("mag", [None, Mag("2-2-2")])
@@ -234,9 +313,23 @@ def test_as_ome_tiff_readable(tmp_upath: UPath, mag: Mag | None) -> None:
         assert np.array_equal(arr, expected)
 
 
+@pytest.mark.parametrize("downsample", [True, False])
+def test_as_ome_tiff_downsample(tmp_upath: UPath, downsample: bool) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    _dataset, layer, _data = make_layer(tmp_upath)
+    out_path = tmp_upath / "color.ome.tif"
+
+    layer.export.as_ome_tiff(output_path=out_path, downsample=downsample)
+
+    with tifffile.TiffFile(str(out_path)) as tif:
+        assert (len(tif.series[0].levels) > 1) == downsample
+
+
 def make_nd_layer() -> Layer:
     """Opens the ND (c,t,z,y,x) sample dataset."""
-    source_path = download_wklibs_sample_archive("4D") / "4D_series_zarr3"
+    source_path = download_wklibs_sample_archive("4D_v2") / "4D_series_zarr3"
     dataset = Dataset.open(source_path)
     return dataset.get_layer("color")
 
@@ -274,6 +367,24 @@ def test_as_tiff_stack_nd_layer(tmp_upath: UPath) -> None:
         image = tifffile.imread(str(out_dir / f"t{t}_z{z}.tiff"))
         expected = data[0, t, z]
         assert np.array_equal(image, expected)
+
+
+def test_as_tiff_stack_nd_layer_cropped_names_are_absolute(tmp_upath: UPath) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    layer = make_nd_layer()
+    data = layer.get_finest_mag().read()  # (c=1, t=7, z=5, y=167, x=439)
+    crop = layer.bounding_box.with_bounds(T_AXIS, 3, 2).with_bounds(Z_AXIS, 1, 2)
+    out_dir = tmp_upath / "nd_tiff_stack_cropped"
+
+    layer.export.as_tiff_stack(output_path=out_dir, bounding_box=crop)
+
+    files = sorted(f.name for f in out_dir.glob("*.tiff"))
+    assert files == ["t3_z1.tiff", "t3_z2.tiff", "t4_z1.tiff", "t4_z2.tiff"]
+    for t, z in [(3, 1), (4, 2)]:
+        image = tifffile.imread(str(out_dir / f"t{t}_z{z}.tiff"))
+        assert np.array_equal(image, data[0, t, z])
 
 
 def test_as_ome_tiff_nd_layer_roundtrip(tmp_upath: UPath) -> None:
@@ -372,3 +483,102 @@ def test_export_layer_bbox_without_channel_axis_of_array(tmp_upath: UPath) -> No
     layer.export.as_ozx(output_path=ozx_path, bounding_box=crop, mag=Mag(1))
     with zipfile.ZipFile(str(ozx_path)) as archive:
         assert "zarr.json" in archive.namelist()
+
+
+def test_export_neuroglancer_precomputed_layer(tmp_upath: UPath) -> None:
+    """Neuroglancer precomputed arrays store channels last (x, y, z, c)."""
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    layer = Dataset.open(TESTDATA_DIR / "simple_ng_dataset").get_layer("color")
+    data = layer.get_mag(1).read()
+    assert data.shape == (3, 24, 24, 24)
+    crop = BoundingBox((4, 8, 2), (12, 10, 6))
+    expected = data[:, 4:16, 8:18, 2:8]
+
+    ome_path = tmp_upath / "ng.ome.tif"
+    layer.export.as_ome_tiff(output_path=ome_path, bounding_box=crop, mag=Mag(1))
+    with tifffile.TiffFile(str(ome_path)) as tif:
+        assert tif.series[0].axes == "CZYX"
+        assert np.array_equal(tif.series[0].asarray(), expected.transpose(0, 3, 2, 1))
+
+    stack_dir = tmp_upath / "ng_stack"
+    layer.export.as_tiff_stack(output_path=stack_dir, bounding_box=crop, mag=Mag(1))
+    files = sorted(stack_dir.glob("*.tiff"))
+    assert len(files) == 6
+    assert np.array_equal(
+        tifffile.imread(str(files[0])), expected[:, :, :, 0].transpose(2, 1, 0)
+    )
+
+    ozx_path = tmp_upath / "ng.ozx"
+    layer.export.as_ozx(output_path=ozx_path, bounding_box=crop, mag=Mag(1))
+    with zipfile.ZipFile(str(ozx_path)) as archive:
+        assert "zarr.json" in archive.namelist()
+
+
+def make_precomputed_channel_layer(
+    tmp_upath: UPath, channel_index: int
+) -> tuple[Layer, dict[Mag, np.ndarray]]:
+    """A layer referencing one channel of a 3-channel precomputed volume with
+    the scales "1" and "2-2-1". Returns the full (c, x, y, z) data per mag."""
+    volume_path = tmp_upath / "precomputed"
+    data_by_mag = {}
+    for mag_name, size, resolution in [
+        ("1", (64, 32, 8), (1.0, 1.0, 1.0)),
+        ("2-2-1", (32, 16, 8), (2.0, 2.0, 1.0)),
+    ]:
+        data_xyzc = rng.integers(0, 256, size + (3,), dtype=np.uint8)
+        write_neuroglancer_precomputed_scale(
+            volume_path, data_xyzc, resolution=resolution, key=mag_name
+        )
+        data_by_mag[Mag(mag_name)] = np.moveaxis(data_xyzc, 3, 0)
+    layer_properties = {
+        "name": f"channel_{channel_index}",
+        "category": "color",
+        "dataFormat": "neuroglancerPrecomputed",
+        "elementClass": "uint8",
+        "numChannels": 1,
+        "boundingBox": {"topLeft": [0, 0, 0], "width": 64, "height": 32, "depth": 8},
+        "mags": [
+            {
+                "mag": Mag(mag_name).to_list(),
+                "path": str(volume_path / mag_name),
+                "channelIndex": channel_index,
+            }
+            for mag_name in ["1", "2-2-1"]
+        ],
+    }
+    dataset = write_layers_to_properties(tmp_upath / "dataset", [layer_properties])
+    return dataset.get_layer(f"channel_{channel_index}"), data_by_mag
+
+
+@pytest.mark.parametrize("channel_index", [0, 2])
+def test_read_neuroglancer_precomputed_channel_index(
+    tmp_upath: UPath, channel_index: int
+) -> None:
+    layer, data_by_mag = make_precomputed_channel_layer(tmp_upath, channel_index)
+    for mag, data in data_by_mag.items():
+        expected = data[channel_index : channel_index + 1]
+        mag_view = layer.get_mag(mag)
+        assert np.array_equal(mag_view.read(), expected)
+        assert np.array_equal(mag_view.read_cxyz(), expected)
+
+
+@pytest.mark.parametrize("channel_index", [0, 2])
+def test_export_neuroglancer_precomputed_channel_index_coarser_mag(
+    tmp_upath: UPath, channel_index: int
+) -> None:
+    pytest.importorskip("tifffile")
+    import tifffile
+
+    layer, data_by_mag = make_precomputed_channel_layer(tmp_upath, channel_index)
+    data = data_by_mag[Mag("2-2-1")][channel_index]
+    # Not aligned with the mag, so the export has to align it.
+    crop = BoundingBox((5, 4, 1), (20, 10, 6))
+    expected = data[2:13, 2:7, 1:7]
+
+    out_path = tmp_upath / "channel.ome.tif"
+    layer.export.as_ome_tiff(
+        output_path=out_path, bounding_box=crop, mag=Mag("2-2-1"), downsample=False
+    )
+    assert np.array_equal(tifffile.imread(str(out_path)), expected.transpose(2, 1, 0))
