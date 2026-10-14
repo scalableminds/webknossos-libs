@@ -16,13 +16,16 @@ in the _Changed_ sections.
 ### Breaking Changes
 
 ### Added
-- Added `annotation_url`, `dataset_url` and `annotation_id_from_url`, which build links to annotations and datasets, optionally at a position, and parse annotation URLs, without contacting the server. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
+- Added `Annotation.id_from_url`, `RemoteAnnotation.url_for`/`generate_url` and `RemoteDataset.url_for`/`generate_url`, which parse annotation URLs and build links to annotations and datasets, optionally at a position. The classmethods work from ids alone, without contacting the server. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
+- Added `Group.add_skeleton` (also available on `Skeleton`), which copies all groups, trees, nodes and edges of another skeleton into a group with fresh ids, e.g. to merge several NML files into one annotation. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
 
 ### Changed
 
 ### Deprecated
 
 ### Fixed
+- Fixed that copying trees with `Group.add_tree(tree)` between skeletons could produce duplicate tree or node ids, and that ids set explicitly (e.g. when loading NML files) could be handed out again to later trees, groups or nodes. Copied trees now get fresh node ids where they collide, keeping their edges. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
+- Fixed that annotation URLs with a malformed or empty annotation id were partially matched. `RemoteAnnotation.url` now uses the context the annotation was opened with. Fixed the example in the `RemoteDataset.url` docstring. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
 
 
 ## [4.2.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.5) - 2026-10-14
