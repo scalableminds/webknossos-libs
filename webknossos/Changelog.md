@@ -16,6 +16,7 @@ in the _Changed_ sections.
 ### Breaking Changes
 
 ### Added
+- `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. [#TBD](https://github.com/scalableminds/webknossos-libs/pull/TBD)
 
 ### Changed
 

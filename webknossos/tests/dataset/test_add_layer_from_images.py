@@ -1498,7 +1498,10 @@ def test_zarr_array_from_images(tmp_upath: UPath) -> None:
     assert len(layer.mags) > 1
 
 
-def test_ome_zarr_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
+@pytest.mark.parametrize("ome_version", ["0.5", "0.6"])
+def test_ome_zarr_from_images_picks_finest_resolution(
+    tmp_upath: UPath, ome_version: str
+) -> None:
     Z, Y, X = 4, 16, 16
     finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
     coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
@@ -1515,6 +1518,7 @@ def test_ome_zarr_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
             ("0", finest, [1.0, 1.0, 1.0]),
         ],
         axes,
+        ome_version=ome_version,
     )
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
@@ -1609,7 +1613,10 @@ def test_ome_zarr_from_images_allow_multiple_layers_never_splits_by_scale(
         np.testing.assert_array_equal(read_data, finest[i].transpose(2, 1, 0))
 
 
-def test_ozx_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
+@pytest.mark.parametrize("ome_version", ["0.5", "0.6"])
+def test_ozx_from_images_picks_finest_resolution(
+    tmp_upath: UPath, ome_version: str
+) -> None:
     Z, Y, X = 4, 16, 16
     finest = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
     coarse = np.zeros((Z, Y // 2, X // 2), dtype="uint8")
@@ -1626,6 +1633,7 @@ def test_ozx_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
             ("0", finest, [1.0, 1.0, 1.0]),
         ],
         axes,
+        ome_version=ome_version,
     )
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
@@ -1641,8 +1649,9 @@ def test_ozx_from_images_picks_finest_resolution(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(read_data, finest.transpose(2, 1, 0))
 
 
+@pytest.mark.parametrize("ome_version", ["0.5", "0.6"])
 def test_ome_zarr_omero_channel_metadata_applied_when_splitting(
-    tmp_upath: UPath,
+    tmp_upath: UPath, ome_version: str
 ) -> None:
     Z, Y, X = 2, 8, 8
     data = np.zeros((4, Z, Y, X), dtype="uint16")
@@ -1674,7 +1683,11 @@ def test_ome_zarr_omero_channel_metadata_applied_when_splitting(
         ]
     }
     write_ome_zarr_v3_group(
-        group_path, [("0", data, [1.0, 1.0, 1.0, 1.0])], axes, omero
+        group_path,
+        [("0", data, [1.0, 1.0, 1.0, 1.0])],
+        axes,
+        omero,
+        ome_version=ome_version,
     )
 
     ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
