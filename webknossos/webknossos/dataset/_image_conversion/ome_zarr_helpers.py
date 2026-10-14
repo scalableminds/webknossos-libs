@@ -22,7 +22,7 @@ from ..errors import (
 from ..layer.abstract_layer import _UNALLOWED_LAYER_NAME_CHARS
 from .tensorstore_chunked_image_source import normalize_axis
 
-_SUPPORTED_OME_VERSIONS = ("0.4", "0.5")
+_SUPPORTED_OME_VERSIONS = ("0.4", "0.5", "0.6")
 
 
 def _scale_transform(dataset: dict[str, Any], *, path: UPath) -> list[float]:
@@ -36,13 +36,77 @@ def _scale_transform(dataset: dict[str, Any], *, path: UPath) -> list[float]:
     )
 
 
-def _resolution_key(
-    dataset: dict[str, Any], axes: list[dict[str, Any]], *, path: UPath
-) -> float:
+def _single_dataset_transform(
+    dataset: dict[str, Any], *, path: UPath
+) -> dict[str, Any]:
+    transforms = dataset.get("coordinateTransformations")
+    if not isinstance(transforms, list) or len(transforms) != 1:
+        raise CorruptImageError(
+            f"OME-Zarr dataset {dataset.get('path')!r} of {path} must have "
+            "exactly one coordinateTransformation.",
+            path=path,
+        )
+    return transforms[0]
+
+
+def _scale_transform_0_6(dataset: dict[str, Any], *, path: UPath) -> list[float] | None:
+    """The scale of a dataset's `scale`, `identity` (None) or
+    `sequence[scale, translation]` transform."""
+    transform = _single_dataset_transform(dataset, path=path)
+    transform_type = transform.get("type")
+    if transform_type == "identity":
+        return None
+    if transform_type == "scale":
+        return transform["scale"]
+    if transform_type == "sequence":
+        inner = transform.get("transformations") or []
+        inner_types = [t.get("type") for t in inner]
+        if inner_types.count("scale") == 1 and set(inner_types) <= {
+            "scale",
+            "translation",
+        }:
+            return next(t["scale"] for t in inner if t.get("type") == "scale")
+        transform_type = f"sequence{inner_types}"
+    raise UnsupportedImageDataError(
+        f"OME-Zarr dataset {dataset.get('path')!r} of {path} has an "
+        f"unsupported coordinateTransformation {transform_type!r}; only "
+        "'scale', 'identity' and a 'sequence' of 'scale' and 'translation' "
+        "are supported.",
+        path=path,
+    )
+
+
+def _intrinsic_axes_0_6(
+    multiscale: dict[str, Any], datasets: list[dict[str, Any]], *, path: UPath
+) -> list[dict[str, Any]]:
+    """The `axes` of the coordinate system all datasets map into."""
+    output_names = {
+        (_single_dataset_transform(dataset, path=path).get("output") or {}).get("name")
+        for dataset in datasets
+    }
+    if len(output_names) != 1:
+        raise CorruptImageError(
+            f"The datasets of OME-Zarr multiscale group {path} must all map "
+            f"into the same coordinate system, got outputs {output_names!r}.",
+            path=path,
+        )
+    (name,) = output_names
+    for coordinate_system in multiscale.get("coordinateSystems") or []:
+        if coordinate_system.get("name") == name:
+            return coordinate_system.get("axes") or []
+    raise CorruptImageError(
+        f"OME-Zarr multiscale group {path} has no coordinate system named {name!r}.",
+        path=path,
+    )
+
+
+def _resolution_key(scale: list[float] | None, axes: list[dict[str, Any]]) -> float:
     """Product of the spatial-axis scale factors — smaller is finer. Uses the
     group's `axes` metadata to know which scale entries are spatial, rather
-    than assuming any particular list order."""
-    scale = _scale_transform(dataset, path=path)
+    than assuming any particular list order. An identity transform (None)
+    counts as scale 1."""
+    if scale is None:
+        return 1.0
     if axes:
         spatial_indices = [
             i for i, axis in enumerate(axes) if axis.get("type") == "space"
@@ -210,10 +274,16 @@ def resolve_ome_multiscale(attributes: dict[str, Any], *, path: UPath) -> OmeMul
     """
     Validates and ranks the first `multiscales` entry of an OME-Zarr group's
     attributes. `attributes` is the group's `.zattrs` (NGFF 0.4) or its
-    `attributes.ome` (NGFF 0.5) — whichever carries `multiscales` and,
+    `attributes.ome` (NGFF 0.5/0.6) — whichever carries `multiscales` and,
     for 0.4, `version` alongside it.
     """
     multiscales = attributes.get("multiscales")
+    if not multiscales and "scene" in attributes:
+        raise UnsupportedImageFormatError(
+            f"{path} is an OME-Zarr scene group. Convert the multiscale "
+            "images it contains individually instead.",
+            path=path,
+        )
     if not multiscales:
         raise UnsupportedImageFormatError(
             f"{path} is a Zarr group but not an OME-Zarr multiscale group "
@@ -223,7 +293,7 @@ def resolve_ome_multiscale(attributes: dict[str, Any], *, path: UPath) -> OmeMul
     multiscale = multiscales[0]
 
     # NGFF 0.4 (Zarr v2) carries "version" inside the multiscale entry; NGFF
-    # 0.5 (Zarr v3) carries it on the enclosing "ome" object instead —
+    # 0.5/0.6 (Zarr v3) carry it on the enclosing "ome" object instead —
     # `attributes` is whichever of the two was passed in.
     version = attributes.get("version") or multiscale.get("version")
     if version not in _SUPPORTED_OME_VERSIONS:
@@ -239,11 +309,17 @@ def resolve_ome_multiscale(attributes: dict[str, Any], *, path: UPath) -> OmeMul
         raise CorruptImageError(
             f"OME-Zarr multiscale group {path} has no datasets.", path=path
         )
-    axes = multiscale.get("axes", [])
+    if version == "0.6":
+        # NGFF 0.6 moves "axes" into named "coordinateSystems" and allows
+        # the scale to be nested in a "sequence".
+        axes = _intrinsic_axes_0_6(multiscale, datasets, path=path)
+        scales = [_scale_transform_0_6(dataset, path=path) for dataset in datasets]
+    else:
+        axes = multiscale.get("axes", [])
+        scales = [_scale_transform(dataset, path=path) for dataset in datasets]
 
     ranked_indices = sorted(
-        range(len(datasets)),
-        key=lambda i: _resolution_key(datasets[i], axes, path=path),
+        range(len(datasets)), key=lambda i: _resolution_key(scales[i], axes)
     )
     dataset_paths = tuple(datasets[i]["path"] for i in ranked_indices)
     axis_names = (

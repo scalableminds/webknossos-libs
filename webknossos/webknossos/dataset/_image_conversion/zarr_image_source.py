@@ -50,8 +50,8 @@ def _read_json(path: UPath, *, path_for_errors: UPath) -> Any:
 class ZarrImageSource(TensorStoreChunkedImageSource):
     """
     ChunkedImageSource for plain Zarr arrays (v2 `.zarray`, v3 `zarr.json`
-    array nodes) and OME-Zarr multiscale groups (NGFF 0.4 on Zarr v2, NGFF 0.5
-    on Zarr v3). For a multiscale group, the finest resolution level is opened
+    array nodes) and OME-Zarr multiscale groups (NGFF 0.4 on Zarr v2, NGFF
+    0.5/0.6 on Zarr v3). For a multiscale group, the finest resolution level is opened
     by default; only the first `multiscales` entry is considered.
     """
 
