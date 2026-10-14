@@ -58,7 +58,12 @@ from webknossos.geometry import (
     Vec3IntLike,
 )
 from webknossos.geometry.mag import Mag, MagLike
-from webknossos.utils import enrich_path, infer_metadata_type, warn_deprecated
+from webknossos.utils import (
+    _position_fragment,
+    enrich_path,
+    infer_metadata_type,
+    warn_deprecated,
+)
 
 from ..client.api_client.errors import UnexpectedStatusError
 from ..ssl_context import SSL_CONTEXT
@@ -611,11 +616,11 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         Constructs the full URL to the dataset in the webknossos web interface.
 
         Returns:
-            str: Full dataset URL including organization and dataset name
+            str: Full dataset URL including the dataset id
 
         Examples:
             ```
-            print(ds.url) # 'https://webknossos.org/datasets/my_org/my_dataset'
+            print(ds.url) # 'https://webknossos.org/datasets/6114d9410100009f0096c640'
             ```
         """
 
@@ -624,6 +629,65 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         with self._context:
             wk_url = _get_context().url
         return f"{wk_url}/datasets/{self._dataset_id}"
+
+    @classmethod
+    def url_for(
+        cls,
+        dataset_id: str,
+        *,
+        position: Vec3IntLike | None = None,
+        webknossos_url: str | None = None,
+    ) -> str:
+        """Returns the URL that views a dataset, without contacting the server.
+
+        Args:
+            dataset_id: The id of the dataset.
+            position: Optional position (in mag 1) at which the dataset opens.
+            webknossos_url: The WEBKNOSSOS server. Defaults to the URL of the current
+                context.
+
+        Returns:
+            str: The dataset view URL.
+
+        Examples:
+            ```python
+            RemoteDataset.url_for(
+                "6114d9410100009f0096c640",
+                position=(1, 2, 3),
+                webknossos_url="https://webknossos.org",
+            )
+            # "https://webknossos.org/datasets/6114d9410100009f0096c640/view#1,2,3,0,1"
+            ```
+        """
+        if webknossos_url is None:
+            from ..client.context import _get_context
+
+            webknossos_url = _get_context().url
+        return (
+            f"{webknossos_url.rstrip('/')}/datasets/{dataset_id}/view"
+            f"{_position_fragment(position)}"
+        )
+
+    def generate_url(self, position: Vec3IntLike | None = None) -> str:
+        """Returns the URL that views this dataset, optionally at `position`.
+
+        Args:
+            position: Optional position (in mag 1) at which the dataset opens.
+
+        Returns:
+            str: The dataset view URL.
+
+        Examples:
+            ```python
+            ds.generate_url(position=(1, 2, 3))
+            # "https://webknossos.org/datasets/6114d9410100009f0096c640/view#1,2,3,0,1"
+            ```
+        """
+        from ..client.context import _get_context
+
+        with self._context:
+            wk_url = _get_context().url
+        return self.url_for(self._dataset_id, position=position, webknossos_url=wk_url)
 
     @property
     def created(self) -> str:

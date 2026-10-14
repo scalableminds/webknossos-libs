@@ -90,6 +90,7 @@ from ..geometry.vec3_float import as_vec3_float_or_none
 from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import (
+    _position_fragment,
     time_since_epoch_in_ms,
     warn_deprecated,
 )
@@ -313,6 +314,30 @@ class Annotation:
         self.skeleton.description = description
 
     @classmethod
+    def id_from_url(cls, annotation_id_or_url: str) -> str:
+        """Returns the id of an annotation URL, or the argument if it is no annotation URL.
+
+        Does not contact the server. Short links are not resolved.
+
+        Args:
+            annotation_id_or_url: An annotation id or an annotation URL, with or without
+                annotation type segment and with or without query or fragment.
+
+        Returns:
+            str: The annotation id.
+
+        Examples:
+            ```python
+            Annotation.id_from_url("https://webknossos.org/annotations/6114d9410100009f0096c640#1,2,3,0,1")
+            # "6114d9410100009f0096c640"
+            Annotation.id_from_url("6114d9410100009f0096c640")
+            # "6114d9410100009f0096c640"
+            ```
+        """
+        match = re.match(_ANNOTATION_URL_REGEX, annotation_id_or_url)
+        return annotation_id_or_url if match is None else match.group("annotation_id")
+
+    @classmethod
     def load(cls, annotation_path: str | PathLike | UPath) -> "Annotation":
         """Loads an annotation from a file.
 
@@ -415,16 +440,14 @@ class Annotation:
         annotation_id_or_url = resolve_short_link(annotation_id_or_url)
 
         match = re.match(_ANNOTATION_URL_REGEX, annotation_id_or_url)
+        annotation_id = cls.id_from_url(annotation_id_or_url)
         if match is not None:
             assert webknossos_url is None, (
                 "When Annotation.download() is be called with an annotation url, "
                 + "e.g. Annotation.download('https://webknossos.org/annotations/6114d9410100009f0096c640'), "
                 + "annotation_type and webknossos_url must not be set."
             )
-            annotation_id = match.group("annotation_id")
             webknossos_url = match.group("webknossos_url")
-        else:
-            annotation_id = annotation_id_or_url
 
         if webknossos_url is not None:
             webknossos_url = webknossos_url.rstrip("/")
@@ -1360,7 +1383,8 @@ _COMPOUND_ANNOTATION_TYPES = [
 _ANNOTATION_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/annotations/"
     + rf"((?P<annotation_type>{'|'.join(i.value for i in AnnotationType.__members__.values())})/)?"
-    + r"(?P<annotation_id>[0-9A-Fa-f]*)"
+    + r"(?P<annotation_id>[0-9A-Fa-f]+)"
+    + r"(?:[?#].*)?$"
 )
 
 
@@ -1395,15 +1419,88 @@ class RemoteAnnotation(Annotation):
         self.task_bounding_box = task_bounding_box
         self.user_bounding_boxes = user_bounding_boxes or []
         self.metadata = metadata
+        from ..client.context import _get_context
+
+        self._context = _get_context()
 
     def __repr__(self) -> str:
         return f"RemoteAnnotation({self.url})"
 
     @property
     def url(self) -> str:
-        from webknossos.client.context import _get_context
+        """URL to access this annotation in WEBKNOSSOS.
 
-        return f"{_get_context().url}/annotations/{self.annotation_id}"
+        Examples:
+            ```python
+            print(annotation.url)  # 'https://webknossos.org/annotations/6114d9410100009f0096c640'
+            ```
+        """
+        return self.generate_url()
+
+    @classmethod
+    def url_for(
+        cls,
+        annotation_id_or_url: str,
+        *,
+        position: Vec3IntLike | None = None,
+        webknossos_url: str | None = None,
+    ) -> str:
+        """Returns the URL of an annotation, without contacting the server.
+
+        Args:
+            annotation_id_or_url: An annotation id, or an annotation URL, whose
+                WEBKNOSSOS server is kept.
+            position: Optional position (in mag 1) at which the annotation opens.
+            webknossos_url: The WEBKNOSSOS server for an annotation id. Defaults to the
+                URL of the current context.
+
+        Returns:
+            str: The annotation URL.
+
+        Examples:
+            ```python
+            RemoteAnnotation.url_for(
+                "6114d9410100009f0096c640",
+                position=(1, 2, 3),
+                webknossos_url="https://webknossos.org",
+            )
+            # "https://webknossos.org/annotations/6114d9410100009f0096c640#1,2,3,0,1"
+            ```
+        """
+        match = re.match(_ANNOTATION_URL_REGEX, annotation_id_or_url)
+        if match is not None:
+            webknossos_url = match.group("webknossos_url")
+        if webknossos_url is None:
+            from ..client.context import _get_context
+
+            webknossos_url = _get_context().url
+        annotation_id = cls.id_from_url(annotation_id_or_url)
+        return (
+            f"{webknossos_url.rstrip('/')}/annotations/{annotation_id}"
+            f"{_position_fragment(position)}"
+        )
+
+    def generate_url(self, position: Vec3IntLike | None = None) -> str:
+        """Returns the URL of this annotation, optionally opening at `position`.
+
+        Args:
+            position: Optional position (in mag 1) at which the annotation opens.
+
+        Returns:
+            str: The annotation URL.
+
+        Examples:
+            ```python
+            annotation.generate_url(position=(1, 2, 3))
+            # "https://webknossos.org/annotations/6114d9410100009f0096c640#1,2,3,0,1"
+            ```
+        """
+        assert self.annotation_id is not None, "Annotation ID must be set."
+        return self.url_for(
+            self.annotation_id,
+            position=position,
+            webknossos_url=self._context.url,
+        )
 
     @property
     def name(self) -> str:
