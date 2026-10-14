@@ -72,7 +72,7 @@ def _transform_parameters(
     return parameters
 
 
-def _transform_matrix_0_6(
+def _transform_matrix(
     transform: dict[str, Any], ndim: int, *, path: UPath
 ) -> np.ndarray:
     """A coordinateTransformation as an (ndim + 1) x (ndim + 1) homogeneous
@@ -109,7 +109,7 @@ def _transform_matrix_0_6(
     elif transform_type == "sequence":
         # The first transformation is applied first.
         for inner in transform.get("transformations") or []:
-            matrix = _transform_matrix_0_6(inner, ndim, path=path) @ matrix
+            matrix = _transform_matrix(inner, ndim, path=path) @ matrix
     else:
         raise UnsupportedImageDataError(
             f"The coordinateTransformation {transform_type!r} of {path} is not "
@@ -120,7 +120,7 @@ def _transform_matrix_0_6(
     return matrix
 
 
-def _spatial_matrix_0_6(
+def _spatial_matrix(
     matrix: np.ndarray, axes: list[dict[str, Any]], *, path: UPath
 ) -> np.ndarray:
     """The x/y/z part of a dataset's transform as a 4x4 matrix in x, y, z
@@ -144,7 +144,7 @@ def _spatial_matrix_0_6(
     return result
 
 
-def _layer_transformation_0_6(
+def _layer_transformation(
     spatial_matrix: np.ndarray, *, path: UPath
 ) -> AffineCoordinateTransformation | None:
     """The WEBKNOSSOS layer transformation for a dataset's x/y/z transform,
@@ -159,6 +159,28 @@ def _layer_transformation_0_6(
     if np.allclose(in_voxels, np.eye(4)):
         return None
     return AffineCoordinateTransformation(matrix=in_voxels)
+
+
+def _layer_transformation_0_4(
+    dataset: dict[str, Any], axes: list[dict[str, Any]], *, path: UPath
+) -> AffineCoordinateTransformation | None:
+    """The WEBKNOSSOS layer transformation for a dataset's `scale` and
+    optional `translation`. None if there is no translation, or no `axes`
+    to tell which of its entries are spatial."""
+    translations = [
+        transform
+        for transform in dataset.get("coordinateTransformations", ())
+        if transform.get("type") == "translation"
+    ]
+    if not translations or not axes:
+        return None
+    scale = {"type": "scale", "scale": _scale_transform(dataset, path=path)}
+    matrix = _transform_matrix(
+        {"type": "sequence", "transformations": [scale, translations[0]]},
+        len(axes),
+        path=path,
+    )
+    return _layer_transformation(_spatial_matrix(matrix, axes, path=path), path=path)
 
 
 def _intrinsic_axes_0_6(
@@ -402,8 +424,8 @@ def resolve_ome_multiscale(attributes: dict[str, Any], *, path: UPath) -> OmeMul
         # dataset's transform can be any composition of affine transforms.
         axes = _intrinsic_axes_0_6(multiscale, datasets, path=path)
         spatial_matrices = [
-            _spatial_matrix_0_6(
-                _transform_matrix_0_6(
+            _spatial_matrix(
+                _transform_matrix(
                     _single_dataset_transform(dataset, path=path),
                     len(axes),
                     path=path,
@@ -416,7 +438,7 @@ def resolve_ome_multiscale(attributes: dict[str, Any], *, path: UPath) -> OmeMul
         # The volume of a voxel — smaller is finer.
         resolution_keys = [abs(np.linalg.det(m[:3, :3])) for m in spatial_matrices]
         layer_transformations = [
-            _layer_transformation_0_6(m, path=path) for m in spatial_matrices
+            _layer_transformation(m, path=path) for m in spatial_matrices
         ]
     else:
         axes = multiscale.get("axes", [])
@@ -424,7 +446,9 @@ def resolve_ome_multiscale(attributes: dict[str, Any], *, path: UPath) -> OmeMul
             _resolution_key(_scale_transform(dataset, path=path), axes)
             for dataset in datasets
         ]
-        layer_transformations = [None] * len(datasets)
+        layer_transformations = [
+            _layer_transformation_0_4(dataset, axes, path=path) for dataset in datasets
+        ]
 
     ranked_indices = sorted(range(len(datasets)), key=lambda i: resolution_keys[i])
     dataset_paths = tuple(datasets[i]["path"] for i in ranked_indices)
