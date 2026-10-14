@@ -195,6 +195,54 @@ def test_resolve_ome_multiscale_without_omero_has_no_channels() -> None:
     assert multiscale.channels is None
 
 
+@pytest.mark.parametrize("version", ["0.4", "0.5"])
+def test_resolve_ome_multiscale_translation_becomes_voxel_translation(
+    version: str,
+) -> None:
+    # Voxel size (x, y, z) = (0.5, 0.5, 2), so the physical translation
+    # (x, y, z) = (3, 1, 10) is (6, 2, 5) voxels; the channel entry is dropped.
+    finest = _dataset("s0", [1.0, 2.0, 0.5, 0.5])
+    finest["coordinateTransformations"].append(
+        {"type": "translation", "translation": [7.0, 10.0, 1.0, 3.0]}
+    )
+    attributes = _multiscale_attributes(
+        [_dataset("s1", [1.0, 4.0, 1.0, 1.0]), finest], version=version
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.dataset_paths == ("s0", "s1")
+    transformation, coarser_transformation = multiscale.layer_transformations
+    assert transformation is not None
+    np.testing.assert_allclose(
+        transformation.matrix,
+        [[1, 0, 0, 6], [0, 1, 0, 2], [0, 0, 1, 5], [0, 0, 0, 1]],
+    )
+    assert coarser_transformation is None
+
+
+def test_resolve_ome_multiscale_without_translation_needs_no_layer_transformation() -> (
+    None
+):
+    attributes = _multiscale_attributes([_dataset("0", [1.0, 2.0, 0.5, 0.5])])
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.layer_transformations == (None,)
+
+
+def test_resolve_ome_multiscale_without_axes_ignores_translation() -> None:
+    dataset = _dataset("0", [2.0, 0.5, 0.5])
+    dataset["coordinateTransformations"].append(
+        {"type": "translation", "translation": [10.0, 1.0, 3.0]}
+    )
+    attributes = _multiscale_attributes([dataset], axes=None)
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.layer_transformations == (None,)
+
+
 def _dataset_0_6(
     path: str,
     scale: list[float],
