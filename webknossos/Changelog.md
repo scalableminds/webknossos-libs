@@ -22,6 +22,7 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- Fixed `rich.errors.LiveError: Only one live display may be active at once` when progress-reporting operations (e.g. downsampling) run concurrently in multiple threads. Progress bars are now only rendered from the main thread.
 
 
 ## [4.2.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.5) - 2026-10-14

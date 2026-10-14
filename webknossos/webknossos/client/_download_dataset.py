@@ -10,6 +10,7 @@ from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset.layer.abstract_layer import LayerCategoryType
 from ..dataset_properties import DataFormat, LayerProperties
 from ..geometry import BoundingBox, Mag, Vec3Int
+from ..utils import is_rich_progress_disabled
 from .api_client.models import ApiUnusableDataSource
 from .context import _get_context
 
@@ -108,6 +109,7 @@ def download_dataset(
                     )
                 ),
                 description=f"Downloading layer={layer.name} mag={mag}",
+                disable=is_rich_progress_disabled(),
             ):
                 chunk_in_mag = chunk.in_mag(mag)
                 chunk_bytes, missing_buckets = datastore_client.dataset_get_raw_data(
