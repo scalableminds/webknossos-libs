@@ -16,7 +16,7 @@ from typing import Any
 import tensorstore as ts
 from upath import UPath
 
-from ...dataset_properties import LayerViewConfiguration
+from ...dataset_properties import CoordinateTransformation, LayerViewConfiguration
 from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from .._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from ..defaults import (
@@ -70,6 +70,7 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
     def __init__(self, path: UPath, options: ReadOptions) -> None:
         super().__init__(path, options)
         self._possible_layers: dict[str, list[int]] = {}
+        self._layer_transformation: CoordinateTransformation | None = None
 
         resolved_path, axis_name_hint, self._omero_channels = self._resolve_array_path(
             path, options
@@ -126,6 +127,14 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
         return _ome_suggested_view_configuration(
             self._omero_channels, self._channel, self.num_channels
         )
+
+    @property
+    def suggested_coordinate_transformations(
+        self,
+    ) -> tuple[CoordinateTransformation, ...] | None:
+        if self._layer_transformation is None:
+            return None
+        return (self._layer_transformation,)
 
     def layer_split_label(self, key: str, value: int) -> str:
         return _ome_layer_split_label(
@@ -193,5 +202,6 @@ class ZarrImageSource(TensorStoreChunkedImageSource):
             )
 
         resolved_path = path / multiscale.dataset_paths[rank]
+        self._layer_transformation = multiscale.layer_transformations[rank]
         axis_names = list(multiscale.axis_names) if multiscale.axis_names else None
         return resolved_path, axis_names, multiscale.channels
