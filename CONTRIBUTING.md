@@ -161,7 +161,7 @@ For testing the `kubernetes` setup, we recommend a [Kubernetes-in-Docker setup](
 
 We render a common documentation for WEBKNOSSOS itself and WEBKNOSSOS-libs from this repository using [mkdocs](https://www.mkdocs.org/). Source-files for the documentation are stored at `docs/src`:
 
-* `docs/src/webknossos`: Server & Website documentation from the [webknossos repository](https://github.com/scalableminds/webknossos). `docs/generate.sh` links it to `docs/wk-repo/docs`, so the repository must be available under `docs/wk-repo` (see below).
+* `docs/src/webknossos`: Server & Website documentation from the [webknossos repository](https://github.com/scalableminds/webknossos). `docs/generate.sh` links it to `docs/wk-repo/docs`, so the repository must be available under `docs/wk-repo` (see below). In the monorepo (scalableminds/mono), it links `webknossos/docs` instead.
 * `docs/src/api`: Generated using [pdoc](https://pdoc.dev) from Python docstrings.
 * `docs/src/webknossos-py`: Documentation for the Python Package
 

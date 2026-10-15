@@ -1,9 +1,14 @@
 #! /usr/bin/env bash
 set -Eeo pipefail
 
-# src/webknossos: the docs of the webknossos repository, cloned or linked to wk-repo
-if [ ! -e "src/webknossos" ] && [ -d "wk-repo/docs" ]; then
-    ln -sfn ../wk-repo/docs src/webknossos
+# src/webknossos: the docs of the webknossos repository, cloned or linked to
+# wk-repo, or next to webknossos-libs in the monorepo (scalableminds/mono)
+if [ ! -e "src/webknossos" ]; then
+    if [ -d "wk-repo/docs" ]; then
+        ln -sfn ../wk-repo/docs src/webknossos
+    elif [ -d "../../webknossos/docs" ]; then
+        ln -sfn ../../../webknossos/docs src/webknossos
+    fi
 fi
 if [ ! -d "src/webknossos" ]; then
     echo
