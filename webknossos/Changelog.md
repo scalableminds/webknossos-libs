@@ -23,6 +23,7 @@ in the _Changed_ sections.
 
 ### Fixed
 - Fixed `rich.errors.LiveError: Only one live display may be active at once` when progress-reporting operations (e.g. downsampling) run concurrently in multiple threads. Progress bars are now only rendered from the main thread.
+- Fixed `Too many open files` errors when uploading datasets with many files. Files are now only opened while their chunks are being uploaded. [#1579](https://github.com/scalableminds/webknossos-libs/pull/1579)
 
 
 ## [4.2.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.5) - 2026-10-14
