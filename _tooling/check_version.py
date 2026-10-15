@@ -10,7 +10,7 @@ max_git_tag = max(
         for line in run(["git", "tag"], capture_output=True)
         .stdout.decode("utf-8")
         .split("\n")
-        if match("^v\d+\.\d+.\d+$", line)
+        if match(r"^v\d+\.\d+\.\d+$", line)
     ]
 )
 
