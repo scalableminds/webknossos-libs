@@ -165,6 +165,8 @@ exclude = [
     "webknossos/dataset/_image_conversion/vendor",
     "webknossos/proofreading/generated/agglomerate_graph_pb2.py",
     "webknossos/proofreading/generated/agglomerate_graph_pb2.pyi",
+    "webknossos/proofreading/generated/list_of_long_pb2.py",
+    "webknossos/proofreading/generated/list_of_long_pb2.pyi",
 ]
 
 # Same as Black.
