@@ -2,6 +2,7 @@ from collections import namedtuple
 from collections.abc import Callable
 from functools import partial
 from threading import Lock
+from typing import BinaryIO
 
 from upath import UPath
 
@@ -62,7 +63,10 @@ class ResumableFile:
         self.chunk_size = chunk_size
         self.size = self.path.stat().st_size
 
-        self._fp = self.path.open("rb")
+        # The file is opened lazily on the first chunk read and closed once all
+        # chunks are completed, so that adding many files to a session does not
+        # exhaust the open file limit.
+        self._fp: BinaryIO | None = None
         self._fp_lock = Lock()
 
         self.chunks = build_chunks(self._read_bytes, self.size, chunk_size)
@@ -72,12 +76,17 @@ class ResumableFile:
         self.chunk_completed = CallbackDispatcher()
 
     def close(self) -> None:
-        """Close the file."""
-        self._fp.close()
+        """Close the file, if it is open."""
+        with self._fp_lock:
+            if self._fp is not None:
+                self._fp.close()
+                self._fp = None
 
     def _read_bytes(self, start: int, num_bytes: int) -> bytes:
         """Read a byte range from the file."""
         with self._fp_lock:
+            if self._fp is None:
+                self._fp = self.path.open("rb")
             self._fp.seek(start)
             return self._fp.read(num_bytes)
 

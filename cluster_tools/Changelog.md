@@ -8,7 +8,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.5...HEAD)
 
 ### Breaking Changes
 
@@ -22,6 +22,14 @@ in the _Changed_ sections.
 - Deprecated `map_to_futures(..., output_pickle_path_getter=...)` and `__cfut_options={"output_pickle_path": ...}` in favor of `output_key_getter` and `output_key`. [#1547](https://github.com/scalableminds/webknossos-libs/pull/1547)
 
 ### Fixed
+
+
+## [4.2.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.5) - 2026-10-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.4...v4.2.5)
+
+
+## [4.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.4) - 2026-10-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.3...v4.2.4)
 
 
 ## [4.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.3) - 2026-10-12
