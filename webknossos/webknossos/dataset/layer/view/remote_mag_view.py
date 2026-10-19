@@ -96,13 +96,6 @@ class RemoteMagView(MagView["RemoteLayer"]):
     def _get_layer_properties(self) -> "LayerProperties":
         return self._layer_properties
 
-    def _get_dimension_names(self) -> tuple[str, ...] | None:
-        # Zarr streaming re-encodes the arrays with their own axis order, while
-        # the other access modes serve the original arrays.
-        if self._access_mode == RemoteAccessMode.ZARR_STREAMING:
-            return None
-        return super()._get_dimension_names()
-
     @property
     def paths_by_access_mode(self) -> Mapping[RemoteAccessMode, UPath]:
         """All paths at which this mag's data can be reached, keyed by access mode.
