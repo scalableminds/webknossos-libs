@@ -3,3 +3,4 @@
 label: automerge
 merge_method: squash
 update_method: merge
+require_approval: false
