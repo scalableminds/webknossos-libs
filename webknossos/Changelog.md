@@ -11,7 +11,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.5...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.1...HEAD)
 
 ### Breaking Changes
 
@@ -26,6 +26,22 @@ in the _Changed_ sections.
 ### Fixed
 - Fixed that copying trees with `Group.add_tree(tree)` between skeletons could produce duplicate tree or node ids, and that ids set explicitly (e.g. when loading NML files) could be handed out again to later trees, groups or nodes. Copied trees now get fresh node ids where they collide, keeping their edges. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
 - Fixed that annotation URLs with a malformed or empty annotation id were partially matched. `RemoteAnnotation.url` now uses the context the annotation was opened with. Fixed the example in the `RemoteDataset.url` docstring. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
+
+
+## [4.3.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.1) - 2026-10-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.0...v4.3.1)
+
+### Fixed
+- Fixed opening Zarr-streamed mags with additional axes (e.g. a `t` axis), e.g. for exporting annotations of such datasets. The axes are now taken from the `axisOrder` of the streamed layer properties. [#1582](https://github.com/scalableminds/webknossos-libs/pull/1582)
+
+
+## [4.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.0) - 2026-10-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.5...v4.3.0)
+
+### Fixed
+- Fixed `rich.errors.LiveError: Only one live display may be active at once` when progress-reporting operations (e.g. downsampling) run concurrently in multiple threads. Progress bars are now only rendered from the main thread.
+- Fixed `Too many open files` errors when uploading datasets with many files. Files are now only opened while their chunks are being uploaded. [#1579](https://github.com/scalableminds/webknossos-libs/pull/1579)
+
 
 
 ## [4.2.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.5) - 2026-10-14

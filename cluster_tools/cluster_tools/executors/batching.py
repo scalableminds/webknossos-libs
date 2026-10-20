@@ -111,10 +111,11 @@ class BatchingExecutor:
         fn: Callable[[_S], _T],
         args: Iterable[_S],
         output_pickle_path_getter: Callable[[_S], PathLike] | None = None,
+        output_key_getter: Callable[[_S], str] | None = None,
     ) -> list[Future[_T]]:
-        if output_pickle_path_getter is not None:
+        if output_key_getter is not None or output_pickle_path_getter is not None:
             raise NotImplementedError(
-                "BatchingExecutor does not support output_pickle_path_getter"
+                "BatchingExecutor does not support output_key_getter or output_pickle_path_getter"
             )
 
         items = list(args)

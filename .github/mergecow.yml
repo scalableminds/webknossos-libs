@@ -1,0 +1,6 @@
+# Merge queue config for mergecow (https://github.com/scalableminds/mergecow).
+# Label a PR with `automerge` to have it merged once it is green and approved.
+label: automerge
+merge_method: squash
+update_method: merge
+require_approval: false

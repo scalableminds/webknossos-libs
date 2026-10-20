@@ -16,7 +16,7 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from os import PathLike
 from shutil import copyfileobj, move
-from threading import Thread
+from threading import Thread, current_thread, main_thread
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -272,6 +272,14 @@ def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
     parser.set_defaults(verbose=False)
 
 
+def is_rich_progress_disabled() -> bool:
+    """rich live displays are process-global and not thread-safe: only one may be
+    active per console (a second one raises `rich.errors.LiveError`) and they
+    redirect `sys.stdout`. Therefore, progress bars are only rendered from the
+    main thread."""
+    return current_thread() is not main_thread()
+
+
 def get_rich_progress() -> Progress:
     return Progress(
         "[progress.description]{task.description:<20}",
@@ -280,6 +288,7 @@ def get_rich_progress() -> Progress:
         rich.progress.TimeElapsedColumn(),
         "|",
         rich.progress.TimeRemainingColumn(),
+        disable=is_rich_progress_disabled(),
     )
 
 

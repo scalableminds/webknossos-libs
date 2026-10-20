@@ -1,4 +1,6 @@
 import pickle
+import threading
+import time
 from shutil import ignore_patterns
 from unittest.mock import Mock, patch
 
@@ -13,6 +15,7 @@ from webknossos.utils import (
     copytree,
     dump_path,
     enrich_path,
+    get_rich_progress,
     named_partial,
 )
 
@@ -412,3 +415,40 @@ def test_named_partial_is_picklable() -> None:
     partial_func = named_partial(_add, 1)
     assert partial_func.__name__ == "_add"
     assert pickle.loads(pickle.dumps(partial_func))() == 3
+
+
+def test_rich_progress_is_only_rendered_in_main_thread() -> None:
+    assert get_rich_progress().disable is False
+
+    disabled_in_thread: list[bool] = []
+    thread = threading.Thread(
+        target=lambda: disabled_in_thread.append(get_rich_progress().disable)
+    )
+    thread.start()
+    thread.join()
+    assert disabled_in_thread == [True]
+
+
+def test_rich_progress_concurrent_use_from_threads() -> None:
+    """Concurrent progress bars from several threads (and the main thread) must not
+    raise `rich.errors.LiveError: Only one live display may be active at once`."""
+    errors: list[Exception] = []
+
+    def run() -> None:
+        try:
+            with get_rich_progress() as progress:
+                task = progress.add_task("test", total=5)
+                for _ in range(5):
+                    time.sleep(0.01)
+                    progress.update(task, advance=1)
+        except Exception as e:
+            errors.append(e)
+
+    threads = [threading.Thread(target=run) for _ in range(4)]
+    for thread in threads:
+        thread.start()
+    run()
+    for thread in threads:
+        thread.join()
+
+    assert errors == []

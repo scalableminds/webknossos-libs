@@ -139,4 +139,5 @@ cython_debug/
 
 /src/api/webknossos
 /wk-repo
+/src/webknossos
 /out
