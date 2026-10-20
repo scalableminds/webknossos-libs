@@ -1437,49 +1437,6 @@ class RemoteAnnotation(Annotation):
         """
         return self.generate_url()
 
-    @classmethod
-    def url_for(
-        cls,
-        annotation_id_or_url: str,
-        *,
-        position: Vec3IntLike | None = None,
-        webknossos_url: str | None = None,
-    ) -> str:
-        """Returns the URL of an annotation, without contacting the server.
-
-        Args:
-            annotation_id_or_url: An annotation id, or an annotation URL, whose
-                WEBKNOSSOS server is kept.
-            position: Optional position (in mag 1) at which the annotation opens.
-            webknossos_url: The WEBKNOSSOS server for an annotation id. Defaults to the
-                URL of the current context.
-
-        Returns:
-            str: The annotation URL.
-
-        Examples:
-            ```python
-            RemoteAnnotation.url_for(
-                "6114d9410100009f0096c640",
-                position=(1, 2, 3),
-                webknossos_url="https://webknossos.org",
-            )
-            # "https://webknossos.org/annotations/6114d9410100009f0096c640#1,2,3,0,1"
-            ```
-        """
-        match = re.match(_ANNOTATION_URL_REGEX, annotation_id_or_url)
-        if match is not None:
-            webknossos_url = match.group("webknossos_url")
-        if webknossos_url is None:
-            from ..client.context import _get_context
-
-            webknossos_url = _get_context().url
-        annotation_id = cls.id_from_url(annotation_id_or_url)
-        return (
-            f"{webknossos_url.rstrip('/')}/annotations/{annotation_id}"
-            f"{_position_fragment(position)}"
-        )
-
     def generate_url(self, position: Vec3IntLike | None = None) -> str:
         """Returns the URL of this annotation, optionally opening at `position`.
 
@@ -1496,10 +1453,9 @@ class RemoteAnnotation(Annotation):
             ```
         """
         assert self.annotation_id is not None, "Annotation ID must be set."
-        return self.url_for(
-            self.annotation_id,
-            position=position,
-            webknossos_url=self._context.url,
+        return (
+            f"{self._context.url.rstrip('/')}/annotations/{self.annotation_id}"
+            f"{_position_fragment(position)}"
         )
 
     @property

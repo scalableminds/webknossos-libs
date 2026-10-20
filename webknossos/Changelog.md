@@ -16,7 +16,7 @@ in the _Changed_ sections.
 ### Breaking Changes
 
 ### Added
-- Added `Annotation.id_from_url`, `RemoteAnnotation.url_for`/`generate_url` and `RemoteDataset.url_for`/`generate_url`, which parse annotation URLs and build links to annotations and datasets, optionally at a position. The classmethods work from ids alone, without contacting the server. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
+- Added `Annotation.id_from_url`, `RemoteAnnotation.generate_url` and `RemoteDataset.generate_url`, which parse annotation URLs and build links to annotations and datasets, optionally at a position. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
 - Added `Group.add_skeleton` (also available on `Skeleton`), which copies all groups, trees, nodes and edges of another skeleton into a group with fresh ids, e.g. to merge several NML files into one annotation. [#1560](https://github.com/scalableminds/webknossos-libs/pull/1560)
 
 ### Changed

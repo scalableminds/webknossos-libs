@@ -630,44 +630,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             wk_url = _get_context().url
         return f"{wk_url}/datasets/{self._dataset_id}"
 
-    @classmethod
-    def url_for(
-        cls,
-        dataset_id: str,
-        *,
-        position: Vec3IntLike | None = None,
-        webknossos_url: str | None = None,
-    ) -> str:
-        """Returns the URL that views a dataset, without contacting the server.
-
-        Args:
-            dataset_id: The id of the dataset.
-            position: Optional position (in mag 1) at which the dataset opens.
-            webknossos_url: The WEBKNOSSOS server. Defaults to the URL of the current
-                context.
-
-        Returns:
-            str: The dataset view URL.
-
-        Examples:
-            ```python
-            RemoteDataset.url_for(
-                "6114d9410100009f0096c640",
-                position=(1, 2, 3),
-                webknossos_url="https://webknossos.org",
-            )
-            # "https://webknossos.org/datasets/6114d9410100009f0096c640/view#1,2,3,0,1"
-            ```
-        """
-        if webknossos_url is None:
-            from ..client.context import _get_context
-
-            webknossos_url = _get_context().url
-        return (
-            f"{webknossos_url.rstrip('/')}/datasets/{dataset_id}/view"
-            f"{_position_fragment(position)}"
-        )
-
     def generate_url(self, position: Vec3IntLike | None = None) -> str:
         """Returns the URL that views this dataset, optionally at `position`.
 
@@ -687,7 +649,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         with self._context:
             wk_url = _get_context().url
-        return self.url_for(self._dataset_id, position=position, webknossos_url=wk_url)
+        return (
+            f"{wk_url.rstrip('/')}/datasets/{self._dataset_id}/view"
+            f"{_position_fragment(position)}"
+        )
 
     @property
     def created(self) -> str:
