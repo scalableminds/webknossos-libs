@@ -673,6 +673,20 @@ def test_add_tree_copies_with_colliding_ids(tmp_upath: UPath) -> None:
     assert len(node_ids) == len(set(node_ids))
 
 
+def test_add_tree_copy_is_bound_to_target_skeleton() -> None:
+    source = _make_colliding_skeleton("a")
+    target = _make_colliding_skeleton("b")
+    for tree in list(source.flattened_trees()):
+        new_tree = target.add_tree(tree)
+        assert new_tree._skeleton is target
+        assert all(node._skeleton is target for node in new_tree.nodes)
+        # nodes added to the copy later get ids from the target skeleton
+        new_tree.add_node((0, 0, 0))
+    _, tree_ids, node_ids = _all_ids(target)
+    assert len(tree_ids) == len(set(tree_ids))
+    assert len(node_ids) == len(set(node_ids))
+
+
 def test_enforced_ids_are_not_handed_out_again() -> None:
     skeleton = wk.Skeleton(dataset_name="test_dataset", voxel_size=(1, 1, 1))
     tree = skeleton.add_tree("a", _enforced_id=5)

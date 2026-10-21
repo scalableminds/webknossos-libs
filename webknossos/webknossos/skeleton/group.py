@@ -203,7 +203,9 @@ class Group:
                 )
 
             new_tree.group = self
-            new_tree.skeleton = self._skeleton
+            new_tree._skeleton = self._skeleton
+            for node in new_tree.nodes:
+                node._skeleton = self._skeleton
 
             self._child_trees.add(new_tree)
             return new_tree
