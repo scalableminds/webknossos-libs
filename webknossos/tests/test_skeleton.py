@@ -281,20 +281,20 @@ def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
     <experiment name="ds_name" />
     <scale unit="nanometer" x="0.5" y="0.5" z="0.5" />
   </parameters>
-  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="3" isVisible="true" name="my_other_tree">
-    <nodes />
-    <edges />
-    <metadata />
-  </thing>
-  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" id="4" isVisible="true" name="top_level_tree">
-    <nodes />
-    <edges />
-    <metadata />
-  </thing>
   <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="9" isVisible="true" name="my_tree">
     <nodes>
-      <node id="2" x="2.0" y="4.0" z="6.0" />
+      <node id="10" x="2.0" y="4.0" z="6.0" />
     </nodes>
+    <edges />
+    <metadata />
+  </thing>
+  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" groupId="1" id="11" isVisible="true" name="my_other_tree">
+    <nodes />
+    <edges />
+    <metadata />
+  </thing>
+  <thing color.a="1.0" color.b="0.3" color.g="0.2" color.r="0.1" id="12" isVisible="true" name="top_level_tree">
+    <nodes />
     <edges />
     <metadata />
   </thing>
@@ -523,3 +523,209 @@ def test_behave_like_nx_graph() -> None:
     for node in nodes_to_remove:
         tree.remove_node(node)
     assert len(tree.nodes) == 1
+
+
+def _make_colliding_skeleton(prefix: str) -> wk.Skeleton:
+    # Same tree, node and group ids in every skeleton created by this helper.
+    skeleton = wk.Skeleton(dataset_name="test_dataset", voxel_size=(1, 1, 1))
+    top_tree = skeleton.add_tree(
+        f"{prefix}_top", color=(1, 0, 0, 1), metadata={"origin": prefix}
+    )
+    a = top_tree.add_node((1, 1, 1), comment=f"{prefix}_a", is_branchpoint=True)
+    b = top_tree.add_node((2, 2, 2), radius=2.5)
+    c = top_tree.add_node((3, 3, 3))
+    top_tree.add_edge(a, b)
+    top_tree.add_edge(b, c)
+
+    group = skeleton.add_group(f"{prefix}_group")
+    nested = group.add_group(f"{prefix}_nested")
+    tree = nested.add_tree(f"{prefix}_nested_tree", is_visible=False)
+    d = tree.add_node((4, 4, 4), comment=f"{prefix}_d")
+    e = tree.add_node((5, 5, 5))
+    tree.add_edge(d, e)
+    return skeleton
+
+
+def _all_ids(group: wk.Group) -> tuple[list[int], list[int], list[int]]:
+    group_ids = [g.id for g in group.flattened_groups()]
+    tree_ids = [t.id for t in group.flattened_trees()]
+    node_ids = [n.id for t in group.flattened_trees() for n in t.nodes]
+    return group_ids, tree_ids, node_ids
+
+
+def test_add_skeleton_merges_colliding_skeletons(tmp_upath: UPath) -> None:
+    sources = {"a": _make_colliding_skeleton("a"), "b": _make_colliding_skeleton("b")}
+    assert _all_ids(sources["a"]) == _all_ids(sources["b"])
+
+    target = wk.Skeleton(dataset_name="test_dataset", voxel_size=(1, 1, 1))
+    for name, source in sources.items():
+        target.add_group(f"file_{name}").add_skeleton(source)
+
+    # sources are unchanged
+    assert _all_ids(sources["a"]) == _all_ids(sources["b"])
+
+    def check(skeleton: wk.Skeleton) -> None:
+        group_ids, tree_ids, node_ids = _all_ids(skeleton)
+        assert len(group_ids) == len(set(group_ids)) == 6
+        assert len(tree_ids) == len(set(tree_ids)) == 4
+        assert len(node_ids) == len(set(node_ids)) == 10
+
+        top_groups = {g.name: g for g in skeleton.groups}
+        assert set(top_groups) == {"file_a", "file_b"}
+        for prefix in ("a", "b"):
+            file_group = top_groups[f"file_{prefix}"]
+            assert [t.name for t in file_group.trees] == [f"{prefix}_top"]
+            (top_tree,) = file_group.trees
+            assert top_tree.color == (1, 0, 0, 1)
+            assert top_tree.metadata == {"origin": prefix}
+            assert top_tree.number_of_nodes() == 3
+            assert top_tree.number_of_edges() == 2
+            nodes = {n.position.to_tuple(): n for n in top_tree.nodes}
+            assert nodes[(1, 1, 1)].comment == f"{prefix}_a"
+            assert nodes[(1, 1, 1)].is_branchpoint
+            assert nodes[(2, 2, 2)].radius == 2.5
+            assert top_tree.has_edge(nodes[(1, 1, 1)], nodes[(2, 2, 2)])
+            assert top_tree.has_edge(nodes[(2, 2, 2)], nodes[(3, 3, 3)])
+            assert not top_tree.has_edge(nodes[(1, 1, 1)], nodes[(3, 3, 3)])
+
+            (group,) = file_group.groups
+            assert group.name == f"{prefix}_group"
+            (nested,) = group.groups
+            assert nested.name == f"{prefix}_nested"
+            (nested_tree,) = nested.trees
+            assert nested_tree.name == f"{prefix}_nested_tree"
+            assert not nested_tree.is_visible
+            nested_nodes = {n.position.to_tuple(): n for n in nested_tree.nodes}
+            assert nested_nodes[(4, 4, 4)].comment == f"{prefix}_d"
+            assert nested_tree.has_edge(
+                nested_nodes[(4, 4, 4)], nested_nodes[(5, 5, 5)]
+            )
+
+    check(target)
+
+    path = tmp_upath / "merged.nml"
+    target.save(path)
+    check(wk.Skeleton.load(path))
+
+
+def test_add_skeleton_to_annotation_loaded_from_nml() -> None:
+    nml_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    annotation = wk.Annotation(
+        name="merged", dataset_name="test_dataset", voxel_size=(1, 1, 1)
+    )
+    for _ in range(2):
+        loaded = wk.Annotation.load(nml_path)
+        annotation.skeleton.add_group("file").add_skeleton(loaded.skeleton)
+    expected_nodes = 2 * loaded.skeleton.get_total_node_count()
+
+    _, tree_ids, node_ids = _all_ids(annotation.skeleton)
+    assert len(node_ids) == len(set(node_ids)) == expected_nodes
+    assert len(tree_ids) == len(set(tree_ids))
+
+    # fresh ids of later additions do not collide
+    extra = annotation.skeleton.add_tree("extra")
+    extra.add_node((0, 0, 0))
+    _, _, node_ids = _all_ids(annotation.skeleton)
+    assert len(node_ids) == len(set(node_ids))
+
+
+def test_add_skeleton_into_itself_raises() -> None:
+    skeleton = _make_colliding_skeleton("a")
+    with pytest.raises(ValueError):
+        skeleton.add_group("g").add_skeleton(skeleton)
+
+
+def test_add_tree_copies_with_colliding_ids(tmp_upath: UPath) -> None:
+    nml_path = TESTDATA_DIR / "nmls" / "test_a.nml"
+    sources = [wk.Skeleton.load(nml_path), wk.Skeleton.load(nml_path)]
+    assert _all_ids(sources[0]) == _all_ids(sources[1])
+    source_trees = [
+        (t.name, t.number_of_nodes(), t.number_of_edges())
+        for t in sources[0].flattened_trees()
+    ]
+
+    target = wk.Skeleton(dataset_name="test_dataset", voxel_size=(1, 1, 1))
+    for source in sources:
+        for tree in list(source.flattened_trees()):
+            target.add_tree(tree)
+
+    def check(skeleton: wk.Skeleton) -> None:
+        _, tree_ids, node_ids = _all_ids(skeleton)
+        assert len(tree_ids) == len(set(tree_ids)) == 2 * len(source_trees)
+        assert len(node_ids) == len(set(node_ids))
+        assert sorted(
+            (t.name, t.number_of_nodes(), t.number_of_edges())
+            for t in skeleton.flattened_trees()
+        ) == sorted(source_trees * 2)
+        for tree in skeleton.flattened_trees():
+            for u, v in tree.edges:
+                assert tree.has_node(u.id) and tree.has_node(v.id)
+
+    check(target)
+    path = tmp_upath / "copied.nml"
+    target.save(path)
+    check(wk.Skeleton.load(path))
+
+    # ids handed out later do not collide either
+    target.add_tree("new").add_node((0, 0, 0))
+    _, tree_ids, node_ids = _all_ids(target)
+    assert len(tree_ids) == len(set(tree_ids))
+    assert len(node_ids) == len(set(node_ids))
+
+
+def test_add_tree_copy_is_bound_to_target_skeleton() -> None:
+    source = _make_colliding_skeleton("a")
+    target = _make_colliding_skeleton("b")
+    for tree in list(source.flattened_trees()):
+        new_tree = target.add_tree(tree)
+        assert new_tree._skeleton is target
+        assert all(node._skeleton is target for node in new_tree.nodes)
+        # nodes added to the copy later get ids from the target skeleton
+        new_tree.add_node((0, 0, 0))
+    _, tree_ids, node_ids = _all_ids(target)
+    assert len(tree_ids) == len(set(tree_ids))
+    assert len(node_ids) == len(set(node_ids))
+
+
+def test_enforced_ids_are_not_handed_out_again() -> None:
+    skeleton = wk.Skeleton(dataset_name="test_dataset", voxel_size=(1, 1, 1))
+    tree = skeleton.add_tree("a", _enforced_id=5)
+    tree.add_node((0, 0, 0), _enforced_id=7)
+    group = skeleton.add_group("g", _enforced_id=9)
+    for _ in range(10):
+        group.add_tree("b").add_node((1, 1, 1))
+    group_ids, tree_ids, node_ids = _all_ids(skeleton)
+    assert len(tree_ids) == len(set(tree_ids))
+    assert len(node_ids) == len(set(node_ids))
+    assert len(group_ids) == len(set(group_ids))
+
+
+def test_add_tree_copies_keep_edges_with_colliding_ids(tmp_upath: UPath) -> None:
+    sources = [_make_colliding_skeleton("a"), _make_colliding_skeleton("b")]
+    target = wk.Skeleton(dataset_name="test_dataset", voxel_size=(1, 1, 1))
+    for source in sources:
+        for tree in list(source.flattened_trees()):
+            target.add_tree(tree)
+
+    # sources are unchanged
+    assert _all_ids(sources[0]) == _all_ids(sources[1])
+
+    def check(skeleton: wk.Skeleton) -> None:
+        _, tree_ids, node_ids = _all_ids(skeleton)
+        assert len(tree_ids) == len(set(tree_ids)) == 4
+        assert len(node_ids) == len(set(node_ids)) == 10
+        for tree in skeleton.flattened_trees():
+            positions = {n.position.to_tuple(): n for n in tree.nodes}
+            if tree.name.endswith("_top"):
+                assert tree.number_of_edges() == 2
+                assert tree.has_edge(positions[(1, 1, 1)], positions[(2, 2, 2)])
+                assert tree.has_edge(positions[(2, 2, 2)], positions[(3, 3, 3)])
+                assert positions[(1, 1, 1)].is_branchpoint
+            else:
+                assert tree.number_of_edges() == 1
+                assert tree.has_edge(positions[(4, 4, 4)], positions[(5, 5, 5)])
+
+    check(target)
+    path = tmp_upath / "copied.nml"
+    target.save(path)
+    check(wk.Skeleton.load(path))

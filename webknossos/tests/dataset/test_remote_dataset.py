@@ -431,6 +431,13 @@ def test_zarr_streaming_additional_axes_info(tmp_upath: UPath) -> None:
         remote_dataset.delete()
 
 
+def test_generate_url() -> None:
+    remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
+    base_url = f"{remote_dataset.url}/view"
+    assert remote_dataset.generate_url() == base_url
+    assert remote_dataset.generate_url(position=(1, 2, 3)) == f"{base_url}#1,2,3,0,1"
+
+
 def test_per_mag_access_mode() -> None:
     remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
     layer = remote_dataset.get_layer("color")

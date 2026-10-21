@@ -58,7 +58,12 @@ from webknossos.geometry import (
     Vec3IntLike,
 )
 from webknossos.geometry.mag import Mag, MagLike
-from webknossos.utils import enrich_path, infer_metadata_type, warn_deprecated
+from webknossos.utils import (
+    _position_fragment,
+    enrich_path,
+    infer_metadata_type,
+    warn_deprecated,
+)
 
 from ..client.api_client.errors import UnexpectedStatusError
 from ..ssl_context import SSL_CONTEXT
@@ -611,11 +616,11 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         Constructs the full URL to the dataset in the webknossos web interface.
 
         Returns:
-            str: Full dataset URL including organization and dataset name
+            str: Full dataset URL including the dataset id
 
         Examples:
             ```
-            print(ds.url) # 'https://webknossos.org/datasets/my_org/my_dataset'
+            print(ds.url) # 'https://webknossos.org/datasets/6114d9410100009f0096c640'
             ```
         """
 
@@ -624,6 +629,30 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         with self._context:
             wk_url = _get_context().url
         return f"{wk_url}/datasets/{self._dataset_id}"
+
+    def generate_url(self, position: Vec3IntLike | None = None) -> str:
+        """Returns the URL that views this dataset, optionally at `position`.
+
+        Args:
+            position: Optional position (in mag 1) at which the dataset opens.
+
+        Returns:
+            str: The dataset view URL.
+
+        Examples:
+            ```python
+            ds.generate_url(position=(1, 2, 3))
+            # "https://webknossos.org/datasets/6114d9410100009f0096c640/view#1,2,3,0,1"
+            ```
+        """
+        from ..client.context import _get_context
+
+        with self._context:
+            wk_url = _get_context().url
+        return (
+            f"{wk_url.rstrip('/')}/datasets/{self._dataset_id}/view"
+            f"{_position_fragment(position)}"
+        )
 
     @property
     def created(self) -> str:
