@@ -43,6 +43,7 @@ def register_chunked_image_source(
 
 def get_valid_slice_reader_extensions() -> set[str]:
     """The extensions (without dot) that some registered slice reader can open."""
+    _ensure_readers_imported()
     valid_extensions: set[str] = set()
     for cls in _SLICE_READER_CLASSES:
         valid_extensions.update(cls.supported_file_extensions())
@@ -51,6 +52,7 @@ def get_valid_slice_reader_extensions() -> set[str]:
 
 def get_valid_chunked_image_source_extensions() -> set[str]:
     """The extensions (without dot) that some registered chunked reader can open."""
+    _ensure_readers_imported()
     valid_extensions: set[str] = set()
     for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
         valid_extensions.update(cls.supported_file_extensions())
@@ -76,6 +78,7 @@ def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
     # Deferred to avoid a cycle: the raster readers register themselves here.
     from .common_slice_readers import MultiImageSliceReader
 
+    _ensure_readers_imported()
     if len(glob.glob(path_spec)) > 1:
         return MultiImageSliceReader(path_spec, **kwargs)
 
@@ -122,6 +125,7 @@ def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
 
 
 def _find_chunked_image_source_class(path: UPath) -> type[ChunkedImageSource] | None:
+    _ensure_readers_imported()
     extension = path.suffix.lstrip(".").lower()
     for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
         if extension in cls.supported_file_extensions():
@@ -186,8 +190,8 @@ _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES: tuple[_OptionalReader, ...] = (
     _OptionalReader("czi_image_source", "CziImageSource", "czi", frozenset({"czi"})),
 )
 
-# extension -> extra, for readers that failed to import. Populated at import
-# time below and consumed by get_unavailable_extensions().
+# extension -> extra, for readers that failed to import. Populated by
+# _ensure_readers_imported() and consumed by get_unavailable_extensions().
 _UNAVAILABLE_EXTENSIONS: dict[str, str] = {}
 
 
@@ -199,6 +203,7 @@ def get_unavailable_extensions() -> dict[str, str]:
     missing dependency instead of silently omitting the format from the
     supported list.
     """
+    _ensure_readers_imported()
     return dict(_UNAVAILABLE_EXTENSIONS)
 
 
@@ -282,14 +287,27 @@ def _import_readers() -> str | None:
     return None
 
 
-if (_reader_warnings := _import_readers()) is not None:
-    if environ.get("WEBKNOSSOS_SHOWED_IMAGE_READER_IMPORT_WARNING", "False") == "False":
-        # If the environment variable is not set, we assume that the user has not seen the warning yet.
-        # We set it to True to prevent showing the warning again.
-        environ["WEBKNOSSOS_SHOWED_IMAGE_READER_IMPORT_WARNING"] = "True"
-        warnings.warn(
-            f"[WARNING] Not all image readers could be imported:\n{_reader_warnings}Install the readers you need or use 'webknossos[all]' to install all readers.",
-            category=UserWarning,
-            source=None,
-            stacklevel=2,
-        )
+_readers_imported = False
+
+
+def _ensure_readers_imported() -> None:
+    """Imports the readers on first use, since some of their dependencies are
+    slow to import."""
+    global _readers_imported
+    if _readers_imported:
+        return
+    _readers_imported = True
+    if (reader_warnings := _import_readers()) is not None:
+        if (
+            environ.get("WEBKNOSSOS_SHOWED_IMAGE_READER_IMPORT_WARNING", "False")
+            == "False"
+        ):
+            # If the environment variable is not set, we assume that the user has not seen the warning yet.
+            # We set it to True to prevent showing the warning again.
+            environ["WEBKNOSSOS_SHOWED_IMAGE_READER_IMPORT_WARNING"] = "True"
+            warnings.warn(
+                f"[WARNING] Not all image readers could be imported:\n{reader_warnings}Install the readers you need or use 'webknossos[all]' to install all readers.",
+                category=UserWarning,
+                source=None,
+                stacklevel=3,
+            )

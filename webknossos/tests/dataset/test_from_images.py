@@ -569,10 +569,12 @@ def test_optional_reader_extensions_match_supported_file_extensions() -> None:
         _CHUNKED_IMAGE_SOURCE_CLASSES,
         _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES,
         _SLICE_READER_CLASSES,
+        _ensure_readers_imported,
         get_unavailable_extensions,
     )
     from webknossos.dataset._image_conversion.slice_reader import SliceReader
 
+    _ensure_readers_imported()
     # Annotated because the two lists' only common base is ABC, which does
     # not declare supported_file_extensions(); the union does.
     registered: dict[str, type[SliceReader] | type[ChunkedImageSource]] = {
