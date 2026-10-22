@@ -18,6 +18,7 @@ in the _Changed_ sections.
 ### Added
 
 ### Changed
+- Updated Pillow to 13.0.0 for Python 3.11+ (Pillow 13 requires Python >=3.11; Python 3.10 stays on Pillow 12.x). Pillow is only a transitive dependency (via `imageio`), so this is enforced through a uv constraint.
 
 ### Deprecated
 
