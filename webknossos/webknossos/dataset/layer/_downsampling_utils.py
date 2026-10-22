@@ -3,12 +3,13 @@ import math
 import warnings
 from collections.abc import Callable
 from enum import Enum
+from functools import cache
 from itertools import product
 from os import environ
+from types import ModuleType
 from typing import TYPE_CHECKING, Union
 
 import numpy as np
-from scipy.ndimage import zoom
 
 if TYPE_CHECKING:
     from webknossos.dataset.dataset import Dataset, RemoteDataset
@@ -25,10 +26,16 @@ from webknossos.geometry import (
 
 from .view import ArrayInfo, View
 
-try:
-    from . import _downsampling_numba
-except ImportError:
-    _downsampling_numba = None  # type: ignore[assignment]
+
+@cache
+def _get_downsampling_numba() -> ModuleType | None:
+    # Imported lazily, because numba is slow to import.
+    try:
+        from . import _downsampling_numba
+    except ImportError:
+        return None
+    return _downsampling_numba
+
 
 logger = logging.getLogger(__name__)
 
@@ -177,6 +184,8 @@ def parse_interpolation_mode(
 
 
 def linear_filter_3d(data: np.ndarray, factors: list[int], order: int) -> np.ndarray:
+    from scipy.ndimage import zoom
+
     factors_np = np.array(factors)
 
     return zoom(
@@ -279,12 +288,11 @@ def _warn_once_about_missing_numba() -> None:
 def warn_if_numba_is_missing(
     interpolation_mode: InterpolationModes, dtype: np.dtype
 ) -> None:
-    if _downsampling_numba is not None:
-        return
     # The median filter of floating point data uses numpy either way.
-    if interpolation_mode == InterpolationModes.MODE or (
-        interpolation_mode == InterpolationModes.MEDIAN and dtype.kind in "iu"
-    ):
+    if (
+        interpolation_mode == InterpolationModes.MODE
+        or (interpolation_mode == InterpolationModes.MEDIAN and dtype.kind in "iu")
+    ) and _get_downsampling_numba() is None:
         _warn_once_about_missing_numba()
 
 
@@ -292,16 +300,16 @@ def _downsample_median(data: np.ndarray, factors: list[int]) -> np.ndarray:
     # Floating point data uses the numpy implementation, because np.median
     # accumulates in the input dtype for float32 and has its own NaN semantics.
     if _supports_fast_path(data, factors) and data.dtype.kind in "iu":
-        if _downsampling_numba is not None:
-            return _downsampling_numba.median_downsample(data, factors)
+        if (downsampling_numba := _get_downsampling_numba()) is not None:
+            return downsampling_numba.median_downsample(data, factors)
         _warn_once_about_missing_numba()
     return non_linear_filter_3d(data, factors, _median)
 
 
 def _downsample_mode(data: np.ndarray, factors: list[int]) -> np.ndarray:
     if _supports_fast_path(data, factors):
-        if _downsampling_numba is not None:
-            return _downsampling_numba.mode_downsample(data, factors)
+        if (downsampling_numba := _get_downsampling_numba()) is not None:
+            return downsampling_numba.mode_downsample(data, factors)
         _warn_once_about_missing_numba()
     return non_linear_filter_3d(data, factors, _mode)
 

@@ -18,6 +18,7 @@ in the _Changed_ sections.
 ### Added
 
 ### Changed
+- Import time was cut roughly in half by using lazy imports for several dependencies. [#1583](https://github.com/scalableminds/webknossos-libs/pull/1583)
 
 ### Deprecated
 

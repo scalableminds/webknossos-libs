@@ -480,6 +480,7 @@ def test_add_layer_from_images_names_missing_optional_dependency(
     registry = importlib.import_module(
         "webknossos.dataset._image_conversion.image_source_registry"
     )
+    registry._ensure_readers_imported()
     monkeypatch.setattr(registry, "_CHUNKED_IMAGE_SOURCE_CLASSES", [])
     monkeypatch.setattr(registry, "_UNAVAILABLE_EXTENSIONS", {"ims": "ims"})
     ims_path = tmp_upath / "a.ims"
