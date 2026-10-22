@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import glob
 import os
+import sys
 import threading
 import warnings
 from collections import Counter
@@ -294,6 +295,19 @@ def _import_readers() -> str | None:
     return None
 
 
+def _stacklevel_of_caller_outside_webknossos() -> int:
+    """The `stacklevel` that attributes a warning raised by the calling
+    function to the first frame outside of webknossos."""
+    stacklevel = 1
+    frame = sys._getframe(1)
+    while frame.f_back is not None and frame.f_globals.get("__name__", "").startswith(
+        "webknossos"
+    ):
+        frame = frame.f_back
+        stacklevel += 1
+    return stacklevel
+
+
 _readers_imported = False
 _readers_import_lock = threading.Lock()
 
@@ -322,5 +336,5 @@ def _ensure_readers_imported() -> None:
                 f"[WARNING] Not all image readers could be imported:\n{reader_warnings}Install the readers you need or use 'webknossos[all]' to install all readers.",
                 category=UserWarning,
                 source=None,
-                stacklevel=3,
+                stacklevel=_stacklevel_of_caller_outside_webknossos(),
             )
