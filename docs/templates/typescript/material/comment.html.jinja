@@ -1,0 +1,28 @@
+{#- Renders the comment of `obj`. mkdocstrings-typescript only renders the
+    comment summary, so block tags (e.g. `@example`) and parameter
+    descriptions are added here. -#}
+{% set section_titles = {
+  "@deprecated": "Deprecated",
+  "@remarks": "Remarks",
+  "@returns": "Returns",
+  "@throws": "Throws",
+  "@example": "Example",
+  "@see": "See also",
+} %}
+{% set doc = namespace(markdown=obj.comment.markdown(symbol_map=obj.symbol_map) if obj.comment else "") %}
+{% set documented_parameters = (obj.parameters or [])|selectattr("comment")|list %}
+{% if documented_parameters %}
+  {% set doc.markdown = doc.markdown ~ "\n\n**Parameters:**\n" %}
+  {% for parameter in documented_parameters %}
+    {% set doc.markdown = doc.markdown ~ "\n- `" ~ parameter.name ~ "`: " ~ parameter.comment.markdown(symbol_map=obj.symbol_map) %}
+  {% endfor %}
+{% endif %}
+{% for tag in (obj.comment.block_tags if obj.comment else none) or [] if tag.kind.value in section_titles %}
+  {% set doc.markdown = doc.markdown ~ "\n\n**" ~ section_titles[tag.kind.value] ~ ":**\n\n" %}
+  {% for part in tag.content %}
+    {% set doc.markdown = doc.markdown ~ part.markdown(symbol_map=obj.symbol_map) %}
+  {% endfor %}
+{% endfor %}
+{% if doc.markdown %}
+  {{ doc.markdown|convert_markdown(heading_level, html_id) }}
+{% endif %}

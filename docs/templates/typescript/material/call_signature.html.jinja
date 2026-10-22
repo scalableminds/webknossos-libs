@@ -1,0 +1,35 @@
+{#- Overrides mkdocstrings-typescript's template, which only shows the first
+    source line of a signature (cutting off multi-line signatures). Instead,
+    the signature is assembled from its parameters and return type. Also
+    renders block tags and parameter descriptions, see comment.html.jinja. -#}
+{{ log.debug("Rendering " + call_signature.path) }}
+
+<div class="doc doc-object doc-call_signature">
+  {% with obj = call_signature, html_id = call_signature.path %}
+
+    {% set parameters = [] %}
+    {% for parameter in call_signature.parameters or [] %}
+      {% set _ = parameters.append(
+          ("..." if parameter.flags.isRest else "")
+          ~ parameter.name
+          ~ ("?" if parameter.flags.isOptional else "")
+          ~ (": " ~ parameter.type.name if parameter.type else "")
+          ~ (" = " ~ parameter.default_value if parameter.default_value else "")
+      ) %}
+    {% endfor %}
+    {% set returns = ": " ~ call_signature.type.name if call_signature.type else "" %}
+    {% set one_line = call_signature.name ~ "(" ~ parameters|join(", ") ~ ")" ~ returns %}
+
+    {% filter highlight(language="typescript", inline=False) %}
+      {%- if one_line|length <= 80 -%}
+        {{ one_line }}
+      {%- else -%}
+        {{ call_signature.name }}(
+  {{ parameters|join(",\n  ") }},
+){{ returns }}
+      {%- endif -%}
+    {% endfilter %}
+
+    {% include "comment.html.jinja" with context %}
+  {% endwith %}
+</div>

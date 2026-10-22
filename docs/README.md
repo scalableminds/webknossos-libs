@@ -8,6 +8,8 @@ webknossos-libs/docs/src$ ls -l webknossos
 webknossos -> ../../../webknossos/docs
 ```
 Run `./generate.sh` to open a live-reloading server rendering the documentation.
+Besides `uv`, this requires Node.js/`npm`: The frontend scripting API reference (`src/frontend-api`) is generated from the TypeScript sources of the webknossos repository (`wk-repo/frontend`) by [mkdocstrings-typescript](https://mkdocstrings.github.io/typescript/), which calls [TypeDoc](https://typedoc.org) (see `typedoc.json` and `package.json`).
+`generate.sh` links `wk-repo` to the webknossos repository if only `src/webknossos` is linked.
 
 ## Production
 

@@ -1,0 +1,6 @@
+{#- Renders block tags of class comments, see comment.html.jinja. -#}
+{% extends "_base/class.html.jinja" %}
+
+{% block docstring scoped %}
+  {% include "comment.html.jinja" with context %}
+{% endblock docstring %}
