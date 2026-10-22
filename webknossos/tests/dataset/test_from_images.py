@@ -566,21 +566,19 @@ def test_optional_reader_extensions_match_supported_file_extensions() -> None:
         ChunkedImageSource,
     )
     from webknossos.dataset._image_conversion.image_source_registry import (
-        _CHUNKED_IMAGE_SOURCE_CLASSES,
         _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES,
-        _SLICE_READER_CLASSES,
-        _ensure_readers_imported,
+        _chunked_image_source_classes,
+        _slice_reader_classes,
         get_unavailable_extensions,
     )
     from webknossos.dataset._image_conversion.slice_reader import SliceReader
 
-    _ensure_readers_imported()
     # Annotated because the two lists' only common base is ABC, which does
     # not declare supported_file_extensions(); the union does.
     registered: dict[str, type[SliceReader] | type[ChunkedImageSource]] = {
-        cls.__name__: cls for cls in _SLICE_READER_CLASSES
+        cls.__name__: cls for cls in _slice_reader_classes()
     }
-    registered.update({cls.__name__: cls for cls in _CHUNKED_IMAGE_SOURCE_CLASSES})
+    registered.update({cls.__name__: cls for cls in _chunked_image_source_classes()})
     # The test env installs every extra except czi on Python 3.14, since
     # pylibCZIrw ships no wheel there.
     unavailable_extras = set(get_unavailable_extensions().values())

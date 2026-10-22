@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import glob
 import os
+import threading
 import warnings
 from collections import Counter
 from os import environ
@@ -41,20 +42,28 @@ def register_chunked_image_source(
     return cls
 
 
+def _slice_reader_classes() -> list[type[SliceReader]]:
+    _ensure_readers_imported()
+    return _SLICE_READER_CLASSES
+
+
+def _chunked_image_source_classes() -> list[type[ChunkedImageSource]]:
+    _ensure_readers_imported()
+    return _CHUNKED_IMAGE_SOURCE_CLASSES
+
+
 def get_valid_slice_reader_extensions() -> set[str]:
     """The extensions (without dot) that some registered slice reader can open."""
-    _ensure_readers_imported()
     valid_extensions: set[str] = set()
-    for cls in _SLICE_READER_CLASSES:
+    for cls in _slice_reader_classes():
         valid_extensions.update(cls.supported_file_extensions())
     return valid_extensions
 
 
 def get_valid_chunked_image_source_extensions() -> set[str]:
     """The extensions (without dot) that some registered chunked reader can open."""
-    _ensure_readers_imported()
     valid_extensions: set[str] = set()
-    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
+    for cls in _chunked_image_source_classes():
         valid_extensions.update(cls.supported_file_extensions())
     return valid_extensions
 
@@ -78,7 +87,6 @@ def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
     # Deferred to avoid a cycle: the raster readers register themselves here.
     from .common_slice_readers import MultiImageSliceReader
 
-    _ensure_readers_imported()
     if len(glob.glob(path_spec)) > 1:
         return MultiImageSliceReader(path_spec, **kwargs)
 
@@ -98,7 +106,7 @@ def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
 
     eligible_handlers = [
         handler
-        for handler in _SLICE_READER_CLASSES
+        for handler in _slice_reader_classes()
         if ext in {e.lstrip(".").lower() for e in handler.supported_file_extensions()}
     ]
     if not eligible_handlers:
@@ -125,13 +133,13 @@ def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
 
 
 def _find_chunked_image_source_class(path: UPath) -> type[ChunkedImageSource] | None:
-    _ensure_readers_imported()
+    classes = _chunked_image_source_classes()
     extension = path.suffix.lstrip(".").lower()
-    for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
+    for cls in classes:
         if extension in cls.supported_file_extensions():
             return cls
     if path.is_dir():
-        for cls in _CHUNKED_IMAGE_SOURCE_CLASSES:
+        for cls in classes:
             if cls.probe_directory(path):
                 return cls
     return None
@@ -190,8 +198,7 @@ _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES: tuple[_OptionalReader, ...] = (
     _OptionalReader("czi_image_source", "CziImageSource", "czi", frozenset({"czi"})),
 )
 
-# extension -> extra, for readers that failed to import. Populated by
-# _ensure_readers_imported() and consumed by get_unavailable_extensions().
+# extension -> extra, for readers that failed to import.
 _UNAVAILABLE_EXTENSIONS: dict[str, str] = {}
 
 
@@ -288,6 +295,7 @@ def _import_readers() -> str | None:
 
 
 _readers_imported = False
+_readers_import_lock = threading.Lock()
 
 
 def _ensure_readers_imported() -> None:
@@ -296,8 +304,13 @@ def _ensure_readers_imported() -> None:
     global _readers_imported
     if _readers_imported:
         return
-    _readers_imported = True
-    if (reader_warnings := _import_readers()) is not None:
+    with _readers_import_lock:
+        if _readers_imported:
+            return
+        # Only marked as done on success, so a failed import is retried.
+        reader_warnings = _import_readers()
+        _readers_imported = True
+    if reader_warnings is not None:
         if (
             environ.get("WEBKNOSSOS_SHOWED_IMAGE_READER_IMPORT_WARNING", "False")
             == "False"
