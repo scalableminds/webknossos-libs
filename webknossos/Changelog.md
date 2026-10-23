@@ -22,6 +22,7 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- Fixed that opening S3 arrays with explicit credentials from several threads at once could fail with `Failed to create credentials provider ... AWS_ERROR_STRING_MATCH_NOT_FOUND`. Each set of credentials now gets its own temporary credentials file, which is written once and never changed. [#1586](https://github.com/scalableminds/webknossos-libs/pull/1586)
 
 
 ## [4.3.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.2) - 2026-10-21
