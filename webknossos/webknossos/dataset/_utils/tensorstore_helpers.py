@@ -1,11 +1,11 @@
 import atexit
 import math
-import os
-import threading
 from functools import lru_cache
+from hashlib import sha256
 from tempfile import mkdtemp
 from typing import Any
 from urllib.parse import urlparse
+from uuid import uuid4
 
 import numpy as np
 import tensorstore as ts
@@ -17,75 +17,70 @@ TS_CONTEXT = ts.Context()
 
 
 class AWSCredentialManager:
-    entries: dict[int, tuple[str, str]]
+    """Writes one credentials file per key pair, for tensorstore's `aws_credentials`.
+
+    A file is written once and never changed afterwards. Readers therefore never see
+    a partially written or rewritten file, without any locking between threads or
+    forked processes that share the folder.
+    """
+
     folder_path: UPath
 
     def __init__(self, folder_path: UPath) -> None:
-        self.entries = {}
         self.folder_path = folder_path
-        self._lock = threading.Lock()
-        # A forked process must not inherit a lock held by another thread.
-        # os.register_at_fork is not available on Windows, which does not fork.
-        if hasattr(os, "register_at_fork"):
-            os.register_at_fork(after_in_child=self._reset_lock)
-
-        self.credentials_file_path.touch()
+        # Profiles whose file is known to exist. The folder starts out empty, so
+        # this replaces a disk check on each add. Without a lock, two threads may
+        # both write the same new file, which is harmless.
+        self._written_profiles: set[str] = set()
         self.config_file_path.write_text("[default]\n")
 
         atexit.register(self._cleanup)
 
     @property
-    def credentials_file_path(self) -> UPath:
-        return self.folder_path / "credentials"
-
-    @property
     def config_file_path(self) -> UPath:
         return self.folder_path / "config"
 
-    def _reset_lock(self) -> None:
-        self._lock = threading.Lock()
+    def credentials_file_path(self, profile: str) -> UPath:
+        return self.folder_path / f"credentials-{profile}"
 
-    def _dump_credentials(self) -> None:
-        # Written to a temporary file and moved into place, so that tensorstore
-        # never reads a partially written file
-        tmp_path = self.folder_path / f"credentials.{os.getpid()}.tmp"
-        tmp_path.write_text(
-            "\n".join(
-                [
-                    f"[profile-{key_hash}]\naws_access_key_id = {access_key_id}\naws_secret_access_key = {secret_access_key}\n"
-                    for key_hash, (
-                        access_key_id,
-                        secret_access_key,
-                    ) in self.entries.items()
-                ]
+    def _write_credentials_file(
+        self, path: UPath, profile: str, access_key_id: str, secret_access_key: str
+    ) -> None:
+        # Written to a unique temporary file and renamed into place, so that
+        # tensorstore never reads a partially written file
+        tmp_path = self.folder_path / f"{path.name}.{uuid4().hex}.tmp"
+        try:
+            tmp_path.write_text(
+                f"[{profile}]\naws_access_key_id = {access_key_id}\naws_secret_access_key = {secret_access_key}\n"
             )
-        )
-        os.replace(str(tmp_path), str(self.credentials_file_path))
+            try:
+                tmp_path.rename(path)
+            except FileExistsError:
+                # On Windows, rename does not replace an existing file. Another
+                # thread or process already wrote the same content.
+                pass
+        finally:
+            tmp_path.unlink(missing_ok=True)
 
     def _cleanup(self) -> None:
         rmtree(self.folder_path)
 
     def add(self, access_key_id: str, secret_access_key: str) -> dict[str, str]:
-        key_tuple = (access_key_id, secret_access_key)
-        key_hash = hash(key_tuple)
-        with self._lock:
-            previous_entry = self.entries.get(key_hash)
-            if previous_entry != key_tuple:
-                self.entries[key_hash] = key_tuple
-                try:
-                    self._dump_credentials()
-                except BaseException:
-                    # Roll back, so that a later call retries writing the file
-                    if previous_entry is None:
-                        del self.entries[key_hash]
-                    else:
-                        self.entries[key_hash] = previous_entry
-                    raise
+        # A stable digest, so that equal key pairs map to the same file in all
+        # processes. The secret is not recoverable from it.
+        digest = sha256(f"{access_key_id}\0{secret_access_key}".encode()).hexdigest()
+        profile = f"profile-{digest}"
+        credentials_file_path = self.credentials_file_path(profile)
+        if profile not in self._written_profiles:
+            self._write_credentials_file(
+                credentials_file_path, profile, access_key_id, secret_access_key
+            )
+            self._written_profiles.add(profile)
         return {
             "type": "profile",
-            "profile": f"profile-{key_hash}",
+            "profile": profile,
             "config_file": str(self.config_file_path),
-            "credentials_file": str(self.credentials_file_path),
+            "credentials_file": str(credentials_file_path),
         }
 
 
