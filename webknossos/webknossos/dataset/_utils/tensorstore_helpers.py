@@ -24,8 +24,10 @@ class AWSCredentialManager:
         self.entries = {}
         self.folder_path = folder_path
         self._lock = threading.Lock()
-        # A forked process must not inherit a lock held by another thread
-        os.register_at_fork(after_in_child=self._reset_lock)
+        # A forked process must not inherit a lock held by another thread.
+        # os.register_at_fork is not available on Windows, which does not fork.
+        if hasattr(os, "register_at_fork"):
+            os.register_at_fork(after_in_child=self._reset_lock)
 
         self.credentials_file_path.touch()
         self.config_file_path.write_text("[default]\n")
@@ -67,9 +69,18 @@ class AWSCredentialManager:
         key_tuple = (access_key_id, secret_access_key)
         key_hash = hash(key_tuple)
         with self._lock:
-            if self.entries.get(key_hash) != key_tuple:
+            previous_entry = self.entries.get(key_hash)
+            if previous_entry != key_tuple:
                 self.entries[key_hash] = key_tuple
-                self._dump_credentials()
+                try:
+                    self._dump_credentials()
+                except BaseException:
+                    # Roll back, so that a later call retries writing the file
+                    if previous_entry is None:
+                        del self.entries[key_hash]
+                    else:
+                        self.entries[key_hash] = previous_entry
+                    raise
         return {
             "type": "profile",
             "profile": f"profile-{key_hash}",

@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import pytest
 import tensorstore as ts
 from upath import UPath
 
@@ -43,3 +44,20 @@ def test_adding_known_credentials_does_not_rewrite_the_file(tmp_path: Path) -> N
     assert manager.add("key", "secret") == first
     assert manager.credentials_file_path.read_text().endswith(marker)
     assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_failed_write_is_retried_on_next_add(tmp_path: Path) -> None:
+    manager = AWSCredentialManager(UPath(tmp_path))
+    original_dump = manager._dump_credentials
+
+    def failing_dump() -> None:
+        raise OSError("disk full")
+
+    manager._dump_credentials = failing_dump  # type: ignore[method-assign]
+    with pytest.raises(OSError):
+        manager.add("key", "secret")
+    assert manager.entries == {}
+
+    manager._dump_credentials = original_dump  # type: ignore[method-assign]
+    profile = manager.add("key", "secret")
+    assert f"[{profile['profile']}]" in manager.credentials_file_path.read_text()
