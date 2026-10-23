@@ -83,9 +83,19 @@ plugins:
       sections:
         API Reference:
           - api/**/*.md
+        Frontend API Reference:
+          - frontend-api/*.md
   - mkdocstrings:
       default_handler: python
+      custom_templates: templates
       handlers:
+            typescript:
+                # Runs `typedoc` (see typedoc.json and package.json) to
+                # collect the frontend API of the webknossos repository.
+                options:
+                    heading_level: 2
+                    show_symbol_type_heading: true
+                    show_symbol_type_toc: true
             python:
                 options:
                     show_source: false
@@ -234,7 +244,12 @@ nav:
       - AI Training Data Annotation: webknossos/tutorials/trainingdata_annotation.md
       - Today I Learned: webknossos/today_i_learned.md
     - Reference:
-      - Frontend Scripting API: https://webknossos.org/assets/docs/frontend-api/index.html" target="_blank
+      - Frontend Scripting API:
+        - frontend-api/index.md
+        - api.tracing: frontend-api/tracing.md
+        - api.data: frontend-api/data.md
+        - api.user: frontend-api/user.md
+        - api.utils: frontend-api/utils.md
       - Changelog: webknossos/CHANGELOG.released.md
       - Migration Guide: webknossos/MIGRATIONS.released.md
   - Python Library:
