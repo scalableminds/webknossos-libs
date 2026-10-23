@@ -1,5 +1,7 @@
 import atexit
 import math
+import os
+import threading
 from functools import lru_cache
 from tempfile import mkdtemp
 from typing import Any
@@ -21,6 +23,9 @@ class AWSCredentialManager:
     def __init__(self, folder_path: UPath) -> None:
         self.entries = {}
         self.folder_path = folder_path
+        self._lock = threading.Lock()
+        # A forked process must not inherit a lock held by another thread
+        os.register_at_fork(after_in_child=self._reset_lock)
 
         self.credentials_file_path.touch()
         self.config_file_path.write_text("[default]\n")
@@ -35,8 +40,14 @@ class AWSCredentialManager:
     def config_file_path(self) -> UPath:
         return self.folder_path / "config"
 
+    def _reset_lock(self) -> None:
+        self._lock = threading.Lock()
+
     def _dump_credentials(self) -> None:
-        self.credentials_file_path.write_text(
+        # Written to a temporary file and moved into place, so that tensorstore
+        # never reads a partially written file
+        tmp_path = self.folder_path / f"credentials.{os.getpid()}.tmp"
+        tmp_path.write_text(
             "\n".join(
                 [
                     f"[profile-{key_hash}]\naws_access_key_id = {access_key_id}\naws_secret_access_key = {secret_access_key}\n"
@@ -47,6 +58,7 @@ class AWSCredentialManager:
                 ]
             )
         )
+        os.replace(str(tmp_path), str(self.credentials_file_path))
 
     def _cleanup(self) -> None:
         rmtree(self.folder_path)
@@ -54,8 +66,10 @@ class AWSCredentialManager:
     def add(self, access_key_id: str, secret_access_key: str) -> dict[str, str]:
         key_tuple = (access_key_id, secret_access_key)
         key_hash = hash(key_tuple)
-        self.entries[key_hash] = key_tuple
-        self._dump_credentials()
+        with self._lock:
+            if self.entries.get(key_hash) != key_tuple:
+                self.entries[key_hash] = key_tuple
+                self._dump_credentials()
         return {
             "type": "profile",
             "profile": f"profile-{key_hash}",
