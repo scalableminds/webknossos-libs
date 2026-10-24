@@ -694,6 +694,12 @@ def add_layer_from_images(
             elif suggested is not None:
                 layer.default_view_configuration = suggested
 
+        # A format may also place the layer, e.g. OME-Zarr's coordinateTransformations.
+        if image_source.suggested_coordinate_transformations:
+            layer.coordinate_transformations = (
+                image_source.suggested_coordinate_transformations
+            )
+
         expected_bbox = image_source.expected_bbox
 
         _shard_shape_user_specified = (
