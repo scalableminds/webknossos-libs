@@ -18,6 +18,7 @@ in the _Changed_ sections.
 ### Added
 
 ### Changed
+- Allow `python-dotenv` 1.2.2 and newer 1.x versions instead of only 1.0.x. 1.2.2 fixes CVE-2026-28684. [#1587](https://github.com/scalableminds/webknossos-libs/pull/1587)
 
 ### Deprecated
 
