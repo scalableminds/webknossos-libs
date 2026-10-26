@@ -11,19 +11,28 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.3...HEAD)
 
 ### Breaking Changes
 
 ### Added
 
 ### Changed
-- Allow `python-dotenv` 1.2.2 and newer 1.x versions instead of only 1.0.x. 1.2.2 fixes CVE-2026-28684. [#1587](https://github.com/scalableminds/webknossos-libs/pull/1587)
 
 ### Deprecated
 
 ### Fixed
+
+
+## [4.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.3) - 2026-10-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.2...v4.3.3)
+
+### Changed
+- Allow `python-dotenv` 1.2.2 and newer 1.x versions instead of only 1.0.x. 1.2.2 fixes CVE-2026-28684. [#1587](https://github.com/scalableminds/webknossos-libs/pull/1587)
+
+### Fixed
 - Fixed that opening S3 arrays with explicit credentials from several threads at once could fail with `Failed to create credentials provider ... AWS_ERROR_STRING_MATCH_NOT_FOUND`. Each set of credentials now gets its own temporary credentials file, which is written once and never changed. [#1586](https://github.com/scalableminds/webknossos-libs/pull/1586)
+
 
 
 ## [4.3.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.2) - 2026-10-21
