@@ -360,13 +360,22 @@ def main(
                     f"Reading attachment '{apply_mapping}' via proxy_path, "
                     "because it is not readable via direct_path from this machine."
                 )
-                named = next(
-                    a
-                    for a in seg_layer.attachments.with_access_mode(
-                        RemoteAccessMode.PROXY_PATH
-                    ).agglomerates
-                    if a.name == apply_mapping
+                proxy_named = next(
+                    (
+                        a
+                        for a in seg_layer.attachments.with_access_mode(
+                            RemoteAccessMode.PROXY_PATH
+                        ).agglomerates
+                        if a.name == apply_mapping
+                    ),
+                    None,
                 )
+                if proxy_named is None:
+                    raise ValueError(
+                        f"Agglomerate attachment '{apply_mapping}' is not readable via "
+                        "direct_path from this machine and is not available via proxy_path."
+                    )
+                named = proxy_named
             mapping_path = named.path / "segment_to_agglomerate"
 
     if mag_view is None:

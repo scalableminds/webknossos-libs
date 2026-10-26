@@ -1,5 +1,6 @@
 """This module contains tests for the WEBKNOSSOS CLI."""
 
+import importlib
 import json
 import os
 import random
@@ -604,11 +605,16 @@ def test_convert_upload_downsample_auto_modes(
 ) -> None:
     """Tests convert --upload, downsample and export-as-tiff without explicit transfer and access modes."""
     if not storage_accessible:
-        for module in [
+        for module_name in [
             "webknossos.dataset.dataset",
             "webknossos.dataset.transfer_mode",
         ]:
-            monkeypatch.setattr(f"{module}.is_path_writable", lambda _path: False)
+            # Not a dotted path, since `webknossos.dataset.dataset` is shadowed by the class
+            monkeypatch.setattr(
+                importlib.import_module(module_name),
+                "is_path_writable",
+                lambda _path: False,
+            )
         monkeypatch.setattr(
             "webknossos.cli._utils.is_path_readable", lambda _path: False
         )

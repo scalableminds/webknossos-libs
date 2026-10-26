@@ -1,3 +1,4 @@
+import importlib
 import itertools
 import pickle
 from collections.abc import Iterable, Iterator
@@ -174,11 +175,16 @@ def test_remote_dataset_upload_and_add_mag_as_copy_auto(
     storage_writable: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     if not storage_writable:
-        for module in [
+        for module_name in [
             "webknossos.dataset.dataset",
             "webknossos.dataset.transfer_mode",
         ]:
-            monkeypatch.setattr(f"{module}.is_path_writable", lambda _path: False)
+            # Not a dotted path, since `webknossos.dataset.dataset` is shadowed by the class
+            monkeypatch.setattr(
+                importlib.import_module(module_name),
+                "is_path_writable",
+                lambda _path: False,
+            )
 
     ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_auto_src")
     source_ds = Dataset(ds_path, voxel_size=(2, 2, 1))
@@ -193,14 +199,12 @@ def test_remote_dataset_upload_and_add_mag_as_copy_auto(
     )
 
     dataset_name = f"test_remote_dataset_upload_auto_{storage_writable}"
-    datasets_before = Dataset.get_remote_datasets(name=dataset_name)
+    datasets_before = RemoteDataset.list(name=dataset_name)
     remote_ds = source_ds.upload(
         new_dataset_name=dataset_name, transfer_mode=TransferMode.AUTO
     )
     # A fallback to http must not leave the reserved dataset behind
-    assert len(Dataset.get_remote_datasets(name=dataset_name)) == (
-        len(datasets_before) + 1
-    )
+    assert len(RemoteDataset.list(name=dataset_name)) == (len(datasets_before) + 1)
     remote_ds = reopen_dataset(remote_ds)
     np.testing.assert_array_equal(
         remote_ds.get_layer("color").get_mag(1).read(), source_mag.read()
