@@ -111,7 +111,7 @@ def export_tiff_slice_batch(
         mapping_array = open_zarr3_array(mapping_path, context=ts_context)
 
     if tiling_size is None:
-        tiff_data = view.read()
+        tiff_data = view.read_cxyz()
         if mapping_array is not None:
             tiff_data = _apply_mapping(tiff_data, mapping_array)
     else:
@@ -120,7 +120,7 @@ def export_tiff_slice_batch(
             tiling_size[1] * ceil(tiff_bbox.size.y / tiling_size[1]),
             tiff_bbox.size.z,
         )
-        tiff_data = view.read()
+        tiff_data = view.read_cxyz()
         if mapping_array is not None:
             tiff_data = _apply_mapping(tiff_data, mapping_array)
         padded_tiff_data = np.zeros(

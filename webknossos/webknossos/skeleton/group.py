@@ -100,6 +100,7 @@ class Group:
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
             self._id = self._enforced_id
+            self._skeleton._element_id_generator.register(self._id)
         else:
             self._id = self._skeleton._element_id_generator.__next__()
 
@@ -164,6 +165,8 @@ class Group:
                 metadata=metadata,
                 is_visible=is_visible,
             )
+            if _enforced_id is not None:
+                self._skeleton._element_id_generator.register(_enforced_id)
             self._child_trees.add(new_tree)
 
             return new_tree
@@ -180,14 +183,81 @@ class Group:
                 )
                 new_tree._id = _enforced_id
 
-            if self.has_tree_id(tree.id):
-                new_tree._id = self._skeleton._element_id_generator.__next__()
+            id_generator = self._skeleton._element_id_generator
+            if self._skeleton.has_tree_id(new_tree.id):
+                new_tree._id = id_generator.__next__()
+            else:
+                id_generator.register(new_tree.id)
+
+            used_node_ids = {
+                node.id
+                for existing_tree in self._skeleton.flattened_trees()
+                for node in existing_tree.nodes
+            }
+            for node in new_tree.nodes:
+                id_generator.register(node.id)
+            colliding = [node.id for node in new_tree.nodes if node.id in used_node_ids]
+            if colliding:
+                new_tree._reassign_node_ids(
+                    {old_id: id_generator.__next__() for old_id in colliding}
+                )
 
             new_tree.group = self
-            new_tree.skeleton = self._skeleton
+            new_tree._skeleton = self._skeleton
+            for node in new_tree.nodes:
+                node._skeleton = self._skeleton
 
             self._child_trees.add(new_tree)
             return new_tree
+
+    def add_skeleton(self, skeleton: "Skeleton") -> None:
+        """Copies all groups, trees, nodes and edges of another skeleton into this group.
+
+        The group hierarchy of `skeleton` is preserved below this group. All copied
+        groups, trees and nodes get fresh ids, so skeletons with colliding ids
+        (e.g. loaded from different NML files) can be merged into one skeleton.
+        Node attributes (e.g. comments, branchpoints), edges and tree properties
+        (name, color, visibility, metadata) are kept. `skeleton` is not modified.
+
+        Args:
+            skeleton: The skeleton to copy from. Must not be the skeleton of this group.
+
+        Raises:
+            ValueError: If `skeleton` is the skeleton this group belongs to.
+
+        Examples:
+            ```python
+            annotation = wk.Annotation(name="merged", dataset_name="ds", voxel_size=(11, 11, 24))
+            for path in nml_paths:
+                group = annotation.skeleton.add_group(path.stem)
+                group.add_skeleton(wk.Annotation.load(path).skeleton)
+            ```
+        """
+        if skeleton is self._skeleton:
+            raise ValueError("Cannot add a skeleton to itself.")
+
+        def copy_into(source: "Group", target: "Group") -> None:
+            for source_tree in list(source.trees):
+                new_tree = target.add_tree(
+                    source_tree.name,
+                    color=source_tree.color,
+                    metadata=dict(source_tree.metadata),
+                    is_visible=source_tree.is_visible,
+                )
+                new_nodes = {
+                    node.id: new_tree.add_node(**node.get_dict())
+                    for node in source_tree.nodes
+                }
+                for source_node, target_node, edge_data in source_tree.edges(data=True):
+                    new_tree.add_edge(
+                        new_nodes[source_node.id],
+                        new_nodes[target_node.id],
+                        **edge_data,
+                    )
+            for source_group in list(source.groups):
+                copy_into(source_group, target.add_group(source_group.name))
+
+        copy_into(skeleton, self)
 
     def remove_tree_by_id(self, tree_id: int) -> None:
         self._child_trees.remove(self.get_tree_by_id(tree_id))

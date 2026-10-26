@@ -349,6 +349,23 @@ class Tree(nx.Graph):
         super().add_node(node)
         return node
 
+    def _reassign_node_ids(self, new_ids: dict[int, int]) -> None:
+        """Changes node ids according to `new_ids` (old id -> new id), keeping edges."""
+        nodes = list(self.nodes)
+        attrs = {node.id: dict(self._node._id_to_attrs[node.id]) for node in nodes}
+        edges = [(u.id, v.id, dict(data)) for u, v, data in self.edges(data=True)]
+        graph_attrs = dict(self.graph)
+        self.clear()
+        self.graph.update(graph_attrs)
+        by_old_id = {}
+        for node in nodes:
+            old_id = node.id
+            node._id = new_ids.get(old_id, old_id)
+            by_old_id[old_id] = node
+            super().add_node(node, **attrs[old_id])
+        for source, target, data in edges:
+            self.add_edge(by_old_id[source], by_old_id[target], **data)
+
     def get_max_node_id(self) -> int:
         """Get the highest node ID in the tree.
 

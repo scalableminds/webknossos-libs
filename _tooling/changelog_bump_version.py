@@ -35,7 +35,7 @@ last_release_idx = next(
 # Clean up unreleased notes (i.e. remove empty sections)
 released_notes = "\n".join(changelog_lines[(unreleased_idx + 2) : last_release_idx])
 
-release_section_fragments = re.split("\n### (.*)\n", released_notes, re.MULTILINE)
+release_section_fragments = re.split("\n### (.*)\n", released_notes, flags=re.MULTILINE)
 release_notes_intro = release_section_fragments[0]
 release_sections = list(
     zip(release_section_fragments[1::2], release_section_fragments[2::2])
@@ -64,6 +64,8 @@ lines_to_insert = [
     "### Added",
     "",
     "### Changed",
+    "",
+    "### Deprecated",
     "",
     "### Fixed",
     "",

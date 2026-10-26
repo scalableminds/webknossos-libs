@@ -43,6 +43,9 @@ All other SLURM resource keys (e.g. `mem`, `time`, `partition`) are supported ju
 
 ## KUBERNETES
 
+!!! warning
+    The `kubernetes` strategy is deprecated and will be removed in the next major release.
+
 The `kubernetes` strategy allows tasks to execute within a Kubernetes cluster. It is ideal for containerized workflows and scalable orchestration. This strategy handles job creation and resource allocation automatically based on your Kubernetes configuration.
 
 ## MULTIPROCESSING

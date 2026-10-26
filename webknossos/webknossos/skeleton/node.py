@@ -73,6 +73,7 @@ class Node:
     def __attrs_post_init__(self) -> None:
         if self._enforced_id is not None:
             self._id = self._enforced_id
+            self._skeleton._element_id_generator.register(self._id)
         else:
             self._id = self._skeleton._element_id_generator.__next__()
 

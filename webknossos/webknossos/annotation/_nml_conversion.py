@@ -215,7 +215,7 @@ def annotation_to_nml(
     volumes = [
         wknml.Volume(
             id=volume.id,
-            location=volume._default_zip_name(),
+            location=volume._default_zip_name() if volume._has_volume_data() else None,
             fallback_layer=volume.fallback_layer_name,
             name=volume.name,
             segments=[

@@ -8,6 +8,12 @@ import pytest
 from upath import UPath
 
 from tests.constants import TESTDATA_DIR, TESTOUTPUT_DIR
+from tests.dataset._dataset_helpers import (
+    GENERIC_DIMENSION_NAMES,
+    generic_dimension_names_layer,
+    write_layers_to_properties,
+    write_zarr3_array,
+)
 from webknossos import (
     COLOR_CATEGORY,
     AffineCoordinateTransformation,
@@ -412,6 +418,80 @@ def test_explored_remote_access_modes_return_same_data() -> None:
                 )
     finally:
         remote_dataset.delete()
+
+
+def test_generic_dimension_names_all_access_modes(tmp_upath: UPath) -> None:
+    """The proxy path serves the original arrays, so it also has to use the
+    explicit `axisOrder` of arrays with generic dimension names."""
+    data = np.random.default_rng(0).integers(0, 65535, (1, 3, 8, 32, 64), "uint16")
+    dataset_path = tmp_upath / "generic_dimension_names"
+    Dataset(dataset_path, voxel_size=(11, 11, 25))
+    layers = []
+    for channel_index in range(3):
+        layer_properties = generic_dimension_names_layer(
+            f"channel_{channel_index}", channel_index
+        )
+        write_zarr3_array(
+            dataset_path / layer_properties["name"] / "1",
+            data,
+            GENERIC_DIMENSION_NAMES,
+        )
+        layers.append(layer_properties)
+    local_dataset = write_layers_to_properties(dataset_path, layers)
+    remote_dataset = local_dataset.upload(
+        new_dataset_name="test_generic_dimension_names_all_access_modes"
+    )
+    try:
+        for channel_index in range(3):
+            layer = remote_dataset.get_layer(f"channel_{channel_index}")
+            # (t, c, z, y, x) -> (c, x, y, z)
+            expected = data[0, channel_index : channel_index + 1].transpose(0, 3, 2, 1)
+            for access_mode in RemoteAccessMode:
+                mag = layer.get_mag(1, access_mode=access_mode)
+                np.testing.assert_array_equal(
+                    mag.read_cxyz(),
+                    expected,
+                    err_msg=f"{layer.name} via {access_mode.value}",
+                )
+    finally:
+        remote_dataset.delete()
+
+
+def test_zarr_streaming_additional_axes_info(tmp_upath: UPath) -> None:
+    """Zarr streaming serves arrays with additional axes without dimension names,
+    so their axes have to come from the streamed `axisOrder`."""
+    data = np.random.default_rng(0).integers(0, 65535, (1, 3, 8, 32, 64), "uint16")
+    dataset_path = tmp_upath / "zarr_streaming_additional_axes"
+    Dataset(dataset_path, voxel_size=(11, 11, 25))
+    layer_properties = generic_dimension_names_layer("color", channel_index=0)
+    write_zarr3_array(
+        dataset_path / layer_properties["name"] / "1",
+        data,
+        GENERIC_DIMENSION_NAMES,
+    )
+    local_dataset = write_layers_to_properties(dataset_path, [layer_properties])
+    remote_dataset = local_dataset.upload(
+        new_dataset_name="test_zarr_streaming_additional_axes_info"
+    )
+    try:
+        mag = remote_dataset.get_layer("color").get_mag(
+            1, access_mode=RemoteAccessMode.ZARR_STREAMING
+        )
+        assert mag.info.bounding_box.axes == ("c", "t", "x", "y", "z")
+        np.testing.assert_array_equal(
+            mag.read(absolute_bounding_box=mag.bounding_box),
+            # (t, c, z, y, x) -> (c, t, x, y, z)
+            data[:, 0:1].transpose(1, 0, 4, 3, 2),
+        )
+    finally:
+        remote_dataset.delete()
+
+
+def test_generate_url() -> None:
+    remote_dataset = RemoteDataset.open("l4_sample", organization_id="Organization_X")
+    base_url = f"{remote_dataset.url}/view"
+    assert remote_dataset.generate_url() == base_url
+    assert remote_dataset.generate_url(position=(1, 2, 3)) == f"{base_url}#1,2,3,0,1"
 
 
 def test_per_mag_access_mode() -> None:

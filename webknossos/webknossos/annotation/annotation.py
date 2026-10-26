@@ -71,6 +71,7 @@ from ..client.api_client.models import (
 from ..dataset import (
     Dataset,
     Layer,
+    RemoteLayer,
     SegmentationLayer,
 )
 from ..dataset_properties import (
@@ -89,6 +90,7 @@ from ..geometry.vec3_float import as_vec3_float_or_none
 from ..proofreading.agglomerate_graph_data import AgglomerateGraphData
 from ..skeleton import Skeleton
 from ..utils import (
+    _position_fragment,
     time_since_epoch_in_ms,
     warn_deprecated,
 )
@@ -312,6 +314,30 @@ class Annotation:
         self.skeleton.description = description
 
     @classmethod
+    def id_from_url(cls, annotation_id_or_url: str) -> str:
+        """Returns the id of an annotation URL, or the argument if it is no annotation URL.
+
+        Does not contact the server. Short links are not resolved.
+
+        Args:
+            annotation_id_or_url: An annotation id or an annotation URL, with or without
+                annotation type segment and with or without query or fragment.
+
+        Returns:
+            str: The annotation id.
+
+        Examples:
+            ```python
+            Annotation.id_from_url("https://webknossos.org/annotations/6114d9410100009f0096c640#1,2,3,0,1")
+            # "6114d9410100009f0096c640"
+            Annotation.id_from_url("6114d9410100009f0096c640")
+            # "6114d9410100009f0096c640"
+            ```
+        """
+        match = re.match(_ANNOTATION_URL_REGEX, annotation_id_or_url)
+        return annotation_id_or_url if match is None else match.group("annotation_id")
+
+    @classmethod
     def load(cls, annotation_path: str | PathLike | UPath) -> "Annotation":
         """Loads an annotation from a file.
 
@@ -414,16 +440,14 @@ class Annotation:
         annotation_id_or_url = resolve_short_link(annotation_id_or_url)
 
         match = re.match(_ANNOTATION_URL_REGEX, annotation_id_or_url)
+        annotation_id = cls.id_from_url(annotation_id_or_url)
         if match is not None:
             assert webknossos_url is None, (
                 "When Annotation.download() is be called with an annotation url, "
                 + "e.g. Annotation.download('https://webknossos.org/annotations/6114d9410100009f0096c640'), "
                 + "annotation_type and webknossos_url must not be set."
             )
-            annotation_id = match.group("annotation_id")
             webknossos_url = match.group("webknossos_url")
-        else:
-            annotation_id = annotation_id_or_url
 
         if webknossos_url is not None:
             webknossos_url = webknossos_url.rstrip("/")
@@ -668,9 +692,16 @@ class Annotation:
             f"There must be exactly one nml file in the zip-file, but found {len(nml_paths)}."
         )
         with nml_paths[0].open(mode="rb") as nml_f:
-            return cls._load_from_nml(
+            annotation = cls._load_from_nml(
                 nml_paths[0].stem, nml_f, possible_volume_paths=paths
             )
+        # Volume layer data is read lazily from the zip, so it can only be closed if unused.
+        if f is not content and all(
+            volume_layer.zip is None for volume_layer in annotation._volume_layers
+        ):
+            zipfile.close()
+            f.close()
+        return annotation
 
     def save(self, path: str | PathLike | UPath) -> None:
         """Saves the annotation to a file.
@@ -894,17 +925,13 @@ class Annotation:
             nml_str = buffer.getvalue().decode("utf-8")
         zipfile.writestr(self.name + ".nml", nml_str)
         for volume_layer in self._volume_layers:
-            if volume_layer.zip is None:
-                with BytesIO() as buffer:
-                    with ZipFile(buffer, mode="a"):
-                        pass
-                    layer_content = buffer.getvalue()
-            else:
-                layer_content = volume_layer.zip.read_bytes()
-            zipfile.writestr(
-                volume_layer._default_zip_name(),
-                layer_content,
-            )
+            # WEBKNOSSOS rejects data zips without any buckets.
+            if volume_layer._has_volume_data():
+                assert volume_layer.zip is not None
+                zipfile.writestr(
+                    volume_layer._default_zip_name(),
+                    volume_layer.zip.read_bytes(),
+                )
 
     def get_remote_annotation_dataset(self) -> RemoteDataset:
         """Returns a streamed dataset of the annotation from WEBKNOSSOS.
@@ -1018,7 +1045,7 @@ class Annotation:
         self,
         name: str,
         dtype: DTypeLike,
-        fallback_layer: Layer | str | None = None,
+        fallback_layer: Layer | RemoteLayer | str | None = None,
         volume_layer_id: int | None = None,
     ) -> VolumeLayer:
         """Adds a new volume layer to the annotation.
@@ -1030,7 +1057,7 @@ class Annotation:
             name: Name of the volume layer.
             dtype: Datatype of the volume layer.
             fallback_layer: Optional reference to existing segmentation layer in WEBKNOSSOS.
-                          Can be Layer instance or layer name.
+                          Can be a Layer or RemoteLayer instance or a layer name.
             volume_layer_id: Optional explicit ID for the layer.
                            Auto-generated if not provided.
 
@@ -1059,7 +1086,7 @@ class Annotation:
                 f"volume layer id {volume_layer_id} already exists in annotation {self.name}."
             )
         fallback_layer_name: str | None
-        if isinstance(fallback_layer, Layer):
+        if isinstance(fallback_layer, (Layer, RemoteLayer)):
             assert fallback_layer.category == SEGMENTATION_CATEGORY, (
                 "The fallback layer must be a segmentation layer."
             )
@@ -1356,7 +1383,8 @@ _COMPOUND_ANNOTATION_TYPES = [
 _ANNOTATION_URL_REGEX = re.compile(
     r"^(?P<webknossos_url>https?://.*)/annotations/"
     + rf"((?P<annotation_type>{'|'.join(i.value for i in AnnotationType.__members__.values())})/)?"
-    + r"(?P<annotation_id>[0-9A-Fa-f]*)"
+    + r"(?P<annotation_id>[0-9A-Fa-f]+)"
+    + r"(?:[?#].*)?$"
 )
 
 
@@ -1391,15 +1419,44 @@ class RemoteAnnotation(Annotation):
         self.task_bounding_box = task_bounding_box
         self.user_bounding_boxes = user_bounding_boxes or []
         self.metadata = metadata
+        from ..client.context import _get_context
+
+        self._context = _get_context()
 
     def __repr__(self) -> str:
         return f"RemoteAnnotation({self.url})"
 
     @property
     def url(self) -> str:
-        from webknossos.client.context import _get_context
+        """URL to access this annotation in WEBKNOSSOS.
 
-        return f"{_get_context().url}/annotations/{self.annotation_id}"
+        Examples:
+            ```python
+            print(annotation.url)  # 'https://webknossos.org/annotations/6114d9410100009f0096c640'
+            ```
+        """
+        return self.generate_url()
+
+    def generate_url(self, position: Vec3IntLike | None = None) -> str:
+        """Returns the URL of this annotation, optionally opening at `position`.
+
+        Args:
+            position: Optional position (in mag 1) at which the annotation opens.
+
+        Returns:
+            str: The annotation URL.
+
+        Examples:
+            ```python
+            annotation.generate_url(position=(1, 2, 3))
+            # "https://webknossos.org/annotations/6114d9410100009f0096c640#1,2,3,0,1"
+            ```
+        """
+        assert self.annotation_id is not None, "Annotation ID must be set."
+        return (
+            f"{self._context.url.rstrip('/')}/annotations/{self.annotation_id}"
+            f"{_position_fragment(position)}"
+        )
 
     @property
     def name(self) -> str:

@@ -60,7 +60,7 @@ class KubernetesExecutor(ClusterExecutor):
             exit()
 
         warn(
-            "Kubernetes support is deprecated and will be removed in a future version.",
+            "The Kubernetes executor is deprecated and will be removed in the next major release of cluster_tools.",
             category=DeprecationWarning,
             stacklevel=2,
         )

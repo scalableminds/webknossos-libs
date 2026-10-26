@@ -152,6 +152,7 @@ nav:
         - Layers and Settings: webknossos/ui/layers.md
         - Object Info and Lists: webknossos/ui/object_info.md
         - Status Bar: webknossos/ui/status_bar.md
+        - Context Menu: webknossos/ui/context_menu.md
         - Keyboard Shortcuts: webknossos/ui/keyboard_shortcuts.md
       - Volume Annotations:
         - webknossos/volume_annotation/index.md

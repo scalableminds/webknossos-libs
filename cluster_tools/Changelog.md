@@ -3,11 +3,12 @@
 All notable changes to the cluster_tools library are documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/) `MAJOR.MINOR.PATCH`.
-For upgrade instructions, please check the respective *Breaking Changes* sections.
+and this project uses `MAJOR.MINOR.PATCH` version numbers as described in the [Stability Policy](https://docs.webknossos.org/webknossos-py/stability_policy.html).
+For upgrade instructions, please check the respective _Breaking Changes_ sections and the entries starting with **Breaking:**
+in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.1...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.3...HEAD)
 
 ### Breaking Changes
 
@@ -15,7 +16,61 @@ For upgrade instructions, please check the respective *Breaking Changes* section
 
 ### Changed
 
+### Deprecated
+
 ### Fixed
+
+
+## [4.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.3) - 2026-10-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.2...v4.3.3)
+
+
+## [4.3.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.2) - 2026-10-21
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.1...v4.3.2)
+
+
+## [4.3.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.1) - 2026-10-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.0...v4.3.1)
+
+
+## [4.3.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.0) - 2026-10-19
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.5...v4.3.0)
+
+### Added
+- Added the `OutputStore` interface (with `FileOutputStore` as the default) that executors use to persist job outputs and, for cluster executors, to poll for job completion and read results back. Passing a custom store via `get_executor(..., output_store=...)` allows storing results in non-filesystem storage (e.g. a database), in which case no output pickle files are written at all. Output locations are selected with `map_to_futures(..., output_key_getter=...)` and `submit(..., __cfut_options={"output_key": ...})`; `output_pickle_path_getter`/`output_pickle_path` are kept as deprecated aliases for the file store. [#1547](https://github.com/scalableminds/webknossos-libs/pull/1547)
+
+### Changed
+- Cluster executors delete transient outputs (jobs without a custom output key) right after reading the result or the error, instead of keeping them until executor shutdown. Failed ones were not deleted at all before. [#1547](https://github.com/scalableminds/webknossos-libs/pull/1547)
+
+### Deprecated
+- Deprecated `map_to_futures(..., output_pickle_path_getter=...)` and `__cfut_options={"output_pickle_path": ...}` in favor of `output_key_getter` and `output_key`. [#1547](https://github.com/scalableminds/webknossos-libs/pull/1547)
+
+
+## [4.2.5](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.5) - 2026-10-14
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.4...v4.2.5)
+
+
+## [4.2.4](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.4) - 2026-10-13
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.3...v4.2.4)
+
+
+## [4.2.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.3) - 2026-10-12
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.2...v4.2.3)
+
+### Deprecated
+- The `dask`, `kubernetes` and `pbs` executors are deprecated. They will be removed in the next major release. [#1565](https://github.com/scalableminds/webknossos-libs/pull/1565)
+
+
+## [4.2.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.2) - 2026-10-07
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.1...v4.2.2)
+
+
+## [4.2.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.1) - 2026-10-06
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.2.0...v4.2.1)
+
+
+## [4.2.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.2.0) - 2026-10-05
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.1.1...v4.2.0)
 
 
 ## [4.1.1](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.1.1) - 2026-09-22

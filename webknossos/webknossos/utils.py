@@ -16,8 +16,9 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from os import PathLike
 from shutil import copyfileobj, move
-from threading import Thread
+from threading import Thread, current_thread, main_thread
 from typing import (
+    TYPE_CHECKING,
     Any,
     Protocol,
     TypeGuard,
@@ -33,6 +34,9 @@ from packaging.version import InvalidVersion, Version
 from rich.progress import Progress
 from upath import UPath
 from upath.implementations.local import PosixUPath, WindowsUPath
+
+if TYPE_CHECKING:
+    from webknossos.geometry import Vec3IntLike
 
 logger = logging.getLogger(__name__)
 
@@ -268,6 +272,14 @@ def add_verbose_flag(parser: argparse.ArgumentParser) -> None:
     parser.set_defaults(verbose=False)
 
 
+def is_rich_progress_disabled() -> bool:
+    """rich live displays are process-global and not thread-safe: only one may be
+    active per console (a second one raises `rich.errors.LiveError`) and they
+    redirect `sys.stdout`. Therefore, progress bars are only rendered from the
+    main thread."""
+    return current_thread() is not main_thread()
+
+
 def get_rich_progress() -> Progress:
     return Progress(
         "[progress.description]{task.description:<20}",
@@ -276,6 +288,7 @@ def get_rich_progress() -> Progress:
         rich.progress.TimeElapsedColumn(),
         "|",
         rich.progress.TimeRemainingColumn(),
+        disable=is_rich_progress_disabled(),
     )
 
 
@@ -766,3 +779,12 @@ class WkImportError(ImportError):
             custom_message or f"Cannot import {missing_package}. "
         ) + f"Please install it e.g. using `pip install webknossos[{extras}]`."
         super().__init__(msg)
+
+
+def _position_fragment(position: "Vec3IntLike | None") -> str:
+    """Returns the URL fragment that opens WEBKNOSSOS at `position` (mag 1)."""
+    from webknossos.geometry import Vec3Int
+
+    if position is None:
+        return ""
+    return "#{},{},{},0,1".format(*Vec3Int(position).to_list())

@@ -17,7 +17,7 @@ from webknossos.utils import (
     warn_deprecated,
 )
 
-from ....dataset_properties import DataFormat, MagViewProperties
+from ....dataset_properties import DataFormat, LayerProperties, MagViewProperties
 from ....geometry import (
     Mag,
     NDBoundingBox,
@@ -202,6 +202,7 @@ class MagView(View, Generic[LayerTypeT]):
             read_only=read_only,
         )
         self._layer = layer
+        self._cached_dimension_names: tuple[str, ...] | None = None
 
     def _ensure_writable(self) -> None:
         if self._read_only:
@@ -240,6 +241,29 @@ class MagView(View, Generic[LayerTypeT]):
             int: Number of channels
         """
         return self.layer.num_channels
+
+    def _get_dimension_names(self) -> tuple[str, ...] | None:
+        # An explicit `axisOrder` takes precedence over the array's metadata.
+        # The bounding box's axes are sorted by their index in the array.
+        if self._cached_dimension_names is None:
+            mag_properties = self._find_properties()
+            if mag_properties is None or mag_properties.axis_order is None:
+                return None
+            self._cached_dimension_names = self.normalized_bounding_box.axes
+        return self._cached_dimension_names
+
+    def _get_layer_properties(self) -> LayerProperties:
+        return self.layer._properties
+
+    def _find_properties(self) -> MagViewProperties | None:
+        return next(
+            (
+                mag_property
+                for mag_property in self._get_layer_properties().mags
+                if mag_property.mag == self._mag
+            ),
+            None,
+        )
 
     # Own methods:
 
@@ -395,6 +419,7 @@ class MagView(View, Generic[LayerTypeT]):
             rel_mag1_bbox=relative_bounding_box,
             current_mag_size=data_shape,
         )
+        self._check_write_shape(data, mag1_bbox)
 
         # Only update the layer's bbox if we are actually larger
         # than the mag-aligned, rounded up bbox (self.bounding_box):
@@ -872,11 +897,10 @@ class MagView(View, Generic[LayerTypeT]):
             MagViewProperties: Properties object for this magnification level.
 
         """
-        return next(
-            mag_property
-            for mag_property in self.layer._properties.mags
-            if mag_property.mag == self._mag
-        )
+        mag_properties = self._find_properties()
+        if mag_properties is None:
+            raise KeyError(f"No properties found for mag {self._mag}.")
+        return mag_properties
 
     def __repr__(self) -> str:
         return f"MagView(name={repr(self.name)}, bounding_box={self.bounding_box})"

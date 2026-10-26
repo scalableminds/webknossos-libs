@@ -21,6 +21,10 @@ class _Counter:
         self._n += 1
         return n
 
+    def register(self, used_id: int) -> None:
+        """Ensures that `used_id` is never handed out by this counter."""
+        self._n = max(self._n, used_id + 1)
+
     def __iter__(self) -> Iterator[int]:
         return self
 

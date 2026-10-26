@@ -30,6 +30,7 @@ from webknossos import (
     DataFormat,
     Dataset,
     Mag,
+    NDBoundingBox,
     RemoteAccessMode,
     RemoteDataset,
 )
@@ -731,6 +732,46 @@ def test_export_tiff_stack(tmp_upath: UPath) -> None:
             correct_image,
             test_image,
             f"The tiff file {tiff_path} that was written is not equal to the original wkw_file.",
+        )
+
+
+def test_export_tiff_stack_nd_layer(tmp_upath: UPath) -> None:
+    """Tests export of a layer whose array is stored as (c, t, x, y, z)."""
+
+    source_path = tmp_upath / "nd_dataset"
+    destination_path = tmp_upath / "nd_dataset_tiff"
+    nd_bbox = NDBoundingBox(
+        (0, 0, 0, 0, 0),
+        (1, 1, 16, 16, 8),
+        axes=("c", "t", "x", "y", "z"),
+        index=(0, 1, 2, 3, 4),
+    )
+    data = np.random.default_rng(0).integers(0, 255, (1, 1, 16, 16, 8), dtype="uint8")
+    layer = Dataset(source_path, voxel_size=(11, 11, 25)).add_layer(
+        "color", "color", dtype="uint8", data_format="zarr3", bounding_box=nd_bbox
+    )
+    layer.add_mag(1).write(data=data, absolute_bounding_box=nd_bbox)
+    assert layer.get_mag(1).info.bounding_box.axes == ("c", "t", "x", "y", "z")
+
+    result = runner.invoke(
+        app,
+        [
+            "export-as-tiff",
+            "--layer-name",
+            "color",
+            "--bbox",
+            "2,4,1,8,10,5",
+            str(source_path),
+            str(destination_path),
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout
+    for slice_index in range(5):
+        with (destination_path / _make_tiff_name("", slice_index)).open("rb") as f:
+            test_image = np.array(Image.open(f)).T
+        np.testing.assert_array_equal(
+            test_image, data[0, 0, 2:10, 4:14, 1 + slice_index]
         )
 
 

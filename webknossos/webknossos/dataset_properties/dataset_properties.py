@@ -79,6 +79,11 @@ class MagViewProperties:
     Could be None for older datasource-proterties.json files.
     """
     cube_length: int | None = None
+    axis_order: dict[str, int] | None = attr.field(default=None, eq=False)
+    """
+    Index of each axis in the array, as read from the datasource-properties.json.
+    None if not set there. On save, it is derived from the layer's bounding box.
+    """
 
 
 @attr.define

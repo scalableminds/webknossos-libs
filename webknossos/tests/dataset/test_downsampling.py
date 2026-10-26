@@ -622,7 +622,7 @@ def test_downsample_2d(tmp_upath: UPath) -> None:
 
 
 def test_downsample_nd_dataset(tmp_upath: UPath) -> None:
-    source_path = download_wklibs_sample_archive("4D") / "4D_series_zarr3"
+    source_path = download_wklibs_sample_archive("4D_v2") / "4D_series_zarr3"
     target_path = tmp_upath / "downsample_test"
 
     source_ds = Dataset.open(source_path)
@@ -938,3 +938,34 @@ def test_guided_downsampling(data_format: DataFormat, output_path: UPath) -> Non
         assert (output_ds_path / "color" / "4-4-2" / "header.wkw").exists()
 
     assure_exported_properties(input_dataset)
+
+
+@pytest.mark.parametrize(
+    "interpolation_mode", ["median", "mode", "nearest", "bilinear", "max", "min"]
+)
+def test_downsampling_does_not_mix_in_data_outside_of_bbox(
+    tmp_upath: UPath, interpolation_mode: str
+) -> None:
+    # A thin layer in z whose bounding box is not aligned with the coarser mags in
+    # any axis. The area outside of the bounding box must not darken the coarse mags.
+    value = 200
+    bbox = BoundingBox((3, 5, 0), (250, 200, 7))
+    ds = Dataset(tmp_upath / "ds", voxel_size=(10, 10, 10))
+    layer = ds.add_layer("color", COLOR_CATEGORY, dtype="uint8", bounding_box=bbox)
+    layer.add_mag(1, chunk_shape=32, shard_shape=32).write(
+        np.full(bbox.size.to_tuple(), value, dtype="uint8"),
+        absolute_offset=bbox.topleft,
+    )
+
+    layer.downsample(
+        coarsest_mag=Mag(32),
+        interpolation_mode=interpolation_mode,
+        sampling_mode=SamplingModes.ISOTROPIC,
+        chunk_shape=32,
+        shard_shape=32,
+    )
+
+    assert set(layer.mags.keys()) == {Mag(m) for m in (1, 2, 4, 8, 16, 32)}
+    for mag, mag_view in layer.mags.items():
+        data = mag_view.read(absolute_bounding_box=bbox.align_with_mag(mag, ceil=True))
+        assert np.all(data == value), f"Mag {mag} contains values != {value}"
