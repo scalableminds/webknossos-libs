@@ -37,9 +37,10 @@ webknossos upload [OPTIONS] SOURCE
     If not provided, the root folder is used.
 
 - `--transfer-mode`  
-    The transfer mode to use. Available options are `http`, `copy`, `move+symlink`, `symlink`.  
-    `copy`, `move+symlink`, `symlink` are only for users with direct filesystem access to the WEBKNOSSOS datastore.
-    Default: `http`.
+    The transfer mode to use. Available options are `auto`, `http`, `copy`, `move+symlink`, `symlink`.  
+    `auto` reserves the storage path on WEBKNOSSOS and copies the data there if that path is writable from this machine (local file system, or S3 with matching `AWS_ACCESS_KEY_ID__<prefix>`/`AWS_SECRET_ACCESS_KEY__<prefix>` credentials), otherwise it uploads via `http`.  
+    `copy`, `move+symlink`, `symlink` require direct access to the WEBKNOSSOS storage.  
+    Default: `auto`.
 
 ### Environment Variables for Remote Paths
 

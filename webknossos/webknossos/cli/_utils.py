@@ -3,7 +3,7 @@
 import json
 import logging
 import re
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from contextlib import AbstractContextManager, contextmanager
 from enum import Enum
 from multiprocessing import cpu_count
@@ -19,13 +19,21 @@ from upath import UPath
 from ..annotation.annotation import _ANNOTATION_URL_REGEX, Annotation
 from ..client import webknossos_context
 from ..client._resolve_short_link import resolve_short_link
-from ..dataset import Dataset, RemoteDataset
+from ..dataset import (
+    Dataset,
+    Layer,
+    MagView,
+    RemoteDataset,
+    RemoteLayer,
+    RemoteMagView,
+    TransferMode,
+)
 from ..dataset.abstract_dataset import _DATASET_DEPRECATED_URL_REGEX, _DATASET_URL_REGEX
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_DATA_FORMAT
 from ..dataset.remote_dataset import RemoteAccessMode
 from ..dataset_properties import DataFormat, LengthUnit
-from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import is_fs_path
+from ..geometry import BoundingBox, Mag, MagLike, Vec3Int
+from ..utils import is_fs_path, is_path_readable
 
 logger = logging.getLogger(__name__)
 
@@ -237,7 +245,20 @@ AccessModeOption = Annotated[
     RemoteAccessMode | None,
     typer.Option(
         help="How to access the remote dataset's data. "
-        "Defaults to 'direct_path' when --transfer-mode is not 'http', otherwise 'proxy_path'.",
+        "By default, 'direct_path' is used if the storage is readable from this machine "
+        "(local file system or S3 with matching AWS_ACCESS_KEY_ID__<prefix> credentials), "
+        "otherwise 'proxy_path' if available, otherwise 'zarr_streaming'.",
+        rich_help_panel="WEBKNOSSOS context",
+    ),
+]
+
+TransferModeOption = Annotated[
+    TransferMode,
+    typer.Option(
+        help="How data is transferred to the WEBKNOSSOS storage. "
+        "'auto' copies the data if the storage path reserved by WEBKNOSSOS is writable "
+        "from this machine, otherwise it uploads via 'http'. "
+        "'copy', 'move+symlink' and 'symlink' require direct access to the WEBKNOSSOS storage.",
         rich_help_panel="WEBKNOSSOS context",
     ),
 ]
@@ -556,7 +577,10 @@ def open_dataset(
             if re.match(_DATASET_URL_REGEX, url) or re.match(
                 _DATASET_DEPRECATED_URL_REGEX, url
             ):
-                yield RemoteDataset.open(url, access_mode=access_mode)
+                # Mags are opened via a readable access mode later on, see `get_readable_mag`
+                yield RemoteDataset.open(
+                    url, access_mode=access_mode or RemoteAccessMode.DIRECT_PATH
+                )
             elif re.match(_ANNOTATION_URL_REGEX, url):
                 if not annotation_ok:
                     raise ValueError(
@@ -569,3 +593,50 @@ def open_dataset(
                 )
     else:
         yield Dataset.open(source)
+
+
+def pick_access_mode(
+    paths_by_access_mode: Mapping[RemoteAccessMode, UPath],
+) -> RemoteAccessMode:
+    """Picks the direct path if readable, otherwise the proxy path, otherwise zarr streaming."""
+    direct_path = paths_by_access_mode.get(RemoteAccessMode.DIRECT_PATH)
+    if direct_path is not None and is_path_readable(direct_path):
+        return RemoteAccessMode.DIRECT_PATH
+    if RemoteAccessMode.PROXY_PATH in paths_by_access_mode:
+        return RemoteAccessMode.PROXY_PATH
+    return RemoteAccessMode.ZARR_STREAMING
+
+
+def _readable_access_mode(mag_view: RemoteMagView) -> RemoteAccessMode:
+    if mag_view.access_mode == RemoteAccessMode.DIRECT_PATH and is_path_readable(
+        mag_view.path
+    ):
+        # Avoids fetching the other modes' properties
+        return RemoteAccessMode.DIRECT_PATH
+    access_mode = pick_access_mode(mag_view.paths_by_access_mode)
+    if access_mode != RemoteAccessMode.DIRECT_PATH:
+        logger.info(
+            f"Reading {mag_view.layer.name}/{mag_view.mag.to_layer_name()} via {access_mode.value}, "
+            + f"because it is not readable via {RemoteAccessMode.DIRECT_PATH.value} from this machine."
+        )
+    return access_mode
+
+
+def get_readable_mag(layer: Layer | RemoteLayer, mag: MagLike) -> MagView:
+    """Returns the mag of `layer`, accessed via the fastest access mode that is readable from this machine."""
+    mag_view = layer.get_mag(mag)
+    if not isinstance(mag_view, RemoteMagView):
+        return mag_view
+    access_mode = _readable_access_mode(mag_view)
+    if access_mode == mag_view.access_mode:
+        return mag_view
+    return mag_view.with_access_mode(access_mode)
+
+
+def get_readable_layer(layer: RemoteLayer, mag: MagLike) -> RemoteLayer:
+    """Returns `layer` with the dataset's default access mode set to the fastest
+    access mode in which `mag` is readable from this machine."""
+    access_mode = _readable_access_mode(layer.get_mag(mag))
+    if access_mode == layer.dataset.access_mode:
+        return layer
+    return layer.dataset.with_access_mode(access_mode).get_layer(layer.name)

@@ -82,7 +82,8 @@ webknossos export-as-tiff [OPTIONS] SOURCE TARGET
     Required when SOURCE is a WEBKNOSSOS server URL pointing to a non-public dataset.
 
 - `--access-mode`  
-    How to access the remote dataset's data. Available options are `direct_path`, `zarr_streaming`, `proxy_path`.
+    How to access the remote dataset's data. Available options are `direct_path`, `zarr_streaming`, `proxy_path`.  
+    By default, each mag is read via `direct_path` if its storage is readable from this machine (local file system, or S3 with matching `AWS_ACCESS_KEY_ID__<prefix>`/`AWS_SECRET_ACCESS_KEY__<prefix>` credentials), otherwise via `proxy_path` if available, otherwise via `zarr_streaming`.
 
 ## Example Commands
 

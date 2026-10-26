@@ -415,16 +415,7 @@ class RemoteAttachments(AbstractAttachments):
         client = _get_api_client()
 
         self._ensure_writable()
-        if transfer_mode == TransferMode.HTTP:
-            from webknossos.client._upload_dataset import upload_attachment
-
-            upload_attachment(
-                dataset_id=self._layer.dataset.dataset_id,
-                layer_name=self._layer.name,
-                attachment=attachment,
-                overwrite_pending=overwrite_pending,
-            )
-        else:
+        if transfer_mode != TransferMode.HTTP:
             new_path = enrich_path(
                 client.reserve_attachment_upload_to_path(
                     target_dataset_id,
@@ -435,8 +426,24 @@ class RemoteAttachments(AbstractAttachments):
                     common_storage_prefix,
                 )
             )
+            resolved_transfer_mode = transfer_mode.resolve(new_path)
+        else:
+            resolved_transfer_mode = transfer_mode
+
+        if resolved_transfer_mode == TransferMode.HTTP:
+            from webknossos.client._upload_dataset import upload_attachment
+
+            upload_attachment(
+                dataset_id=self._layer.dataset.dataset_id,
+                layer_name=self._layer.name,
+                attachment=attachment,
+                # Takes over a pending reservation from AUTO
+                overwrite_pending=overwrite_pending
+                or transfer_mode == TransferMode.AUTO,
+            )
+        else:
             # transfer to target dataset
-            transfer_mode.transfer(
+            resolved_transfer_mode.transfer(
                 attachment.path, new_path, progress_desc_label="attachment"
             )
 

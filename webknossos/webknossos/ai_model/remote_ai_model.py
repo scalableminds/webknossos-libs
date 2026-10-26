@@ -38,8 +38,10 @@ class RemoteAiModel:
         path_prefix: str | None,
         transfer_mode: TransferMode = TransferMode.COPY,
     ) -> "RemoteAiModel":
-        if transfer_mode == TransferMode.HTTP:
-            raise ValueError("HTTP transfer mode is not supported for this method")
+        if transfer_mode in (TransferMode.HTTP, TransferMode.AUTO):
+            raise ValueError(
+                f"{transfer_mode.value} transfer mode is not supported for this method"
+            )
 
         api_client = _get_context().api_client
 

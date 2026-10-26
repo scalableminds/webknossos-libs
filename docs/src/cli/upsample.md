@@ -41,12 +41,14 @@ webknossos upsample [OPTIONS] SOURCE
     Required when SOURCE is a WEBKNOSSOS server URL pointing to a non-public dataset.
 
 - `--transfer-mode`
-    Required for remote datasets. The transfer mode to use. Available options are `copy`, `move+symlink`, `symlink`, `http`.
-    `copy`, `move+symlink`, `symlink` require direct filesystem access to the WEBKNOSSOS datastore.
+    The transfer mode to use. Available options are `auto`, `http`, `copy`, `move+symlink`, `symlink`.
+    `auto` reserves the storage path on WEBKNOSSOS and copies the data there if that path is writable from this machine (local file system, or S3 with matching `AWS_ACCESS_KEY_ID__<prefix>`/`AWS_SECRET_ACCESS_KEY__<prefix>` credentials), otherwise it uploads via `http`.
+    `copy`, `move+symlink`, `symlink` require direct access to the WEBKNOSSOS storage.
+    Default: `auto`. Ignored for local datasets.
 
 - `--access-mode`
     How to access the remote dataset's data. Available options are `direct_path`, `zarr_streaming`, `proxy_path`.
-    Defaults to `direct_path` when `--transfer-mode` is not `http`, otherwise `proxy_path`.
+    By default, each mag is read via `direct_path` if its storage is readable from this machine (local file system, or S3 with matching `AWS_ACCESS_KEY_ID__<prefix>`/`AWS_SECRET_ACCESS_KEY__<prefix>` credentials), otherwise via `proxy_path` if available, otherwise via `zarr_streaming`.
 
 #### Executor options
 
@@ -84,17 +86,16 @@ webknossos upsample --from-mag 2 --distribution-strategy slurm --job-resources m
 
 ### Upsample a dataset on a WEBKNOSSOS server:
 ```bash
-webknossos upsample --from-mag 2 --token YOUR_TOKEN --transfer-mode copy https://webknossos.org/datasets/Organization_X/my_dataset
+webknossos upsample --from-mag 2 --token YOUR_TOKEN https://webknossos.org/datasets/Organization_X/my_dataset
 ```
 
 ### Upsample a specific layer of a remote dataset:
 ```bash
-webknossos upsample --from-mag 2 --layer-name gray_matter --token YOUR_TOKEN --transfer-mode copy https://webknossos.org/datasets/Organization_X/my_dataset
+webknossos upsample --from-mag 2 --layer-name gray_matter --token YOUR_TOKEN https://webknossos.org/datasets/Organization_X/my_dataset
 ```
 
 ## Notes
 
 - Local and remote datasets are distinguished automatically: a URL (starting with `http://` or `https://`) is treated as a remote dataset; any other path is treated as local.
 - `--token` is only required when accessing non-public remote datasets. It can be set once via the `WK_TOKEN` environment variable.
-- `--transfer-mode` is required for remote datasets and ignored for local datasets.
 - If `--layer-name` is omitted, all layers in the dataset are upsampled.

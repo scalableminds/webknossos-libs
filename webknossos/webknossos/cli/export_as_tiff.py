@@ -12,12 +12,13 @@ from scipy.ndimage import zoom
 from tensorstore import Context, TensorStore
 from upath import UPath
 
-from ..dataset import MagView, View
+from ..dataset import MagView, RemoteAccessMode, View
 from ..dataset._utils.tensorstore_helpers import open_zarr3_array
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE
+from ..dataset.layer.segmentation_layer.attachments import RemoteAttachments
 from ..dataset_properties import SEGMENTATION_CATEGORY, AttachmentDataFormat
 from ..geometry import BoundingBox, Mag, Vec3Int
-from ..utils import WkImportError, wait_and_ensure_success
+from ..utils import WkImportError, is_path_readable, wait_and_ensure_success
 from ._utils import (
     AccessModeOption,
     DistributionStrategy,
@@ -27,6 +28,7 @@ from ._utils import (
     TokenOption,
     Vec2Int,
     get_executor_for_args,
+    get_readable_mag,
     open_dataset,
     parse_bbox,
     parse_mag,
@@ -307,7 +309,11 @@ def main(
         source_path, annotation_ok=True, token=token, access_mode=access_mode
     ) as dataset:
         layer = dataset.get_layer(layer_name)
-        mag_view = layer.get_mag(mag)
+        mag_view = (
+            layer.get_mag(mag)
+            if access_mode is not None
+            else get_readable_mag(layer, mag)
+        )
 
         if apply_mapping is not None:
             try:
@@ -343,6 +349,23 @@ def main(
                 raise ValueError(
                     f"Agglomerate attachment '{apply_mapping}' is not in Zarr3 format. "
                     "Only Zarr3 format is supported."
+                )
+            if (
+                isinstance(seg_layer.attachments, RemoteAttachments)
+                and access_mode is None
+                and not is_path_readable(named.path)
+            ):
+                # Attachments are not available via zarr streaming
+                logger.info(
+                    f"Reading attachment '{apply_mapping}' via proxy_path, "
+                    "because it is not readable via direct_path from this machine."
+                )
+                named = next(
+                    a
+                    for a in seg_layer.attachments.with_access_mode(
+                        RemoteAccessMode.PROXY_PATH
+                    ).agglomerates
+                    if a.name == apply_mapping
                 )
             mapping_path = named.path / "segment_to_agglomerate"
 

@@ -2,7 +2,7 @@ import copy
 import json
 import logging
 import warnings
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from os import PathLike
 from os.path import relpath
 from typing import Any, cast
@@ -54,6 +54,7 @@ from ..utils import (
     dump_path,
     enrich_path,
     is_fs_path,
+    is_path_writable,
     rmtree,
     strip_trailing_slash,
     warn_deprecated,
@@ -126,6 +127,16 @@ def _find_array_info(layer_path: UPath) -> ArrayInfo | None:
             except ArrayException:
                 pass
     return None
+
+
+def _reserved_paths(data_source: DatasetProperties) -> Iterator[str]:
+    for layer in data_source.data_layers:
+        for mag in layer.mags:
+            assert mag.path is not None, "mag.path must be set to copy/move data"
+            yield mag.path
+        if isinstance(layer, SegmentationLayerProperties):
+            for attachment in layer.attachments:
+                yield attachment.path
 
 
 class Dataset(AbstractDataset[Layer, SegmentationLayer]):
@@ -456,8 +467,10 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         """
         from ..client.context import _get_api_client
 
-        if transfer_mode == TransferMode.HTTP:
-            raise ValueError("HTTP transfer mode is not supported for this method")
+        if transfer_mode in (TransferMode.HTTP, TransferMode.AUTO):
+            raise ValueError(
+                f"{transfer_mode.value} transfer mode is not supported for this method"
+            )
 
         client = _get_api_client()
         response = client.reserve_dataset_upload_to_paths_for_preliminary(
@@ -543,7 +556,9 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             ]
         )
 
+        new_dataset_id: str | None = None
         if transfer_mode in (
+            TransferMode.AUTO,
             TransferMode.COPY,
             TransferMode.MOVE_AND_SYMLINK,
             TransferMode.SYMLINK,
@@ -565,15 +580,36 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     path_prefix=common_storage_path_prefix,
                 )
             )
-            new_dataset_id = response.new_dataset_id
             data_source = response.data_source
 
-            self._transfer_dataset_items(data_source, transfer_mode)
-            # announce finished upload
-            client.finish_dataset_upload_to_paths(new_dataset_id)
-        else:
-            assert transfer_mode == TransferMode.HTTP, "Expected HTTP transfer mode"
-            if common_storage_path_prefix is not None:
+            if transfer_mode == TransferMode.AUTO:
+                resolved_transfer_mode = (
+                    TransferMode.COPY
+                    if all(
+                        is_path_writable(enrich_path(path))
+                        for path in _reserved_paths(data_source)
+                    )
+                    else TransferMode.HTTP
+                )
+            else:
+                resolved_transfer_mode = transfer_mode
+
+            if resolved_transfer_mode == TransferMode.HTTP:
+                logger.info(
+                    "Uploading via http, because the reserved paths are not writable from this machine."
+                )
+                client.dataset_delete(dataset_id=response.new_dataset_id)
+            else:
+                self._transfer_dataset_items(data_source, resolved_transfer_mode)
+                # announce finished upload
+                client.finish_dataset_upload_to_paths(response.new_dataset_id)
+                new_dataset_id = response.new_dataset_id
+
+        if new_dataset_id is None:
+            if (
+                transfer_mode == TransferMode.HTTP
+                and common_storage_path_prefix is not None
+            ):
                 logger.warning(
                     "common_storage_path_prefix is not None, but uploading via HTTP."
                     " Ignoring common_storage_path_prefix."

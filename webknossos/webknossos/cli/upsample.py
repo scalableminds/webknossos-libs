@@ -5,8 +5,7 @@ from typing import Annotated
 import typer
 from upath import UPath
 
-from ..dataset import RemoteDataset, SamplingModes, TransferMode
-from ..dataset.remote_dataset import RemoteAccessMode
+from ..dataset import Layer, RemoteDataset, RemoteLayer, SamplingModes, TransferMode
 from ..geometry import Mag
 from ._utils import (
     AccessModeOption,
@@ -17,7 +16,9 @@ from ._utils import (
     SamplingMode,
     SamplingModeOption,
     TokenOption,
+    TransferModeOption,
     get_executor_for_args,
+    get_readable_layer,
     open_dataset,
     parse_mag,
 )
@@ -51,58 +52,33 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
     jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
-    transfer_mode: Annotated[
-        TransferMode | None,
-        typer.Option(
-            help="The transfer mode to use. Required for remote datasets. "
-            "Options: 'copy', 'move+symlink', 'symlink', 'http'.",
-            rich_help_panel="WEBKNOSSOS context",
-        ),
-    ] = None,
+    transfer_mode: TransferModeOption = TransferMode.AUTO,
     access_mode: AccessModeOption = None,
 ) -> None:
     """Upsample your WEBKNOSSOS dataset."""
 
     mode = SamplingModes.parse(sampling_mode.value)
 
-    if access_mode is None:
-        if transfer_mode is not None and transfer_mode != TransferMode.HTTP:
-            access_mode = RemoteAccessMode.DIRECT_PATH
-        else:
-            access_mode = RemoteAccessMode.PROXY_PATH
-
     with open_dataset(
         UPath(source), annotation_ok=False, token=token, access_mode=access_mode
     ) as dataset:
-        if isinstance(dataset, RemoteDataset):
-            if transfer_mode is None:
-                raise typer.BadParameter(
-                    "--transfer-mode is required for remote datasets.",
-                    param_hint="--transfer-mode",
-                )
-            extra_kwargs: dict = {"transfer_mode": transfer_mode}
-        else:
-            extra_kwargs = {}
-        if layer_name is None:
-            for layer in dataset.layers.values():
-                with get_executor_for_args(
-                    jobs=jobs,
-                    distribution_strategy=distribution_strategy,
-                    job_resources=job_resources,
-                ) as executor:
-                    layer.upsample(
-                        from_mag=from_mag,
-                        sampling_mode=mode,
-                        executor=executor,
-                        **extra_kwargs,
-                    )
-        else:
+        is_remote = isinstance(dataset, RemoteDataset)
+        extra_kwargs: dict = {"transfer_mode": transfer_mode} if is_remote else {}
+        layers: list[Layer | RemoteLayer] = (
+            list(dataset.layers.values())
+            if layer_name is None
+            else [dataset.get_layer(layer_name)]
+        )
+        for layer in layers:
+            if is_remote and access_mode is None:
+                assert isinstance(layer, RemoteLayer)
+                layer = get_readable_layer(layer, from_mag)
             with get_executor_for_args(
                 jobs=jobs,
                 distribution_strategy=distribution_strategy,
                 job_resources=job_resources,
             ) as executor:
-                dataset.get_layer(layer_name).upsample(
+                layer.upsample(
                     from_mag=from_mag,
                     sampling_mode=mode,
                     executor=executor,
