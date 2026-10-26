@@ -15,11 +15,11 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 ### Breaking Changes
 
 ### Added
-- Added `TransferMode.AUTO`, which copies data to the storage path reserved by WEBKNOSSOS if it is writable from this machine (local file system, or S3 with prefix-scoped credentials) and uploads via HTTP otherwise. It is supported by `Dataset.upload`, `RemoteLayer.add_mag_as_copy` (and thereby `RemoteLayer.downsample`/`upsample`) and `RemoteAttachments.add_attachment_as_copy`.
+- Added `TransferMode.AUTO`, which copies data to the storage path reserved by WEBKNOSSOS if it is writable from this machine (local file system, or S3 with prefix-scoped credentials) and uploads via HTTP otherwise. It is supported by `Dataset.upload`, `RemoteLayer.add_mag_as_copy` (and thereby `RemoteLayer.downsample`/`upsample`) and `RemoteAttachments.add_attachment_as_copy`. [#1588](https://github.com/scalableminds/webknossos-libs/pull/1588)
 
 ### Changed
-- CLI: When `--access-mode` is not given, remote mags are now read via `direct_path` if their storage is readable from this machine, otherwise via `proxy_path` if available, otherwise via `zarr_streaming`. This applies to `downsample`, `upsample` and `export-as-tiff`.
-- CLI: `--transfer-mode` now defaults to `auto` for `upload`, `convert --upload`, `downsample` and `upsample`, and is no longer required for remote datasets in `downsample` and `upsample`.
+- CLI: When `--access-mode` is not given, remote mags are now read via `direct_path` if their storage is readable from this machine, otherwise via `proxy_path` if available, otherwise via `zarr_streaming`. This applies to `downsample`, `upsample` and `export-as-tiff`. [#1588](https://github.com/scalableminds/webknossos-libs/pull/1588)
+- CLI: `--transfer-mode` now defaults to `auto` for `upload`, `convert --upload`, `downsample` and `upsample`, and is no longer required for remote datasets in `downsample` and `upsample`. [#1588](https://github.com/scalableminds/webknossos-libs/pull/1588)
 - Renamed `RemoteMagView.paths` to `RemoteMagView.paths_by_access_mode`, since it is a mapping from access mode to path rather than a sequence of paths. `RemoteMagView.paths` is kept as a deprecated alias. [#1550](https://github.com/scalableminds/webknossos-libs/pull/1550)
 
 ### Fixed
