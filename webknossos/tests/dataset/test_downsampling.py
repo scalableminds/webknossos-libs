@@ -131,7 +131,9 @@ def test_downsample_cube_matches_non_linear_filter(
     """Both the numba and the numpy implementation must stay bit-identical to
     non_linear_filter_3d, including the tie-breaking of the mode filter."""
     if not with_numba:
-        monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
+        monkeypatch.setattr(
+            _downsampling_utils, "_get_downsampling_numba", lambda: None
+        )
     rng = np.random.default_rng(42)
     shape = tuple(6 * factor for factor in factors)
     # A narrow value range provokes ties, a wide one yields distinct values.
@@ -164,7 +166,9 @@ def test_downsample_cube_float(
 ) -> None:
     """Float layers must produce the same result with and without numba."""
     if not with_numba:
-        monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
+        monkeypatch.setattr(
+            _downsampling_utils, "_get_downsampling_numba", lambda: None
+        )
     rng = np.random.default_rng(7)
     buffer = np.asfortranarray(rng.integers(0, 5, size=(16, 16, 16)).astype(dtype))
     for interpolation_mode in (InterpolationModes.MEDIAN, InterpolationModes.MODE):
@@ -175,7 +179,7 @@ def test_downsample_cube_float(
 
 
 def test_missing_numba_warns_once(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(_downsampling_utils, "_downsampling_numba", None)
+    monkeypatch.setattr(_downsampling_utils, "_get_downsampling_numba", lambda: None)
     monkeypatch.delenv("WEBKNOSSOS_SHOWED_MISSING_NUMBA_WARNING", raising=False)
     buffer = np.zeros((4, 4, 4), dtype=np.uint8)
 
