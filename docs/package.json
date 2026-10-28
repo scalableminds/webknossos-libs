@@ -1,0 +1,10 @@
+{
+  "name": "webknossos-docs",
+  "private": true,
+  "description": "Tooling for the WEBKNOSSOS frontend API reference, rendered by mkdocstrings-typescript",
+  "devDependencies": {
+    "typedoc": "~0.28.20",
+    "typedoc-plugin-missing-exports": "~4.1.4",
+    "typescript": "~5.9.3"
+  }
+}
