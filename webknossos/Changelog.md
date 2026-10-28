@@ -16,6 +16,7 @@ in the _Changed_ sections.
 ### Breaking Changes
 
 ### Added
+- `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
 
 ### Changed
 
