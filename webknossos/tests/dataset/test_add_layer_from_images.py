@@ -29,6 +29,7 @@ from tests.data_fixtures import (
     download_wklibs_sample_archive,
     write_n5_array,
     write_neuroglancer_precomputed_scale,
+    write_ome_zarr_v2_group,
     write_ome_zarr_v3_group,
     write_ozx_file,
     write_zarr_v3_array,
@@ -1657,6 +1658,50 @@ def test_ome_zarr_0_6_transform_is_applied_to_the_layer(tmp_upath: UPath) -> Non
     assert wk.Dataset.open(ds.path).get_layer("rotated").coordinate_transformations == (
         expected,
     )
+
+
+@pytest.mark.parametrize("ome_version", ["0.4", "0.5"])
+def test_ome_zarr_translation_is_applied_to_the_layer(
+    tmp_upath: UPath, ome_version: str
+) -> None:
+    # Voxel size (x, y, z) = (0.5, 0.5, 2), so the physical translation
+    # (x, y, z) = (3, 1, 10) is (6, 2, 5) voxels.
+    Z, Y, X = 2, 8, 8
+    data = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    group_path = tmp_upath / "translated.ome.zarr"
+    axes = [
+        {"name": Z_AXIS, "type": "space"},
+        {"name": Y_AXIS, "type": "space"},
+        {"name": X_AXIS, "type": "space"},
+    ]
+    datasets = [("0", data, [2.0, 0.5, 0.5])]
+    if ome_version == "0.4":
+        write_ome_zarr_v2_group(group_path, datasets, axes)
+        metadata_path = group_path / ".zattrs"
+    else:
+        write_ome_zarr_v3_group(group_path, datasets, axes)
+        metadata_path = group_path / "zarr.json"
+    metadata = json.loads(metadata_path.read_text())
+    ome = metadata if ome_version == "0.4" else metadata["attributes"]["ome"]
+    (dataset,) = ome["multiscales"][0]["datasets"]
+    dataset["coordinateTransformations"].append(
+        {"type": "translation", "translation": [10.0, 1.0, 3.0]}
+    )
+    metadata_path.write_text(json.dumps(metadata))
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            group_path, layer_name="translated", executor=executor
+        )
+
+    expected = AffineCoordinateTransformation(
+        matrix=[[1, 0, 0, 6], [0, 1, 0, 2], [0, 0, 1, 5], [0, 0, 0, 1]]
+    )
+    assert layer.coordinate_transformations == (expected,)
+    assert wk.Dataset.open(ds.path).get_layer(
+        "translated"
+    ).coordinate_transformations == (expected,)
 
 
 @pytest.mark.parametrize("ome_version", ["0.5", "0.6"])
