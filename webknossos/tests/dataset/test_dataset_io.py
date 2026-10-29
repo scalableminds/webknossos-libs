@@ -883,7 +883,9 @@ def test_read_only_view(data_format: DataFormat, output_path: UPath) -> None:
 def test_read_with_negative_offset(
     data_format: DataFormat, output_path: UPath, mag: int
 ) -> None:
-    ds_path = prepare_dataset_path(data_format, output_path, "negative_offset")
+    ds_path = prepare_dataset_path(
+        data_format, output_path, f"negative_offset_mag{mag}"
+    )
     ds = Dataset(ds_path, voxel_size=(1, 1, 1))
     layer = ds.add_layer(
         "color", COLOR_CATEGORY, dtype="uint8", num_channels=3, data_format=data_format

@@ -981,9 +981,13 @@ class View:
             clamped_bbox = current_mag_bbox.with_topleft(clamped_topleft).with_size(
                 clamped_size
             )
-            out[clamped_bbox.offset(-current_mag_bbox.topleft).to_slices()] = (
-                self._array.read(clamped_bbox)
+            out_slices = tuple(
+                slice(start, start + size)
+                for start, size in zip(
+                    clamped_topleft - current_mag_bbox.topleft, clamped_size
+                )
             )
+            out[out_slices] = self._array.read(clamped_bbox)
         return out
 
     def get_view(
