@@ -11,18 +11,31 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.2...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.3...HEAD)
 
 ### Breaking Changes
 
 ### Added
+- `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
 
 ### Changed
 - Updated Pillow to 13.0.0 for Python 3.11+ (Pillow 13 requires Python >=3.11; Python 3.10 stays on Pillow 12.x). Pillow is only a transitive dependency (via `imageio`), so this is enforced through a uv constraint.
+- `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
 
 ### Deprecated
 
 ### Fixed
+
+
+## [4.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.3) - 2026-10-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.2...v4.3.3)
+
+### Changed
+- Allow `python-dotenv` 1.2.2 and newer 1.x versions instead of only 1.0.x. 1.2.2 fixes CVE-2026-28684. [#1587](https://github.com/scalableminds/webknossos-libs/pull/1587)
+
+### Fixed
+- Fixed that opening S3 arrays with explicit credentials from several threads at once could fail with `Failed to create credentials provider ... AWS_ERROR_STRING_MATCH_NOT_FOUND`. Each set of credentials now gets its own temporary credentials file, which is written once and never changed. [#1586](https://github.com/scalableminds/webknossos-libs/pull/1586)
+
 
 
 ## [4.3.2](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.2) - 2026-10-21
