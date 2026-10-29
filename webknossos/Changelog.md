@@ -19,6 +19,7 @@ in the _Changed_ sections.
 - `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
 
 ### Changed
+- Updated Pillow to 13.0.0 for Python 3.11+ (Pillow 13 requires Python >=3.11; Python 3.10 stays on Pillow 12.x). Pillow is only a transitive dependency (via `imageio`), so this is enforced through a uv constraint.
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
 
 ### Deprecated
