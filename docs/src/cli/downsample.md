@@ -46,12 +46,14 @@ webknossos downsample [OPTIONS] TARGET
     Required when TARGET is a WEBKNOSSOS server URL pointing to a non-public dataset.
 
 - `--transfer-mode`
-    The transfer mode to use for remote datasets. Available options are `http`, `copy`, `move+symlink`, `symlink`.
-    Defaults to `http`. `copy`, `move+symlink`, `symlink` require direct filesystem access to the WEBKNOSSOS datastore.
+    The transfer mode to use. Available options are `auto`, `http`, `copy`, `move+symlink`, `symlink`.
+    `auto` reserves the storage path on WEBKNOSSOS and copies the data there if that path is writable from this machine (local file system, or S3 with matching `AWS_ACCESS_KEY_ID__<prefix>`/`AWS_SECRET_ACCESS_KEY__<prefix>` credentials), otherwise it uploads via `http`.
+    `copy`, `move+symlink`, `symlink` require direct access to the WEBKNOSSOS storage.
+    Default: `auto`. Ignored for local datasets.
 
 - `--access-mode`
     How to access the remote dataset's data. Available options are `direct_path`, `zarr_streaming`, `proxy_path`.
-    Defaults to `direct_path` when `--transfer-mode` is not `http`, otherwise `proxy_path`.
+    By default, each mag is read via `direct_path` if its storage is readable from this machine (local file system, or S3 with matching `AWS_ACCESS_KEY_ID__<prefix>`/`AWS_SECRET_ACCESS_KEY__<prefix>` credentials), otherwise via `proxy_path` if available, otherwise via `zarr_streaming`.
 
 #### Executor options
 
@@ -106,6 +108,5 @@ webknossos downsample --token YOUR_TOKEN --layer-name gray https://webknossos.or
 
 - Local and remote datasets are distinguished automatically based on the TARGET: a URL (starting with `http://` or `https://`) is treated as a remote dataset; any other path is treated as local.
 - `--token` is only required when accessing non-public remote datasets. It can be set once via the `WK_TOKEN` environment variable.
-- `--transfer-mode` defaults to `http` for remote datasets and is ignored for local datasets.
 - Use `--layer-name` to downsample a specific layer; if omitted, all layers are processed.
 - Customize parallel execution with `--jobs`, `--distribution-strategy`, and `--job-resources` to optimize performance.

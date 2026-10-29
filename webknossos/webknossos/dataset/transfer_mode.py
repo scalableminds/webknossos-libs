@@ -1,20 +1,39 @@
+import logging
 import os
 from enum import Enum
 
 from upath import UPath
 
-from webknossos.utils import copytree, is_fs_path
+from webknossos.utils import copytree, is_fs_path, is_path_writable
+
+logger = logging.getLogger(__name__)
 
 
 class TransferMode(str, Enum):
     """
     The transfer mode determines how mags or attachments are transferred to the remote or local storage.
+
+    `AUTO` copies the data if the storage path reserved by WEBKNOSSOS is writable from this machine
+    and uploads it via HTTP otherwise. It is supported by `Dataset.upload`, `RemoteLayer.add_mag_as_copy`
+    (and thereby `RemoteLayer.downsample`/`upsample`) and `RemoteAttachments.add_attachment_as_copy`.
     """
 
+    AUTO = "auto"
     HTTP = "http"
     MOVE_AND_SYMLINK = "move+symlink"
     SYMLINK = "symlink"
     COPY = "copy"
+
+    def resolve(self, reserved_path: UPath) -> "TransferMode":
+        """Resolves `AUTO` to `COPY` if `reserved_path` is writable from this machine, otherwise to `HTTP`."""
+        if self != TransferMode.AUTO:
+            return self
+        if is_path_writable(reserved_path):
+            return TransferMode.COPY
+        logger.info(
+            f"Uploading via http, because {reserved_path} is not writable from this machine."
+        )
+        return TransferMode.HTTP
 
     @staticmethod
     def symlink(src_path: UPath, dst_path: UPath) -> None:
@@ -60,6 +79,10 @@ class TransferMode(str, Enum):
             self.move_and_symlink(src_path, dst_path)
         elif self.name == TransferMode.SYMLINK.name:
             self.symlink(src_path, dst_path)
+        elif self.name == TransferMode.AUTO.name:
+            raise NotImplementedError(
+                "AUTO transfer mode needs to be resolved to COPY or HTTP before transferring."
+            )
         elif self.name == TransferMode.HTTP.name:
             raise NotImplementedError(
                 "HTTP transfer mode is currently implemented via upload_dataset on the dataset level, not on individual mags or attachments."

@@ -6,7 +6,6 @@ import typer
 from upath import UPath
 
 from ..dataset import RemoteDataset, SamplingModes, TransferMode
-from ..dataset.remote_dataset import RemoteAccessMode
 from ..geometry import Mag
 from ._utils import (
     AccessModeOption,
@@ -17,7 +16,9 @@ from ._utils import (
     SamplingMode,
     SamplingModeOption,
     TokenOption,
+    TransferModeOption,
     get_executor_for_args,
+    get_readable_layer,
     open_dataset,
     parse_mag,
 )
@@ -51,25 +52,12 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
     jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,
-    transfer_mode: Annotated[
-        TransferMode,
-        typer.Option(
-            help="The transfer mode to use for remote datasets. 'http' is the default. "
-            "Other modes like 'copy', 'move+symlink', 'symlink' are for users with direct access to the storage underlying the WEBKNOSSOS datastore.",
-            rich_help_panel="WEBKNOSSOS context",
-        ),
-    ] = TransferMode.HTTP,
+    transfer_mode: TransferModeOption = TransferMode.AUTO,
     access_mode: AccessModeOption = None,
 ) -> None:
     """Downsample your WEBKNOSSOS dataset."""
 
     sampling_mode_parsed = SamplingModes.parse(sampling_mode.value)
-
-    if access_mode is None:
-        if transfer_mode != TransferMode.HTTP:
-            access_mode = RemoteAccessMode.DIRECT_PATH
-        else:
-            access_mode = RemoteAccessMode.PROXY_PATH
 
     with open_dataset(
         UPath(target), annotation_ok=False, token=token, access_mode=access_mode
@@ -80,20 +68,30 @@ Should be number or hyphen-separated string (e.g. 2 or 2-2-2).",
             job_resources=job_resources,
         ) as executor:
             if isinstance(dataset, RemoteDataset):
-                extra_kwargs: dict = {"transfer_mode": transfer_mode}
-            else:
-                extra_kwargs = {}
-            if layer_name is None:
+                layers = (
+                    list(dataset.layers.values())
+                    if layer_name is None
+                    else [dataset.get_layer(layer_name)]
+                )
+                for layer in layers:
+                    if access_mode is None and len(layer.mags) > 0:
+                        # The mag that RemoteLayer.downsample reads from by default
+                        layer = get_readable_layer(layer, max(layer.mags.keys()))
+                    layer.downsample(
+                        coarsest_mag=coarsest_mag,
+                        sampling_mode=sampling_mode_parsed,
+                        executor=executor,
+                        transfer_mode=transfer_mode,
+                    )
+            elif layer_name is None:
                 dataset.downsample(
                     coarsest_mag=coarsest_mag,
                     sampling_mode=sampling_mode_parsed,
                     executor=executor,
-                    **extra_kwargs,
                 )
             else:
                 dataset.get_layer(layer_name).downsample(
                     coarsest_mag=coarsest_mag,
                     sampling_mode=sampling_mode_parsed,
                     executor=executor,
-                    **extra_kwargs,
                 )

@@ -1,3 +1,4 @@
+import os
 import pickle
 import threading
 import time
@@ -415,6 +416,44 @@ def test_named_partial_is_picklable() -> None:
     partial_func = named_partial(_add, 1)
     assert partial_func.__name__ == "_add"
     assert pickle.loads(pickle.dumps(partial_func))() == 3
+
+
+@pytest.mark.skip_on_windows
+def test_is_path_readable_and_writable(tmp_path: UPath) -> None:
+    from webknossos.utils import is_path_readable, is_path_writable
+
+    base = UPath(tmp_path)
+    existing = base / "existing"
+    existing.mkdir()
+    assert is_path_readable(existing)
+    assert is_path_writable(existing)
+    assert is_path_writable(existing / "not" / "yet" / "created")
+    assert not is_path_readable(existing / "missing")
+
+    if os.geteuid() != 0:  # root ignores directory permissions
+        read_only = base / "read_only"
+        read_only.mkdir()
+        read_only.chmod(0o555)
+        try:
+            assert is_path_readable(read_only)
+            assert not is_path_writable(read_only / "child")
+        finally:
+            read_only.chmod(0o755)
+
+    with_credentials = UPath(
+        "s3://bucket/prefix", endpoint_url="https://s3.example.com", key="k", secret="s"
+    )
+    without_credentials = UPath(
+        "s3://bucket/prefix", endpoint_url="https://s3.example.com"
+    )
+    assert is_path_readable(with_credentials)
+    assert is_path_writable(with_credentials)
+    assert not is_path_readable(without_credentials)
+    assert not is_path_writable(without_credentials)
+
+    http_path = UPath("https://example.com/data")
+    assert not is_path_readable(http_path)
+    assert not is_path_writable(http_path)
 
 
 def test_rich_progress_is_only_rendered_in_main_thread() -> None:

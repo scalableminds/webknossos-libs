@@ -169,19 +169,7 @@ class RemoteLayer(AbstractLayer):
             }
             channel_index = foreign_layer_bbox.topleft.get(C_AXIS, None)
 
-            if transfer_mode == TransferMode.HTTP:
-                from ...client._upload_dataset import upload_mag
-
-                upload_mag(
-                    dataset_id=self.dataset.dataset_id,
-                    layer_name=self.name,
-                    mag=foreign_mag_view,
-                    target_mag=target_mag,
-                    axis_order=axis_order,
-                    channel_index=channel_index,
-                    overwrite_pending=overwrite_pending,
-                )
-            else:
+            if transfer_mode != TransferMode.HTTP:
                 reserve_parameters = ApiReserveMagUploadToPathParameters(
                     layer_name=self.name,
                     mag=target_mag.to_list(),
@@ -195,7 +183,26 @@ class RemoteLayer(AbstractLayer):
                         self._dataset.dataset_id, reserve_parameters
                     )
                 )
-                transfer_mode.transfer(
+                resolved_transfer_mode = transfer_mode.resolve(path)
+            else:
+                resolved_transfer_mode = transfer_mode
+
+            if resolved_transfer_mode == TransferMode.HTTP:
+                from ...client._upload_dataset import upload_mag
+
+                upload_mag(
+                    dataset_id=self.dataset.dataset_id,
+                    layer_name=self.name,
+                    mag=foreign_mag_view,
+                    target_mag=target_mag,
+                    axis_order=axis_order,
+                    channel_index=channel_index,
+                    # Takes over a pending reservation from AUTO
+                    overwrite_pending=overwrite_pending
+                    or transfer_mode == TransferMode.AUTO,
+                )
+            else:
+                resolved_transfer_mode.transfer(
                     foreign_mag_view.path,
                     path,
                     progress_desc_label=f"{self.name}/{target_mag}",

@@ -1,5 +1,6 @@
 """This module contains tests for the WEBKNOSSOS CLI."""
 
+import importlib
 import json
 import os
 import random
@@ -25,7 +26,16 @@ from tests.constants import (
     TESTDATA_DIR,
 )
 from tests.data_fixtures import download_wklibs_sample_archive
-from webknossos import BoundingBox, DataFormat, Dataset, Mag, NDBoundingBox
+from webknossos import (
+    BoundingBox,
+    DataFormat,
+    Dataset,
+    Mag,
+    NDBoundingBox,
+    RemoteAccessMode,
+    RemoteDataset,
+)
+from webknossos.cli._utils import pick_access_mode
 from webknossos.cli.export_as_tiff import _apply_mapping, _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset._utils.tensorstore_helpers import (
@@ -545,6 +555,108 @@ def test_convert_upload_downsample() -> None:
         ],
     )
     assert result.exit_code == 0, result.stdout
+
+
+def test_pick_access_mode(tmp_path: UPath) -> None:
+    readable = UPath(tmp_path)
+    unreadable = UPath("https://example.com/direct")
+    proxy = UPath("https://example.com/proxy")
+    streaming = UPath("https://example.com/streaming")
+
+    assert (
+        pick_access_mode(
+            {
+                RemoteAccessMode.DIRECT_PATH: readable,
+                RemoteAccessMode.PROXY_PATH: proxy,
+                RemoteAccessMode.ZARR_STREAMING: streaming,
+            }
+        )
+        == RemoteAccessMode.DIRECT_PATH
+    )
+    assert (
+        pick_access_mode(
+            {
+                RemoteAccessMode.DIRECT_PATH: unreadable,
+                RemoteAccessMode.PROXY_PATH: proxy,
+                RemoteAccessMode.ZARR_STREAMING: streaming,
+            }
+        )
+        == RemoteAccessMode.PROXY_PATH
+    )
+    assert (
+        pick_access_mode(
+            {
+                RemoteAccessMode.DIRECT_PATH: unreadable,
+                RemoteAccessMode.ZARR_STREAMING: streaming,
+            }
+        )
+        == RemoteAccessMode.ZARR_STREAMING
+    )
+    assert (
+        pick_access_mode({RemoteAccessMode.ZARR_STREAMING: streaming})
+        == RemoteAccessMode.ZARR_STREAMING
+    )
+
+
+@pytest.mark.skip_on_windows
+@pytest.mark.parametrize("storage_accessible", [True, False])
+def test_convert_upload_downsample_auto_modes(
+    storage_accessible: bool, tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Tests convert --upload, downsample and export-as-tiff without explicit transfer and access modes."""
+    if not storage_accessible:
+        for module_name in [
+            "webknossos.dataset.dataset",
+            "webknossos.dataset.transfer_mode",
+        ]:
+            # Not a dotted path, since `webknossos.dataset.dataset` is shadowed by the class
+            monkeypatch.setattr(
+                importlib.import_module(module_name),
+                "is_path_writable",
+                lambda _path: False,
+            )
+        monkeypatch.setattr(
+            "webknossos.cli._utils.is_path_readable", lambda _path: False
+        )
+
+    name = f"test_remote_convert_auto_{storage_accessible}"
+    with tmp_cwd():
+        result = runner.invoke(
+            app,
+            [
+                "convert",
+                "--upload",
+                "--voxel-size",
+                "11.24,11.24,25",
+                "--no-downsample",
+                "--name",
+                name,
+                str(TESTDATA_DIR / "tiff"),
+            ],
+        )
+        assert result.exit_code == 0, result.stdout
+
+    url = f"http://localhost:9000/datasets/Organization_X/{name}"
+    result = runner.invoke(
+        app, ["downsample", "--jobs", "2", "--coarsest-mag", "2-2-1", url]
+    )
+    assert result.exit_code == 0, result.stdout
+    assert Mag("2-2-1") in RemoteDataset.open(url).get_layer("tiff").mags
+
+    result = runner.invoke(
+        app,
+        [
+            "export-as-tiff",
+            "--layer-name",
+            "tiff",
+            "--mag",
+            "2-2-1",
+            url,
+            str(tmp_upath / "tiff_export"),
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    assert len(list((tmp_upath / "tiff_export").iterdir())) > 0
 
 
 def test_apply_mapping(tmp_path: UPath) -> None:

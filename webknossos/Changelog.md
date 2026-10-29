@@ -17,9 +17,12 @@ in the _Changed_ sections.
 
 ### Added
 - `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
+- Added `TransferMode.AUTO`, which copies data to the storage path reserved by WEBKNOSSOS if it is writable from this machine (local file system, or S3 with prefix-scoped credentials) and uploads via HTTP otherwise. It is supported by `Dataset.upload`, `RemoteLayer.add_mag_as_copy` (and thereby `RemoteLayer.downsample`/`upsample`) and `RemoteAttachments.add_attachment_as_copy`. [#1588](https://github.com/scalableminds/webknossos-libs/pull/1588)
 
 ### Changed
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
+- CLI: When `--access-mode` is not given, remote mags are now read via `direct_path` if their storage is readable from this machine, otherwise via `proxy_path` if available, otherwise via `zarr_streaming`. This applies to `downsample`, `upsample` and `export-as-tiff`. [#1588](https://github.com/scalableminds/webknossos-libs/pull/1588)
+- CLI: `--transfer-mode` now defaults to `auto` for `upload`, `convert --upload`, `downsample` and `upsample` (previously `http`). [#1588](https://github.com/scalableminds/webknossos-libs/pull/1588)
 
 ### Deprecated
 

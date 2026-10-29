@@ -8,7 +8,12 @@ from ..client import webknossos_context
 from ..client._defaults import DEFAULT_WEBKNOSSOS_URL
 from ..client._upload_dataset import DEFAULT_SIMULTANEOUS_UPLOADS
 from ..dataset import Dataset, RemoteFolder, TransferMode
-from ._utils import TokenOption, WebknossosUrlOption, parse_path
+from ._utils import (
+    TokenOption,
+    TransferModeOption,
+    WebknossosUrlOption,
+    parse_path,
+)
 
 
 def main(
@@ -44,12 +49,7 @@ def main(
             rich_help_panel="Executor options",
         ),
     ] = DEFAULT_SIMULTANEOUS_UPLOADS,
-    transfer_mode: Annotated[
-        TransferMode,
-        typer.Option(
-            help="The transfer mode to use. 'http' is the default. Other modes like 'copy', 'move+symlink', 'symlink' are for users with direct filesystem access to the WEBKNOSSOS datastore."
-        ),
-    ] = TransferMode.HTTP,
+    transfer_mode: TransferModeOption = TransferMode.AUTO,
 ) -> None:
     """Upload a dataset to a WEBKNOSSOS server."""
 

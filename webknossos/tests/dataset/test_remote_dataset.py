@@ -1,3 +1,4 @@
+import importlib
 import itertools
 import pickle
 from collections.abc import Iterable, Iterator
@@ -137,7 +138,12 @@ def test_remote_dataset_add_layer_as_copy(transfer_mode: TransferMode) -> None:
 
 @pytest.mark.parametrize(
     "transfer_mode",
-    [TransferMode.HTTP, TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK],
+    [
+        TransferMode.HTTP,
+        TransferMode.COPY,
+        TransferMode.MOVE_AND_SYMLINK,
+        TransferMode.AUTO,
+    ],
 )
 def test_remote_dataset_add_mag_as_copy(transfer_mode: TransferMode) -> None:
     ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_copy_mag_src")
@@ -161,6 +167,55 @@ def test_remote_dataset_add_mag_as_copy(transfer_mode: TransferMode) -> None:
         source_mag, transfer_mode=transfer_mode, extend_layer_bounding_box=True
     )
     assert Mag(1) in remote_layer.mags
+    np.testing.assert_array_equal(copied_mag.read(), source_mag.read())
+
+
+@pytest.mark.parametrize("storage_writable", [True, False])
+def test_remote_dataset_upload_and_add_mag_as_copy_auto(
+    storage_writable: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    if not storage_writable:
+        for module_name in [
+            "webknossos.dataset.dataset",
+            "webknossos.dataset.transfer_mode",
+        ]:
+            # Not a dotted path, since `webknossos.dataset.dataset` is shadowed by the class
+            monkeypatch.setattr(
+                importlib.import_module(module_name),
+                "is_path_writable",
+                lambda _path: False,
+            )
+
+    ds_path = _prepare_dataset_path(TESTOUTPUT_DIR, "remote_auto_src")
+    source_ds = Dataset(ds_path, voxel_size=(2, 2, 1))
+    source_layer = source_ds.add_layer(
+        "color", COLOR_CATEGORY, data_format=DataFormat.Zarr3
+    )
+    source_mag = source_layer.add_mag(1)
+    source_mag.write(
+        absolute_offset=(0, 0, 0),
+        data=rng.integers(0, 256, (16, 16, 16), dtype=np.uint8),
+        allow_resize=True,
+    )
+
+    dataset_name = f"test_remote_dataset_upload_auto_{storage_writable}"
+    datasets_before = RemoteDataset.list(name=dataset_name)
+    remote_ds = source_ds.upload(
+        new_dataset_name=dataset_name, transfer_mode=TransferMode.AUTO
+    )
+    # A fallback to http must not leave the reserved dataset behind
+    assert len(RemoteDataset.list(name=dataset_name)) == (len(datasets_before) + 1)
+    remote_ds = reopen_dataset(remote_ds)
+    np.testing.assert_array_equal(
+        remote_ds.get_layer("color").get_mag(1).read(), source_mag.read()
+    )
+
+    remote_layer = remote_ds.add_layer(
+        "color2", COLOR_CATEGORY, data_format=DataFormat.Zarr3
+    )
+    copied_mag = remote_layer.add_mag_as_copy(
+        source_mag, transfer_mode=TransferMode.AUTO, extend_layer_bounding_box=True
+    )
     np.testing.assert_array_equal(copied_mag.read(), source_mag.read())
 
 
@@ -259,7 +314,12 @@ def test_add_remote_mags_from_path(
 
 @pytest.mark.parametrize(
     "transfer_mode",
-    [TransferMode.HTTP, TransferMode.COPY, TransferMode.MOVE_AND_SYMLINK],
+    [
+        TransferMode.HTTP,
+        TransferMode.COPY,
+        TransferMode.MOVE_AND_SYMLINK,
+        TransferMode.AUTO,
+    ],
 )
 def test_remote_attachments_add_attachment_as_copy(
     tmp_upath: UPath, transfer_mode: TransferMode

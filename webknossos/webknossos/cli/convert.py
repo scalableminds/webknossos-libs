@@ -28,6 +28,7 @@ from ._utils import (
     SamplingModeOption,
     ShardShapeOption,
     TokenOption,
+    TransferModeOption,
     UnitOption,
     VoxelSizeOption,
     WebknossosUrlOption,
@@ -141,14 +142,7 @@ def main(
             rich_help_panel="WEBKNOSSOS context",
         ),
     ] = None,
-    transfer_mode: Annotated[
-        TransferMode,
-        typer.Option(
-            help="The transfer mode to use when uploading. 'http' is the default. "
-            "Other modes like 'copy', 'move+symlink', 'symlink' are for users with direct filesystem access to the WEBKNOSSOS datastore.",
-            rich_help_panel="WEBKNOSSOS context",
-        ),
-    ] = TransferMode.HTTP,
+    transfer_mode: TransferModeOption = TransferMode.AUTO,
     jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,

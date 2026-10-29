@@ -315,6 +315,30 @@ def is_remote_path(path: UPath) -> bool:
     return isinstance(path, UPath) and not is_fs_path(path)
 
 
+def _has_s3_credentials(path: UPath) -> bool:
+    # Only set by `enrich_path` if prefix-scoped credentials were found
+    return path.protocol == "s3" and path.storage_options.get("key") is not None
+
+
+def is_path_readable(path: UPath) -> bool:
+    """Whether `path` can be read directly from this machine."""
+    if is_fs_path(path):
+        return os.access(path, os.R_OK)
+    return _has_s3_credentials(path)
+
+
+def is_path_writable(path: UPath) -> bool:
+    """Whether `path` (which may not exist yet) can be written directly from this machine."""
+    if is_fs_path(path):
+        existing_path = path.absolute()
+        while not existing_path.exists():
+            if existing_path.parent == existing_path:
+                return False
+            existing_path = existing_path.parent
+        return os.access(existing_path, os.W_OK)
+    return _has_s3_credentials(path)
+
+
 def cheap_resolve(path: UPath) -> UPath:
     from upath.implementations.http import HTTPPath
 
