@@ -154,3 +154,13 @@ def test_add_mag_as_ref_keeps_axis_order(tmp_upath: UPath) -> None:
 
     assert mag.info.bounding_box.axes == ("t", "c", "z", "y", "x")
     assert np.array_equal(mag.read(), data[:, 1:2])
+
+
+def test_read_with_negative_offset_and_axis_order(tmp_upath: UPath) -> None:
+    dataset, data = _make_bigstitcher_dataset(tmp_upath)
+    mag = dataset.get_layer("channel_1").get_mag(1)
+
+    read_bbox = mag.bounding_box.with_bounds("x", -16, 64).with_bounds("y", -8, 32)
+    expected = np.zeros((1, 1, 8, 32, 64), dtype=data.dtype)
+    expected[:, :, :, 8:, 16:] = data[:, 1:2, :, :24, :48]
+    assert np.array_equal(mag.read(absolute_bounding_box=read_bbox), expected)

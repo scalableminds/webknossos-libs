@@ -803,9 +803,6 @@ class View:
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
             + "All dimensions must be strictly larger than '0'."
         )
-        assert mag1_bbox.topleft.is_positive(), (
-            f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
-        )
         return mag1_bbox
 
     def read_xyz(
