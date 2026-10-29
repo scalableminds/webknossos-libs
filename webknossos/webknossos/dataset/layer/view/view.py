@@ -968,27 +968,8 @@ class View:
         self,
         current_mag_bbox: NormalizedBoundingBox,
     ) -> np.ndarray:
-        if current_mag_bbox.topleft.is_positive():
-            return self._array.read(current_mag_bbox)
-
-        # Negative coordinates cannot be stored, so they are zero-padded.
-        out = np.zeros(
-            current_mag_bbox.size.to_tuple(), dtype=self.get_dtype(), order="F"
-        )
-        clamped_topleft = current_mag_bbox.topleft.pairmax(0)
-        clamped_size = current_mag_bbox.bottomright - clamped_topleft
-        if clamped_size.is_positive(strictly_positive=True):
-            clamped_bbox = current_mag_bbox.with_topleft(clamped_topleft).with_size(
-                clamped_size
-            )
-            out_slices = tuple(
-                slice(start, start + size)
-                for start, size in zip(
-                    clamped_topleft - current_mag_bbox.topleft, clamped_size
-                )
-            )
-            out[out_slices] = self._array.read(clamped_bbox)
-        return out
+        data = self._array.read(current_mag_bbox)
+        return data
 
     def get_view(
         self,
