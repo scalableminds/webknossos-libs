@@ -803,9 +803,6 @@ class View:
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
             + "All dimensions must be strictly larger than '0'."
         )
-        assert mag1_bbox.topleft.is_positive(), (
-            f"The offset ({mag1_bbox.topleft} in mag1) must not contain negative dimensions."
-        )
         return mag1_bbox
 
     def read_xyz(
@@ -971,8 +968,23 @@ class View:
         self,
         current_mag_bbox: NormalizedBoundingBox,
     ) -> np.ndarray:
-        data = self._array.read(current_mag_bbox)
-        return data
+        if current_mag_bbox.topleft.is_positive():
+            return self._array.read(current_mag_bbox)
+
+        # Negative coordinates cannot be stored, so they are zero-padded.
+        out = np.zeros(
+            current_mag_bbox.size.to_tuple(), dtype=self.get_dtype(), order="F"
+        )
+        clamped_topleft = current_mag_bbox.topleft.pairmax(0)
+        clamped_size = current_mag_bbox.bottomright - clamped_topleft
+        if clamped_size.is_positive(strictly_positive=True):
+            clamped_bbox = current_mag_bbox.with_topleft(clamped_topleft).with_size(
+                clamped_size
+            )
+            out[clamped_bbox.offset(-current_mag_bbox.topleft).to_slices()] = (
+                self._array.read(clamped_bbox)
+            )
+        return out
 
     def get_view(
         self,
