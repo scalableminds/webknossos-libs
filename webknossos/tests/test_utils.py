@@ -452,3 +452,25 @@ def test_rich_progress_concurrent_use_from_threads() -> None:
         thread.join()
 
     assert errors == []
+
+
+def test_copytree_skip_existing_same_size() -> None:
+    with TestTemporaryDirectoryNonLocal() as tmp_dir:
+        src_dir = tmp_dir / "src"
+        (src_dir / "subdir").mkdir(parents=True)
+        (src_dir / "same.txt").write_text("source")
+        (src_dir / "other_size.txt").write_text("source")
+        (src_dir / "subdir" / "missing.txt").write_text("source")
+
+        dst_dir = tmp_dir / "dst"
+        dst_dir.mkdir()
+        (dst_dir / "same.txt").write_text("stale!")
+        (dst_dir / "other_size.txt").write_text("stale")
+
+        copytree(src_dir, dst_dir, skip_existing_same_size=True)
+        assert (dst_dir / "same.txt").read_text() == "stale!"
+        assert (dst_dir / "other_size.txt").read_text() == "source"
+        assert (dst_dir / "subdir" / "missing.txt").read_text() == "source"
+
+        copytree(src_dir, dst_dir)
+        assert (dst_dir / "same.txt").read_text() == "source"

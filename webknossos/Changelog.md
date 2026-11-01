@@ -21,6 +21,7 @@ in the _Changed_ sections.
 
 ### Changed
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
+- `copytree`, `TransferMode.COPY` and `Dataset.publish_to_preliminary_dataset` accept `skip_existing_same_size=True` to skip files that already exist at the destination with the same size, e.g. to resume an interrupted copy. The default behavior is unchanged.
 
 ### Deprecated
 

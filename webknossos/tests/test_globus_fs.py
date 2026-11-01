@@ -461,6 +461,16 @@ def test_transfer_dataset_items(fake_globus: FakeGlobus, tmp_path: Path) -> None
     del data
 
 
+def test_resume_copy(fake_globus: FakeGlobus, tmp_path: Path) -> None:
+    _create_dataset(fake_globus.root / "datasets" / "my_ds")
+    path = make_path(fake_globus, "datasets/my_ds")
+    copytree(path, UPath(tmp_path / "copy"))
+
+    fake_globus.requests.clear()
+    copytree(path, UPath(tmp_path / "copy"), skip_existing_same_size=True)
+    assert fake_globus.requests_to("/https/") == []
+
+
 @pytest.mark.usefixtures("moto_server")
 def test_copy_dataset_to_s3(fake_globus: FakeGlobus) -> None:
     data = _create_dataset(fake_globus.root / "datasets" / "my_ds")
