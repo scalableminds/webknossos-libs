@@ -103,15 +103,14 @@ def _parse_mtime(value: str | None) -> float | None:
 
 def _make_transfer_client(token_source: Any) -> "globus_sdk.TransferClient":
     import globus_sdk
+    from globus_sdk.authorizers import GlobusAuthorizer
 
-    authorizer: globus_sdk.authorizers.GlobusAuthorizer | None
-    if token_source is None or isinstance(
-        token_source, globus_sdk.authorizers.GlobusAuthorizer
-    ):
+    authorizer: GlobusAuthorizer | None
+    if token_source is None or isinstance(token_source, GlobusAuthorizer):
         authorizer = token_source
     else:
 
-        class _CallableAuthorizer(globus_sdk.authorizers.GlobusAuthorizer):
+        class _CallableAuthorizer(GlobusAuthorizer):
             def get_authorization_header(self) -> str:
                 return f"Bearer {token_source()}"
 

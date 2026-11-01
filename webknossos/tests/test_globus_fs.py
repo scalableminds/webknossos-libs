@@ -13,6 +13,8 @@ from urllib.parse import parse_qs, unquote, urlparse
 import globus_sdk
 import numpy as np
 import pytest
+from globus_sdk.authorizers import GlobusAuthorizer
+from globus_sdk.transport import RetryConfig
 from upath import UPath
 
 import webknossos as wk
@@ -204,7 +206,7 @@ def make_transfer_client(fake: FakeGlobus) -> globus_sdk.TransferClient:
     return globus_sdk.TransferClient(
         base_url=f"{fake.url}/transfer/",
         authorizer=globus_sdk.AccessTokenAuthorizer(TRANSFER_TOKEN),
-        retry_config=globus_sdk.transport.RetryConfig(max_retries=0),
+        retry_config=RetryConfig(max_retries=0),
     )
 
 
@@ -307,7 +309,7 @@ def test_copyfileobj_streams_in_blocks(fake_globus: FakeGlobus, tmp_path: Path) 
     path = make_path(fake_globus, "data/big.bin")
     with path.fs.open(path.path, "rb", block_size=200_000) as src:
         with open(tmp_path / "out.bin", "wb") as dst:
-            shutil.copyfileobj(src, dst)
+            shutil.copyfileobj(src, dst, length=64 * 1024)
     assert (tmp_path / "out.bin").read_bytes() == (
         fake_globus.root / "data" / "big.bin"
     ).read_bytes()
@@ -359,7 +361,7 @@ def test_transfer_error_mapping(fake_globus: FakeGlobus) -> None:
 
 
 def test_token_callables_and_refresh(fake_globus: FakeGlobus) -> None:
-    class RefreshingAuthorizer(globus_sdk.authorizers.GlobusAuthorizer):
+    class RefreshingAuthorizer(GlobusAuthorizer):
         def __init__(self) -> None:
             self.token = "expired"
 
