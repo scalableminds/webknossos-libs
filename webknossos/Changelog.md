@@ -17,6 +17,7 @@ in the _Changed_ sections.
 
 ### Added
 - `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
+- Added read-only support for Globus collections via `globus://<collection_id>/<path>` paths, e.g. to open datasets with `Dataset.open` and copy them with `copytree` or `Dataset.publish_to_preliminary_dataset`. Listings use the Globus Transfer API, files are streamed via ranged HTTPS reads. Credentials are passed as `transfer_authorizer` and `https_authorizer` storage options. Reading voxel data directly from `globus://` paths is not supported. Requires the new `globus` extra (`pip install webknossos[globus]`).
 
 ### Changed
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)

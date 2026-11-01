@@ -31,6 +31,7 @@ from .dataset import *
 from .dataset_properties import *
 from .datastore import *
 from .geometry import *
+from .globus_fs import register_globus_protocol
 from .skeleton import *
 from .utils import check_version_in_background
 from .version import __version__ as current_version
@@ -50,3 +51,5 @@ import os
 
 # This needs to be set to make sure the encoding is not chunked when uploading
 os.environ["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED"
+
+register_globus_protocol()
