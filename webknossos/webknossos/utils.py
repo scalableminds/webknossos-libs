@@ -440,9 +440,12 @@ def copytree(
         if skip_existing_same_size:
             try:
                 dest_stat = dest.stat()
+                # None if the source size is unknown, e.g. HTTP without Content-Length
+                src_size = src.fs.info(src.path).get("size")
                 if (
                     S_ISREG(dest_stat.st_mode)
-                    and dest_stat.st_size == src.stat().st_size
+                    and src_size is not None
+                    and dest_stat.st_size == src_size
                 ):
                     return
             except FileNotFoundError:
