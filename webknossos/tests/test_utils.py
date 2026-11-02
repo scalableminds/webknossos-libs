@@ -466,6 +466,13 @@ def test_copytree_skip_existing_same_size() -> None:
         dst_dir.mkdir()
         (dst_dir / "same.txt").write_text("stale!")
         (dst_dir / "other_size.txt").write_text("stale")
+        (src_dir / "dir_conflict.txt").write_text("")
+        (dst_dir / "dir_conflict.txt").mkdir()
+        assert (dst_dir / "dir_conflict.txt").stat().st_size == 0
+
+        with pytest.raises(OSError):
+            copytree(src_dir, dst_dir, skip_existing_same_size=True)
+        (dst_dir / "dir_conflict.txt").rmdir()
 
         copytree(src_dir, dst_dir, skip_existing_same_size=True)
         assert (dst_dir / "same.txt").read_text() == "stale!"

@@ -445,11 +445,18 @@ class GlobusPath(CloudPath):
 def register_globus_protocol() -> None:
     import fsspec
     import upath.registry
-    from upath._flavour import WrappedFileSystemFlavour
 
     # Registering the class itself lets upath derive the path flavour from it.
     fsspec.register_implementation(PROTOCOL, GlobusFileSystem, clobber=True)
     upath.registry.register_implementation(PROTOCOL, GlobusPath, clobber=True)
-    # Treat the collection id like a bucket name.
-    WrappedFileSystemFlavour.protocol_config["netloc_is_anchor"].add(PROTOCOL)
-    WrappedFileSystemFlavour.protocol_config["supports_empty_parts"].add(PROTOCOL)
+    try:
+        from upath._flavour import WrappedFileSystemFlavour
+
+        # Treat the collection id like a bucket name.
+        WrappedFileSystemFlavour.protocol_config["netloc_is_anchor"].add(PROTOCOL)
+        WrappedFileSystemFlavour.protocol_config["supports_empty_parts"].add(PROTOCOL)
+    except (ImportError, AttributeError, KeyError):
+        logger.warning(
+            "globus:// paths are not supported with this universal-pathlib version. "
+            "Please upgrade universal-pathlib."
+        )

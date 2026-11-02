@@ -16,6 +16,7 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from os import PathLike
 from shutil import copyfileobj, move
+from stat import S_ISREG
 from threading import Thread, current_thread, main_thread
 from typing import (
     TYPE_CHECKING,
@@ -438,7 +439,11 @@ def copytree(
         dest = _append(out_path, sub_path)
         if skip_existing_same_size:
             try:
-                if dest.stat().st_size == src.stat().st_size:
+                dest_stat = dest.stat()
+                if (
+                    S_ISREG(dest_stat.st_mode)
+                    and dest_stat.st_size == src.stat().st_size
+                ):
                     return
             except FileNotFoundError:
                 pass
