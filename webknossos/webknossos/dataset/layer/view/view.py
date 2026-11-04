@@ -90,7 +90,6 @@ class View:
 
         Args:
             path_to_mag_view (Path): Path to the magnification view directory.
-            array_info (ArrayInfo): Information about the array structure and properties.
             bounding_box (NDBoundingBox | None): The bounding box in mag 1 absolute coordinates.
                 Optional only for mag_view since it overwrites the bounding_box property.
             mag (Mag): Magnification level of the view.
@@ -991,7 +990,7 @@ class View:
         and can optionally be made read-only.
 
         Args:
-             size (Vec3IntLike | None, optional): Size of the new view. Must be specified
+            size (Vec3IntLike | None, optional): Size of the new view. Must be specified
                 when using any offset parameter. Defaults to None.
             relative_offset (Vec3IntLike | None, optional): Offset relative to current
                 view's position in Mag(1) coordinates. Must be used with size. Defaults to None.
