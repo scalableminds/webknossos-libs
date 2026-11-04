@@ -1,4 +1,5 @@
 import json
+from functools import partial
 from typing import Any
 
 import numpy as np
@@ -15,6 +16,13 @@ from webknossos.dataset import CorruptImageError, UnsupportedImageFormatError
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.zarr_image_source import ZarrImageSource
 from webknossos.geometry.constants import C_AXIS, CXYZ_AXES, X_AXIS, Y_AXIS, Z_AXIS
+
+# One OME-Zarr group writer per supported NGFF version.
+_OME_WRITERS = [
+    pytest.param(write_ome_zarr_v2_group, id="0.4"),
+    pytest.param(write_ome_zarr_v3_group, id="0.5"),
+    pytest.param(partial(write_ome_zarr_v3_group, ome_version="0.6"), id="0.6"),
+]
 
 
 def _open(path: UPath, **options: Any) -> ZarrImageSource:
@@ -90,7 +98,7 @@ def test_plain_zarr_v3_array_with_dimension_names_uses_labels(tmp_upath: UPath) 
     )  # (x, y, z) -> (z, y, x), channel 0 (the default pin)
 
 
-@pytest.mark.parametrize("writer", [write_ome_zarr_v2_group, write_ome_zarr_v3_group])
+@pytest.mark.parametrize("writer", _OME_WRITERS)
 def test_ome_zarr_group_picks_finest_resolution(tmp_upath: UPath, writer: Any) -> None:
     group_path = tmp_upath / "multiscale"
     finest = np.arange(2 * 4 * 8 * 8, dtype=np.uint8).reshape(2, 4, 8, 8)
@@ -118,7 +126,7 @@ def test_ome_zarr_group_picks_finest_resolution(tmp_upath: UPath, writer: Any) -
     np.testing.assert_array_equal(block[0], finest[0])  # channel 0, the default pin
 
 
-@pytest.mark.parametrize("writer", [write_ome_zarr_v2_group, write_ome_zarr_v3_group])
+@pytest.mark.parametrize("writer", _OME_WRITERS)
 def test_ome_zarr_group_scale_option_picks_other_level(
     tmp_upath: UPath, writer: Any
 ) -> None:
@@ -201,7 +209,7 @@ def test_corrupt_metadata_json_raises_corrupt_image_error(tmp_upath: UPath) -> N
         _open(array_path)
 
 
-@pytest.mark.parametrize("writer", [write_ome_zarr_v2_group, write_ome_zarr_v3_group])
+@pytest.mark.parametrize("writer", _OME_WRITERS)
 def test_unsupported_ome_version_is_rejected(tmp_upath: UPath, writer: Any) -> None:
     group_path = tmp_upath / "future_version"
     data = np.zeros((4, 8, 8), dtype=np.uint8)

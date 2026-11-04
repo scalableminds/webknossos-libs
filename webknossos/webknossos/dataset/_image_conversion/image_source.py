@@ -21,7 +21,7 @@ from typing import NamedTuple
 import numpy as np
 from numpy.typing import DTypeLike
 
-from ...dataset_properties import LayerViewConfiguration
+from ...dataset_properties import CoordinateTransformation, LayerViewConfiguration
 from ...geometry.constants import C_AXIS, CXYZ_AXES, T_AXIS, XYZ_AXES
 from ...geometry.mag import Mag
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
@@ -214,6 +214,15 @@ class ImageSource(ABC):
         """Format-specific default display (color, intensity range, ...) for
         the channel this source writes, when the format's own metadata
         carries one. None for formats with no such metadata."""
+        return None
+
+    @property
+    def suggested_coordinate_transformations(
+        self,
+    ) -> tuple[CoordinateTransformation, ...] | None:
+        """Format-specific placement of the layer (e.g. a rotation or
+        translation from OME-Zarr metadata), in voxel units. None for formats
+        with no such metadata."""
         return None
 
     def layer_split_label(self, key: str, value: int) -> str:

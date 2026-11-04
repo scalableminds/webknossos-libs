@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from upath import UPath
 
@@ -13,7 +14,7 @@ from webknossos.dataset._image_conversion.ome_zarr_helpers import (
     suggested_view_configuration,
 )
 from webknossos.dataset_properties import LayerViewConfiguration
-from webknossos.geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
+from webknossos.geometry.constants import C_AXIS, T_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 
 _PATH = UPath("test.ome.zarr")
 
@@ -192,6 +193,464 @@ def test_resolve_ome_multiscale_without_omero_has_no_channels() -> None:
     multiscale = resolve_ome_multiscale(attributes, path=_PATH)
 
     assert multiscale.channels is None
+
+
+@pytest.mark.parametrize("version", ["0.4", "0.5"])
+def test_resolve_ome_multiscale_translation_becomes_voxel_translation(
+    version: str,
+) -> None:
+    # Voxel size (x, y, z) = (0.5, 0.5, 2), so the physical translation
+    # (x, y, z) = (3, 1, 10) is (6, 2, 5) voxels; the channel entry is dropped.
+    finest = _dataset("s0", [1.0, 2.0, 0.5, 0.5])
+    finest["coordinateTransformations"].append(
+        {"type": "translation", "translation": [7.0, 10.0, 1.0, 3.0]}
+    )
+    attributes = _multiscale_attributes(
+        [_dataset("s1", [1.0, 4.0, 1.0, 1.0]), finest], version=version
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.dataset_paths == ("s0", "s1")
+    transformation, coarser_transformation = multiscale.layer_transformations
+    assert transformation is not None
+    np.testing.assert_allclose(
+        transformation.matrix,
+        [[1, 0, 0, 6], [0, 1, 0, 2], [0, 0, 1, 5], [0, 0, 0, 1]],
+    )
+    assert coarser_transformation is None
+
+
+def test_resolve_ome_multiscale_without_translation_needs_no_layer_transformation() -> (
+    None
+):
+    attributes = _multiscale_attributes([_dataset("0", [1.0, 2.0, 0.5, 0.5])])
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.layer_transformations == (None,)
+
+
+def test_resolve_ome_multiscale_without_axes_ignores_translation() -> None:
+    dataset = _dataset("0", [2.0, 0.5, 0.5])
+    dataset["coordinateTransformations"].append(
+        {"type": "translation", "translation": [10.0, 1.0, 3.0]}
+    )
+    attributes = _multiscale_attributes([dataset], axes=None)
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.layer_transformations == (None,)
+
+
+def _dataset_0_6(
+    path: str,
+    scale: list[float],
+    translation: list[float] | None = None,
+    *,
+    output: str = "physical",
+) -> dict:
+    endpoints = {"input": {"path": path}, "output": {"name": output}}
+    transform: dict
+    if translation is None:
+        transform = {"type": "scale", "scale": scale, **endpoints}
+    else:
+        transform = {
+            "type": "sequence",
+            **endpoints,
+            "transformations": [
+                {"type": "scale", "scale": scale},
+                {"type": "translation", "translation": translation},
+            ],
+        }
+    return {"path": path, "coordinateTransformations": [transform]}
+
+
+def _multiscale_attributes_0_6(
+    datasets: list[dict],
+    *,
+    coordinate_systems: list[dict] | None = None,
+    omero: dict | None = None,
+) -> dict:
+    if coordinate_systems is None:
+        coordinate_systems = [{"name": "physical", "axes": _CZYX_AXES}]
+    attributes: dict = {
+        "version": "0.6",
+        "multiscales": [
+            {"coordinateSystems": coordinate_systems, "datasets": datasets}
+        ],
+    }
+    if omero is not None:
+        attributes["omero"] = omero
+    return attributes
+
+
+def test_resolve_ome_multiscale_0_6_spec_example() -> None:
+    # The complete multiscales example of the NGFF 0.6 spec, as `attributes.ome`.
+    attributes = {
+        "version": "0.6",
+        "multiscales": [
+            {
+                "name": "example",
+                "coordinateSystems": [
+                    {
+                        "name": "intrinsic",
+                        "axes": [
+                            {"name": "t", "type": "time", "unit": "millisecond"},
+                            {"name": "c", "type": "channel"},
+                            {"name": "z", "type": "space", "unit": "micrometer"},
+                            {"name": "y", "type": "space", "unit": "micrometer"},
+                            {"name": "x", "type": "space", "unit": "micrometer"},
+                        ],
+                    }
+                ],
+                "datasets": [
+                    {
+                        "path": "s0",
+                        "coordinateTransformations": [
+                            {
+                                "type": "scale",
+                                "scale": [0.1, 1.0, 0.5, 0.5, 0.5],
+                                "input": {"path": "s0"},
+                                "output": {"name": "intrinsic"},
+                            }
+                        ],
+                    },
+                    {
+                        "path": "s1",
+                        "coordinateTransformations": [
+                            {
+                                "type": "sequence",
+                                "input": {"path": "s1"},
+                                "output": {"name": "intrinsic"},
+                                "transformations": [
+                                    {
+                                        "type": "scale",
+                                        "scale": [0.1, 1.0, 1.0, 1.0, 1.0],
+                                    },
+                                    {
+                                        "type": "translation",
+                                        "translation": [0, 0, 0.25, 0.25, 0.25],
+                                    },
+                                ],
+                            }
+                        ],
+                    },
+                    {
+                        "path": "s2",
+                        "coordinateTransformations": [
+                            {
+                                "type": "sequence",
+                                "input": {"path": "s2"},
+                                "output": {"name": "intrinsic"},
+                                "transformations": [
+                                    {
+                                        "type": "scale",
+                                        "scale": [0.1, 1.0, 2.0, 2.0, 2.0],
+                                    },
+                                    {
+                                        "type": "translation",
+                                        "translation": [0, 0, 0.75, 0.75, 0.75],
+                                    },
+                                ],
+                            }
+                        ],
+                    },
+                ],
+                "type": "gaussian",
+            }
+        ],
+    }
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.dataset_paths == ("s0", "s1", "s2")
+    assert multiscale.axis_names == (T_AXIS, C_AXIS, Z_AXIS, Y_AXIS, X_AXIS)
+
+
+def test_resolve_ome_multiscale_0_6_ranks_sequence_scales_regardless_of_list_order() -> (
+    None
+):
+    attributes = _multiscale_attributes_0_6(
+        [
+            _dataset_0_6("s2", [1.0, 4.0, 4.0, 4.0], [0, 1.5, 1.5, 1.5]),
+            _dataset_0_6("s0", [1.0, 1.0, 1.0, 1.0]),
+            _dataset_0_6("s1", [1.0, 2.0, 2.0, 2.0], [0, 0.5, 0.5, 0.5]),
+        ]
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.dataset_paths == ("s0", "s1", "s2")
+
+
+def test_resolve_ome_multiscale_0_6_uses_the_coordinate_system_datasets_map_into() -> (
+    None
+):
+    # The intrinsic coordinate system is the datasets' output, not the first entry.
+    attributes = _multiscale_attributes_0_6(
+        [_dataset_0_6("0", [1.0, 1.0, 1.0], output="intrinsic")],
+        coordinate_systems=[
+            {
+                "name": "other",
+                "axes": [
+                    {"name": "y", "type": "space"},
+                    {"name": "x", "type": "space"},
+                ],
+            },
+            {"name": "intrinsic", "axes": _CZYX_AXES[1:]},
+        ],
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.axis_names == (Z_AXIS, Y_AXIS, X_AXIS)
+
+
+def test_resolve_ome_multiscale_0_6_accepts_identity_transform() -> None:
+    attributes = _multiscale_attributes_0_6(
+        [
+            {
+                "path": "0",
+                "coordinateTransformations": [
+                    {
+                        "type": "identity",
+                        "input": {"path": "0"},
+                        "output": {"name": "physical"},
+                    }
+                ],
+            }
+        ]
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.dataset_paths == ("0",)
+
+
+def test_resolve_ome_multiscale_0_6_parses_omero_channels() -> None:
+    attributes = _multiscale_attributes_0_6(
+        [_dataset_0_6("0", [1.0, 1.0, 1.0, 1.0])],
+        omero={"channels": [{"color": "00FF00", "label": "GFP"}]},
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.channels is not None
+    assert multiscale.channels[0].label == "GFP"
+
+
+def _zyx_attributes_0_6(transforms: list[dict]) -> dict:
+    """A 0.6 z/y/x group with one dataset per transform."""
+    return _multiscale_attributes_0_6(
+        [
+            {
+                "path": str(i),
+                "coordinateTransformations": [
+                    {
+                        **transform,
+                        "input": {"path": str(i)},
+                        "output": {"name": "physical"},
+                    }
+                ],
+            }
+            for i, transform in enumerate(transforms)
+        ],
+        coordinate_systems=[{"name": "physical", "axes": _CZYX_AXES[1:]}],
+    )
+
+
+def test_resolve_ome_multiscale_0_6_plain_scale_needs_no_layer_transformation() -> None:
+    attributes = _zyx_attributes_0_6([{"type": "scale", "scale": [2.0, 0.5, 0.5]}])
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.layer_transformations == (None,)
+
+
+def test_resolve_ome_multiscale_0_6_translation_becomes_voxel_translation() -> None:
+    # Voxel size (x, y, z) = (0.5, 0.5, 2), so the physical translation
+    # (x, y, z) = (3, 1, 10) is (6, 2, 5) voxels.
+    attributes = _zyx_attributes_0_6(
+        [
+            {
+                "type": "sequence",
+                "transformations": [
+                    {"type": "scale", "scale": [2.0, 0.5, 0.5]},
+                    {"type": "translation", "translation": [10.0, 1.0, 3.0]},
+                ],
+            }
+        ]
+    )
+
+    (transformation,) = resolve_ome_multiscale(
+        attributes, path=_PATH
+    ).layer_transformations
+
+    assert transformation is not None
+    np.testing.assert_allclose(
+        transformation.matrix,
+        [[1, 0, 0, 6], [0, 1, 0, 2], [0, 0, 1, 5], [0, 0, 0, 1]],
+    )
+
+
+def test_resolve_ome_multiscale_0_6_rotation_becomes_layer_rotation() -> None:
+    # In z/y/x order: z stays, y' = -x, x' = y — a 90° rotation in the xy plane.
+    attributes = _zyx_attributes_0_6(
+        [{"type": "rotation", "rotation": [[1, 0, 0], [0, 0, -1], [0, 1, 0]]}]
+    )
+
+    (transformation,) = resolve_ome_multiscale(
+        attributes, path=_PATH
+    ).layer_transformations
+
+    assert transformation is not None
+    np.testing.assert_allclose(
+        transformation.matrix,
+        [[0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+    )
+
+
+def test_resolve_ome_multiscale_0_6_affine_keeps_channel_axis_separate() -> None:
+    # Like the spec's affine example 3: the channel axis maps onto itself.
+    attributes = _multiscale_attributes_0_6(
+        [
+            {
+                "path": "0",
+                "coordinateTransformations": [
+                    {
+                        "type": "affine",
+                        "affine": [
+                            [1, 0, 0, 0, 0],
+                            [0, 2, 0, 0, 4],
+                            [0, 0, 1, 0, 0],
+                            [0, 0, 0, 1, 0],
+                        ],
+                        "input": {"path": "0"},
+                        "output": {"name": "physical"},
+                    }
+                ],
+            }
+        ]
+    )
+
+    (transformation,) = resolve_ome_multiscale(
+        attributes, path=_PATH
+    ).layer_transformations
+
+    assert transformation is not None
+    # z voxel size 2, z offset 4 → 2 voxels.
+    np.testing.assert_allclose(transformation.matrix[:, 3], [0, 0, 2, 1])
+
+
+def test_resolve_ome_multiscale_0_6_ranks_rotated_levels_by_voxel_volume() -> None:
+    rotate_xy = {"type": "rotation", "rotation": [[1, 0, 0], [0, 0, -1], [0, 1, 0]]}
+    attributes = _zyx_attributes_0_6(
+        [
+            {
+                "type": "sequence",
+                "transformations": [
+                    {"type": "scale", "scale": [1.0, 2.0, 2.0]},
+                    rotate_xy,
+                ],
+            },
+            {
+                "type": "sequence",
+                "transformations": [
+                    {"type": "scale", "scale": [1.0, 1.0, 1.0]},
+                    rotate_xy,
+                    {"type": "translation", "translation": [0.0, 0.0, 5.0]},
+                ],
+            },
+        ]
+    )
+
+    multiscale = resolve_ome_multiscale(attributes, path=_PATH)
+
+    assert multiscale.dataset_paths == ("1", "0")
+    # The transformations are ranked along with the paths.
+    finest = multiscale.layer_transformations[0]
+    assert finest is not None
+    np.testing.assert_allclose(finest.matrix[:, 3], [5, 0, 0, 1])
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        {"type": "displacements", "path": "field", "interpolation": "linear"},
+        {"type": "affine", "path": "params"},
+        {
+            "type": "affine",
+            # The channel row picks up x.
+            "affine": [
+                [1, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0],
+                [0, 0, 1, 0, 0],
+                [0, 0, 0, 1, 0],
+            ],
+        },
+    ],
+    ids=["displacements", "affine-stored-in-array", "affine-mixing-channel-and-x"],
+)
+def test_resolve_ome_multiscale_0_6_rejects_transforms_webknossos_cannot_represent(
+    transform: dict,
+) -> None:
+    transform = {**transform, "input": {"path": "0"}, "output": {"name": "physical"}}
+    attributes = _multiscale_attributes_0_6(
+        [{"path": "0", "coordinateTransformations": [transform]}]
+    )
+
+    with pytest.raises(UnsupportedImageDataError):
+        resolve_ome_multiscale(attributes, path=_PATH)
+
+
+def test_resolve_ome_multiscale_0_6_rejects_malformed_affine() -> None:
+    attributes = _zyx_attributes_0_6([{"type": "affine", "affine": [[1, 0], [0, 1]]}])
+
+    with pytest.raises(CorruptImageError, match="shape"):
+        resolve_ome_multiscale(attributes, path=_PATH)
+
+
+def test_resolve_ome_multiscale_0_6_rejects_unknown_output_coordinate_system() -> None:
+    attributes = _multiscale_attributes_0_6(
+        [_dataset_0_6("0", [1.0, 1.0, 1.0, 1.0], output="missing")]
+    )
+
+    with pytest.raises(CorruptImageError, match="missing"):
+        resolve_ome_multiscale(attributes, path=_PATH)
+
+
+def test_resolve_ome_multiscale_0_6_rejects_inconsistent_output_coordinate_systems() -> (
+    None
+):
+    attributes = _multiscale_attributes_0_6(
+        [
+            _dataset_0_6("0", [1.0, 1.0, 1.0, 1.0]),
+            _dataset_0_6("1", [1.0, 2.0, 2.0, 2.0], output="other"),
+        ]
+    )
+
+    with pytest.raises(CorruptImageError, match="same coordinate system"):
+        resolve_ome_multiscale(attributes, path=_PATH)
+
+
+def test_resolve_ome_multiscale_0_6_rejects_multiple_dataset_transforms() -> None:
+    # 0.6 requires a "sequence" instead of a flat list of transforms.
+    dataset = _dataset_0_6("0", [1.0, 1.0, 1.0, 1.0])
+    dataset["coordinateTransformations"].append(
+        {"type": "translation", "translation": [0, 0, 0, 0]}
+    )
+    attributes = _multiscale_attributes_0_6([dataset])
+
+    with pytest.raises(CorruptImageError, match="exactly one"):
+        resolve_ome_multiscale(attributes, path=_PATH)
+
+
+def test_resolve_ome_multiscale_rejects_scene_group_with_hint() -> None:
+    attributes = {"version": "0.6", "scene": {"coordinateTransformations": []}}
+
+    with pytest.raises(UnsupportedImageFormatError, match="scene"):
+        resolve_ome_multiscale(attributes, path=_PATH)
 
 
 _view_configuration = LayerViewConfiguration(color=(255, 0, 0))

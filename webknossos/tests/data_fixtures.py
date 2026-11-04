@@ -306,35 +306,68 @@ def write_ome_zarr_v2_group(
         write_zarr_v2_array(path / rel_path, data)
 
 
+def _ome_0_6_dataset_transform(
+    rel_path: str, scale: list[float], finest_scale: list[float]
+) -> dict[str, Any]:
+    """A plain `scale` for the finest dataset, and a `sequence[scale,
+    translation]` with the half-pixel offset for all others, as in the
+    NGFF 0.6 spec example."""
+    endpoints = {"input": {"path": rel_path}, "output": {"name": "physical"}}
+    if scale == finest_scale:
+        return {"type": "scale", "scale": scale, **endpoints}
+    return {
+        "type": "sequence",
+        **endpoints,
+        "transformations": [
+            {"type": "scale", "scale": scale},
+            {
+                "type": "translation",
+                "translation": [(s - f) / 2 for s, f in zip(scale, finest_scale)],
+            },
+        ],
+    }
+
+
 def write_ome_zarr_v3_group(
     path: UPath,
     datasets: list[tuple[str, np.ndarray, list[float]]],
     axes: list[dict[str, str]],
     omero: dict[str, Any] | None = None,
+    ome_version: str = "0.5",
 ) -> None:
-    """Writes a v3 (`zarr.json`) OME-Zarr (NGFF 0.5) multiscale group. Each
-    entry in `datasets` is `(relative_path, data, scale)`: `data` is written
-    as a plain v3 sub-array at `path/relative_path`, and `scale` becomes its
-    `coordinateTransformations`. `omero`, if given, is written alongside
-    `multiscales` as-is."""
+    """Writes a v3 (`zarr.json`) OME-Zarr (NGFF 0.5 or 0.6) multiscale group.
+    Each entry in `datasets` is `(relative_path, data, scale)`: `data` is
+    written as a plain v3 sub-array at `path/relative_path`, and `scale`
+    becomes its `coordinateTransformations`. `omero`, if given, is written
+    alongside `multiscales` as-is."""
     path.mkdir(parents=True, exist_ok=True)
-    ome: dict[str, Any] = {
-        "version": "0.5",
-        "multiscales": [
-            {
-                "axes": axes,
-                "datasets": [
-                    {
-                        "path": rel_path,
-                        "coordinateTransformations": [
-                            {"type": "scale", "scale": scale}
-                        ],
-                    }
-                    for rel_path, _, scale in datasets
-                ],
-            }
-        ],
-    }
+    multiscale: dict[str, Any]
+    if ome_version == "0.6":
+        finest_scale = min((scale for _, _, scale in datasets), key=np.prod)
+        multiscale = {
+            "coordinateSystems": [{"name": "physical", "axes": axes}],
+            "datasets": [
+                {
+                    "path": rel_path,
+                    "coordinateTransformations": [
+                        _ome_0_6_dataset_transform(rel_path, scale, finest_scale)
+                    ],
+                }
+                for rel_path, _, scale in datasets
+            ],
+        }
+    else:
+        multiscale = {
+            "axes": axes,
+            "datasets": [
+                {
+                    "path": rel_path,
+                    "coordinateTransformations": [{"type": "scale", "scale": scale}],
+                }
+                for rel_path, _, scale in datasets
+            ],
+        }
+    ome: dict[str, Any] = {"version": ome_version, "multiscales": [multiscale]}
     if omero is not None:
         ome["omero"] = omero
     (path / "zarr.json").write_text(
@@ -355,6 +388,7 @@ def write_ozx_file(
     datasets: list[tuple[str, np.ndarray, list[float]]],
     axes: list[dict[str, str]],
     omero: dict[str, Any] | None = None,
+    ome_version: str = "0.5",
 ) -> None:
     """Writes `datasets` as a zipped OME-Zarr (`.ozx`, NGFF RFC-9) archive at
     `path`: a v3 OME-Zarr multiscale group (see `write_ome_zarr_v3_group`),
@@ -362,7 +396,9 @@ def write_ozx_file(
     the root `zarr.json` as the first entry — as RFC-9 recommends."""
     with TemporaryDirectory() as tmp_dir:
         group_path = UPath(tmp_dir) / "group"
-        write_ome_zarr_v3_group(group_path, datasets, axes, omero)
+        write_ome_zarr_v3_group(
+            group_path, datasets, axes, omero, ome_version=ome_version
+        )
         with ZipFile(str(path), "w", compression=ZIP_STORED) as zip_file:
             zip_file.write(str(group_path / "zarr.json"), "zarr.json")
             for file_path in sorted(group_path.rglob("*")):

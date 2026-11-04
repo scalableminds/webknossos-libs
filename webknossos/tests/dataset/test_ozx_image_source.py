@@ -27,7 +27,8 @@ _AXES_CZYX = [
 ]
 
 
-def test_ozx_group_picks_finest_resolution(tmp_upath: UPath) -> None:
+@pytest.mark.parametrize("ome_version", ["0.5", "0.6"])
+def test_ozx_group_picks_finest_resolution(tmp_upath: UPath, ome_version: str) -> None:
     ozx_path = tmp_upath / "multiscale.ozx"
     finest = np.arange(2 * 4 * 8 * 8, dtype=np.uint8).reshape(2, 4, 8, 8)
     coarse = np.zeros((2, 4, 4, 4), dtype=np.uint8)
@@ -38,6 +39,7 @@ def test_ozx_group_picks_finest_resolution(tmp_upath: UPath) -> None:
             ("0", finest, [1.0, 1.0, 1.0, 1.0]),
         ],
         _AXES_CZYX,
+        ome_version=ome_version,
     )
 
     source = _open(ozx_path)
@@ -54,7 +56,10 @@ def test_ozx_group_picks_finest_resolution(tmp_upath: UPath) -> None:
     np.testing.assert_array_equal(block[0], finest[0])  # channel 0, the default pin
 
 
-def test_ozx_group_scale_option_picks_other_level(tmp_upath: UPath) -> None:
+@pytest.mark.parametrize("ome_version", ["0.5", "0.6"])
+def test_ozx_group_scale_option_picks_other_level(
+    tmp_upath: UPath, ome_version: str
+) -> None:
     ozx_path = tmp_upath / "multiscale_pick.ozx"
     finest = np.ones((4, 8, 8), dtype=np.uint8)
     coarse = np.full((4, 4, 4), 7, dtype=np.uint8)
@@ -63,6 +68,7 @@ def test_ozx_group_scale_option_picks_other_level(tmp_upath: UPath) -> None:
         ozx_path,
         [("0", finest, [1.0, 1.0, 1.0]), ("1", coarse, [1.0, 2.0, 2.0])],
         axes,
+        ome_version=ome_version,
     )
 
     finest_source = _open(ozx_path)
@@ -172,7 +178,10 @@ def test_unsupported_ome_version_is_rejected(tmp_upath: UPath) -> None:
         _open(ozx_path)
 
 
-def test_axis_names_come_from_ome_axes_metadata(tmp_upath: UPath) -> None:
+@pytest.mark.parametrize("ome_version", ["0.5", "0.6"])
+def test_axis_names_come_from_ome_axes_metadata(
+    tmp_upath: UPath, ome_version: str
+) -> None:
     # axes in a non-canonical physical order (c, x, y, z) proves axis roles
     # come from the OME metadata, not from position.
     ozx_path = tmp_upath / "labeled.ozx"
@@ -184,7 +193,9 @@ def test_axis_names_come_from_ome_axes_metadata(tmp_upath: UPath) -> None:
     ]
     c, x, y, z = 1, 7, 5, 3
     data = np.arange(c * x * y * z, dtype=np.uint8).reshape(c, x, y, z)
-    write_ozx_file(ozx_path, [("0", data, [1.0, 1.0, 1.0, 1.0])], axes)
+    write_ozx_file(
+        ozx_path, [("0", data, [1.0, 1.0, 1.0, 1.0])], axes, ome_version=ome_version
+    )
 
     source = _open(ozx_path)
 

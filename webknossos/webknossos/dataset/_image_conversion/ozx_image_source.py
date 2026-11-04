@@ -19,7 +19,7 @@ import zipfile
 import tensorstore as ts
 from upath import UPath
 
-from ...dataset_properties import LayerViewConfiguration
+from ...dataset_properties import CoordinateTransformation, LayerViewConfiguration
 from ...geometry.constants import C_AXIS, X_AXIS, Y_AXIS, Z_AXIS
 from .._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
 from ..errors import CorruptImageError, UnsupportedImageFormatError
@@ -103,6 +103,7 @@ class OzxImageSource(TensorStoreChunkedImageSource):
                 f"{list(range(len(multiscale.dataset_paths)))}."
             )
         chosen_dataset_path = multiscale.dataset_paths[rank]
+        self._layer_transformation = multiscale.layer_transformations[rank]
         self._ts_spec = {
             "driver": "zarr3",
             "kvstore": {
@@ -160,6 +161,14 @@ class OzxImageSource(TensorStoreChunkedImageSource):
         return _ome_suggested_view_configuration(
             self._omero_channels, self._channel, self.num_channels
         )
+
+    @property
+    def suggested_coordinate_transformations(
+        self,
+    ) -> tuple[CoordinateTransformation, ...] | None:
+        if self._layer_transformation is None:
+            return None
+        return (self._layer_transformation,)
 
     def layer_split_label(self, key: str, value: int) -> str:
         return _ome_layer_split_label(
