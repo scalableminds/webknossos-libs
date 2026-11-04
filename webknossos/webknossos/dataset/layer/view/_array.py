@@ -716,14 +716,37 @@ class TensorStoreArray(BaseArray):
             if chunk_coords_list is None:
                 continue
 
-            if shape.axes[0] == C_AXIS:
-                chunk_coords = Vec3Int(chunk_coords_list[1:])
-            else:
-                chunk_coords = Vec3Int(chunk_coords_list)
+            if shape.axes == CXYZ_AXES or shape.axes == XYZ_AXES:
+                if shape.axes[0] == C_AXIS:
+                    chunk_coords = Vec3Int(chunk_coords_list[1:])
+                else:
+                    chunk_coords = Vec3Int(chunk_coords_list)
 
-            yield BoundingBox(chunk_coords * shard_shape, shard_shape).normalize_axes(
-                self.info.bounding_box.size.c
-            )
+                yield BoundingBox(
+                    chunk_coords * shard_shape, shard_shape
+                ).normalize_axes(self.info.bounding_box.size.c)
+            else:
+                # The channel axis always spans all channels, other axes are split into shards.
+                array_write_chunk_shape = self._array.chunk_layout.write_chunk.shape
+                write_chunk_shape = [
+                    _chunk_dim(array_write_chunk_shape, i)
+                    for i in range(len(shape.axes))
+                ]
+                yield NormalizedBoundingBox(
+                    topleft=tuple(
+                        0 if axis == C_AXIS else coord * chunk_size
+                        for axis, coord, chunk_size in zip(
+                            shape.axes, chunk_coords_list, write_chunk_shape
+                        )
+                    ),
+                    size=tuple(
+                        shape_size if axis == C_AXIS else chunk_size
+                        for axis, shape_size, chunk_size in zip(
+                            shape.axes, shape.size, write_chunk_shape
+                        )
+                    ),
+                    axes=shape.axes,
+                )
 
     def list_bounding_boxes(self) -> Iterator[NormalizedBoundingBox]:
         kvstore = self._array.kvstore
@@ -736,9 +759,13 @@ class TensorStoreArray(BaseArray):
 
         _, shard_shape, shape = self._get_array_dimensions(self._array)
 
-        if shape.axes != CXYZ_AXES and shape.axes != XYZ_AXES:
+        if X_AXIS not in shape.axes or Y_AXIS not in shape.axes:
             raise NotImplementedError(
-                "list_bounding_boxes() is not supported for non 3-D arrays."
+                "list_bounding_boxes() is not supported for arrays without x and y axes."
+            )
+        if shape.axes not in (CXYZ_AXES, XYZ_AXES) and C_AXIS not in shape.axes:
+            raise NotImplementedError(
+                "list_bounding_boxes() is not supported for n-dimensional arrays without a channel axis."
             )
 
         # This needs to be a separate function because we need the NotImplementedError
