@@ -52,7 +52,7 @@ dependencies = [
     "google-api-python-client >= 2.0.0",
     "psutil ~=6.0.0",
     "python-dateutil >=2.9.0",
-    "python-dotenv ~=1.0.1",
+    "python-dotenv >=1.2.2,<2",
     "rich ~=13.8.0",
     "scipy >=1.13",
     "tensorstore ==0.1.76; sys_platform == 'win32'", # tensorstore crashes on windows with >0.1.76
