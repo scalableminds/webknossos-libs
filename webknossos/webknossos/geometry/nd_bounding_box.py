@@ -51,7 +51,7 @@ class NDBoundingBox:
     top-left corner coordinates and size. Each dimension has an associated axis name
     and index for ordering.
 
-    Args:
+    Attributes:
         topleft: The coordinates of the upper-left corner (inclusive)
         size: The size/extent in each dimension
         axes: The names of the axes/dimensions (e.g. "x", "y", "z", "t")
