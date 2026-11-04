@@ -17,6 +17,7 @@ in the _Changed_ sections.
 
 ### Added
 - `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
+- Volume layers of annotations now support segment groups via `VolumeLayer.segment_groups`, `VolumeLayer.add_segment_group` and `SegmentInformation.group_id`. They are read from and written to NML files.
 
 ### Changed
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
@@ -24,6 +25,7 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- Segment groups in NML files are no longer parsed as skeleton tree groups.
 
 
 ## [4.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.3) - 2026-10-26

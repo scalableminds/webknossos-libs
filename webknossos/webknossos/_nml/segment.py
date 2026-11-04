@@ -14,6 +14,7 @@ class Segment(NamedTuple):
     anchor_position: Vec3Int | None
     color: Vector4 | None
     metadata: list[MetadataEntry]
+    group_id: int | None = None
 
     def _dump(self, xf: XmlWriter) -> None:
         if self.anchor_position is None:
@@ -41,6 +42,7 @@ class Segment(NamedTuple):
                     "name": self.name,
                     **anchor_position_dict,
                     **color_dict,
+                    "groupId": None if self.group_id is None else str(self.group_id),
                 }
             ),
         )
@@ -69,10 +71,14 @@ class Segment(NamedTuple):
                 int(enforce_not_null(nml_segment.get("anchorPositionY"))),
                 int(enforce_not_null(nml_segment.get("anchorPositionZ"))),
             )
+        group_id_str = nml_segment.get("groupId")
         return cls(
             int(enforce_not_null(nml_segment.get("id"))),
             name=nml_segment.get("name"),
             anchor_position=anchor_position,
             color=color,
             metadata=[],
+            group_id=None
+            if group_id_str is None or int(group_id_str) < 0
+            else int(group_id_str),
         )

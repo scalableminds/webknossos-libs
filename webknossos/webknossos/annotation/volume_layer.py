@@ -55,6 +55,22 @@ class SegmentInformation:
     anchor_position: Vec3Int | None = attr.field(converter=as_vec3_int_or_none)
     color: Vector4 | None
     metadata: dict[str, str | int | float | Sequence[str]]
+    group_id: int | None = None
+
+
+@attr.define
+class SegmentGroup:
+    """A named group of segments, which may contain nested subgroups."""
+
+    id: int
+    name: str
+    children: list["SegmentGroup"] = attr.Factory(list)
+
+    def flattened_groups(self) -> Iterator["SegmentGroup"]:
+        """Yields this group and all of its subgroups recursively."""
+        yield self
+        for child in self.children:
+            yield from child.flattened_groups()
 
 
 _VOLUME_METADATA_FILE_NAMES = {
@@ -110,6 +126,31 @@ class VolumeLayer:
     voxel_size: Vec3Float | None = attr.field(converter=as_vec3_float_or_none)
     dtype: DTypeLike | None = None
     layer_name: str = "volumeAnnotationData"
+    segment_groups: list[SegmentGroup] = attr.Factory(list)
+
+    def add_segment_group(
+        self, name: str, parent: SegmentGroup | None = None
+    ) -> SegmentGroup:
+        """Creates a segment group with a fresh id.
+
+        Args:
+            name: Name of the new group.
+            parent: Group to nest the new group in. Top-level if None.
+
+        Returns:
+            SegmentGroup: The new group. Assign its id to `SegmentInformation.group_id`
+                to put segments into it.
+        """
+        group_id = (
+            max(
+                (g.id for root in self.segment_groups for g in root.flattened_groups()),
+                default=0,
+            )
+            + 1
+        )
+        group = SegmentGroup(id=group_id, name=name)
+        (self.segment_groups if parent is None else parent.children).append(group)
+        return group
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"

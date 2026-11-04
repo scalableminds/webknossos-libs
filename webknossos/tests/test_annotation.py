@@ -412,6 +412,50 @@ def test_segment_metadata(tmp_upath: UPath) -> None:
     )
 
 
+def test_segment_groups(tmp_upath: UPath) -> None:
+    nml = (TESTDATA_DIR / "annotations" / "nml_with_volumes.nml").read_text()
+    nml = nml.replace(
+        "<groups />", '<groups><group id="1" name="tree_group" /></groups>'
+    )
+    nml = nml.replace(
+        'anchorPositionZ="1024" />',
+        'anchorPositionZ="1024" groupId="3" />',
+    )
+    nml = nml.replace(
+        "</segments>",
+        '</segments><groups><group id="2" name="outer">'
+        + '<group id="3" name="inner" /></group></groups>',
+    )
+    (tmp_upath / "in.nml").write_text(nml)
+
+    annotation = wk.Annotation.load(tmp_upath / "in.nml")
+    assert [g.name for g in annotation.skeleton.flattened_groups()] == ["tree_group"]
+    volume_layer = annotation.get_volume_layer("segmentation")
+    assert volume_layer.segment_groups == [
+        wk.SegmentGroup(
+            id=2, name="outer", children=[wk.SegmentGroup(id=3, name="inner")]
+        )
+    ]
+    assert volume_layer.segments[2504698].group_id == 3
+
+    new_group = volume_layer.add_segment_group("new")
+    assert new_group.id == 4
+    volume_layer.segments[1] = SegmentInformation(
+        name=None,
+        anchor_position=None,
+        color=None,
+        metadata={},
+        group_id=new_group.id,
+    )
+
+    annotation.save(tmp_upath / "out.zip")
+    reloaded = wk.Annotation.load(tmp_upath / "out.zip")
+    reloaded_layer = reloaded.get_volume_layer("segmentation")
+    assert reloaded_layer.segment_groups == volume_layer.segment_groups
+    assert reloaded_layer.segments == volume_layer.segments
+    assert [g.name for g in reloaded.skeleton.flattened_groups()] == ["tree_group"]
+
+
 def test_tree_metadata(tmp_upath: UPath) -> None:
     annotation = wk.Annotation.load(
         TESTDATA_DIR / "annotations" / "l4_sample__explorational__suser__94b271.zip"

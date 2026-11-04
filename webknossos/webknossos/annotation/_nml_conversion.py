@@ -11,7 +11,7 @@ import webknossos._nml as wknml
 from ..geometry import Vec3Int
 
 if TYPE_CHECKING:
-    from ..annotation import Annotation
+    from ..annotation import Annotation, SegmentGroup
     from ..skeleton import Group, Skeleton, Tree
 
 
@@ -135,6 +135,14 @@ def _nml_tree_to_wk_tree(
         new_tree.add_edge(edge.source, edge.target)
 
 
+def _segment_group_to_nml_group(group: "SegmentGroup") -> wknml.Group:
+    return wknml.Group(
+        id=group.id,
+        name=group.name,
+        children=[_segment_group_to_nml_group(c) for c in group.children],
+    )
+
+
 def _random_color_rgba() -> tuple[float, float, float, float]:
     """
     A utility to generate a new random RGBA color.
@@ -225,11 +233,15 @@ def annotation_to_nml(
                     anchor_position=segment_info.anchor_position,
                     color=segment_info.color,
                     metadata=_dict_to_metadata_entry_list(segment_info.metadata),
+                    group_id=segment_info.group_id,
                 )
                 for segment_id, segment_info in volume.segments.items()
             ],
             format=str(volume.data_format),
             largest_segment_id=volume.largest_segment_id,
+            segment_groups=[
+                _segment_group_to_nml_group(g) for g in volume.segment_groups
+            ],
         )
         for volume in annotation._volume_layers
     ]

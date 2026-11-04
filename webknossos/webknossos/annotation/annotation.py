@@ -95,7 +95,7 @@ from ..utils import (
     warn_deprecated,
 )
 from ._nml_conversion import annotation_to_nml, nml_to_skeleton
-from .volume_layer import SegmentInformation, VolumeLayer
+from .volume_layer import SegmentGroup, SegmentInformation, VolumeLayer
 
 logger = logging.getLogger(__name__)
 
@@ -640,6 +640,7 @@ class Annotation:
                         anchor_position=segment.anchor_position,
                         color=segment.color,
                         metadata={i.key: i.value for i in segment.metadata},
+                        group_id=segment.group_id,
                     )
             volume_layers.append(
                 VolumeLayer(
@@ -655,6 +656,9 @@ class Annotation:
                     segments=segments,
                     largest_segment_id=volume.largest_segment_id,
                     voxel_size=nml.parameters.scale.factor,
+                    segment_groups=[
+                        _nml_group_to_segment_group(g) for g in volume.segment_groups
+                    ],
                 )
             )
         assert len(set(i.id for i in volume_layers)) == len(volume_layers), (
@@ -1338,6 +1342,14 @@ class Annotation:
 
 
 Annotation._set_init_docstring()
+
+
+def _nml_group_to_segment_group(nml_group: wknml.Group) -> SegmentGroup:
+    return SegmentGroup(
+        id=nml_group.id,
+        name=nml_group.name,
+        children=[_nml_group_to_segment_group(c) for c in nml_group.children],
+    )
 
 
 @unique

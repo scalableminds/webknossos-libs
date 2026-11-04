@@ -3,6 +3,7 @@ from xml.etree.ElementTree import Element
 
 from loxun import XmlWriter
 
+from .group import Group
 from .segment import Segment
 from .utils import enforce_not_null, filter_none_values
 
@@ -19,6 +20,7 @@ class Volume(NamedTuple):
     segments: list[Segment]
     format: str | None = None
     largest_segment_id: int | None = None
+    segment_groups: list[Group] = []
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag(
@@ -41,6 +43,10 @@ class Volume(NamedTuple):
             for segment in self.segments:
                 segment._dump(xf)
             xf.endTag()  # segments
+        xf.startTag("groups")
+        for group in self.segment_groups:
+            group._dump(xf)
+        xf.endTag()  # groups
         xf.endTag()  # volume
 
     @classmethod
@@ -53,6 +59,7 @@ class Volume(NamedTuple):
             name=nml_volume.get("name", default=None),
             format=nml_volume.get("format", default=None),
             segments=[],
+            segment_groups=[],
             largest_segment_id=None
             if largest_segment_id_str is None
             else int(largest_segment_id_str),

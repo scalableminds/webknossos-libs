@@ -4,6 +4,7 @@ from .annotation import (
     AnnotationState,
     AnnotationType,
     RemoteAnnotation,
+    SegmentGroup,
     SegmentInformation,
 )
 from .annotation_info import AnnotationInfo
