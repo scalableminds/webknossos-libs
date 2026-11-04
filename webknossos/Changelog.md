@@ -20,6 +20,7 @@ in the _Changed_ sections.
 
 ### Changed
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
+- Import time was cut roughly in half by using lazy imports for several dependencies. [#1583](https://github.com/scalableminds/webknossos-libs/pull/1583)
 
 ### Deprecated
 
