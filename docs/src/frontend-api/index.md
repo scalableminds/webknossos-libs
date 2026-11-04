@@ -4,12 +4,15 @@ WEBKNOSSOS exposes a JavaScript API in the browser for user scripts, e.g. to add
 Scripts can be run from the annotation viewer or attached to tasks, see [Scripts](../webknossos/tasks_projects/scripts.md).
 
 The API is available as `window.webknossos` once an annotation or dataset is opened.
-Request the API with `apiReady`, which resolves as soon as WEBKNOSSOS is fully initialized:
+Request the API with `apiReady`, which resolves as soon as WEBKNOSSOS is fully initialized.
+This example comments on the active node, so it requires an opened skeleton annotation:
 
 ```javascript
 window.webknossos.apiReady(3).then((api) => {
   const nodeId = api.tracing.getActiveNodeId();
-  api.tracing.setCommentForNode("my comment", nodeId);
+  if (nodeId != null) {
+    api.tracing.setCommentForNode("my comment", nodeId);
+  }
 });
 ```
 
