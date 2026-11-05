@@ -127,6 +127,11 @@ dev = [
     "waitress ~=3.0.2",
 ]
 
+[tool.uv]
+constraint-dependencies = [
+    "pillow ~=13.0.0; python_version >= '3.11'", # Pillow 13 requires Python >=3.11
+]
+
 [tool.uv.sources]
 cluster-tools = { path = "../cluster_tools", editable = true }
 
