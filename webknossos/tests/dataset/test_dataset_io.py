@@ -914,6 +914,14 @@ def test_read_with_negative_offset(
         data, np.zeros((3, 32 // mag, 32 // mag, 32 // mag), dtype="uint8")
     )
 
+    # Negative channels are not allowed
+    with pytest.raises(AssertionError):
+        mag_view.read(
+            absolute_bounding_box=NDBoundingBox(
+                (-1, 0, 0, 0), (3, 32, 32, 32), axes=("c", "x", "y", "z")
+            )
+        )
+
 
 def test_read_bbox() -> None:
     ds_path = prepare_dataset_path(DataFormat.WKW, TESTOUTPUT_DIR)

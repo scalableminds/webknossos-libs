@@ -802,6 +802,9 @@ class View:
             f"The size ({mag1_bbox.size} in mag1) contains a zero. "
             + "All dimensions must be strictly larger than '0'."
         )
+        assert mag1_bbox.topleft.get(C_AXIS, 0) >= 0, (
+            f"The channel offset ({mag1_bbox.topleft.c}) must not be negative."
+        )
         return mag1_bbox
 
     def read_xyz(
