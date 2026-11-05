@@ -1,0 +1,36 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "WEBKNOSSOS Frontend API",
+  "entryPoints": [
+    "wk-repo/frontend/javascripts/viewer/api/api_loader.ts",
+    "wk-repo/frontend/javascripts/viewer/api/api_latest.ts"
+  ],
+  "tsconfig": "wk-repo/tsconfig.json",
+  "plugin": [
+    "typedoc-plugin-missing-exports",
+    "./typedoc-plugin-griffe-compat.mjs"
+  ],
+  "internalModule": "internal",
+  "readme": "none",
+  "skipErrorChecking": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "excludeNotDocumented": true,
+  "excludeNotDocumentedKinds": [
+    "Variable",
+    "Function",
+    "Constructor",
+    "Property",
+    "Method",
+    "Accessor",
+    "Interface",
+    "TypeAlias",
+    "Enum",
+    "CallSignature",
+    "ConstructorSignature",
+    "IndexSignature",
+    "GetSignature",
+    "SetSignature"
+  ]
+}

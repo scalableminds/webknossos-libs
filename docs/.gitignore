@@ -141,3 +141,4 @@ cython_debug/
 /wk-repo
 /src/webknossos
 /out
+/node_modules
