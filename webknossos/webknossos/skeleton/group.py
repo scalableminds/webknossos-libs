@@ -1,6 +1,6 @@
 import copy
-from collections.abc import Iterator, Sequence
-from typing import TYPE_CHECKING, Any, Union, cast
+from collections.abc import Collection, Iterator, Sequence
+from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
 
 import attr
 from boltons.strutils import unit_len
@@ -17,10 +17,56 @@ if TYPE_CHECKING:
 
 Vector4 = tuple[float, float, float, float]
 GroupOrTree = Union["Group", Tree]
+_GroupT = TypeVar("_GroupT", bound="_BaseGroup")
 
 
-@attr.define()
-class Group:
+class _BaseGroup:
+    """Id and nesting logic shared by skeleton groups and segment groups."""
+
+    __slots__ = ()
+
+    _id: int
+    name: str
+    _child_groups: Collection[Any]
+
+    @property
+    def id(self) -> int:
+        """Read-only property."""
+        return self._id
+
+    @property
+    def groups(self: _GroupT) -> Iterator[_GroupT]:
+        """Returns all (immediate) group children as an iterator.
+        Use flattened_groups if you also need groups within subgroups."""
+        return iter(self._child_groups)
+
+    def flattened_groups(self: _GroupT) -> Iterator[_GroupT]:
+        """Returns an iterator of all groups within this group (and its subgroups)."""
+        for group in self.groups:
+            yield group
+            yield from group.flattened_groups()
+
+    def get_group_by_id(self: _GroupT, group_id: int) -> _GroupT:
+        """Returns the group within this group (and its subgroups) which has the specified id."""
+        for group in self.flattened_groups():
+            if group.id == group_id:
+                return group
+        raise ValueError(f"No group with id {group_id} was found")
+
+    def as_nml_group(self) -> wknml.Group:
+        """Converts this group to its NML representation."""
+        return wknml.Group(
+            id=self.id,
+            name=self.name,
+            children=[g.as_nml_group() for g in self._child_groups],
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        return type(other) is type(self) and self._id == other._id
+
+
+@attr.define(eq=False)
+class Group(_BaseGroup):
     """A hierarchical container for organizing trees and subgroups in WEBKNOSSOS skeleton annotations.
 
     The Group class provides a way to organize skeleton trees into logical collections,
@@ -103,11 +149,6 @@ class Group:
             self._skeleton._element_id_generator.register(self._id)
         else:
             self._id = self._skeleton._element_id_generator.__next__()
-
-    @property
-    def id(self) -> int:
-        """Read-only property."""
-        return self._id
 
     def add_tree(
         self,
@@ -292,12 +333,6 @@ class Group:
         Use flattened_trees if you also need trees within subgroups."""
         return (child for child in self._child_trees)
 
-    @property
-    def groups(self) -> Iterator["Group"]:
-        """Returns all (immediate) group children as an iterator.
-        Use flattened_groups if you need also need groups within subgroups."""
-        return (child for child in self._child_groups)
-
     def add_group(
         self,
         name: str,
@@ -369,12 +404,6 @@ class Group:
         yield from self.trees
         for group in self.groups:
             yield from group.flattened_trees()
-
-    def flattened_groups(self) -> Iterator["Group"]:
-        """Returns an iterator of all groups within this group (and its subgroups)."""
-        for group in self.groups:
-            yield group
-            yield from group.flattened_groups()
 
     def get_node_by_id(self, node_id: int) -> "Node":
         """Retrieves a node by its ID from any tree in this group or its subgroups.
@@ -451,35 +480,6 @@ class Group:
             return True
         except ValueError:
             return False
-
-    def get_group_by_id(self, group_id: int) -> "Group":
-        """Returns the group which has the specified group id."""
-        # Todo: Use hashed access if it turns out to be worth it? # noqa: FIX002 Line contains TODO
-        for group in self.flattened_groups():
-            if group.id == group_id:
-                return group
-        raise ValueError(f"No group with id {group_id} was found")
-
-    def as_nml_group(self) -> wknml.Group:
-        """Converts this group to its NML representation.
-
-        This method creates a lightweight representation of the group
-        suitable for serialization in the NML format.
-
-        Returns:
-            wknml.Group: NML representation of this group.
-
-        Notes:
-            This is primarily used internally for file I/O operations.
-        """
-        return wknml.Group(
-            self.id,
-            self.name,
-            children=[g.as_nml_group() for g in self._child_groups],
-        )
-
-    def __eq__(self, other: Any) -> bool:
-        return type(other) is type(self) and self._id == other._id
 
     def __hash__(self) -> int:
         return id(self)

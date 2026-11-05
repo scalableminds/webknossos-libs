@@ -1,3 +1,4 @@
+import io
 import sys
 import tempfile
 
@@ -8,6 +9,8 @@ from upath import UPath
 
 import webknossos as wk
 from webknossos import Annotation, DataFormat, SegmentationLayer
+from webknossos.annotation._nml_conversion import annotation_to_nml
+from webknossos.annotation.segment_group import SegmentGroup
 from webknossos.annotation.volume_layer import SegmentInformation, VolumeLayerEditMode
 from webknossos.geometry import BoundingBox, Vec3Int
 
@@ -410,6 +413,126 @@ def test_segment_metadata(tmp_upath: UPath) -> None:
         ]
         == "test"
     )
+
+
+def test_segment_groups(tmp_upath: UPath) -> None:
+    nml = (TESTDATA_DIR / "annotations" / "nml_with_volumes.nml").read_text()
+    nml = nml.replace(
+        "<groups />", '<groups><group id="1" name="tree_group" /></groups>'
+    )
+    nml = nml.replace(
+        'anchorPositionZ="1024" />',
+        'anchorPositionZ="1024" groupId="3" />',
+    )
+    nml = nml.replace(
+        "</segments>",
+        '</segments><groups><group id="2" name="outer">'
+        + '<group id="3" name="inner" /></group></groups>',
+    )
+    (tmp_upath / "in.nml").write_text(nml)
+
+    annotation = wk.Annotation.load(tmp_upath / "in.nml")
+    assert [g.name for g in annotation.skeleton.flattened_groups()] == ["tree_group"]
+    volume_layer = annotation.get_volume_layer("segmentation")
+    (outer,) = volume_layer.segment_groups
+    (inner,) = outer.groups
+    assert (outer.id, outer.name, inner.id, inner.name) == (2, "outer", 3, "inner")
+    assert list(volume_layer.flattened_segment_groups()) == [outer, inner]
+    assert volume_layer.get_segment_group_by_id(3) is inner
+    assert volume_layer.segments[2504698].group is inner
+    assert outer.segments == {}
+    assert outer.flattened_segments() == {2504698: volume_layer.segments[2504698]}
+
+    new_group = inner.add_group("new")
+    assert new_group.id == 4
+    volume_layer.segments[1] = SegmentInformation(
+        name=None,
+        anchor_position=None,
+        color=None,
+        metadata={},
+        group=new_group,
+    )
+    assert set(outer.flattened_segments()) == {1, 2504698}
+
+    other_layer = annotation.add_volume_layer(name="other", dtype="uint32")
+    volume_layer.segments[2] = SegmentInformation(
+        name=None,
+        anchor_position=None,
+        color=None,
+        metadata={},
+        group=other_layer.add_segment_group("foreign"),
+    )
+    (tmp_upath / "invalid.zip").write_bytes(b"existing")
+    with pytest.raises(ValueError, match="does not belong"):
+        annotation.save(tmp_upath / "invalid.zip")
+    assert (tmp_upath / "invalid.zip").read_bytes() == b"existing"
+    del volume_layer.segments[2]
+    annotation.delete_volume_layer(volume_layer_id=other_layer.id)
+
+    annotation.save(tmp_upath / "out.zip")
+    reloaded = wk.Annotation.load(tmp_upath / "out.zip")
+    reloaded_layer = reloaded.get_volume_layer("segmentation")
+    reloaded_new_group = reloaded_layer.get_segment_group_by_id(4)
+    assert reloaded_new_group.name == "new"
+    assert list(reloaded_layer.get_segment_group_by_id(3).groups) == [
+        reloaded_new_group
+    ]
+    assert reloaded_layer.segments == volume_layer.segments
+    assert reloaded_layer.segments[1].group is reloaded_new_group
+    assert [g.name for g in reloaded.skeleton.flattened_groups()] == ["tree_group"]
+
+
+def test_segment_groups_invalid(tmp_upath: UPath) -> None:
+    nml = (TESTDATA_DIR / "annotations" / "nml_with_volumes.nml").read_text()
+    nml_dangling = nml.replace(
+        'anchorPositionZ="1024" />', 'anchorPositionZ="1024" groupId="5" />'
+    )
+    (tmp_upath / "dangling.nml").write_text(nml_dangling)
+    with pytest.warns(UserWarning, match="unknown segment group 5"):
+        annotation = wk.Annotation.load(tmp_upath / "dangling.nml")
+    volume_layer = annotation.get_volume_layer("segmentation")
+    assert volume_layer.segments[2504698].group is None
+
+    nml_duplicate = nml.replace(
+        "</segments>",
+        '</segments><groups><group id="2" name="a" /><group id="2" name="b" /></groups>',
+    )
+    (tmp_upath / "duplicate.nml").write_text(nml_duplicate)
+    with pytest.raises(ValueError, match="id 2 already exists"):
+        wk.Annotation.load(tmp_upath / "duplicate.nml")
+
+    nml_negative = nml.replace(
+        "</segments>", '</segments><groups><group id="-1" name="a" /></groups>'
+    )
+    (tmp_upath / "negative.nml").write_text(nml_negative)
+    with pytest.raises(ValueError, match="must not be negative"):
+        wk.Annotation.load(tmp_upath / "negative.nml")
+
+    group = volume_layer.add_segment_group("a")
+    other_layer = annotation.add_volume_layer(name="other", dtype="uint32")
+    other_group = other_layer.add_segment_group("b")
+    assert group.id == other_group.id
+    volume_layer.segments[2504698].group = other_group
+    assert group.segments == {}
+    assert group.flattened_segments() == {}
+    assert len({group, other_group}) == 1
+
+    volume_layer.segments[2504698].group = SegmentGroup(
+        "detached", volume_layer=volume_layer
+    )
+    with pytest.raises(ValueError, match="does not belong"):
+        annotation.save(tmp_upath / "invalid.zip")
+
+
+def test_volume_without_segment_groups_has_no_groups_element() -> None:
+    annotation = wk.Annotation.load(
+        TESTDATA_DIR / "annotations" / "nml_with_volumes.nml"
+    )
+    buffer = io.BytesIO()
+    annotation_to_nml(annotation).write(buffer)
+    nml = buffer.getvalue().decode()
+    volume = nml[nml.index("<volume") : nml.index("</volume>")]
+    assert "<groups" not in volume
 
 
 def test_tree_metadata(tmp_upath: UPath) -> None:

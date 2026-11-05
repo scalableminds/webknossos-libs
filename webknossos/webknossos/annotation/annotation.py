@@ -94,7 +94,11 @@ from ..utils import (
     time_since_epoch_in_ms,
     warn_deprecated,
 )
-from ._nml_conversion import annotation_to_nml, nml_to_skeleton
+from ._nml_conversion import (
+    annotation_to_nml,
+    nml_to_skeleton,
+    nml_volume_to_segments,
+)
 from .volume_layer import SegmentInformation, VolumeLayer
 
 logger = logging.getLogger(__name__)
@@ -632,31 +636,22 @@ class Annotation:
                     layers_with_not_found_location.append(volume)
                     volume_path = None
 
-            segments = {}
-            if volume.segments is not None:
-                for segment in volume.segments:
-                    segments[segment.id] = SegmentInformation(
-                        name=segment.name,
-                        anchor_position=segment.anchor_position,
-                        color=segment.color,
-                        metadata={i.key: i.value for i in segment.metadata},
-                    )
-            volume_layers.append(
-                VolumeLayer(
-                    id=volume.id,
-                    name="Volume" if volume.name is None else volume.name,
-                    fallback_layer_name=volume.fallback_layer,
-                    data_format=(
-                        DataFormat(volume.format)
-                        if volume.format is not None
-                        else DataFormat.WKW
-                    ),
-                    zip=volume_path,
-                    segments=segments,
-                    largest_segment_id=volume.largest_segment_id,
-                    voxel_size=nml.parameters.scale.factor,
-                )
+            volume_layer = VolumeLayer(
+                id=volume.id,
+                name="Volume" if volume.name is None else volume.name,
+                fallback_layer_name=volume.fallback_layer,
+                data_format=(
+                    DataFormat(volume.format)
+                    if volume.format is not None
+                    else DataFormat.WKW
+                ),
+                zip=volume_path,
+                segments={},
+                largest_segment_id=volume.largest_segment_id,
+                voxel_size=nml.parameters.scale.factor,
             )
+            volume_layer.segments.update(nml_volume_to_segments(volume_layer, volume))
+            volume_layers.append(volume_layer)
         assert len(set(i.id for i in volume_layers)) == len(volume_layers), (
             "Some volume layers have the same id, this is not allowed."
         )
@@ -733,13 +728,15 @@ class Annotation:
         ], "The target path must have a .zip or .nml suffix."
 
         if path.suffix == ".zip":
+            # Build the NML first so that conversion errors don't truncate the target.
+            nml = annotation_to_nml(self)
             with (
                 path.open(mode="wb") as f,
                 ZipFile(
                     f, mode="w", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
                 ) as zipfile,
             ):
-                self._write_to_zip(zipfile)
+                self._write_to_zip(zipfile, nml=nml)
         else:
             assert len(self._volume_layers) == 0, (
                 f"Annotation {self.name} contains volume annotations and cannot be saved as an NML file. "
@@ -915,11 +912,10 @@ class Annotation:
             with ZipFile(
                 buffer, mode="a", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
             ) as zipfile:
-                self._write_to_zip(zipfile)
+                self._write_to_zip(zipfile, nml=annotation_to_nml(self))
             return buffer.getvalue()
 
-    def _write_to_zip(self, zipfile: ZipFile) -> None:
-        nml = annotation_to_nml(self)
+    def _write_to_zip(self, zipfile: ZipFile, nml: wknml.Nml) -> None:
         with BytesIO() as buffer:
             nml.write(buffer)
             nml_str = buffer.getvalue().decode("utf-8")
