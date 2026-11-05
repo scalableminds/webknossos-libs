@@ -81,8 +81,12 @@ class SegmentGroup(_BaseGroup):
             SegmentGroup: The newly created group.
 
         Raises:
-            ValueError: If `_enforced_id` is already used by another group of the layer.
+            ValueError: If `_enforced_id` is negative or already used by another group of the layer.
         """
+        if _enforced_id is not None and _enforced_id < 0:
+            raise ValueError(
+                f"Segment group ids must not be negative, got {_enforced_id}."
+            )
         groups_by_id = self._volume_layer._segment_groups_by_id
         if _enforced_id is not None and _enforced_id in groups_by_id:
             raise ValueError(

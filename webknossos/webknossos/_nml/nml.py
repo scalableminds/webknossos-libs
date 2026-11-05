@@ -104,7 +104,7 @@ class Nml(NamedTuple):
         branchpoints = []
         comments = []
         current_tree = None
-        root_group = Group(-1, "", [])
+        root_group = Group(id=-1, name="", children=[])
         group_stack = [root_group]
         element_stack = []
         volumes = []
@@ -134,7 +134,7 @@ class Nml(NamedTuple):
                 elif elem.tag == "volume":
                     volumes.append(Volume._parse(elem))
                     in_volume = True
-                    segment_group_stack = [Group(-1, "", [])]
+                    segment_group_stack = [Group(id=-1, name="", children=[])]
                 elif elem.tag == "meta":
                     meta.append(Meta._parse(elem))
                 elif elem.tag == "group":

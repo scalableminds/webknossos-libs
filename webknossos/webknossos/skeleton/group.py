@@ -482,6 +482,4 @@ class Group(_BaseGroup):
             return False
 
     def __hash__(self) -> int:
-        # Identity-based, since groups are kept in sets which are rebuilt
-        # while half-initialized during deepcopy.
         return id(self)

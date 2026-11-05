@@ -499,6 +499,13 @@ def test_segment_groups_invalid(tmp_upath: UPath) -> None:
     with pytest.raises(ValueError, match="id 2 already exists"):
         wk.Annotation.load(tmp_upath / "duplicate.nml")
 
+    nml_negative = nml.replace(
+        "</segments>", '</segments><groups><group id="-1" name="a" /></groups>'
+    )
+    (tmp_upath / "negative.nml").write_text(nml_negative)
+    with pytest.raises(ValueError, match="must not be negative"):
+        wk.Annotation.load(tmp_upath / "negative.nml")
+
     group = volume_layer.add_segment_group("a")
     other_layer = annotation.add_volume_layer(name="other", dtype="uint32")
     other_group = other_layer.add_segment_group("b")

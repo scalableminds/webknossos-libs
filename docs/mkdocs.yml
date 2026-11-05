@@ -301,6 +301,7 @@ nav:
       - Annotation:
         - Annotation: api/webknossos/annotation/annotation.md
         - AnnotationInfo: api/webknossos/annotation/annotation_info.md
+        - SegmentGroup: api/webknossos/annotation/segment_group.md
       - Skeleton:
         - Skeleton: api/webknossos/skeleton/skeleton.md
         - Group: api/webknossos/skeleton/group.md
