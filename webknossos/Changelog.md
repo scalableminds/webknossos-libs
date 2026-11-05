@@ -18,13 +18,17 @@ in the _Changed_ sections.
 ### Added
 - `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
 - `View.read` and `View.read_cxyz` now accept regions with negative coordinates. Like other regions outside the dataset, these are zero-padded. [#1589](https://github.com/scalableminds/webknossos-libs/pull/1589)
+- Volume layers of annotations now support segment groups via `VolumeLayer.add_segment_group`, `SegmentGroup` (analogous to skeleton tree groups) and `SegmentInformation.group`. They are read from and written to NML files. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
 
 ### Changed
+- Updated Pillow to 13.0.0 for Python 3.11+ (Pillow 13 requires Python >=3.11; Python 3.10 stays on Pillow 12.x). Pillow is only a transitive dependency (via `imageio`), so this is enforced through a uv constraint.
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
+- Import time was cut roughly in half by using lazy imports for several dependencies. [#1583](https://github.com/scalableminds/webknossos-libs/pull/1583)
 
 ### Deprecated
 
 ### Fixed
+- Segment groups in NML files are no longer parsed as skeleton tree groups. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
 
 
 ## [4.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.3) - 2026-10-26

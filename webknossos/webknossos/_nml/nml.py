@@ -104,10 +104,12 @@ class Nml(NamedTuple):
         branchpoints = []
         comments = []
         current_tree = None
-        root_group = Group(-1, "", [])
+        root_group = Group(id=-1, name="", children=[])
         group_stack = [root_group]
         element_stack = []
         volumes = []
+        in_volume = False
+        segment_group_stack: list[Group] = []
 
         for event, elem in ET.iterparse(file, events=("start", "end")):
             if event == "start":
@@ -131,12 +133,15 @@ class Nml(NamedTuple):
                     comments.append(Comment._parse(elem))
                 elif elem.tag == "volume":
                     volumes.append(Volume._parse(elem))
+                    in_volume = True
+                    segment_group_stack = [Group(id=-1, name="", children=[])]
                 elif elem.tag == "meta":
                     meta.append(Meta._parse(elem))
                 elif elem.tag == "group":
                     group = Group._parse(elem)
-                    group_stack[-1].children.append(group)
-                    group_stack.append(group)
+                    stack = segment_group_stack if in_volume else group_stack
+                    stack[-1].children.append(group)
+                    stack.append(group)
                 elif elem.tag == "segment":
                     segment = Segment._parse(elem)
                     if volumes[-1].segments is None:
@@ -163,7 +168,12 @@ class Nml(NamedTuple):
                 elif elem.tag == "thing":
                     current_tree = None
                 elif elem.tag == "group":
-                    group_stack.pop()
+                    (segment_group_stack if in_volume else group_stack).pop()
+                elif elem.tag == "volume":
+                    volumes[-1] = volumes[-1]._replace(
+                        segment_groups=segment_group_stack[0].children
+                    )
+                    in_volume = False
 
                 element_stack.pop()
                 # Do not clear the elements of the parameters tag as we want to _parse those all at once

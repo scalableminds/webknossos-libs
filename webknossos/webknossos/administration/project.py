@@ -102,15 +102,15 @@ class Project:
         owner: str | User | None = None,
     ) -> "Project":
         """Creates a new project and returns it.
-        Note: The project will be created with the current user as owner.
 
         Args:
             name (str): The name of the project.
+            team (str | Team): The team (or its ID) to which the project belongs.
+            expected_time (int | None): The expected time for the project in minutes.
             priority (int): The priority of the project.
             paused (bool): Whether the project is paused or not.
-            expected_time (int | None): The expected time for the project in minutes.
-            team_id (str): The ID of the team to which the project belongs.
-            owner_id: (str | None): The ID of the owner user of the project. If None, the current user will be used.
+            is_blacklisted_from_report (bool): Whether the project is excluded from reports.
+            owner (str | User | None): The owner user (or its ID) of the project. If None, the current user will be used.
 
         Returns:
             Project: The created project.
@@ -198,9 +198,6 @@ class Project:
 
         Returns:
             list[Task]: A list of Task objects associated with this project.
-
-        Raises:
-            Any exceptions raised by the underlying API client.
 
         Examples:
             Fetch up to 1000 tasks:

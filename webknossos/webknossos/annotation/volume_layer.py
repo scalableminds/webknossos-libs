@@ -38,7 +38,9 @@ from ..dataset.layer import Zarr3Config
 from ..geometry import Vec3Float, Vec3Int
 from ..geometry.vec3_float import as_vec3_float_or_none
 from ..geometry.vec3_int import as_vec3_int_or_none
+from ..skeleton.skeleton import _Counter
 from ..utils import is_fs_path
+from .segment_group import SegmentGroup
 
 Vector4 = tuple[float, float, float, float]
 
@@ -55,6 +57,8 @@ class SegmentInformation:
     anchor_position: Vec3Int | None = attr.field(converter=as_vec3_int_or_none)
     color: Vector4 | None
     metadata: dict[str, str | int | float | Sequence[str]]
+    group: SegmentGroup | None = None
+    """The segment group this segment belongs to. Top-level if None."""
 
 
 _VOLUME_METADATA_FILE_NAMES = {
@@ -110,6 +114,60 @@ class VolumeLayer:
     voxel_size: Vec3Float | None = attr.field(converter=as_vec3_float_or_none)
     dtype: DTypeLike | None = None
     layer_name: str = "volumeAnnotationData"
+    _segment_group_id_generator: _Counter = attr.field(init=False, eq=False, repr=False)
+    _segment_group_root: SegmentGroup = attr.field(init=False, eq=False, repr=False)
+    _segment_groups_by_id: dict[int, SegmentGroup] = attr.field(
+        init=False, eq=False, repr=False
+    )
+
+    def __attrs_post_init__(self) -> None:
+        self._segment_group_id_generator = _Counter(start=1)
+        self._segment_groups_by_id = {}
+        self._segment_group_root = SegmentGroup(
+            "Root", volume_layer=self, enforced_id=-1
+        )
+
+    @property
+    def segment_groups(self) -> Iterator[SegmentGroup]:
+        """Returns all top-level segment groups as an iterator.
+        Use flattened_segment_groups if you also need nested groups."""
+        return self._segment_group_root.groups
+
+    def add_segment_group(
+        self,
+        name: str,
+        _enforced_id: int | None = None,
+    ) -> SegmentGroup:
+        """Creates and adds a new top-level segment group.
+
+        Use `SegmentGroup.add_group` to create nested groups. Segments are assigned
+        to a group via `SegmentInformation.group`.
+
+        Args:
+            name: Name for the new group.
+            _enforced_id: Optional specific ID for the group (internal use).
+
+        Returns:
+            SegmentGroup: The newly created group.
+
+        Examples:
+            ```python
+            neuron = volume_layer.add_segment_group("neuron_42")
+            volume_layer.segments[1].group = neuron
+            ```
+        """
+        return self._segment_group_root.add_group(name, _enforced_id=_enforced_id)
+
+    def flattened_segment_groups(self) -> Iterator[SegmentGroup]:
+        """Returns an iterator of all segment groups, including nested ones."""
+        return self._segment_group_root.flattened_groups()
+
+    def get_segment_group_by_id(self, group_id: int) -> SegmentGroup:
+        """Returns the segment group which has the specified group id."""
+        try:
+            return self._segment_groups_by_id[group_id]
+        except KeyError:
+            raise ValueError(f"No segment group with id {group_id} was found") from None
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"
