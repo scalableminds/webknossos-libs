@@ -20,7 +20,7 @@ class Volume(NamedTuple):
     segments: list[Segment]
     format: str | None = None
     largest_segment_id: int | None = None
-    segment_groups: list[Group] = []
+    segment_groups: list[Group] | None = None
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag(
@@ -44,7 +44,7 @@ class Volume(NamedTuple):
                 segment._dump(xf)
             xf.endTag()  # segments
         xf.startTag("groups")
-        for group in self.segment_groups:
+        for group in self.segment_groups or []:
             group._dump(xf)
         xf.endTag()  # groups
         xf.endTag()  # volume
@@ -59,7 +59,6 @@ class Volume(NamedTuple):
             name=nml_volume.get("name", default=None),
             format=nml_volume.get("format", default=None),
             segments=[],
-            segment_groups=[],
             largest_segment_id=None
             if largest_segment_id_str is None
             else int(largest_segment_id_str),

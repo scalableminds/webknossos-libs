@@ -1,6 +1,6 @@
 import colorsys
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING
 
 import networkx as nx
@@ -11,8 +11,10 @@ import webknossos._nml as wknml
 from ..geometry import Vec3Int
 
 if TYPE_CHECKING:
-    from ..annotation import Annotation, SegmentGroup
+    from ..annotation import Annotation
     from ..skeleton import Group, Skeleton, Tree
+    from .segment_group import SegmentGroup
+    from .volume_layer import VolumeLayer
 
 
 def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
@@ -135,12 +137,35 @@ def _nml_tree_to_wk_tree(
         new_tree.add_edge(edge.source, edge.target)
 
 
-def _segment_group_to_nml_group(group: "SegmentGroup") -> wknml.Group:
-    return wknml.Group(
-        id=group.id,
-        name=group.name,
-        children=[_segment_group_to_nml_group(c) for c in group.children],
-    )
+def nml_volume_to_segment_groups(
+    volume_layer: "VolumeLayer", nml_volume: wknml.Volume
+) -> None:
+    groups_by_id = {}
+
+    def visit_groups(
+        nml_groups: list[wknml.Group], add_group: Callable[..., "SegmentGroup"]
+    ) -> None:
+        for nml_group in nml_groups:
+            sub_group = add_group(name=nml_group.name, _enforced_id=nml_group.id)
+            groups_by_id[sub_group.id] = sub_group
+            visit_groups(nml_group.children, sub_group.add_group)
+
+    visit_groups(nml_volume.segment_groups or [], volume_layer.add_segment_group)
+    for segment in nml_volume.segments or []:
+        if segment.group_id is not None:
+            volume_layer.segments[segment.id].group = groups_by_id[segment.group_id]
+
+
+def _segment_group_id(
+    volume_layer: "VolumeLayer", group: "SegmentGroup | None"
+) -> int | None:
+    if group is None:
+        return None
+    if group._volume_layer is not volume_layer or group._is_root():
+        raise ValueError(
+            f"Segment group {group.name!r} does not belong to volume layer {volume_layer.name!r}."
+        )
+    return group.id
 
 
 def _random_color_rgba() -> tuple[float, float, float, float]:
@@ -233,15 +258,13 @@ def annotation_to_nml(
                     anchor_position=segment_info.anchor_position,
                     color=segment_info.color,
                     metadata=_dict_to_metadata_entry_list(segment_info.metadata),
-                    group_id=segment_info.group_id,
+                    group_id=_segment_group_id(volume, segment_info.group),
                 )
                 for segment_id, segment_info in volume.segments.items()
             ],
             format=str(volume.data_format),
             largest_segment_id=volume.largest_segment_id,
-            segment_groups=[
-                _segment_group_to_nml_group(g) for g in volume.segment_groups
-            ],
+            segment_groups=volume._segment_group_root.as_nml_group().children,
         )
         for volume in annotation._volume_layers
     ]

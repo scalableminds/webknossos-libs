@@ -94,8 +94,12 @@ from ..utils import (
     time_since_epoch_in_ms,
     warn_deprecated,
 )
-from ._nml_conversion import annotation_to_nml, nml_to_skeleton
-from .volume_layer import SegmentGroup, SegmentInformation, VolumeLayer
+from ._nml_conversion import (
+    annotation_to_nml,
+    nml_to_skeleton,
+    nml_volume_to_segment_groups,
+)
+from .volume_layer import SegmentInformation, VolumeLayer
 
 logger = logging.getLogger(__name__)
 
@@ -640,27 +644,23 @@ class Annotation:
                         anchor_position=segment.anchor_position,
                         color=segment.color,
                         metadata={i.key: i.value for i in segment.metadata},
-                        group_id=segment.group_id,
                     )
-            volume_layers.append(
-                VolumeLayer(
-                    id=volume.id,
-                    name="Volume" if volume.name is None else volume.name,
-                    fallback_layer_name=volume.fallback_layer,
-                    data_format=(
-                        DataFormat(volume.format)
-                        if volume.format is not None
-                        else DataFormat.WKW
-                    ),
-                    zip=volume_path,
-                    segments=segments,
-                    largest_segment_id=volume.largest_segment_id,
-                    voxel_size=nml.parameters.scale.factor,
-                    segment_groups=[
-                        _nml_group_to_segment_group(g) for g in volume.segment_groups
-                    ],
-                )
+            volume_layer = VolumeLayer(
+                id=volume.id,
+                name="Volume" if volume.name is None else volume.name,
+                fallback_layer_name=volume.fallback_layer,
+                data_format=(
+                    DataFormat(volume.format)
+                    if volume.format is not None
+                    else DataFormat.WKW
+                ),
+                zip=volume_path,
+                segments=segments,
+                largest_segment_id=volume.largest_segment_id,
+                voxel_size=nml.parameters.scale.factor,
             )
+            nml_volume_to_segment_groups(volume_layer, volume)
+            volume_layers.append(volume_layer)
         assert len(set(i.id for i in volume_layers)) == len(volume_layers), (
             "Some volume layers have the same id, this is not allowed."
         )
@@ -1342,14 +1342,6 @@ class Annotation:
 
 
 Annotation._set_init_docstring()
-
-
-def _nml_group_to_segment_group(nml_group: wknml.Group) -> SegmentGroup:
-    return SegmentGroup(
-        id=nml_group.id,
-        name=nml_group.name,
-        children=[_nml_group_to_segment_group(c) for c in nml_group.children],
-    )
 
 
 @unique

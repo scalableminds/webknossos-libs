@@ -134,7 +134,7 @@ class Nml(NamedTuple):
                 elif elem.tag == "volume":
                     volumes.append(Volume._parse(elem))
                     in_volume = True
-                    segment_group_stack = [Group(-1, "", volumes[-1].segment_groups)]
+                    segment_group_stack = [Group(-1, "", [])]
                 elif elem.tag == "meta":
                     meta.append(Meta._parse(elem))
                 elif elem.tag == "group":
@@ -170,6 +170,9 @@ class Nml(NamedTuple):
                 elif elem.tag == "group":
                     (segment_group_stack if in_volume else group_stack).pop()
                 elif elem.tag == "volume":
+                    volumes[-1] = volumes[-1]._replace(
+                        segment_groups=segment_group_stack[0].children
+                    )
                     in_volume = False
 
                 element_stack.pop()

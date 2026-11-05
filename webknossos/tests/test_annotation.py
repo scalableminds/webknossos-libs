@@ -431,28 +431,49 @@ def test_segment_groups(tmp_upath: UPath) -> None:
     annotation = wk.Annotation.load(tmp_upath / "in.nml")
     assert [g.name for g in annotation.skeleton.flattened_groups()] == ["tree_group"]
     volume_layer = annotation.get_volume_layer("segmentation")
-    assert volume_layer.segment_groups == [
-        wk.SegmentGroup(
-            id=2, name="outer", children=[wk.SegmentGroup(id=3, name="inner")]
-        )
-    ]
-    assert volume_layer.segments[2504698].group_id == 3
+    (outer,) = volume_layer.segment_groups
+    (inner,) = outer.groups
+    assert (outer.id, outer.name, inner.id, inner.name) == (2, "outer", 3, "inner")
+    assert list(volume_layer.flattened_segment_groups()) == [outer, inner]
+    assert volume_layer.get_segment_group_by_id(3) is inner
+    assert volume_layer.segments[2504698].group is inner
+    assert outer.segments == {}
+    assert outer.flattened_segments() == {2504698: volume_layer.segments[2504698]}
 
-    new_group = volume_layer.add_segment_group("new")
+    new_group = inner.add_group("new")
     assert new_group.id == 4
     volume_layer.segments[1] = SegmentInformation(
         name=None,
         anchor_position=None,
         color=None,
         metadata={},
-        group_id=new_group.id,
+        group=new_group,
     )
+    assert set(outer.flattened_segments()) == {1, 2504698}
+
+    other_layer = annotation.add_volume_layer(name="other", dtype="uint32")
+    volume_layer.segments[2] = SegmentInformation(
+        name=None,
+        anchor_position=None,
+        color=None,
+        metadata={},
+        group=other_layer.add_segment_group("foreign"),
+    )
+    with pytest.raises(ValueError, match="does not belong"):
+        annotation.save(tmp_upath / "invalid.zip")
+    del volume_layer.segments[2]
+    annotation.delete_volume_layer(volume_layer_id=other_layer.id)
 
     annotation.save(tmp_upath / "out.zip")
     reloaded = wk.Annotation.load(tmp_upath / "out.zip")
     reloaded_layer = reloaded.get_volume_layer("segmentation")
-    assert reloaded_layer.segment_groups == volume_layer.segment_groups
+    reloaded_new_group = reloaded_layer.get_segment_group_by_id(4)
+    assert reloaded_new_group.name == "new"
+    assert list(reloaded_layer.get_segment_group_by_id(3).groups) == [
+        reloaded_new_group
+    ]
     assert reloaded_layer.segments == volume_layer.segments
+    assert reloaded_layer.segments[1].group is reloaded_new_group
     assert [g.name for g in reloaded.skeleton.flattened_groups()] == ["tree_group"]
 
 
