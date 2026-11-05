@@ -1,17 +1,16 @@
-from collections.abc import Iterator
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import attr
 from boltons.strutils import unit_len
 
-import webknossos._nml as wknml
+from ..skeleton.group import _BaseGroup
 
 if TYPE_CHECKING:
     from .volume_layer import SegmentInformation, VolumeLayer
 
 
-@attr.define()
-class SegmentGroup:
+@attr.define(eq=False)
+class SegmentGroup(_BaseGroup):
     """A hierarchical container for organizing segments of a volume layer.
 
     Segment groups can be nested. A segment is assigned to a group by setting
@@ -67,17 +66,6 @@ class SegmentGroup:
         else:
             self._id = id_generator.__next__()
 
-    @property
-    def id(self) -> int:
-        """Read-only property."""
-        return self._id
-
-    @property
-    def groups(self) -> Iterator["SegmentGroup"]:
-        """Returns all (immediate) group children as an iterator.
-        Use flattened_groups if you also need groups within subgroups."""
-        return iter(self._child_groups)
-
     def add_group(
         self,
         name: str,
@@ -91,25 +79,21 @@ class SegmentGroup:
 
         Returns:
             SegmentGroup: The newly created group.
+
+        Raises:
+            ValueError: If `_enforced_id` is already used by another group of the layer.
         """
+        groups_by_id = self._volume_layer._segment_groups_by_id
+        if _enforced_id is not None and _enforced_id in groups_by_id:
+            raise ValueError(
+                f"A segment group with id {_enforced_id} already exists in volume layer {self._volume_layer.name!r}."
+            )
         new_group = SegmentGroup(
             name, volume_layer=self._volume_layer, enforced_id=_enforced_id
         )
         self._child_groups.append(new_group)
+        groups_by_id[new_group.id] = new_group
         return new_group
-
-    def flattened_groups(self) -> Iterator["SegmentGroup"]:
-        """Returns an iterator of all groups within this group (and its subgroups)."""
-        for group in self.groups:
-            yield group
-            yield from group.flattened_groups()
-
-    def get_group_by_id(self, group_id: int) -> "SegmentGroup":
-        """Returns the group within this group (and its subgroups) which has the specified id."""
-        for group in self.flattened_groups():
-            if group.id == group_id:
-                return group
-        raise ValueError(f"No segment group with id {group_id} was found")
 
     @property
     def segments(self) -> dict[int, "SegmentInformation"]:
@@ -119,33 +103,22 @@ class SegmentGroup:
         return {
             segment_id: segment_info
             for segment_id, segment_info in self._volume_layer.segments.items()
-            if segment_info.group == group
+            if segment_info.group is group
         }
 
     def flattened_segments(self) -> dict[int, "SegmentInformation"]:
         """Returns all segments of this group and its subgroups, keyed by segment id."""
         if self._is_root():
             return dict(self._volume_layer.segments)
-        group_ids = {self.id} | {group.id for group in self.flattened_groups()}
+        groups = {id(self)} | {id(group) for group in self.flattened_groups()}
         return {
             segment_id: segment_info
             for segment_id, segment_info in self._volume_layer.segments.items()
-            if segment_info.group is not None and segment_info.group.id in group_ids
+            if segment_info.group is not None and id(segment_info.group) in groups
         }
-
-    def as_nml_group(self) -> wknml.Group:
-        """Converts this group to its NML representation."""
-        return wknml.Group(
-            self.id,
-            self.name,
-            children=[g.as_nml_group() for g in self._child_groups],
-        )
 
     def _is_root(self) -> bool:
         return self is self._volume_layer._segment_group_root
 
-    def __eq__(self, other: Any) -> bool:
-        return type(other) is type(self) and self._id == other._id
-
     def __hash__(self) -> int:
-        return id(self)
+        return hash(self._id)

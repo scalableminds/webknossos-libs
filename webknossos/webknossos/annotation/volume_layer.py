@@ -116,9 +116,13 @@ class VolumeLayer:
     layer_name: str = "volumeAnnotationData"
     _segment_group_id_generator: _Counter = attr.field(init=False, eq=False, repr=False)
     _segment_group_root: SegmentGroup = attr.field(init=False, eq=False, repr=False)
+    _segment_groups_by_id: dict[int, SegmentGroup] = attr.field(
+        init=False, eq=False, repr=False
+    )
 
     def __attrs_post_init__(self) -> None:
         self._segment_group_id_generator = _Counter(start=1)
+        self._segment_groups_by_id = {}
         self._segment_group_root = SegmentGroup(
             "Root", volume_layer=self, enforced_id=-1
         )
@@ -160,7 +164,10 @@ class VolumeLayer:
 
     def get_segment_group_by_id(self, group_id: int) -> SegmentGroup:
         """Returns the segment group which has the specified group id."""
-        return self._segment_group_root.get_group_by_id(group_id)
+        try:
+            return self._segment_groups_by_id[group_id]
+        except KeyError:
+            raise ValueError(f"No segment group with id {group_id} was found") from None
 
     def _default_zip_name(self) -> str:
         return f"data_{self.id}_{self.name}.zip"

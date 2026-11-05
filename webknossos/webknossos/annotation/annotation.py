@@ -97,7 +97,7 @@ from ..utils import (
 from ._nml_conversion import (
     annotation_to_nml,
     nml_to_skeleton,
-    nml_volume_to_segment_groups,
+    nml_volume_to_segments,
 )
 from .volume_layer import SegmentInformation, VolumeLayer
 
@@ -636,15 +636,6 @@ class Annotation:
                     layers_with_not_found_location.append(volume)
                     volume_path = None
 
-            segments = {}
-            if volume.segments is not None:
-                for segment in volume.segments:
-                    segments[segment.id] = SegmentInformation(
-                        name=segment.name,
-                        anchor_position=segment.anchor_position,
-                        color=segment.color,
-                        metadata={i.key: i.value for i in segment.metadata},
-                    )
             volume_layer = VolumeLayer(
                 id=volume.id,
                 name="Volume" if volume.name is None else volume.name,
@@ -655,11 +646,11 @@ class Annotation:
                     else DataFormat.WKW
                 ),
                 zip=volume_path,
-                segments=segments,
+                segments={},
                 largest_segment_id=volume.largest_segment_id,
                 voxel_size=nml.parameters.scale.factor,
             )
-            nml_volume_to_segment_groups(volume_layer, volume)
+            volume_layer.segments.update(nml_volume_to_segments(volume_layer, volume))
             volume_layers.append(volume_layer)
         assert len(set(i.id for i in volume_layers)) == len(volume_layers), (
             "Some volume layers have the same id, this is not allowed."

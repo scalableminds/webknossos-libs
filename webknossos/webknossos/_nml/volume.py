@@ -43,10 +43,11 @@ class Volume(NamedTuple):
             for segment in self.segments:
                 segment._dump(xf)
             xf.endTag()  # segments
-        xf.startTag("groups")
-        for group in self.segment_groups or []:
-            group._dump(xf)
-        xf.endTag()  # groups
+        if self.segment_groups:
+            xf.startTag("groups")
+            for group in self.segment_groups:
+                group._dump(xf)
+            xf.endTag()  # groups
         xf.endTag()  # volume
 
     @classmethod

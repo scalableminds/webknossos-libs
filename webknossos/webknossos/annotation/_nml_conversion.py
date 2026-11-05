@@ -1,6 +1,6 @@
 import colorsys
 import warnings
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import networkx as nx
@@ -9,6 +9,7 @@ import numpy as np
 import webknossos._nml as wknml
 
 from ..geometry import Vec3Int
+from .volume_layer import SegmentInformation
 
 if TYPE_CHECKING:
     from ..annotation import Annotation
@@ -137,23 +138,37 @@ def _nml_tree_to_wk_tree(
         new_tree.add_edge(edge.source, edge.target)
 
 
-def nml_volume_to_segment_groups(
+def nml_volume_to_segments(
     volume_layer: "VolumeLayer", nml_volume: wknml.Volume
-) -> None:
-    groups_by_id = {}
+) -> dict[int, "SegmentInformation"]:
+    """Adds the segment groups of `nml_volume` to `volume_layer` and returns its segments."""
 
-    def visit_groups(
-        nml_groups: list[wknml.Group], add_group: Callable[..., "SegmentGroup"]
-    ) -> None:
+    def visit_groups(nml_groups: list[wknml.Group], parent: "SegmentGroup") -> None:
         for nml_group in nml_groups:
-            sub_group = add_group(name=nml_group.name, _enforced_id=nml_group.id)
-            groups_by_id[sub_group.id] = sub_group
-            visit_groups(nml_group.children, sub_group.add_group)
+            visit_groups(
+                nml_group.children,
+                parent.add_group(name=nml_group.name, _enforced_id=nml_group.id),
+            )
 
-    visit_groups(nml_volume.segment_groups or [], volume_layer.add_segment_group)
+    visit_groups(nml_volume.segment_groups or [], volume_layer._segment_group_root)
+
+    segments = {}
     for segment in nml_volume.segments or []:
+        group = None
         if segment.group_id is not None:
-            volume_layer.segments[segment.id].group = groups_by_id[segment.group_id]
+            group = volume_layer._segment_groups_by_id.get(segment.group_id)
+            if group is None:
+                warnings.warn(
+                    f"[WARNING] Segment {segment.id} of volume layer {volume_layer.name!r} references the unknown segment group {segment.group_id}. It is treated as top-level."
+                )
+        segments[segment.id] = SegmentInformation(
+            name=segment.name,
+            anchor_position=segment.anchor_position,
+            color=segment.color,
+            metadata={i.key: i.value for i in segment.metadata},
+            group=group,
+        )
+    return segments
 
 
 def _segment_group_id(
@@ -161,7 +176,7 @@ def _segment_group_id(
 ) -> int | None:
     if group is None:
         return None
-    if group._volume_layer is not volume_layer or group._is_root():
+    if volume_layer._segment_groups_by_id.get(group.id) is not group:
         raise ValueError(
             f"Segment group {group.name!r} does not belong to volume layer {volume_layer.name!r}."
         )
