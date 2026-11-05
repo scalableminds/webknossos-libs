@@ -312,10 +312,10 @@ class RemoteLayer(AbstractLayer):
             chunk_shape (Vec3IntLike | int | None): Shape of chunks for storage.
             shard_shape (Vec3IntLike | int | None): Shape of shards for storage.
             force_sampling_scheme (bool): Force invalid sampling schemes. Defaults to False.
-            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to HTTP.
+            transfer_mode (TransferMode): How new mags are transferred to the remote or local storage. Defaults to HTTP.
             common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
                                         to select one of the available WEBKNOSSOS storages.
-            overwrite_pending (bool). If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
+            overwrite_pending (bool): If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
             executor (Executor | None): Executor for parallel processing. None by default.
 
         Raises:
