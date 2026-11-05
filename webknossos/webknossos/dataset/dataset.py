@@ -1929,7 +1929,6 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             new_dataset_path: Path where new dataset should be created
             name: Optional name for the new dataset, uses original name if None
             layers_to_ignore: Optional iterable of layer names to exclude
-            executor: Optional executor for copy operations
 
         Returns:
             Dataset: The newly created dataset with linked layers
