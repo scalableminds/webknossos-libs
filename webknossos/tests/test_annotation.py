@@ -462,8 +462,10 @@ def test_segment_groups(tmp_upath: UPath) -> None:
         metadata={},
         group=other_layer.add_segment_group("foreign"),
     )
+    (tmp_upath / "invalid.zip").write_bytes(b"existing")
     with pytest.raises(ValueError, match="does not belong"):
         annotation.save(tmp_upath / "invalid.zip")
+    assert (tmp_upath / "invalid.zip").read_bytes() == b"existing"
     del volume_layer.segments[2]
     annotation.delete_volume_layer(volume_layer_id=other_layer.id)
 

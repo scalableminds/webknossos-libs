@@ -728,13 +728,15 @@ class Annotation:
         ], "The target path must have a .zip or .nml suffix."
 
         if path.suffix == ".zip":
+            # Build the NML first so that conversion errors don't truncate the target.
+            nml = annotation_to_nml(self)
             with (
                 path.open(mode="wb") as f,
                 ZipFile(
                     f, mode="w", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
                 ) as zipfile,
             ):
-                self._write_to_zip(zipfile)
+                self._write_to_zip(zipfile, nml=nml)
         else:
             assert len(self._volume_layers) == 0, (
                 f"Annotation {self.name} contains volume annotations and cannot be saved as an NML file. "
@@ -910,11 +912,10 @@ class Annotation:
             with ZipFile(
                 buffer, mode="a", compression=ZIP_DEFLATED, compresslevel=Z_BEST_SPEED
             ) as zipfile:
-                self._write_to_zip(zipfile)
+                self._write_to_zip(zipfile, nml=annotation_to_nml(self))
             return buffer.getvalue()
 
-    def _write_to_zip(self, zipfile: ZipFile) -> None:
-        nml = annotation_to_nml(self)
+    def _write_to_zip(self, zipfile: ZipFile, nml: wknml.Nml) -> None:
         with BytesIO() as buffer:
             nml.write(buffer)
             nml_str = buffer.getvalue().decode("utf-8")
