@@ -1862,10 +1862,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             coarsest_mag: Optional maximum/coarsest magnification to generate
             interpolation_mode: Interpolation method to use. Defaults to "default" (= "mode" for segmentation, "median" for color).
             compress: Whether to compress generated magnifications. For Zarr3 datasets, codec configuration and chunk key encoding may also be supplied. Defaults to True.
-            transfer_mode (TransferMode). How new mags are transferred to the remote or local storage. Defaults to HTTP.
+            transfer_mode (TransferMode): How new mags are transferred to the remote or local storage. Defaults to HTTP.
             common_storage_path_prefix (str | None): Optional path prefix used when transfer_mode is either COPY or MOVE_AND_SYMLINK
                                         to select one of the available WEBKNOSSOS storages.
-            overwrite_pending (bool). If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
+            overwrite_pending (bool): If there are already pending/unfinished committed mags on the server, overwrite them. Defaults to True
             executor: Optional executor for parallel processing
 
         Raises:

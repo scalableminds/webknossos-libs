@@ -105,9 +105,6 @@ class Tree(nx.Graph):
         metadata (dict, optional): Key-value metadata associated with the tree. Defaults to {}.
         is_visible (bool, optional): Whether the tree is visible in WEBKNOSSOS. Defaults to True.
 
-    Returns:
-        Tree: A new Tree instance that represents a collection of nodes and edges.
-
     Raises:
         ValueError: If the tree name is empty or if the group or skeleton is None.
         TypeError: If the color value is not a valid Vector4 type when provided.
