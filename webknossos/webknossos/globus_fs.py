@@ -442,13 +442,34 @@ class GlobusPath(CloudPath):
     __slots__ = ()
 
 
-def register_globus_protocol() -> None:
+def register_globus_protocol(*, clobber: bool = False) -> None:
+    """Registers `GlobusFileSystem` and `GlobusPath` for `globus://` paths.
+
+    An existing `globus` backend from another package is kept unless `clobber` is True.
+    """
     import fsspec
     import upath.registry
+    from fsspec.registry import known_implementations, registry
+
+    existing = registry.get(PROTOCOL) or (
+        known_implementations.get(PROTOCOL, {}).get("class")
+    )
+    own = (GlobusFileSystem, f"{GlobusFileSystem.__module__}.GlobusFileSystem")
+    if existing is not None and existing not in own and not clobber:
+        logger.info(
+            "Keeping the existing fsspec backend %s for globus:// paths. "
+            "Call webknossos.globus_fs.register_globus_protocol(clobber=True) to replace it.",
+            existing,
+        )
+        return
 
     # Registering the class itself lets upath derive the path flavour from it.
     fsspec.register_implementation(PROTOCOL, GlobusFileSystem, clobber=True)
     upath.registry.register_implementation(PROTOCOL, GlobusPath, clobber=True)
+    # Drops lookups of globus:// cached before this registration.
+    cache_clear = getattr(upath.registry.get_upath_class, "cache_clear", None)
+    if cache_clear is not None:
+        cache_clear()
     try:
         from upath._flavour import WrappedFileSystemFlavour
 

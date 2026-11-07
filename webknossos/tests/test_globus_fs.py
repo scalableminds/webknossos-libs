@@ -25,6 +25,7 @@ from webknossos.globus_fs import (
     GlobusPath,
     GlobusPermissionError,
     https_scope,
+    register_globus_protocol,
     transfer_scope,
 )
 from webknossos.utils import copytree
@@ -228,6 +229,26 @@ def test_upath_resolution() -> None:
     assert str(path.parent) == f"globus://{COLLECTION_ID}/data"
     assert str(path / "color" / "1") == f"globus://{COLLECTION_ID}/data/ds/color/1"
     assert isinstance(path.fs, GlobusFileSystem)
+
+
+def test_registration_keeps_foreign_backend() -> None:
+    import fsspec
+    from fsspec.implementations.memory import MemoryFileSystem
+
+    class OtherGlobusFileSystem(MemoryFileSystem):
+        protocol = "globus"
+
+    fsspec.register_implementation("globus", OtherGlobusFileSystem, clobber=True)
+    try:
+        register_globus_protocol()
+        assert fsspec.get_filesystem_class("globus") is OtherGlobusFileSystem
+        register_globus_protocol(clobber=True)
+        assert fsspec.get_filesystem_class("globus") is GlobusFileSystem
+    finally:
+        register_globus_protocol(clobber=True)
+    # Registering again is a no-op.
+    register_globus_protocol()
+    assert isinstance(UPath(f"globus://{COLLECTION_ID}/data"), GlobusPath)
 
 
 def test_scopes() -> None:
