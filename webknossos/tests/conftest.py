@@ -132,7 +132,12 @@ def moto_server() -> Generator:
 def clear_testoutput() -> Generator:
     TESTOUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     yield
-    rmtree(TESTOUTPUT_DIR)
+    try:
+        rmtree(TESTOUTPUT_DIR)
+    except PermissionError:
+        # Windows can't delete files still held open by uncollected objects.
+        gc.collect()
+        rmtree(TESTOUTPUT_DIR)
 
 
 @pytest.fixture(autouse=True, scope="function")

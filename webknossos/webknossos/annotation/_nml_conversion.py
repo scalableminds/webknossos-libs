@@ -9,10 +9,13 @@ import numpy as np
 import webknossos._nml as wknml
 
 from ..geometry import Vec3Int
+from .volume_layer import SegmentInformation
 
 if TYPE_CHECKING:
     from ..annotation import Annotation
     from ..skeleton import Group, Skeleton, Tree
+    from .segment_group import SegmentGroup
+    from .volume_layer import VolumeLayer
 
 
 def nml_to_skeleton(nml: wknml.Nml) -> "Skeleton":
@@ -135,6 +138,51 @@ def _nml_tree_to_wk_tree(
         new_tree.add_edge(edge.source, edge.target)
 
 
+def nml_volume_to_segments(
+    volume_layer: "VolumeLayer", nml_volume: wknml.Volume
+) -> dict[int, "SegmentInformation"]:
+    """Adds the segment groups of `nml_volume` to `volume_layer` and returns its segments."""
+
+    def visit_groups(nml_groups: list[wknml.Group], parent: "SegmentGroup") -> None:
+        for nml_group in nml_groups:
+            visit_groups(
+                nml_group.children,
+                parent.add_group(name=nml_group.name, _enforced_id=nml_group.id),
+            )
+
+    visit_groups(nml_volume.segment_groups or [], volume_layer._segment_group_root)
+
+    segments = {}
+    for segment in nml_volume.segments or []:
+        group = None
+        if segment.group_id is not None:
+            group = volume_layer._segment_groups_by_id.get(segment.group_id)
+            if group is None:
+                warnings.warn(
+                    f"[WARNING] Segment {segment.id} of volume layer {volume_layer.name!r} references the unknown segment group {segment.group_id}. It is treated as top-level."
+                )
+        segments[segment.id] = SegmentInformation(
+            name=segment.name,
+            anchor_position=segment.anchor_position,
+            color=segment.color,
+            metadata={i.key: i.value for i in segment.metadata},
+            group=group,
+        )
+    return segments
+
+
+def _segment_group_id(
+    volume_layer: "VolumeLayer", group: "SegmentGroup | None"
+) -> int | None:
+    if group is None:
+        return None
+    if volume_layer._segment_groups_by_id.get(group.id) is not group:
+        raise ValueError(
+            f"Segment group {group.name!r} does not belong to volume layer {volume_layer.name!r}."
+        )
+    return group.id
+
+
 def _random_color_rgba() -> tuple[float, float, float, float]:
     """
     A utility to generate a new random RGBA color.
@@ -225,11 +273,13 @@ def annotation_to_nml(
                     anchor_position=segment_info.anchor_position,
                     color=segment_info.color,
                     metadata=_dict_to_metadata_entry_list(segment_info.metadata),
+                    group_id=_segment_group_id(volume, segment_info.group),
                 )
                 for segment_id, segment_info in volume.segments.items()
             ],
             format=str(volume.data_format),
             largest_segment_id=volume.largest_segment_id,
+            segment_groups=volume._segment_group_root.as_nml_group().children,
         )
         for volume in annotation._volume_layers
     ]
