@@ -362,7 +362,25 @@ class WKWArray(BaseArray):
 
     def read(self, bbox: NormalizedBoundingBox) -> np.ndarray:
         assert bbox.axes == CXYZ_AXES
-        return self._wkw_dataset.read(bbox.topleft.xyz, bbox.size.xyz)
+        topleft = bbox.topleft.xyz
+        if topleft.is_positive():
+            return self._wkw_dataset.read(topleft, bbox.size.xyz)
+
+        # Negative coordinates cannot be stored, so they are zero-padded.
+        header = self._wkw_dataset.header
+        out = np.zeros(
+            (header.num_channels,) + bbox.size.xyz.to_tuple(),
+            dtype=header.voxel_type,
+            order="F",
+        )
+        clamped_topleft = topleft.pairmax(0)
+        clamped_size = bbox.bottomright.xyz - clamped_topleft
+        if clamped_size.is_positive(strictly_positive=True):
+            start = clamped_topleft - topleft
+            out[:, start.x :, start.y :, start.z :] = self._wkw_dataset.read(
+                clamped_topleft, clamped_size
+            )
+        return out
 
     def write(self, bbox: NormalizedBoundingBox, data: np.ndarray) -> None:
         assert bbox.axes == CXYZ_AXES
@@ -621,7 +639,16 @@ class TensorStoreArray(BaseArray):
             out = np.zeros(
                 requested_domain.shape, dtype=array.dtype.numpy_dtype, order="F"
             )
-            out[tuple(slice(0, data.shape[i]) for i in range(len(data.shape)))] = data
+            out[
+                tuple(
+                    slice(start - requested_start, start - requested_start + size)
+                    for start, requested_start, size in zip(
+                        available_domain.inclusive_min,
+                        requested_domain.inclusive_min,
+                        data.shape,
+                    )
+                )
+            ] = data
         else:
             out = data
         return out

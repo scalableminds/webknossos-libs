@@ -17,6 +17,7 @@ in the _Changed_ sections.
 
 ### Added
 - `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
+- `View.read` and `View.read_cxyz` now accept regions with negative coordinates. Like other regions outside the dataset, these are zero-padded. [#1589](https://github.com/scalableminds/webknossos-libs/pull/1589)
 - Volume layers of annotations now support segment groups via `VolumeLayer.add_segment_group`, `SegmentGroup` (analogous to skeleton tree groups) and `SegmentInformation.group`. They are read from and written to NML files. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
 
 ### Changed
