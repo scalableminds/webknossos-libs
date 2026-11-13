@@ -9,7 +9,8 @@ for PKG in {cluster_tools,webknossos}/pyproject.toml; do
     pushd "$PKG" > /dev/null
 
     cp pyproject.toml pyproject.toml.bak
-    PKG_VERSION="$(uvx dunamai from git)"
+    # set by the monorepo's dev releases (tools/dev_version.py); its release tags are webknossos-libs/vX.Y.Z
+    PKG_VERSION="${PKG_VERSION:-$(uvx dunamai from git --pattern-prefix '(?:webknossos-libs/)?' --strict)}"
 
     echo "__version__ = '$PKG_VERSION'" > ./"$PKG"/version.py
 
@@ -20,7 +21,11 @@ for PKG in {cluster_tools,webknossos}/pyproject.toml; do
     sed -i 's/"cluster-tools"/"cluster-tools=='"${PKG_VERSION}"'"/g' pyproject.toml    
     
     uv build
-    uv publish
+    if [ "${DRY_RUN:-}" = true ]; then
+        echo "Dry run, not publishing:" dist/*
+    else
+        uv publish
+    fi
 
     # Restore files
     mv pyproject.toml.bak pyproject.toml
