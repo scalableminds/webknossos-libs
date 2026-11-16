@@ -123,10 +123,10 @@ Internal workflows for scalable minds:
 
 * **CI**: We use continuous integration with [github actions](https://github.com/scalableminds/webknossos-libs/actions),
   please see the `CI` workflow for details.
-* **Releases** are triggered via the
-  [`Automatic release` github action](https://github.com/scalableminds/webknossos-libs/actions/workflows/release.yml),
-  using the `Run workflow` button in the topright corner.
-  This updates the changelog and pushes a new tag, which triggers another CI run building and publishing the package.
+* **Releases** are made in the monorepo (scalableminds/mono) with its
+  `Release` github action (project `libs`), using the `Run workflow` button in the topright corner.
+  This updates the changelog and pushes a new tag `webknossos-libs/vX.Y.Z`, which triggers another CI run
+  building and publishing the package. The tag is mirrored to this repository as `vX.Y.Z`.
 
 
 #### `webknossos` package

@@ -309,8 +309,9 @@ jobs:
           cd docs
           ./generate.sh --persist
 
+      # Publishing happens in the monorepo only (scalableminds/mono), where these workflows run too.
       - name: Push docs (for master)
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && github.repository == 'scalableminds/mono'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -320,21 +321,22 @@ jobs:
           uvx --from awscli aws s3 cp --recursive --endpoint-url https://eu-central-2.storage.impossibleapi.net docs/out s3://webknossos-www/docs/${NORMALIZED_CI_BRANCH}
 
       - name: Push docs (for tag)
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' && github.repository == 'scalableminds/mono'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           N8N_TOKEN: ${{ secrets.N8N_USERNAME }}
           N8N_USERNAME: ${{ secrets.N8N_TOKEN }}
         run: |
-          CI_TAG=$(git describe --tags)
+          # the monorepo's release tags are webknossos-libs/vX.Y.Z
+          CI_TAG=${GITHUB_REF_NAME#webknossos-libs/}
           set -e
 
           uvx --from awscli aws s3 cp --recursive --endpoint-url https://eu-central-2.storage.impossibleapi.net docs/out s3://webknossos-www/docs/${CI_TAG}
           curl --basic -u "${N8N_TOKEN}:${N8N_USERNAME}" https://docs.webknossos.org/webhooks/index-docs
 
       - name: Check links (on master)
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' && github.repository == 'scalableminds/mono'
         env:
           # Or as an environment variable
           SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
@@ -355,6 +357,7 @@ jobs:
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
       github.ref_type == 'tag' &&
+      github.repository == 'scalableminds/mono' &&
       !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
     steps:
@@ -367,7 +370,7 @@ jobs:
         run: _tooling/publish.sh
       - name: Prepare github release
         run: |
-          VERSION="$(uvx dunamai from git)"
+          VERSION="$(uvx dunamai from git --pattern-prefix '(?:webknossos-libs/)?')"
           _tooling/changelog_for_version.sh $VERSION > Changelog.md
       - name: Publish github release
         id: create_release
