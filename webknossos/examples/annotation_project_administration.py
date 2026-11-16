@@ -36,7 +36,7 @@ def main() -> None:
         project_name="sampleProject2",
         base_annotations=finished_annotations,
         # Only annotators with the experience "sampleExp" of at least value 2 will get this task.
-        # Omit both experience arguments to let any member of the project's team get it.
+        # Pass None for both experience arguments to let any member of the project's team get it.
         needed_experience_domain="sampleExp",
         needed_experience_value=2,
     )

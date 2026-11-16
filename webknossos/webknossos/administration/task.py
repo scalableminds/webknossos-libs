@@ -53,7 +53,11 @@ class TaskExperience:
 def _api_experience_from_args(
     domain: str | None, value: int | None
 ) -> ApiExperience | None:
-    if domain is None or domain.strip() == "":
+    if domain is not None and domain.strip() == "":
+        raise ValueError(
+            "needed_experience_domain must not be empty. Use None for no experience requirement."
+        )
+    if domain is None:
         if value is not None:
             raise ValueError(
                 "needed_experience_value can only be set together with needed_experience_domain."
@@ -339,8 +343,8 @@ class Task:
         task_type_id: str | TaskType,
         project_name: str | Project,
         base_annotations: list[Annotation],
-        needed_experience_domain: str | None = None,
-        needed_experience_value: int | None = None,
+        needed_experience_domain: str | None,
+        needed_experience_value: int | None,
         instances: int = 1,
         script_id: str | None = None,
         bounding_box: BoundingBox | None = None,
@@ -356,8 +360,8 @@ class Task:
             task_type_id: The ID or TaskType object specifying the type of task to create.
             project_name: The name or Project object specifying the project to which the tasks belong.
             base_annotations: List of Annotation objects to use as the basis for the new tasks. Must not be empty.
-            needed_experience_domain: Optional experience domain required for the task (e.g., "proofreading").
-                If None or empty, any member of the project's team can get the task.
+            needed_experience_domain: The experience domain required for the task (e.g., "proofreading").
+                If None, any member of the project's team can get the task.
             needed_experience_value: The minimum experience value required for the task.
                 Must be set if and only if `needed_experience_domain` is set.
             instances: Number of task instances to create (default: 1).
@@ -369,7 +373,8 @@ class Task:
 
         Raises:
             AssertionError: If no base annotations are provided.
-            ValueError: If only one of `needed_experience_domain` and `needed_experience_value` is set.
+            ValueError: If only one of `needed_experience_domain` and `needed_experience_value` is set,
+                or if `needed_experience_domain` is empty.
 
         Examples:
             ```
@@ -454,7 +459,7 @@ class Task:
             task_type_id: The ID of the task type to create, or a TaskType instance.
             project_name: The name of the project to associate the task with, or a Project instance.
             needed_experience_domain: The experience domain required for the task (e.g., "segmentation").
-                If None or empty, any member of the project's team can get the task.
+                If None, any member of the project's team can get the task.
             needed_experience_value: The minimum experience value required for the task.
                 Must be set if and only if `needed_experience_domain` is set.
             starting_position: The starting position for the task as a Vec3IntLike (x, y, z).
@@ -470,7 +475,8 @@ class Task:
 
         Raises:
             AssertionError: If neither dataset_id nor dataset_name is provided.
-            ValueError: If only one of `needed_experience_domain` and `needed_experience_value` is set.
+            ValueError: If only one of `needed_experience_domain` and `needed_experience_value` is set,
+                or if `needed_experience_domain` is empty.
             DeprecationWarning: If dataset_name is used instead of dataset_id.
 
         Examples:

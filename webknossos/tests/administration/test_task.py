@@ -193,8 +193,6 @@ def test_task_parameters_to_json_without_experience() -> None:
     ("domain", "value", "expected"),
     [
         (None, None, None),
-        ("", None, None),
-        ("  ", None, None),
         ("testing", 3, ApiExperience(domain="testing", value=3)),
     ],
 )
@@ -206,7 +204,7 @@ def test_needed_experience_from_args(
 
 @pytest.mark.parametrize(
     ("domain", "value"),
-    [(None, 3), ("", 3), ("testing", None)],
+    [(None, 3), ("", None), ("  ", None), ("  ", 3), ("testing", None)],
 )
 def test_needed_experience_from_args_invalid(
     domain: str | None, value: int | None
