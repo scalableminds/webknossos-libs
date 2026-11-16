@@ -24,6 +24,7 @@ in the _Changed_ sections.
 - Updated Pillow to 13.0.0 for Python 3.11+ (Pillow 13 requires Python >=3.11; Python 3.10 stays on Pillow 12.x). Pillow is only a transitive dependency (via `imageio`), so this is enforced through a uv constraint.
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
 - Import time was cut roughly in half by using lazy imports for several dependencies. [#1583](https://github.com/scalableminds/webknossos-libs/pull/1583)
+- Tasks can now have no experience requirement, so that any member of the project's team can get them. `Task.experience` is `None` for such tasks, and `Task.create` and `Task.create_from_annotations` accept `None` for `needed_experience_domain` and `needed_experience_value`. Tasks without an experience requirement could not be read before. This needs a WEBKNOSSOS version that includes [scalableminds/webknossos#10390](https://github.com/scalableminds/webknossos/pull/10390) to create such tasks.
 
 ### Deprecated
 
