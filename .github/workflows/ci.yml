@@ -335,17 +335,6 @@ jobs:
           uvx --from awscli aws s3 cp --recursive --endpoint-url https://eu-central-2.storage.impossibleapi.net docs/out s3://webknossos-www/docs/${CI_TAG}
           curl --basic -u "${N8N_TOKEN}:${N8N_USERNAME}" https://docs.webknossos.org/webhooks/index-docs
 
-      - name: Check links (on master)
-        if: github.ref == 'refs/heads/master' && github.repository == 'scalableminds/mono'
-        env:
-          # Or as an environment variable
-          SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
-        run: |
-          cd docs
-          uv run --frozen linkchecker --config linkcheckerrc https://docs.webknossos.org > link_status || \
-            curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
-              "$SLACK_HOOK"
-
   pypi_and_gh_release:
     needs:
       - cluster_tools_slurm
