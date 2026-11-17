@@ -33,6 +33,7 @@ from .image_source_registry import (
     get_unavailable_extensions,
     get_valid_extensions,
     get_valid_slice_reader_extensions,
+    has_glob_magic,
     open_slice_reader,
 )
 from .slice_reader import SliceReader, _SlicedView
@@ -115,21 +116,24 @@ class SlicedImageSource(ImageSource):
         if possible_channels is not None:
             self._possible_layers["channel"] = possible_channels
 
-    def _resolve_original_image_paths(self) -> str | list[str]:
+    def _resolve_original_image_paths(self) -> UPath | list[UPath]:
         original_images = self._original_images
         if isinstance(original_images, list):
-            return [str(i) for i in original_images]
+            return [UPath(i) for i in original_images]
         if original_images.is_dir():
             valid_extensions = get_valid_slice_reader_extensions()
-            files: list[str] = natsorted(
-                str(i)
-                for i in original_images.glob("**/*")
-                if i.is_file() and i.suffix.lstrip(".") in valid_extensions
+            files: list[UPath] = natsorted(
+                (
+                    i
+                    for i in original_images.glob("**/*")
+                    if i.is_file() and i.suffix.lstrip(".") in valid_extensions
+                ),
+                key=str,
             )
             if len(files) == 1:
                 return files[0]
             return files
-        return str(original_images)
+        return original_images
 
     def _error_path(self) -> UPath | None:
         """The single input path to blame when opening fails, or None when
@@ -216,7 +220,7 @@ class SlicedImageSource(ImageSource):
         path = self._error_path()
         if path is None:
             return None
-        if any(char in str(path) for char in "*?["):
+        if has_glob_magic(path):
             # A glob pattern rather than a file: no single file's contents to
             # blame, and the pattern may not have matched anything at all.
             return None
@@ -244,7 +248,7 @@ class SlicedImageSource(ImageSource):
         Image.MAX_IMAGE_PIXELS = None
 
     def _try_open_slice_reader(
-        self, original_images: str | list[str], exceptions: list[Exception]
+        self, original_images: UPath | list[UPath], exceptions: list[Exception]
     ) -> SliceReader | None:
         # try the registered reader for this extension
         def strategy_0() -> SliceReader | None:

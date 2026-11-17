@@ -7,30 +7,42 @@ read, in what order, and how to present them as one sequence of slices.
 from __future__ import annotations
 
 import fnmatch
-import glob
 import os
 import zipfile
 from collections.abc import Callable, Iterable
 from io import BytesIO
-from typing import Any
+from typing import IO, Any
 from warnings import warn
 
 import numpy as np
 from imageio import v2 as iio
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
+from upath import UPath
 
 from ...geometry.constants import Z_AXIS
+from ...utils import is_fs_path
 from ..errors import UnsupportedImageDataError
-from .image_source_registry import register_slice_reader
+from .image_source_registry import expand_glob, has_glob_magic, register_slice_reader
 from .slice_reader import SliceReader
 
-_natsort_key = natsort_keygen()
+_natsort_keygen = natsort_keygen()
+
+
+def _natsort_key(path: str | UPath) -> Any:
+    return _natsort_keygen(str(path))
 
 
 def imread(uri: Any, **kwargs: Any) -> np.ndarray:
     """Reads one image file into an array, stripping imageio's metadata."""
+    if isinstance(uri, UPath):
+        # imageio only reads local files and http(s) URLs by name.
+        uri = str(uri) if is_fs_path(uri) else BytesIO(uri.read_bytes())
     return np.asarray(iio.imread(uri, **kwargs))
+
+
+def _extension(path: str | UPath) -> str:
+    return os.path.splitext(str(path))[1].lstrip(".").lower()
 
 
 def _plane_axes(plane: np.ndarray, source: object) -> str:
@@ -62,9 +74,9 @@ class SingleImageSliceReader(SliceReader):
     # A three-channel png is an RGB photograph, not three acquisitions.
     channels_are_rgb = True
 
-    def __init__(self, filename: str, **kwargs: Any) -> None:
+    def __init__(self, filename: str | UPath, **kwargs: Any) -> None:
         super().__init__()
-        self._data = imread(filename, **kwargs)
+        self._data = imread(UPath(filename), **kwargs)
         axes = _plane_axes(self._data, filename)
         for axis, size in zip(axes, self._data.shape):
             self._init_axis(axis, size)
@@ -79,35 +91,64 @@ class SingleImageSliceReader(SliceReader):
         return self._data.dtype
 
 
+class _OwningZipFile(zipfile.ZipFile):
+    """A `ZipFile` that also closes the file object it reads from."""
+
+    def __init__(self, file: IO[bytes]) -> None:
+        self._owned_file = file
+        try:
+            super().__init__(file, "r")
+        except BaseException:
+            file.close()
+            raise
+
+    def close(self) -> None:
+        try:
+            super().close()
+        finally:
+            self._owned_file.close()
+
+
+def _open_zip_archive(path: UPath) -> zipfile.ZipFile | None:
+    """The zip archive at `path`, or None if `path` is not one."""
+    if has_glob_magic(path) or not path.is_file():
+        return None
+    with path.open("rb") as file:
+        if not zipfile.is_zipfile(file):
+            return None
+    return _OwningZipFile(path.open("rb"))
+
+
 def _collect_files(
-    path_spec: str | Iterable[str],
-) -> tuple[list[str], zipfile.ZipFile | None]:
+    path_spec: str | UPath | Iterable[str | UPath],
+) -> tuple[list[UPath] | list[str], zipfile.ZipFile | None]:
     """Resolves a directory, glob pattern, zip archive or iterable of paths
     into the list of files to read, in the order they should be read. An
     explicitly passed list is returned as given, preserving a custom order;
-    callers that want it sorted anyway do so themselves."""
-    if not isinstance(path_spec, str):
-        return [str(i) for i in path_spec], None
+    callers that want it sorted anyway do so themselves. For a zip archive,
+    the files are the names of its members."""
+    if not isinstance(path_spec, str | UPath):
+        return [UPath(i) for i in path_spec], None
+    path_spec = UPath(path_spec)
 
-    if zipfile.is_zipfile(path_spec):
-        archive = zipfile.ZipFile(path_spec, "r")
-        filepaths = [fn for fn in archive.namelist() if fnmatch.fnmatch(fn, "*.*")]
-        filepaths.sort(key=_natsort_key)
-        return filepaths, archive
+    archive = _open_zip_archive(path_spec)
+    if archive is not None:
+        members = [fn for fn in archive.namelist() if fnmatch.fnmatch(fn, "*.*")]
+        members.sort(key=_natsort_key)
+        return members, archive
 
-    if os.path.isdir(path_spec):
+    if has_glob_magic(path_spec):
+        filepaths = expand_glob(path_spec)
+    elif path_spec.is_dir():
         warn(
             "Loading ALL files in this directory. To ignore extraneous files, "
             "use a pattern like 'path/to/images/*.png'",
             UserWarning,
             stacklevel=2,
         )
-        filepaths = [
-            os.path.abspath(os.path.join(path_spec, filename))
-            for filename in os.listdir(path_spec)
-        ]
+        filepaths = list(path_spec.iterdir())
     else:
-        filepaths = glob.glob(path_spec)
+        filepaths = [path_spec] if path_spec.exists() else []
 
     filepaths.sort(key=_natsort_key)
     if not filepaths:
@@ -121,7 +162,9 @@ class MultiImageSliceReader(SliceReader):
     must decode to the shape of the first, which is the only one read up front.
     """
 
-    def __init__(self, path_spec: str | Iterable[str], **kwargs: Any) -> None:
+    def __init__(
+        self, path_spec: str | UPath | Iterable[str | UPath], **kwargs: Any
+    ) -> None:
         super().__init__()
         self.kwargs = kwargs
         # Set before anything that can raise, so __del__ -> close() does not
@@ -134,9 +177,9 @@ class MultiImageSliceReader(SliceReader):
         # imageio also decodes formats this class is not the preferred reader
         # for — a directory of TIFFs ends up here, where a "c" axis is separate
         # acquisitions rather than RGB. The files say which case this is.
-        first_extension = os.path.splitext(self._filepaths[0])[1].lstrip(".").lower()
         self.channels_are_rgb = (
-            first_extension in SingleImageSliceReader.supported_file_extensions()
+            _extension(self._filepaths[0])
+            in SingleImageSliceReader.supported_file_extensions()
         )
 
         self._init_axis(Z_AXIS, len(self._filepaths))
@@ -148,9 +191,9 @@ class MultiImageSliceReader(SliceReader):
         self._set_get_slice(self._read_file, plane_axes)
         self.iter_axes = [Z_AXIS]
 
-    def imread(self, filename: str, **kwargs: Any) -> np.ndarray:
+    def imread(self, filename: str | UPath, **kwargs: Any) -> np.ndarray:
         if self._zipfile is not None:
-            return imread(BytesIO(self._zipfile.read(filename)), **kwargs)
+            return imread(BytesIO(self._zipfile.read(str(filename))), **kwargs)
         return imread(filename, **kwargs)
 
     def _read_file(self, **coords: int) -> np.ndarray:
@@ -177,7 +220,7 @@ class StackedFileSliceReader(SliceReader):
 
     def __init__(
         self,
-        path_spec: str | Iterable[str],
+        path_spec: str | UPath | Iterable[str | UPath],
         # Any rather than SliceReader: not a fixed type since it can be a
         # reader class or a factory function.
         reader_cls: Callable[..., Any] | None = None,
@@ -194,7 +237,7 @@ class StackedFileSliceReader(SliceReader):
         else:
             self.reader_cls = reader_cls
         self._filepaths, self._zipfile = _collect_files(path_spec)
-        if not isinstance(path_spec, str):
+        if not isinstance(path_spec, str | UPath):
             # Unlike MultiImageSliceReader, an explicit list is sorted here
             # too, rather than kept in the caller's order.
             self._filepaths.sort(key=_natsort_key)

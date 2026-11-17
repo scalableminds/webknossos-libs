@@ -53,11 +53,10 @@ class OzxImageSource(TensorStoreChunkedImageSource):
         super().__init__(path, options)
         self._possible_layers: dict[str, list[int]] = {}
 
-        # `super().__init__` already rejected a remote `path`, so plain
-        # `zipfile` (rather than a tensorstore kvstore) is enough to read the
-        # root metadata.
+        # The root metadata is read with `zipfile` over `path.open()`, so a
+        # remote archive works too; only the requested ranges are fetched.
         try:
-            with zipfile.ZipFile(str(path)) as archive:
+            with path.open("rb") as file, zipfile.ZipFile(file) as archive:
                 root_bytes = archive.read(_ROOT_ZARR_JSON_KEY)
         except KeyError as e:
             raise UnsupportedImageFormatError(
