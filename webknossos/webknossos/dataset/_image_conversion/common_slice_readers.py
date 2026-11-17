@@ -16,6 +16,7 @@ from warnings import warn
 
 import numpy as np
 from imageio import v2 as iio
+from imageio.config import known_extensions
 from natsort import natsort_keygen
 from numpy.typing import DTypeLike
 from upath import UPath
@@ -36,9 +37,22 @@ def _natsort_key(path: str | UPath) -> Any:
 def imread(uri: Any, **kwargs: Any) -> np.ndarray:
     """Reads one image file into an array, stripping imageio's metadata."""
     if isinstance(uri, UPath):
-        # imageio only reads local files and http(s) URLs by name.
-        uri = str(uri) if is_fs_path(uri) else BytesIO(uri.read_bytes())
+        if is_fs_path(uri):
+            uri = str(uri)
+        else:
+            # imageio only reads local files and http(s) URLs by name.
+            return _imread_bytes(uri.read_bytes(), name=str(uri), **kwargs)
     return np.asarray(iio.imread(uri, **kwargs))
+
+
+def _imread_bytes(data: bytes, *, name: str, **kwargs: Any) -> np.ndarray:
+    """Reads one image file's bytes. `name` supplies the format hint that
+    imageio would otherwise take from the file name, e.g. so that a
+    multi-page TIFF is decoded completely rather than as its first page."""
+    extension = os.path.splitext(name)[1].lower()
+    if extension in known_extensions:
+        kwargs = {"format": extension, **kwargs}
+    return np.asarray(iio.imread(BytesIO(data), **kwargs))
 
 
 def _extension(path: str | UPath) -> str:
@@ -193,7 +207,9 @@ class MultiImageSliceReader(SliceReader):
 
     def imread(self, filename: str | UPath, **kwargs: Any) -> np.ndarray:
         if self._zipfile is not None:
-            return imread(BytesIO(self._zipfile.read(str(filename))), **kwargs)
+            return _imread_bytes(
+                self._zipfile.read(str(filename)), name=str(filename), **kwargs
+            )
         return imread(filename, **kwargs)
 
     def _read_file(self, **coords: int) -> np.ndarray:

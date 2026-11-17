@@ -529,3 +529,24 @@ def test_dm_slice_readers_read_remote_files(
     reader = reader_cls(remote_path)  # type: ignore[call-arg]
     assert reader.pixel_type == np.dtype(dtype)
     assert reader[0].shape == shape
+
+
+def test_sliced_image_source_reads_remote_multipage_tiffs(
+    tmp_upath: UPath, memory_upath: UPath
+) -> None:
+    import tifffile
+
+    for i in range(2):
+        data = np.full((2, 2, 4, 6), i, dtype="uint16")
+        for directory in [tmp_upath, memory_upath]:
+            with (directory / f"stack_{i}.tif").open("wb") as f:
+                tifffile.imwrite(
+                    f, data, metadata={"axes": "ZCYX"}, photometric="minisblack"
+                )
+
+    local_source = SlicedImageSource(tmp_upath, ReadOptions())
+    remote_source = SlicedImageSource(memory_upath, ReadOptions())
+    assert remote_source.get_layer_split_options() == {"channel": [0, 1]}
+    assert remote_source.expected_bbox == local_source.expected_bbox
+    assert remote_source.expected_bbox.get_shape(Z_AXIS) == 2
+    assert remote_source.expected_bbox.get_shape("t") == 2
