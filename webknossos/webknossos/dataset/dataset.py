@@ -443,6 +443,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         *,
         path_prefix: str | None = None,
         transfer_mode: TransferMode = TransferMode.COPY,
+        skip_existing_same_size: bool = False,
     ) -> None:
         """
         Copies or moves+symlinks the data to paths returned by WEBKNOSSOS
@@ -453,6 +454,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             dataset_id: The dataset_id of the already existing dataset
             path_prefix: The prefix of the storage path, can be used to select one of the storage path options.
             symlink_data_instead_of_copy: Set to true if the client has access to the same file system as the WEBKNOSSOS datastore.
+            skip_existing_same_size: With TransferMode.COPY, skip files that already exist at the target with the same size, e.g. to resume an interrupted copy.
         """
         from ..client.context import _get_api_client
 
@@ -466,7 +468,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                 self._properties, path_prefix
             ),
         )
-        self._transfer_dataset_items(response.data_source, transfer_mode)
+        self._transfer_dataset_items(
+            response.data_source,
+            transfer_mode,
+            skip_existing_same_size=skip_existing_same_size,
+        )
 
         client.finish_dataset_upload_to_paths(dataset_id)
 
@@ -592,7 +598,11 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         return RemoteDataset.open(dataset_id=new_dataset_id)
 
     def _transfer_dataset_items(
-        self, data_source: DatasetProperties, transfer_mode: TransferMode
+        self,
+        data_source: DatasetProperties,
+        transfer_mode: TransferMode,
+        *,
+        skip_existing_same_size: bool = False,
     ) -> None:
         """
         Iterates over the mags and attachments and transfers them to the target location.
@@ -614,6 +624,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                     src_mag.path,
                     dst_mag_path,
                     progress_desc_label=f"{layer.name}/{mag.mag}",
+                    skip_existing_same_size=skip_existing_same_size,
                 )
             if isinstance(src_layer, SegmentationLayer):
                 assert isinstance(layer, SegmentationLayerProperties), (
@@ -628,6 +639,7 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
                         src_attachment.path,
                         dst_attachment_path,
                         progress_desc_label=f"{layer.name}/{src_attachment.type_name}:{src_attachment.name}",
+                        skip_existing_same_size=skip_existing_same_size,
                     )
 
     @staticmethod

@@ -16,6 +16,7 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from os import PathLike
 from shutil import copyfileobj, move
+from stat import S_ISREG
 from threading import Thread, current_thread, main_thread
 from typing import (
     TYPE_CHECKING,
@@ -399,7 +400,20 @@ def copytree(
     ignore: Callable[[UPath, list[str]], set[str]] | None = None,
     threads: int | None = 10,
     progress_desc: str | None = None,
+    skip_existing_same_size: bool = False,
 ) -> None:
+    """Copies a directory tree between local or remote paths.
+
+    Args:
+        in_path: Source directory.
+        out_path: Destination directory.
+        ignore: Callable that returns the names to skip for a directory and its children's names.
+        threads: Number of files to copy in parallel.
+        progress_desc: If set, shows a progress bar with this description.
+        skip_existing_same_size: Skips files that already exist in the destination with the
+            same size, e.g. to resume an interrupted copy.
+    """
+
     def _walk(path: UPath, base_path: UPath) -> Iterator[tuple[UPath, tuple[str, ...]]]:
         # base_path.parts is a prefix of path.parts; strip it
         assert len(path.parts) >= len(base_path.parts)
@@ -421,7 +435,21 @@ def copytree(
 
     def _copy(args: tuple[UPath, UPath, tuple[str, ...]]) -> None:
         in_path, out_path, sub_path = args
+        src = _append(in_path, sub_path)
         dest = _append(out_path, sub_path)
+        if skip_existing_same_size:
+            try:
+                dest_stat = dest.stat()
+                # None if the source size is unknown, e.g. HTTP without Content-Length
+                src_size = src.fs.info(src.path).get("size")
+                if (
+                    S_ISREG(dest_stat.st_mode)
+                    and src_size is not None
+                    and dest_stat.st_size == src_size
+                ):
+                    return
+            except FileNotFoundError:
+                pass
         content_type, _ = mimetypes.guess_type(dest.name)
         write_kwargs: dict[str, Any] = (
             {"ContentType": content_type}
@@ -429,7 +457,7 @@ def copytree(
             else {}
         )
         with (
-            _append(in_path, sub_path).open("rb") as in_file,
+            src.open("rb") as in_file,
             dest.open("wb", **write_kwargs) as out_file,
         ):
             copyfileobj(in_file, out_file)

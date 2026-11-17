@@ -2,6 +2,7 @@ import pickle
 import threading
 import time
 from shutil import ignore_patterns
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -452,3 +453,58 @@ def test_rich_progress_concurrent_use_from_threads() -> None:
         thread.join()
 
     assert errors == []
+
+
+def test_copytree_skip_existing_same_size() -> None:
+    with TestTemporaryDirectoryNonLocal() as tmp_dir:
+        src_dir = tmp_dir / "src"
+        (src_dir / "subdir").mkdir(parents=True)
+        (src_dir / "same.txt").write_text("source")
+        (src_dir / "other_size.txt").write_text("source")
+        (src_dir / "subdir" / "missing.txt").write_text("source")
+
+        dst_dir = tmp_dir / "dst"
+        dst_dir.mkdir()
+        (dst_dir / "same.txt").write_text("stale!")
+        (dst_dir / "other_size.txt").write_text("stale")
+        (src_dir / "dir_conflict.txt").write_text("")
+        (dst_dir / "dir_conflict.txt").mkdir()
+        assert (dst_dir / "dir_conflict.txt").stat().st_size == 0
+
+        with pytest.raises(OSError):
+            copytree(src_dir, dst_dir, skip_existing_same_size=True)
+        (dst_dir / "dir_conflict.txt").rmdir()
+
+        copytree(src_dir, dst_dir, skip_existing_same_size=True)
+        assert (dst_dir / "same.txt").read_text() == "stale!"
+        assert (dst_dir / "other_size.txt").read_text() == "source"
+        assert (dst_dir / "subdir" / "missing.txt").read_text() == "source"
+
+        copytree(src_dir, dst_dir)
+        assert (dst_dir / "same.txt").read_text() == "source"
+
+
+def test_copytree_skip_existing_unknown_source_size(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with TestTemporaryDirectoryNonLocal() as tmp_dir:
+        src_dir = tmp_dir / "src"
+        src_dir.mkdir()
+        (src_dir / "file.txt").write_text("source")
+        dst_dir = tmp_dir / "dst"
+        dst_dir.mkdir()
+        (dst_dir / "file.txt").write_text("")
+
+        fs = src_dir.fs
+        original_info = fs.info
+
+        def info_without_size(path: str, **kwargs: Any) -> dict[str, Any]:
+            info = dict(original_info(path, **kwargs))
+            if info["name"].endswith("src/file.txt"):
+                info["size"] = None
+            return info
+
+        monkeypatch.setattr(fs, "info", info_without_size)
+        copytree(src_dir, dst_dir, skip_existing_same_size=True)
+        monkeypatch.undo()
+        assert (dst_dir / "file.txt").read_text() == "source"

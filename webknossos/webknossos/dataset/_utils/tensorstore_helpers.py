@@ -128,6 +128,11 @@ def _make_kvstore(path: UPath) -> str | dict[str, str | list[str]]:
             "path": parsed_url.path.lstrip("/"),
             "bucket": parsed_url.netloc,
         }
+    elif path.protocol == "globus":
+        raise NotImplementedError(
+            f"Reading array data directly from {path} is not supported. "
+            "Copy the data first, e.g. with `Dataset.publish_to_preliminary_dataset` or `webknossos.utils.copytree`."
+        )
     elif path.protocol == "memory":
         # use memory driver (in-memory file systems), e.g. useful for testing
         # attention: this is not a persistent storage and it does not support

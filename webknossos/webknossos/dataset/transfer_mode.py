@@ -39,7 +39,11 @@ class TransferMode(str, Enum):
 
     @staticmethod
     def copy(
-        src_path: UPath, dst_path: UPath, progress_desc_label: str | None = None
+        src_path: UPath,
+        dst_path: UPath,
+        progress_desc_label: str | None = None,
+        *,
+        skip_existing_same_size: bool = False,
     ) -> None:
         progress_desc_label = (
             progress_desc_label + " " if progress_desc_label is not None else ""
@@ -49,13 +53,26 @@ class TransferMode(str, Enum):
             src_path,
             dst_path,
             progress_desc=f"Copying {progress_desc_label}",
+            skip_existing_same_size=skip_existing_same_size,
         )
 
     def transfer(
-        self, src_path: UPath, dst_path: UPath, progress_desc_label: str | None = None
+        self,
+        src_path: UPath,
+        dst_path: UPath,
+        progress_desc_label: str | None = None,
+        *,
+        skip_existing_same_size: bool = False,
     ) -> None:
+        """Transfers `src_path` to `dst_path`. With `skip_existing_same_size`, the COPY mode
+        skips files that already exist in the destination with the same size."""
         if self.name == TransferMode.COPY.name:
-            self.copy(src_path, dst_path, progress_desc_label)
+            self.copy(
+                src_path,
+                dst_path,
+                progress_desc_label,
+                skip_existing_same_size=skip_existing_same_size,
+            )
         elif self.name == TransferMode.MOVE_AND_SYMLINK.name:
             self.move_and_symlink(src_path, dst_path)
         elif self.name == TransferMode.SYMLINK.name:
