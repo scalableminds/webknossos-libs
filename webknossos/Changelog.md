@@ -11,21 +11,9 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.4.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.3...HEAD)
 
 ### Breaking Changes
-
-### Added
-
-### Changed
-
-### Deprecated
-
-### Fixed
-
-
-## [4.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.4.0) - 2026-11-17
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.3...v4.4.0)
 
 ### Added
 - `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
@@ -38,9 +26,10 @@ in the _Changed_ sections.
 - Import time was cut roughly in half by using lazy imports for several dependencies. [#1583](https://github.com/scalableminds/webknossos-libs/pull/1583)
 - **Breaking:** Tasks can now have no experience requirement, so that any member of the project's team can get them. `Task.experience` is now typed `TaskExperience | None` and is `None` for such tasks, and `Task.create` and `Task.create_from_annotations` accept `None` for `needed_experience_domain` and `needed_experience_value`. Tasks without an experience requirement could not be read before. This needs a WEBKNOSSOS version that includes [scalableminds/webknossos#10390](https://github.com/scalableminds/webknossos/pull/10390) to create such tasks. [#1593](https://github.com/scalableminds/webknossos-libs/pull/1593)
 
+### Deprecated
+
 ### Fixed
 - Segment groups in NML files are no longer parsed as skeleton tree groups. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
-
 
 
 ## [4.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.3) - 2026-10-26
