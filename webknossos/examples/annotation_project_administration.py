@@ -35,7 +35,9 @@ def main() -> None:
         task_type_id=task_type_id,  # New task type instructs annotators what to do in the task
         project_name="sampleProject2",
         base_annotations=finished_annotations,
-        needed_experience_domain="sampleExp",  # Only annotators with the experience "sampleExp" of at least value 2 will get this task
+        # Only annotators with the experience "sampleExp" of at least value 2 will get this task.
+        # Pass None for both experience arguments to let any member of the project's team get it.
+        needed_experience_domain="sampleExp",
         needed_experience_value=2,
     )
     print(f"New tasks: {tasks}")

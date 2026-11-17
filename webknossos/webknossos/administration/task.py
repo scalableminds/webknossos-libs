@@ -50,6 +50,26 @@ class TaskExperience:
         return cls(api_experience.domain, api_experience.value)
 
 
+def _api_experience_from_args(
+    domain: str | None, value: int | None
+) -> ApiExperience | None:
+    if domain is not None and domain.strip() == "":
+        raise ValueError(
+            "needed_experience_domain must not be empty. Use None for no experience requirement."
+        )
+    if domain is None:
+        if value is not None:
+            raise ValueError(
+                "needed_experience_value can only be set together with needed_experience_domain."
+            )
+        return None
+    if value is None:
+        raise ValueError(
+            "needed_experience_value is required when needed_experience_domain is set."
+        )
+    return ApiExperience(domain=domain, value=value)
+
+
 @attr.frozen
 class TaskType:
     task_type_id: str
@@ -260,7 +280,8 @@ class Task:
     dataset_id: str
     status: TaskStatus
     task_type: TaskType
-    experience: TaskExperience
+    # None if any member of the project's team may get the task
+    experience: TaskExperience | None
     edit_position: Vec3Int = attr.field(converter=Vec3Int)
     edit_rotation: Vec3Float = attr.field(converter=Vec3Float)
     script_id: str | None = None
@@ -322,8 +343,8 @@ class Task:
         task_type_id: str | TaskType,
         project_name: str | Project,
         base_annotations: list[Annotation],
-        needed_experience_domain: str,
-        needed_experience_value: int,
+        needed_experience_domain: str | None,
+        needed_experience_value: int | None,
         instances: int = 1,
         script_id: str | None = None,
         bounding_box: BoundingBox | None = None,
@@ -340,7 +361,9 @@ class Task:
             project_name: The name or Project object specifying the project to which the tasks belong.
             base_annotations: List of Annotation objects to use as the basis for the new tasks. Must not be empty.
             needed_experience_domain: The experience domain required for the task (e.g., "proofreading").
+                If None, any member of the project's team can get the task.
             needed_experience_value: The minimum experience value required for the task.
+                Must be set if and only if `needed_experience_domain` is set.
             instances: Number of task instances to create (default: 1).
             script_id: Optional script ID to associate with the task.
             bounding_box: Optional BoundingBox object specifying the spatial extent of the task.
@@ -350,6 +373,8 @@ class Task:
 
         Raises:
             AssertionError: If no base annotations are provided.
+            ValueError: If only one of `needed_experience_domain` and `needed_experience_value` is set,
+                or if `needed_experience_domain` is empty.
 
         Examples:
             ```
@@ -374,6 +399,9 @@ class Task:
         assert len(base_annotations) > 0, (
             "Must supply at least one base annotation to create tasks"
         )
+        needed_experience = _api_experience_from_args(
+            needed_experience_domain, needed_experience_value
+        )
         if isinstance(task_type_id, TaskType):
             task_type_id = task_type_id.task_type_id
         if isinstance(project_name, Project):
@@ -382,10 +410,7 @@ class Task:
         client = _get_api_client()
         nml_task_parameters = ApiNmlTaskParameters(
             task_type_id=task_type_id,
-            needed_experience=ApiExperience(
-                domain=needed_experience_domain,
-                value=needed_experience_value,
-            ),
+            needed_experience=needed_experience,
             pending_instances=instances,
             project_name=project_name,
             script_id=script_id,
@@ -412,8 +437,8 @@ class Task:
         cls,
         task_type_id: str | TaskType,
         project_name: str | Project,
-        needed_experience_domain: str,
-        needed_experience_value: int,
+        needed_experience_domain: str | None,
+        needed_experience_value: int | None,
         starting_position: Vec3IntLike,
         dataset_id: str | RemoteDataset,
         dataset_name: str | RemoteDataset | None = None,
@@ -434,7 +459,9 @@ class Task:
             task_type_id: The ID of the task type to create, or a TaskType instance.
             project_name: The name of the project to associate the task with, or a Project instance.
             needed_experience_domain: The experience domain required for the task (e.g., "segmentation").
+                If None, any member of the project's team can get the task.
             needed_experience_value: The minimum experience value required for the task.
+                Must be set if and only if `needed_experience_domain` is set.
             starting_position: The starting position for the task as a Vec3IntLike (x, y, z).
             dataset_id: The dataset ID as a string or a RemoteDataset instance.
             dataset_name: (Deprecated) The dataset name as a string or RemoteDataset instance. Prefer using dataset_id.
@@ -448,6 +475,8 @@ class Task:
 
         Raises:
             AssertionError: If neither dataset_id nor dataset_name is provided.
+            ValueError: If only one of `needed_experience_domain` and `needed_experience_value` is set,
+                or if `needed_experience_domain` is empty.
             DeprecationWarning: If dataset_name is used instead of dataset_id.
 
         Examples:
@@ -477,8 +506,23 @@ class Task:
                     dataset_id=remote_ds,
                     bounding_box=bbox
                 ```
+
+            Create a task that any member of the project's team can get:
+                ```
+                tasks = Task.create(
+                    task_type_id=task_type,
+                    project_name=project,
+                    needed_experience_domain=None,
+                    needed_experience_value=None,
+                    starting_position=(0, 0, 0),
+                    dataset_id=remote_ds,
+                )
+                ```
         """
 
+        needed_experience = _api_experience_from_args(
+            needed_experience_domain, needed_experience_value
+        )
         client = _get_api_client()
         assert dataset_id is not None or dataset_name is not None, (
             "Please provide a dataset_id to create a task."
@@ -505,10 +549,7 @@ class Task:
 
         task_parameters = ApiTaskParameters(
             task_type_id=task_type_id,
-            needed_experience=ApiExperience(
-                domain=needed_experience_domain,
-                value=needed_experience_value,
-            ),
+            needed_experience=needed_experience,
             pending_instances=instances,
             project_name=project_name,
             script_id=script_id,
@@ -541,7 +582,9 @@ class Task:
                 api_task.status.finished,
             ),
             TaskType._from_api_task_type(api_task.type),
-            TaskExperience._from_api_experience(api_task.needed_experience),
+            TaskExperience._from_api_experience(api_task.needed_experience)
+            if api_task.needed_experience is not None
+            else None,
             api_task.edit_position,
             api_task.edit_rotation,
             api_task.script.id if api_task.script else None,
@@ -584,7 +627,9 @@ class Task:
         client = _get_api_client()
         api_task = ApiTaskParameters(
             self.task_type.task_type_id,
-            ApiExperience(self.experience.domain, self.experience.value),
+            ApiExperience(self.experience.domain, self.experience.value)
+            if self.experience is not None
+            else None,
             remaining_instances,
             self.get_project().name,
             self.script_id,

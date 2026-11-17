@@ -320,7 +320,7 @@ class ApiTask:
     dataset_id: str
     status: ApiTaskStatus
     type: ApiTaskType
-    needed_experience: ApiExperience
+    needed_experience: ApiExperience | None
     bounding_box: ApiBoundingBox | None
     edit_position: tuple[int, int, int]
     edit_rotation: tuple[float, float, float]
@@ -330,7 +330,7 @@ class ApiTask:
 @attr.s(auto_attribs=True)
 class ApiNmlTaskParameters:
     task_type_id: str
-    needed_experience: ApiExperience
+    needed_experience: ApiExperience | None
     pending_instances: int
     project_name: str
     script_id: str | None
@@ -340,7 +340,7 @@ class ApiNmlTaskParameters:
 @attr.s(auto_attribs=True)
 class ApiTaskParameters:
     task_type_id: str
-    needed_experience: ApiExperience
+    needed_experience: ApiExperience | None
     pending_instances: int
     project_name: str
     script_id: str | None

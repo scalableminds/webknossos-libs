@@ -72,6 +72,30 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     subprocess.check_call(
         ["docker", "compose", "run", "--rm", "prepare-test-db"], cwd=wk_docker_dir
     )
+    # The test db may point the stores to a different port than the one webknossos serves on here.
+    store_url_sql = "; ".join(
+        f"UPDATE webknossos.{table} SET url = '{WK_URL}', publicUrl = '{WK_URL}'"
+        for table in ("dataStores", "tracingStores")
+    )
+    subprocess.check_call(
+        [
+            "docker",
+            "compose",
+            "exec",
+            "-T",
+            "postgres",
+            "psql",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-U",
+            "postgres",
+            "-d",
+            "webknossos",
+            "-c",
+            store_url_sql,
+        ],
+        cwd=wk_docker_dir,
+    )
 
     # Start the webknossos server
     subprocess.check_call(
