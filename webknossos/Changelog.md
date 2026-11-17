@@ -30,7 +30,7 @@ in the _Changed_ sections.
 
 ### Fixed
 - Segment groups in NML files are no longer parsed as skeleton tree groups. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
-- `Dataset.from_images` and `add_layer_from_images` can now read `.ozx` archives, DM3/DM4 files and common 2D images (png, jpg, …, including directories, glob patterns and zip archives of them) from remote paths such as S3. Before, remote `.ozx` archives were wrongly reported as corrupted. TIFF files on remote paths now keep the path's storage options, e.g. credentials.
+- `Dataset.from_images` and `add_layer_from_images` can now read `.ozx` archives, DM3/DM4 files and common 2D images (png, jpg, …, including directories, glob patterns and zip archives of them) from remote paths such as S3. Before, remote `.ozx` archives were wrongly reported as corrupted. TIFF files on remote paths now keep the path's storage options, e.g. credentials. [#1595](https://github.com/scalableminds/webknossos-libs/pull/1595)
 
 
 ## [4.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.3) - 2026-10-26
