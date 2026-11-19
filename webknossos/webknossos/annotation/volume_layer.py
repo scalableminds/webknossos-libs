@@ -6,6 +6,7 @@ import uuid
 from collections.abc import Generator, Iterator, Sequence
 from contextlib import contextmanager
 from enum import Enum
+from pathlib import PurePosixPath, PureWindowsPath
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
 from typing import Any, cast
@@ -424,10 +425,24 @@ class VolumeLayer:
         return layer
 
 
+def _escapes_target_dir(relative_name: str) -> bool:
+    """Whether a relative zip entry path would resolve outside of the extraction directory."""
+    return (
+        ".." in re.split(r"[/\\]", relative_name)
+        or PurePosixPath(relative_name).is_absolute()
+        or PureWindowsPath(relative_name).anchor != ""
+    )
+
+
 def _extract_zip_folder(zip_file: ZipFile, out_path: UPath, prefix: str) -> None:
     for zip_entry in zip_file.filelist:
         if zip_entry.filename.startswith(prefix) and not zip_entry.is_dir():
-            out_file_path = out_path / (zip_entry.filename[len(prefix) :])
+            relative_name = zip_entry.filename[len(prefix) :]
+            if _escapes_target_dir(relative_name):
+                raise ValueError(
+                    f"The zip entry {zip_entry.filename!r} points outside of the target directory."
+                )
+            out_file_path = out_path / relative_name
             out_file_path.parent.mkdir(parents=True, exist_ok=True)
             with (
                 zip_file.open(zip_entry, "r") as zip_f,

@@ -22,6 +22,7 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- Fixed a path traversal when exporting Zarr3 volume layers of annotations: entries of a crafted annotation zip file could be written outside of the target dataset. Such annotations are now rejected with a `ValueError`. [#80](https://github.com/scalableminds/mono/pull/80)
 
 
 ## [4.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.4.0) - 2026-11-17
