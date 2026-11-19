@@ -1,6 +1,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
+from uuid import uuid4
 
 import numpy as np
 import pytest
@@ -8,9 +9,14 @@ from PIL import Image
 from upath import UPath
 
 import webknossos as wk
+from tests.data_fixtures import download_wklibs_sample_archive
 from webknossos.dataset._image_conversion.common_slice_readers import (
     MultiImageSliceReader,
     SingleImageSliceReader,
+)
+from webknossos.dataset._image_conversion.dm_slice_reader import (
+    Dm3SliceReader,
+    Dm4SliceReader,
 )
 from webknossos.dataset._image_conversion.image_source import ReadOptions
 from webknossos.dataset._image_conversion.image_source_registry import open_slice_reader
@@ -437,3 +443,110 @@ def test_no_real_z_axis_gets_a_size_one_axis_without_relabeling_a_real_axis(
         # pull y/x to the front, squeezing the size-1 s/t/c/z axes
         written_slice = np.moveaxis(data, [y_index, x_index], [0, 1]).reshape(4, 5)
         np.testing.assert_array_equal(written_slice, _NO_Z_VOLUME[t, s])
+
+
+@pytest.fixture()
+def memory_upath() -> Generator[UPath]:
+    """A fresh directory on fsspec's in-memory file system, which is not a
+    local file system."""
+    path = UPath(f"memory:///test_slice_reader/{uuid4().hex}")
+    path.mkdir(parents=True, exist_ok=True)
+    yield path
+    path.fs.rm(path.path, recursive=True)
+
+
+def _write_memory_png(path: UPath, value: int) -> None:
+    with path.open("wb") as f:
+        Image.fromarray(np.full((4, 6), value, dtype="uint8")).save(f, format="png")
+
+
+def test_open_slice_reader_reads_remote_png(memory_upath: UPath) -> None:
+    _write_memory_png(memory_upath / "single.png", 7)
+    reader = open_slice_reader(memory_upath / "single.png")
+    assert isinstance(reader, SingleImageSliceReader)
+    assert _values(reader) == [7]
+
+
+def test_image_sequence_reads_remote_glob(memory_upath: UPath) -> None:
+    for i in [1, 2, 10]:
+        _write_memory_png(memory_upath / f"img_{i}.png", i)
+    reader = open_slice_reader(memory_upath / "img_*.png")
+    assert isinstance(reader, MultiImageSliceReader)
+    assert _values(reader) == [1, 2, 10]
+
+
+def test_image_sequence_reads_remote_directory(memory_upath: UPath) -> None:
+    for i in [1, 2, 10]:
+        _write_memory_png(memory_upath / f"img_{i}.png", i)
+    with pytest.warns(UserWarning, match="Loading ALL files"):
+        reader = MultiImageSliceReader(memory_upath)
+    assert _values(reader) == [1, 2, 10]
+
+
+def test_image_sequence_reads_remote_zip_archive(
+    tmp_upath: UPath, memory_upath: UPath
+) -> None:
+    import zipfile
+
+    for i in [1, 2, 10]:
+        _write_png(tmp_upath / f"img_{i}.png", i)
+    archive = memory_upath / "images.zip"
+    with archive.open("wb") as f, zipfile.ZipFile(f, "w") as zf:
+        for i in [1, 2, 10]:
+            zf.write(str(tmp_upath / f"img_{i}.png"), f"img_{i}.png")
+
+    reader = MultiImageSliceReader(archive)
+    assert _values(reader) == [1, 2, 10]
+    reader.close()
+
+
+def test_sliced_image_source_reads_remote_directory(memory_upath: UPath) -> None:
+    for i in [1, 2, 10]:
+        _write_memory_png(memory_upath / f"img_{i}.png", i)
+    source = SlicedImageSource(memory_upath, ReadOptions())
+    assert source.dtype == np.dtype("uint8")
+    assert source.num_channels == 1
+
+
+@pytest.mark.parametrize(
+    "name, reader_cls, dtype, shape",
+    [
+        ("dnasample1.dm3", Dm3SliceReader, "int16", (4096, 4096)),
+        ("slice_0420.dm4", Dm4SliceReader, "uint16", (8192, 8192)),
+    ],
+)
+def test_dm_slice_readers_read_remote_files(
+    memory_upath: UPath,
+    name: str,
+    reader_cls: type[SliceReader],
+    dtype: str,
+    shape: tuple[int, int],
+) -> None:
+    local_path = download_wklibs_sample_archive(name)
+    remote_path = memory_upath / name
+    remote_path.write_bytes(local_path.read_bytes())
+
+    reader = reader_cls(remote_path)  # type: ignore[call-arg]
+    assert reader.pixel_type == np.dtype(dtype)
+    assert reader[0].shape == shape
+
+
+def test_sliced_image_source_reads_remote_multipage_tiffs(
+    tmp_upath: UPath, memory_upath: UPath
+) -> None:
+    import tifffile
+
+    for i in range(2):
+        data = np.full((2, 2, 4, 6), i, dtype="uint16")
+        for directory in [tmp_upath, memory_upath]:
+            with (directory / f"stack_{i}.tif").open("wb") as f:
+                tifffile.imwrite(
+                    f, data, metadata={"axes": "ZCYX"}, photometric="minisblack"
+                )
+
+    local_source = SlicedImageSource(tmp_upath, ReadOptions())
+    remote_source = SlicedImageSource(memory_upath, ReadOptions())
+    assert remote_source.get_layer_split_options() == {"channel": [0, 1]}
+    assert remote_source.expected_bbox == local_source.expected_bbox
+    assert remote_source.expected_bbox.get_shape(Z_AXIS) == 2
+    assert remote_source.expected_bbox.get_shape("t") == 2

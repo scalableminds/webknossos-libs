@@ -107,6 +107,23 @@ def test_remote_path_warns() -> None:
             _open(UPath("memory://some/path.ozx"))
 
 
+def test_remote_archive_metadata_is_read(tmp_upath: UPath) -> None:
+    local_path = tmp_upath / "remote.ozx"
+    write_ozx_file(
+        local_path, [("0", np.ones((4, 8, 8), np.uint8), [1.0] * 3)], _AXES_CZYX[1:]
+    )
+    remote_path = UPath("memory:///test_ozx_image_source/remote.ozx")
+    remote_path.write_bytes(local_path.read_bytes())
+    try:
+        # tensorstore's memory kvstore does not share fsspec's in-memory file
+        # system, so only the array open fails; the root metadata is read.
+        with pytest.warns(UserWarning, match="remote path"):
+            with pytest.raises(CorruptImageError, match="Cannot open the OME-Zarr"):
+                _open(remote_path)
+    finally:
+        remote_path.unlink()
+
+
 def test_not_a_zip_file_raises_corrupt_image_error(tmp_upath: UPath) -> None:
     not_a_zip = tmp_upath / "not_a_zip.ozx"
     not_a_zip.write_text("this is not a zip file")

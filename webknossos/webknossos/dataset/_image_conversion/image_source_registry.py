@@ -12,7 +12,6 @@ while a chunked reader is, which is what its `…ImageSource` name says.
 from __future__ import annotations
 
 import glob
-import os
 import sys
 import threading
 import warnings
@@ -22,6 +21,7 @@ from typing import NamedTuple
 
 from upath import UPath
 
+from ...utils import is_fs_path
 from ..errors import UnsupportedImageFormatError
 from .chunked_image_source import ChunkedImageSource
 from .image_source import ImageSource, ReadOptions
@@ -77,7 +77,28 @@ def get_valid_extensions() -> set[str]:
     )
 
 
-def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
+def has_glob_magic(path: str | UPath) -> bool:
+    return any(char in str(path) for char in "*?[")
+
+
+def expand_glob(pattern: UPath) -> list[UPath]:
+    """The paths matching `pattern`, unsorted. Remote patterns are expanded by
+    the path's own file system, keeping its storage options."""
+    if is_fs_path(pattern):
+        return [UPath(match) for match in glob.glob(str(pattern))]
+    parts = pattern.parts
+    first_magic = next(
+        (i for i, part in enumerate(parts) if has_glob_magic(part)), len(parts)
+    )
+    base = pattern
+    for _ in range(len(parts) - first_magic):
+        base = base.parent
+    if first_magic == len(parts):
+        return [base] if base.exists() else []
+    return list(base.glob("/".join(parts[first_magic:])))
+
+
+def open_slice_reader(path_spec: str | UPath, **kwargs: object) -> SliceReader:
     """Opens a path, glob pattern or directory as a sequence of slices.
 
     A pattern matching more than one file becomes an image sequence; a single
@@ -88,7 +109,8 @@ def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
     # Deferred to avoid a cycle: the raster readers register themselves here.
     from .common_slice_readers import MultiImageSliceReader
 
-    if len(glob.glob(path_spec)) > 1:
+    path_spec = UPath(path_spec)
+    if has_glob_magic(path_spec) and len(expand_glob(path_spec)) > 1:
         return MultiImageSliceReader(path_spec, **kwargs)
 
     # The errors below are dispatch failing, not the final word: a caller may
@@ -96,7 +118,7 @@ def open_slice_reader(path_spec: str, **kwargs: object) -> SliceReader:
     # (path_spec may be a glob, so these cannot).
     supported = tuple(sorted(get_valid_extensions()))
 
-    _, ext = os.path.splitext(path_spec)
+    ext = path_spec.suffix
     if len(ext) < 2:
         raise UnsupportedImageFormatError(
             f"Could not detect the file type of {path_spec} because it has no "

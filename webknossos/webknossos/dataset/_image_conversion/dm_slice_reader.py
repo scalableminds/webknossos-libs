@@ -22,26 +22,33 @@ class Dm3SliceReader(SliceReader):
     # default; nothing else claims dm3.
     class_priority = 20
 
-    def __init__(self, path: UPath) -> None:
+    def __init__(self, path: str | UPath) -> None:
         self.path = UPath(path)
         super().__init__()
-        dm3_file = DM3(self.path)
-        self._init_axis(X_AXIS, dm3_file.width)
-        self._init_axis(Y_AXIS, dm3_file.height)
-        if dm3_file.depth > 1:
-            self._init_axis(Z_AXIS, dm3_file.depth)
-            self._set_get_slice(self._get_slice, (Z_AXIS, Y_AXIS, X_AXIS))
-        else:
-            self._set_get_slice(self._get_slice, (Y_AXIS, X_AXIS))
+        with self.dm3_file() as dm3_file:
+            self._init_axis(X_AXIS, dm3_file.width)
+            self._init_axis(Y_AXIS, dm3_file.height)
+            if dm3_file.depth > 1:
+                self._init_axis(Z_AXIS, dm3_file.depth)
+                self._set_get_slice(self._get_slice, (Z_AXIS, Y_AXIS, X_AXIS))
+            else:
+                self._set_get_slice(self._get_slice, (Y_AXIS, X_AXIS))
+
+    @contextmanager
+    def dm3_file(self) -> Generator[DM3]:
+        # Opened via UPath so that remote paths work too.
+        with self.path.open("rb") as f:
+            yield DM3(str(self.path), fileobj=f)
 
     @property  # potential @cached_property for py3.8+
     def pixel_type(self) -> np.dtype:
-        dm3_file = DM3(self.path)
-        return np.dtype(DM3_DTYPE_MAPPING[dm3_file._data_type])
+        with self.dm3_file() as dm3_file:
+            return np.dtype(DM3_DTYPE_MAPPING[dm3_file._data_type])
 
     def _get_slice(self, **ind: int) -> np.ndarray:
         del ind
-        return DM3(self.path).imagedata
+        with self.dm3_file() as dm3_file:
+            return dm3_file.imagedata
 
 
 @register_slice_reader
@@ -54,7 +61,7 @@ class Dm4SliceReader(SliceReader):
     # 10 is the default; nothing else claims dm4.
     class_priority = 20
 
-    def __init__(self, path: UPath) -> None:
+    def __init__(self, path: str | UPath) -> None:
         self.path = UPath(path)
         super().__init__()
         with self.dm4_file() as dm4_file:
@@ -84,7 +91,14 @@ class Dm4SliceReader(SliceReader):
 
     @contextmanager
     def dm4_file(self) -> Generator[DM4File]:
-        with closing(DM4File.open(self.path)) as dm4_file:
+        # Opened via UPath so that remote paths work too.
+        f = self.path.open("rb")
+        try:
+            dm4_file = DM4File(f)
+        except BaseException:
+            f.close()
+            raise
+        with closing(dm4_file):
             yield dm4_file
 
     @property  # potential @cached_property for py3.8+

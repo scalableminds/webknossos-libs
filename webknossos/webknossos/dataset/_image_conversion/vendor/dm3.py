@@ -506,8 +506,12 @@ class DM3(object):
 
     ### END utility functions ###
 
-    def __init__(self, filename, debug=0):
-        """DM3 object: parses DM3 file."""
+    def __init__(self, filename, debug=0, fileobj=None):
+        """DM3 object: parses DM3 file.
+
+        `fileobj`, when given, is read instead of opening `filename`, which
+        then only names the file in messages. The caller keeps ownership of it.
+        """
 
         ## initialize variables ##
         self._debug = debug
@@ -522,7 +526,7 @@ class DM3(object):
         self._curTagAtLevelX = ["" for x in range(MAXDEPTH)]
         self._curTagName = ""
         # - open file for reading
-        self._f = open(self._filename, "rb")
+        self._f = open(self._filename, "rb") if fileobj is None else fileobj
         # - create Tags repositories
         self._storedTags = []
         self._tagDict = {}
