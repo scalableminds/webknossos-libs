@@ -110,7 +110,9 @@ def test_main() -> None:
     """Tests the functionality of the webknossos command."""
 
     result_without_args = runner.invoke(app, [])
-    assert result_without_args.exit_code == 0
+    # Exit code is 2 with recent typer versions
+    assert result_without_args.exit_code in (0, 2)
+    assert "Usage:" in result_without_args.output
 
 
 def test_check_equality() -> None:
