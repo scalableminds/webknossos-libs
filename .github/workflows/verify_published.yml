@@ -18,7 +18,7 @@ jobs:
         extras: ["", "[all]"]
     steps:
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -50,7 +50,7 @@ jobs:
           source .venv/bin/activate
           python -c "import webknossos; from webknossos import version; print(f'webknossos version: {version.__version__}')"
 
-      - uses: slackapi/slack-github-action@v3.0.1
+      - uses: slackapi/slack-github-action@v4.0.0
         if: failure() || cancelled()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
