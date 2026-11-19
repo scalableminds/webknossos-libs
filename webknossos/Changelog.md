@@ -23,6 +23,7 @@ in the _Changed_ sections.
 
 ### Fixed
 - Fixed a path traversal when exporting Zarr3 volume layers of annotations: entries of a crafted annotation zip file could be written outside of the target dataset. Such annotations are now rejected with a `ValueError`. [#80](https://github.com/scalableminds/mono/pull/80)
+- Fixed that `Layer.upsample` left voxels empty when a mag is upsampled by a factor larger than 2 in one step. [#79](https://github.com/scalableminds/mono/pull/79)
 
 
 ## [4.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.4.0) - 2026-11-17

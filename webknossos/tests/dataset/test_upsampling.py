@@ -64,6 +64,15 @@ def test_upsample_cube() -> None:
     assert np.all(output[:, :, :] == np.repeat(np.arange(0, BUFFER_SHAPE.x), 2))
 
 
+def test_upsample_cube_with_factor_larger_than_2() -> None:
+    buffer = np.arange(1, 9, dtype=np.uint8).reshape((2, 2, 2))
+
+    output = upsample_cube(buffer, [1, 3, 4])
+
+    expected = buffer.repeat(3, axis=1).repeat(4, axis=2)
+    np.testing.assert_array_equal(output, expected)
+
+
 def upsample_test_helper(tmp_upath: UPath, use_compress: bool) -> None:
     ds = Dataset(tmp_upath, voxel_size=(10.5, 10.5, 5))
     layer = ds.add_layer("color", COLOR_CATEGORY)
