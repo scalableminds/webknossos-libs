@@ -31,11 +31,22 @@ def _validate_segment_ids(graph: AgglomerateGraph) -> tuple[int, list[int]]:
             )
 
     n_segments = max(segment_ids) if len(segment_ids) > 0 else 0
-    if set(segment_ids) != set(range(1, n_segments + 1)):
-        missing = sorted(set(range(1, n_segments + 1)) - set(segment_ids))
+    # Ids are distinct and within 1..n_segments, so any shortfall means gaps.
+    n_missing = n_segments - len(segment_ids)
+    if n_missing > 0:
+        present = set(segment_ids)
+        missing_sample = []
+        for sid in range(1, n_segments + 1):
+            if sid not in present:
+                missing_sample.append(sid)
+                if len(missing_sample) == 10:
+                    break
+        missing_str = ", ".join(str(sid) for sid in missing_sample)
+        if n_missing > len(missing_sample):
+            missing_str += ", ..."
         raise ValueError(
             f"Segment IDs must be dense (1..{n_segments}) with no gaps, "
-            f"missing: {missing}"
+            f"missing {n_missing} IDs: [{missing_str}]"
         )
     return n_segments, segment_ids
 

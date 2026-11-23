@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import numpy as np
 import pytest
@@ -239,6 +240,32 @@ def test_create_sparse_segment_ids_rejected(tmp_upath: UPath) -> None:
     G.add_segment(3, position=Vec3Int(4, 5, 6))  # gap: segment 2 is missing
     with pytest.raises(ValueError, match="dense"):
         AgglomerateAttachment.create(tmp_upath / "agg_sparse", G)
+
+
+def test_create_huge_sparse_segment_id_rejected(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from webknossos.dataset.layer.segmentation_layer.attachments import (
+        agglomerate_attachment,
+    )
+
+    def set_without_ranges(*args: Any) -> set:
+        # Fail fast instead of allocating the full id range.
+        assert not any(isinstance(arg, range) for arg in args)
+        return set(*args)
+
+    monkeypatch.setattr(
+        agglomerate_attachment, "set", set_without_ranges, raising=False
+    )
+
+    G = AgglomerateGraph()
+    G.add_segment(1, position=Vec3Int(1, 2, 3))
+    G.add_segment(10**10, position=Vec3Int(4, 5, 6))
+    with pytest.raises(
+        ValueError,
+        match=r"dense \(1\.\.10000000000\).*missing 9999999998 IDs: \[2, 3, .*, 11, \.\.\.\]",
+    ):
+        AgglomerateAttachment.create(tmp_upath / "agg_huge_sparse", G)
 
 
 def test_agglomerate_graph_api() -> None:

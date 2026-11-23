@@ -19,6 +19,7 @@ in the _Changed_ sections.
 ### Added
 
 ### Changed
+- `Skeleton.get_node_by_id` and `Skeleton.get_tree_by_id` (also on groups) now use a lazily built index instead of scanning all trees. This also makes loading NML files with many trees and comments or branchpoints much faster (e.g. 8000 trees: 17.6 s → 0.23 s). [#88](https://github.com/scalableminds/mono/pull/88)
 
 ### Deprecated
 
@@ -31,6 +32,7 @@ in the _Changed_ sections.
 - `AgglomerateAttachment.create` and `AgglomerateAttachment.create_and_add_to` validate the name and the segment IDs before writing anything, so an invalid name can no longer write outside the `agglomerates` folder and a failed call no longer leaves an empty directory behind. [#89](https://github.com/scalableminds/mono/pull/89)
 - Converting images no longer disables Pillow's decompression-bomb protection for the rest of the process; the limit is restored once the conversion is done reading. [#89](https://github.com/scalableminds/mono/pull/89)
 - Fixed that `Layer.upsample` left voxels empty when a mag is upsampled by a factor larger than 2 in one step. [#79](https://github.com/scalableminds/mono/pull/79)
+- `AgglomerateAttachment.create` now rejects segment ids with huge gaps immediately instead of running out of memory. The error message for non-dense segment ids now reports the number of missing ids and only the first 10 of them. [#88](https://github.com/scalableminds/mono/pull/88)
 
 
 ## [4.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.4.0) - 2026-11-17
