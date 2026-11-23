@@ -28,6 +28,7 @@ from typing import (
 )
 from urllib.parse import urlparse
 
+import aiohttp
 import httpx
 import numpy as np
 import rich
@@ -675,22 +676,48 @@ def _detect_aws_credentials(path_parts: Iterable[str]) -> tuple[str, str] | None
     return None
 
 
+_TOKEN_HEADER = "X-Auth-Token"
+
+
+async def _drop_token_on_cross_origin_redirect(
+    _session: Any, _trace_context: Any, params: Any
+) -> None:
+    response_headers = params.response.headers
+    location = response_headers.get("Location") or response_headers.get("URI")
+    if not location:
+        return
+    try:
+        same_origin = (
+            params.url.join(type(params.url)(location)).origin() == params.url.origin()
+        )
+    except ValueError:
+        same_origin = False
+    if not same_origin:
+        params.headers.popall(_TOKEN_HEADER, None)
+
+
+async def _get_http_client(**kwargs: Any) -> aiohttp.ClientSession:
+    trace_config = aiohttp.TraceConfig()
+    trace_config.on_request_redirect.append(_drop_token_on_cross_origin_redirect)
+    return aiohttp.ClientSession(trace_configs=[trace_config], **kwargs)
+
+
+def http_upath(path: str | PathLike | UPath, token: str | None) -> UPath:
+    """An http(s) path that sends `token` to the host of `path`, but not to other
+    hosts it gets redirected to."""
+    from .ssl_context import SSL_CONTEXT
+
+    headers = {} if token is None else {_TOKEN_HEADER: token}
+    return UPath(path, headers=headers, ssl=SSL_CONTEXT, get_client=_get_http_client)
+
+
 def enrich_path(
     path: str | PathLike | UPath, dataset_path: UPath | None = None
 ) -> UPath:
     upath = UPath(path)
     if upath.protocol in ("http", "https"):
-        from .client.context import _get_context
-        from .ssl_context import SSL_CONTEXT
-
-        # To setup the mag for non-public remote paths, we need to get the token from the context
-        wk_context = _get_context()
-        token = wk_context.token
-        return UPath(
-            path,
-            headers={} if token is None else {"X-Auth-Token": token},
-            ssl=SSL_CONTEXT,
-        )
+        # The path may come from an untrusted source, so it never gets the token.
+        return http_upath(path, None)
 
     elif upath.protocol == "s3":
         if upath.storage_options.get("endpoint_url") is not None:

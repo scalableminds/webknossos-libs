@@ -2,6 +2,7 @@ import pickle
 import threading
 import time
 from shutil import ignore_patterns
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -452,3 +453,66 @@ def test_rich_progress_concurrent_use_from_threads() -> None:
         thread.join()
 
     assert errors == []
+
+
+def test_enrich_path_does_not_send_token() -> None:
+    from webknossos.client.context import webknossos_context
+
+    with webknossos_context(
+        url="https://wk.example.com", token="secret", api_version=14
+    ):
+        upath = enrich_path("https://wk.example.com/data/zarr/ds/color/1")
+    assert upath.storage_options["headers"] == {}
+
+
+def test_http_upath_drops_token_on_cross_origin_redirect() -> None:
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    from webknossos.utils import http_upath
+
+    received_tokens: dict[str, str | None] = {}
+
+    class TargetHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            received_tokens[self.path] = self.headers.get("X-Auth-Token")
+            self.send_response(200)
+            self.send_header("Content-Length", "2")
+            self.end_headers()
+            self.wfile.write(b"ok")
+
+        def log_message(self, *args: Any) -> None:
+            pass
+
+    class RedirectHandler(TargetHandler):
+        def do_GET(self) -> None:
+            header = "URI" if self.path.endswith("-uri") else "Location"
+            if self.path == "/same-origin":
+                location = "/target"
+            elif self.path.startswith("/cross-origin"):
+                location = f"http://127.0.0.1:{other_server.server_port}/target"
+            else:
+                return super().do_GET()
+            self.send_response(302)
+            self.send_header(header, location)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+    other_server = ThreadingHTTPServer(("127.0.0.1", 0), TargetHandler)
+    server = ThreadingHTTPServer(("127.0.0.1", 0), RedirectHandler)
+    threads = [threading.Thread(target=s.serve_forever) for s in (other_server, server)]
+    for thread in threads:
+        thread.start()
+    try:
+        base_url = f"http://127.0.0.1:{server.server_port}"
+        for path in ("/same-origin", "/cross-origin", "/cross-origin-uri"):
+            received_tokens.clear()
+            assert http_upath(f"{base_url}{path}", "secret").read_bytes() == b"ok"
+            assert received_tokens == {
+                "/target": "secret" if path == "/same-origin" else None
+            }
+    finally:
+        for s in (other_server, server):
+            s.shutdown()
+            s.server_close()
+        for thread in threads:
+            thread.join()

@@ -14,6 +14,7 @@ in the _Changed_ sections.
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.4.0...HEAD)
 
 ### Breaking Changes
+- The WEBKNOSSOS token is no longer attached to `http(s)` paths of mags and attachments that are read from a `datasource-properties.json`. Before, opening a dataset from an untrusted source could send the token of the current context to an arbitrary host. Only paths that the WEBKNOSSOS server itself hands out (e.g. via `RemoteDataset`) receive the token now, and it is dropped when they redirect to another host. Local datasets that reference non-public remote layers by `https` URL (e.g. via `add_layer_as_ref`) can no longer read them after being reopened; open the `RemoteDataset` instead. [#83](https://github.com/scalableminds/mono/pull/83)
 
 ### Added
 
