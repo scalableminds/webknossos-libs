@@ -11,17 +11,27 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.4.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.0.0...HEAD)
 
 ### Breaking Changes
-- The WEBKNOSSOS token is no longer attached to `http(s)` paths of mags and attachments that are read from a `datasource-properties.json`. Before, opening a dataset from an untrusted source could send the token of the current context to an arbitrary host. Only paths that the WEBKNOSSOS server itself hands out (e.g. via `RemoteDataset`) receive the token now, and it is dropped when they redirect to another host. Local datasets that reference non-public remote layers by `https` URL (e.g. via `add_layer_as_ref`) can no longer read them after being reopened; open the `RemoteDataset` instead. [#83](https://github.com/scalableminds/mono/pull/83)
 
 ### Added
 
 ### Changed
-- `Skeleton.get_node_by_id` and `Skeleton.get_tree_by_id` (also on groups) now use a lazily built index instead of scanning all trees. This also makes loading NML files with many trees and comments or branchpoints much faster (e.g. 8000 trees: 17.6 s → 0.23 s). [#88](https://github.com/scalableminds/mono/pull/88)
 
 ### Deprecated
+
+### Fixed
+
+
+## [5.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.0.0) - 2026-11-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.4.0...v5.0.0)
+
+### Breaking Changes
+- The WEBKNOSSOS token is no longer attached to `http(s)` paths of mags and attachments that are read from a `datasource-properties.json`. Before, opening a dataset from an untrusted source could send the token of the current context to an arbitrary host. Only paths that the WEBKNOSSOS server itself hands out (e.g. via `RemoteDataset`) receive the token now, and it is dropped when they redirect to another host. Local datasets that reference non-public remote layers by `https` URL (e.g. via `add_layer_as_ref`) can no longer read them after being reopened; open the `RemoteDataset` instead. [#83](https://github.com/scalableminds/mono/pull/83)
+
+### Changed
+- `Skeleton.get_node_by_id` and `Skeleton.get_tree_by_id` (also on groups) now use a lazily built index instead of scanning all trees. This also makes loading NML files with many trees and comments or branchpoints much faster (e.g. 8000 trees: 17.6 s → 0.23 s). [#88](https://github.com/scalableminds/mono/pull/88)
 
 ### Fixed
 - Fixed a path traversal when exporting Zarr3 volume layers of annotations: entries of a crafted annotation zip file could be written outside of the target dataset. Such annotations are now rejected with a `ValueError`. [#80](https://github.com/scalableminds/mono/pull/80)
@@ -33,6 +43,7 @@ in the _Changed_ sections.
 - Converting images no longer disables Pillow's decompression-bomb protection for the rest of the process; the limit is restored once the conversion is done reading. [#89](https://github.com/scalableminds/mono/pull/89)
 - Fixed that `Layer.upsample` left voxels empty when a mag is upsampled by a factor larger than 2 in one step. [#79](https://github.com/scalableminds/mono/pull/79)
 - `AgglomerateAttachment.create` now rejects segment ids with huge gaps immediately instead of running out of memory. The error message for non-dense segment ids now reports the number of missing ids and only the first 10 of them. [#88](https://github.com/scalableminds/mono/pull/88)
+
 
 
 ## [4.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.4.0) - 2026-11-17

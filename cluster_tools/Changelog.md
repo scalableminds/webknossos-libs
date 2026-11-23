@@ -8,7 +8,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.4.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.0.0...HEAD)
 
 ### Breaking Changes
 
@@ -19,6 +19,10 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+
+
+## [5.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.0.0) - 2026-11-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.4.0...v5.0.0)
 
 
 ## [4.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.4.0) - 2026-11-17
