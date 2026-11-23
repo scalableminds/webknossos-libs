@@ -6,7 +6,6 @@ import uuid
 from collections.abc import Generator, Iterator, Sequence
 from contextlib import contextmanager
 from enum import Enum
-from pathlib import PurePosixPath, PureWindowsPath
 from shutil import copyfileobj
 from tempfile import TemporaryDirectory
 from typing import Any, cast
@@ -40,7 +39,7 @@ from ..geometry import Vec3Float, Vec3Int
 from ..geometry.vec3_float import as_vec3_float_or_none
 from ..geometry.vec3_int import as_vec3_int_or_none
 from ..skeleton.skeleton import _Counter
-from ..utils import is_fs_path
+from ..utils import escapes_target_dir, is_fs_path
 from .segment_group import SegmentGroup
 
 Vector4 = tuple[float, float, float, float]
@@ -425,20 +424,11 @@ class VolumeLayer:
         return layer
 
 
-def _escapes_target_dir(relative_name: str) -> bool:
-    """Whether a relative zip entry path would resolve outside of the extraction directory."""
-    return (
-        ".." in re.split(r"[/\\]", relative_name)
-        or PurePosixPath(relative_name).is_absolute()
-        or PureWindowsPath(relative_name).anchor != ""
-    )
-
-
 def _extract_zip_folder(zip_file: ZipFile, out_path: UPath, prefix: str) -> None:
     for zip_entry in zip_file.filelist:
         if zip_entry.filename.startswith(prefix) and not zip_entry.is_dir():
             relative_name = zip_entry.filename[len(prefix) :]
-            if _escapes_target_dir(relative_name):
+            if escapes_target_dir(relative_name):
                 raise ValueError(
                     f"The zip entry {zip_entry.filename!r} points outside of the target directory."
                 )

@@ -39,6 +39,7 @@ from webknossos.dataset.layer.remote_layer import RemoteLayer
 from webknossos.dataset.layer.segmentation_layer.attachments.attachments import (
     RemoteAttachments,
 )
+from webknossos.dataset.remote_dataset import StorageCredentials
 from webknossos.utils import is_remote_path, rmtree
 
 rng = np.random.default_rng(1234)
@@ -1252,3 +1253,11 @@ def test_remote_attachments_add_attachment_as_ref(
         .name
         == "new_agglomerate"
     )
+
+
+def test_storage_credentials_repr_hides_secret() -> None:
+    credentials = StorageCredentials(
+        credential_identifier="access-key-id", credential_secret="secret-key"
+    )
+    assert "access-key-id" in repr(credentials)
+    assert "secret-key" not in repr(credentials)

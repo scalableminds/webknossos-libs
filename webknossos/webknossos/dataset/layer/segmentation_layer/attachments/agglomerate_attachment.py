@@ -15,7 +15,7 @@ from webknossos.dataset._utils.tensorstore_helpers import (
 from webknossos.dataset_properties import AttachmentDataFormat
 from webknossos.geometry import Vec3Int
 
-from .attachment import Attachment
+from .attachment import Attachment, _validate_name
 
 if TYPE_CHECKING:
     from webknossos.dataset import SegmentationLayer
@@ -119,6 +119,7 @@ class AgglomerateAttachment(Attachment):
             f"Cannot create agglomerate attachment for segmentation layer with dtype {layer.dtype}. "
             + "Please use a segmentation layer with dtype uint32 or uint64."
         )
+        _validate_name(name)
         attachment_path = layer.resolved_path / cls.container_name / name
         if attachment_path.exists():
             raise FileExistsError(
@@ -155,7 +156,7 @@ class AgglomerateAttachment(Attachment):
         segmentation_dtype = np.dtype(segmentation_dtype)
 
         path = UPath(path)
-        path.mkdir(parents=True, exist_ok=True)
+        _validate_name(path.name)
 
         n_segments, _ = _validate_segment_ids(graph)
 
@@ -243,6 +244,7 @@ class AgglomerateAttachment(Attachment):
                 }
             },
         }
+        path.mkdir(parents=True, exist_ok=True)
         (path / "zarr.json").write_text(json.dumps(group_meta, indent=2))
 
         # Target sizes from the spec

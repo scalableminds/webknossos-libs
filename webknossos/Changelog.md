@@ -23,6 +23,12 @@ in the _Changed_ sections.
 
 ### Fixed
 - Fixed a path traversal when exporting Zarr3 volume layers of annotations: entries of a crafted annotation zip file could be written outside of the target dataset. Such annotations are now rejected with a `ValueError`. [#80](https://github.com/scalableminds/mono/pull/80)
+- The WEBKNOSSOS token no longer appears in the repr of the webknossos context (which could end up in error messages), and `StorageCredentials` no longer shows the credential secret in its repr. [#89](https://github.com/scalableminds/mono/pull/89)
+- `Dataset.add_symlink_layer` and `Dataset.add_fs_copy_layer` validate `new_layer_name` before touching the filesystem, so names like `../x` can no longer write outside the dataset. [#89](https://github.com/scalableminds/mono/pull/89)
+- Opening a dataset whose `datasource-properties.json` contains an empty layer name or one with `/` or a leading `.` now raises a `ValueError`, also when Python runs with `-O`. On Windows, layer names that would resolve outside of the dataset via `..\` or a drive prefix are rejected as well. [#89](https://github.com/scalableminds/mono/pull/89)
+- Layer and attachment names with a trailing newline are no longer accepted. [#89](https://github.com/scalableminds/mono/pull/89)
+- `AgglomerateAttachment.create` and `AgglomerateAttachment.create_and_add_to` validate the name and the segment IDs before writing anything, so an invalid name can no longer write outside the `agglomerates` folder and a failed call no longer leaves an empty directory behind. [#89](https://github.com/scalableminds/mono/pull/89)
+- Converting images no longer disables Pillow's decompression-bomb protection for the rest of the process; the limit is restored once the conversion is done reading. [#89](https://github.com/scalableminds/mono/pull/89)
 - Fixed that `Layer.upsample` left voxels empty when a mag is upsampled by a factor larger than 2 in one step. [#79](https://github.com/scalableminds/mono/pull/79)
 
 

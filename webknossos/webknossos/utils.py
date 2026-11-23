@@ -5,6 +5,7 @@ import json
 import logging
 import mimetypes
 import os
+import re
 import time
 import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -15,6 +16,7 @@ from inspect import getframeinfo, stack
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from os import PathLike
+from pathlib import PurePosixPath, PureWindowsPath
 from shutil import copyfileobj, move
 from threading import Thread, current_thread, main_thread
 from typing import (
@@ -309,6 +311,15 @@ def is_fs_path(
     path: UPath,
 ) -> TypeGuard[PosixUPath | WindowsUPath]:
     return isinstance(path, PosixUPath | WindowsUPath)
+
+
+def escapes_target_dir(relative_name: str) -> bool:
+    """Whether a relative path would resolve outside of the directory it is joined to."""
+    return (
+        ".." in re.split(r"[/\\]", relative_name)
+        or PurePosixPath(relative_name).is_absolute()
+        or PureWindowsPath(relative_name).anchor != ""
+    )
 
 
 def is_remote_path(path: UPath) -> bool:

@@ -102,7 +102,7 @@ class StorageCredentials:
 
     credential_identifier: str
     """Remote storage credential identifier (e.g. aws access key id)."""
-    credential_secret: str
+    credential_secret: str = attr.field(repr=False)
     """Remote storage credential secret (e.g. aws secret access key)."""
 
 

@@ -392,3 +392,42 @@ def test_roundtrip_multiple_components(tmp_upath: UPath) -> None:
     attachment = AgglomerateAttachment.create(tmp_upath / "agg_view_multi", G)
     G2 = attachment.to_graph()
     assert_graphs_equal(G, G2)
+
+
+def test_create_and_add_to_rejects_invalid_name(tmp_upath: UPath) -> None:
+    dataset = Dataset(tmp_upath / "ds", voxel_size=(10, 10, 10))
+    seg_layer = dataset.add_layer(
+        "seg",
+        SEGMENTATION_CATEGORY,
+        dtype="uint32",
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
+    ).as_segmentation_layer()
+
+    with pytest.raises(ValueError, match="not allowed"):
+        AgglomerateAttachment.create_and_add_to(
+            seg_layer, "../outside", build_example_graph()
+        )
+    assert not (seg_layer.resolved_path / "outside").exists()
+    assert not (seg_layer.resolved_path / "agglomerates").exists()
+
+
+def test_create_validates_before_writing(tmp_upath: UPath) -> None:
+    G = AgglomerateGraph()
+    G.add_node(0, position=Vec3Int(1, 2, 3))
+    with pytest.raises(ValueError, match="positive integers"):
+        AgglomerateAttachment.create(tmp_upath / "agg", G)
+    assert not (tmp_upath / "agg").exists()
+
+    with pytest.raises(ValueError, match="not allowed"):
+        AgglomerateAttachment.create(tmp_upath / "in valid", build_example_graph())
+    assert not (tmp_upath / "in valid").exists()
+
+    with pytest.raises(ValueError, match="not allowed"):
+        AgglomerateAttachment.create(tmp_upath / "agg\n", build_example_graph())
+
+    G = AgglomerateGraph()
+    G.add_node(1)
+    with pytest.raises(KeyError, match="position"):
+        AgglomerateAttachment.create(tmp_upath / "agg_no_position", G)
+    assert not (tmp_upath / "agg_no_position").exists()

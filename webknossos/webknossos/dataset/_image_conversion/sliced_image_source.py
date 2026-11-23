@@ -1,3 +1,4 @@
+import threading
 import warnings
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
@@ -40,6 +41,32 @@ from .slice_reader import SliceReader, _SlicedView
 # The x/y extent is only discovered while reading, so the layer starts out
 # deliberately oversized and is cut back down once reading is complete.
 SAFE_LARGE_XY: int = 10_000_000_000  # 10 billion
+
+
+_pil_limit_lock = threading.Lock()
+_pil_limit_users = 0
+_pil_limit_saved: int | None = None
+
+
+@contextmanager
+def _pil_image_size_limit_disabled() -> Generator[None]:
+    """Lifts Pillow's decompression-bomb limit while any reader in this process
+    needs it, and restores the previous value when the last one is done."""
+    global _pil_limit_users, _pil_limit_saved
+    from PIL import Image
+
+    with _pil_limit_lock:
+        if _pil_limit_users == 0:
+            _pil_limit_saved = Image.MAX_IMAGE_PIXELS
+            Image.MAX_IMAGE_PIXELS = None
+        _pil_limit_users += 1
+    try:
+        yield
+    finally:
+        with _pil_limit_lock:
+            _pil_limit_users -= 1
+            if _pil_limit_users == 0:
+                Image.MAX_IMAGE_PIXELS = _pil_limit_saved
 
 
 class SlicedImageSource(ImageSource):
@@ -238,11 +265,6 @@ class SlicedImageSource(ImageSource):
             path=path,
         )
 
-    def _disable_pil_image_size_limit(self) -> None:
-        from PIL import Image
-
-        Image.MAX_IMAGE_PIXELS = None
-
     def _try_open_slice_reader(
         self, original_images: str | list[str], exceptions: list[Exception]
     ) -> SliceReader | None:
@@ -267,8 +289,6 @@ class SlicedImageSource(ImageSource):
             else:
                 return None
 
-        self._disable_pil_image_size_limit()
-
         for strategy in [strategy_0, strategy_1, strategy_2]:
             try:
                 images_context_manager = strategy()
@@ -287,6 +307,10 @@ class SlicedImageSource(ImageSource):
         that, the reader is yielded with its own defaults, which is how those
         axes are found in the first place.
         """
+        with _pil_image_size_limit_disabled():
+            yield from self._open_slice_reader_unguarded()
+
+    def _open_slice_reader_unguarded(self) -> Generator[SliceReader]:
         exceptions: list[Exception] = []
         original_images = self._resolve_original_image_paths()
 

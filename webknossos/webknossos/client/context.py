@@ -56,7 +56,7 @@ There are the following four options to specify which server context to use:
 import os
 from contextlib import ContextDecorator
 from contextvars import ContextVar, Token
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cache, cached_property
 from typing import Any
 
@@ -124,7 +124,9 @@ def _clear_all_context_caches() -> None:
 @dataclass(kw_only=True, frozen=True)
 class _WebknossosContext:
     url: str = os.environ.get("WK_URL", default=DEFAULT_WEBKNOSSOS_URL).rstrip("/")
-    token: str | None = os.environ.get("WK_TOKEN", default=None)
+    token: str | None = field(
+        default=os.environ.get("WK_TOKEN", default=None), repr=False
+    )
     timeout: int = int(os.environ.get("WK_TIMEOUT", default=DEFAULT_HTTP_TIMEOUT))
     _api_version: int | None = None
 
