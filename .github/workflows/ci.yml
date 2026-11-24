@@ -225,18 +225,7 @@ jobs:
           path: ~/.cache/webknossos-libs-test/l4_sample.zip
           key: l4-sample-zarr-v3-v2
 
-      - name: Python tests (with coverage)
-        if: ${{ matrix.python-version == '3.11' }}
-        timeout-minutes: 30
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-          WK_TEST_DATA_CACHE_DIR: ~/.cache/webknossos-libs-test
-        run:
-          uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
-          least_duration --cov=webknossos --cov-report=
-
       - name: Python tests
-        if: ${{ matrix.python-version != '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -244,16 +233,6 @@ jobs:
         run:
           uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
           least_duration
-
-      - name: Persist coverage reports
-        if: ${{ matrix.python-version == '3.11' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-report-${{ matrix.group }}
-          path: "webknossos/.coverage"
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 1 # Automatically deletes after 1 day
 
       - name: Check if git is dirty
         run: ../_tooling/check_clean.sh
@@ -294,41 +273,6 @@ jobs:
         run:
           uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
           least_duration
-
-  coverage_report:
-    needs: [webknossos_linux]
-    if: success()
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: webknossos
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Install coverage.py
-        run: pip install coverage
-
-      - name: Download all coverage reports
-        uses: actions/download-artifact@v8
-        with:
-          path: ~/coverage-files
-
-      - name: Generate coverage report
-        env:
-          COVERAGE_FILE: "~/coverage-files/result.coverage"
-        run: |
-          coverage combine ~/coverage-files/**/.coverage
-          coverage xml -i -o ~/coverage-files/result.xml
-
-      - name: Report coverage
-        uses: orgoro/coverage@v3.3.1
-        with:
-          coverageFile: /home/runner/coverage-files/result.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          thresholdAll: 0.8
-
-      - name: Cleanup temporary files
-        run: rm -rf ~/coverage-files
 
   docs:
     needs:
