@@ -336,6 +336,38 @@ def test_image_sequence_reads_zip_archive(tmp_upath: UPath) -> None:
     reader.close()
 
 
+def test_image_sequence_reads_zip_archive_with_glob_chars_in_name(
+    tmp_upath: UPath,
+) -> None:
+    import zipfile
+
+    for i in [1, 2]:
+        _write_png(tmp_upath / f"img_{i}.png", i)
+    # `[1]` is glob syntax, but an existing archive of that name is opened as is.
+    archive = tmp_upath / "images[1].zip"
+    with zipfile.ZipFile(str(archive), "w") as zf:
+        for i in [1, 2]:
+            zf.write(str(tmp_upath / f"img_{i}.png"), f"img_{i}.png")
+
+    reader = MultiImageSliceReader(str(archive))
+    assert _values(reader) == [1, 2]
+    reader.close()
+
+
+def test_image_sequence_reads_directory_with_glob_chars_in_name(
+    tmp_upath: UPath,
+) -> None:
+    # `[1]` is glob syntax, but an existing directory of that name is read as is.
+    directory = tmp_upath / "sample[1]"
+    directory.mkdir()
+    for i in [1, 2]:
+        _write_png(directory / f"img_{i}.png", i)
+
+    with pytest.warns(UserWarning, match="Loading ALL files"):
+        reader = MultiImageSliceReader(str(directory))
+    assert _values(reader) == [1, 2]
+
+
 def test_image_sequence_reports_missing_files(tmp_upath: UPath) -> None:
     with pytest.raises(OSError, match="No files were found"):
         MultiImageSliceReader(str(tmp_upath / "nothing_*.png"))

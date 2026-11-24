@@ -124,8 +124,9 @@ class _OwningZipFile(zipfile.ZipFile):
 
 
 def _open_zip_archive(path: UPath) -> zipfile.ZipFile | None:
-    """The zip archive at `path`, or None if `path` is not one."""
-    if has_glob_magic(path) or not path.is_file():
+    """The zip archive at `path`, or None if `path` is not one. A literal
+    file wins over glob syntax, so `images[1].zip` opens that archive."""
+    if not path.is_file():
         return None
     with path.open("rb") as file:
         if not zipfile.is_zipfile(file):
@@ -151,9 +152,9 @@ def _collect_files(
         members.sort(key=_natsort_key)
         return members, archive
 
-    if has_glob_magic(path_spec):
-        filepaths = expand_glob(path_spec)
-    elif path_spec.is_dir():
+    # A literal directory wins over glob syntax, so `sample[1]/` is read as
+    # that directory rather than expanded as a pattern.
+    if path_spec.is_dir():
         warn(
             "Loading ALL files in this directory. To ignore extraneous files, "
             "use a pattern like 'path/to/images/*.png'",
@@ -161,6 +162,8 @@ def _collect_files(
             stacklevel=2,
         )
         filepaths = list(path_spec.iterdir())
+    elif has_glob_magic(path_spec):
+        filepaths = expand_glob(path_spec)
     else:
         filepaths = [path_spec] if path_spec.exists() else []
 
