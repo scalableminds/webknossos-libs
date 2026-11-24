@@ -18,6 +18,7 @@ in the _Changed_ sections.
 ### Added
 
 ### Changed
+- Allow newer versions of `httpx` (0.28+), `networkx` (3.3+), `click` (8.2+), `aiohttp` (3.15+) and `natsort` (8.5+). `typer` no longer has an upper bound, and its minimum version is now 0.16, the first one that works with click 8.2. This makes it easier to install webknossos alongside other packages. [#112](https://github.com/scalableminds/mono/pull/112)
 - Type checking (`./typecheck.sh`) uses pyrefly instead of mypy. Non-overlapping container checks (`x in [y]`), which mypy reported with `strict_equality`, are no longer checked. [#116](https://github.com/scalableminds/mono/pull/116)
 
 ### Deprecated
@@ -48,6 +49,7 @@ in the _Changed_ sections.
 - The WEBKNOSSOS token is no longer attached to `http(s)` paths of mags and attachments that are read from a `datasource-properties.json`. Before, opening a dataset from an untrusted source could send the token of the current context to an arbitrary host. Only paths that the WEBKNOSSOS server itself hands out (e.g. via `RemoteDataset`) receive the token now, and it is dropped when they redirect to another host. Local datasets that reference non-public remote layers by `https` URL (e.g. via `add_layer_as_ref`) can no longer read them after being reopened; open the `RemoteDataset` instead. [#83](https://github.com/scalableminds/mono/pull/83)
 
 ### Changed
+- Allow newer versions of `psutil` (7.x), `rich` (14.x, 15.x) and `typer` (up to 0.x). This allows installing webknossos alongside napari 0.10. With recent typer versions, running `webknossos` without arguments exits with code 2 (instead of 0). [#59](https://github.com/scalableminds/mono/pull/59)
 - `Skeleton.get_node_by_id` and `Skeleton.get_tree_by_id` (also on groups) now use a lazily built index instead of scanning all trees. This also makes loading NML files with many trees and comments or branchpoints much faster (e.g. 8000 trees: 17.6 s → 0.23 s). [#88](https://github.com/scalableminds/mono/pull/88)
 
 ### Fixed
@@ -72,7 +74,6 @@ in the _Changed_ sections.
 - Volume layers of annotations now support segment groups via `VolumeLayer.add_segment_group`, `SegmentGroup` (analogous to skeleton tree groups) and `SegmentInformation.group`. They are read from and written to NML files. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
 
 ### Changed
-- Allow newer versions of `psutil` (7.x), `rich` (14.x, 15.x) and `typer` (up to 0.x). This allows installing webknossos alongside napari 0.10. With recent typer versions, running `webknossos` without arguments exits with code 2 (instead of 0). [#59](https://github.com/scalableminds/mono/pull/59)
 - Updated Pillow to 13.0.0 for Python 3.11+ (Pillow 13 requires Python >=3.11; Python 3.10 stays on Pillow 12.x). Pillow is only a transitive dependency (via `imageio`), so this is enforced through a uv constraint.
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
 - Import time was cut roughly in half by using lazy imports for several dependencies. [#1583](https://github.com/scalableminds/webknossos-libs/pull/1583)

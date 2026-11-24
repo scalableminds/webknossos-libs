@@ -15,6 +15,7 @@ in the _Changed_ sections.
 ### Added
 
 ### Changed
+- Allow newer versions of `typing-extensions` (4.16+). [#112](https://github.com/scalableminds/mono/pull/112)
 - Type checking (`./typecheck.sh`) uses pyrefly instead of mypy. Non-overlapping container checks (`x in [y]`), which mypy reported with `strict_equality`, are no longer checked. In the `Executor` protocol, the `futures` parameter of `as_completed` and the `fn` and `iterables` parameters of `map` are positional-only, because the executors name them differently. [#116](https://github.com/scalableminds/mono/pull/116)
 
 ### Deprecated
