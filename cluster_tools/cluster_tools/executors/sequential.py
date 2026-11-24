@@ -31,7 +31,7 @@ class SequentialExecutor(Executor):
     ) -> None:
         self.output_store = FileOutputStore() if output_store is None else output_store
 
-    def submit(  # type: ignore[override]
+    def submit(
         self,
         __fn: Callable[_P, _T],
         *args: _P.args,
@@ -76,7 +76,8 @@ class SequentialExecutor(Executor):
             for arg in args
         ]
 
-    def map(  # type: ignore[override]
+    # pyrefly: ignore[bad-override]
+    def map(
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],

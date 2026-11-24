@@ -95,7 +95,7 @@ class NormalizedBoundingBox(NDBoundingBox):
         if denormalized is not None:
             result = denormalized[0].intersected_with(denormalized[1], dont_assert)
             return result.normalize_axes(denormalized[2])
-        return super().intersected_with(other, dont_assert)  # type: ignore[arg-type]
+        return super().intersected_with(other, dont_assert)  # pyrefly: ignore[bad-argument-type]
 
     def extended_by(self, other: NDBoundingBox) -> "NormalizedBoundingBox":
         """Returns the smallest bounding box that contains both bounding boxes.
@@ -108,7 +108,7 @@ class NormalizedBoundingBox(NDBoundingBox):
         if denormalized is not None:
             result = denormalized[0].extended_by(denormalized[1])
             return result.normalize_axes(denormalized[2])
-        return super().extended_by(other)  # type: ignore[arg-type]
+        return super().extended_by(other)  # pyrefly: ignore[bad-argument-type]
 
     def contains_bbox(self, inner_bbox: NDBoundingBox) -> bool:
         """Check whether a bounding box is completely inside this bounding box.
@@ -119,7 +119,7 @@ class NormalizedBoundingBox(NDBoundingBox):
         denormalized = self._denormalize_for_bbox_op(inner_bbox)
         if denormalized is not None:
             return denormalized[0].contains_bbox(denormalized[1])
-        return super().contains_bbox(inner_bbox)  # type: ignore[arg-type]
+        return super().contains_bbox(inner_bbox)  # pyrefly: ignore[bad-argument-type]
 
     @classmethod
     def from_wkw_dict(cls, bbox: dict) -> NDBoundingBox:

@@ -184,9 +184,9 @@ class BoundingBox(NDBoundingBox):
             )
         elif isinstance(obj, list) or isinstance(obj, tuple):
             if len(obj) == 2:
-                return cls.from_tuple2(obj)  # type: ignore
+                return cls.from_tuple2(obj)  # pyrefly: ignore[bad-argument-type]
             elif len(obj) == 6:
-                return cls.from_tuple6(obj)  # type: ignore
+                return cls.from_tuple6(obj)  # pyrefly: ignore[bad-argument-type]
 
         raise Exception("Unknown bounding box format.")
 
@@ -231,7 +231,7 @@ class BoundingBox(NDBoundingBox):
                 - First three values: (x,y,z) coordinates of topleft
                 - Last three values: (width,height,depth) dimensions
         """
-        return tuple(self.topleft.to_list() + self.size.to_list())  # type: ignore
+        return tuple(self.topleft.to_list() + self.size.to_list())  # pyrefly: ignore[bad-return]
 
     def to_csv(self) -> str:
         """Converts the bounding box coordinates to a comma-separated string.

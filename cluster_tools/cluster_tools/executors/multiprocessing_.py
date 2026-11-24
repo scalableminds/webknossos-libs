@@ -82,7 +82,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     def as_completed(cls, futs: list[Future[_T]]) -> Iterator[Future[_T]]:
         return futures.as_completed(futs)
 
-    def submit(  # type: ignore[override]
+    def submit(
         self,
         __fn: Callable[_P, _T],
         *args: _P.args,
@@ -127,7 +127,8 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         enrich_future_with_uncaught_warning(fut)
         return fut
 
-    def map(  # type: ignore[override]
+    # pyrefly: ignore[bad-override]
+    def map(
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],

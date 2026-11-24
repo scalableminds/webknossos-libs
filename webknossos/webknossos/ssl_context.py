@@ -9,7 +9,7 @@ import certifi
 def _create_sslcontext() -> ssl.SSLContext:
     cafile = certifi.where()
     ssl_context = ssl.create_default_context(cafile=cafile)
-    ssl_context.cafile = cafile  # type: ignore
+    ssl_context.cafile = cafile  # pyrefly: ignore[missing-attribute]
     return ssl_context
 
 
@@ -24,7 +24,7 @@ def _rebuild_sslcontext(protocol: ssl._SSLMethod, cafile: str | None) -> ssl.SSL
     ssl_context = ssl.SSLContext(protocol)
     if cafile is not None:
         ssl_context.load_verify_locations(cafile=cafile)
-        ssl_context.cafile = cafile  # type: ignore
+        ssl_context.cafile = cafile  # pyrefly: ignore[missing-attribute]
     return ssl_context
 
 

@@ -339,7 +339,8 @@ def test_submit_with_pickle_paths(exc: cluster_tools.Executor) -> None:
                 cfut_options = {"output_pickle_path": output_path}
                 with pytest.warns(DeprecationWarning, match="output_pickle_path"):
                     futures.append(
-                        exc.submit(square, n, __cfut_options=cfut_options)  # type: ignore[call-arg]
+                        # pyrefly: ignore[unexpected-keyword]
+                        exc.submit(square, n, __cfut_options=cfut_options)
                     )
 
             for future, job_index in zip(futures, job_range):
@@ -465,7 +466,8 @@ def test_output_store_keeps_failures(exc_key: str) -> None:
                     raise_if,
                     "job failed",
                     True,
-                    __cfut_options={"output_key": "failed"},  # type: ignore[call-arg]
+                    # pyrefly: ignore[unexpected-keyword]
+                    __cfut_options={"output_key": "failed"},
                 ).result()
 
         if transports_through_store(exc_key):
@@ -493,7 +495,8 @@ def test_failing_output_store_fails_job(exc_key: str) -> None:
             exc.submit(
                 square,
                 3,
-                __cfut_options={"output_key": "chunk"},  # type: ignore[call-arg]
+                # pyrefly: ignore[unexpected-keyword]
+                __cfut_options={"output_key": "chunk"},
             ).result()
 
 

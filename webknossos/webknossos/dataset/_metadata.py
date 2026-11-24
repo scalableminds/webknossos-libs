@@ -34,7 +34,7 @@ class Metadata(MutableMapping):
             client = _get_api_client()
             full_object = client._get_json(
                 f"{self._api_path}{self._id}",
-                self._api_type,  # type: ignore
+                self._api_type,
             )
             metadata: list[ApiMetadata] = full_object.metadata
             if metadata is not None:

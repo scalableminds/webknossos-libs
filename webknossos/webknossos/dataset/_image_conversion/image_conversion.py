@@ -669,7 +669,7 @@ def add_layer_from_images(
                 data_format=data_format,
                 dtype=current_dtype,
                 num_channels=image_source.num_channels,
-                **add_layer_kwargs,  # type: ignore[arg-type]
+                **add_layer_kwargs,  # pyrefly: ignore[bad-argument-type]
             )
         except ValueError as e:
             # add_layer rejects dtypes WEBKNOSSOS cannot store (e.g. float data

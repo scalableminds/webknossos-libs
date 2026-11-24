@@ -253,7 +253,7 @@ def main(
             parser=parse_mag,
             metavar="MAG",
         ),
-    ] = 1,  # type: ignore
+    ] = 1,  # pyrefly: ignore[bad-function-definition]
     name: Annotated[str, typer.Option(help="Name of the tiffs.")] = "",
     downsample: Annotated[int, typer.Option(help="Downsample each tiff image.")] = 1,
     apply_mapping: Annotated[

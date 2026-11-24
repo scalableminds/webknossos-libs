@@ -41,7 +41,7 @@ def attr_to_camel_case_structure(cl: type[T]) -> Callable[[Mapping[str, Any], An
                 else None,
             )
             # https://github.com/python/mypy/issues/16254
-            for a in attr_fields(cl)  # type: ignore[arg-type,misc]
+            for a in attr_fields(cl)
         },
     )
 
@@ -59,7 +59,7 @@ def attr_to_camel_case_unstructure(cl: type[T]) -> Callable[[T], dict[str, Any]]
                 else None,
             )
             # https://github.com/python/mypy/issues/16254
-            for a in attr_fields(cl)  # type: ignore[arg-type,misc]
+            for a in attr_fields(cl)
         },
     )
 

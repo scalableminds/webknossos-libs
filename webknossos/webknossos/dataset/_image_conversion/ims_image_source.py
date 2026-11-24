@@ -43,7 +43,7 @@ def _read_ims_metadata_quietly(
         ims_obj.close()
         del ims_obj
         gc.collect()
-    return shape, dtype  # type: ignore[return-value]
+    return shape, dtype  # pyrefly: ignore[bad-return]
 
 
 @register_chunked_image_source

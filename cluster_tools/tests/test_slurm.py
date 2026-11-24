@@ -58,7 +58,8 @@ def test_slurm_submit_returns_job_ids() -> None:
     exc = cluster_tools.get_executor("slurm", debug=True)
     with exc:
         future = exc.submit(square, 2)
-        assert isinstance(future.cluster_jobid, str)  # type: ignore[attr-defined]
+        # pyrefly: ignore[missing-attribute]
+        assert isinstance(future.cluster_jobid, str)
         assert int(future.cluster_jobid) > 0
         assert future.result() == 4
 
@@ -99,7 +100,8 @@ def test_slurm_max_submit_user() -> None:
                 result = [fut.result() for fut in futures]
                 assert result == [i**2 for i in range(10)]
 
-                job_ids = {fut.cluster_jobid for fut in futures}  # type: ignore[attr-defined]
+                # pyrefly: ignore[missing-attribute]
+                job_ids = {fut.cluster_jobid for fut in futures}
                 # The 10 work packages should have been scheduled as 2 separate jobs.
                 assert len(job_ids) == 2
         finally:
@@ -126,7 +128,8 @@ def test_slurm_max_submit_user_env() -> None:
             result = [fut.result() for fut in futures]
             assert result == [i**2 for i in range(10)]
 
-            job_ids = {fut.cluster_jobid for fut in futures}  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            job_ids = {fut.cluster_jobid for fut in futures}
             # The 10 work packages should have been scheduled as 3 separate jobs.
             assert len(job_ids) == 3
     finally:
@@ -344,7 +347,8 @@ def test_slurm_max_array_size() -> None:
     with executor:
         futures = executor.map_to_futures(square, range(6))
         concurrent.futures.wait(futures)
-        job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
+        # pyrefly: ignore[missing-attribute]
+        job_ids = [fut.cluster_jobid for fut in futures]
 
         # Count how often each job_id occurs which corresponds to the array size of the job
         occurrences = list(Counter(job_ids).values())
@@ -413,7 +417,8 @@ def test_slurm_max_array_size_env() -> None:
         with executor:
             futures = executor.map_to_futures(square, range(6))
             concurrent.futures.wait(futures)
-            job_ids = [fut.cluster_jobid for fut in futures]  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            job_ids = [fut.cluster_jobid for fut in futures]
 
             # Count how often each job_id occurs which corresponds to the array size of the job
             occurrences = list(Counter(job_ids).values())
@@ -444,7 +449,8 @@ def test_pickled_logging() -> None:
             fut = executor.submit(log, test_output_str)
             fut.result()
 
-            output = f".cfut/slurmpy.{fut.cluster_jobid}.log.stdout"  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            output = f".cfut/slurmpy.{fut.cluster_jobid}.log.stdout"
 
             with open(output) as file:
                 return file.read()
@@ -506,7 +512,8 @@ def test_preliminary_file_submit() -> None:
             fut_2 = executor.submit(
                 square,
                 3,
-                __cfut_options={"output_key": str(output_pickle_path)},  # type: ignore[call-arg]
+                # pyrefly: ignore[unexpected-keyword]
+                __cfut_options={"output_key": str(output_pickle_path)},
             )
             assert fut_2.result() == 9
             assert output_pickle_path.exists(), "Final output file should exist"

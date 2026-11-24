@@ -101,9 +101,9 @@ class VecInt(Sequence[int]):
                     assert all(isinstance(arg, str) for arg in args[1]), _value_error(
                         args
                     )
-                    axes = tuple(args[1])  # type: ignore
+                    axes = tuple(args[1])  # pyrefly: ignore[bad-assignment]
             elif isinstance(args, Iterable):
-                as_tuple = tuple(int(arg) for arg in args)  # type: ignore
+                as_tuple = tuple(int(arg) for arg in args)  # pyrefly: ignore[bad-argument-type]
             else:
                 raise ValueError(_value_error(args))
             assert axes is not None, _value_error(args)

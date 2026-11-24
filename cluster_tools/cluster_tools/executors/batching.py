@@ -124,7 +124,8 @@ class BatchingExecutor:
 
         for batch in _iter_batches(items, batch_size):
             batch_fn = partial(_apply_fn_to_batch, fn)
-            batch_fn.__name__ = f"batch_{get_function_name(fn)}"  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            batch_fn.__name__ = f"batch_{get_function_name(fn)}"
             (batch_future,) = self._executor.map_to_futures(batch_fn, [batch])
             item_futures: list[Future[_T]] = [Future() for _ in batch]
             all_item_futures.extend(item_futures)
@@ -163,7 +164,8 @@ class BatchingExecutor:
 
         def result_generator() -> Iterator[_T]:
             batch_fn = partial(_apply_fn_to_batch, fn)
-            batch_fn.__name__ = f"batch_{get_function_name(fn)}"  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            batch_fn.__name__ = f"batch_{get_function_name(fn)}"
             for batch_results in self._executor.map(
                 batch_fn,
                 _iter_batches(items, batch_size),

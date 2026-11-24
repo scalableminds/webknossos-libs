@@ -163,7 +163,7 @@ class Annotation:
     """
 
     name: str
-    skeleton: Skeleton = None  # type: ignore[assignment]
+    skeleton: Skeleton = None  # pyrefly: ignore[bad-assignment]
     # The following underscored attributes are just for initialization
     # in case the skeleton is not given. They are always None as attributes.
     _dataset_name: str | None = None

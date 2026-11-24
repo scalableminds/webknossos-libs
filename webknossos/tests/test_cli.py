@@ -956,7 +956,7 @@ def test_merge_fallback_no_fallback_layer(
     )
 
     annotation._volume_layers = [
-        webknossos.annotation.VolumeLayer(  # type: ignore
+        webknossos.annotation.VolumeLayer(  # pyrefly: ignore[missing-attribute]
             id=0,
             name=tmp_layer.name,
             fallback_layer_name=fallback_mag.layer.name,

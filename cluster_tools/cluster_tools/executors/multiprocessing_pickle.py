@@ -33,7 +33,7 @@ class MultiprocessingPickleExecutor(MultiprocessingExecutor):
     won't provoke pickling-related problems.
     """
 
-    def submit(  # type: ignore[override]
+    def submit(
         self,
         fn: Callable[_P, _T],
         /,

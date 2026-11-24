@@ -475,7 +475,7 @@ def test_per_mag_access_mode() -> None:
     assert "/zarr/" in str(paths[RemoteAccessMode.ZARR_STREAMING])
     # Testing the immutability of the paths_by_access_mode property
     with pytest.raises(TypeError):
-        paths[RemoteAccessMode.DIRECT_PATH] = paths[RemoteAccessMode.DIRECT_PATH]  # type: ignore[index]
+        paths[RemoteAccessMode.DIRECT_PATH] = paths[RemoteAccessMode.DIRECT_PATH]  # pyrefly: ignore[unsupported-operation]
     # The old name is a deprecated alias.
     with pytest.warns(DeprecationWarning):
         assert mag.paths == paths
@@ -1351,13 +1351,13 @@ def test_remote_dataset_download_from_multiple_threads() -> None:
 def test_remote_dataset_folder_uses_dataset_context() -> None:
     mock_ds = _remote_dataset_mock_with_context()
     with patch.object(RemoteFolder, "get_by_id", side_effect=_record_context):
-        result = RemoteDataset.folder.fget(mock_ds)  # type: ignore[attr-defined]
+        result = RemoteDataset.folder.fget(mock_ds)  # pyrefly: ignore[not-callable]
     assert result == ("http://other-instance:9000", "sharing_token")
 
 
 def test_remote_dataset_metadata_set_none() -> None:
     mock_ds = MagicMock()
-    RemoteDataset.metadata.fset(mock_ds, None)  # type: ignore[attr-defined]
+    RemoteDataset.metadata.fset(mock_ds, None)  # pyrefly: ignore[not-callable]
     mock_ds._update_dataset_info.assert_called_once_with(metadata=[])
 
 

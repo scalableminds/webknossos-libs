@@ -386,7 +386,7 @@ def test_timepoint_argument_is_removed(tmp_upath: UPath) -> None:
         ds.add_layer_from_images(
             tmp_upath / "unused.ims",
             layer_name="x",
-            timepoint=0,  # type: ignore[call-arg]
+            timepoint=0,  # pyrefly: ignore[unexpected-keyword]
         )
 
 

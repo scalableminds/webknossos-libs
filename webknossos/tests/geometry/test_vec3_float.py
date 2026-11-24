@@ -40,13 +40,13 @@ def test_construction() -> None:
 def test_rejects_invalid_values() -> None:
     for invalid in [(1, 2), (1, 2, 3, 4), [], np.zeros((3, 1)), np.zeros((2, 3))]:
         with pytest.raises(ValueError, match="three floats"):
-            Vec3Float(invalid)  # type: ignore[arg-type]
+            Vec3Float(invalid)
 
     with pytest.raises(ValueError, match="three floats"):
-        Vec3Float(("a", "b", "c"))  # type: ignore[arg-type]
+        Vec3Float(("a", "b", "c"))  # pyrefly: ignore[bad-argument-type]
 
     with pytest.raises(ValueError, match="three floats"):
-        Vec3Float(1, 2)  # type: ignore[call-overload]
+        Vec3Float(1, 2)
 
 
 def test_tuple_interoperability() -> None:
@@ -60,7 +60,7 @@ def test_tuple_interoperability() -> None:
 
     assert hash(vector) == hash((1.0, 2.0, 3.0))
     assert vector in {(1.0, 2.0, 3.0)}
-    assert {vector: "value"}[(1.0, 2.0, 3.0)] == "value"  # type: ignore[index]
+    assert {vector: "value"}[(1.0, 2.0, 3.0)] == "value"  # pyrefly: ignore[bad-index]
 
 
 def test_access_and_conversion() -> None:
@@ -173,7 +173,7 @@ def test_public_apis_accept_vec3_float_like() -> None:
 
     # Malformed values are rejected at the boundary instead of being stored as-is
     with pytest.raises(ValueError, match="three floats"):
-        tree.add_node(position=(1, 1, 1), rotation=(1, 2))  # type: ignore[arg-type]
+        tree.add_node(position=(1, 1, 1), rotation=(1, 2))
 
 
 def test_tree_color_accepts_vec3_float() -> None:

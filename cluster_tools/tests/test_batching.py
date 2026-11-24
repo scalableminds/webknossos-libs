@@ -54,7 +54,8 @@ def test_map_calls_inner_with_batches() -> None:
     received_batches: list[list[int]] = []
     original_map = inner.map
 
-    def spy(fn, iterables, **kwargs):  # type: ignore[no-untyped-def]
+    # pyrefly: ignore[implicit-any-parameter, unannotated-return]
+    def spy(fn, iterables, **kwargs):
         batches = list(iterables)
         received_batches.extend(batches)
         return original_map(fn, iter(batches), **kwargs)
@@ -141,7 +142,8 @@ def test_target_job_count_map() -> None:
     received_batches: list[list[int]] = []
     original_map = inner.map
 
-    def spy(fn, iterables, **kwargs):  # type: ignore[no-untyped-def]
+    # pyrefly: ignore[implicit-any-parameter, unannotated-return]
+    def spy(fn, iterables, **kwargs):
         batches = list(iterables)
         received_batches.extend(batches)
         return original_map(fn, iter(batches), **kwargs)
@@ -177,7 +179,8 @@ def test_get_executor() -> None:
     )
     assert isinstance(executor, BatchingExecutor)
     assert isinstance(executor._executor, MultiprocessingExecutor)
-    assert executor._executor._max_workers == 3  # type: ignore[attr-defined]
+    # pyrefly: ignore[missing-attribute]
+    assert executor._executor._max_workers == 3
     assert executor.batch_size == 10
 
 

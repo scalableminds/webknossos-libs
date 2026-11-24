@@ -81,19 +81,19 @@ def test_immutability() -> None:
     skeleton = create_dummy_skeleton()
 
     with pytest.raises(AttributeError):
-        skeleton.get_node_by_id(2).id = 999  # type: ignore
+        skeleton.get_node_by_id(2).id = 999  # pyrefly: ignore[read-only]
 
     with pytest.raises(AttributeError):
-        skeleton.get_tree_by_id(1).id = 999  # type: ignore
+        skeleton.get_tree_by_id(1).id = 999  # pyrefly: ignore[read-only]
 
     with pytest.raises(AttributeError):
-        skeleton.get_group_by_id(5).id = 999  # type: ignore
+        skeleton.get_group_by_id(5).id = 999  # pyrefly: ignore[read-only]
 
     with pytest.raises(AttributeError):
-        skeleton.get_group_by_id(5).children = []  # type: ignore
+        skeleton.get_group_by_id(5).children = []  # pyrefly: ignore[read-only]
 
     with pytest.raises(AttributeError):
-        skeleton.get_group_by_id(5).children.append(skeleton.get_group_by_id(5))  # type: ignore
+        skeleton.get_group_by_id(5).children.append(skeleton.get_group_by_id(5))  # pyrefly: ignore[missing-attribute]
 
 
 def test_skeleton_creation() -> None:

@@ -193,7 +193,7 @@ def get_dataset_converter() -> cattrs.Converter:
     dataset_converter.register_structure_hook(Vec3Float, lambda d, _: Vec3Float(d))
 
     dataset_converter.register_structure_hook_func(
-        lambda d: d == LayerCategoryType,  # type: ignore[comparison-overlap]
+        lambda d: d == LayerCategoryType,
         lambda d, _: str(d),
     )
 
@@ -229,7 +229,7 @@ def get_dataset_converter() -> cattrs.Converter:
                     a.name: override(
                         omit_if_default=True, rename=snake_to_camel_case(a.name)
                     )
-                    for a in attr.fields(cls)  # type: ignore
+                    for a in attr.fields(cls)
                 },
             ),
         )
@@ -241,7 +241,7 @@ def get_dataset_converter() -> cattrs.Converter:
                 # pyrefly: ignore[bad-argument-type]
                 **{
                     a.name: override(rename=snake_to_camel_case(a.name))
-                    for a in attr.fields(cls)  # type: ignore
+                    for a in attr.fields(cls)
                 },
             ),
         )
@@ -265,7 +265,7 @@ def get_dataset_converter() -> cattrs.Converter:
                             if a.name == "largest_segment_id"
                             else None,
                         )
-                        for a in attr.fields(cls)  # type: ignore
+                        for a in attr.fields(cls)
                     },
                 )
             ),
@@ -284,7 +284,7 @@ def get_dataset_converter() -> cattrs.Converter:
                             if a.name == "largest_segment_id"
                             else None,
                         )
-                        for a in attr.fields(cls)  # type: ignore
+                        for a in attr.fields(cls)
                     },
                 )
             ),
