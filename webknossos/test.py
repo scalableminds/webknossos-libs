@@ -14,7 +14,7 @@ import sys
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from shutil import copyfileobj, rmtree, unpack_archive
+from shutil import rmtree, unpack_archive
 from time import sleep
 
 import requests
@@ -24,6 +24,7 @@ WK_URL = "http://localhost:9000"
 WK_API_VERSION = 14
 IS_WINDOWS = sys.platform == "win32"
 PROXAY_VERSION = "1.9.0"
+L4_SAMPLE_URL = "https://static.webknossos.org/data/zarr_v3/l4_sample.zip"
 
 
 def check_and_clean_datasets_folder() -> None:
@@ -36,16 +37,58 @@ def check_and_clean_datasets_folder() -> None:
             rmtree(dataset_path)
 
 
-def download_and_unpack(
-    url: str | None,
-    org_binary_data_dir: Path,
-) -> None:
-    with requests.get(url, stream=True) as req:
-        req.raise_for_status()
-        with open(org_binary_data_dir / "tmp.zip", "wb") as f:
-            copyfileobj(req.raw, f)
-    unpack_archive(org_binary_data_dir / "tmp.zip", org_binary_data_dir)
-    (org_binary_data_dir / "tmp.zip").unlink()
+def download_with_resume(url: str, target_path: Path, max_attempts: int = 10) -> None:
+    # Interrupted transfers are resumed with HTTP range requests, also from a
+    # partial file of an earlier call. The file only appears at target_path once
+    # it is complete.
+    partial_path = target_path.with_name(target_path.name + ".part")
+    for attempt in range(1, max_attempts + 1):
+        offset = partial_path.stat().st_size if partial_path.exists() else 0
+        headers = {"Range": f"bytes={offset}-"} if offset > 0 else {}
+        try:
+            with requests.get(url, headers=headers, stream=True, timeout=60) as req:
+                if req.status_code != 416:
+                    req.raise_for_status()
+                    # 200 means the server ignored the range and sends the whole file.
+                    mode = "ab" if req.status_code == 206 else "wb"
+                    with open(partial_path, mode) as f:
+                        for chunk in req.iter_content(chunk_size=64 * 1024):
+                            f.write(chunk)
+            partial_path.replace(target_path)
+            return
+        except requests.RequestException as e:
+            backoff_seconds = min(2**attempt, 60)
+            print(
+                f"Download of {url} was interrupted (attempt {attempt}/{max_attempts}), "
+                + f"retrying in {backoff_seconds}s: {e}",
+                flush=True,
+            )
+            if attempt < max_attempts:
+                sleep(backoff_seconds)
+    raise RuntimeError(f"Could not download {url} after {max_attempts} attempts.")
+
+
+def download_test_data(cache_dir: str) -> Path:
+    zip_path = Path(cache_dir).expanduser() / L4_SAMPLE_URL.rsplit("/", maxsplit=1)[-1]
+    if zip_path.exists():
+        print(f"Using cached {zip_path}", flush=True)
+    else:
+        zip_path.parent.mkdir(parents=True, exist_ok=True)
+        download_with_resume(L4_SAMPLE_URL, zip_path)
+    return zip_path
+
+
+def download_and_unpack_test_data(org_binary_data_dir: Path) -> None:
+    # CI sets WK_TEST_DATA_CACHE_DIR to keep the archive in a cached directory.
+    cache_dir = os.environ.get("WK_TEST_DATA_CACHE_DIR")
+    if cache_dir is not None:
+        unpack_archive(download_test_data(cache_dir), org_binary_data_dir)
+        return
+
+    zip_path = org_binary_data_dir / "tmp.zip"
+    download_with_resume(L4_SAMPLE_URL, zip_path)
+    unpack_archive(zip_path, org_binary_data_dir)
+    zip_path.unlink()
 
 
 def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
@@ -63,10 +106,7 @@ def start_wk_via_docker(wk_docker_dir: Path, wk_docker_tag: str) -> None:
     org_binary_data_dir = binary_data_dir / "Organization_X"
     if not (org_binary_data_dir / "l4_sample").exists():
         org_binary_data_dir.mkdir(parents=True, exist_ok=True)
-        download_and_unpack(
-            "https://static.webknossos.org/data/zarr_v3/l4_sample.zip",
-            org_binary_data_dir,
-        )
+        download_and_unpack_test_data(org_binary_data_dir)
 
     # Prepare test database
     subprocess.check_call(

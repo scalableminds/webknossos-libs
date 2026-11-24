@@ -4979,7 +4979,7 @@ requires-dist = [
     { name = "aiohttp", specifier = "~=3.14.1" },
     { name = "attrs", specifier = ">=22.0.0" },
     { name = "boltons", specifier = ">=21.0.0" },
-    { name = "cattrs", specifier = ">=22.0.0" },
+    { name = "cattrs", specifier = ">=23.1.0" },
     { name = "certifi", specifier = ">=2023" },
     { name = "click", specifier = "<8.2.0" },
     { name = "cluster-tools", editable = "../cluster_tools" },

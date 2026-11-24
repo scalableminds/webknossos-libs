@@ -4,8 +4,8 @@ from functools import cache
 from typing import Any
 
 import attr
-import cattr
-from cattr.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
+import cattrs
+from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
 
 from ..dataset_properties import (
     AttachmentProperties,
@@ -169,8 +169,8 @@ def layer_properties_pre_structure(
 
 
 @cache
-def get_dataset_converter() -> cattr.Converter:
-    dataset_converter = cattr.Converter()
+def get_dataset_converter() -> cattrs.Converter:
+    dataset_converter = cattrs.Converter()
     dataset_converter.register_unstructure_hook(NormalizedBoundingBox, bbox_to_wkw)
     dataset_converter.register_structure_hook(
         NormalizedBoundingBox, lambda d, _: NormalizedBoundingBox.from_wkw_dict(d)

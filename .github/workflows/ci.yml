@@ -133,8 +133,47 @@ jobs:
           cd tests
           uv run --frozen python -m pytest -sv test_batching.py
 
-  webknossos_linux:
+  test_data:
+    # Downloads the 1.2 GB l4_sample archive once into the cache, so that the
+    # parallel webknossos_linux jobs don't all download it from the file host.
     needs: changes
+    if: |
+      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
+      ${{ needs.changes.outputs.webknossos == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webknossos
+
+    steps:
+      - name: Look up cached test data
+        id: test-data-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/webknossos-libs-test/l4_sample.zip
+          key: l4-sample-zarr-v3-v2
+          lookup-only: true
+
+      - uses: actions/checkout@v7
+        if: ${{ steps.test-data-cache.outputs.cache-hit != 'true' }}
+
+      - name: Install uv
+        if: ${{ steps.test-data-cache.outputs.cache-hit != 'true' }}
+        uses: astral-sh/setup-uv@v10.3.3
+
+      - name: Download test data
+        if: ${{ steps.test-data-cache.outputs.cache-hit != 'true' }}
+        run: uv run --no-project --with requests python -c "import test; test.download_test_data('~/.cache/webknossos-libs-test')"
+
+      - name: Save test data
+        if: ${{ steps.test-data-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/webknossos-libs-test/l4_sample.zip
+          key: l4-sample-zarr-v3-v2
+
+  webknossos_linux:
+    needs: [changes, test_data]
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
@@ -180,11 +219,18 @@ jobs:
           sed -i '/def _launch/a\ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' ${UV_PYTHON_INSTALL_DIR}/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
           cat ${UV_PYTHON_INSTALL_DIR}/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
 
+      - name: Restore test data
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/webknossos-libs-test/l4_sample.zip
+          key: l4-sample-zarr-v3-v2
+
       - name: Python tests (with coverage)
         if: ${{ matrix.python-version == '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
+          WK_TEST_DATA_CACHE_DIR: ~/.cache/webknossos-libs-test
         run:
           uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
           least_duration --cov=webknossos --cov-report=
@@ -194,6 +240,7 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
+          WK_TEST_DATA_CACHE_DIR: ~/.cache/webknossos-libs-test
         run:
           uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
           least_duration
@@ -375,6 +422,7 @@ jobs:
     needs:
       - cluster_tools_other
       - cluster_tools_slurm
+      - test_data
       - webknossos_linux
       - webknossos_windows
       - docs

@@ -22,6 +22,7 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- Raised the minimum `cattrs` version from 22.0.0 to 23.1.0. With cattrs 22.x, `import webknossos` failed with `TypeError: override() got an unexpected keyword argument 'unstruct_hook'`. [#115](https://github.com/scalableminds/mono/pull/115)
 
 
 ## [5.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.0.0) - 2026-11-23
