@@ -426,9 +426,19 @@ class Group(_BaseGroup):
                 print("Node not found")
             ```
         """
-        for tree in self.flattened_trees():
-            if tree.has_node(node_id):
-                return tree.get_node_by_id(node_id)
+        node = self._get_indexed_node(node_id)
+        if node is None:
+            self._rebuild_node_index()
+            node = self._get_indexed_node(node_id)
+        if node is not None:
+            return node
+        assert self._skeleton._nodes_by_id is not None
+        if node_id in self._skeleton._nodes_by_id:
+            # The index keeps one node per id. If node ids are not unique, the
+            # indexed node may lie outside of this group while another one is within.
+            for tree in self.flattened_trees():
+                if (found := tree._node._id_to_node.get(node_id)) is not None:
+                    return found
 
         raise ValueError("Node id not found")
 
@@ -453,11 +463,57 @@ class Group(_BaseGroup):
                 print("Tree not found")
             ```
         """
-        # Todo: Use hashed access if it turns out to be worth it? # noqa: FIX002 Line contains TODO
-        for tree in self.flattened_trees():
-            if tree.id == tree_id:
-                return tree
+        tree = self._get_indexed_tree(tree_id)
+        if tree is None:
+            self._rebuild_tree_index()
+            tree = self._get_indexed_tree(tree_id)
+        if tree is not None:
+            return tree
         raise ValueError(f"No tree with id {tree_id} was found")
+
+    def _contains_tree(self, tree: Tree) -> bool:
+        """Whether `tree` is currently attached to this group or one of its subgroups."""
+        group = tree.group
+        if tree._skeleton is not self._skeleton or tree not in group._child_trees:
+            return False
+        # Groups cannot be removed, so the group of an attached tree is always
+        # reachable from the skeleton root.
+        return (
+            self is self._skeleton
+            or group is self
+            or any(g is group for g in self.flattened_groups())
+        )
+
+    # The id indexes live on the skeleton and are built lazily. They are not updated
+    # on every modification (e.g. networkx methods can remove nodes), so entries may
+    # be stale: every hit is validated, and a miss rebuilds the index once.
+
+    def _get_indexed_tree(self, tree_id: int) -> Tree | None:
+        tree = (self._skeleton._trees_by_id or {}).get(tree_id)
+        if tree is not None and tree.id == tree_id and self._contains_tree(tree):
+            return tree
+        return None
+
+    def _get_indexed_node(self, node_id: int) -> "Node | None":
+        entry = (self._skeleton._nodes_by_id or {}).get(node_id)
+        if entry is None:
+            return None
+        tree, node = entry
+        if tree._node._id_to_node.get(node_id) is node and self._contains_tree(tree):
+            return node
+        return None
+
+    def _rebuild_tree_index(self) -> None:
+        self._skeleton._trees_by_id = {
+            tree.id: tree for tree in self._skeleton.flattened_trees()
+        }
+
+    def _rebuild_node_index(self) -> None:
+        nodes_by_id: dict[int, tuple[Tree, Node]] = {}
+        for tree in self._skeleton.flattened_trees():
+            for node_id, node in tree._node._id_to_node.items():
+                nodes_by_id.setdefault(node_id, (tree, node))
+        self._skeleton._nodes_by_id = nodes_by_id
 
     def has_tree_id(self, tree_id: int) -> bool:
         """Checks if a tree with the given ID exists in this group or its subgroups.

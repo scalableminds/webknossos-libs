@@ -10,7 +10,12 @@ for PKG in {cluster_tools,webknossos}/pyproject.toml; do
 
     cp pyproject.toml pyproject.toml.bak
     # set by the monorepo's dev releases (tools/dev_version.py); its release tags are webknossos-libs/vX.Y.Z
-    PKG_VERSION="${PKG_VERSION:-$(uvx dunamai from git --pattern-prefix '(?:webknossos-libs/)?' --strict)}"
+    # not --strict: it turns the warning about the shallow checkout into an error
+    PKG_VERSION="${PKG_VERSION:-$(uvx dunamai from git --pattern-prefix '(?:webknossos-libs/)?')}"
+    if [[ "$PKG_VERSION" == 0.0.0* ]]; then
+        echo "No release tag found, not publishing version $PKG_VERSION" >&2
+        exit 1
+    fi
 
     echo "__version__ = '$PKG_VERSION'" > ./"$PKG"/version.py
 

@@ -1,3 +1,4 @@
+import copy
 import difflib
 
 import networkx as nx
@@ -5,6 +6,7 @@ import pytest
 from upath import UPath
 
 import webknossos as wk
+from webknossos.skeleton.group import Group
 
 from .constants import TESTDATA_DIR
 
@@ -729,3 +731,121 @@ def test_add_tree_copies_keep_edges_with_colliding_ids(tmp_upath: UPath) -> None
     path = tmp_upath / "copied.nml"
     target.save(path)
     check(wk.Skeleton.load(path))
+
+
+def test_load_nml_assigns_comments_and_branchpoints_across_many_trees(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    skeleton = wk.Skeleton(voxel_size=(1, 1, 1), dataset_name="many_trees")
+    group = skeleton.add_group("group")
+    expected = {}
+    for i in range(50):
+        parent = group if i % 2 else skeleton
+        tree = parent.add_tree(f"tree_{i}")
+        for j in range(3):
+            node = tree.add_node(position=(i, j, 0))
+            if j == 1:
+                node.comment = f"comment_{i}"
+            if j == 2:
+                node.is_branchpoint = True
+                node.time = 1000 + i
+            expected[node.id] = (tree.id, node.comment, node.is_branchpoint)
+    path = tmp_upath / "many_trees.nml"
+    skeleton.save(path)
+
+    rebuild_node_index = Group._rebuild_node_index
+    rebuilds = 0
+
+    def count_rebuilds(self: Group) -> None:
+        nonlocal rebuilds
+        rebuilds += 1
+        rebuild_node_index(self)
+
+    with monkeypatch.context() as m:
+        m.setattr(Group, "_rebuild_node_index", count_rebuilds)
+        loaded = wk.Skeleton.load(path)
+
+    assert rebuilds == 1
+
+    assert loaded == skeleton
+    for tree in loaded.flattened_trees():
+        for node in tree.nodes:
+            assert expected[node.id] == (tree.id, node.comment, node.is_branchpoint)
+            if node.is_branchpoint:
+                assert (
+                    node.branchpoint_time
+                    == node.time
+                    == 1000 + int(tree.name.split("_")[1])
+                )
+
+
+@pytest.mark.parametrize("element", ["comment", "branchpoint"])
+def test_load_nml_with_unknown_node_id_raises(tmp_upath: UPath, element: str) -> None:
+    skeleton = wk.Skeleton(voxel_size=(1, 1, 1), dataset_name="unknown_node")
+    node = skeleton.add_tree("tree").add_node(
+        position=(1, 2, 3), comment="c", is_branchpoint=True
+    )
+    path = tmp_upath / "unknown_node.nml"
+    skeleton.save(path)
+    content = path.read_text()
+    old, new = (
+        (f' node="{node.id}"', ' node="12345"')
+        if element == "comment"
+        else (f'<branchpoint id="{node.id}"', '<branchpoint id="12345"')
+    )
+    assert content.count(old) == 1
+    path.write_text(content.replace(old, new))
+
+    with pytest.raises(ValueError, match="Node id not found"):
+        wk.Skeleton.load(path)
+
+
+def test_get_by_id_stays_correct_after_modifications() -> None:
+    skeleton = wk.Skeleton(voxel_size=(1, 1, 1), dataset_name="lookup")
+    group = skeleton.add_group("group")
+    other_group = skeleton.add_group("other_group")
+    tree = group.add_tree("tree")
+    node = tree.add_node(position=(1, 2, 3))
+    assert skeleton.get_node_by_id(node.id) is node
+    assert skeleton.get_tree_by_id(tree.id) is tree
+    assert group.get_node_by_id(node.id) is node
+    with pytest.raises(ValueError):
+        other_group.get_node_by_id(node.id)
+    with pytest.raises(ValueError):
+        other_group.get_tree_by_id(tree.id)
+
+    # Additions after the indexes were built are found.
+    new_tree = other_group.add_tree("new_tree")
+    new_node = new_tree.add_node(position=(4, 5, 6))
+    assert skeleton.get_node_by_id(new_node.id) is new_node
+    assert other_group.get_tree_by_id(new_tree.id) is new_tree
+
+    # Removals are not returned anymore.
+    tree.remove_node(node)
+    with pytest.raises(ValueError):
+        skeleton.get_node_by_id(node.id)
+    group.remove_tree_by_id(tree.id)
+    assert not skeleton.has_tree_id(tree.id)
+
+    # Copies get their own indexes.
+    copied = copy.deepcopy(skeleton)
+    copied_node = copied.get_node_by_id(new_node.id)
+    assert copied_node is not new_node
+    assert copied_node.position == new_node.position
+
+
+def test_get_node_by_id_with_duplicate_node_ids_in_groups() -> None:
+    skeleton = wk.Skeleton(voxel_size=(1, 1, 1), dataset_name="duplicates")
+    tree_a = skeleton.add_group("a").add_tree("tree_a")
+    tree_b = skeleton.add_group("b").add_tree("tree_b")
+    tree_a.add_node(position=(1, 1, 1), _enforced_id=7)
+    tree_b.add_node(position=(2, 2, 2), _enforced_id=7)
+    for group, tree in [
+        (skeleton.get_group_by_id(tree_a.group.id), tree_a),
+        (skeleton.get_group_by_id(tree_b.group.id), tree_b),
+    ]:
+        assert group.get_node_by_id(7) is tree.get_node_by_id(7)
+    assert skeleton.get_node_by_id(7) in (
+        tree_a.get_node_by_id(7),
+        tree_b.get_node_by_id(7),
+    )

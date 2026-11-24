@@ -21,8 +21,8 @@ jobs:
       cluster_tools: ${{ steps.filter.outputs.cluster_tools || github.ref ==
         'refs/heads/master' }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: dorny/paths-filter@v4.0.1
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4.0.3
         id: filter
         with:
           filters: |
@@ -43,8 +43,8 @@ jobs:
       run:
         working-directory: cluster_tools
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8.0.0
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
@@ -103,9 +103,9 @@ jobs:
       run:
         working-directory: cluster_tools
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.0.0
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           cache-dependency-glob: "cluster_tools/uv.lock"
@@ -133,8 +133,47 @@ jobs:
           cd tests
           uv run --frozen python -m pytest -sv test_batching.py
 
-  webknossos_linux:
+  test_data:
+    # Downloads the 1.2 GB l4_sample archive once into the cache, so that the
+    # parallel webknossos_linux jobs don't all download it from the file host.
     needs: changes
+    if: |
+      ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
+      ${{ needs.changes.outputs.webknossos == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webknossos
+
+    steps:
+      - name: Look up cached test data
+        id: test-data-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/webknossos-libs-test/l4_sample.zip
+          key: l4-sample-zarr-v3-v2
+          lookup-only: true
+
+      - uses: actions/checkout@v7
+        if: ${{ steps.test-data-cache.outputs.cache-hit != 'true' }}
+
+      - name: Install uv
+        if: ${{ steps.test-data-cache.outputs.cache-hit != 'true' }}
+        uses: astral-sh/setup-uv@v10.3.3
+
+      - name: Download test data
+        if: ${{ steps.test-data-cache.outputs.cache-hit != 'true' }}
+        run: uv run --no-project --with requests python -c "import test; test.download_test_data('~/.cache/webknossos-libs-test')"
+
+      - name: Save test data
+        if: ${{ steps.test-data-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/webknossos-libs-test/l4_sample.zip
+          key: l4-sample-zarr-v3-v2
+
+  webknossos_linux:
+    needs: [changes, test_data]
     if: |
       ${{ needs.changes.outputs.cluster_tools == 'true' }} ||
       ${{ needs.changes.outputs.webknossos == 'true' }}
@@ -149,10 +188,10 @@ jobs:
         working-directory: webknossos
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.0.0
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
@@ -180,11 +219,18 @@ jobs:
           sed -i '/def _launch/a\ \ \ \ \ \ \ \ raise Exception("fork is not allowed.")' ${UV_PYTHON_INSTALL_DIR}/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
           cat ${UV_PYTHON_INSTALL_DIR}/cpython-${{ matrix.python-version }}.*-linux-x86_64-gnu/lib/python${{ matrix.python-version }}/multiprocessing/popen_fork.py
 
+      - name: Restore test data
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/webknossos-libs-test/l4_sample.zip
+          key: l4-sample-zarr-v3-v2
+
       - name: Python tests (with coverage)
         if: ${{ matrix.python-version == '3.11' }}
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
+          WK_TEST_DATA_CACHE_DIR: ~/.cache/webknossos-libs-test
         run:
           uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
           least_duration --cov=webknossos --cov-report=
@@ -194,6 +240,7 @@ jobs:
         timeout-minutes: 30
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
+          WK_TEST_DATA_CACHE_DIR: ~/.cache/webknossos-libs-test
         run:
           uv run test.py --splits 3 --group ${{ matrix.group }} --splitting-algorithm
           least_duration
@@ -227,10 +274,10 @@ jobs:
         working-directory: webknossos
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.0.0
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
           cache-dependency-glob: "webknossos/uv.lock"
@@ -256,7 +303,7 @@ jobs:
       run:
         working-directory: webknossos
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install coverage.py
         run: pip install coverage
@@ -297,13 +344,13 @@ jobs:
       !github.event.pull_request.head.repo.fork
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           repository: scalableminds/webknossos
           path: docs/wk-repo
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.0.0
+        uses: astral-sh/setup-uv@v10.3.3
       - name: Build Docs
         run: |
           cd docs
@@ -335,17 +382,6 @@ jobs:
           uvx --from awscli aws s3 cp --recursive --endpoint-url https://eu-central-2.storage.impossibleapi.net docs/out s3://webknossos-www/docs/${CI_TAG}
           curl --basic -u "${N8N_TOKEN}:${N8N_USERNAME}" https://docs.webknossos.org/webhooks/index-docs
 
-      - name: Check links (on master)
-        if: github.ref == 'refs/heads/master' && github.repository == 'scalableminds/mono'
-        env:
-          # Or as an environment variable
-          SLACK_HOOK: ${{ secrets.LINK_CHECKER_SLACK_HOOK }}
-        run: |
-          cd docs
-          uv run --frozen linkchecker --config linkcheckerrc https://docs.webknossos.org > link_status || \
-            curl -X POST --data-urlencode "payload={\"text\": \":warning: Broken Links on doc.webknossos.org :warning:\n"'```'"\n$(cat link_status)\n"'```"}' \
-              "$SLACK_HOOK"
-
   pypi_and_gh_release:
     needs:
       - cluster_tools_slurm
@@ -361,9 +397,9 @@ jobs:
       !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.0.0
+        uses: astral-sh/setup-uv@v10.3.3
       - name: Publish python packages
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.PYPI_PASSWORD }}
@@ -374,7 +410,7 @@ jobs:
           _tooling/changelog_for_version.sh $VERSION > Changelog.md
       - name: Publish github release
         id: create_release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
@@ -386,6 +422,7 @@ jobs:
     needs:
       - cluster_tools_other
       - cluster_tools_slurm
+      - test_data
       - webknossos_linux
       - webknossos_windows
       - docs

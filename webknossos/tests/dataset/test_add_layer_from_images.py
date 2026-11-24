@@ -2083,3 +2083,40 @@ if __name__ == "__main__":
                 .upload(new_dataset_name=f"test_test_images_{name}_{time()}")
                 .url
             )
+
+
+def test_pil_image_size_limit_is_restored(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The image exceeds the limit, so the conversion only succeeds if the
+    # limit is lifted while reading, and it must be back in place afterwards.
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 32)
+    png_path = tmp_upath / "large.png"
+    Image.fromarray(np.ones((16, 16), dtype="uint8")).save(str(png_path))
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            png_path, layer_name="color", executor=executor
+        )
+
+    assert (layer.get_finest_mag().read() == 1).all()
+    assert Image.MAX_IMAGE_PIXELS == 32
+
+
+def test_pil_image_size_limit_stays_lifted_for_overlapping_readers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from webknossos.dataset._image_conversion.sliced_image_source import (
+        _pil_image_size_limit_disabled,
+    )
+
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 32)
+    first = _pil_image_size_limit_disabled()
+    second = _pil_image_size_limit_disabled()
+    first.__enter__()
+    second.__enter__()
+    first.__exit__(None, None, None)
+    assert Image.MAX_IMAGE_PIXELS is None
+    second.__exit__(None, None, None)
+    assert Image.MAX_IMAGE_PIXELS == 32

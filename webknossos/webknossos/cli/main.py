@@ -41,7 +41,6 @@ def main(
         callback=version_callback,
         is_eager=True,
         help="Show the version and exit.",
-        is_flag=True,
     ),
 ) -> None:
     """WEBKNOSSOS CLI tool."""

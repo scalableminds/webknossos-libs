@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 def upsample_cube(cube_buffer: np.ndarray, factors: list[int]) -> np.ndarray:
     ds = cube_buffer.shape
     out_buf = np.zeros(tuple(s * f for s, f in zip(ds, factors)), cube_buffer.dtype)
-    for dx in (0, factors[0] - 1):
-        for dy in (0, factors[1] - 1):
-            for dz in (0, factors[2] - 1):
+    for dx in range(factors[0]):
+        for dy in range(factors[1]):
+            for dz in range(factors[2]):
                 out_buf[
                     dx : out_buf.shape[0] : factors[0],
                     dy : out_buf.shape[1] : factors[1],

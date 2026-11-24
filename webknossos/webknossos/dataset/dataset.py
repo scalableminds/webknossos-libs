@@ -1526,6 +1526,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
 
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
+        else:
+            _validate_layer_name(new_layer_name)
 
         if new_layer_name in self.layers.keys():
             raise IndexError(
@@ -1696,6 +1698,8 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
         foreign_layer = maybe_remote_foreign_layer
         if new_layer_name is None:
             new_layer_name = foreign_layer.name
+        else:
+            _validate_layer_name(new_layer_name)
 
         if new_layer_name in self.layers.keys():
             raise IndexError(

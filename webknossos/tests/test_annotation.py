@@ -742,3 +742,31 @@ def test_edited_volume_annotation_upload_download() -> None:
         mag = seg_layer.get_mag(1)
         read_data = mag.read(absolute_offset=(0, 0, 0), size=(10, 10, 10))
         np.testing.assert_array_equal(data, read_data)
+
+
+@pytest.mark.parametrize(
+    "entry_name",
+    [
+        "volumeAnnotationData/../../outside.txt",
+        "volumeAnnotationData//outside.txt",
+        "volumeAnnotationData/..\\..\\outside.txt",
+    ],
+)
+def test_extract_zip_folder_rejects_path_traversal(
+    tmp_upath: UPath, entry_name: str
+) -> None:
+    from zipfile import ZipFile
+
+    from webknossos.annotation.volume_layer import _extract_zip_folder
+
+    zip_buffer = io.BytesIO()
+    with ZipFile(zip_buffer, "w") as zip_file:
+        zip_file.writestr("volumeAnnotationData/1/zarr.json", "{}")
+        zip_file.writestr(entry_name, "outside")
+
+    out_path = tmp_upath / "dataset" / "layer"
+    with ZipFile(zip_buffer) as zip_file:
+        with pytest.raises(ValueError, match="outside of the target directory"):
+            _extract_zip_folder(zip_file, out_path, "volumeAnnotationData/")
+
+    assert not any(p.name == "outside.txt" for p in tmp_upath.rglob("*"))

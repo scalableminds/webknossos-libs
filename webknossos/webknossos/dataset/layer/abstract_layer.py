@@ -1,5 +1,6 @@
 import copy
 import logging
+import os
 import re
 from abc import abstractmethod
 from collections.abc import Mapping, Sequence
@@ -22,7 +23,7 @@ from webknossos.dataset_properties.structuring import (
 from webknossos.geometry import C_AXIS, NDBoundingBox, NormalizedBoundingBox
 from webknossos.geometry.mag import Mag, MagLike
 
-from ...utils import warn_deprecated
+from ...utils import escapes_target_dir, warn_deprecated
 from .export import LayerExport
 from .view import ArrayException, MagView
 
@@ -58,7 +59,7 @@ def _rescaled_foreign_bounding_box(
 
 
 def _validate_layer_name(layer_name: str) -> None:
-    if _ALLOWED_LAYER_NAME_REGEX.match(layer_name) is None:
+    if _ALLOWED_LAYER_NAME_REGEX.fullmatch(layer_name) is None:
         raise ValueError(
             f"The layer name '{layer_name}' is invalid. It must only contain letters, numbers, underscores, hyphens and dots."
         )
@@ -70,6 +71,8 @@ def _validate_layer_name(layer_name: str) -> None:
 _ALLOWED_LAYER_NAME_REGEX = re.compile(r"^[A-Za-z0-9_$@\-]+[A-Za-z0-9_$@\-\.]*$")
 # This regex matches any character that is not allowed in a layer name.
 _UNALLOWED_LAYER_NAME_CHARS = re.compile(r"[^A-Za-z0-9_$@\-\.]")
+
+_IS_WINDOWS = os.name == "nt"
 
 
 class AbstractLayer:
@@ -86,9 +89,13 @@ class AbstractLayer:
     def _apply_properties(self, properties: LayerProperties, read_only: bool) -> None:
         # It is possible that the properties on disk do not contain the number of channels.
         # Therefore, the parameter is optional. However at this point, 'num_channels' was already inferred.
-        assert "/" not in properties.name and not properties.name.startswith("."), (
-            f"The layer name '{properties.name}' is invalid."
-        )
+        if (
+            properties.name == ""
+            or "/" in properties.name
+            or properties.name.startswith(".")
+            or (_IS_WINDOWS and escapes_target_dir(properties.name))
+        ):
+            raise ValueError(f"The layer name '{properties.name}' is invalid.")
         self._name: str = properties.name  # The name is also stored in the properties, but the name is required to get the properties.
 
         self._dtype = properties.dtype_np

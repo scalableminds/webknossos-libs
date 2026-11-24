@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import numpy as np
 import pytest
@@ -241,6 +242,32 @@ def test_create_sparse_segment_ids_rejected(tmp_upath: UPath) -> None:
         AgglomerateAttachment.create(tmp_upath / "agg_sparse", G)
 
 
+def test_create_huge_sparse_segment_id_rejected(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from webknossos.dataset.layer.segmentation_layer.attachments import (
+        agglomerate_attachment,
+    )
+
+    def set_without_ranges(*args: Any) -> set:
+        # Fail fast instead of allocating the full id range.
+        assert not any(isinstance(arg, range) for arg in args)
+        return set(*args)
+
+    monkeypatch.setattr(
+        agglomerate_attachment, "set", set_without_ranges, raising=False
+    )
+
+    G = AgglomerateGraph()
+    G.add_segment(1, position=Vec3Int(1, 2, 3))
+    G.add_segment(10**10, position=Vec3Int(4, 5, 6))
+    with pytest.raises(
+        ValueError,
+        match=r"dense \(1\.\.10000000000\).*missing 9999999998 IDs: \[2, 3, .*, 11, \.\.\.\]",
+    ):
+        AgglomerateAttachment.create(tmp_upath / "agg_huge_sparse", G)
+
+
 def test_agglomerate_graph_api() -> None:
     G = AgglomerateGraph()
     G.add_segment(1, position=Vec3Int(10, 20, 30))
@@ -392,3 +419,42 @@ def test_roundtrip_multiple_components(tmp_upath: UPath) -> None:
     attachment = AgglomerateAttachment.create(tmp_upath / "agg_view_multi", G)
     G2 = attachment.to_graph()
     assert_graphs_equal(G, G2)
+
+
+def test_create_and_add_to_rejects_invalid_name(tmp_upath: UPath) -> None:
+    dataset = Dataset(tmp_upath / "ds", voxel_size=(10, 10, 10))
+    seg_layer = dataset.add_layer(
+        "seg",
+        SEGMENTATION_CATEGORY,
+        dtype="uint32",
+        data_format="zarr3",
+        bounding_box=BoundingBox((0, 0, 0), (16, 16, 16)),
+    ).as_segmentation_layer()
+
+    with pytest.raises(ValueError, match="not allowed"):
+        AgglomerateAttachment.create_and_add_to(
+            seg_layer, "../outside", build_example_graph()
+        )
+    assert not (seg_layer.resolved_path / "outside").exists()
+    assert not (seg_layer.resolved_path / "agglomerates").exists()
+
+
+def test_create_validates_before_writing(tmp_upath: UPath) -> None:
+    G = AgglomerateGraph()
+    G.add_node(0, position=Vec3Int(1, 2, 3))
+    with pytest.raises(ValueError, match="positive integers"):
+        AgglomerateAttachment.create(tmp_upath / "agg", G)
+    assert not (tmp_upath / "agg").exists()
+
+    with pytest.raises(ValueError, match="not allowed"):
+        AgglomerateAttachment.create(tmp_upath / "in valid", build_example_graph())
+    assert not (tmp_upath / "in valid").exists()
+
+    with pytest.raises(ValueError, match="not allowed"):
+        AgglomerateAttachment.create(tmp_upath / "agg\n", build_example_graph())
+
+    G = AgglomerateGraph()
+    G.add_node(1)
+    with pytest.raises(KeyError, match="position"):
+        AgglomerateAttachment.create(tmp_upath / "agg_no_position", G)
+    assert not (tmp_upath / "agg_no_position").exists()

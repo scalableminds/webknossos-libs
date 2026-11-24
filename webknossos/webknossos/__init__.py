@@ -23,6 +23,8 @@ Server interactions may require [authentication](webknossos/client/context.md) e
 
 # The table above contains zero-width spaces in the code examples after each dot to enforce correct line-breaks.
 # ruff: noqa: F403
+import os
+
 from .administration import *
 from .ai_model import *
 from .annotation import *
@@ -35,9 +37,11 @@ from .skeleton import *
 from .utils import check_version_in_background
 from .version import __version__ as current_version
 
+# This needs to be set to make sure the encoding is not chunked when uploading
+os.environ["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED"
+
 if not current_version == "0.0.0":
     import multiprocessing
-    import os
 
     if (
         multiprocessing.parent_process() is None
@@ -46,7 +50,3 @@ if not current_version == "0.0.0":
         os.environ["WEBKNOSSOS_SKIP_VERSION_CHECK"] = "True"
         # Schedule the version check to run non-blocking in a background thread
         check_version_in_background(current_version)
-import os
-
-# This needs to be set to make sure the encoding is not chunked when uploading
-os.environ["AWS_REQUEST_CHECKSUM_CALCULATION"] = "WHEN_REQUIRED"

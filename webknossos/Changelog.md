@@ -11,9 +11,44 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.3...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.0.0...HEAD)
 
 ### Breaking Changes
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+- Raised the minimum `cattrs` version from 22.0.0 to 23.1.0. With cattrs 22.x, `import webknossos` failed with `TypeError: override() got an unexpected keyword argument 'unstruct_hook'`. [#115](https://github.com/scalableminds/mono/pull/115)
+
+
+## [5.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.0.0) - 2026-11-23
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.4.0...v5.0.0)
+
+### Breaking Changes
+- The WEBKNOSSOS token is no longer attached to `http(s)` paths of mags and attachments that are read from a `datasource-properties.json`. Before, opening a dataset from an untrusted source could send the token of the current context to an arbitrary host. Only paths that the WEBKNOSSOS server itself hands out (e.g. via `RemoteDataset`) receive the token now, and it is dropped when they redirect to another host. Local datasets that reference non-public remote layers by `https` URL (e.g. via `add_layer_as_ref`) can no longer read them after being reopened; open the `RemoteDataset` instead. [#83](https://github.com/scalableminds/mono/pull/83)
+
+### Changed
+- `Skeleton.get_node_by_id` and `Skeleton.get_tree_by_id` (also on groups) now use a lazily built index instead of scanning all trees. This also makes loading NML files with many trees and comments or branchpoints much faster (e.g. 8000 trees: 17.6 s → 0.23 s). [#88](https://github.com/scalableminds/mono/pull/88)
+
+### Fixed
+- Fixed a path traversal when exporting Zarr3 volume layers of annotations: entries of a crafted annotation zip file could be written outside of the target dataset. Such annotations are now rejected with a `ValueError`. [#80](https://github.com/scalableminds/mono/pull/80)
+- The WEBKNOSSOS token no longer appears in the repr of the webknossos context (which could end up in error messages), and `StorageCredentials` no longer shows the credential secret in its repr. [#89](https://github.com/scalableminds/mono/pull/89)
+- `Dataset.add_symlink_layer` and `Dataset.add_fs_copy_layer` validate `new_layer_name` before touching the filesystem, so names like `../x` can no longer write outside the dataset. [#89](https://github.com/scalableminds/mono/pull/89)
+- Opening a dataset whose `datasource-properties.json` contains an empty layer name or one with `/` or a leading `.` now raises a `ValueError`, also when Python runs with `-O`. On Windows, layer names that would resolve outside of the dataset via `..\` or a drive prefix are rejected as well. [#89](https://github.com/scalableminds/mono/pull/89)
+- Layer and attachment names with a trailing newline are no longer accepted. [#89](https://github.com/scalableminds/mono/pull/89)
+- `AgglomerateAttachment.create` and `AgglomerateAttachment.create_and_add_to` validate the name and the segment IDs before writing anything, so an invalid name can no longer write outside the `agglomerates` folder and a failed call no longer leaves an empty directory behind. [#89](https://github.com/scalableminds/mono/pull/89)
+- Converting images no longer disables Pillow's decompression-bomb protection for the rest of the process; the limit is restored once the conversion is done reading. [#89](https://github.com/scalableminds/mono/pull/89)
+- Fixed that `Layer.upsample` left voxels empty when a mag is upsampled by a factor larger than 2 in one step. [#79](https://github.com/scalableminds/mono/pull/79)
+- `AgglomerateAttachment.create` now rejects segment ids with huge gaps immediately instead of running out of memory. The error message for non-dense segment ids now reports the number of missing ids and only the first 10 of them. [#88](https://github.com/scalableminds/mono/pull/88)
+
+
+
+## [4.4.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.4.0) - 2026-11-17
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v4.3.3...v4.4.0)
 
 ### Added
 - `Dataset.from_images` and `add_layer_from_images` now also read OME-Zarr groups and `.ozx` archives following OME-NGFF 0.6. Affine dataset transformations (e.g. rotations and translations) are carried over as the layer's `coordinate_transformations`. [#1574](https://github.com/scalableminds/webknossos-libs/pull/1574)
@@ -21,16 +56,16 @@ in the _Changed_ sections.
 - Volume layers of annotations now support segment groups via `VolumeLayer.add_segment_group`, `SegmentGroup` (analogous to skeleton tree groups) and `SegmentInformation.group`. They are read from and written to NML files. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
 
 ### Changed
+- Allow newer versions of `psutil` (7.x), `rich` (14.x, 15.x) and `typer` (up to 0.x). This allows installing webknossos alongside napari 0.10. With recent typer versions, running `webknossos` without arguments exits with code 2 (instead of 0). [#59](https://github.com/scalableminds/mono/pull/59)
 - Updated Pillow to 13.0.0 for Python 3.11+ (Pillow 13 requires Python >=3.11; Python 3.10 stays on Pillow 12.x). Pillow is only a transitive dependency (via `imageio`), so this is enforced through a uv constraint.
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
 - Import time was cut roughly in half by using lazy imports for several dependencies. [#1583](https://github.com/scalableminds/webknossos-libs/pull/1583)
 - **Breaking:** Tasks can now have no experience requirement, so that any member of the project's team can get them. `Task.experience` is now typed `TaskExperience | None` and is `None` for such tasks, and `Task.create` and `Task.create_from_annotations` accept `None` for `needed_experience_domain` and `needed_experience_value`. Tasks without an experience requirement could not be read before. This needs a WEBKNOSSOS version that includes [scalableminds/webknossos#10390](https://github.com/scalableminds/webknossos/pull/10390) to create such tasks. [#1593](https://github.com/scalableminds/webknossos-libs/pull/1593)
 
-### Deprecated
-
 ### Fixed
 - Segment groups in NML files are no longer parsed as skeleton tree groups. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
 - `Dataset.from_images` and `add_layer_from_images` can now read `.ozx` archives, DM3/DM4 files and common 2D images (png, jpg, …, including directories, glob patterns and zip archives of them) from remote paths such as S3. Before, remote `.ozx` archives were wrongly reported as corrupted. TIFF files on remote paths now keep the path's storage options, e.g. credentials. [#1595](https://github.com/scalableminds/webknossos-libs/pull/1595)
+
 
 
 ## [4.3.3](https://github.com/scalableminds/webknossos-libs/releases/tag/v4.3.3) - 2026-10-26

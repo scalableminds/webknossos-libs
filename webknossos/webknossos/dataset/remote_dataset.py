@@ -61,12 +61,12 @@ from webknossos.geometry.mag import Mag, MagLike
 from webknossos.utils import (
     _position_fragment,
     enrich_path,
+    http_upath,
     infer_metadata_type,
     warn_deprecated,
 )
 
 from ..client.api_client.errors import UnexpectedStatusError
-from ..ssl_context import SSL_CONTEXT
 from .defaults import DEFAULT_DATA_FORMAT, DEFAULT_DTYPE
 from .remote_access_mode import RemoteAccessMode
 from .remote_dataset_registry import RemoteDatasetRegistry
@@ -102,7 +102,7 @@ class StorageCredentials:
 
     credential_identifier: str
     """Remote storage credential identifier (e.g. aws access key id)."""
-    credential_secret: str
+    credential_secret: str = attr.field(repr=False)
     """Remote storage credential secret (e.g. aws secret access key)."""
 
 
@@ -427,7 +427,6 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             # The token is read on every call instead of being stored, so that
             # pickling does not freeze a token and context changes are picked up.
             token = _get_context().token
-        headers = {} if token is None else {"X-Auth-Token": token}
         client = self._get_datastore_api_client()
 
         if access_mode == RemoteAccessMode.ZARR_STREAMING:
@@ -446,7 +445,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             raise ValueError(
                 f"Unsupported access mode {access_mode}. Supported modes are {RemoteAccessMode.__members__}"
             )
-        return UPath(url, headers=headers, ssl=SSL_CONTEXT)
+        return http_upath(url, token)
 
     def _mag_path(
         self, layer_name: str, mag: Mag, access_mode: RemoteAccessMode

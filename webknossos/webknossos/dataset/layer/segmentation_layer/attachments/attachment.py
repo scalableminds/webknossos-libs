@@ -26,7 +26,7 @@ def _validate_data_format(
 def _validate_name(name: str) -> None:
     from webknossos.dataset.layer.abstract_layer import _ALLOWED_LAYER_NAME_REGEX
 
-    if not _ALLOWED_LAYER_NAME_REGEX.match(name):
+    if not _ALLOWED_LAYER_NAME_REGEX.fullmatch(name):
         raise ValueError(
             f"Name {name} is not allowed. It must only contain letters, numbers, underscores, hyphens and dots."
         )

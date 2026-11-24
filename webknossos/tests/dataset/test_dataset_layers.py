@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pytest
 from upath import UPath
@@ -518,3 +520,65 @@ def test_add_layer_dtype(
                 category=category,
                 dtype=dtype,
             )
+
+
+@pytest.mark.parametrize("layer_name", ["color\n", "../outside", "a/b", ""])
+def test_add_layer_rejects_invalid_name(tmp_upath: UPath, layer_name: str) -> None:
+    ds = Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))
+
+    with pytest.raises(ValueError, match="is invalid"):
+        ds.add_layer(layer_name, COLOR_CATEGORY)
+
+    assert not (tmp_upath / "outside").exists()
+    assert sorted(p.name for p in ds.path.iterdir()) == ["datasource-properties.json"]
+
+
+@pytest.mark.parametrize("method", ["add_symlink_layer", "add_fs_copy_layer"])
+@pytest.mark.parametrize("new_layer_name", ["../outside", "a/b", "a\\b", "a\n"])
+def test_add_layer_by_fs_rejects_invalid_name(
+    tmp_upath: UPath, method: str, new_layer_name: str
+) -> None:
+    src_ds = Dataset(tmp_upath / "src", voxel_size=(1, 1, 1))
+    src_ds.add_layer("color", COLOR_CATEGORY).add_mag(1)
+    dst_ds = Dataset(tmp_upath / "dst", voxel_size=(1, 1, 1))
+
+    with pytest.warns(DeprecationWarning), pytest.raises(ValueError):
+        getattr(dst_ds, method)(src_ds.get_layer("color"), new_layer_name)
+
+    assert not (tmp_upath / "outside").exists()
+    assert sorted(p.name for p in (tmp_upath / "dst").iterdir()) == [
+        "datasource-properties.json"
+    ]
+
+
+@pytest.mark.parametrize("layer_name", ["..\\outside", "C:outside", "C:\\outside"])
+def test_open_dataset_rejects_escaping_layer_name_on_windows(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch, layer_name: str
+) -> None:
+    from webknossos.dataset.layer import abstract_layer as layer_module
+
+    ds = Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))
+    ds.add_layer("color", COLOR_CATEGORY).add_mag(1)
+    properties_path = ds.path / "datasource-properties.json"
+    properties = json.loads(properties_path.read_text())
+    properties["dataLayers"][0]["name"] = layer_name
+    properties_path.write_text(json.dumps(properties))
+
+    monkeypatch.setattr(layer_module, "_IS_WINDOWS", True)
+    with pytest.raises(ValueError, match="is invalid"):
+        Dataset.open(ds.path)
+
+
+@pytest.mark.parametrize("layer_name", ["../outside", "", ".hidden"])
+def test_open_dataset_rejects_invalid_layer_name(
+    tmp_upath: UPath, layer_name: str
+) -> None:
+    ds = Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))
+    ds.add_layer("color", COLOR_CATEGORY).add_mag(1)
+    properties_path = ds.path / "datasource-properties.json"
+    properties = json.loads(properties_path.read_text())
+    properties["dataLayers"][0]["name"] = layer_name
+    properties_path.write_text(json.dumps(properties))
+
+    with pytest.raises(ValueError, match="is invalid"):
+        Dataset.open(ds.path)
