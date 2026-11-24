@@ -164,14 +164,17 @@ def test_attachments(tmp_upath: UPath) -> None:
     assert seg_layer._properties.attachments.agglomerates is None
     seg_layer.attachments.delete_attachment(seg_layer.attachments.connectomes[0])
     assert seg_layer._properties.attachments.connectomes is None
-    # pyrefly: ignore[bad-argument-type]
-    seg_layer.attachments.delete_attachment(seg_layer.attachments.segment_index)
+    segment_index = seg_layer.attachments.segment_index
+    assert segment_index is not None
+    seg_layer.attachments.delete_attachment(segment_index)
     assert seg_layer._properties.attachments.segment_index is None
-    # pyrefly: ignore[bad-argument-type]
-    seg_layer.attachments.delete_attachment(seg_layer.attachments.segment_statistics)
+    segment_statistics = seg_layer.attachments.segment_statistics
+    assert segment_statistics is not None
+    seg_layer.attachments.delete_attachment(segment_statistics)
     assert seg_layer._properties.attachments.segment_statistics is None
-    # pyrefly: ignore[bad-argument-type]
-    seg_layer.attachments.delete_attachment(seg_layer.attachments.cumsum)
+    cumsum = seg_layer.attachments.cumsum
+    assert cumsum is not None
+    seg_layer.attachments.delete_attachment(cumsum)
     assert seg_layer._properties.attachments.cumsum is None
 
     properties_json = json.loads(

@@ -1,5 +1,6 @@
 import copy
 import difflib
+from collections.abc import Sequence
 
 import networkx as nx
 import pytest
@@ -204,7 +205,7 @@ def test_nml_generation(tmp_upath: UPath) -> None:
                     assert old_edge[1].position == new_edge[1].position
 
 
-def diff_lines(lines_a: list[str], lines_b: list[str]) -> list[str]:
+def diff_lines(lines_a: Sequence[str], lines_b: Sequence[str]) -> list[str]:
     diff = list(
         difflib.unified_diff(
             lines_a,
@@ -261,7 +262,6 @@ def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
 """
     nml.save(nml_path)
     with nml_path.open(mode="r", encoding="utf-8") as f:
-        # pyrefly: ignore[bad-argument-type]
         diff = diff_lines(f.readlines(), EXPECTED_NML.splitlines(keepends=True))
         assert len(diff) == 0, (
             f"Written nml does not look as expected:\n{''.join(diff)}"
@@ -312,7 +312,6 @@ def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
     with nml_path.open("r", encoding="utf-8") as f:
         diff = diff_lines(
             f.readlines(),
-            # pyrefly: ignore[bad-argument-type]
             EXPECTED_EXTENDED_NML.splitlines(keepends=True),
         )
         assert len(diff) == 0, (

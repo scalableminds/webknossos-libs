@@ -480,8 +480,7 @@ def test_http_upath_drops_token_on_cross_origin_redirect() -> None:
             self.end_headers()
             self.wfile.write(b"ok")
 
-        # pyrefly: ignore[bad-override]
-        def log_message(self, *args: Any) -> None:
+        def log_message(self, *args: Any, **kwargs: Any) -> None:
             pass
 
     class RedirectHandler(TargetHandler):

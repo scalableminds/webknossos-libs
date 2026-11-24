@@ -106,8 +106,11 @@ def _default_zarr3_codecs(ndim: int, compression: bool) -> tuple[Zarr3Codec, ...
         },
     )
     if compression:
-        # pyrefly: ignore[bad-assignment]
-        codecs += ({"name": "zstd", "configuration": {"level": 5, "checksum": True}},)
+        zstd_codec: Zarr3Codec = {
+            "name": "zstd",
+            "configuration": {"level": 5, "checksum": True},
+        }
+        codecs += (zstd_codec,)
     return codecs
 
 

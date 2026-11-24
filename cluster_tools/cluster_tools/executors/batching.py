@@ -131,9 +131,8 @@ class BatchingExecutor:
             all_item_futures.extend(item_futures)
 
             def on_batch_done(
+                _item_futures: list[Future[_T]],
                 batch_future: Future[list[_T]],
-                # pyrefly: ignore[bad-function-definition]
-                _item_futures: list[Future[_T]] = item_futures,
             ) -> None:
                 try:
                     results = batch_future.result()
@@ -143,7 +142,7 @@ class BatchingExecutor:
                     for future in _item_futures:
                         future.set_exception(e)
 
-            batch_future.add_done_callback(on_batch_done)
+            batch_future.add_done_callback(partial(on_batch_done, item_futures))
 
         return all_item_futures
 

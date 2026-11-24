@@ -1240,11 +1240,10 @@ def test_remote_attachments_add_attachment_as_ref(
     )
 
     # Add attachment
+    source_layer = source_remote.get_segmentation_layer("segmentation")
     new_layer.attachments.add_attachment_as_ref(
-        # pyrefly: ignore[missing-attribute]
-        source_remote.get_layer("segmentation").attachments.agglomerates[0],
-        # pyrefly: ignore[bad-argument-type]
-        foreign_layer=source_remote.get_layer("segmentation"),
+        source_layer.attachments.agglomerates[0],
+        foreign_layer=source_layer,
         new_name="new_agglomerate",
     )
     assert len(new_layer.attachments.agglomerates) == 1
