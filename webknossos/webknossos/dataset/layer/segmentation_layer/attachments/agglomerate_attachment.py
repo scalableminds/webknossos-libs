@@ -15,7 +15,7 @@ from webknossos.dataset._utils.tensorstore_helpers import (
 from webknossos.dataset_properties import AttachmentDataFormat
 from webknossos.geometry import Vec3Int
 
-from .attachment import Attachment
+from .attachment import Attachment, _validate_name
 
 if TYPE_CHECKING:
     from webknossos.dataset import SegmentationLayer
@@ -31,11 +31,22 @@ def _validate_segment_ids(graph: AgglomerateGraph) -> tuple[int, list[int]]:
             )
 
     n_segments = max(segment_ids) if len(segment_ids) > 0 else 0
-    if set(segment_ids) != set(range(1, n_segments + 1)):
-        missing = sorted(set(range(1, n_segments + 1)) - set(segment_ids))
+    # Ids are distinct and within 1..n_segments, so any shortfall means gaps.
+    n_missing = n_segments - len(segment_ids)
+    if n_missing > 0:
+        present = set(segment_ids)
+        missing_sample = []
+        for sid in range(1, n_segments + 1):
+            if sid not in present:
+                missing_sample.append(sid)
+                if len(missing_sample) == 10:
+                    break
+        missing_str = ", ".join(str(sid) for sid in missing_sample)
+        if n_missing > len(missing_sample):
+            missing_str += ", ..."
         raise ValueError(
             f"Segment IDs must be dense (1..{n_segments}) with no gaps, "
-            f"missing: {missing}"
+            f"missing {n_missing} IDs: [{missing_str}]"
         )
     return n_segments, segment_ids
 
@@ -119,6 +130,7 @@ class AgglomerateAttachment(Attachment):
             f"Cannot create agglomerate attachment for segmentation layer with dtype {layer.dtype}. "
             + "Please use a segmentation layer with dtype uint32 or uint64."
         )
+        _validate_name(name)
         attachment_path = layer.resolved_path / cls.container_name / name
         if attachment_path.exists():
             raise FileExistsError(
@@ -155,7 +167,7 @@ class AgglomerateAttachment(Attachment):
         segmentation_dtype = np.dtype(segmentation_dtype)
 
         path = UPath(path)
-        path.mkdir(parents=True, exist_ok=True)
+        _validate_name(path.name)
 
         n_segments, _ = _validate_segment_ids(graph)
 
@@ -243,6 +255,7 @@ class AgglomerateAttachment(Attachment):
                 }
             },
         }
+        path.mkdir(parents=True, exist_ok=True)
         (path / "zarr.json").write_text(json.dumps(group_meta, indent=2))
 
         # Target sizes from the spec

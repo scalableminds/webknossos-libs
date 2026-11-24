@@ -8,6 +8,8 @@ from upath import UPath
 from ..dataset_properties import _LENGTH_UNIT_TO_NANOMETER, VoxelSize
 from ..geometry import Vec3Float, Vec3FloatLike
 from .group import Group
+from .node import Node
+from .tree import Tree
 
 
 class _Counter:
@@ -112,11 +114,19 @@ class Skeleton(Group):
     _id: int = attr.field(init=False, repr=False)
     _element_id_generator: _Counter = attr.field(init=False, eq=False, repr=False)
     _skeleton: "Skeleton" = attr.field(init=False, eq=False, repr=False)
+    # Lazily built lookup indexes for get_node_by_id and get_tree_by_id, see Group.
+    # Entries may be stale, so every hit is validated and a miss triggers a rebuild.
+    _trees_by_id: dict[int, Tree] | None = attr.field(init=False, eq=False, repr=False)
+    _nodes_by_id: dict[int, tuple[Tree, Node]] | None = attr.field(
+        init=False, eq=False, repr=False
+    )
 
     def __attrs_post_init__(self) -> None:
         if not isinstance(self._voxel_size, VoxelSize):
             self._voxel_size = VoxelSize(self._voxel_size)
         self._element_id_generator = _Counter()
+        self._trees_by_id = None
+        self._nodes_by_id = None
         self._skeleton = self
         super().__attrs_post_init__()  # sets self._id
 

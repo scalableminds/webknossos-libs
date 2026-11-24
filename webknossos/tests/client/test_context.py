@@ -50,3 +50,15 @@ def test_webknossos_context_api_version(
         api_client = _get_context().api_client
         assert isinstance(api_client, api_client_class)
         assert api_client.webknossos_api_version == api_version
+
+
+def test_context_repr_hides_token() -> None:
+    with webknossos_context(url="http://example.com", token="secret-token"):
+        context = _get_context()
+        assert "secret-token" not in repr(context)
+        assert context.token == "secret-token"
+    with webknossos_context(url="http://example.com", token="secret-token"):
+        assert _get_context() == context
+        assert hash(_get_context()) == hash(context)
+    with webknossos_context(url="http://example.com", token="other"):
+        assert _get_context() != context

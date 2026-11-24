@@ -34,7 +34,7 @@ def _natsort_key(path: str | UPath) -> Any:
     return _natsort_keygen(str(path))
 
 
-def imread(uri: Any, **kwargs: Any) -> np.ndarray:
+def imread(uri: str | UPath, **kwargs: Any) -> np.ndarray:
     """Reads one image file into an array, stripping imageio's metadata."""
     if isinstance(uri, UPath):
         if is_fs_path(uri):

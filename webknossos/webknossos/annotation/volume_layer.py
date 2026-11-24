@@ -39,7 +39,7 @@ from ..geometry import Vec3Float, Vec3Int
 from ..geometry.vec3_float import as_vec3_float_or_none
 from ..geometry.vec3_int import as_vec3_int_or_none
 from ..skeleton.skeleton import _Counter
-from ..utils import is_fs_path
+from ..utils import escapes_target_dir, is_fs_path
 from .segment_group import SegmentGroup
 
 Vector4 = tuple[float, float, float, float]
@@ -427,7 +427,12 @@ class VolumeLayer:
 def _extract_zip_folder(zip_file: ZipFile, out_path: UPath, prefix: str) -> None:
     for zip_entry in zip_file.filelist:
         if zip_entry.filename.startswith(prefix) and not zip_entry.is_dir():
-            out_file_path = out_path / (zip_entry.filename[len(prefix) :])
+            relative_name = zip_entry.filename[len(prefix) :]
+            if escapes_target_dir(relative_name):
+                raise ValueError(
+                    f"The zip entry {zip_entry.filename!r} points outside of the target directory."
+                )
+            out_file_path = out_path / relative_name
             out_file_path.parent.mkdir(parents=True, exist_ok=True)
             with (
                 zip_file.open(zip_entry, "r") as zip_f,
