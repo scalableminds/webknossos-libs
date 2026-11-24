@@ -234,6 +234,8 @@ class Project:
                         limit=PAGINATION_LIMIT,
                         page_number=pagination_page,
                     )
+                    if len(api_tasks_batch) == 0:
+                        break
                     new_tasks = [Task._from_api_task(t) for t in api_tasks_batch]
                     all_tasks.extend(new_tasks)
 

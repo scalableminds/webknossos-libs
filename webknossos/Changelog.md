@@ -22,6 +22,13 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- `wk.login(url=...)` no longer queries the API version of the previously configured server and no longer pins that version for the new server. An explicitly set `api_version` still carries over. [#87](https://github.com/scalableminds/mono/pull/87)
+- `RemoteDataset.download()` now downloads from the dataset's own server with the dataset's token (e.g. when the dataset was opened from a URL of another server) instead of the current context, and uses the sharing token the dataset was opened with. `RemoteDataset.folder` looks up the folder on the dataset's own server. [#87](https://github.com/scalableminds/mono/pull/87)
+- Building an upload request without a token no longer raises an `AttributeError`, so that the server's authentication error is shown. [#87](https://github.com/scalableminds/mono/pull/87)
+- `Project.get_tasks(fetch_all=True)` no longer loops forever if tasks are deleted while they are fetched. [#87](https://github.com/scalableminds/mono/pull/87)
+- Setting `RemoteDataset.metadata` or `RemoteFolder.metadata` to `None` now clears the metadata instead of raising an `UnboundLocalError`. [#87](https://github.com/scalableminds/mono/pull/87)
+- `upload_dataset` with `layers_to_link` now respects `folder_id` and `datastore_url`. [#87](https://github.com/scalableminds/mono/pull/87)
+- API errors with a non-UTF-8 response body now show the HTTP error instead of a `UnicodeDecodeError`. [#87](https://github.com/scalableminds/mono/pull/87)
 - `add_layer_for_existing_files` now raises a clear error for arrays without a channel axis, which are not supported. Before, it stored a layer with zero channels, after which the dataset could not be opened anymore. [#90](https://github.com/scalableminds/mono/pull/90)
 - Growing a layer's bounding box now also grows coarser mags far enough. Before, writing to the new border of e.g. mag 2 failed and reading it returned zeros. [#90](https://github.com/scalableminds/mono/pull/90)
 - `download_dataset` now downloads all mags of each layer when `mags` is not given. Before, every layer was downloaded with the mags of the first layer. [#90](https://github.com/scalableminds/mono/pull/90)

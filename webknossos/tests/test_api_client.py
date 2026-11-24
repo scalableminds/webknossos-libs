@@ -1,7 +1,9 @@
+import httpx
 import pytest
 
 from webknossos.client.api_client import WkApiClient
 from webknossos.client.api_client.datastore_api_client import DatastoreApiClient
+from webknossos.client.api_client.errors import UnexpectedStatusError
 from webknossos.client.api_client.models import ApiDataStore
 from webknossos.client.context import _get_api_client
 from webknossos.dataset_properties import DatasetProperties
@@ -112,3 +114,11 @@ def test_datastore_api_client_paths() -> None:
         client.proxy_dataset_url(dataset_id)
         == f"{client.url_prefix}/datasets/{dataset_id}/proxy/"
     )
+
+
+def test_error_message_with_non_utf8_body() -> None:
+    response = httpx.Response(
+        500, content=b"\xff\xfe error", request=httpx.Request("GET", DATASTORE_URL)
+    )
+    error = UnexpectedStatusError(response)
+    assert "Got response status 500" in str(error)

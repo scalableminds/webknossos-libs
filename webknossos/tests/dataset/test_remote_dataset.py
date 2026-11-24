@@ -1,7 +1,7 @@
 import itertools
 import pickle
 from collections.abc import Iterable, Iterator
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -35,6 +35,7 @@ from webknossos import (
     Vec3Int,
     webknossos_context,
 )
+from webknossos.client.context import _get_context
 from webknossos.dataset.layer.remote_layer import RemoteLayer
 from webknossos.dataset.layer.segmentation_layer.attachments.attachments import (
     RemoteAttachments,
@@ -1253,6 +1254,119 @@ def test_remote_attachments_add_attachment_as_ref(
         .name
         == "new_agglomerate"
     )
+
+
+def _remote_dataset_mock_with_context() -> MagicMock:
+    mock_ds = MagicMock()
+    mock_ds.dataset_id = "dataset_id"
+    mock_ds._context = webknossos_context(
+        url="http://other-instance:9000", token="sharing_token"
+    )
+    return mock_ds
+
+
+def _record_context(*_args: object, **_kwargs: object) -> tuple[str, str | None]:
+    context = _get_context()
+    return context.url, context.token
+
+
+def test_remote_dataset_download_uses_dataset_context() -> None:
+    mock_ds = _remote_dataset_mock_with_context()
+    with patch(
+        "webknossos.client._download_dataset.download_dataset",
+        side_effect=_record_context,
+    ):
+        result = RemoteDataset.download(mock_ds)
+    assert result == ("http://other-instance:9000", "sharing_token")
+
+
+def test_remote_dataset_download_keeps_api_version_auto_detection() -> None:
+    mock_ds = _remote_dataset_mock_with_context()
+    assert mock_ds._context._api_version is None
+
+    def _record_api_version(*_args: object, **_kwargs: object) -> int | None:
+        return _get_context()._api_version
+
+    with (
+        webknossos_context(url="http://pinned-instance:9000", api_version=13),
+        patch(
+            "webknossos.client._download_dataset.download_dataset",
+            side_effect=_record_api_version,
+        ),
+    ):
+        assert RemoteDataset.download(mock_ds) is None
+
+
+def test_remote_dataset_download_uses_sharing_token_from_open() -> None:
+    mock_ds = _remote_dataset_mock_with_context()
+    mock_ds._sharing_token = "token_from_url"
+    with patch(
+        "webknossos.client._download_dataset.download_dataset"
+    ) as download_dataset:
+        RemoteDataset.download(mock_ds)
+        assert download_dataset.call_args.kwargs["sharing_token"] == "token_from_url"
+        RemoteDataset.download(mock_ds, sharing_token="explicit")
+        assert download_dataset.call_args.kwargs["sharing_token"] == "explicit"
+
+
+def test_remote_dataset_download_from_multiple_threads() -> None:
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier, Event, get_ident
+
+    mock_ds = _remote_dataset_mock_with_context()
+    barrier = Barrier(2, timeout=10)
+    entered: list[int] = []
+    finished: dict[int, Event] = {}
+
+    def _download(*_args: object, **_kwargs: object) -> tuple[str, str | None]:
+        entered.append(get_ident())
+        # Both threads are inside the dataset's context at the same time.
+        barrier.wait()
+        if entered[1] == get_ident():
+            # The thread that entered first also leaves first.
+            assert finished[entered[0]].wait(timeout=10)
+        return _record_context()
+
+    def _run() -> object:
+        finished[get_ident()] = Event()
+        try:
+            return RemoteDataset.download(mock_ds)
+        finally:
+            finished[get_ident()].set()
+
+    with (
+        patch(
+            "webknossos.client._download_dataset.download_dataset",
+            side_effect=_download,
+        ),
+        ThreadPoolExecutor(max_workers=2) as pool,
+    ):
+        futures = [pool.submit(_run) for _ in range(2)]
+        results = [future.result() for future in futures]
+    assert results == [("http://other-instance:9000", "sharing_token")] * 2
+
+
+def test_remote_dataset_folder_uses_dataset_context() -> None:
+    mock_ds = _remote_dataset_mock_with_context()
+    with patch.object(RemoteFolder, "get_by_id", side_effect=_record_context):
+        result = RemoteDataset.folder.fget(mock_ds)  # type: ignore[attr-defined]
+    assert result == ("http://other-instance:9000", "sharing_token")
+
+
+def test_remote_dataset_metadata_set_none() -> None:
+    mock_ds = MagicMock()
+    RemoteDataset.metadata.fset(mock_ds, None)  # type: ignore[attr-defined]
+    mock_ds._update_dataset_info.assert_called_once_with(metadata=[])
+
+
+def test_remote_folder_metadata_set_none() -> None:
+    client = MagicMock()
+    client.folder_get.return_value.name = "folder"
+    client.folder_get.return_value.allowed_teams = []
+    folder = RemoteFolder(id="folder_id", name="folder", parent=None)
+    with patch("webknossos.client.context._get_api_client", return_value=client):
+        folder.metadata = None
+    assert client.folder_update.call_args.kwargs["folder"].metadata == []
 
 
 def test_storage_credentials_repr_hides_secret() -> None:

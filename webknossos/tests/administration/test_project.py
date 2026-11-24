@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 import webknossos as wk
@@ -129,3 +131,31 @@ def test_project_get_tasks() -> None:
         )
 
     assert len(project.get_tasks()) == 3
+
+
+def test_get_tasks_fetch_all_stops_on_empty_page() -> None:
+    project = wk.Project(
+        project_id="project_id",
+        name="project",
+        team_id="team_id",
+        team_name="team",
+        owner_id=None,
+        priority=1,
+        paused=False,
+        expected_time=None,
+        is_blacklisted_from_report=False,
+    )
+    client = MagicMock()
+    # A task was deleted after the first page was fetched.
+    client.task_infos_by_project_id_paginated.side_effect = [
+        (list(range(1000)), 1002),
+        (["last"], 1002),
+        ([], 1002),
+        AssertionError("requested too many pages"),
+    ]
+    with (
+        patch("webknossos.administration.project._get_api_client", return_value=client),
+        patch.object(wk.Task, "_from_api_task", side_effect=lambda t: t),
+    ):
+        tasks = project.get_tasks(fetch_all=True)
+    assert len(tasks) == 1001
