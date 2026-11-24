@@ -23,6 +23,7 @@ in the _Changed_ sections.
 
 ### Fixed
 - Raised the minimum `cattrs` version from 22.0.0 to 23.1.0. With cattrs 22.x, `import webknossos` failed with `TypeError: override() got an unexpected keyword argument 'unstruct_hook'`. [#115](https://github.com/scalableminds/mono/pull/115)
+- `Dataset.from_images` and `add_layer_from_images` can now read `.ozx` archives, MRC files, DM3/DM4 files and common 2D images (png, jpg, …, including directories, glob patterns and zip archives of them) from remote paths such as S3. `webknossos convert-raw` can now read its source from remote paths, too. Before, remote `.ozx` archives were wrongly reported as corrupted. TIFF files on remote paths now keep the path's storage options, e.g. credentials. [#1595](https://github.com/scalableminds/webknossos-libs/pull/1595)
 
 
 ## [5.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.0.0) - 2026-11-23
@@ -64,7 +65,6 @@ in the _Changed_ sections.
 
 ### Fixed
 - Segment groups in NML files are no longer parsed as skeleton tree groups. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
-- `Dataset.from_images` and `add_layer_from_images` can now read `.ozx` archives, MRC files, DM3/DM4 files and common 2D images (png, jpg, …, including directories, glob patterns and zip archives of them) from remote paths such as S3. `webknossos convert-raw` can now read its source from remote paths, too. Before, remote `.ozx` archives were wrongly reported as corrupted. TIFF files on remote paths now keep the path's storage options, e.g. credentials. [#1595](https://github.com/scalableminds/webknossos-libs/pull/1595)
 
 
 
