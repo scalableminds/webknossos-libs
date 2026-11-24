@@ -22,6 +22,14 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- `add_layer_for_existing_files` now raises a clear error for arrays without a channel axis, which are not supported. Before, it stored a layer with zero channels, after which the dataset could not be opened anymore. [#90](https://github.com/scalableminds/mono/pull/90)
+- Growing a layer's bounding box now also grows coarser mags far enough. Before, writing to the new border of e.g. mag 2 failed and reading it returned zeros. [#90](https://github.com/scalableminds/mono/pull/90)
+- `download_dataset` now downloads all mags of each layer when `mags` is not given. Before, every layer was downloaded with the mags of the first layer. [#90](https://github.com/scalableminds/mono/pull/90)
+- `add_attachment_as_copy` now rejects an attachment whose name or target path is already taken by an existing attachment before copying it. Before, it overwrote the files of the existing attachment. [#90](https://github.com/scalableminds/mono/pull/90)
+- Branchpoint times and the `interpolation` flag of nodes are now kept when saving and loading NML files. Before, branchpoints got the node's creation time and `interpolation` was always loaded as `True`. [#90](https://github.com/scalableminds/mono/pull/90)
+- Trees created without `metadata` no longer share one metadata dictionary. Before, metadata set on one tree showed up on all of them, also in other skeletons. [#90](https://github.com/scalableminds/mono/pull/90)
+- `convert-raw --rescale-min-max` now clips values outside the given range for integer target dtypes and writes NaN as 0. Before, they wrapped around. [#90](https://github.com/scalableminds/mono/pull/90)
+- `Dataset.from_images` and `add_layer_from_images` no longer fail for float volumes (e.g. MRC, Zarr, N5) containing NaN or infinite values. [#90](https://github.com/scalableminds/mono/pull/90)
 - Raised the minimum `cattrs` version from 22.0.0 to 23.1.0. With cattrs 22.x, `import webknossos` failed with `TypeError: override() got an unexpected keyword argument 'unstruct_hook'`. [#115](https://github.com/scalableminds/mono/pull/115)
 
 

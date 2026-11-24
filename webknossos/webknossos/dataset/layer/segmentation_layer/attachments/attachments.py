@@ -225,16 +225,22 @@ class AbstractAttachments:
         if _is_singleton_attachment(attachment):
             setattr(self._properties, container_name, attachment._properties)
         else:
-            if any(a.name == attachment.name for a in getattr(self, container_name)):
-                raise ValueError(
-                    f"Attachment with name {attachment.name} already exists in {container_name}."
-                )
+            self._ensure_attachment_name_available(attachment)
             properties_container = getattr(self._properties, container_name)
             if properties_container is None:
                 setattr(self._properties, container_name, [attachment._properties])
             else:
                 properties_container.append(attachment._properties)
         self._save_properties()
+
+    def _ensure_attachment_name_available(self, attachment: Attachment) -> None:
+        if _is_singleton_attachment(attachment):
+            return
+        container_name = attachment.container_name
+        if any(a.name == attachment.name for a in getattr(self, container_name)):
+            raise ValueError(
+                f"Attachment with name {attachment.name} already exists in {container_name}."
+            )
 
     def add_copy_attachments(self, *other: Attachment) -> list[Attachment]:
         warn_deprecated("add_copy_attachments", "add_attachment_as_copy")
@@ -583,12 +589,17 @@ class Attachments(AbstractAttachments):
 
     def add_attachment_as_copy(self, attachment: Attachment) -> Attachment:
         self._ensure_writable()
+        self._ensure_attachment_name_available(attachment)
         # We set the attachment path following the convention.
         new_path = cheap_resolve(
             self._layer.path
             / snake_to_camel_case(attachment.container_name)
             / _maybe_add_suffix(attachment.name, attachment.data_format)
         )
+        if any(cheap_resolve(existing.path) == new_path for existing in self):
+            raise ValueError(
+                f"Cannot copy attachment {attachment.name}: {new_path} belongs to an existing attachment."
+            )
         new_path.parent.mkdir(parents=True, exist_ok=True)
         copytree(attachment.path, new_path)
 

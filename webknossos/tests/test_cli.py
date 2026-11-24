@@ -368,6 +368,74 @@ def test_convert_raw() -> None:
         )
 
 
+def test_convert_raw_rescale_min_max_clips() -> None:
+    with tmp_cwd():
+        origin_path = UPath("test.raw")
+        origin_path.write_bytes(
+            np.array([[-100, 250], [600, 1000]], dtype="int16").tobytes(order="F")
+        )
+        out_path = UPath(f"wk_from_{origin_path.name}")
+        result = runner.invoke(
+            app,
+            [
+                "convert-raw",
+                "--voxel-size",
+                "11.0,11.0,11.0",
+                "--shape",
+                "2,2,1",
+                "--dtype",
+                "uint8",
+                "--source-dtype",
+                "int16",
+                "--rescale-min-max",
+                "0,500",
+                str(origin_path),
+                str(out_path),
+            ],
+        )
+
+        assert result.exit_code == 0, result.stdout
+        np.testing.assert_array_equal(
+            Dataset.open(out_path).get_layer("color").get_finest_mag().read()[0],
+            np.array([[[0], [127]], [[255], [255]]], dtype="uint8"),
+        )
+
+
+def test_convert_raw_rescale_min_max_maps_nan_to_zero() -> None:
+    with tmp_cwd():
+        origin_path = UPath("test.raw")
+        origin_path.write_bytes(
+            np.array([[np.nan, 250], [600, -np.inf]], dtype="float32").tobytes(
+                order="F"
+            )
+        )
+        out_path = UPath(f"wk_from_{origin_path.name}")
+        result = runner.invoke(
+            app,
+            [
+                "convert-raw",
+                "--voxel-size",
+                "11.0,11.0,11.0",
+                "--shape",
+                "2,2,1",
+                "--dtype",
+                "uint8",
+                "--source-dtype",
+                "float32",
+                "--rescale-min-max",
+                "0,500",
+                str(origin_path),
+                str(out_path),
+            ],
+        )
+
+        assert result.exit_code == 0, result.stdout
+        np.testing.assert_array_equal(
+            Dataset.open(out_path).get_layer("color").get_finest_mag().read()[0],
+            np.array([[[0], [127]], [[255], [0]]], dtype="uint8"),
+        )
+
+
 @pytest.mark.parametrize("zarr_format", ["zarr", "zarr3"])
 def test_convert_zarr(zarr_format: Literal["zarr", "zarr3"]) -> None:
     """Tests the functionality of convert-zarr subcommand."""

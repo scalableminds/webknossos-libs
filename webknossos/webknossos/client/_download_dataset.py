@@ -89,9 +89,12 @@ def download_dataset(
                 f"Expected a BoundingBox object for the bbox parameter but got {type(bbox)}"
             )
             layer.bounding_box = bbox
-        if mags is None:
-            mags = [mag_view.mag for mag_view in api_data_layer.mags]
-        for mag in mags:
+        layer_mags = (
+            mags
+            if mags is not None
+            else [mag_view.mag for mag_view in api_data_layer.mags]
+        )
+        for mag in layer_mags:
             mag_view = layer.get_or_add_mag(
                 mag,
                 compress=True,

@@ -93,7 +93,8 @@ class Node(NamedTuple):
             bitDepth=int(nml_node.get("bitDepth", 0))
             if nml_node.get("bitDepth") is not None
             else None,
-            interpolation=bool(nml_node.get("interpolation"))
+            interpolation=enforce_not_null(nml_node.get("interpolation")).lower()
+            == "true"
             if nml_node.get("interpolation") is not None
             else None,
             time=int(nml_node.get("time", 0))

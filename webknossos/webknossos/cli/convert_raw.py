@@ -90,6 +90,8 @@ def _raw_chunk_converter(
             norm = (contiguous_chunk.astype(np.float64) - rescale_min_max.min) / (
                 rescale_min_max.max - rescale_min_max.min
             )
+            if np.issubdtype(target_dtype, np.integer):
+                norm = np.clip(np.nan_to_num(norm, nan=0.0), 0, 1)
             contiguous_chunk = norm * target_max
 
     if contiguous_chunk.dtype != target_dtype:

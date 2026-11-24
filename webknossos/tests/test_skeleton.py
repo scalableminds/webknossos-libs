@@ -733,6 +733,43 @@ def test_add_tree_copies_keep_edges_with_colliding_ids(tmp_upath: UPath) -> None
     check(wk.Skeleton.load(path))
 
 
+def test_node_interpolation_and_branchpoint_time_round_trip(
+    tmp_upath: UPath,
+) -> None:
+    skeleton = wk.Skeleton(dataset_name="test", voxel_size=(1, 1, 1))
+    tree = skeleton.add_tree("tree")
+    no_interpolation = tree.add_node((1, 1, 1), interpolation=False, time=100)
+    interpolation = tree.add_node((2, 2, 2), interpolation=True, time=100)
+    unset = tree.add_node((3, 3, 3))
+    branchpoint = tree.add_node(
+        (4, 4, 4), is_branchpoint=True, branchpoint_time=999, time=100
+    )
+
+    nml_path = tmp_upath / "round_trip.nml"
+    skeleton.save(nml_path)
+    loaded = wk.Skeleton.load(nml_path)
+
+    assert loaded.get_node_by_id(no_interpolation.id).interpolation is False
+    assert loaded.get_node_by_id(interpolation.id).interpolation is True
+    assert loaded.get_node_by_id(unset.id).interpolation is None
+    loaded_branchpoint = loaded.get_node_by_id(branchpoint.id)
+    assert loaded_branchpoint.is_branchpoint
+    assert loaded_branchpoint.branchpoint_time == 999
+
+
+def test_tree_metadata_is_not_shared() -> None:
+    skeleton1 = wk.Skeleton(dataset_name="test", voxel_size=(1, 1, 1))
+    skeleton2 = wk.Skeleton(dataset_name="test", voxel_size=(1, 1, 1))
+    tree1 = skeleton1.add_tree("tree1")
+    tree2 = skeleton1.add_tree("tree2")
+    tree3 = skeleton2.add_tree("tree3")
+
+    tree1.metadata["key"] = "value"
+
+    assert tree2.metadata == {}
+    assert tree3.metadata == {}
+
+
 def test_load_nml_assigns_comments_and_branchpoints_across_many_trees(
     tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
 ) -> None:

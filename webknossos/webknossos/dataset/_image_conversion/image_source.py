@@ -12,6 +12,7 @@ z only and correcting the final size from what was actually written.
 
 from __future__ import annotations
 
+import math
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
@@ -166,6 +167,23 @@ class ValueRange(NamedTuple):
             min(value_range.min for value_range in present),
             max(value_range.max for value_range in present),
         )
+
+
+def largest_value(array: np.ndarray, *, value_range: ValueRange | None) -> int | None:
+    """The largest value of `array` rounded up to an integer, or None when it
+    holds no usable value. `value_range` must be `ValueRange.of(array)`; it
+    gives the maximum of float arrays, while integer arrays are reduced
+    exactly."""
+    if array.size == 0:
+        return None
+    if np.issubdtype(array.dtype, np.floating):
+        return None if value_range is None else math.ceil(value_range.max)
+    return int(array.max())
+
+
+def combined_largest_value(values: Iterable[int | None]) -> int | None:
+    """The largest of `values`, ignoring the missing ones."""
+    return max((value for value in values if value is not None), default=None)
 
 
 class ChunkResult(NamedTuple):

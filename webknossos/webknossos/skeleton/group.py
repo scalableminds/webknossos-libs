@@ -155,7 +155,7 @@ class Group(_BaseGroup):
         name_or_tree: str | Tree,
         color: Vector4 | Vec3FloatLike | None = None,
         _enforced_id: int | None = None,
-        metadata: dict[str, str | int | float | Sequence[str]] = {},
+        metadata: dict[str, str | int | float | Sequence[str]] | None = None,
         is_visible: bool = True,
     ) -> Tree:
         """Adds a new tree or copies an existing tree to this group.

@@ -623,3 +623,50 @@ def test_detect_legacy_attachments(tmp_upath: UPath) -> None:
         seg_layer.attachments.segment_index
         and seg_layer.attachments.segment_index.path == segment_index_path
     )
+
+
+def test_add_attachment_as_copy_with_duplicate_name(tmp_upath: UPath) -> None:
+    _, seg_layer = make_dataset(tmp_upath)
+
+    first_path = tmp_upath / "first"
+    first_path.write_text("first")
+    seg_layer.attachments.add_attachment_as_copy(
+        MeshAttachment.from_path_and_name(
+            first_path, "meshfile", data_format=AttachmentDataFormat.Zarr3
+        )
+    )
+
+    second_path = tmp_upath / "second"
+    second_path.write_text("second")
+    with pytest.raises(ValueError, match="already exists"):
+        seg_layer.attachments.add_attachment_as_copy(
+            MeshAttachment.from_path_and_name(
+                second_path, "meshfile", data_format=AttachmentDataFormat.Zarr3
+            )
+        )
+
+    assert seg_layer.attachments.meshes[0].path.read_text() == "first"
+
+
+def test_add_attachment_as_copy_with_existing_singleton(tmp_upath: UPath) -> None:
+    _, seg_layer = make_dataset(tmp_upath)
+
+    first_path = tmp_upath / "first"
+    first_path.write_text("first")
+    seg_layer.attachments.add_attachment_as_copy(
+        SegmentIndexAttachment.from_path_and_name(
+            first_path, "segment_index", data_format=AttachmentDataFormat.HDF5
+        )
+    )
+
+    second_path = tmp_upath / "second"
+    second_path.write_text("second")
+    with pytest.raises(ValueError, match="belongs to an existing attachment"):
+        seg_layer.attachments.add_attachment_as_copy(
+            SegmentIndexAttachment.from_path_and_name(
+                second_path, "segment_index", data_format=AttachmentDataFormat.HDF5
+            )
+        )
+
+    assert seg_layer.attachments.segment_index is not None
+    assert seg_layer.attachments.segment_index.path.read_text() == "first"

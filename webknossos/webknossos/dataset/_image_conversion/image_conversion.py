@@ -56,7 +56,12 @@ from ..layer.abstract_layer import (
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
 from . import common_slice_readers, sliced_image_source
-from .image_source import ImageSource, ReadOptions, ValueRange
+from .image_source import (
+    ImageSource,
+    ReadOptions,
+    ValueRange,
+    combined_largest_value,
+)
 from .image_source_registry import (
     describe_found_formats,
     describe_missing_extras,
@@ -778,12 +783,13 @@ def add_layer_from_images(
                     progress_desc=f"Creating layer [bold blue]{layer.name}[/bold blue] from images",
                 )
             shapes = [result.xy_size for result in chunk_results]
-            max_ids = [result.max_value for result in chunk_results]
+            max_id = combined_largest_value(
+                result.max_value for result in chunk_results
+            )
             value_range = ValueRange.combined(
                 result.value_range for result in chunk_results
             )
             if category == "segmentation":
-                max_id = max(max_ids)
                 cast(SegmentationLayer, layer).largest_segment_id = max_id
             layer.bounding_box = image_source.final_bounding_box(
                 layer.normalized_bounding_box, chunk_sizes=shapes, mag=mag
@@ -808,7 +814,7 @@ def add_layer_from_images(
                             **(
                                 attr.asdict(layer._properties, recurse=False)
                             ),  # use all attributes from LayerProperties
-                            largest_segment_id=int(max(max_ids)),
+                            largest_segment_id=max_id,
                         )
                         new_layer_properties.category = SEGMENTATION_CATEGORY
                         dataset._layers[layer.name] = SegmentationLayer(

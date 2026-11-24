@@ -25,7 +25,9 @@ from .image_source import (
     ImageSource,
     ReadOptions,
     ValueRange,
+    combined_largest_value,
     compute_channel_selection,
+    largest_value,
 )
 from .image_source_registry import (
     describe_found_formats,
@@ -375,7 +377,7 @@ class SlicedImageSource(ImageSource):
             # to access the correct data from the images
             z_start, z_end = relative_bbox.get_bounds(Z_AXIS)
             shapes = []
-            max_value = 0
+            max_value: int | None = None
             value_ranges = []
 
             with self._open_slice_reader() as images:
@@ -442,8 +444,14 @@ class SlicedImageSource(ImageSource):
                         if dtype is not None:
                             image_slice = image_slice.astype(dtype, order="F")
 
-                        max_value = max(max_value, image_slice.max())
-                        value_ranges.append(ValueRange.of(image_slice))
+                        slice_range = ValueRange.of(image_slice)
+                        max_value = combined_largest_value(
+                            [
+                                max_value,
+                                largest_value(image_slice, value_range=slice_range),
+                            ]
+                        )
+                        value_ranges.append(slice_range)
                         if self._options.swap_xy is False:
                             image_slice = np.moveaxis(image_slice, -1, -2)
 

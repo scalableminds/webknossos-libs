@@ -1399,7 +1399,7 @@ class RemoteAnnotation(Annotation):
         zoom_level: float | None = None,
         task_bounding_box: NDBoundingBox | None = None,
         user_bounding_boxes: list[NDBoundingBox] | None = None,
-        metadata: dict[str, str] = {},
+        metadata: dict[str, str] | None = None,
     ) -> None:
         """A remote Annotation instance.
         Note: Please not initialize this class directly, use Annotation.open_remote() instead."""
@@ -1414,7 +1414,7 @@ class RemoteAnnotation(Annotation):
         self.zoom_level = zoom_level
         self.task_bounding_box = task_bounding_box
         self.user_bounding_boxes = user_bounding_boxes or []
-        self.metadata = metadata
+        self.metadata = metadata if metadata is not None else {}
         from ..client.context import _get_context
 
         self._context = _get_context()
