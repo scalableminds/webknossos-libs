@@ -18,6 +18,7 @@ in the _Changed_ sections.
 ### Added
 
 ### Changed
+- MRC files can now be converted without installing the `webknossos[mrcfile]` extra, which no longer installs anything and is kept only so that existing installs naming it still work. [#1595](https://github.com/scalableminds/webknossos-libs/pull/1595)
 
 ### Deprecated
 

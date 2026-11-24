@@ -397,9 +397,9 @@ def test_add_layer_from_images_unsupported_directory(tmp_upath: UPath) -> None:
     "filename,contents,wraps_reader_error",
     [
         ("broken.tif", b"not a tiff at all", True),
-        # mrcfile parses this permissively and reports an empty extent instead
-        # of raising, so there is no reader error to wrap — and without the
-        # check the file would convert into an empty layer.
+        # A header of zeros parses as an empty extent rather than failing, so
+        # there is no reader error to wrap — and without the check the file
+        # would convert into an empty layer.
         ("broken.mrc", b"\x00" * 2048, False),
         # An HDF5 signature with nothing behind it: the .ims reader gets far
         # enough to fail deep inside h5py.

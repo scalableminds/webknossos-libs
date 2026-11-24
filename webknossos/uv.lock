@@ -4898,7 +4898,6 @@ all = [
     { name = "imagecodecs", version = "2026.3.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "imagecodecs", version = "2026.8.16", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "imaris-ims-file-reader" },
-    { name = "mrcfile" },
     { name = "numba" },
     { name = "pandas", marker = "python_full_version >= '3.11'" },
     { name = "pooch" },
@@ -4936,9 +4935,6 @@ imagecodecs = [
 ims = [
     { name = "imaris-ims-file-reader" },
 ]
-mrcfile = [
-    { name = "mrcfile" },
-]
 numba = [
     { name = "numba" },
 ]
@@ -4960,6 +4956,7 @@ dev = [
     { name = "inducoapi" },
     { name = "jsonschema" },
     { name = "moto", extra = ["s3", "server"] },
+    { name = "mrcfile" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -4992,7 +4989,6 @@ requires-dist = [
     { name = "imaris-ims-file-reader", marker = "extra == 'ims'", specifier = ">=0.1.8" },
     { name = "loxun", specifier = "~=2.0.0" },
     { name = "lz4", specifier = ">=4.0.0" },
-    { name = "mrcfile", marker = "extra == 'mrcfile'", specifier = ">=1.4.3" },
     { name = "natsort", specifier = "~=8.4.0" },
     { name = "networkx", specifier = "~=3.2.1" },
     { name = "numba", marker = "extra == 'numba'", specifier = "~=0.61" },
@@ -5024,7 +5020,6 @@ requires-dist = [
     { name = "webknossos", extras = ["gcs"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["imagecodecs"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["ims"], marker = "extra == 'all'" },
-    { name = "webknossos", extras = ["mrcfile"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["numba"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["s3"], marker = "extra == 'all'" },
     { name = "webknossos", extras = ["tifffile"], marker = "extra == 'all'" },
@@ -5042,6 +5037,7 @@ dev = [
     { name = "inducoapi", specifier = "~=2.0.2" },
     { name = "jsonschema", specifier = "~=4.6.0" },
     { name = "moto", extras = ["s3", "server"], specifier = "~=5.2.2" },
+    { name = "mrcfile", specifier = ">=1.4.3" },
     { name = "mypy", specifier = "~=2.1.0" },
     { name = "pytest", specifier = "~=8.3.2" },
     { name = "pytest-cov", specifier = ">=6.0.0" },

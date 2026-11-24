@@ -212,12 +212,6 @@ _OPTIONAL_SLICE_READERS_AND_IMAGE_SOURCES: tuple[_OptionalReader, ...] = (
         "tiff_slice_reader", "TiffSliceReader", "tifffile", frozenset({"tif", "tiff"})
     ),
     _OptionalReader("ims_image_source", "ImsImageSource", "ims", frozenset({"ims"})),
-    _OptionalReader(
-        "mrc_image_source",
-        "MrcImageSource",
-        "mrcfile",
-        frozenset({"mrc", "rec", "st", "map", "ali"}),
-    ),
     _OptionalReader("czi_image_source", "CziImageSource", "czi", frozenset({"czi"})),
 )
 
@@ -294,6 +288,7 @@ def _import_readers() -> str | None:
     from . import (
         common_slice_readers,  # noqa: F401 unused-import
         dm_slice_reader,  # noqa: F401 unused-import
+        mrc_image_source,  # noqa: F401 unused-import
         n5_image_source,  # noqa: F401 unused-import
         neuroglancer_precomputed_image_source,  # noqa: F401 unused-import
         ozx_image_source,  # noqa: F401 unused-import

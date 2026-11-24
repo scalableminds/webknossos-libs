@@ -3,7 +3,7 @@
 This module deliberately imports nothing but `upath`, so that none of these
 exceptions depends on an image reader or on a reader's optional dependency.
 They can be raised, caught and inspected on any install, whatever combination
-of `webknossos[tifffile]`, `[czi]`, `[ims]` and `[mrcfile]` is present.
+of `webknossos[tifffile]`, `[czi]` and `[ims]` is present.
 """
 
 from __future__ import annotations

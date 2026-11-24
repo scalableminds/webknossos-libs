@@ -25,6 +25,7 @@ from webknossos.dataset import (
     CorruptImageError,
     Dataset,
     RemoteDataset,
+    UnsupportedImageDataError,
     UnsupportedImageFormatError,
 )
 from webknossos.dataset._image_conversion.image_source import ReadOptions
@@ -468,6 +469,63 @@ def test_mrc_truncated_file_is_corrupt(tmp_upath: UPath) -> None:
     mrc_path.write_bytes(mrc_path.read_bytes()[:-1])
 
     with pytest.raises(CorruptImageError):
+        _open_mrc_chunked_images(mrc_path)
+
+
+def _write_mrc(path: UPath, data: np.ndarray) -> bytes:
+    with mrcfile.new(str(path), overwrite=True) as mrc:
+        mrc.set_data(data)
+    return path.read_bytes()
+
+
+@pytest.mark.parametrize("byte_order", ["<", ">"])
+@pytest.mark.parametrize("dtype", ["i1", "i2", "u2", "f2", "f4", "c8"])
+def test_mrc_reads_every_mode_and_byte_order(
+    tmp_upath: UPath, byte_order: str, dtype: str
+) -> None:
+    data = (np.arange(3 * 4 * 5) % 100).astype(byte_order + dtype).reshape(3, 4, 5)
+    mrc_path = tmp_upath / "test.mrc"
+    _write_mrc(mrc_path, data)
+
+    reader = _open_mrc_chunked_images(mrc_path)
+    assert reader.dtype == np.dtype(dtype)
+    block = reader._read_source_box(
+        timepoint=0, z=slice(0, 3), y=slice(1, 3), x=slice(0, 5)
+    )
+    assert block.dtype == np.dtype(dtype)
+    np.testing.assert_array_equal(block[0], data[:, 1:3])
+
+
+def test_mrc_wrong_machine_stamp(tmp_upath: UPath) -> None:
+    data = np.arange(2 * 3 * 4, dtype=">i2").reshape(2, 3, 4)
+    mrc_path = tmp_upath / "test.mrc"
+    contents = bytearray(_write_mrc(mrc_path, data))
+    contents[212:216] = b"\x44\x44\x00\x00"  # claims little-endian
+    mrc_path.write_bytes(bytes(contents))
+
+    reader = _open_mrc_chunked_images(mrc_path)
+    block = reader._read_source_box(
+        timepoint=0, z=slice(0, 2), y=slice(0, 3), x=slice(0, 4)
+    )
+    np.testing.assert_array_equal(block[0], data)
+
+
+def test_mrc_unknown_mode_is_corrupt(tmp_upath: UPath) -> None:
+    mrc_path = tmp_upath / "test.mrc"
+    contents = bytearray(_write_mrc(mrc_path, np.zeros((2, 3, 4), dtype="<i2")))
+    contents[12:16] = (3).to_bytes(4, "little")  # complex int16, unsupported
+    mrc_path.write_bytes(bytes(contents))
+
+    with pytest.raises(CorruptImageError):
+        _open_mrc_chunked_images(mrc_path)
+
+
+def test_mrc_volume_stack_is_unsupported(tmp_upath: UPath) -> None:
+    mrc_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(np.zeros((2, 3, 4, 5), dtype="<i2"))
+
+    with pytest.raises(UnsupportedImageDataError):
         _open_mrc_chunked_images(mrc_path)
 
 
