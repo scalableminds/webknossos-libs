@@ -59,7 +59,7 @@ def test_slurm_submit_returns_job_ids() -> None:
     with exc:
         future = exc.submit(square, 2)
         assert isinstance(future.cluster_jobid, str)  # type: ignore[attr-defined]
-        assert int(future.cluster_jobid) > 0  # type: ignore[attr-defined]
+        assert int(future.cluster_jobid) > 0
         assert future.result() == 4
 
 
@@ -68,7 +68,7 @@ def test_slurm_cfut_dir() -> None:
     if os.path.exists(cfut_dir):
         shutil.rmtree(cfut_dir)
 
-    exc = cluster_tools.get_executor("slurm", debug=True, cfut_dir=cfut_dir)  # type: ignore[attr-defined]
+    exc = cluster_tools.get_executor("slurm", debug=True, cfut_dir=cfut_dir)
     with exc:
         future = exc.submit(square, 2)
         assert future.result() == 4

@@ -284,9 +284,12 @@ class BoundingBox(NDBoundingBox):
             num_channels = other.size.c
             other_denorm = cast(BoundingBox, other.denormalize())
             result = cast(
-                BoundingBox, super().intersected_with(other_denorm, dont_assert)
+                BoundingBox,
+                # pyrefly: ignore[bad-argument-type]
+                super().intersected_with(other_denorm, dont_assert),
             )
             return result.normalize_axes(num_channels)
+        # pyrefly: ignore[bad-argument-type]
         return cast(BoundingBox, super().intersected_with(other, dont_assert))
 
     @overload
@@ -310,8 +313,10 @@ class BoundingBox(NDBoundingBox):
         if isinstance(other, NormalizedBoundingBox):
             num_channels = other.size.c
             other_denorm = cast(BoundingBox, other.denormalize())
+            # pyrefly: ignore[bad-argument-type]
             result = cast(BoundingBox, super().extended_by(other_denorm))
             return result.normalize_axes(num_channels)
+        # pyrefly: ignore[bad-argument-type]
         return cast(BoundingBox, super().extended_by(other))
 
     def contains_bbox(self, inner_bbox: "BoundingBox | NormalizedBoundingBox") -> bool:
@@ -322,6 +327,7 @@ class BoundingBox(NDBoundingBox):
         """
         if isinstance(inner_bbox, NormalizedBoundingBox):
             inner_bbox = cast(BoundingBox, inner_bbox.denormalize())
+        # pyrefly: ignore[bad-argument-type]
         return super().contains_bbox(inner_bbox)
 
     def __repr__(self) -> str:

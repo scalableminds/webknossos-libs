@@ -1,6 +1,7 @@
 import io
 import sys
 import tempfile
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -552,7 +553,10 @@ def test_tree_metadata(tmp_upath: UPath) -> None:
     "edit_mode", [VolumeLayerEditMode.MEMORY, VolumeLayerEditMode.TEMPORARY_DIRECTORY]
 )
 @pytest.mark.parametrize("executor", ["sequential", "multiprocessing"])
-def test_edit_volume_annotation(edit_mode: VolumeLayerEditMode, executor: str) -> None:
+def test_edit_volume_annotation(
+    edit_mode: VolumeLayerEditMode,
+    executor: Literal["sequential", "multiprocessing"],
+) -> None:
     dtype = np.uint32
     data = np.ones((1, 10, 10, 10), dtype=dtype)
     ann = wk.Annotation(

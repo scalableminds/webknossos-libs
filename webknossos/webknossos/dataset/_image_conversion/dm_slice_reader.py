@@ -7,9 +7,9 @@ from upath import UPath
 from ...geometry.constants import X_AXIS, Y_AXIS, Z_AXIS
 from .image_source_registry import register_slice_reader
 from .slice_reader import SliceReader
-from .vendor.dm3 import DM3  # type: ignore[attr-defined]
-from .vendor.dm3 import dT_str as DM3_DTYPE_MAPPING  # type: ignore[attr-defined]
-from .vendor.dm4 import DM4File  # type: ignore[attr-defined]
+from .vendor.dm3 import DM3
+from .vendor.dm3 import dT_str as DM3_DTYPE_MAPPING
+from .vendor.dm4 import DM4File
 
 
 @register_slice_reader

@@ -24,7 +24,7 @@ all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
 [dependency-groups]
 dev = [
     "icecream ~=2.1.1",
-    "mypy ~=2.1.0",
+    "pyrefly ~=1.5.0",
     "pytest ~=8.3.3",
     "pytest-timeout>=2.4.0",
     "ruff ~=0.11.0",
@@ -47,7 +47,6 @@ exclude = [
     ".git",
     ".git-rewrite",
     ".ipynb_checkpoints",
-    ".mypy_cache",
     ".pyenv",
     ".pytest_cache",
     ".ruff_cache",
@@ -98,13 +97,16 @@ indent-style = "space"
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
 
-[tool.mypy]
-disallow_untyped_defs = true
-ignore_missing_imports = true
-namespace_packages = true
-strict_equality = true
-show_error_codes = true
-no_implicit_optional = true
+[tool.pyrefly]
+project-includes = ["cluster_tools", "tests"]
+preset = "legacy"
+ignore-missing-imports = ["*"]
+
+[tool.pyrefly.errors]
+implicit-any-parameter = "error"
+incompatible-comparison = "error"
+unannotated-return = "error"
+unused-ignore = "error"
 
 [tool.pytest.ini_options]
 markers = [

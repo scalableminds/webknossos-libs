@@ -16,7 +16,7 @@ _S = TypeVar("_S")
 
 class Executor(Protocol, AbstractContextManager["Executor"]):
     @classmethod
-    def as_completed(cls, futures: list[Future[_T]]) -> Iterator[Future[_T]]: ...
+    def as_completed(cls, futures: list[Future[_T]], /) -> Iterator[Future[_T]]: ...
 
     def submit(
         self,
@@ -38,6 +38,7 @@ class Executor(Protocol, AbstractContextManager["Executor"]):
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],
+        /,
         timeout: float | None = None,
         chunksize: int | None = None,
     ) -> Iterator[_T]: ...

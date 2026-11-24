@@ -224,6 +224,7 @@ def get_dataset_converter() -> cattrs.Converter:
             make_dict_unstructure_fn(
                 cls,
                 dataset_converter,
+                # pyrefly: ignore[bad-argument-type]
                 **{
                     a.name: override(
                         omit_if_default=True, rename=snake_to_camel_case(a.name)
@@ -237,6 +238,7 @@ def get_dataset_converter() -> cattrs.Converter:
             make_dict_structure_fn(
                 cls,
                 dataset_converter,
+                # pyrefly: ignore[bad-argument-type]
                 **{
                     a.name: override(rename=snake_to_camel_case(a.name))
                     for a in attr.fields(cls)  # type: ignore
@@ -254,6 +256,7 @@ def get_dataset_converter() -> cattrs.Converter:
                 make_dict_unstructure_fn(
                     cls,
                     dataset_converter,
+                    # pyrefly: ignore[bad-argument-type]
                     **{
                         a.name: override(
                             omit_if_default=True,
@@ -273,6 +276,7 @@ def get_dataset_converter() -> cattrs.Converter:
                 make_dict_structure_fn(
                     cls,
                     dataset_converter,
+                    # pyrefly: ignore[bad-argument-type]
                     **{
                         a.name: override(
                             rename=snake_to_camel_case(a.name),
@@ -308,12 +312,13 @@ def get_dataset_converter() -> cattrs.Converter:
         make_dict_unstructure_fn(
             DatasetProperties,
             dataset_converter,
+            # pyrefly: ignore[bad-argument-type]
             **{
                 a.name: override(
                     omit_if_default=True, rename=snake_to_camel_case(a.name)
                 )
                 for a in attr.fields(DatasetProperties)
-            },  # type: ignore[arg-type]
+            },
         ),
     )
     dataset_converter.register_structure_hook(
@@ -322,10 +327,11 @@ def get_dataset_converter() -> cattrs.Converter:
             make_dict_structure_fn(
                 DatasetProperties,
                 dataset_converter,
+                # pyrefly: ignore[bad-argument-type]
                 **{
                     a.name: override(rename=snake_to_camel_case(a.name))
                     for a in attr.fields(DatasetProperties)
-                },  # type: ignore[arg-type]
+                },
             )
         ),
     )

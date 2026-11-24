@@ -66,7 +66,7 @@ class SequentialExecutor(Executor):
         output_key_getter: Callable[[_S], str] | None = None,
     ) -> list[Future[_T]]:
         return [
-            self.submit(  # type: ignore[call-arg]
+            self.submit(
                 fn,
                 arg,
                 **cfut_options_kwargs(

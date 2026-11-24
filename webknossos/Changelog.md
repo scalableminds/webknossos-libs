@@ -18,6 +18,7 @@ in the _Changed_ sections.
 ### Added
 
 ### Changed
+- Type checking (`./typecheck.sh`) uses pyrefly instead of mypy. Non-overlapping container checks (`x in [y]`), which mypy reported with `strict_equality`, are no longer checked. [#116](https://github.com/scalableminds/mono/pull/116)
 
 ### Deprecated
 

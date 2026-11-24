@@ -9,7 +9,7 @@ from .utils import enforce_not_null
 class Group(NamedTuple):
     id: int
     name: str
-    children: list["Group"]  # type: ignore[misc]
+    children: list["Group"]
 
     def _dump(self, xf: XmlWriter) -> None:
         xf.startTag("group", {"id": str(self.id), "name": self.name})

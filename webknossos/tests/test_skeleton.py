@@ -261,6 +261,7 @@ def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
 """
     nml.save(nml_path)
     with nml_path.open(mode="r", encoding="utf-8") as f:
+        # pyrefly: ignore[bad-argument-type]
         diff = diff_lines(f.readlines(), EXPECTED_NML.splitlines(keepends=True))
         assert len(diff) == 0, (
             f"Written nml does not look as expected:\n{''.join(diff)}"
@@ -310,7 +311,9 @@ def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
     nml.save(nml_path)
     with nml_path.open("r", encoding="utf-8") as f:
         diff = diff_lines(
-            f.readlines(), EXPECTED_EXTENDED_NML.splitlines(keepends=True)
+            f.readlines(),
+            # pyrefly: ignore[bad-argument-type]
+            EXPECTED_EXTENDED_NML.splitlines(keepends=True),
         )
         assert len(diff) == 0, (
             f"Written nml does not look as expected:\n{''.join(diff)}"

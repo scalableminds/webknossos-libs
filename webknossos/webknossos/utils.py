@@ -514,7 +514,9 @@ C = TypeVar("C")  # cache
 
 class LazyReadOnlyDict(Mapping[K, V]):
     def __init__(self, entries: dict[K, C], func: Callable[[C], V]) -> None:
+        # pyrefly: ignore[invalid-type-var]
         self.entries = entries
+        # pyrefly: ignore[invalid-type-var]
         self.func = func
 
     def __getitem__(self, key: K) -> V:

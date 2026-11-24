@@ -113,7 +113,7 @@ See below for specifics of the different packages. Let's have a look at the comm
 * **Tooling** we use across the sub-projects to enforce coding styles and tests:
     * `./format.sh`: ruff
     * `./lint.sh`: ruff
-    * `./typecheck.sh`: mypy
+    * `./typecheck.sh`: pyrefly
     * `./test.py`: pytest and custom scripts
 
   Those are also accessible via make commands from the top-level directory, running the respective scripts for each sub-project

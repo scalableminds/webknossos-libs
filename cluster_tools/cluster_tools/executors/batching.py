@@ -131,6 +131,7 @@ class BatchingExecutor:
 
             def on_batch_done(
                 batch_future: Future[list[_T]],
+                # pyrefly: ignore[bad-function-definition]
                 _item_futures: list[Future[_T]] = item_futures,
             ) -> None:
                 try:

@@ -646,6 +646,7 @@ def test_coordinate_transformations_are_immutable() -> None:
 
     # ... nor can they be replaced
     with pytest.raises(attr.exceptions.FrozenAttributeError):
+        # pyrefly: ignore[read-only]
         affine.matrix = np.eye(4)
     with pytest.raises(attr.exceptions.FrozenAttributeError):
         thin_plate_spline.source = [[1, 1, 1]]  # type: ignore[assignment]

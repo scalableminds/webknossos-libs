@@ -76,16 +76,17 @@ SLURM_SRUN_NON_INHERITED_RESOURCE_KEYS = {
 
 SLURM_QUEUE_CHECK_INTERVAL = 1 if "pytest" in sys.modules else 60
 
-T = TypeVar("T")
+T = TypeVar("T", bound=Callable[..., Any])
 
 
 def noopDecorator(func: T) -> T:
     return func
 
 
-cache_in_production = cast(
-    Callable[[T], T], noopDecorator if "pytest" in sys.modules else lru_cache(maxsize=1)
-)
+def cache_in_production(func: T) -> T:
+    if "pytest" in sys.modules:
+        return noopDecorator(func)
+    return cast(T, lru_cache(maxsize=1)(func))
 
 
 class SlurmExecutor(ClusterExecutor):

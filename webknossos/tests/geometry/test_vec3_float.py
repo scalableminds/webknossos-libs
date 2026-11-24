@@ -150,8 +150,8 @@ def test_serialization_round_trip() -> None:
 def test_public_apis_accept_vec3_float_like() -> None:
     """The float-valued entry points coerce whatever `Vec3FloatLike` allows."""
     for value in [(1, 2, 3), [1, 2, 3], np.array([1.0, 2.0, 3.0]), Vec3Int(1, 2, 3)]:
-        assert VoxelSize(value).factor == (1.0, 2.0, 3.0)  # type: ignore[arg-type]
-    assert VoxelSize(iter([1, 2, 3])).factor == (1.0, 2.0, 3.0)  # type: ignore[arg-type]
+        assert VoxelSize(value).factor == (1.0, 2.0, 3.0)
+    assert VoxelSize(iter([1, 2, 3])).factor == (1.0, 2.0, 3.0)
     assert isinstance(VoxelSize((1, 2, 3)).factor, Vec3Float)
 
     skeleton = Skeleton(voxel_size=(1, 1, 1), dataset_name="d")
@@ -203,4 +203,4 @@ def test_ordering() -> None:
     assert min(vectors) == (1.0, 1.0, 2.0)
 
     with pytest.raises(TypeError):
-        Vec3Float(1, 2, 3) < "abc"  # type: ignore[operator]
+        Vec3Float(1, 2, 3) < "abc"

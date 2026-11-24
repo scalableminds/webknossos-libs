@@ -113,7 +113,6 @@ dev = [
     "inducoapi ~=2.0.2",
     "jsonschema ~=4.6.0",
     "moto[s3,server] ~=5.2.2",
-    "mypy ~=2.1.0",
     "pytest ~=8.3.2",
     "pytest-cov>=6.0.0",
     "pytest-custom-exit-code ~=0.3.0",
@@ -125,6 +124,7 @@ dev = [
     "types-python-dateutil ~=2.9",
     "ruff ~=0.15.0",
     "waitress ~=3.0.2",
+    "pyrefly ~=1.5.0",
 ]
 
 [tool.uv]
@@ -138,13 +138,27 @@ cluster-tools = { path = "../cluster_tools", editable = true }
 [project.scripts]
 webknossos = "webknossos.cli.main:app"
 
-[tool.mypy]
-ignore_missing_imports = true
-namespace_packages = true
-strict_equality = true
-show_error_codes = true
-disallow_untyped_defs = true
-no_implicit_optional = true
+[tool.pyrefly]
+project-includes = ["webknossos", "tests", "examples", "script_collection"]
+# The generated protobuf module is typed by the .pyi file next to it.
+project-excludes = ["webknossos/proofreading/generated/*_pb2.py"]
+# cluster_tools is an editable install, which pyrefly does not resolve.
+search-path = [".", "stubs", "../cluster_tools"]
+preset = "legacy"
+ignore-missing-imports = ["*"]
+
+[tool.pyrefly.errors]
+implicit-any-parameter = "error"
+incompatible-comparison = "error"
+unannotated-return = "error"
+unused-ignore = "error"
+
+[[tool.pyrefly.sub-config]]
+matches = "webknossos/dataset/_image_conversion/vendor/**"
+
+[tool.pyrefly.sub-config.errors]
+implicit-any-parameter = "ignore"
+unannotated-return = "ignore"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -154,7 +168,6 @@ exclude = [
     ".git",
     ".git-rewrite",
     ".ipynb_checkpoints",
-    ".mypy_cache",
     ".pyenv",
     ".pytest_cache",
     ".ruff_cache",

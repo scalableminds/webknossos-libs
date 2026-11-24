@@ -370,6 +370,7 @@ class Layer(AbstractLayer):
         self._assert_mag_does_not_exist_yet(mag)
         mag_path = self._create_dir_for_mag(mag)
 
+        # pyrefly: ignore[not-a-type]
         mag_view = MagView["Layer"].create(
             self,
             mag,
