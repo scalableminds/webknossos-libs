@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from shutil import copytree
 from typing import Any
 from unittest.mock import MagicMock, patch
+from uuid import uuid4
 
 import mrcfile
 import numpy as np
@@ -21,6 +22,7 @@ from tests.data_fixtures import (
     write_zarr_v3_array,
 )
 from webknossos.dataset import (
+    CorruptImageError,
     Dataset,
     RemoteDataset,
     UnsupportedImageFormatError,
@@ -394,10 +396,12 @@ def test_mrc_chunked_images_metadata(tmp_upath: UPath) -> None:
     assert reader.expected_bbox.size.c == 1
 
 
-def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
-    # MRC data is read via a memory-mapped array; each copy_chunk_to_view() call must
-    # reopen its own mmap (rather than reusing a shared/cached one), so no
-    # mmap handle crosses a multiprocessing boundary between parallel jobs.
+def test_mrc_chunked_images_reopens_file_per_chunk(
+    tmp_upath: UPath, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Each copy_chunk_to_view() call must open the file itself (rather than
+    # reusing a shared/cached handle), so no file handle crosses a
+    # multiprocessing boundary between parallel jobs.
     Z, Y, X = 4, 8, 8
     data = np.zeros((Z, Y, X), dtype="uint16")
     mrc_path = tmp_upath / "test_reopen.mrc"
@@ -412,21 +416,59 @@ def test_mrc_chunked_images_reopens_mmap_per_chunk(tmp_upath: UPath) -> None:
     mag_view = layer.add_mag(1)
 
     open_count = 0
-    original_mmap = mrcfile.mmap
+    original_open = type(mrc_path).open
 
-    def counting_mmap(*args: Any, **kwargs: Any) -> Any:
+    def counting_open(self: UPath, *args: Any, **kwargs: Any) -> Any:
         nonlocal open_count
-        open_count += 1
-        return original_mmap(*args, **kwargs)
+        if self == mrc_path:
+            open_count += 1
+        return original_open(self, *args, **kwargs)
 
-    with patch("mrcfile.mmap", counting_mmap):
-        for z in range(Z):
-            bbox = BoundingBox((0, 0, z), (X, Y, 1)).normalize_axes(1)
-            reader.copy_chunk_to_view(bbox, mag_view=mag_view, dtype=None)
+    monkeypatch.setattr(type(mrc_path), "open", counting_open)
+    for z in range(Z):
+        bbox = BoundingBox((0, 0, z), (X, Y, 1)).normalize_axes(1)
+        reader.copy_chunk_to_view(bbox, mag_view=mag_view, dtype=None)
 
     assert open_count == Z, (
-        f"Expected mrcfile.mmap to be called {Z} times (once per chunk), got {open_count}"
+        f"Expected the MRC file to be opened {Z} times (once per chunk), got {open_count}"
     )
+
+
+@pytest.mark.parametrize("shape", [(5, 16, 32), (16, 32)])
+def test_mrc_chunked_images_reads_remote_file(
+    tmp_upath: UPath, shape: tuple[int, ...]
+) -> None:
+    data = np.arange(np.prod(shape), dtype="int16").reshape(shape)
+    local_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(local_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+        mrc.set_extended_header(np.zeros(3, dtype="V40"))  # shifts the data
+    remote_path = UPath(f"memory:///test_from_images/{uuid4().hex}/test.mrc")
+    remote_path.write_bytes(local_path.read_bytes())
+
+    try:
+        reader = _open_mrc_chunked_images(remote_path)
+        assert reader.dtype == np.dtype("int16")
+        block = reader._read_source_box(
+            timepoint=0, z=slice(0, 1), y=slice(3, 9), x=slice(5, 30)
+        )
+        expected = data[:1] if len(shape) == 3 else data[np.newaxis]
+        np.testing.assert_array_equal(block[0], expected[:, 3:9, 5:30])
+        # The in-memory file is writable, so this catches the reader
+        # writing anything back.
+        assert remote_path.read_bytes() == local_path.read_bytes()
+    finally:
+        remote_path.unlink()
+
+
+def test_mrc_truncated_file_is_corrupt(tmp_upath: UPath) -> None:
+    mrc_path = tmp_upath / "truncated.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(np.zeros((4, 8, 8), dtype="uint16"))
+    mrc_path.write_bytes(mrc_path.read_bytes()[:-1])
+
+    with pytest.raises(CorruptImageError):
+        _open_mrc_chunked_images(mrc_path)
 
 
 def test_no_slashes_in_layername(tmp_upath: UPath) -> None:

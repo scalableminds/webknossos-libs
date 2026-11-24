@@ -11,12 +11,12 @@ from upath import UPath
 
 from .. import utils
 from ..dataset import Dataset, MagView, SamplingModes
+from ..dataset._utils.contiguous_array import read_box
 from ..dataset.defaults import DEFAULT_CHUNK_SHAPE, DEFAULT_SHARD_SHAPE
 from ..dataset_properties import DataFormat, VoxelSize
 from ..dataset_properties.structuring import DEFAULT_LENGTH_UNIT_STR
 from ..geometry import BoundingBox, Mag, Vec3Int
 from ..utils import (
-    is_fs_path,
     rmtree,
     time_start,
     time_stop,
@@ -61,23 +61,31 @@ def _raw_chunk_converter(
     rescale_min_max: RescaleValues | None,
 ) -> None:
     logger.info("Conversion of %s", bounding_box.topleft)
-    assert is_fs_path(source_raw_path)
-    source_data: np.ndarray = np.memmap(
-        str(
-            source_raw_path
-        ),  # this is fine, because we checked that source_raw_path is a fs_path
-        dtype=source_dtype,
-        mode="r",
-        shape=(1,) + shape.to_tuple(),
-        order=order,
-    )
+    source_shape = (1,) + shape.to_tuple()
+    # The box in the flipped array maps to the mirrored box in the file.
+    source_box = []
+    for axis, (box_slice, size) in enumerate(
+        zip((slice(None),) + bounding_box.to_slices(), source_shape)
+    ):
+        start, stop, _ = box_slice.indices(size)
+        if flip_axes and axis in flip_axes:
+            start, stop = size - stop, size - start
+        source_box.append(slice(start, stop))
+
+    with source_raw_path.open("rb") as source_file:
+        source_data = read_box(
+            source_file,
+            offset=0,
+            shape=source_shape,
+            dtype=source_dtype,
+            order=order,
+            box=source_box,
+        )
 
     if flip_axes:
         source_data = np.flip(source_data, flip_axes)
 
-    contiguous_chunk = source_data[(slice(None),) + bounding_box.to_slices()].copy(
-        order="F"
-    )
+    contiguous_chunk = source_data.copy(order="F")
     if rescale_min_max is not None:
         if np.isclose(rescale_min_max.min, rescale_min_max.max):
             contiguous_chunk = np.zeros_like(contiguous_chunk, dtype=target_dtype)

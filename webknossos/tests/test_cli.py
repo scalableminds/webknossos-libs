@@ -9,10 +9,12 @@ from contextlib import contextmanager
 from math import ceil
 from tempfile import TemporaryDirectory
 from typing import Literal
+from uuid import uuid4
 
 import numpy as np
 import pytest
 import tensorstore as ts
+from cluster_tools import SequentialExecutor
 from PIL import Image
 from typer.testing import CliRunner
 from upath import UPath
@@ -25,7 +27,8 @@ from tests.constants import (
     TESTDATA_DIR,
 )
 from tests.data_fixtures import download_wklibs_sample_archive
-from webknossos import BoundingBox, DataFormat, Dataset, Mag, NDBoundingBox
+from webknossos import BoundingBox, DataFormat, Dataset, Mag, NDBoundingBox, Vec3Int
+from webknossos.cli.convert_raw import convert_raw
 from webknossos.cli.export_as_tiff import _apply_mapping, _make_tiff_name
 from webknossos.cli.main import app
 from webknossos.dataset._utils.tensorstore_helpers import (
@@ -364,6 +367,38 @@ def test_convert_raw() -> None:
             out_ds.get_layer("color").get_finest_mag().read()[0],
             np.array([[[0], [85]], [[170], [255]]], dtype="uint8"),
         )
+
+
+@pytest.mark.parametrize("order", ["C", "F"])
+def test_convert_raw_from_remote_path_with_flips(
+    tmp_upath: UPath, order: Literal["C", "F"]
+) -> None:
+    # Several shards with partial extents, so boxes do not cover whole rows.
+    shape = (6, 5, 3)
+    data = np.arange(np.prod(shape), dtype="uint16").reshape(shape)
+    source_path = UPath(f"memory:///test_cli/{uuid4().hex}/test.raw")
+    source_path.write_bytes(data.tobytes(order=order))
+
+    try:
+        mag_view = convert_raw(
+            source_raw_path=source_path,
+            target_path=tmp_upath / "ds",
+            layer_name="color",
+            source_dtype=np.dtype("uint16"),
+            target_dtype=np.dtype("uint16"),
+            shape=Vec3Int(shape),
+            data_format=DataFormat.Zarr3,
+            chunk_shape=Vec3Int(2, 2, 2),
+            shard_shape=Vec3Int(4, 4, 2),
+            order=order,
+            flip_axes=(1, 3),
+            # The in-memory file system is not shared with other processes.
+            executor=SequentialExecutor(),
+        )
+    finally:
+        source_path.unlink()
+
+    np.testing.assert_array_equal(mag_view.read()[0], data[::-1, :, ::-1])
 
 
 @pytest.mark.parametrize("zarr_format", ["zarr", "zarr3"])

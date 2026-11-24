@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 from upath import UPath
 
-from ...utils import WkImportError, is_remote_path
+from ...utils import WkImportError
+from .._utils.contiguous_array import read_box
 from ..errors import CorruptImageError, UnsupportedImageDataError
 from .chunked_image_source import ChunkedImageSource
 from .image_source import ReadOptions
@@ -11,8 +14,20 @@ from .image_source_registry import register_chunked_image_source
 
 try:
     import mrcfile
+    from mrcfile.mrcinterpreter import MrcInterpreter
 except ImportError as e:
     raise WkImportError("mrcfile", "mrcfile") from e
+
+
+class _MrcHeaderReader(MrcInterpreter):
+    """Reads the header of an MRC stream, never writing back to it (which
+    `MrcInterpreter` otherwise does when it is garbage-collected)."""
+
+    def __init__(self, iostream: Any) -> None:
+        super().__init__(permissive=True)
+        self._read_only = True
+        self._iostream = iostream
+        self._read(header_only=True)
 
 
 @register_chunked_image_source
@@ -20,8 +35,8 @@ class MrcImageSource(ChunkedImageSource):
     """
     ChunkedImageSource for MRC files. MRC data is stored as a single
     contiguous array (no internal chunking, unlike HDF5-based formats), so
-    shard-sized blocks are read straight out of mrcfile's memory-mapped array
-    and written to mag_view.
+    shard-sized blocks are read straight out of the file with seeks, which
+    works for remote paths too, and written to mag_view.
 
     MRC files have neither channels nor timepoints, so num_channels is
     always 1 and get_layer_split_options() always returns None.
@@ -33,42 +48,38 @@ class MrcImageSource(ChunkedImageSource):
 
     def __init__(self, path: UPath, options: ReadOptions) -> None:
         super().__init__(path, options)
-        if is_remote_path(path):
-            raise ValueError(
-                f"Cannot open MRC file from {path}. The path must be a local file path."
-            )
 
+        corrupt_error = CorruptImageError(
+            f"Cannot open MRC file {path}. "
+            + "The file is likely corrupted or not a valid MRC file.",
+            path=path,
+        )
         try:
-            mrc_context = mrcfile.mmap(str(path), mode="r", permissive=True)
+            with path.open("rb") as file:
+                header = _MrcHeaderReader(file).header
+            self.dtype: np.dtype = mrcfile.utils.data_dtype_from_header(header)
+            shape = mrcfile.utils.data_shape_from_header(header)
+            self._data_offset = header.nbytes + int(header.nsymbt)
+            file_size = path.stat().st_size
         except Exception as e:
             # Even in permissive mode mrcfile raises on a header it cannot make
             # sense of at all, with a multi-line message aimed at developers.
-            raise CorruptImageError(
-                f"Cannot open MRC file {path}. "
-                + "The file is likely corrupted or not a valid MRC file.",
-                path=path,
-            ) from e
+            raise corrupt_error from e
 
-        with mrc_context as mrc:
-            if mrc.data is None:
-                raise CorruptImageError(
-                    f"Cannot open MRC file {path}. "
-                    + "The file is likely corrupted or not a valid MRC file.",
-                    path=path,
-                )
-            self.dtype: np.dtype = mrc.data.dtype
-            ndim = mrc.data.ndim
-            if ndim == 3:
-                self._z, self._y, self._x = mrc.data.shape
-            elif ndim == 2:
-                self._z = 1
-                self._y, self._x = mrc.data.shape
-            else:
-                raise UnsupportedImageDataError(
-                    f"Unsupported MRC data dimensionality: {ndim}. "
-                    "Only 2D and 3D MRC files are supported.",
-                    path=path,
-                )
+        if file_size < self._data_offset + self.dtype.itemsize * int(np.prod(shape)):
+            raise corrupt_error
+
+        if len(shape) == 3:
+            self._z, self._y, self._x = shape
+        elif len(shape) == 2:
+            self._z = 1
+            self._y, self._x = shape
+        else:
+            raise UnsupportedImageDataError(
+                f"Unsupported MRC data dimensionality: {len(shape)}. "
+                "Only 2D and 3D MRC files are supported.",
+                path=path,
+            )
 
         if 0 in (self._z, self._y, self._x):
             # In permissive mode mrcfile only warns about a header it cannot
@@ -94,10 +105,13 @@ class MrcImageSource(ChunkedImageSource):
         y: slice,
         x: slice,
     ) -> np.ndarray:
-        with mrcfile.mmap(str(self.path), mode="r", permissive=True) as mrc:
-            if mrc.data.ndim == 3:
-                block = np.array(mrc.data[z, y, x])
-            else:
-                # add a size-1 z axis to unify with the 3D case
-                block = np.array(mrc.data[y, x])[np.newaxis]
+        with self.path.open("rb") as file:
+            block = read_box(
+                file,
+                offset=self._data_offset,
+                shape=(self._z, self._y, self._x),
+                dtype=self.dtype,
+                order="C",
+                box=(z, y, x),
+            )
         return block[np.newaxis]  # (z, y, x) -> (c, z, y, x)
