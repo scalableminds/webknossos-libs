@@ -1,4 +1,5 @@
 import gc
+import importlib
 import sys
 import warnings
 from collections.abc import Generator, Iterator
@@ -14,6 +15,7 @@ from upath import UPath
 import webknossos as wk
 from webknossos.client._upload_dataset import _cached_get_upload_datastore
 from webknossos.client.context import _clear_all_context_caches
+from webknossos.geometry import Vec3Int
 from webknossos.utils import rmtree
 
 from .constants import TESTOUTPUT_DIR, use_moto
@@ -43,6 +45,24 @@ def pytest_make_parametrize_id(config: Any, val: Any, argname: str) -> Any:
         return "/".join(parts[-take:])
     # return None to let pytest handle the formatting
     return None
+
+
+@pytest.fixture(autouse=True)
+def small_from_images_shards(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Shrinks the default Zarr3 shard shape of image conversions from
+    4096×4096×32 to 512×512×32 voxels.
+
+    Compressed writes rewrite whole shards, so with the regular default
+    every write of the small test images allocates several 512 MB buffers.
+    That needs several GB per test and is very slow on the memory-limited
+    Windows runners.
+    """
+    image_conversion = importlib.import_module(
+        "webknossos.dataset._image_conversion.image_conversion"
+    )
+    monkeypatch.setattr(
+        image_conversion, "DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES", Vec3Int(16, 16, 1)
+    )
 
 
 @pytest.fixture()
