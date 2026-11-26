@@ -11,16 +11,26 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.0.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.1.0...HEAD)
+
+### Breaking Changes
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+
+## [5.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.1.0) - 2026-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.0.0...v5.1.0)
 
 ### Changed
 - Allow newer versions of `httpx` (0.28+), `networkx` (3.3+), `click` (8.2+), `aiohttp` (3.15+) and `natsort` (8.5+). `typer` no longer has an upper bound, and its minimum version is now 0.16, the first one that works with click 8.2. This makes it easier to install webknossos alongside other packages. [#112](https://github.com/scalableminds/mono/pull/112)
 - Type checking (`./typecheck.sh`) uses pyrefly instead of mypy. Non-overlapping container checks (`x in [y]`), which mypy reported with `strict_equality`, are no longer checked. [#116](https://github.com/scalableminds/mono/pull/116)
 - Dropped support for Python 3.10, which has reached its end of life. Python 3.11 or newer is now required. [#113](https://github.com/scalableminds/mono/pull/113)
-
-### Deprecated
 
 ### Fixed
 - `Dataset.from_images` and `add_layer_from_images` no longer use shards much larger than the image for Zarr3 layers by default: the default shard shape is reduced in x and y to cover the image. Before, every write of a small compressed image read and wrote a full 4096×4096×32 shard. For example, converting four small multi-page TIFFs (128×128×64) needed 7.4 GB of memory and 11 s, now it needs 0.2 GB and 2 s. [#138](https://github.com/scalableminds/mono/pull/138)
@@ -40,6 +50,7 @@ in the _Changed_ sections.
 - `convert-raw --rescale-min-max` now clips values outside the given range for integer target dtypes and writes NaN as 0. Before, they wrapped around. [#90](https://github.com/scalableminds/mono/pull/90)
 - `Dataset.from_images` and `add_layer_from_images` no longer fail for float volumes (e.g. MRC, Zarr, N5) containing NaN or infinite values. [#90](https://github.com/scalableminds/mono/pull/90)
 - Raised the minimum `cattrs` version from 22.0.0 to 23.1.0. With cattrs 22.x, `import webknossos` failed with `TypeError: override() got an unexpected keyword argument 'unstruct_hook'`. [#115](https://github.com/scalableminds/mono/pull/115)
+
 
 
 ## [5.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.0.0) - 2026-11-23
