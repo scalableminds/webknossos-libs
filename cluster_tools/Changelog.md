@@ -10,15 +10,13 @@ in the _Changed_ sections.
 ## Unreleased
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.0.0...HEAD)
 
-### Breaking Changes
-- Dropped support for Python 3.10, which has reached its end of life. Python 3.11 or newer is now required. [#113](https://github.com/scalableminds/mono/pull/113)
-
 ### Added
 
 ### Changed
 - Allow newer versions of `typing-extensions` (4.16+). [#112](https://github.com/scalableminds/mono/pull/112)
 - Type checking (`./typecheck.sh`) uses pyrefly instead of mypy. Non-overlapping container checks (`x in [y]`), which mypy reported with `strict_equality`, are no longer checked. In the `Executor` protocol, the `futures` parameter of `as_completed` and the `fn` and `iterables` parameters of `map` are positional-only, because the executors name them differently. [#116](https://github.com/scalableminds/mono/pull/116)
-
+- Dropped support for Python 3.10, which has reached its end of life. Python 3.11 or newer is now required. [#113](https://github.com/scalableminds/mono/pull/113)
+  
 ### Deprecated
 
 ### Fixed
