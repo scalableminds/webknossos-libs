@@ -1,9 +1,7 @@
 from collections.abc import Callable
 from concurrent.futures import Future
 from functools import partial
-from typing import TypeVar
-
-from typing_extensions import ParamSpec
+from typing import ParamSpec, TypeVar
 
 from cluster_tools._utils import pickling
 from cluster_tools.executors.multiprocessing_ import MultiprocessingExecutor

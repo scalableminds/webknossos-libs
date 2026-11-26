@@ -6,13 +6,14 @@ from logging import getLogger
 from typing import (
     Any,
     Literal,
+    NotRequired,
+    Self,
     TypedDict,
 )
 
 import numpy as np
 import tensorstore
 import wkw
-from typing_extensions import NotRequired, Self
 from upath import UPath
 
 from webknossos.dataset._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore

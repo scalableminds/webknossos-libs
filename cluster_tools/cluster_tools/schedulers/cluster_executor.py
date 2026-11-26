@@ -17,10 +17,9 @@ from types import FrameType, TracebackType
 from typing import (
     Any,
     Literal,
+    ParamSpec,
     TypeVar,
 )
-
-from typing_extensions import ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.cfut_options import (

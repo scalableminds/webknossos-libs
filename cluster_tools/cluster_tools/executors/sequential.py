@@ -2,9 +2,7 @@ import warnings
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Executor, Future, as_completed
 from os import PathLike
-from typing import Any, TypeVar
-
-from typing_extensions import ParamSpec
+from typing import Any, ParamSpec, TypeVar
 
 from cluster_tools._utils.cfut_options import (
     cfut_options_kwargs,

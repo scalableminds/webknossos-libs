@@ -1,7 +1,6 @@
 from os import PathLike
-from typing import Literal, cast, get_args, get_type_hints
+from typing import Literal, Self, cast, get_args, get_type_hints
 
-from typing_extensions import Self
 from upath import UPath
 
 from webknossos.dataset_properties import AttachmentDataFormat, AttachmentProperties

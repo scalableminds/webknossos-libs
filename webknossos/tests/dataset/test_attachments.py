@@ -1,6 +1,5 @@
 import contextlib
 import json
-import sys
 
 import pytest
 from upath import UPath
@@ -380,9 +379,6 @@ def test_add_attachments(tmp_upath: UPath) -> None:
     assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 11), reason="contextlib.chdir requires Python 3.11+"
-)
 def test_add_attachments_relative_path(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
 

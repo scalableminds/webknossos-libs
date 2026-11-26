@@ -10,13 +10,12 @@ from multiprocessing import Queue, get_context
 from typing import (
     TYPE_CHECKING,
     Any,
+    ParamSpec,
     TypeVar,
     cast,
 )
 from warnings import warn
 from weakref import ReferenceType, ref
-
-from typing_extensions import ParamSpec
 
 from cluster_tools._utils.cfut_options import (
     cfut_options_kwargs,

@@ -5,9 +5,7 @@ import logging
 import os
 import warnings
 from collections.abc import Callable
-from typing import Any, TypedDict, TypeVar, cast
-
-from typing_extensions import NotRequired, ParamSpec
+from typing import Any, NotRequired, ParamSpec, TypedDict, TypeVar, cast
 
 from cluster_tools._utils import pickling
 from cluster_tools.output_store import OutputStore

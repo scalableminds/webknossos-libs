@@ -3,11 +3,10 @@ from concurrent.futures import Future
 from contextlib import AbstractContextManager
 from os import PathLike
 from typing import (
+    ParamSpec,
     Protocol,
     TypeVar,
 )
-
-from typing_extensions import ParamSpec
 
 _T = TypeVar("_T")
 _P = ParamSpec("_P")

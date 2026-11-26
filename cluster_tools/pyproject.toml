@@ -6,7 +6,7 @@ authors = [{name= "scalable minds", email="hello@scalableminds.com"}]
 readme = "README.md"
 license-files = ["LICENSE"]
 license = "MIT"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "typing-extensions >=4.15.0,<5",
 ]
@@ -27,7 +27,7 @@ dev = [
     "pyrefly ~=1.5.0",
     "pytest ~=8.3.3",
     "pytest-timeout>=2.4.0",
-    "ruff ~=0.11.0",
+    "ruff ~=0.15.0",
 ]
 
 [build-system]
@@ -66,8 +66,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.10 for automatic linting fixes
-target-version = "py310"
+# Assume Python 3.11 for automatic linting fixes
+target-version = "py311"
 
 [tool.ruff.lint]
 # F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f

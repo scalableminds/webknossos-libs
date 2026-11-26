@@ -6,9 +6,7 @@ from functools import partial
 from itertools import islice
 from os import PathLike
 from types import TracebackType
-from typing import TypeVar
-
-from typing_extensions import ParamSpec
+from typing import ParamSpec, TypeVar
 
 from cluster_tools._utils.reflection import get_function_name
 from cluster_tools.executor_protocol import Executor

@@ -7,11 +7,10 @@ from functools import partial
 from multiprocessing.context import BaseContext
 from typing import (
     Any,
+    ParamSpec,
     TypeVar,
     cast,
 )
-
-from typing_extensions import ParamSpec
 
 from cluster_tools._utils.cfut_options import (
     cfut_options_kwargs,

@@ -3,9 +3,7 @@ import threading
 import time
 from collections.abc import Callable
 from concurrent.futures import Future
-from typing import TypeVar
-
-from typing_extensions import ParamSpec
+from typing import ParamSpec, TypeVar
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")

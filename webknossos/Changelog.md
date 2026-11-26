@@ -14,6 +14,7 @@ in the _Changed_ sections.
 [Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.0.0...HEAD)
 
 ### Breaking Changes
+- Dropped support for Python 3.10, which has reached its end of life. Python 3.11 or newer is now required. [#113](https://github.com/scalableminds/mono/pull/113)
 
 ### Added
 
