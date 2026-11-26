@@ -46,7 +46,11 @@ from ...geometry import (
 from ...geometry.constants import CXYZ_AXES, Z_AXIS
 from ...geometry.mag import MagLike
 from ...utils import named_partial, wait_and_ensure_success
-from ..defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
+from ..defaults import (
+    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
+    DEFAULT_DATA_FORMAT,
+    _shard_shape_covering,
+)
 from ..errors import UnsupportedImageDataError, UnsupportedImageFormatError
 from ..layer import Layer, SegmentationLayer
 from ..layer.abstract_layer import (
@@ -718,9 +722,14 @@ def add_layer_from_images(
             shard_shape=shard_shape,
         )
         # For Zarr3 image imports, default to z-aligned shards for efficient
-        # slice-by-slice writing, regardless of total z size.
+        # slice-by-slice writing, regardless of total z size. Compressed
+        # writes rewrite whole shards, so x/y is capped to the data's extent.
         if not _shard_shape_user_specified and layer.data_format == DataFormat.Zarr3:
-            shard_shape = chunk_shape * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
+            shard_shape = _shard_shape_covering(
+                expected_bbox.size_xyz,
+                chunk_shape=chunk_shape,
+                max_shard_shape=chunk_shape * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
+            )
         # When the expected bbox is 2D the chunk_shape is set to 2D too.
         if (
             expected_bbox.get_shape(Z_AXIS) == 1

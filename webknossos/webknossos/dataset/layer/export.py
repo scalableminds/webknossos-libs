@@ -33,6 +33,7 @@ from ..defaults import (
     DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
     DEFAULT_SHARD_SHAPE,
     DEFAULT_SHARD_SHAPE_FROM_IMAGES,
+    _shard_shape_covering,
 )
 from ..remote_access_mode import RemoteAccessMode
 from ._downsampling_utils import (
@@ -200,7 +201,7 @@ def _ome_tiff_axes_and_permutation(
 
 
 def _default_max_shard_shape(local_size: Vec3Int) -> Vec3Int:
-    """The cap used by `_shard_shape_for_export` when no explicit
+    """The cap used by `_shard_shape_covering` when no explicit
     `shard_shape` is given: for flat data (few z sections, e.g. an exported
     2D crop), the wider from-images default, otherwise the regular default
     shard shape. Mirrors `Layer.add_mag`'s own default selection.
@@ -208,26 +209,6 @@ def _default_max_shard_shape(local_size: Vec3Int) -> Vec3Int:
     if local_size.z <= DEFAULT_CHUNK_SHAPE.z * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES.z:
         return DEFAULT_SHARD_SHAPE_FROM_IMAGES
     return DEFAULT_SHARD_SHAPE
-
-
-def _shard_shape_for_export(local_size: Vec3Int, max_shard_shape: Vec3Int) -> Vec3Int:
-    """Picks a power-of-two shard shape (a multiple of the default chunk
-    shape) that covers `local_size` in a single shard per axis, capped at
-    `max_shard_shape` so a large export doesn't fragment into more, smaller
-    shards than necessary.
-    """
-
-    def axis_shard(size: int, chunk: int, max_shard: int) -> int:
-        shard = chunk
-        while shard < size and shard < max_shard:
-            shard *= 2
-        return min(shard, max_shard)
-
-    return Vec3Int(
-        axis_shard(local_size.x, DEFAULT_CHUNK_SHAPE.x, max_shard_shape.x),
-        axis_shard(local_size.y, DEFAULT_CHUNK_SHAPE.y, max_shard_shape.y),
-        axis_shard(local_size.z, DEFAULT_CHUNK_SHAPE.z, max_shard_shape.z),
-    )
 
 
 def _slice_to_image(data_slice: np.ndarray) -> np.ndarray:
@@ -368,8 +349,10 @@ class LayerExport:
                 .in_mag(target_mag)
                 .size_xyz
             )
-            return _shard_shape_for_export(
-                local_size, _default_max_shard_shape(local_size)
+            return _shard_shape_covering(
+                local_size,
+                chunk_shape=DEFAULT_CHUNK_SHAPE,
+                max_shard_shape=_default_max_shard_shape(local_size),
             )
 
         with TemporaryDirectory() as tmpdir:

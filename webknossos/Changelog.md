@@ -24,6 +24,7 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- `Dataset.from_images` and `add_layer_from_images` no longer use shards much larger than the image for Zarr3 layers by default: the default shard shape is reduced in x and y to cover the image. Before, every write of a small compressed image read and wrote a full 4096×4096×32 shard. For example, converting four small multi-page TIFFs (128×128×64) needed 7.4 GB of memory and 11 s, now it needs 0.2 GB and 2 s. [#138](https://github.com/scalableminds/mono/pull/138)
 - `wk.login(url=...)` no longer queries the API version of the previously configured server and no longer pins that version for the new server. An explicitly set `api_version` still carries over. [#87](https://github.com/scalableminds/mono/pull/87)
 - `RemoteDataset.download()` now downloads from the dataset's own server with the dataset's token (e.g. when the dataset was opened from a URL of another server) instead of the current context, and uses the sharing token the dataset was opened with. `RemoteDataset.folder` looks up the folder on the dataset's own server. [#87](https://github.com/scalableminds/mono/pull/87)
 - Building an upload request without a token no longer raises an `AttributeError`, so that the server's authentication error is shown. [#87](https://github.com/scalableminds/mono/pull/87)

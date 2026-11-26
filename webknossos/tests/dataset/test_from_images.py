@@ -270,6 +270,27 @@ def test_multiple_multitiffs(tmp_upath: UPath) -> None:
         assert array_shape == shard_aligned_bottomright.to_list()
 
 
+def test_default_shard_shape_is_capped_to_small_images(tmp_upath: UPath) -> None:
+    # Compressed writes rewrite whole shards, so a shard much larger than the
+    # image costs memory and time for every write.
+    Z, Y, X = 40, 200, 100
+    data = np.arange(Z * Y * X, dtype="uint8").reshape(Z, Y, X)
+    tif_path = tmp_upath / "small.tif"
+    imwrite(str(tif_path), data, metadata={"axes": "ZYX"})
+
+    with SequentialExecutor() as executor:
+        ds = Dataset.from_images(
+            tif_path,
+            tmp_upath / "ds",
+            (1, 1, 1),
+            data_format="zarr3",
+            executor=executor,
+        )
+    mag1 = ds.get_color_layers()[0].get_finest_mag()
+    assert mag1.info.shard_shape == Vec3Int(x=128, y=256, z=32)
+    np.testing.assert_array_equal(mag1.read()[0], data.transpose(2, 1, 0))
+
+
 @pytest.mark.parametrize("mode", ["RGB", "RGBA"])
 def test_rgb_image_creates_a_single_rgb_layer(tmp_upath: UPath, mode: str) -> None:
     # from_images() passes allow_multiple_layers=True, but the RGB channels of
