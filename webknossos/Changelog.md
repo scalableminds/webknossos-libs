@@ -22,6 +22,7 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- Fixed that `Layer.delete_mag` deleted the data of another layer, if the mag was added with `add_mag_as_ref` from a layer of the same dataset. Now, only the reference is removed. Renaming such a layer no longer breaks the reference. [#81](https://github.com/scalableminds/mono/pull/81)
 - Fixed that `MagView.rechunk` could silently lose data when the shard shape is changed, the layer's bounding box does not start at a shard border and the executor runs jobs in parallel. [#82](https://github.com/scalableminds/mono/pull/82)
 
 

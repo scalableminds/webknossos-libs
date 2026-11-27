@@ -284,6 +284,92 @@ def test_extending_bounding_box_leaves_referenced_mag_untouched(
     assure_exported_properties(ds)
 
 
+def test_delete_and_rename_mag_ref_within_same_dataset(tmp_upath: UPath) -> None:
+    ds = Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))
+    data = rng.integers(0, 256, (10, 20, 30), dtype=np.uint8)
+    original_layer = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        bounding_box=BoundingBox((0, 0, 0), (10, 20, 30)),
+    )
+    original_mag = original_layer.add_mag(1)
+    original_mag.write(data=data)
+
+    ref_layer = ds.add_layer(
+        "color_ref",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        bounding_box=BoundingBox((0, 0, 0), (10, 20, 30)),
+    )
+    ref_mag = ref_layer.add_mag_as_ref(original_mag)
+    assert ref_mag.read_only
+    assert ref_layer.is_mag_view_foreign(ref_mag)
+    assert not original_layer.is_mag_view_foreign(original_mag)
+
+    ref_layer.name = "color_ref_renamed"
+    np.testing.assert_array_equal(ref_layer.get_mag(1).read()[0], data)
+    np.testing.assert_array_equal(
+        Dataset.open(ds.path).get_layer("color_ref_renamed").get_mag(1).read()[0],
+        data,
+    )
+
+    ref_layer.delete_mag(1)
+    assert Mag(1) not in ref_layer.mags
+    assert original_mag.path.exists()
+    np.testing.assert_array_equal(
+        Dataset.open(ds.path).get_layer("color").get_mag(1).read()[0], data
+    )
+
+
+@pytest.mark.skip_on_windows
+def test_rename_layer_with_legacy_symlinked_mag_without_path(
+    tmp_upath: UPath,
+) -> None:
+    ds = Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))
+    data = rng.integers(0, 256, (10, 20, 30), dtype=np.uint8)
+    original_layer = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        bounding_box=BoundingBox((0, 0, 0), (10, 20, 30)),
+    )
+    original_layer.add_mag(1).write(data=data)
+    ds.add_layer(
+        "ref",
+        COLOR_CATEGORY,
+        dtype="uint8",
+        bounding_box=BoundingBox((0, 0, 0), (10, 20, 30)),
+    )
+
+    # Build a legacy reference: a symlink and a mag entry without a path.
+    (ds.path / "ref").mkdir(exist_ok=True)
+    (ds.path / "ref" / "1").symlink_to("../color/1", target_is_directory=True)
+    properties_path = ds.path / PROPERTIES_FILE_NAME
+    properties = json.loads(properties_path.read_text())
+    layers = {layer["name"]: layer for layer in properties["dataLayers"]}
+    legacy_mag = dict(layers["color"]["mags"][0])
+    del legacy_mag["path"]
+    layers["ref"]["mags"] = [legacy_mag]
+    properties_path.write_text(json.dumps(properties))
+
+    ref_layer = Dataset.open(ds.path).get_layer("ref")
+    assert ref_layer.get_mag(1)._properties.path is None
+    assert ref_layer.is_mag_view_foreign(ref_layer.get_mag(1))
+
+    ref_layer.name = "ref_renamed"
+    np.testing.assert_array_equal(ref_layer.get_mag(1).read()[0], data)
+
+    reopened = Dataset.open(ds.path)
+    assert "ref" not in reopened.layers
+    np.testing.assert_array_equal(
+        reopened.get_layer("ref_renamed").get_mag(1).read()[0], data
+    )
+    np.testing.assert_array_equal(
+        reopened.get_layer("color").get_mag(1).read()[0], data
+    )
+
+
 def test_add_mag_as_ref_does_not_open_remote_array(tmp_upath: UPath) -> None:
     unreadable_path = REMOTE_TESTOUTPUT_DIR / "nonexistent_dataset" / "color" / "1"
     remote_mag = mock.MagicMock(spec=RemoteMagView)

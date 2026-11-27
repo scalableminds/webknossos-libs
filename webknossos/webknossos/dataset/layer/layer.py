@@ -268,6 +268,18 @@ class Layer(AbstractLayer):
 
         _validate_layer_name(layer_name)
 
+        foreign_mags = {
+            mag
+            for mag, mag_view in self._mags.items()
+            if self.is_mag_view_foreign(mag_view)
+        }
+        for mag in foreign_mags:
+            mag_view = self._mags[mag]
+            if mag_view._properties.path is None:
+                # Legacy symlinked mags have no stored path.
+                mag_view._properties.path = dump_path(
+                    mag_view.path, self.dataset.resolved_path
+                )
         if self.path.exists():
             assert is_fs_path(self.dataset.path), (
                 "Renaming layers is only supported for local paths."
@@ -282,7 +294,7 @@ class Layer(AbstractLayer):
 
         # The MagViews need to be updated
         for mag in self._mags.values():
-            if not self.is_mag_view_foreign(mag):
+            if mag.mag not in foreign_mags:
                 mag._properties.path = dump_path(
                     self._resolved_path / mag.path.name, self.dataset.resolved_path
                 )
@@ -304,7 +316,7 @@ class Layer(AbstractLayer):
         Returns:
             bool: True if data is stored in a different location than the parent dataset.
         """
-        return mag.path.parent.parent != self.dataset.resolved_path
+        return _is_foreign_mag(self.dataset.resolved_path, self.name, mag.path)
 
     def add_mag(
         self,
