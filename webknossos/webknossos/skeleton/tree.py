@@ -147,7 +147,7 @@ class Tree(nx.Graph):
         skeleton: "Skeleton",
         color: Vector4 | None = None,
         enforced_id: int | None = None,  # noqa: ARG002 Unused method argument: `enforced_id`
-        metadata: dict[str, str | int | float | Sequence[str]] = {},
+        metadata: dict[str, str | int | float | Sequence[str]] | None = None,
         is_visible: bool = True,
     ) -> None:
         """
@@ -161,7 +161,7 @@ class Tree(nx.Graph):
         self.name = name
         self.group = group
         self.color = color
-        self.metadata = metadata
+        self.metadata = metadata if metadata is not None else {}
         self.is_visible = is_visible
 
         # only used internally
@@ -174,7 +174,7 @@ class Tree(nx.Graph):
         skeleton: "Skeleton",
         color: Vector4 | None = None,  # noqa: ARG004 Unused static method argument: `color`
         enforced_id: int | None = None,
-        metadata: dict[str, str | int | float | Sequence[str]] = {},  # noqa: ARG004 Unused static method argument: `metadata`
+        metadata: dict[str, str | int | float | Sequence[str]] | None = None,  # noqa: ARG004 Unused static method argument: `metadata`
         is_visible: bool = True,  # noqa: ARG004 Unused static method argument: `is_visible`
     ) -> "Tree":
         self = super().__new__(cls)

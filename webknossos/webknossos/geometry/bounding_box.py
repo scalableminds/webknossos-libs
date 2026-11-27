@@ -184,9 +184,9 @@ class BoundingBox(NDBoundingBox):
             )
         elif isinstance(obj, list) or isinstance(obj, tuple):
             if len(obj) == 2:
-                return cls.from_tuple2(obj)  # type: ignore
+                return cls.from_tuple2(obj)  # pyrefly: ignore[bad-argument-type]
             elif len(obj) == 6:
-                return cls.from_tuple6(obj)  # type: ignore
+                return cls.from_tuple6(obj)  # pyrefly: ignore[bad-argument-type]
 
         raise Exception("Unknown bounding box format.")
 
@@ -231,7 +231,7 @@ class BoundingBox(NDBoundingBox):
                 - First three values: (x,y,z) coordinates of topleft
                 - Last three values: (width,height,depth) dimensions
         """
-        return tuple(self.topleft.to_list() + self.size.to_list())  # type: ignore
+        return tuple(self.topleft.to_list() + self.size.to_list())  # pyrefly: ignore[bad-return]
 
     def to_csv(self) -> str:
         """Converts the bounding box coordinates to a comma-separated string.
@@ -283,11 +283,9 @@ class BoundingBox(NDBoundingBox):
         if isinstance(other, NormalizedBoundingBox):
             num_channels = other.size.c
             other_denorm = cast(BoundingBox, other.denormalize())
-            result = cast(
-                BoundingBox, super().intersected_with(other_denorm, dont_assert)
-            )
+            result = NDBoundingBox.intersected_with(self, other_denorm, dont_assert)
             return result.normalize_axes(num_channels)
-        return cast(BoundingBox, super().intersected_with(other, dont_assert))
+        return NDBoundingBox.intersected_with(self, other, dont_assert)
 
     @overload
     def extended_by(
@@ -310,9 +308,9 @@ class BoundingBox(NDBoundingBox):
         if isinstance(other, NormalizedBoundingBox):
             num_channels = other.size.c
             other_denorm = cast(BoundingBox, other.denormalize())
-            result = cast(BoundingBox, super().extended_by(other_denorm))
+            result = NDBoundingBox.extended_by(self, other_denorm)
             return result.normalize_axes(num_channels)
-        return cast(BoundingBox, super().extended_by(other))
+        return NDBoundingBox.extended_by(self, other)
 
     def contains_bbox(self, inner_bbox: "BoundingBox | NormalizedBoundingBox") -> bool:
         """Check whether a bounding box is completely inside this bounding box.
@@ -322,7 +320,7 @@ class BoundingBox(NDBoundingBox):
         """
         if isinstance(inner_bbox, NormalizedBoundingBox):
             inner_bbox = cast(BoundingBox, inner_bbox.denormalize())
-        return super().contains_bbox(inner_bbox)
+        return NDBoundingBox.contains_bbox(self, inner_bbox)
 
     def __repr__(self) -> str:
         return f"BoundingBox(topleft={self.topleft.to_tuple()}, size={self.size.to_tuple()})"

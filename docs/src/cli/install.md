@@ -4,7 +4,7 @@ This document explains how to install the WEBKNOSSOS CLI tool. It also covers ho
 
 ## Installation with pip
 
-WEBKNOSSOS CLI requires Python 3.10 or higher.
+WEBKNOSSOS CLI requires Python 3.11 or higher.
 
 ### Installation
 

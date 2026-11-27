@@ -1,4 +1,4 @@
-# type: ignore
+# pyrefly: ignore-errors
 # ruff: noqa
 import numpy as np
 

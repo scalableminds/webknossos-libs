@@ -145,7 +145,7 @@ def open_slice_reader(path_spec: str | UPath, **kwargs: object) -> SliceReader:
         eligible_handlers, key=lambda cls: cls.class_priority, reverse=True
     ):
         try:
-            return handler(path_spec, **kwargs)  # type: ignore[call-arg]
+            return handler(path_spec, **kwargs)  # pyrefly: ignore[bad-argument-count]
         except Exception as e:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
             messages.append(f"{handler.__name__} errored: {e}")
     raise UnsupportedImageFormatError(

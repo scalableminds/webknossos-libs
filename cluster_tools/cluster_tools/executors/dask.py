@@ -10,13 +10,12 @@ from multiprocessing import Queue, get_context
 from typing import (
     TYPE_CHECKING,
     Any,
+    ParamSpec,
     TypeVar,
     cast,
 )
 from warnings import warn
 from weakref import ReferenceType, ref
-
-from typing_extensions import ParamSpec
 
 from cluster_tools._utils.cfut_options import (
     cfut_options_kwargs,
@@ -38,7 +37,7 @@ _S = TypeVar("_S")
 
 
 def _run_in_nanny(
-    queue: Queue, __fn: Callable[_P, _T], *args: _P.args, **kwargs: _P.kwargs
+    queue: Queue, __fn: Callable[_P, _T], /, *args: _P.args, **kwargs: _P.kwargs
 ) -> None:
     try:
         __env = cast(dict[str, str], kwargs.pop("__env"))
@@ -178,7 +177,7 @@ class DaskExecutor(futures.Executor):
 
         return as_completed(futures)
 
-    def submit(  # type: ignore[override]
+    def submit(
         self,
         __fn: Callable[_P, _T],
         *args: _P.args,
@@ -254,7 +253,7 @@ class DaskExecutor(futures.Executor):
         output_key_getter: Callable[[_S], str] | None = None,
     ) -> list[Future[_T]]:
         futs = [
-            self.submit(  # type: ignore[call-arg]
+            self.submit(
                 fn,
                 arg,
                 **cfut_options_kwargs(
@@ -266,7 +265,8 @@ class DaskExecutor(futures.Executor):
 
         return futs
 
-    def map(  # type: ignore[override]
+    # pyrefly: ignore[bad-override]
+    def map(
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],

@@ -1,5 +1,6 @@
 import itertools
 import json
+import warnings
 
 import numpy as np
 import pytest
@@ -691,6 +692,33 @@ def test_rechunking(data_format: DataFormat, output_path: UPath) -> None:
     mag1.write(rng.integers(0, 256, (3, 10, 20, 30), dtype=np.uint8), allow_resize=True)
 
     assure_exported_properties(mag1.layer.dataset)
+
+
+def test_rechunking_with_unaligned_topleft_and_new_shard_shape(
+    tmp_upath: UPath,
+) -> None:
+    ds = Dataset(tmp_upath, voxel_size=(1, 1, 1))
+    layer = ds.add_layer(
+        "color",
+        COLOR_CATEGORY,
+        data_format=DataFormat.Zarr3,
+        bounding_box=BoundingBox((16, 0, 0), (256, 64, 64)),
+    )
+    mag1 = layer.add_mag(1, chunk_shape=(32, 32, 32), shard_shape=(32, 32, 32))
+    write_data = rng.integers(1, 256, (256, 64, 64), dtype=np.uint8)
+    mag1.write(write_data, absolute_offset=(16, 0, 0), allow_unaligned=True)
+
+    # Jobs that share a target shard overwrite each other when run in parallel,
+    # which is reported as a warning when creating the views.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", message=".*not aligned.*")
+        with get_executor("multiprocessing", max_workers=4) as executor:
+            mag1.rechunk(shard_shape=(64, 64, 64), executor=executor)
+
+    assert mag1.info.shard_shape == Vec3Int(64, 64, 64)
+    np.testing.assert_array_equal(
+        write_data, mag1.read(absolute_offset=(16, 0, 0), size=(256, 64, 64))[0]
+    )
 
 
 @pytest.mark.parametrize("output_path", OUTPUT_PATHS)

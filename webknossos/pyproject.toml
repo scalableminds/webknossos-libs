@@ -23,29 +23,27 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization",
     "Topic :: Software Development :: Libraries",
     "Typing :: Typed",
-    "Programming Language :: Python :: 3.10", 
     "Programming Language :: Python :: 3.11", 
     "Programming Language :: Python :: 3.12", 
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
 
-requires-python = ">=3.10,<3.15"
+requires-python = ">=3.11,<3.15"
 
 dependencies = [
-    "aiohttp ~=3.14.1",
+    "aiohttp >=3.14.1,<4",
     "attrs >=22.0.0",
     "boltons >=21.0.0",
     "cattrs >=23.1.0",
     "certifi >=2023",
-    "click <8.2.0", # pinned because of incompatibility with typer <0.16
     "cluster-tools",
-    "httpx ~=0.27.0",
+    "httpx >=0.27.0,<1",
     "imageio >=2.37.0",
     "lz4 >=4.0.0",
     "loxun ~=2.0.0",
-    "natsort ~=8.4.0",
-    "networkx ~=3.2.1",
+    "natsort >=8.4.0,<9",
+    "networkx >=3.2.1,<4",
     "numpy >=2.0.0,<3.0.0",
     "packaging >=21.0",
     "protobuf<7,>=3.12.0",
@@ -57,7 +55,7 @@ dependencies = [
     "scipy >=1.13",
     "tensorstore ==0.1.76; sys_platform == 'win32'", # tensorstore crashes on windows with >0.1.76
     "tensorstore ~=0.1.78; sys_platform != 'win32'",
-    "typer >=0.12.5,<1",
+    "typer >=0.16.0", # older typer versions break with click >=8.2
     "typing-extensions ~=4.0",
     "universal-pathlib ~=0.2",
     "wkw ==1.1.24",
@@ -84,11 +82,11 @@ s3 = ["s3fs >=2026.2.0"]
 gcs = ["gcsfs >=2026.2.0"]
 examples = [
     "webknossos[fastremap]",
-    "pandas ~=3.0.3; python_version >= '3.11'",
+    "pandas ~=3.0.3",
     "pooch ~=1.5.2",
     "tabulate >=0.9.0",
-    "scikit-learn ~=1.9.0; python_version >= '3.11'",
-    "scikit-image ~=0.26.0; python_version >= '3.11'"
+    "scikit-learn ~=1.9.0",
+    "scikit-image ~=0.26.0"
 ]
 all = [
     "webknossos[numba]",
@@ -112,7 +110,6 @@ dev = [
     "jsonschema ~=4.6.0",
     "moto[s3,server] ~=5.2.2",
     "mrcfile >=1.4.3",
-    "mypy ~=2.1.0",
     "pytest ~=8.3.2",
     "pytest-cov>=6.0.0",
     "pytest-custom-exit-code ~=0.3.0",
@@ -124,11 +121,12 @@ dev = [
     "types-python-dateutil ~=2.9",
     "ruff ~=0.15.0",
     "waitress ~=3.0.2",
+    "pyrefly ~=1.5.0",
 ]
 
 [tool.uv]
 constraint-dependencies = [
-    "pillow ~=13.0.0; python_version >= '3.11'", # Pillow 13 requires Python >=3.11
+    "pillow ~=13.0.0", # transitive dependency via imageio
 ]
 
 [tool.uv.sources]
@@ -137,13 +135,27 @@ cluster-tools = { path = "../cluster_tools", editable = true }
 [project.scripts]
 webknossos = "webknossos.cli.main:app"
 
-[tool.mypy]
-ignore_missing_imports = true
-namespace_packages = true
-strict_equality = true
-show_error_codes = true
-disallow_untyped_defs = true
-no_implicit_optional = true
+[tool.pyrefly]
+project-includes = ["webknossos", "tests", "examples", "script_collection"]
+# The generated protobuf module is typed by the .pyi file next to it.
+project-excludes = ["webknossos/proofreading/generated/*_pb2.py"]
+# cluster_tools is an editable install, which pyrefly does not resolve.
+search-path = [".", "stubs", "../cluster_tools"]
+preset = "legacy"
+ignore-missing-imports = ["*"]
+
+[tool.pyrefly.errors]
+implicit-any-parameter = "error"
+incompatible-comparison = "error"
+unannotated-return = "error"
+unused-ignore = "error"
+
+[[tool.pyrefly.sub-config]]
+matches = "webknossos/dataset/_image_conversion/vendor/**"
+
+[tool.pyrefly.sub-config.errors]
+implicit-any-parameter = "ignore"
+unannotated-return = "ignore"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -153,7 +165,6 @@ exclude = [
     ".git",
     ".git-rewrite",
     ".ipynb_checkpoints",
-    ".mypy_cache",
     ".pyenv",
     ".pytest_cache",
     ".ruff_cache",
@@ -175,8 +186,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.10 for automatic linting fixes
-target-version = "py310"
+# Assume Python 3.11 for automatic linting fixes
+target-version = "py311"
 
 [tool.ruff.lint]
 # F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
@@ -194,7 +205,8 @@ fixable = ["ALL"]
 
 # E501 Line too long https://docs.astral.sh/ruff/rules/line-too-long/
 # E712 true-false-comparison https://docs.astral.sh/ruff/rules/true-false-comparison/
-ignore = ["E501", "E712"]
+# UP042 replace-str-enum https://docs.astral.sh/ruff/rules/replace-str-enum/ (StrEnum changes str() of public enums)
+ignore = ["E501", "E712", "UP042"]
 
 [tool.ruff.lint.per-file-ignores]
 "{examples,tests,script_collection,webknossos/cli}/*" = ["T201"]

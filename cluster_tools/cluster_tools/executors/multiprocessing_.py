@@ -7,11 +7,10 @@ from functools import partial
 from multiprocessing.context import BaseContext
 from typing import (
     Any,
+    ParamSpec,
     TypeVar,
     cast,
 )
-
-from typing_extensions import ParamSpec
 
 from cluster_tools._utils.cfut_options import (
     cfut_options_kwargs,
@@ -82,7 +81,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
     def as_completed(cls, futs: list[Future[_T]]) -> Iterator[Future[_T]]:
         return futures.as_completed(futs)
 
-    def submit(  # type: ignore[override]
+    def submit(
         self,
         __fn: Callable[_P, _T],
         *args: _P.args,
@@ -127,7 +126,8 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         enrich_future_with_uncaught_warning(fut)
         return fut
 
-    def map(  # type: ignore[override]
+    # pyrefly: ignore[bad-override]
+    def map(
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],
@@ -156,7 +156,7 @@ class MultiprocessingExecutor(ProcessPoolExecutor):
         output_key_getter: Callable[[_S], str] | None = None,
     ) -> list[Future[_T]]:
         return [
-            self.submit(  # type: ignore[call-arg]
+            self.submit(
                 fn,
                 arg,
                 **cfut_options_kwargs(

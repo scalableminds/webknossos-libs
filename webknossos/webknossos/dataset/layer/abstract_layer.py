@@ -252,7 +252,7 @@ class AbstractLayer:
             # be touched.
             if mag.read_only:
                 continue
-            mag._array.resize(bbox.align_with_mag(mag.mag).in_mag(mag.mag))
+            mag._array.resize(bbox.align_with_mag(mag.mag, ceil=True).in_mag(mag.mag))
 
     @property
     def normalized_bounding_box(self) -> NormalizedBoundingBox:

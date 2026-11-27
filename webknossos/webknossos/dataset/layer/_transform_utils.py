@@ -388,7 +388,7 @@ def transform(
     if output_bbox is None:
         if transform is not None:
             # input_layer.bounding_box is a BoundingBox (checked above).
-            output_bbox = transform.transform_bbox(input_layer.bounding_box)  # type: ignore[arg-type]
+            output_bbox = transform.transform_bbox(input_layer.bounding_box)
         else:
             output_bbox = output_layer.bounding_box
     if not isinstance(output_bbox, BoundingBox):

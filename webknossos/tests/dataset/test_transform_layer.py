@@ -585,9 +585,9 @@ def test_affine_coordinate_transformation_builders() -> None:
     assert identity == AffineCoordinateTransformation.identity()
 
     with pytest.raises(ValueError, match="must be `x`, `y` or `z`"):
-        AffineCoordinateTransformation.from_rotation("w", 90)  # type: ignore[arg-type]
+        AffineCoordinateTransformation.from_rotation("w", 90)  # pyrefly: ignore[bad-argument-type]
     with pytest.raises(ValueError, match="must be `x`, `y` or `z`"):
-        identity.flip("w")  # type: ignore[arg-type]
+        identity.flip("w")  # pyrefly: ignore[bad-argument-type]
 
 
 def test_thin_plate_spline_coordinate_transformation_pairs() -> None:
@@ -646,9 +646,10 @@ def test_coordinate_transformations_are_immutable() -> None:
 
     # ... nor can they be replaced
     with pytest.raises(attr.exceptions.FrozenAttributeError):
+        # pyrefly: ignore[read-only]
         affine.matrix = np.eye(4)
     with pytest.raises(attr.exceptions.FrozenAttributeError):
-        thin_plate_spline.source = [[1, 1, 1]]  # type: ignore[assignment]
+        thin_plate_spline.source = [[1, 1, 1]]  # pyrefly: ignore[read-only]
 
     # Being immutable, copying one may and does hand back the same object
     assert copy.deepcopy(affine) is affine

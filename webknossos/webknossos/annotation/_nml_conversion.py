@@ -231,7 +231,10 @@ def annotation_to_nml(
     ]
 
     branchpoints = [
-        wknml.Branchpoint(node.id, node.time)
+        wknml.Branchpoint(
+            node.id,
+            node.branchpoint_time if node.branchpoint_time is not None else node.time,
+        )
         for tree in annotation.skeleton.flattened_trees()
         for node in tree.nodes
         if node.is_branchpoint

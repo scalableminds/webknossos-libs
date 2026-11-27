@@ -370,7 +370,7 @@ class Layer(AbstractLayer):
         self._assert_mag_does_not_exist_yet(mag)
         mag_path = self._create_dir_for_mag(mag)
 
-        mag_view = MagView["Layer"].create(
+        mag_view = MagView[Layer].create(
             self,
             mag,
             chunk_shape=chunk_shape,

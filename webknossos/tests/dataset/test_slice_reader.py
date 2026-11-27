@@ -456,7 +456,7 @@ def test_no_real_z_axis_gets_a_size_one_axis_without_relabeling_a_real_axis(
         written.append((bbox, data.copy()))
         real_write(bbox, data)
 
-    mag_view._array.write = _capture_write  # type: ignore[method-assign]
+    mag_view._array.write = _capture_write
 
     axes = layer.normalized_bounding_box.axes
     t_index, s_index = axes.index("t"), axes.index("s")

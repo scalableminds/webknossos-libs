@@ -213,7 +213,7 @@ def login(
     current = _get_context()
     resolved_url = current.url if url is None else url.rstrip("/")
     resolved_timeout = current.timeout if timeout is None else timeout
-    resolved_api_version = current.api_version if api_version is None else api_version
+    resolved_api_version = current._api_version if api_version is None else api_version
     if token is None:
         token = input(
             f"Please enter your WEBKNOSSOS token for {resolved_url}\n"

@@ -106,6 +106,14 @@ class StorageCredentials:
     """Remote storage credential secret (e.g. aws secret access key)."""
 
 
+def _copy_context(context: webknossos_context) -> webknossos_context:
+    # Copy the attributes verbatim: the constructor would replace an unset
+    # api_version with the one pinned in the caller's current context.
+    context_copy = copy.copy(context)
+    context_copy._context_var_token_stack = []
+    return context_copy
+
+
 class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
     """A representation of a dataset managed by a WEBKNOSSOS server.
 
@@ -156,9 +164,11 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         access_mode: RemoteAccessMode,
         datastore_url: str,
         dataset_properties: DatasetProperties | None = None,
+        sharing_token: str | None = None,
     ) -> None:
         """Do not call directly, use `RemoteDataset.open()` instead."""
         self._dataset_id = dataset_id
+        self._sharing_token = sharing_token
         self._annotation_id = annotation_id
         self._context = context
         self._access_mode = access_mode
@@ -292,6 +302,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 access_mode=access_mode,
                 datastore_url=datastore_url,
                 dataset_properties=dataset_properties,
+                sharing_token=sharing_token,
             )
 
     def reopen(self, *, access_mode: RemoteAccessMode) -> "RemoteDataset":
@@ -305,6 +316,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
                 annotation_id_or_url=self.annotation_id,
                 access_mode=access_mode,
                 read_only=self.read_only,
+                sharing_token=self._sharing_token,
             )
 
     def with_access_mode(self, access_mode: RemoteAccessMode) -> "RemoteDataset":
@@ -332,6 +344,7 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
             dataset_properties=self._properties
             if self._properties_are_direct
             else None,
+            sharing_token=self._sharing_token,
         )
 
     @property
@@ -746,11 +759,10 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
         self,
         metadata: dict[str, str | int | float | Sequence[str]] | DatasetMetadata | None,
     ) -> None:
-        if metadata is not None:
-            api_metadata = [
-                ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
-                for k, v in metadata.items()
-            ]
+        api_metadata = [
+            ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
+            for k, v in (metadata or {}).items()
+        ]
         self._update_dataset_info(metadata=api_metadata)
 
     @property
@@ -975,7 +987,8 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         """
 
-        return RemoteFolder.get_by_id(self._get_dataset_info().folder_id)
+        with self._context:
+            return RemoteFolder.get_by_id(self._get_dataset_info().folder_id)
 
     @folder.setter
     def folder(self, folder: RemoteFolder) -> None:
@@ -1014,16 +1027,21 @@ class RemoteDataset(AbstractDataset[RemoteLayer, RemoteSegmentationLayer]):
 
         if isinstance(layers, str):
             layers = [layers]
-        return download_dataset(
-            dataset_id=self.dataset_id,
-            sharing_token=sharing_token,
-            bbox=bounding_box,
-            layers=layers,
-            mags=mags,
-            data_format=data_format,
-            path=UPath(path) if path is not None else None,
-            exist_ok=exist_ok,
-        )
+        if sharing_token is None:
+            sharing_token = self._sharing_token
+        # A context object must not be entered by several threads at once, so this
+        # long-running call gets its own.
+        with _copy_context(self._context):
+            return download_dataset(
+                dataset_id=self.dataset_id,
+                sharing_token=sharing_token,
+                bbox=bounding_box,
+                layers=layers,
+                mags=mags,
+                data_format=data_format,
+                path=UPath(path) if path is not None else None,
+                exist_ok=exist_ok,
+            )
 
     def download_mesh(
         self,

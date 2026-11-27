@@ -102,6 +102,41 @@ def test_mrc_from_images(tmp_upath: UPath, path_type: Callable[[UPath], Any]) ->
     np.testing.assert_array_equal(read_data, data.transpose(2, 1, 0))
 
 
+def test_mrc_from_images_with_nan_and_inf(tmp_upath: UPath) -> None:
+    data = np.arange(4 * 8 * 8, dtype="float32").reshape(4, 8, 8)
+    data[0, 0, 0] = np.nan
+    data[0, 0, 1] = np.inf
+    mrc_path = tmp_upath / "test.mrc"
+    with mrcfile.new(str(mrc_path), overwrite=True) as mrc:
+        mrc.set_data(data)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            mrc_path, layer_name="mrc_layer", executor=executor
+        )
+
+    np.testing.assert_array_equal(
+        layer.get_finest_mag().read()[0], data.transpose(2, 1, 0)
+    )
+
+
+def test_tiff_from_images_with_nan_and_inf(tmp_upath: UPath) -> None:
+    data = np.arange(8 * 8, dtype="float32").reshape(8, 8)
+    data[0, 0] = np.nan
+    data[0, 1] = np.inf
+    tiff_path = tmp_upath / "test.tif"
+    imwrite(str(tiff_path), data)
+
+    ds = wk.Dataset(tmp_upath / "ds", (1, 1, 1))
+    with SequentialExecutor() as executor:
+        layer = ds.add_layer_from_images(
+            tiff_path, layer_name="tiff_layer", executor=executor
+        )
+
+    np.testing.assert_array_equal(layer.get_finest_mag().read()[0, :, :, 0], data.T)
+
+
 @pytest.mark.parametrize("flip_x", [False, True])
 @pytest.mark.parametrize("flip_y", [False, True])
 @pytest.mark.parametrize("flip_z", [False, True])
@@ -351,7 +386,7 @@ def test_timepoint_argument_is_removed(tmp_upath: UPath) -> None:
         ds.add_layer_from_images(
             tmp_upath / "unused.ims",
             layer_name="x",
-            timepoint=0,  # type: ignore[call-arg]
+            timepoint=0,  # pyrefly: ignore[unexpected-keyword]
         )
 
 

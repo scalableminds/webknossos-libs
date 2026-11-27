@@ -57,7 +57,7 @@ def main(
         ),
     ] = None,
     voxel_size: VoxelSizeOption,
-    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # pyrefly: ignore[bad-function-definition]
     layer_name: Annotated[
         str | None,
         typer.Option(
@@ -70,7 +70,7 @@ def main(
             help="The category of the layer that should be created.",
         ),
     ] = None,
-    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # type: ignore
+    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # pyrefly: ignore[bad-function-definition]
     name: Annotated[
         str | None,
         typer.Option(

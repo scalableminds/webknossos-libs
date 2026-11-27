@@ -1,5 +1,6 @@
 import copy
 import difflib
+from collections.abc import Sequence
 
 import networkx as nx
 import pytest
@@ -81,19 +82,19 @@ def test_immutability() -> None:
     skeleton = create_dummy_skeleton()
 
     with pytest.raises(AttributeError):
-        skeleton.get_node_by_id(2).id = 999  # type: ignore
+        skeleton.get_node_by_id(2).id = 999  # pyrefly: ignore[read-only]
 
     with pytest.raises(AttributeError):
-        skeleton.get_tree_by_id(1).id = 999  # type: ignore
+        skeleton.get_tree_by_id(1).id = 999  # pyrefly: ignore[read-only]
 
     with pytest.raises(AttributeError):
-        skeleton.get_group_by_id(5).id = 999  # type: ignore
+        skeleton.get_group_by_id(5).id = 999  # pyrefly: ignore[read-only]
 
     with pytest.raises(AttributeError):
-        skeleton.get_group_by_id(5).children = []  # type: ignore
+        skeleton.get_group_by_id(5).children = []  # pyrefly: ignore[read-only]
 
     with pytest.raises(AttributeError):
-        skeleton.get_group_by_id(5).children.append(skeleton.get_group_by_id(5))  # type: ignore
+        skeleton.get_group_by_id(5).children.append(skeleton.get_group_by_id(5))  # pyrefly: ignore[missing-attribute]
 
 
 def test_skeleton_creation() -> None:
@@ -204,7 +205,7 @@ def test_nml_generation(tmp_upath: UPath) -> None:
                     assert old_edge[1].position == new_edge[1].position
 
 
-def diff_lines(lines_a: list[str], lines_b: list[str]) -> list[str]:
+def diff_lines(lines_a: Sequence[str], lines_b: Sequence[str]) -> list[str]:
     diff = list(
         difflib.unified_diff(
             lines_a,
@@ -310,7 +311,8 @@ def test_simple_initialization_and_representations(tmp_upath: UPath) -> None:
     nml.save(nml_path)
     with nml_path.open("r", encoding="utf-8") as f:
         diff = diff_lines(
-            f.readlines(), EXPECTED_EXTENDED_NML.splitlines(keepends=True)
+            f.readlines(),
+            EXPECTED_EXTENDED_NML.splitlines(keepends=True),
         )
         assert len(diff) == 0, (
             f"Written nml does not look as expected:\n{''.join(diff)}"
@@ -731,6 +733,43 @@ def test_add_tree_copies_keep_edges_with_colliding_ids(tmp_upath: UPath) -> None
     path = tmp_upath / "copied.nml"
     target.save(path)
     check(wk.Skeleton.load(path))
+
+
+def test_node_interpolation_and_branchpoint_time_round_trip(
+    tmp_upath: UPath,
+) -> None:
+    skeleton = wk.Skeleton(dataset_name="test", voxel_size=(1, 1, 1))
+    tree = skeleton.add_tree("tree")
+    no_interpolation = tree.add_node((1, 1, 1), interpolation=False, time=100)
+    interpolation = tree.add_node((2, 2, 2), interpolation=True, time=100)
+    unset = tree.add_node((3, 3, 3))
+    branchpoint = tree.add_node(
+        (4, 4, 4), is_branchpoint=True, branchpoint_time=999, time=100
+    )
+
+    nml_path = tmp_upath / "round_trip.nml"
+    skeleton.save(nml_path)
+    loaded = wk.Skeleton.load(nml_path)
+
+    assert loaded.get_node_by_id(no_interpolation.id).interpolation is False
+    assert loaded.get_node_by_id(interpolation.id).interpolation is True
+    assert loaded.get_node_by_id(unset.id).interpolation is None
+    loaded_branchpoint = loaded.get_node_by_id(branchpoint.id)
+    assert loaded_branchpoint.is_branchpoint
+    assert loaded_branchpoint.branchpoint_time == 999
+
+
+def test_tree_metadata_is_not_shared() -> None:
+    skeleton1 = wk.Skeleton(dataset_name="test", voxel_size=(1, 1, 1))
+    skeleton2 = wk.Skeleton(dataset_name="test", voxel_size=(1, 1, 1))
+    tree1 = skeleton1.add_tree("tree1")
+    tree2 = skeleton1.add_tree("tree2")
+    tree3 = skeleton2.add_tree("tree3")
+
+    tree1.metadata["key"] = "value"
+
+    assert tree2.metadata == {}
+    assert tree3.metadata == {}
 
 
 def test_load_nml_assigns_comments_and_branchpoints_across_many_trees(

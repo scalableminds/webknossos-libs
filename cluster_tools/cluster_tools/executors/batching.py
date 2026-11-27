@@ -6,9 +6,7 @@ from functools import partial
 from itertools import islice
 from os import PathLike
 from types import TracebackType
-from typing import TypeVar
-
-from typing_extensions import ParamSpec
+from typing import ParamSpec, TypeVar
 
 from cluster_tools._utils.reflection import get_function_name
 from cluster_tools.executor_protocol import Executor
@@ -124,14 +122,15 @@ class BatchingExecutor:
 
         for batch in _iter_batches(items, batch_size):
             batch_fn = partial(_apply_fn_to_batch, fn)
-            batch_fn.__name__ = f"batch_{get_function_name(fn)}"  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            batch_fn.__name__ = f"batch_{get_function_name(fn)}"
             (batch_future,) = self._executor.map_to_futures(batch_fn, [batch])
             item_futures: list[Future[_T]] = [Future() for _ in batch]
             all_item_futures.extend(item_futures)
 
             def on_batch_done(
+                _item_futures: list[Future[_T]],
                 batch_future: Future[list[_T]],
-                _item_futures: list[Future[_T]] = item_futures,
             ) -> None:
                 try:
                     results = batch_future.result()
@@ -141,7 +140,7 @@ class BatchingExecutor:
                     for future in _item_futures:
                         future.set_exception(e)
 
-            batch_future.add_done_callback(on_batch_done)
+            batch_future.add_done_callback(partial(on_batch_done, item_futures))
 
         return all_item_futures
 
@@ -162,7 +161,8 @@ class BatchingExecutor:
 
         def result_generator() -> Iterator[_T]:
             batch_fn = partial(_apply_fn_to_batch, fn)
-            batch_fn.__name__ = f"batch_{get_function_name(fn)}"  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            batch_fn.__name__ = f"batch_{get_function_name(fn)}"
             for batch_results in self._executor.map(
                 batch_fn,
                 _iter_batches(items, batch_size),

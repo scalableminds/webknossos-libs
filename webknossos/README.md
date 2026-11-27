@@ -30,7 +30,7 @@ For the WEBKNOSSOS server, please refer to https://github.com/scalableminds/webk
 Please refer to [the documentation for further instructions](https://docs.webknossos.org/webknossos-py).
 
 ## Installation
-The `webknossos` package requires at least Python 3.10.
+The `webknossos` package requires at least Python 3.11.
 
 You can install it from [pypi](https://pypi.org/project/webknossos/), e.g. via pip:
 

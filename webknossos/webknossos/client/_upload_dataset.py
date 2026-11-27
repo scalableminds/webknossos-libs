@@ -48,7 +48,7 @@ def _make_resumable(
         target=target,
         simultaneous_uploads=simultaneous_uploads,
         query=query,
-        headers={"X-Auth-Token": context.token},
+        headers={} if context.token is None else {"X-Auth-Token": context.token},
         chunk_size=100 * 1024 * 1024,  # 100 MiB
         generate_unique_identifier=lambda _, relative_path: (
             f"{upload_id}/{relative_path.as_posix()}"
@@ -227,6 +227,8 @@ def upload_dataset(
                 new_dataset_name=new_dataset_name,
                 layers_to_link=layers_to_link,
                 jobs=jobs,
+                datastore_url=datastore_url,
+                folder_id=folder_id,
             )
 
     file_infos = list(_walk(dataset.path))

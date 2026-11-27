@@ -18,7 +18,7 @@ class ApiClientError(Exception):
     def message_for_response_body(self, response: httpx.Response) -> str:
         response_limit_chars = 2000
 
-        response_str = response.content.decode("utf-8")
+        response_str = response.content.decode("utf-8", errors="replace")
         shortened_label = (
             f" (showing first {response_limit_chars} of {len(response_str)} characters)"
             if (len(response_str) > response_limit_chars)

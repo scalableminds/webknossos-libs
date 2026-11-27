@@ -98,6 +98,8 @@ def _raw_chunk_converter(
             norm = (contiguous_chunk.astype(np.float64) - rescale_min_max.min) / (
                 rescale_min_max.max - rescale_min_max.min
             )
+            if np.issubdtype(target_dtype, np.integer):
+                norm = np.clip(np.nan_to_num(norm, nan=0.0), 0, 1)
             contiguous_chunk = norm * target_max
 
     if contiguous_chunk.dtype != target_dtype:
@@ -196,7 +198,7 @@ def main(
         ),
     ],
     voxel_size: VoxelSizeOption,
-    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # pyrefly: ignore[bad-function-definition]
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. `uint8`, `uint16`, `uint32`)")
     ] = "uint8",
@@ -231,7 +233,7 @@ def main(
             show_default=False,
         ),
     ] = None,
-    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # type: ignore
+    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # pyrefly: ignore[bad-function-definition]
     chunk_shape: ChunkShapeOption = DEFAULT_CHUNK_SHAPE,
     shard_shape: ShardShapeOption = None,
     chunks_per_shard: ChunksPerShardOption = None,

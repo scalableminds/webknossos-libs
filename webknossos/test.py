@@ -2,7 +2,7 @@
 # dependencies = [
 #   "requests",
 # ]
-# requires-python = ">=3.10"
+# requires-python = ">=3.11"
 # ///
 
 # ruff: noqa: T201

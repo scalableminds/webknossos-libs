@@ -522,6 +522,55 @@ def test_add_layer_dtype(
             )
 
 
+def test_growing_bounding_box_resizes_coarser_mags(tmp_upath: UPath) -> None:
+    layer = Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1)).add_layer(
+        "color",
+        COLOR_CATEGORY,
+        data_format=DataFormat.Zarr3,
+        bounding_box=BoundingBox((0, 0, 0), (64, 64, 64)),
+    )
+    layer.add_mag(1, chunk_shape=32, shard_shape=32)
+    mag2 = layer.add_mag(2, chunk_shape=32, shard_shape=32)
+
+    layer.bounding_box = BoundingBox((0, 0, 0), (65, 64, 64))
+
+    data = np.full((1, 1, 32, 32), 7, dtype=np.uint8)
+    mag2.write(data, absolute_offset=(64, 0, 0))
+    np.testing.assert_array_equal(
+        mag2.read(absolute_offset=(64, 0, 0), size=(2, 64, 64)), data
+    )
+
+
+def test_add_layer_for_existing_files_without_channel_axis(
+    tmp_upath: UPath,
+) -> None:
+    import tensorstore as ts
+
+    ds = Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))
+    ts.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {"driver": "file", "path": str(ds.path / "color" / "1")},
+            "metadata": {
+                "shape": [16, 16, 16],
+                "chunk_grid": {
+                    "name": "regular",
+                    "configuration": {"chunk_shape": [16, 16, 16]},
+                },
+                "data_type": "uint8",
+            },
+            "create": True,
+        }
+    ).result()[...] = 5
+
+    # The failed call must not leave a broken layer behind.
+    with pytest.raises(ValueError, match="without a channel axis"):
+        ds.add_layer_for_existing_files("color", category=COLOR_CATEGORY)
+    assert "color" not in ds.layers
+    assert "color" not in Dataset.open(ds.path).layers
+    assert (ds.path / "color" / "1" / "zarr.json").exists()
+
+
 @pytest.mark.parametrize("layer_name", ["color\n", "../outside", "a/b", ""])
 def test_add_layer_rejects_invalid_name(tmp_upath: UPath, layer_name: str) -> None:
     ds = Dataset(tmp_upath / "ds", voxel_size=(1, 1, 1))

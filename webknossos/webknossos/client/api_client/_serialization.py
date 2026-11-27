@@ -32,6 +32,7 @@ def attr_to_camel_case_structure(cl: type[T]) -> Callable[[Mapping[str, Any], An
     return cattrs.gen.make_dict_structure_fn(
         cl,
         api_client_converter,
+        # pyrefly: ignore[bad-argument-type]
         **{
             a.name: cattrs.gen.override(
                 rename=snake_to_camel_case(a.name),
@@ -40,7 +41,7 @@ def attr_to_camel_case_structure(cl: type[T]) -> Callable[[Mapping[str, Any], An
                 else None,
             )
             # https://github.com/python/mypy/issues/16254
-            for a in attr_fields(cl)  # type: ignore[arg-type,misc]
+            for a in attr_fields(cl)
         },
     )
 
@@ -49,6 +50,7 @@ def attr_to_camel_case_unstructure(cl: type[T]) -> Callable[[T], dict[str, Any]]
     return cattrs.gen.make_dict_unstructure_fn(
         cl,
         api_client_converter,
+        # pyrefly: ignore[bad-argument-type]
         **{
             a.name: cattrs.gen.override(
                 rename=snake_to_camel_case(a.name),
@@ -57,7 +59,7 @@ def attr_to_camel_case_unstructure(cl: type[T]) -> Callable[[T], dict[str, Any]]
                 else None,
             )
             # https://github.com/python/mypy/issues/16254
-            for a in attr_fields(cl)  # type: ignore[arg-type,misc]
+            for a in attr_fields(cl)
         },
     )
 

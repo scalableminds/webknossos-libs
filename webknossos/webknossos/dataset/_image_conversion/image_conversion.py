@@ -46,7 +46,11 @@ from ...geometry import (
 from ...geometry.constants import CXYZ_AXES, Z_AXIS
 from ...geometry.mag import MagLike
 from ...utils import named_partial, wait_and_ensure_success
-from ..defaults import DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES, DEFAULT_DATA_FORMAT
+from ..defaults import (
+    DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
+    DEFAULT_DATA_FORMAT,
+    _shard_shape_covering,
+)
 from ..errors import UnsupportedImageDataError, UnsupportedImageFormatError
 from ..layer import Layer, SegmentationLayer
 from ..layer.abstract_layer import (
@@ -56,7 +60,12 @@ from ..layer.abstract_layer import (
 )
 from ..layer.layer import _get_shard_and_chunk_shapes
 from . import common_slice_readers, sliced_image_source
-from .image_source import ImageSource, ReadOptions, ValueRange
+from .image_source import (
+    ImageSource,
+    ReadOptions,
+    ValueRange,
+    combined_largest_value,
+)
 from .image_source_registry import (
     describe_found_formats,
     describe_missing_extras,
@@ -664,7 +673,7 @@ def add_layer_from_images(
                 data_format=data_format,
                 dtype=current_dtype,
                 num_channels=image_source.num_channels,
-                **add_layer_kwargs,  # type: ignore[arg-type]
+                **add_layer_kwargs,  # pyrefly: ignore[bad-argument-type]
             )
         except ValueError as e:
             # add_layer rejects dtypes WEBKNOSSOS cannot store (e.g. float data
@@ -713,9 +722,14 @@ def add_layer_from_images(
             shard_shape=shard_shape,
         )
         # For Zarr3 image imports, default to z-aligned shards for efficient
-        # slice-by-slice writing, regardless of total z size.
+        # slice-by-slice writing, regardless of total z size. Compressed
+        # writes rewrite whole shards, so x/y is capped to the data's extent.
         if not _shard_shape_user_specified and layer.data_format == DataFormat.Zarr3:
-            shard_shape = chunk_shape * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES
+            shard_shape = _shard_shape_covering(
+                expected_bbox.size_xyz,
+                chunk_shape=chunk_shape,
+                max_shard_shape=chunk_shape * DEFAULT_CHUNKS_PER_SHARD_FROM_IMAGES,
+            )
         # When the expected bbox is 2D the chunk_shape is set to 2D too.
         if (
             expected_bbox.get_shape(Z_AXIS) == 1
@@ -778,12 +792,13 @@ def add_layer_from_images(
                     progress_desc=f"Creating layer [bold blue]{layer.name}[/bold blue] from images",
                 )
             shapes = [result.xy_size for result in chunk_results]
-            max_ids = [result.max_value for result in chunk_results]
+            max_id = combined_largest_value(
+                result.max_value for result in chunk_results
+            )
             value_range = ValueRange.combined(
                 result.value_range for result in chunk_results
             )
             if category == "segmentation":
-                max_id = max(max_ids)
                 cast(SegmentationLayer, layer).largest_segment_id = max_id
             layer.bounding_box = image_source.final_bounding_box(
                 layer.normalized_bounding_box, chunk_sizes=shapes, mag=mag
@@ -808,7 +823,7 @@ def add_layer_from_images(
                             **(
                                 attr.asdict(layer._properties, recurse=False)
                             ),  # use all attributes from LayerProperties
-                            largest_segment_id=int(max(max_ids)),
+                            largest_segment_id=max_id,
                         )
                         new_layer_properties.category = SEGMENTATION_CATEGORY
                         dataset._layers[layer.name] = SegmentationLayer(

@@ -11,7 +11,7 @@ For upgrade instructions, please check the respective _Breaking Changes_ section
 in the _Changed_ sections.
 
 ## Unreleased
-[Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.0.0...HEAD)
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.1.0...HEAD)
 
 ### Breaking Changes
 
@@ -23,8 +23,37 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- Fixed that `MagView.rechunk` could silently lose data when the shard shape is changed, the layer's bounding box does not start at a shard border and the executor runs jobs in parallel. [#82](https://github.com/scalableminds/mono/pull/82)
+
+
+## [5.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.1.0) - 2026-11-26
+[Commits](https://github.com/scalableminds/webknossos-libs/compare/v5.0.0...v5.1.0)
+
+### Changed
+- Allow newer versions of `httpx` (0.28+), `networkx` (3.3+), `click` (8.2+), `aiohttp` (3.15+) and `natsort` (8.5+). `typer` no longer has an upper bound, and its minimum version is now 0.16, the first one that works with click 8.2. This makes it easier to install webknossos alongside other packages. [#112](https://github.com/scalableminds/mono/pull/112)
+- Type checking (`./typecheck.sh`) uses pyrefly instead of mypy. Non-overlapping container checks (`x in [y]`), which mypy reported with `strict_equality`, are no longer checked. [#116](https://github.com/scalableminds/mono/pull/116)
+- Dropped support for Python 3.10, which has reached its end of life. Python 3.11 or newer is now required. [#113](https://github.com/scalableminds/mono/pull/113)
+
+### Fixed
+- `Dataset.from_images` and `add_layer_from_images` no longer use shards much larger than the image for Zarr3 layers by default: the default shard shape is reduced in x and y to cover the image. Before, every write of a small compressed image read and wrote a full 4096×4096×32 shard. For example, converting four small multi-page TIFFs (128×128×64) needed 7.4 GB of memory and 11 s, now it needs 0.2 GB and 2 s. [#138](https://github.com/scalableminds/mono/pull/138)
+- `wk.login(url=...)` no longer queries the API version of the previously configured server and no longer pins that version for the new server. An explicitly set `api_version` still carries over. [#87](https://github.com/scalableminds/mono/pull/87)
+- `RemoteDataset.download()` now downloads from the dataset's own server with the dataset's token (e.g. when the dataset was opened from a URL of another server) instead of the current context, and uses the sharing token the dataset was opened with. `RemoteDataset.folder` looks up the folder on the dataset's own server. [#87](https://github.com/scalableminds/mono/pull/87)
+- Building an upload request without a token no longer raises an `AttributeError`, so that the server's authentication error is shown. [#87](https://github.com/scalableminds/mono/pull/87)
+- `Project.get_tasks(fetch_all=True)` no longer loops forever if tasks are deleted while they are fetched. [#87](https://github.com/scalableminds/mono/pull/87)
+- Setting `RemoteDataset.metadata` or `RemoteFolder.metadata` to `None` now clears the metadata instead of raising an `UnboundLocalError`. [#87](https://github.com/scalableminds/mono/pull/87)
+- `upload_dataset` with `layers_to_link` now respects `folder_id` and `datastore_url`. [#87](https://github.com/scalableminds/mono/pull/87)
+- API errors with a non-UTF-8 response body now show the HTTP error instead of a `UnicodeDecodeError`. [#87](https://github.com/scalableminds/mono/pull/87)
+- `add_layer_for_existing_files` now raises a clear error for arrays without a channel axis, which are not supported. Before, it stored a layer with zero channels, after which the dataset could not be opened anymore. [#90](https://github.com/scalableminds/mono/pull/90)
+- Growing a layer's bounding box now also grows coarser mags far enough. Before, writing to the new border of e.g. mag 2 failed and reading it returned zeros. [#90](https://github.com/scalableminds/mono/pull/90)
+- `download_dataset` now downloads all mags of each layer when `mags` is not given. Before, every layer was downloaded with the mags of the first layer. [#90](https://github.com/scalableminds/mono/pull/90)
+- `add_attachment_as_copy` now rejects an attachment whose name or target path is already taken by an existing attachment before copying it. Before, it overwrote the files of the existing attachment. [#90](https://github.com/scalableminds/mono/pull/90)
+- Branchpoint times and the `interpolation` flag of nodes are now kept when saving and loading NML files. Before, branchpoints got the node's creation time and `interpolation` was always loaded as `True`. [#90](https://github.com/scalableminds/mono/pull/90)
+- Trees created without `metadata` no longer share one metadata dictionary. Before, metadata set on one tree showed up on all of them, also in other skeletons. [#90](https://github.com/scalableminds/mono/pull/90)
+- `convert-raw --rescale-min-max` now clips values outside the given range for integer target dtypes and writes NaN as 0. Before, they wrapped around. [#90](https://github.com/scalableminds/mono/pull/90)
+- `Dataset.from_images` and `add_layer_from_images` no longer fail for float volumes (e.g. MRC, Zarr, N5) containing NaN or infinite values. [#90](https://github.com/scalableminds/mono/pull/90)
 - Raised the minimum `cattrs` version from 22.0.0 to 23.1.0. With cattrs 22.x, `import webknossos` failed with `TypeError: override() got an unexpected keyword argument 'unstruct_hook'`. [#115](https://github.com/scalableminds/mono/pull/115)
 - `Dataset.from_images` and `add_layer_from_images` can now read `.ozx` archives, MRC files, DM3/DM4 files and common 2D images (png, jpg, …, including directories, glob patterns and zip archives of them) from remote paths such as S3. `webknossos convert-raw` can now read its source from remote paths, too. Before, remote `.ozx` archives were wrongly reported as corrupted. TIFF files on remote paths now keep the path's storage options, e.g. credentials. [#1595](https://github.com/scalableminds/webknossos-libs/pull/1595)
+
 
 
 ## [5.0.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.0.0) - 2026-11-23
@@ -34,6 +63,7 @@ in the _Changed_ sections.
 - The WEBKNOSSOS token is no longer attached to `http(s)` paths of mags and attachments that are read from a `datasource-properties.json`. Before, opening a dataset from an untrusted source could send the token of the current context to an arbitrary host. Only paths that the WEBKNOSSOS server itself hands out (e.g. via `RemoteDataset`) receive the token now, and it is dropped when they redirect to another host. Local datasets that reference non-public remote layers by `https` URL (e.g. via `add_layer_as_ref`) can no longer read them after being reopened; open the `RemoteDataset` instead. [#83](https://github.com/scalableminds/mono/pull/83)
 
 ### Changed
+- Allow newer versions of `psutil` (7.x), `rich` (14.x, 15.x) and `typer` (up to 0.x). This allows installing webknossos alongside napari 0.10. With recent typer versions, running `webknossos` without arguments exits with code 2 (instead of 0). [#59](https://github.com/scalableminds/mono/pull/59)
 - `Skeleton.get_node_by_id` and `Skeleton.get_tree_by_id` (also on groups) now use a lazily built index instead of scanning all trees. This also makes loading NML files with many trees and comments or branchpoints much faster (e.g. 8000 trees: 17.6 s → 0.23 s). [#88](https://github.com/scalableminds/mono/pull/88)
 
 ### Fixed
@@ -58,7 +88,6 @@ in the _Changed_ sections.
 - Volume layers of annotations now support segment groups via `VolumeLayer.add_segment_group`, `SegmentGroup` (analogous to skeleton tree groups) and `SegmentInformation.group`. They are read from and written to NML files. [#1592](https://github.com/scalableminds/webknossos-libs/pull/1592)
 
 ### Changed
-- Allow newer versions of `psutil` (7.x), `rich` (14.x, 15.x) and `typer` (up to 0.x). This allows installing webknossos alongside napari 0.10. With recent typer versions, running `webknossos` without arguments exits with code 2 (instead of 0). [#59](https://github.com/scalableminds/mono/pull/59)
 - Updated Pillow to 13.0.0 for Python 3.11+ (Pillow 13 requires Python >=3.11; Python 3.10 stays on Pillow 12.x). Pillow is only a transitive dependency (via `imageio`), so this is enforced through a uv constraint.
 - `Dataset.from_images` and `add_layer_from_images` now apply the `translation` of OME-Zarr groups and `.ozx` archives following OME-NGFF 0.4 and 0.5 as the layer's `coordinate_transformations`, like WEBKNOSSOS does when exploring them. Before, it was ignored. [#1575](https://github.com/scalableminds/webknossos-libs/pull/1575)
 - Import time was cut roughly in half by using lazy imports for several dependencies. [#1583](https://github.com/scalableminds/webknossos-libs/pull/1583)

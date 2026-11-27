@@ -1,6 +1,5 @@
 import contextlib
 import json
-import sys
 
 import pytest
 from upath import UPath
@@ -164,11 +163,17 @@ def test_attachments(tmp_upath: UPath) -> None:
     assert seg_layer._properties.attachments.agglomerates is None
     seg_layer.attachments.delete_attachment(seg_layer.attachments.connectomes[0])
     assert seg_layer._properties.attachments.connectomes is None
-    seg_layer.attachments.delete_attachment(seg_layer.attachments.segment_index)
+    segment_index = seg_layer.attachments.segment_index
+    assert segment_index is not None
+    seg_layer.attachments.delete_attachment(segment_index)
     assert seg_layer._properties.attachments.segment_index is None
-    seg_layer.attachments.delete_attachment(seg_layer.attachments.segment_statistics)
+    segment_statistics = seg_layer.attachments.segment_statistics
+    assert segment_statistics is not None
+    seg_layer.attachments.delete_attachment(segment_statistics)
     assert seg_layer._properties.attachments.segment_statistics is None
-    seg_layer.attachments.delete_attachment(seg_layer.attachments.cumsum)
+    cumsum = seg_layer.attachments.cumsum
+    assert cumsum is not None
+    seg_layer.attachments.delete_attachment(cumsum)
     assert seg_layer._properties.attachments.cumsum is None
 
     properties_json = json.loads(
@@ -374,9 +379,6 @@ def test_add_attachments(tmp_upath: UPath) -> None:
     assert seg_layer.attachments.meshes[0].name == "meshfile_4-4-1"
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 11), reason="contextlib.chdir requires Python 3.11+"
-)
 def test_add_attachments_relative_path(tmp_upath: UPath) -> None:
     dataset, seg_layer = make_dataset(tmp_upath)
 
@@ -623,3 +625,50 @@ def test_detect_legacy_attachments(tmp_upath: UPath) -> None:
         seg_layer.attachments.segment_index
         and seg_layer.attachments.segment_index.path == segment_index_path
     )
+
+
+def test_add_attachment_as_copy_with_duplicate_name(tmp_upath: UPath) -> None:
+    _, seg_layer = make_dataset(tmp_upath)
+
+    first_path = tmp_upath / "first"
+    first_path.write_text("first")
+    seg_layer.attachments.add_attachment_as_copy(
+        MeshAttachment.from_path_and_name(
+            first_path, "meshfile", data_format=AttachmentDataFormat.Zarr3
+        )
+    )
+
+    second_path = tmp_upath / "second"
+    second_path.write_text("second")
+    with pytest.raises(ValueError, match="already exists"):
+        seg_layer.attachments.add_attachment_as_copy(
+            MeshAttachment.from_path_and_name(
+                second_path, "meshfile", data_format=AttachmentDataFormat.Zarr3
+            )
+        )
+
+    assert seg_layer.attachments.meshes[0].path.read_text() == "first"
+
+
+def test_add_attachment_as_copy_with_existing_singleton(tmp_upath: UPath) -> None:
+    _, seg_layer = make_dataset(tmp_upath)
+
+    first_path = tmp_upath / "first"
+    first_path.write_text("first")
+    seg_layer.attachments.add_attachment_as_copy(
+        SegmentIndexAttachment.from_path_and_name(
+            first_path, "segment_index", data_format=AttachmentDataFormat.HDF5
+        )
+    )
+
+    second_path = tmp_upath / "second"
+    second_path.write_text("second")
+    with pytest.raises(ValueError, match="belongs to an existing attachment"):
+        seg_layer.attachments.add_attachment_as_copy(
+            SegmentIndexAttachment.from_path_and_name(
+                second_path, "segment_index", data_format=AttachmentDataFormat.HDF5
+            )
+        )
+
+    assert seg_layer.attachments.segment_index is not None
+    assert seg_layer.attachments.segment_index.path.read_text() == "first"

@@ -102,4 +102,4 @@ def test_ordering() -> None:
 
     # Incomparable types still raise rather than comparing by identity
     with pytest.raises(TypeError):
-        Vec3Int(1, 2, 3) < "abc"  # type: ignore[operator]
+        Vec3Int(1, 2, 3) < "abc"

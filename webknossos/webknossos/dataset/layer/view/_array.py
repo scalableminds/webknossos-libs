@@ -6,13 +6,14 @@ from logging import getLogger
 from typing import (
     Any,
     Literal,
+    NotRequired,
+    Self,
     TypedDict,
 )
 
 import numpy as np
 import tensorstore
 import wkw
-from typing_extensions import NotRequired, Self
 from upath import UPath
 
 from webknossos.dataset._utils.tensorstore_helpers import TS_CONTEXT, _make_kvstore
@@ -106,7 +107,11 @@ def _default_zarr3_codecs(ndim: int, compression: bool) -> tuple[Zarr3Codec, ...
         },
     )
     if compression:
-        codecs += ({"name": "zstd", "configuration": {"level": 5, "checksum": True}},)
+        zstd_codec: Zarr3Codec = {
+            "name": "zstd",
+            "configuration": {"level": 5, "checksum": True},
+        }
+        codecs += (zstd_codec,)
     return codecs
 
 
@@ -118,6 +123,7 @@ def _default_zarr3_chunk_key_encoding() -> Zarr3ChunkKeyEncoding:
 
 
 @dataclass(frozen=True)
+# pyrefly: ignore[bad-class-definition]
 class Zarr3ArrayInfo(ArrayInfo):
     data_format = DataFormat.Zarr3
     codecs: tuple[Zarr3Codec, ...] = ()
@@ -208,7 +214,7 @@ class BaseArray(ABC):
         classes = (WKWArray, Zarr3Array, Zarr2Array)
         for cls in classes:
             try:
-                array = cls.open(path)  # type: ignore[attr-defined]
+                array = cls.open(path)
                 return array
             except ArrayException:  # noqa: PERF203 `try`-`except` within a loop incurs performance overhead
                 pass

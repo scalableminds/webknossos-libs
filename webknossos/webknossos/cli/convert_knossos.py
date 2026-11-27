@@ -256,11 +256,11 @@ def main(
         typer.Option(help="Name of the cubed layer (color or segmentation)"),
     ] = "color",
     voxel_size: VoxelSizeOption,
-    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # pyrefly: ignore[bad-function-definition]
     dtype: Annotated[
         str, typer.Option(help="Target datatype (e.g. uint8, uint16, uint32)")
     ] = "uint8",
-    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # type: ignore
+    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # pyrefly: ignore[bad-function-definition]
     chunk_shape: ChunkShapeOption = DEFAULT_CHUNK_SHAPE,
     shard_shape: ShardShapeOption = None,
     chunks_per_shard: ChunksPerShardOption = None,
@@ -272,7 +272,7 @@ def main(
             parser=parse_mag,
             metavar="MAG",
         ),
-    ] = 1,  # type: ignore
+    ] = 1,  # pyrefly: ignore[bad-function-definition]
     jobs: JobsOption = None,
     distribution_strategy: DistributionStrategyOption = DistributionStrategy.MULTIPROCESSING,
     job_resources: JobResourcesOption = None,

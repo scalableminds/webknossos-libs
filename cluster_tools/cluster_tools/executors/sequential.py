@@ -2,9 +2,7 @@ import warnings
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import Executor, Future, as_completed
 from os import PathLike
-from typing import Any, TypeVar
-
-from typing_extensions import ParamSpec
+from typing import Any, ParamSpec, TypeVar
 
 from cluster_tools._utils.cfut_options import (
     cfut_options_kwargs,
@@ -31,7 +29,7 @@ class SequentialExecutor(Executor):
     ) -> None:
         self.output_store = FileOutputStore() if output_store is None else output_store
 
-    def submit(  # type: ignore[override]
+    def submit(
         self,
         __fn: Callable[_P, _T],
         *args: _P.args,
@@ -66,7 +64,7 @@ class SequentialExecutor(Executor):
         output_key_getter: Callable[[_S], str] | None = None,
     ) -> list[Future[_T]]:
         return [
-            self.submit(  # type: ignore[call-arg]
+            self.submit(
                 fn,
                 arg,
                 **cfut_options_kwargs(
@@ -76,7 +74,8 @@ class SequentialExecutor(Executor):
             for arg in args
         ]
 
-    def map(  # type: ignore[override]
+    # pyrefly: ignore[bad-override]
+    def map(
         self,
         fn: Callable[[_S], _T],
         iterables: Iterable[_S],

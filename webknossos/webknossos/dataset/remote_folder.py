@@ -117,11 +117,10 @@ class RemoteFolder:
 
         client = _get_api_client()
         folder = client.folder_get(folder_id=self.id)
-        if metadata is not None:
-            api_metadata = [
-                ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
-                for k, v in metadata.items()
-            ]
+        api_metadata = [
+            ApiMetadata(key=k, type=infer_metadata_type(v), value=v)
+            for k, v in (metadata or {}).items()
+        ]
         new_folder = ApiFolderUpdate(
             name=folder.name,
             allowed_teams=[t.id for t in folder.allowed_teams],

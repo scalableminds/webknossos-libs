@@ -31,8 +31,6 @@
 ## SOFTWARE
 ################################################################################
 
-# mypy: disable-error-code=no-untyped-def
-
 from __future__ import print_function
 
 import os
@@ -56,6 +54,7 @@ if PY3:
     # unicode() deprecated in Python 3
     unicode_str = str
 else:
+    # pyrefly: ignore[unknown-name]
     unicode_str = unicode
 
 ### utility fuctions ###

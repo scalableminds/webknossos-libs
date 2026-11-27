@@ -6,9 +6,9 @@ authors = [{name= "scalable minds", email="hello@scalableminds.com"}]
 readme = "README.md"
 license-files = ["LICENSE"]
 license = "MIT"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-    "typing-extensions ~=4.15.0",
+    "typing-extensions >=4.15.0,<5",
 ]
 
 [project.urls]
@@ -24,10 +24,10 @@ all=["cluster_tools[kubernetes]", "cluster_tools[dask]"]
 [dependency-groups]
 dev = [
     "icecream ~=2.1.1",
-    "mypy ~=2.1.0",
+    "pyrefly ~=1.5.0",
     "pytest ~=8.3.3",
     "pytest-timeout>=2.4.0",
-    "ruff ~=0.11.0",
+    "ruff ~=0.15.0",
 ]
 
 [build-system]
@@ -47,7 +47,6 @@ exclude = [
     ".git",
     ".git-rewrite",
     ".ipynb_checkpoints",
-    ".mypy_cache",
     ".pyenv",
     ".pytest_cache",
     ".ruff_cache",
@@ -67,8 +66,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.10 for automatic linting fixes
-target-version = "py310"
+# Assume Python 3.11 for automatic linting fixes
+target-version = "py311"
 
 [tool.ruff.lint]
 # F = Pyflakes https://docs.astral.sh/ruff/rules/#pyflakes-f
@@ -98,13 +97,16 @@ indent-style = "space"
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
 
-[tool.mypy]
-disallow_untyped_defs = true
-ignore_missing_imports = true
-namespace_packages = true
-strict_equality = true
-show_error_codes = true
-no_implicit_optional = true
+[tool.pyrefly]
+project-includes = ["cluster_tools", "tests"]
+preset = "legacy"
+ignore-missing-imports = ["*"]
+
+[tool.pyrefly.errors]
+implicit-any-parameter = "error"
+incompatible-comparison = "error"
+unannotated-return = "error"
+unused-ignore = "error"
 
 [tool.pytest.ini_options]
 markers = [

@@ -159,7 +159,7 @@ def main(
         ),
     ],
     voxel_size: VoxelSizeOption,
-    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # type:ignore
+    unit: UnitOption = DEFAULT_LENGTH_UNIT_STR,  # pyrefly: ignore[bad-function-definition]
     layer_name: Annotated[
         str,
         typer.Option(help="Name of the output layer (color or segmentation)"),
@@ -171,7 +171,7 @@ def main(
 When converting a folder, this option is ignored."
         ),
     ] = False,
-    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # type: ignore
+    data_format: DataFormatOption = DEFAULT_DATA_FORMAT_STR,  # pyrefly: ignore[bad-function-definition]
     chunk_shape: ChunkShapeOption = DEFAULT_CHUNK_SHAPE,
     shard_shape: ShardShapeOption = None,
     chunks_per_shard: ChunksPerShardOption = None,

@@ -27,6 +27,7 @@ def file_path_to_absolute_module(file_path: str) -> str:
 def get_function_name(fun: Callable) -> str:
     # When using functools.partial, __name__ does not exist
     try:
-        return fun.__name__ if hasattr(fun, "__name__") else get_function_name(fun.func)  # type: ignore[attr-defined]
+        # pyrefly: ignore[missing-attribute]
+        return fun.__name__ if hasattr(fun, "__name__") else get_function_name(fun.func)
     except Exception:
         return "<unknown function>"

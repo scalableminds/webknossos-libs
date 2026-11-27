@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from webknossos.client.api_client import WkApiClient, WkApiClientV13, WkApiClientV14
@@ -50,6 +52,22 @@ def test_webknossos_context_api_version(
         api_client = _get_context().api_client
         assert isinstance(api_client, api_client_class)
         assert api_client.webknossos_api_version == api_version
+
+
+def test_login_does_not_pin_auto_detected_api_version() -> None:
+    with webknossos_context(url="https://previous.example.com"):
+        with patch(
+            "webknossos.client.context._cached_detect_api_version",
+            side_effect=AssertionError("must not query the previous server"),
+        ):
+            login(url="https://other.example.com", token="test_token")
+        assert _get_context()._api_version is None
+
+
+def test_login_keeps_explicitly_pinned_api_version() -> None:
+    with webknossos_context(url="https://previous.example.com", api_version=13):
+        login(url="https://other.example.com", token="test_token")
+        assert _get_context()._api_version == 13
 
 
 def test_context_repr_hides_token() -> None:

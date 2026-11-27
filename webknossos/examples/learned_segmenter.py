@@ -16,7 +16,7 @@ def main() -> None:
 
     # Step 1: Read the training data from the annotation and the dataset's color
     # layer (the data will be streamed from WEBKNOSSOS to our local computer)
-    training_data_bbox = annotation.user_bounding_boxes[0]  # type: ignore[index]
+    training_data_bbox = annotation.user_bounding_boxes[0]
     dataset = annotation.get_remote_annotation_dataset()
 
     volume_mag_view = dataset.layers["Volume"].get_finest_mag()

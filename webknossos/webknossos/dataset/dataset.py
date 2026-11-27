@@ -1067,9 +1067,12 @@ class Dataset(AbstractDataset[Layer, SegmentationLayer]):
             f"Could not find any valid mags in {self.path / layer_name}. Cannot add layer."
         )
 
-        num_channels = kwargs.pop(
-            "num_channels", array_info.bounding_box.size.get("c", 0)
-        )
+        if "c" not in array_info.bounding_box.axes:
+            raise ValueError(
+                f"Cannot add layer {layer_name}: Arrays without a channel axis are not supported."
+            )
+
+        num_channels = kwargs.pop("num_channels", array_info.bounding_box.size.c)
         dtype = (
             _dtype_maybe(
                 kwargs.pop("dtype", None), kwargs.pop("dtype_per_channel", None)

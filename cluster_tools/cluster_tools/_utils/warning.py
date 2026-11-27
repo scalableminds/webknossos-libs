@@ -3,9 +3,7 @@ import threading
 import time
 from collections.abc import Callable
 from concurrent.futures import Future
-from typing import TypeVar
-
-from typing_extensions import ParamSpec
+from typing import ParamSpec, TypeVar
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
@@ -57,5 +55,6 @@ def enrich_future_with_uncaught_warning(f: Future) -> None:
             )
 
     if not hasattr(f, "is_wrapped_by_cluster_tools"):
-        f.is_wrapped_by_cluster_tools = True  # type: ignore[attr-defined]
+        # pyrefly: ignore[missing-attribute]
+        f.is_wrapped_by_cluster_tools = True
         f.add_done_callback(warn_on_exception)

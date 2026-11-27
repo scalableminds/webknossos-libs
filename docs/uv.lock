@@ -3,13 +3,13 @@ revision = 5
 requires-python = ">=3.11, <3.13"
 resolution-markers = [
     "python_full_version >= '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version >= '3.12' and sys_platform != 'win32'",
+    "python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version < '3.12' and sys_platform != 'win32'",
 ]
 
 [manifest]
-constraints = [{ name = "pillow", marker = "python_full_version >= '3.11'", specifier = "~=13.0.0" }]
+constraints = [{ name = "pillow", specifier = "~=13.0.0" }]
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -86,6 +86,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/61/62/06741b579156360248d1ec624842ad0edf697050bbaf7c3e46394e106ad1/aiosignal-1.4.0.tar.gz", hash = "sha256:f47eecd9468083c2029cc99945502cb7708b082c232f9aca65da147157b251c7", size = 25007, upload-time = "2025-07-03T22:54:43.528Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fb/76/641ae371508676492379f16e2fa48f4e2c11741bd63c48be4b12a6b09cba/aiosignal-1.4.0-py3-none-any.whl", hash = "sha256:053243f8b92b990551949e63930a839ff0cf0b0ebbe0597b0f3fb19e1a0fe82e", size = 7490, upload-time = "2025-07-03T22:54:42.156Z" },
+]
+
+[[package]]
+name = "annotated-doc"
+version = "0.0.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/7d/bdbf3062e5dae31da8b3de1e3269110beb93d268df4a7f6d22b167c6cee0/annotated_doc-0.0.7.tar.gz", hash = "sha256:0a30ef8f5322a4173720ae6712dc9a5e58f5a19868f3f167b4b5778db066c2b5", size = 10764, upload-time = "2026-11-18T11:06:55.181Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5e/b1/9530d6bee606979d54501adcc767d958a38929827f11a524b0d93429d2ad/annotated_doc-0.0.7-py3-none-any.whl", hash = "sha256:6bc31bbbec6dfaaedc1676dbc11dbda96fe22a2b5c400e9ebad113fec44a9dc6", size = 5286, upload-time = "2026-11-18T11:06:54.096Z" },
 ]
 
 [[package]]
@@ -281,17 +290,17 @@ requires-dist = [
     { name = "cluster-tools", extras = ["kubernetes"], marker = "extra == 'all'" },
     { name = "distributed", marker = "extra == 'dask'", specifier = "~=2023.9.1" },
     { name = "kubernetes", marker = "extra == 'kubernetes'", specifier = "~=27.2.0" },
-    { name = "typing-extensions", specifier = "~=4.15.0" },
+    { name = "typing-extensions", specifier = ">=4.15.0,<5" },
 ]
 provides-extras = ["dask", "kubernetes", "all"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "icecream", specifier = "~=2.1.1" },
-    { name = "mypy", specifier = "~=2.1.0" },
+    { name = "pyrefly", specifier = "~=1.5.0" },
     { name = "pytest", specifier = "~=8.3.3" },
     { name = "pytest-timeout", specifier = ">=2.4.0" },
-    { name = "ruff", specifier = "~=0.11.0" },
+    { name = "ruff", specifier = "~=0.15.0" },
 ]
 
 [[package]]
@@ -1536,17 +1545,18 @@ wheels = [
 
 [[package]]
 name = "typer"
-version = "0.12.5"
+version = "0.29.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "click" },
+    { name = "annotated-doc" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "pydantic" },
     { name = "rich" },
     { name = "shellingham" },
-    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c5/58/a79003b91ac2c6890fc5d90145c662fd5771c6f11447f116b63300436bc9/typer-0.12.5.tar.gz", hash = "sha256:f592f089bedcc8ec1b974125d64851029c3b1af145f04aca64d69410f0c9b722", size = 98953, upload-time = "2024-08-24T21:17:57.346Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bf/21/37383ece7d0a4995fb8ea97729207c4292b3ff94085002f37b2387063cfb/typer-0.29.2.tar.gz", hash = "sha256:b1998dc5f2c3dedafa1517a9521fa944cc4dc1fadcea085d81a3b10ebcaeb075", size = 205728, upload-time = "2026-11-18T11:09:46.189Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/2b/886d13e742e514f704c33c4caa7df0f3b89e5a25ef8db02aa9ca3d9535d5/typer-0.12.5-py3-none-any.whl", hash = "sha256:62fe4e471711b147e3365034133904df3e235698399bc4de2b36c8579298d52b", size = 47288, upload-time = "2024-08-24T21:17:55.451Z" },
+    { url = "https://files.pythonhosted.org/packages/62/f3/864dcb0e165b52e9f75aa3c7e0aeeb9876f139c66eb14d87856bb173b0fa/typer-0.29.2-py3-none-any.whl", hash = "sha256:f30731f8ca758368b836b3714872e58e395cef8fcaff918c853b1969ed5274e7", size = 121041, upload-time = "2026-11-18T11:09:45.03Z" },
 ]
 
 [[package]]
@@ -1644,7 +1654,6 @@ dependencies = [
     { name = "boltons" },
     { name = "cattrs" },
     { name = "certifi" },
-    { name = "click" },
     { name = "cluster-tools" },
     { name = "google-api-python-client" },
     { name = "httpx" },
@@ -1672,45 +1681,44 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiohttp", specifier = "~=3.14.1" },
+    { name = "aiohttp", specifier = ">=3.14.1,<4" },
     { name = "attrs", specifier = ">=22.0.0" },
     { name = "boltons", specifier = ">=21.0.0" },
-    { name = "cattrs", specifier = ">=22.0.0" },
+    { name = "cattrs", specifier = ">=23.1.0" },
     { name = "certifi", specifier = ">=2023" },
-    { name = "click", specifier = "<8.2.0" },
     { name = "cluster-tools", editable = "../cluster_tools" },
     { name = "fastremap", marker = "extra == 'fastremap'", specifier = "~=1.20.0" },
     { name = "gcsfs", marker = "extra == 'gcs'", specifier = ">=2026.2.0" },
     { name = "google-api-python-client", specifier = ">=2.0.0" },
-    { name = "httpx", specifier = "~=0.27.0" },
+    { name = "httpx", specifier = ">=0.27.0,<1" },
     { name = "imagecodecs", marker = "extra == 'imagecodecs'", specifier = ">=2021.11.20" },
     { name = "imageio", specifier = ">=2.37.0" },
     { name = "imaris-ims-file-reader", marker = "extra == 'ims'", specifier = ">=0.1.8" },
     { name = "loxun", specifier = "~=2.0.0" },
     { name = "lz4", specifier = ">=4.0.0" },
     { name = "mrcfile", marker = "extra == 'mrcfile'", specifier = ">=1.4.3" },
-    { name = "natsort", specifier = "~=8.4.0" },
-    { name = "networkx", specifier = "~=3.2.1" },
+    { name = "natsort", specifier = ">=8.4.0,<9" },
+    { name = "networkx", specifier = ">=3.2.1,<4" },
     { name = "numba", marker = "extra == 'numba'", specifier = "~=0.61" },
     { name = "numpy", specifier = ">=2.0.0,<3.0.0" },
     { name = "packaging", specifier = ">=21.0" },
-    { name = "pandas", marker = "python_full_version >= '3.11' and extra == 'examples'", specifier = "~=3.0.3" },
+    { name = "pandas", marker = "extra == 'examples'", specifier = "~=3.0.3" },
     { name = "pooch", marker = "extra == 'examples'", specifier = "~=1.5.2" },
     { name = "protobuf", specifier = ">=3.12.0,<7" },
-    { name = "psutil", specifier = "~=6.0.0" },
+    { name = "psutil", specifier = ">=6.0.0,<8" },
     { name = "pylibczirw", marker = "python_full_version < '3.14' and extra == 'czi'", specifier = "==5.1.1" },
     { name = "python-dateutil", specifier = ">=2.9.0" },
     { name = "python-dotenv", specifier = ">=1.2.2,<2" },
-    { name = "rich", specifier = "~=13.8.0" },
+    { name = "rich", specifier = ">=13.8.0,<16" },
     { name = "s3fs", marker = "extra == 's3'", specifier = ">=2026.2.0" },
-    { name = "scikit-image", marker = "python_full_version >= '3.11' and extra == 'examples'", specifier = "~=0.26.0" },
-    { name = "scikit-learn", marker = "python_full_version >= '3.11' and extra == 'examples'", specifier = "~=1.9.0" },
+    { name = "scikit-image", marker = "extra == 'examples'", specifier = "~=0.26.0" },
+    { name = "scikit-learn", marker = "extra == 'examples'", specifier = "~=1.9.0" },
     { name = "scipy", specifier = ">=1.13" },
     { name = "tabulate", marker = "extra == 'examples'", specifier = ">=0.9.0" },
     { name = "tensorstore", marker = "sys_platform != 'win32'", specifier = "~=0.1.78" },
     { name = "tensorstore", marker = "sys_platform == 'win32'", specifier = "==0.1.76" },
     { name = "tifffile", marker = "extra == 'tifffile'", specifier = ">=2024.8.24" },
-    { name = "typer", specifier = "~=0.12.5" },
+    { name = "typer", specifier = ">=0.16.0" },
     { name = "typing-extensions", specifier = "~=4.0" },
     { name = "universal-pathlib", specifier = "~=0.2" },
     { name = "webknossos", extras = ["czi"], marker = "extra == 'all'" },
@@ -1738,7 +1746,7 @@ dev = [
     { name = "inducoapi", specifier = "~=2.0.2" },
     { name = "jsonschema", specifier = "~=4.6.0" },
     { name = "moto", extras = ["s3", "server"], specifier = "~=5.2.2" },
-    { name = "mypy", specifier = "~=2.1.0" },
+    { name = "pyrefly", specifier = "~=1.5.0" },
     { name = "pytest", specifier = "~=8.3.2" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "pytest-custom-exit-code", specifier = "~=0.3.0" },

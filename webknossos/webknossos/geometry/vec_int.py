@@ -101,9 +101,9 @@ class VecInt(Sequence[int]):
                     assert all(isinstance(arg, str) for arg in args[1]), _value_error(
                         args
                     )
-                    axes = tuple(args[1])  # type: ignore
+                    axes = tuple(args[1])  # pyrefly: ignore[bad-assignment]
             elif isinstance(args, Iterable):
-                as_tuple = tuple(int(arg) for arg in args)  # type: ignore
+                as_tuple = tuple(int(arg) for arg in args)  # pyrefly: ignore[bad-argument-type]
             else:
                 raise ValueError(_value_error(args))
             assert axes is not None, _value_error(args)
@@ -388,7 +388,7 @@ class VecInt(Sequence[int]):
     # Note: When adding regular tuples the first tuple is extended with the second tuple.
     # For VecInt we want to add the elements at the same index.
     # Do not add VecInt to plain tuple! Hence the type:ignore)
-    def __add__(self: _T, other: Union[int, "VecIntLike"]) -> _T:  # type: ignore[override]
+    def __add__(self: _T, other: Union[int, "VecIntLike"]) -> _T:
         return self._element_wise(other, add)
 
     def __sub__(self: _T, other: Union[int, "VecIntLike"]) -> _T:
@@ -396,7 +396,7 @@ class VecInt(Sequence[int]):
 
     # Note: When multiplying regular tuples with an int those are repeated,
     # which is a different behavior in the superclass! Hence the type:ignore.
-    def __mul__(self: _T, other: Union[int, "VecIntLike"]) -> _T:  # type: ignore[override]
+    def __mul__(self: _T, other: Union[int, "VecIntLike"]) -> _T:
         return self._element_wise(other, mul)
 
     def __floordiv__(self: _T, other: Union[int, "VecIntLike"]) -> _T:

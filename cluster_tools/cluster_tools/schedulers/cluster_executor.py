@@ -17,10 +17,9 @@ from types import FrameType, TracebackType
 from typing import (
     Any,
     Literal,
+    ParamSpec,
     TypeVar,
 )
-
-from typing_extensions import ParamSpec
 
 from cluster_tools._utils import pickling
 from cluster_tools._utils.cfut_options import (
@@ -492,7 +491,7 @@ class ClusterExecutor(futures.Executor):
         enrich_future_with_uncaught_warning(fut)
         return fut
 
-    def submit(  # type: ignore[override]
+    def submit(
         self,
         __fn: Callable[_P, _T],
         *args: _P.args,
@@ -544,7 +543,8 @@ class ClusterExecutor(futures.Executor):
         with self.jobs_lock:
             self.jobs[jobid] = (fut, workerid, output_key, should_keep_output)
 
-        fut.cluster_jobid = jobid  # type: ignore[attr-defined]
+        # pyrefly: ignore[missing-attribute]
+        fut.cluster_jobid = jobid
 
         # Thread will wait for it to finish.
         self.wait_thread.waitFor(output_key, jobid)
@@ -685,9 +685,11 @@ class ClusterExecutor(futures.Executor):
         for array_index, (fut, output_key) in enumerate(futs_with_output_keys):
             jobid_with_index = self.get_jobid_with_index(jobid, array_index)
 
-            fut.cluster_jobid = jobid  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            fut.cluster_jobid = jobid
             # fut.cluster_jobindex is only used for debugging:
-            fut.cluster_jobindex = array_index  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            fut.cluster_jobindex = array_index
 
             job_index = job_index_offset + array_index
             workerid_with_index = self.get_workerid_with_index(workerid, job_index)
@@ -752,7 +754,8 @@ class ClusterExecutor(futures.Executor):
         self.files_to_clean_up = []
         self._deregister_shutdown_hook(self.handle_kill)
 
-    def map(  # type: ignore[override]
+    # pyrefly: ignore[bad-override]
+    def map(
         self,
         fn: Callable[[_S], _T],
         args: Iterable[Any],
@@ -787,12 +790,14 @@ class ClusterExecutor(futures.Executor):
         process. This method blocks as long as the future is not done.
         """
 
-        log_path = self.format_log_file_path(self.cfut_dir, fut.cluster_jobid)  # type: ignore[attr-defined]
+        # pyrefly: ignore[missing-attribute]
+        log_path = self.format_log_file_path(self.cfut_dir, fut.cluster_jobid)
 
         # Don't use a logger instance here, since the child process
         # probably already used a logger.
         def log_callback(s: str) -> None:
-            sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")  # type: ignore[attr-defined]
+            # pyrefly: ignore[missing-attribute]
+            sys.stdout.write(f"(jid={fut.cluster_jobid}) {s}")
 
         tailer = Tail(log_path, log_callback)
         fut.add_done_callback(lambda _: tailer.cancel())
@@ -814,7 +819,8 @@ class ClusterExecutor(futures.Executor):
             log_file_exists = os.path.exists(log_path)
             retries += 1
             sys.stdout.write(
-                f"Job with id {fut.cluster_jobid} is finished but log file couldn't be found at {log_path}. Retrying {retries}/{max_retries}"  # type: ignore[attr-defined]
+                # pyrefly: ignore[missing-attribute]
+                f"Job with id {fut.cluster_jobid} is finished but log file couldn't be found at {log_path}. Retrying {retries}/{max_retries}"
             )
             time.sleep(LOG_FILE_POLLING_INTERVAL_SECONDS)
         tailer.follow(LOG_FILE_POLLING_INTERVAL_SECONDS)

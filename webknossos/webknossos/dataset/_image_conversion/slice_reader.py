@@ -137,7 +137,7 @@ class DefaultCoordsDict(dict[str, int]):
             raise ValueError(f"axis {key!r} does not exist")
         super().__setitem__(key, value)
 
-    def update(self, *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
+    def update(self, *args: Any, **kwargs: Any) -> None:
         # Route through __setitem__ so the check applies here too.
         for k, v in dict(*args, **kwargs).items():
             self[k] = v

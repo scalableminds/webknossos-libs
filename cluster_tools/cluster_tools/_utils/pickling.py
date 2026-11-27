@@ -16,12 +16,12 @@ def _get_suitable_pickle_protocol() -> int:
 
 @warn_after("pickle.dumps", WARNING_TIMEOUT)
 def dumps(*args: Any, **kwargs: Any) -> bytes:
-    return pickle.dumps(*args, protocol=_get_suitable_pickle_protocol(), **kwargs)  # type: ignore[misc]
+    return pickle.dumps(*args, protocol=_get_suitable_pickle_protocol(), **kwargs)
 
 
 @warn_after("pickle.dump", WARNING_TIMEOUT)
 def dump(*args: Any, **kwargs: Any) -> None:
-    pickle.dump(*args, protocol=_get_suitable_pickle_protocol(), **kwargs)  # type: ignore[misc]
+    pickle.dump(*args, protocol=_get_suitable_pickle_protocol(), **kwargs)
 
 
 @warn_after("pickle.loads", WARNING_TIMEOUT)

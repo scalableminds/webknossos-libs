@@ -1,4 +1,4 @@
-# type: ignore
+# pyrefly: ignore-errors
 
 """
 Created on Aug 7, 2015

@@ -18,7 +18,13 @@ from ...geometry.constants import (
 from ...geometry.mag import Mag
 from ...geometry.normalized_bounding_box import NormalizedBoundingBox
 from ..layer.view import MagView
-from .image_source import ChunkResult, ImageSource, ReadOptions, ValueRange
+from .image_source import (
+    ChunkResult,
+    ImageSource,
+    ReadOptions,
+    ValueRange,
+    largest_value,
+)
 
 
 class ChunkedImageSource(ImageSource):
@@ -196,8 +202,8 @@ class ChunkedImageSource(ImageSource):
 
         block = np.asarray(block, dtype=dtype)
 
-        max_value = int(block.max())
         value_range = ValueRange.of(block)
+        max_value = largest_value(block, value_range=value_range)
         if T_AXIS in relative_bbox.axes:
             # Add back the size-1 "t" axis this chunk corresponds to.
             block = block[np.newaxis]
