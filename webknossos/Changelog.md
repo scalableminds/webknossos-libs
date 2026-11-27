@@ -22,6 +22,7 @@ in the _Changed_ sections.
 ### Deprecated
 
 ### Fixed
+- Fixed that `MagView.rechunk` could silently lose data when the shard shape is changed, the layer's bounding box does not start at a shard border and the executor runs jobs in parallel. [#82](https://github.com/scalableminds/mono/pull/82)
 
 
 ## [5.1.0](https://github.com/scalableminds/webknossos-libs/releases/tag/v5.1.0) - 2026-11-26

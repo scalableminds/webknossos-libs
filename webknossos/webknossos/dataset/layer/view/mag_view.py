@@ -723,7 +723,8 @@ class MagView(View, Generic[LayerTypeT]):
                     bbox.from_mag_to_mag1(self._mag) for bbox in source_bbox_iterator
                 ]
                 for bbox in rechunked_layer.normalized_bounding_box.chunk(
-                    combined_shard_shape
+                    combined_shard_shape,
+                    chunk_border_alignments=combined_shard_shape,
                 ):
                     if any(
                         not bbox.intersected_with(
