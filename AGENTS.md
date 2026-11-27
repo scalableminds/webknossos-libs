@@ -9,6 +9,7 @@
 ## Pull Requests
 
 * After opening a PR, make sure to add the PR number to added changelog entries, e.g. `[#1518](https://github.com/scalableminds/webknossos/pull/1518)`.
+* We are using EffVer. Don't add items under "Breaking changes" unless explictly instructed. Put them under "Changed" with the "**Breaking:**" prefix.
 * Use the PR template at `.github/PULL_REQUEST_TEMPLATE.md`.
 * Keep your summaries short and to the point.
 * When adding comments or replies to PRs, always mention that Claude wrote them.
