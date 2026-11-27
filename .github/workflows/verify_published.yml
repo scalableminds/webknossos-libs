@@ -43,7 +43,7 @@ jobs:
             python -c "import tifffile; import imagecodecs; import pandas;"
           fi
 
-      - uses: slackapi/slack-github-action@v4.0.0
+      - uses: slackapi/slack-github-action@v4.1.0
         if: failure() || cancelled()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
